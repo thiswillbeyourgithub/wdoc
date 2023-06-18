@@ -4,6 +4,7 @@ import fire
 from pathlib import Path
 import os
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import GPT4All
 from langchain import PromptTemplate, LLMChain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.mapreduce import MapReduceChain
@@ -13,20 +14,54 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.callbacks import get_openai_callback
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from pprint import pprint
 
-assert Path("API_KEY.txt").exists(), "No api key found"
-os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
+class fakecallback:
+    total_tokens = 0
+    total_cost = 0
 
-llm = ChatOpenAI(
-        model_name="gpt-3.5-turbo",
-        temperature=0,
-        verbose=True,
-        )
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass
+
+def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
+    if model.lower() == "openai":
+        print("Loading openai models")
+        assert Path("API_KEY.txt").exists(), "No api key found"
+        os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
+
+        llm = ChatOpenAI(
+                model_name="gpt-3.5-turbo",
+                temperature=0,
+                verbose=True,
+                )
+        callback = get_openai_callback()
+    elif model.lower() == "gpt4all":
+        print("loading gpt4all")
+        local_path = Path(local_path)
+        assert local_path.exists(), "local model not found"
+        callbacks = [StreamingStdOutCallbackHandler()]
+        # Verbose is required to pass to the callback manager
+        llm = GPT4All(
+                model=str(local_path.absolute()),
+                n_ctx=512,
+                n_threads=4,
+                callbacks=callbacks,
+                verbose=True,
+                )
+        callback = fakecallback()
+    else:
+        raise ValueError(model)
+    print("done loading.\n")
+    return llm, callback
+
 
 text_splitter = CharacterTextSplitter()
 
-def load_doc(path, filetype, *args, **kwargs):
+def load_doc(path, filetype, **kwargs):
     if filetype == "youtube":
         if "youtube.com" in path:
             print("Loading youtube")
@@ -83,12 +118,27 @@ refine_prompt = PromptTemplate(
     template=refine_template,
 )
 
+def get_kwargs(**kwargs):
+    return kwargs
+
 if __name__ == "__main__":
-    import sys
-    docs = fire.Fire(load_doc)
-    with get_openai_callback() as cb:
-        chain = load_summarize_chain(llm, chain_type="refine", return_intermediate_steps=True, question_prompt=PROMPT, refine_prompt=refine_prompt, verbose=True)
-        out = chain({"input_documents": docs}, return_only_outputs=True)
+    kwargs = fire.Fire(get_kwargs)
+    llm, callback = load_llm(**kwargs)
+    docs = load_doc(**kwargs)
+
+    with callback as cb:
+        chain = load_summarize_chain(
+                llm,
+                chain_type="refine",
+                return_intermediate_steps=True,
+                question_prompt=PROMPT,
+                refine_prompt=refine_prompt,
+                verbose=True,
+                )
+        out = chain(
+                {"input_documents": docs},
+                return_only_outputs=True,
+                )
         print(cb.total_tokens)
         print(cb.total_cost)
 
