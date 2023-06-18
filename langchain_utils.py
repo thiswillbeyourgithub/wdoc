@@ -1,5 +1,6 @@
 # source https://python.langchain.com/en/latest/modules/chains/index_examples/summarize.html
 
+import json
 from bs4 import BeautifulSoup
 import shutil
 import ankipandas as akp
@@ -99,47 +100,51 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
 
 text_splitter = CharacterTextSplitter()
 
-def load_doc(filetype, **kwargs):
-    if "path" in kwargs:
-        path = kwargs["path"]
+def load_doc(**kwargs):
+    filetype = kwargs["filetype"]
+
     if filetype == "path_list":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
         doclist = str(Path(path).read_text()).splitlines()
         docs = []
         for line in tqdm(doclist, desc="loading list of documents"):
+            line = line.strip()
             if not line:
                 continue
             if line.startswith("#"):
                 continue
-            if line.count(" ; ") == 0:
-                raise Exception(f"Missing ' ; ' in {line}")
-            elif line.count(" ; ") == 1:
-                linepath, filetype = line.split(" ; ")
-            elif line.count(" ; ") > 1:
-                splits = line.split(" ; ")
-                filetype = splits[-1]
-                linepath = " ; ".join(splits[:-1])
-            docs.extend(load_doc(linepath, filetype))
+            meta = json.loads(line.strip())
+            assert isinstance(meta, dict), f"meta from line '{line}' is not dict but '{type(meta)}'"
+            assert "filetype" in meta, "no key 'filetype' in meta"
+            docs.extend(load_doc(**meta))
         return docs
 
     if filetype == "youtube":
-        if "youtube.com" in path:
-            print(f"Loading youtube: '{path}'")
-            loader = YoutubeLoader.from_youtube_url(
-                    path,
-                    add_video_info=True,
-                    language=[kwargs["language"]],
-                    translation=kwargs["translation"],
-                    )
-            loader.load()
-            docs = loader.load_and_split()
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        print(f"Loading youtube: '{path}'")
+        loader = YoutubeLoader.from_youtube_url(
+                path,
+                add_video_info=True,
+                language=[kwargs["language"]],
+                translation=kwargs["translation"],
+                )
+        loader.load()
+        docs = loader.load_and_split()
 
     elif filetype == "pdf":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
         print(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         docs = split_cache.eval(loader.load_and_split)
 
     elif filetype == "anki":
+        needed_keys = ["anki_deck", "anki_notetype", "anki_profile"]
+        for nk in needed_keys:
+            assert nk in kwargs, f"Missing '{nk}' in arguments from load_doc"
         profile = kwargs["anki_profile"]
         print(f"Loading anki profile: '{profile}'")
         original_db = akp.find_db(user=profile)
@@ -164,6 +169,8 @@ def load_doc(filetype, **kwargs):
             docs[i].metadata["path"] = f"Anki profile '{profile}'"
 
     else:
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
         print(f"Loading txt: '{path}'")
         print(path)
         assert Path(path).exists(), f"file not found: '{path}'"
