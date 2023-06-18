@@ -103,20 +103,40 @@ text_splitter = CharacterTextSplitter()
 def load_doc(**kwargs):
     filetype = kwargs["filetype"]
 
-    if filetype == "path_list":
+    if filetype in "path_list"  or "recursive" in filetype:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        doclist = str(Path(path).read_text()).splitlines()
+        print(filetype)
+        if "recursive" in filetype:
+            assert "pattern" in kwargs, "missing 'pattern' key in args"
+            pattern = kwargs["pattern"]
+            doclist = [str(p) for p in Path(path).rglob(pattern)]
+            assert doclist, "empty recursive search!"
+            assert " " in filetype, "missing space in recursive filetype"
+
+        elif filetype == "path_list":
+            doclist = str(Path(path).read_text()).splitlines()
+        else:
+            raise ValueError(filetype)
+
         docs = []
-        for line in tqdm(doclist, desc="loading list of documents"):
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith("#"):
-                continue
-            meta = json.loads(line.strip())
-            assert isinstance(meta, dict), f"meta from line '{line}' is not dict but '{type(meta)}'"
-            assert "filetype" in meta, "no key 'filetype' in meta"
+        for item in tqdm(doclist, desc="loading list of documents"):
+            if filetype == "path_list":
+                item = item.strip()
+                if not item:
+                    continue
+                if item.startswith("#"):
+                    continue
+                meta = json.loads(item.strip())
+                assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
+                assert "filetype" in meta, "no key 'filetype' in meta"
+            elif "recursive" in filetype:
+                meta = kwargs.copy()
+                meta["filetype"] = filetype.replace("recursive", "").strip()
+                meta["path"] = item
+                del meta["pattern"]
+            else:
+                raise ValueError(filetype)
             docs.extend(load_doc(**meta))
         return docs
 
@@ -139,7 +159,11 @@ def load_doc(**kwargs):
         print(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
+        # try:
         docs = split_cache.eval(loader.load_and_split)
+        # except Exception as err:
+        #     print(f"Error when using cache to load '{path}': '{err}'")
+        #     docs = loader.load_and_split()
 
     elif filetype == "anki":
         needed_keys = ["anki_deck", "anki_notetype", "anki_profile"]
