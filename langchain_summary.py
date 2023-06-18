@@ -1,5 +1,8 @@
 # source https://python.langchain.com/en/latest/modules/chains/index_examples/summarize.html
 
+from bs4 import BeautifulSoup
+import shutil
+import ankipandas as akp
 from pprint import pprint
 import fire
 from pathlib import Path
@@ -21,6 +24,7 @@ from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
+from langchain.document_loaders import DataFrameLoader
 from langchain.callbacks import get_openai_callback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.embeddings import SentenceTransformerEmbeddings
@@ -41,6 +45,10 @@ split_cache = Memory(".cache/split_cache/")
 
 def hasher(text):
     return hashlib.sha256(text.encode()).hexdigest()[:10]
+
+def html_to_text(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    return soup.get_text()
 
 class fakecallback:
     total_tokens = 0
@@ -91,7 +99,9 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
 
 text_splitter = CharacterTextSplitter()
 
-def load_doc(path, filetype, **kwargs):
+def load_doc(filetype, **kwargs):
+    if "path" in kwargs:
+        path = kwargs["path"]
     if filetype == "path_list":
         doclist = str(Path(path).read_text()).splitlines()
         docs = []
@@ -129,6 +139,30 @@ def load_doc(path, filetype, **kwargs):
         loader = PyPDFLoader(path)
         docs = split_cache.eval(loader.load_and_split)
 
+    elif filetype == "anki":
+        profile = kwargs["anki_profile"]
+        print(f"Loading anki profile: '{profile}'")
+        original_db = akp.find_db(user=profile)
+        name = f"{profile}".replace(" ", "_")
+        temp_db = shutil.copy(original_db, f"./.cache/anki_collection_{name.replace('/', '_')}")
+        col = akp.Collection(path=temp_db)
+        cards = col.cards.merge_notes()
+        cards["cdeck"] = cards["cdeck"].apply(lambda x: x.replace("\x1f", "::"))
+        cards = cards[cards["cdeck"].str.startswith(kwargs["anki_deck"])]
+        cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
+        cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
+        cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x))
+        loader = DataFrameLoader(
+            cards,
+            page_content_column="fields",
+            )
+        docs = loader.load()
+        for i in range(len(docs)):
+            docs[i].metadata["anki_profile"] = profile
+            docs[i].metadata["anki_deck"] = kwargs["anki_deck"]
+            docs[i].metadata["anki_notetype"] = kwargs["anki_notetype"]
+            docs[i].metadata["path"] = f"Anki profile '{profile}'"
+
     else:
         print(f"Loading txt: '{path}'")
         print(path)
@@ -140,7 +174,7 @@ def load_doc(path, filetype, **kwargs):
     for i in range(len(docs)):
         docs[i].metadata["hash"] = hasher(docs[i].page_content)
         docs[i].metadata["head"] = str(docs[i].page_content)[:100]
-        if "path" not in docs[i].metadata:
+        if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
     return docs
 
