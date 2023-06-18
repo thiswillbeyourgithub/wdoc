@@ -177,24 +177,28 @@ if __name__ == "__main__":
     docs = load_doc(**kwargs)
 
     if kwargs["task"] == "query":
-        embeddings = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+        if "sbert_model" not in kwargs:
+            kwargs["sbert_model"]="paraphrase-multilingual-mpnet-base-v2"
+        embeddings = SentenceTransformerEmbeddings(model_name=kwargs["sbert_model"])
+        model_hash = hasher(kwargs["sbert_model"])
+
         done_list = set()
         db = None
         for doc in tqdm(docs, desc="embedding documents"):
-            dochash = doc.metadata["hash"]
-            if (docstore_cache / dochash).exists():
+            hashcheck = doc.metadata["hash"] + model_hash
+            if (docstore_cache / hashcheck).exists():
                 tqdm.write("Loaded from cache")
-                temp = FAISS.load_local(str(docstore_cache / dochash), embeddings)
+                temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
             else:
                 tqdm.write("Computing embeddings")
                 temp = FAISS.from_documents([doc], embeddings)
-                temp.save_local(str(docstore_cache / dochash))
+                temp.save_local(str(docstore_cache / hashcheck))
             if db is None:
                 db = temp
             else:
-                if not dochash in done_list:
+                if not hashcheck in done_list:
                     db.merge_from(temp)
-                    done_list.add(dochash)
+                    done_list.add(hashcheck)
                 else:
                     tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
         retriever = db.as_retriever()
