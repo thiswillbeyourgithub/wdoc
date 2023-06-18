@@ -108,9 +108,12 @@ def load_doc(**kwargs):
         path = kwargs["path"]
         print(filetype)
         if "recursive" in filetype:
+            assert filetype.count("recursive") == 1, "can't use more than 1 recursive word"
+            assert filetype.count("recursive") + filetype.count("path_list"), "can't use recusrive and path_list in the same line"
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             pattern = kwargs["pattern"]
-            doclist = [str(p) for p in Path(path).rglob(pattern)]
+            doclist = [p for p in Path(path).rglob(pattern)]
+            doclist = [str(p) for p in doclist if p.is_file()]
             if "exclude" in kwargs:
                 for exc in kwargs["exclude"]:
                     doclist = [p for p in doclist if exc not in p]
@@ -125,12 +128,12 @@ def load_doc(**kwargs):
 
         docs = []
         for item in tqdm(doclist, desc="loading list of documents"):
+            item = item.strip()
+            if not item:
+                continue
+            if item.startswith("#"):
+                continue
             if filetype == "path_list":
-                item = item.strip()
-                if not item:
-                    continue
-                if item.startswith("#"):
-                    continue
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
                 assert "filetype" in meta, "no key 'filetype' in meta"
@@ -138,6 +141,7 @@ def load_doc(**kwargs):
                 meta = kwargs.copy()
                 meta["filetype"] = filetype.replace("recursive", "").strip()
                 meta["path"] = item
+                assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
             else:
                 raise ValueError(filetype)
