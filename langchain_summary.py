@@ -3,11 +3,18 @@
 import fire
 from pathlib import Path
 import os
+from pprint import pprint
+from tqdm import tqdm
+import hashlib
+from datetime import datetime
+from joblib import Memory
+
 from langchain.chat_models import ChatOpenAI
 from langchain.llms import GPT4All
 from langchain import PromptTemplate, LLMChain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.mapreduce import MapReduceChain
+from langchain.chains import ConversationalRetrievalChain, RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
@@ -15,16 +22,33 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.callbacks import get_openai_callback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from pprint import pprint
+from langchain.embeddings import SentenceTransformerEmbeddings
+from langchain.vectorstores import FAISS
+
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+d = datetime.today()
+today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
+
+
+Path(".cache").mkdir(exist_ok=True)
+Path(".cache/docstore_cache").mkdir(exist_ok=True)
+Path(".cache/split_cache").mkdir(exist_ok=True)
+
+docstore_cache = Path(".cache/docstore_cache/")
+split_cache = Memory(".cache/split_cache/")
+
+def hasher(text):
+    return hashlib.sha256(text.encode()).hexdigest()[:10]
 
 class fakecallback:
     total_tokens = 0
     total_cost = 0
 
-    def __enter__(self):
-        pass
+    def __enter__(self, *args, **kwargs):
+        return self
 
-    def __exit__(self):
+    def __exit__(self, *args, **kwargs):
         pass
 
 def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
@@ -51,17 +75,30 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
                 n_threads=4,
                 callbacks=callbacks,
                 verbose=True,
+                streaming=True,
                 )
         callback = fakecallback()
     else:
         raise ValueError(model)
-    print("done loading.\n")
+    print("done loading model.\n")
     return llm, callback
 
 
 text_splitter = CharacterTextSplitter()
 
 def load_doc(path, filetype, **kwargs):
+    if filetype == "path_list":
+        doclist = str(Path(path).read_text()).splitlines()
+        docs = []
+        for line in doclist:
+            if not line:
+                continue
+            if ";" not in line:
+                raise Exception(f"Missing ; in {line}")
+            linepath, filetype = line.split(" ; ")
+            docs.extend(load_doc(linepath, filetype))
+            return docs
+
     if filetype == "youtube":
         if "youtube.com" in path:
             print("Loading youtube")
@@ -73,22 +110,26 @@ def load_doc(path, filetype, **kwargs):
                     )
             loader.load()
             docs = loader.load_and_split()
+
     elif filetype == "pdf":
         print("Loading pdf")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
-        docs = loader.load_and_split()[:2]
-        breakpoint()
+        docs = split_cache.eval(loader.load_and_split)
+
     else:
         print("Loading txt")
+        print(path)
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()
-        if len(content) > 1000:
-            print("Long content, openning console")
-            breakpoint()
-        texts = text_splitter.split_text(content)
-        docs = [Document(page_content=t) for t in texts]
+        texts = split_cache.eval(text_splitter.split_text, content)
+        docs = [Document(page_content=t, metadata = {
+            "path": path,
+            "hash": hasher(t),
+            "head": str(t)[:100],
+            "date": today,
+            }) for t in texts]
     return docs
 
 
@@ -123,24 +164,65 @@ def get_kwargs(**kwargs):
 
 if __name__ == "__main__":
     kwargs = fire.Fire(get_kwargs)
+
     llm, callback = load_llm(**kwargs)
     docs = load_doc(**kwargs)
 
-    with callback as cb:
-        chain = load_summarize_chain(
-                llm,
-                chain_type="refine",
-                return_intermediate_steps=True,
-                question_prompt=PROMPT,
-                refine_prompt=refine_prompt,
-                verbose=True,
+    if kwargs["task"] == "query":
+        embeddings = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+        db = None
+        for doc in tqdm(docs, desc="embedding documents"):
+            cachename = doc.dict()["metadata"]["hash"]
+            if (docstore_cache / cachename).exists():
+                print("Loaded from cache")
+                temp = FAISS.load_local(str(docstore_cache / cachename), embeddings)
+            else:
+                print("Computing embeddings")
+                temp = FAISS.from_documents([doc], embeddings)
+                temp.save_local(str(docstore_cache / cachename))
+            if db is None:
+                db = temp
+            else:
+                db.merge_from(temp)
+        retriever = db.as_retriever()
+        qa = RetrievalQA.from_chain_type(
+                llm=llm,
+                chain_type="stuff",
+                retriever=retriever,
+                return_source_documents=True,
                 )
-        out = chain(
-                {"input_documents": docs},
-                return_only_outputs=True,
-                )
-        print(cb.total_tokens)
-        print(cb.total_cost)
+        while True:
+            try:
+                query = input("\n\nEnter a question:\n>")
+                ans = qa({"query": query})
+                print(ans["result"])
+                print("\n\nSources:")
+                for doc in ans["source_documents"]:
+                    print(f"{doc.dict()['metadata'].items()}")
+            except Exception as err:
+                print(f"Error: '{err}'")
+                breakpoint()
+                continue
+
+    elif kwargs["task"] == "summary":
+        with callback as cb:
+            chain = load_summarize_chain(
+                    llm,
+                    chain_type="refine",
+                    return_intermediate_steps=True,
+                    question_prompt=PROMPT,
+                    refine_prompt=refine_prompt,
+                    verbose=True,
+                    )
+            out = chain(
+                    {"input_documents": docs},
+                    return_only_outputs=True,
+                    )
+            print(cb.total_tokens)
+            print(cb.total_cost)
+
+    else:
+        raise ValueError(kwargs["task"])
 
     t = out["output_text"]
     for bulletpoint in t.split("\n"):
