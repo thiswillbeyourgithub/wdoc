@@ -10,7 +10,7 @@ from datetime import datetime
 from joblib import Memory
 
 from langchain.chat_models import ChatOpenAI
-from langchain.llms import GPT4All
+from langchain.llms import GPT4All, FakeListLLM
 from langchain import PromptTemplate, LLMChain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.mapreduce import MapReduceChain
@@ -78,6 +78,9 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
                 verbose=True,
                 streaming=True,
                 )
+        callback = fakecallback()
+    elif model.lower() == "fake":
+        llm = FakeListLLM(verbose=True, responses=["fake answer"]*10)
         callback = fakecallback()
     else:
         raise ValueError(model)
@@ -201,17 +204,25 @@ if __name__ == "__main__":
                     done_list.add(hashcheck)
                 else:
                     tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
-        retriever = db.as_retriever()
+        retriever = db.as_retriever(search_kwargs={"k": 5})
         qa = RetrievalQA.from_chain_type(
                 llm=llm,
                 chain_type="stuff",
                 retriever=retriever,
                 return_source_documents=True,
+                verbose=True,
                 )
         while True:
             try:
-                query = input("\n\nEnter a question:\n>")
-                ans = qa({"query": query})
+                with callback as cb:
+                    query = input("\n\nEnter a question:\n>")
+                    ans = qa(
+                            inputs={"query": query},
+                            return_only_outputs=False,
+                            include_run_info=True,
+                            )
+                    print(cb.total_tokens)
+                    print(cb.total_cost)
                 print(ans["result"])
                 print("\n\nSources:")
                 for doc in ans["source_documents"]:
