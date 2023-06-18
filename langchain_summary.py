@@ -1,5 +1,6 @@
 # source https://python.langchain.com/en/latest/modules/chains/index_examples/summarize.html
 
+from pprint import pprint
 import fire
 from pathlib import Path
 import os
@@ -226,7 +227,7 @@ if __name__ == "__main__":
                 print(ans["result"])
                 print("\n\nSources:")
                 for doc in ans["source_documents"]:
-                    print(f"{doc.metadata.items()}")
+                    pprint(f"{doc.metadata.items()}")
             except Exception as err:
                 print(f"Error: '{err}'")
                 breakpoint()
