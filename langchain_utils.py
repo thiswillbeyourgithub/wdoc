@@ -252,6 +252,7 @@ if __name__ == "__main__":
 
     llm, callback = load_llm(**kwargs)
     docs = load_doc(**kwargs)
+    print(f"\n\nLoaded '{len(docs)}' documents")
 
     if kwargs["task"] == "query":
         if "sbert_model" not in kwargs:
