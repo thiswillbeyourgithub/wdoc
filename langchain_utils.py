@@ -1,5 +1,4 @@
-# source https://python.langchain.com/en/latest/modules/chains/index_examples/summarize.html
-
+import ftfy
 import json
 from bs4 import BeautifulSoup
 import shutil
@@ -47,9 +46,12 @@ split_cache = Memory(".cache/split_cache/")
 def hasher(text):
     return hashlib.sha256(text.encode()).hexdigest()[:10]
 
-def html_to_text(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    return soup.get_text()
+def html_to_text(html, issoup):
+    if not issoup:
+        soup = BeautifulSoup(html, 'html.parser')
+        return soup.get_text()
+    else:
+        return html.get_text()
 
 class fakecallback:
     total_tokens = 0
@@ -188,7 +190,7 @@ def load_doc(**kwargs):
         cards = cards[cards["cdeck"].str.startswith(kwargs["anki_deck"])]
         cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
         cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
-        cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x))
+        cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x, issoup=False))
         loader = DataFrameLoader(
             cards,
             page_content_column="fields",
@@ -215,6 +217,14 @@ def load_doc(**kwargs):
         docs[i].metadata["head"] = str(docs[i].page_content)[:100]
         if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
+
+        # if html, parse it
+        soup = BeautifulSoup(docs[i].page_content, "html.parser")
+        if bool(soup.find()):
+            docs[i].page_content = html_to_text(soup, issoup=True)
+
+        # fix text just in case
+        docs[i].page_content = ftfy.fix_text(docs[i].page_content)
     return docs
 
 
