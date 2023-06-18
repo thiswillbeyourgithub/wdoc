@@ -111,6 +111,10 @@ def load_doc(**kwargs):
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             pattern = kwargs["pattern"]
             doclist = [str(p) for p in Path(path).rglob(pattern)]
+            if "exclude" in kwargs:
+                for exc in kwargs["exclude"]:
+                    doclist = [p for p in doclist if exc not in p]
+                del kwargs["exclude"]
             assert doclist, "empty recursive search!"
             assert " " in filetype, "missing space in recursive filetype"
 
