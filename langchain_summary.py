@@ -64,7 +64,7 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
                 )
         callback = get_openai_callback()
     elif model.lower() == "gpt4all":
-        print("loading gpt4all")
+        print(f"loading gpt4all: '{local_path}'")
         local_path = Path(local_path)
         assert local_path.exists(), "local model not found"
         callbacks = [StreamingStdOutCallbackHandler()]
@@ -90,18 +90,25 @@ def load_doc(path, filetype, **kwargs):
     if filetype == "path_list":
         doclist = str(Path(path).read_text()).splitlines()
         docs = []
-        for line in doclist:
+        for line in tqdm(doclist, desc="loading list of documents"):
             if not line:
                 continue
-            if ";" not in line:
-                raise Exception(f"Missing ; in {line}")
-            linepath, filetype = line.split(" ; ")
+            if line.startswith("#"):
+                continue
+            if line.count(" ; ") == 0:
+                raise Exception(f"Missing ' ; ' in {line}")
+            elif line.count(" ; ") == 1:
+                linepath, filetype = line.split(" ; ")
+            elif line.count(" ; ") > 1:
+                splits = line.split(" ; ")
+                filetype = splits[-1]
+                linepath = " ; ".join(splits[:-1])
             docs.extend(load_doc(linepath, filetype))
-            return docs
+        return docs
 
     if filetype == "youtube":
         if "youtube.com" in path:
-            print("Loading youtube")
+            print(f"Loading youtube: '{path}'")
             loader = YoutubeLoader.from_youtube_url(
                     path,
                     add_video_info=True,
@@ -112,24 +119,24 @@ def load_doc(path, filetype, **kwargs):
             docs = loader.load_and_split()
 
     elif filetype == "pdf":
-        print("Loading pdf")
+        print(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         docs = split_cache.eval(loader.load_and_split)
 
     else:
-        print("Loading txt")
+        print(f"Loading txt: '{path}'")
         print(path)
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()
         texts = split_cache.eval(text_splitter.split_text, content)
-        docs = [Document(page_content=t, metadata = {
-            "path": path,
-            "hash": hasher(t),
-            "head": str(t)[:100],
-            "date": today,
-            }) for t in texts]
+        docs = [Document(page_content=t) for t in texts]
+    for i in range(len(docs)):
+        docs[i].metadata["hash"] = hasher(docs[i].page_content)
+        docs[i].metadata["head"] = str(docs[i].page_content)[:100]
+        if "path" not in docs[i].metadata:
+            docs[i].metadata["path"] = path
     return docs
 
 
@@ -170,20 +177,25 @@ if __name__ == "__main__":
 
     if kwargs["task"] == "query":
         embeddings = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+        done_list = set()
         db = None
         for doc in tqdm(docs, desc="embedding documents"):
-            cachename = doc.dict()["metadata"]["hash"]
-            if (docstore_cache / cachename).exists():
-                print("Loaded from cache")
-                temp = FAISS.load_local(str(docstore_cache / cachename), embeddings)
+            dochash = doc.metadata["hash"]
+            if (docstore_cache / dochash).exists():
+                tqdm.write("Loaded from cache")
+                temp = FAISS.load_local(str(docstore_cache / dochash), embeddings)
             else:
-                print("Computing embeddings")
+                tqdm.write("Computing embeddings")
                 temp = FAISS.from_documents([doc], embeddings)
-                temp.save_local(str(docstore_cache / cachename))
+                temp.save_local(str(docstore_cache / dochash))
             if db is None:
                 db = temp
             else:
-                db.merge_from(temp)
+                if not dochash in done_list:
+                    db.merge_from(temp)
+                    done_list.add(dochash)
+                else:
+                    tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
         retriever = db.as_retriever()
         qa = RetrievalQA.from_chain_type(
                 llm=llm,
@@ -198,7 +210,7 @@ if __name__ == "__main__":
                 print(ans["result"])
                 print("\n\nSources:")
                 for doc in ans["source_documents"]:
-                    print(f"{doc.dict()['metadata'].items()}")
+                    print(f"{doc.metadata.items()}")
             except Exception as err:
                 print(f"Error: '{err}'")
                 breakpoint()
