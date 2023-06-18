@@ -61,6 +61,7 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
                 model_name="gpt-3.5-turbo",
                 temperature=0,
                 verbose=True,
+                streaming=True,
                 )
         callback = get_openai_callback()
     elif model.lower() == "gpt4all":
