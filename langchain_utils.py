@@ -258,7 +258,7 @@ if __name__ == "__main__":
         done_list = set()
         db = None
         for doc in tqdm(docs, desc="embedding documents"):
-            hashcheck = doc.metadata["hash"] + model_hash
+            hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
             if (docstore_cache / hashcheck).exists():
                 tqdm.write("Loaded from cache")
                 temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
