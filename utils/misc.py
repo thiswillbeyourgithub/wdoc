@@ -59,17 +59,17 @@ def check_kwargs(**kwargs):
         the embedding cache will be populated with new elements (the hash
         used to check for previous values includes the name of the sbert model)
 
-    --savetopickle str, default .cache/latest_docs_and_embeddings.pickle
+    --saveas str, default .cache/latest_docs_and_embeddings
         only used if task is query
-        save the latest 'inputs' to a pickle file. Can be loaded again with
-        --loadfrompickle to speed up loading time. This loads both the
+        save the latest 'inputs' to a file. Can be loaded again with
+        --loadfrom to speed up loading time. This loads both the
         split documents and embeddings but will not update itself if the
         original files have changed.
 
-    --loadfrompickle str, default None
-        if not filetype argument is given, loadfrompickle will be set to the
-        same default value as savetopickle
-        For more, see --savetopickle
+    --loadfrom str, default None
+        if not filetype argument is given, loadfrom will be set to the
+        same default value as saveto
+        For more, see --saveto
     """
     assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
     assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
@@ -77,10 +77,10 @@ def check_kwargs(**kwargs):
         kwargs["sbert_model"] = "paraphrase-multilingual-mpnet-base-v2"
     if "task" not in kwargs:
         kwargs["task"] = "query"
-    if "savetopickle" not in kwargs:
-        kwargs["savetopickle"] = str(docstore_cache.parent / "latest_docs_and_embeddings.pickle")
-    if "filetype" not in kwargs and "loadfrompickle" not in kwargs:
+    if "saveto" not in kwargs:
+        kwargs["saveto"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
+    if "filetype" not in kwargs and "loadfrom" not in kwargs:
         kwargs["filetype"] = None
-        kwargs["loadfrompickle"] = str(docstore_cache.parent / "latest_docs_and_embeddings.pickle")
+        kwargs["loadfrom"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
 
     return kwargs

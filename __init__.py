@@ -1,4 +1,3 @@
-import pickle
 from pathlib import Path
 from pprint import pprint
 import fire
@@ -22,14 +21,9 @@ d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 def process_task(**kwargs):
-    whi("Processing task")
-    docs = kwargs["loaded_docs"]
+    red("\nProcessing task")
 
     if kwargs["task"] == "query":
-        with open(str(kwargs["savetopickle"]), "wb") as f:
-            pickle.dump(
-                    [kwargs["loaded_docs"], kwargs["loaded_embeddings"]],
-                    f)
         db = kwargs["loaded_embeddings"]
         retriever = db.as_retriever(search_kwargs={"k": 5})
         qa = RetrievalQA.from_chain_type(
@@ -60,6 +54,7 @@ def process_task(**kwargs):
                 breakpoint()
 
     elif kwargs["task"] == "summary":
+        docs = kwargs["loaded_docs"]
         with callback as cb:
             chain = load_summarize_chain(
                     llm,
@@ -88,17 +83,7 @@ if __name__ == "__main__":
     kwargs = fire.Fire(check_kwargs)
 
     llm, callback = load_llm(**kwargs)
-    if "loadfrompickle" in kwargs:
-        red("Loading documents and embeddings from pickle file")
-        path = Path(kwargs["loadfrompickle"])
-        assert path.exists(), f"pickle file not found at '{path}'"
-        with open(str(path), "rb") as f:
-            loaded = pickle.load(f)
-            kwargs["loaded_docs"] = loaded[0]
-            kwargs["loaded_embeddings"] = loaded[1]
-    else:
-        kwargs = load_documents(**kwargs)
-    whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")
+    kwargs = load_documents(**kwargs)
 
     out = process_task(**kwargs)
 

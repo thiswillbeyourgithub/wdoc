@@ -24,7 +24,9 @@ text_splitter = CharacterTextSplitter()
 
 def load_documents(**kwargs):
     red("\nLoading documents.")
-    kwargs["loaded_docs"] = _load_doc(**kwargs)
+    if "loadfrom" not in kwargs:
+        kwargs["loaded_docs"] = _load_doc(**kwargs)
+        whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")
     if kwargs["task"] == "query":
         kwargs["loaded_embeddings"] = _load_embeddings(**kwargs)
     return kwargs
@@ -164,14 +166,23 @@ def _load_doc(**kwargs):
 
 def _load_embeddings(**kwargs):
     """loads embeddings for each document"""
-    red("\nLoading embeddings.")
     embeddings = SentenceTransformerEmbeddings(model_name=kwargs["sbert_model"])
+
+    # reload passed embeddings
+    if "loadfrom" in kwargs:
+        red("Reloading documents and embeddings from file")
+        path = Path(kwargs["loadfrom"])
+        assert path.exists(), f"file not found at '{path}'"
+        db = FAISS.load_local(str(path), embeddings)
+        return db
+
+    red("\nLoading embeddings.")
+
     model_hash = hasher(kwargs["sbert_model"])
-
     docs = kwargs["loaded_docs"]
-
     done_list = set()
     db = None
+
     for doc in tqdm(docs, desc="embedding documents"):
         hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
         if (docstore_cache / hashcheck).exists():
@@ -189,4 +200,11 @@ def _load_embeddings(**kwargs):
                 done_list.add(hashcheck)
             else:
                 tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
+
+    # saving embeddings
+    path = Path(kwargs["saveto"])
+    if path.exists():
+        path.unlink()
+    db.save_local(kwargs["saveto"])
+
     return db
