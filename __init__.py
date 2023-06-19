@@ -52,8 +52,6 @@ def process_task(llm, callback, **kwargs):
                             return_only_outputs=False,
                             include_run_info=True,
                             )
-                whi(cb.total_tokens)
-                whi(cb.total_cost)
 
                 red(ans["result"])
 
@@ -65,7 +63,9 @@ def process_task(llm, callback, **kwargs):
                             val = doc.metadata[toprint]
                             yel(f"    * {toprint}: {val}")
                     whi("    * Head:")
-                    whi(f'{doc.metadata["head"]:>30}')
+                    whi(f'{doc.metadata["head"].strip():>30}')
+
+                yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
             except Exception as err:
                 whi(f"Error: '{err}'")
@@ -75,7 +75,7 @@ def process_task(llm, callback, **kwargs):
 
     elif kwargs["task"] == "summary":
         docs = kwargs["loaded_docs"]
-        with callback as cb:
+        with callback() as cb:
             chain = load_summarize_chain(
                     llm,
                     chain_type="refine",
@@ -88,8 +88,8 @@ def process_task(llm, callback, **kwargs):
                     {"input_documents": docs},
                     return_only_outputs=True,
                     )
-            whi(cb.total_tokens)
-            whi(cb.total_cost)
+        whi(cb.total_tokens)
+        whi(cb.total_cost)
 
         t = out["output_text"]
         for bulletpoint in t.split("\n"):
