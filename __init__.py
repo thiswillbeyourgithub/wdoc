@@ -38,8 +38,7 @@ def process_task(llm, callback, **kwargs):
                     {"input_documents": docs},
                     return_only_outputs=True,
                     )
-        whi(cb.total_tokens)
-        whi(cb.total_cost)
+        red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
         t = out["output_text"]
         for bulletpoint in t.split("\n"):

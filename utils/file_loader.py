@@ -17,7 +17,7 @@ from langchain.document_loaders import DataFrameLoader
 from langchain.vectorstores import FAISS
 
 from .misc import split_cache, html_to_text, hasher
-from .logger import whi, yel, red
+from .logger import whi, yel, red, log
 from utils.misc import docstore_cache
 
 text_splitter = CharacterTextSplitter()
@@ -145,6 +145,7 @@ def _load_doc(**kwargs):
                 "Paste your text content here then press esc+enter or meta+enter:\n>",
                 multiline=True,
                 )
+        log.info(f"Pasted string input:\n{content}")
         texts = split_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
 
