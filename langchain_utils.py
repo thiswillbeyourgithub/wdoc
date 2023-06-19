@@ -44,10 +44,41 @@ Path(".cache/split_cache").mkdir(exist_ok=True)
 docstore_cache = Path(".cache/docstore_cache/")
 split_cache = Memory(".cache/split_cache/")
 
+text_splitter = CharacterTextSplitter()
+
+prompt_template = """Write in the same language of the input an easy to read summary of the author's reasonning paragraph by paragraph as logically indented markdown bullet points:
+
+'''
+{text}
+'''
+
+CONCISE SUMMARY AS LOGICALLY INDENTED MARKDOWN BULLET POINTS:"""
+PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
+refine_template = (
+    """Your job is to continue a summary of a long text as logically indented markdown bullet points of the author's reasonning.
+    We have provided an existing summary up to this point:
+    '''
+    {existing_answer}
+    '''
+
+    You have to continue the summary by adding the bullet points of the following part of the article (only if relevant, stay concise, avoid expliciting what is implied by the previous bullet points):
+    '''
+    {text}
+    '''
+    Given this new section of the document, refine the summary as logically indented markdown bullet points. If the new section is not worth it, simply return the original summary."""
+)
+refine_prompt = PromptTemplate(
+    input_variables=["existing_answer", "text"],
+    template=refine_template,
+)
+
 def hasher(text):
+    """used to hash the text contant of each doc to cache the splitting and
+    embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:10]
 
 def html_to_text(html, issoup):
+    """used to strip any html present in the text files"""
     if not issoup:
         soup = BeautifulSoup(html, 'html.parser')
         return soup.get_text()
@@ -55,6 +86,7 @@ def html_to_text(html, issoup):
         return html.get_text()
 
 class fakecallback:
+    """used by gpt4all to avoid bugs"""
     total_tokens = 0
     total_cost = 0
 
@@ -65,6 +97,7 @@ class fakecallback:
         pass
 
 def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
+    """load the gpt model"""
     if model.lower() == "openai":
         print("Loading openai models")
         assert Path("API_KEY.txt").exists(), "No api key found"
@@ -101,9 +134,8 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
     return llm, callback
 
 
-text_splitter = CharacterTextSplitter()
-
 def load_doc(**kwargs):
+    """load the input"""
     filetype = kwargs["filetype"]
 
     if filetype in ["path_list", "recursive"]:
@@ -233,32 +265,6 @@ def load_doc(**kwargs):
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
     return docs
 
-
-prompt_template = """Write in the same language of the input an easy to read summary of the author's reasonning paragraph by paragraph as logically indented markdown bullet points:
-
-'''
-{text}
-'''
-
-CONCISE SUMMARY AS LOGICALLY INDENTED MARKDOWN BULLET POINTS:"""
-PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
-refine_template = (
-    """Your job is to continue a summary of a long text as logically indented markdown bullet points of the author's reasonning.
-    We have provided an existing summary up to this point:
-    '''
-    {existing_answer}
-    '''
-
-    You have to continue the summary by adding the bullet points of the following part of the article (only if relevant, stay concise, avoid expliciting what is implied by the previous bullet points):
-    '''
-    {text}
-    '''
-    Given this new section of the document, refine the summary as logically indented markdown bullet points. If the new section is not worth it, simply return the original summary."""
-)
-refine_prompt = PromptTemplate(
-    input_variables=["existing_answer", "text"],
-    template=refine_template,
-)
 
 def get_kwargs(**kwargs):
     """
