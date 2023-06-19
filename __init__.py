@@ -23,6 +23,31 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 def process_task(llm, callback, **kwargs):
     red("\nProcessing task")
 
+    if kwargs["task"] == "summary":
+        docs = kwargs["loaded_docs"]
+        with callback() as cb:
+            chain = load_summarize_chain(
+                    llm,
+                    chain_type="refine",
+                    return_intermediate_steps=True,
+                    question_prompt=PROMPT,
+                    refine_prompt=refine_prompt,
+                    verbose=True,
+                    )
+            out = chain(
+                    {"input_documents": docs},
+                    return_only_outputs=True,
+                    )
+        whi(cb.total_tokens)
+        whi(cb.total_cost)
+
+        t = out["output_text"]
+        for bulletpoint in t.split("\n"):
+            whi(bulletpoint)
+
+    else:
+        raise ValueError(kwargs["task"])
+
     if kwargs["task"] == "query":
         db = kwargs["loaded_embeddings"]
 
@@ -72,31 +97,6 @@ def process_task(llm, callback, **kwargs):
                 if "debug" in kwargs:
                     raise
                 breakpoint()
-
-    elif kwargs["task"] == "summary":
-        docs = kwargs["loaded_docs"]
-        with callback() as cb:
-            chain = load_summarize_chain(
-                    llm,
-                    chain_type="refine",
-                    return_intermediate_steps=True,
-                    question_prompt=PROMPT,
-                    refine_prompt=refine_prompt,
-                    verbose=True,
-                    )
-            out = chain(
-                    {"input_documents": docs},
-                    return_only_outputs=True,
-                    )
-        whi(cb.total_tokens)
-        whi(cb.total_cost)
-
-        t = out["output_text"]
-        for bulletpoint in t.split("\n"):
-            whi(bulletpoint)
-
-    else:
-        raise ValueError(kwargs["task"])
 
 
 if __name__ == "__main__":
