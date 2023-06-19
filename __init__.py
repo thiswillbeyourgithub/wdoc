@@ -14,6 +14,7 @@ from utils.prompts import refine_prompt, PROMPT
 from utils.llm import load_llm
 from utils.file_loader import load_doc
 from utils.misc import get_kwargs, hasher, docstore_cache
+from utils.logger import whi, yel, red
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -21,7 +22,7 @@ d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 def process_task(**kwargs):
-    print("Processing task")
+    whi("Processing task")
     if kwargs["task"] == "query":
         if "sbert_model" not in kwargs:
             kwargs["sbert_model"]="paraphrase-multilingual-mpnet-base-v2"
@@ -64,14 +65,14 @@ def process_task(**kwargs):
                             return_only_outputs=False,
                             include_run_info=True,
                             )
-                    print(cb.total_tokens)
-                    print(cb.total_cost)
-                print(ans["result"])
-                print("\n\nSources:")
+                    whi(cb.total_tokens)
+                    whi(cb.total_cost)
+                whi(ans["result"])
+                whi("\n\nSources:")
                 for doc in ans["source_documents"]:
                     pprint(f"{doc.metadata.items()}")
             except Exception as err:
-                print(f"Error: '{err}'")
+                whi(f"Error: '{err}'")
                 breakpoint()
 
     elif kwargs["task"] == "summary":
@@ -88,12 +89,12 @@ def process_task(**kwargs):
                     {"input_documents": docs},
                     return_only_outputs=True,
                     )
-            print(cb.total_tokens)
-            print(cb.total_cost)
+            whi(cb.total_tokens)
+            whi(cb.total_cost)
 
         t = out["output_text"]
         for bulletpoint in t.split("\n"):
-            print(bulletpoint)
+            whi(bulletpoint)
 
     else:
         raise ValueError(kwargs["task"])
@@ -104,9 +105,9 @@ if __name__ == "__main__":
 
     llm, callback = load_llm(**kwargs)
     docs = load_doc(**kwargs)
-    print(f"\n\nLoaded '{len(docs)}' documents")
+    whi(f"\n\nLoaded '{len(docs)}' documents")
 
     out = process_task(**kwargs)
 
-    print("Done.\nOpenning debugger.")
+    whi("Done.\nOpenning debugger.")
     breakpoint()

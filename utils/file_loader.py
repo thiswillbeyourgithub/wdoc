@@ -14,6 +14,7 @@ from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import DataFrameLoader
 
 from .misc import split_cache, html_to_text, hasher
+from .logger import whi, yel, red
 
 text_splitter = CharacterTextSplitter()
 
@@ -25,7 +26,7 @@ def load_doc(**kwargs):
     if filetype in ["path_list", "recursive"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        print(filetype)
+        whi(filetype)
         if filetype == "recursive":
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             assert "recursed_filetype" in kwargs, "missing 'recursed_filetype' in args"
@@ -75,7 +76,7 @@ def load_doc(**kwargs):
     if filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        print(f"Loading youtube: '{path}'")
+        whi(f"Loading youtube: '{path}'")
         loader = YoutubeLoader.from_youtube_url(
                 path,
                 add_video_info=True,
@@ -88,13 +89,13 @@ def load_doc(**kwargs):
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        print(f"Loading pdf: '{path}'")
+        whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         # try:
         docs = split_cache.eval(loader.load_and_split)
         # except Exception as err:
-        #     print(f"Error when using cache to load '{path}': '{err}'")
+        #     whi(f"Error when using cache to load '{path}': '{err}'")
         #     docs = loader.load_and_split()
 
     elif filetype == "anki":
@@ -102,7 +103,7 @@ def load_doc(**kwargs):
         for nk in needed_keys:
             assert nk in kwargs, f"Missing '{nk}' in arguments from load_doc"
         profile = kwargs["anki_profile"]
-        print(f"Loading anki profile: '{profile}'")
+        whi(f"Loading anki profile: '{profile}'")
         original_db = akp.find_db(user=profile)
         name = f"{profile}".replace(" ", "_")
         temp_db = shutil.copy(original_db, f"./.cache/anki_collection_{name.replace('/', '_')}")
@@ -127,8 +128,8 @@ def load_doc(**kwargs):
     else:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        print(f"Loading txt: '{path}'")
-        print(path)
+        whi(f"Loading txt: '{path}'")
+        whi(path)
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()

@@ -6,11 +6,13 @@ from langchain.callbacks import get_openai_callback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 
+from .logger import whi, yel, red
+
 
 def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
     """load the gpt model"""
     if model.lower() == "openai":
-        print("Loading openai models")
+        whi("Loading openai models")
         assert Path("API_KEY.txt").exists(), "No api key found"
         os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
 
@@ -22,7 +24,7 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
                 )
         callback = get_openai_callback()
     elif model.lower() == "gpt4all":
-        print(f"loading gpt4all: '{gpt4all_model_path}'")
+        whi(f"loading gpt4all: '{gpt4all_model_path}'")
         gpt4all_model_path = Path(gpt4all_model_path)
         assert gpt4all_model_path.exists(), "local model not found"
         callbacks = [StreamingStdOutCallbackHandler()]
@@ -41,7 +43,7 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
         callback = fakecallback()
     else:
         raise ValueError(model)
-    print("done loading model.\n")
+    whi("done loading model.\n")
     return llm, callback
 
 
