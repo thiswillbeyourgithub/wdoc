@@ -1,3 +1,4 @@
+import textwrap
 from pathlib import Path
 import fire
 import os
@@ -94,8 +95,12 @@ def process_task(llm, callback, **kwargs):
                         if toprint in doc.metadata:
                             val = doc.metadata[toprint]
                             yel(f"    * {toprint}: {val}")
-                    whi("    * Head:")
-                    whi(f'{doc.metadata["head"].strip():>30}')
+                    content = doc.page_content.strip()
+                    wrapped = textwrap.wrap(content, width=120)
+                    whi(f"    * content: {wrapped[0]}")
+                    for w in wrapped[1:]:
+                        whi(f"        {w}")
+                    print("\n\n")
 
                 red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
