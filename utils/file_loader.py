@@ -10,7 +10,7 @@ from prompt_toolkit import prompt
 from joblib import Parallel, delayed
 
 from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
@@ -21,7 +21,11 @@ from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import docstore_cache
 
-text_splitter = CharacterTextSplitter()
+text_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n\n\n", "\n\n\n", "\n\n"],
+        chunk_size=4000,  # default 4000
+        chunk_overlap=1000,  # default 200
+        )
 clozeregex = re.compile(r"{{c\d+::|}}")
 
 
