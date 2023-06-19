@@ -38,7 +38,8 @@ def check_kwargs(**kwargs):
     --filetype str
         the type of input. Depending on the value, different other parameters
         are needed. If path_list is used, the line of the input file can contain
-        any of those parameters as long as they are as json.
+        any of those parameters as long as they are as json. You can find
+        an example of path_list file in utils/file_list.txt
 
         Supported values => relevant parameters
             * youtube => --path must be a link to youtube --language=fr to use french transcripts --translation=en to use the transcripts after translation to english

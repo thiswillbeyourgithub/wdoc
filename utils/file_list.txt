@@ -1,0 +1,5 @@
+# the json has to be in one line
+# empty lines are ignored
+# each line must contain as least a 'filetype' key/value pair
+# correct syntax:
+# {'key': 'value', 'other_key': 'othervalue'}
