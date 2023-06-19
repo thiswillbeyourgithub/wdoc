@@ -1,3 +1,4 @@
+import re
 import ftfy
 import json
 from bs4 import BeautifulSoup
@@ -118,7 +119,11 @@ def load_doc(**kwargs):
             doclist = [str(p) for p in doclist if p.is_file()]
             if "exclude" in kwargs:
                 for exc in kwargs["exclude"]:
-                    doclist = [p for p in doclist if exc not in p]
+                    if exc == exc.lower():
+                        exc = re.compile(exc, flags=re.IGNORECASE)
+                    else:
+                        exc = re.compile(exc)
+                    doclist = [p for p in doclist if not re.search(exc, p)]
                 del kwargs["exclude"]
             assert doclist, "empty recursive search!"
             assert " " in filetype, "missing space in recursive filetype"
