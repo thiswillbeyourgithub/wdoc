@@ -140,11 +140,9 @@ def _load_doc(**kwargs):
         cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
         cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x, issoup=False))
         cards["fields"] = cards["fields"].apply(lambda x: cloze_stripper(x))
-        loader = DataFrameLoader(
-            cards,
-            page_content_column="fields",
-            )
-        docs = loader.load()
+        full_df = "\n\n\n".join(cards["fields"].tolist())
+        texts = split_cache.eval(text_splitter.split_text, full_df)
+        docs = [Document(page_content=t) for t in texts]
 
         for i in range(len(docs)):
             docs[i].metadata["anki_profile"] = profile
