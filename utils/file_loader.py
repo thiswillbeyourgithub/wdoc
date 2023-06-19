@@ -133,6 +133,7 @@ def _load_doc(**kwargs):
         temp_db = shutil.copy(original_db, f"./.cache/anki_collection_{name.replace('/', '_')}")
         col = akp.Collection(path=temp_db)
         cards = col.cards.merge_notes()
+        cards.loc[cards['codeck']=="", 'codeck'] = cards['cdeck'][cards['codeck']==""]
         cards["codeck"] = cards["codeck"].apply(lambda x: x.replace("\x1f", "::"))
         cards = cards[cards["codeck"].str.startswith(deck)]
         cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
