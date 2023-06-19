@@ -65,7 +65,7 @@ def process_task(llm, callback, **kwargs):
                     whi("    * Head:")
                     whi(f'{doc.metadata["head"].strip():>30}')
 
-                yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
             except Exception as err:
                 whi(f"Error: '{err}'")
