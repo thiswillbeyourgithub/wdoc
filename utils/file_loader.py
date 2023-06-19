@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 from tqdm import tqdm
 import json
+from prompt_toolkit import prompt
 
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
@@ -138,7 +139,16 @@ def _load_doc(**kwargs):
             docs[i].metadata["anki_notetype"] = kwargs["anki_notetype"]
             docs[i].metadata["path"] = f"Anki profile '{profile}'"
 
-    else:
+    elif filetype == "string":
+        whi("Loading string")
+        content = prompt(
+                "Paste your text content here then press esc+enter or meta+enter:\n>",
+                multiline=True,
+                )
+        texts = split_cache.eval(text_splitter.split_text, content)
+        docs = [Document(page_content=t) for t in texts]
+
+    elif filetype == "txt":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         whi(f"Loading txt: '{path}'")
@@ -148,6 +158,8 @@ def _load_doc(**kwargs):
             content = f.read()
         texts = split_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
+
+    # add metadata
     for i in range(len(docs)):
         docs[i].metadata["hash"] = hasher(docs[i].page_content)
         docs[i].metadata["head"] = str(docs[i].page_content)[:100]
@@ -162,6 +174,7 @@ def _load_doc(**kwargs):
 
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
+
     return docs
 
 
