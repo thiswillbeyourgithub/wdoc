@@ -190,7 +190,7 @@ def _load_doc(**kwargs):
     # add metadata
     for i in range(len(docs)):
         docs[i].metadata["hash"] = hasher(docs[i].page_content)
-        docs[i].metadata["head"] = str(docs[i].page_content)[:100]
+        docs[i].metadata["head"] = str(docs[i].page_content)[:50]
         docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
