@@ -339,7 +339,6 @@ if __name__ == "__main__":
             except Exception as err:
                 print(f"Error: '{err}'")
                 breakpoint()
-                continue
 
     elif kwargs["task"] == "summary":
         with callback as cb:
