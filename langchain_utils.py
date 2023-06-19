@@ -106,14 +106,16 @@ text_splitter = CharacterTextSplitter()
 def load_doc(**kwargs):
     filetype = kwargs["filetype"]
 
-    if filetype in "path_list"  or "recursive" in filetype:
+    if filetype in ["path_list", "recursive"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         print(filetype)
-        if "recursive" in filetype:
-            assert filetype.count("recursive") == 1, "can't use more than 1 recursive word"
-            assert filetype.count("recursive") + filetype.count("path_list"), "can't use recusrive and path_list in the same line"
+        if filetype == "recursive":
             assert "pattern" in kwargs, "missing 'pattern' key in args"
+            assert "recursed_filetype"] in kwargs, "missing 'recursed_filetype' in args"
+            assert kwargs["recursed_filetype"] not in [
+                    "recursive", "path_list", "youtube"
+                    ], "'recursed_filetype' cannot be 'recursive', 'path_list' or 'youtube'"
             pattern = kwargs["pattern"]
             doclist = [p for p in Path(path).rglob(pattern)]
             doclist = [str(p) for p in doclist if p.is_file()]
@@ -126,7 +128,6 @@ def load_doc(**kwargs):
                     doclist = [p for p in doclist if not re.search(exc, p)]
                 del kwargs["exclude"]
             assert doclist, "empty recursive search!"
-            assert " " in filetype, "missing space in recursive filetype"
 
         elif filetype == "path_list":
             doclist = str(Path(path).read_text()).splitlines()
@@ -144,9 +145,9 @@ def load_doc(**kwargs):
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
                 assert "filetype" in meta, "no key 'filetype' in meta"
-            elif "recursive" in filetype:
+            elif filetype == "recursive":
                 meta = kwargs.copy()
-                meta["filetype"] = filetype.replace("recursive", "").strip()
+                meta["filetype"] = kwargs["recursed_filetype"]
                 meta["path"] = item
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
