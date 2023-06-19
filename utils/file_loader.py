@@ -26,7 +26,7 @@ clozeregex = re.compile(r"{{c\d+::|}}")
 
 
 def cloze_stripper(clozed):
-    clozed = re.sub(clozeregex, "")
+    clozed = re.sub(clozeregex, "", clozed)
     return clozed
 
 
