@@ -268,6 +268,7 @@ def get_kwargs(**kwargs):
         either query or summary. query means to load the input files then wait
         for user question. summary means the input will be passed through a
         summarization prompt to get the idea.
+
     --filetype str
         the type of input. Depending on the value, different other parameters
         are needed. If path_list is used, the line of the input file can contain
@@ -280,8 +281,10 @@ def get_kwargs(**kwargs):
             * path_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
             * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep
             * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude can be a list of regex that excludes some paths --recursed_filetype is the filetype to use for each of the found path
+
     --model str, default gpt4all
         either gpt4all or openai or fake/test/testing to use a fake answer.
+
     --gpt4all_model_path str
         if model is gpt4all, this needs to point to a compatible model
     """
