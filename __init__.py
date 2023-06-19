@@ -40,9 +40,9 @@ def process_task(llm, callback, **kwargs):
                     )
         red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
-        t = out["output_text"]
-        for bulletpoint in t.split("\n"):
-            whi(bulletpoint)
+        red("\n\nSummary:")
+        for bulletpoint in out["output_text"].split("\n"):
+            red(bulletpoint)
 
     if kwargs["task"] == "query":
         db = kwargs["loaded_embeddings"]
