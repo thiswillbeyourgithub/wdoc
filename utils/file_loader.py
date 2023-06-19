@@ -59,20 +59,19 @@ def _load_doc(**kwargs):
                         exc = re.compile(exc)
                     doclist = [p for p in doclist if not re.search(exc, p)]
                 del kwargs["exclude"]
-            assert doclist, "empty recursive search!"
 
         elif filetype == "path_list":
             doclist = str(Path(path).read_text()).splitlines()
         else:
             raise ValueError(filetype)
 
+        doclist = [p.strip() for p in doclist]
+        doclist = [p for p in doclist if p]
+        doclist = [p for p in doclist if not p.startswith("#")]
+        assert doclist, "empty recursive search!"
+
         docs = []
         for item in tqdm(doclist, desc="loading list of documents"):
-            item = item.strip()
-            if not item:
-                continue
-            if item.startswith("#"):
-                continue
             if filetype == "path_list":
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
