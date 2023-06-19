@@ -1,21 +1,28 @@
 from langchain import PromptTemplate, LLMChain
 
-prompt_template = """Write in the same language of the input an easy to read summary of the author's reasonning paragraph by paragraph as logically indented markdown bullet points:
+prompt_template = """Write a summary of the this text.
+You have to summarize each information of the input text as markdown bullet points.
+You have to organize the informations hierarchically using indentation.
+You have to write the summary in the same language as the input text.
 
 '''
 {text}
 '''
 
-CONCISE SUMMARY AS LOGICALLY INDENTED MARKDOWN BULLET POINTS:"""
+SUMMARY AS LOGICALLY INDENTED MARKDOWN BULLET POINTS:"""
 PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
 refine_template = (
-    """Your job is to continue a summary of a long text as logically indented markdown bullet points of the author's reasonning.
+    """Your job is to continue writing a summary of a text.
+    You have to summarize each new information of the supplied text as markdown bullet points.
+    You have to organize the informations hierarchically using indentation.
+    You have to write the summary in the same language as the input text.
+
     We have provided an existing summary up to this point:
     '''
     {existing_answer}
     '''
 
-    You have to continue the summary by adding the bullet points of the following part of the article (only if relevant, stay concise, avoid expliciting what is implied by the previous bullet points):
+    You have to continue the summary by adding the indented bullet points of the following part of the article (only if relevant, stay concise, avoid expliciting what is implied by the previous bullet points):
     '''
     {text}
     '''
