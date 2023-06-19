@@ -14,6 +14,7 @@ from utils.llm import load_llm
 from utils.file_loader import load_documents
 from utils.misc import check_kwargs
 from utils.logger import whi, yel, red
+from utils.cli import ask_user
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -25,19 +26,28 @@ def process_task(**kwargs):
 
     if kwargs["task"] == "query":
         db = kwargs["loaded_embeddings"]
-        retriever = db.as_retriever(search_kwargs={"k": 5})
-        qa = RetrievalQA.from_chain_type(
-                llm=llm,
-                chain_type="stuff",
-                retriever=retriever,
-                return_source_documents=True,
-                verbose=True,
-                )
+
+        # set default ask_user argument
+        multiline = False
+        top_k = 3
 
         while True:
             try:
                 with callback as cb:
-                    query = input("\n\nEnter a question:\n>")
+                    query, top_k, multiline = ask_user(
+                            "\n\nWhat is your question? (Q to quit)\n",
+                            top_k=top_k,
+                            multiline=multiline,
+                            )
+                    retriever = db.as_retriever(search_kwargs={"k": top_k})
+                    qa = RetrievalQA.from_chain_type(
+                            llm=llm,
+                            chain_type="stuff",
+                            retriever=retriever,
+                            return_source_documents=True,
+                            verbose=True,
+                            )
+
                     ans = qa(
                             inputs={"query": query},
                             return_only_outputs=False,
