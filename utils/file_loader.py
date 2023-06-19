@@ -259,7 +259,7 @@ def _load_embeddings(**kwargs):
         return temp, hashcheck, doc.metadata['path']
 
     results = Parallel(
-            n_jobs=1,
+            n_jobs=2,
             backend="threading",
             )(delayed(get_embedding)(doc, embeddings, docstore_cache) for doc in tqdm(docs, desc="embedding documents"))
 
