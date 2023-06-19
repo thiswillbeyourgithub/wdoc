@@ -43,6 +43,7 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
         callback = fakecallback()
     else:
         raise ValueError(model)
+
     whi("done loading model.\n")
     return llm, callback
 
@@ -51,9 +52,15 @@ class fakecallback:
     """used by gpt4all to avoid bugs"""
     total_tokens = 0
     total_cost = 0
+    args = None
+    kwds = None
+    func = None
 
-    def __enter__(self, *args, **kwargs):
+    def __enter__(self):
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args):
+        return False
+
+    def __str__(self):
         pass

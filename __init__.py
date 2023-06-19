@@ -20,7 +20,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
-def process_task(**kwargs):
+def process_task(llm, callback, **kwargs):
     red("\nProcessing task")
 
     if kwargs["task"] == "query":
@@ -52,9 +52,10 @@ def process_task(**kwargs):
                             return_only_outputs=False,
                             include_run_info=True,
                             )
-                    whi(cb.total_tokens)
-                    whi(cb.total_cost)
-                whi(ans["result"])
+                whi(cb.total_tokens)
+                whi(cb.total_cost)
+
+                red(ans["result"])
 
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
@@ -62,11 +63,14 @@ def process_task(**kwargs):
                             "filetype", "nid", "anki_deck", "ntags"]:
                         if toprint in doc.metadata:
                             val = doc.metadata[toprint]
-                            yel(f"* {toprint}: {val}")
-                    whi(f"* Head: '{doc.metadata['head']:>20}'")
+                            yel(f"    * {toprint}: {val}")
+                    whi("    * Head:")
+                    whi(f'{doc.metadata["head"]:>30}')
 
             except Exception as err:
                 whi(f"Error: '{err}'")
+                if "debug" in kwargs:
+                    raise
                 breakpoint()
 
     elif kwargs["task"] == "summary":
@@ -101,7 +105,7 @@ if __name__ == "__main__":
     llm, callback = load_llm(**kwargs)
     kwargs = load_documents(**kwargs)
 
-    out = process_task(**kwargs)
+    out = process_task(llm, callback, **kwargs)
 
     whi("Done.\nOpenning debugger.")
     breakpoint()

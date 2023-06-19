@@ -7,29 +7,6 @@ from prompt_toolkit.completion import WordCompleter
 
 from .logger import whi
 
-prev_questions = []
-try:
-    whi("Loading previous prompts from file.")
-    pp_file = Path("previous_questions.json")
-    assert pp_file.exists(), (
-        "Cache file does not exist. Creating it now.")
-    pp_list = json.load(pp_file.open("r"))
-    assert isinstance(pp_list, list), "Invalid cache type"
-    for i, pp in enumerate(pp_list):
-        assert isinstance(pp, dict), "Invalid item in cache"
-        assert "prompt" in pp, "Invalid item in cache"
-    for pp in pp_list:
-        if "timestamp" not in pp:
-            pp["timestamp"] = 0
-        if pp not in prev_questions:
-            prev_questions.append(pp)
-    prev_questions = sorted(
-            prev_questions,
-            key=lambda x: x["timestamp"],
-            )
-except Exception as err:
-    whi(f"Exception when loading previous prompts : '{err}'")
-
 
 def ask_user(q, top_k, multiline):
     """
@@ -40,6 +17,25 @@ def ask_user(q, top_k, multiline):
         /debug to open a console.
         /multiline to write your question over multiple lines.
     """
+    # loading history from files
+    prev_questions = []
+    pp_file = Path(".cache/previous_questions.json")
+    if pp_file.exists():
+        pp_list = json.load(pp_file.open("r"))
+        assert isinstance(pp_list, list), "Invalid cache type"
+        for i, pp in enumerate(pp_list):
+            assert isinstance(pp, dict), "Invalid item in cache"
+            assert "prompt" in pp, "Invalid item in cache"
+        for pp in pp_list:
+            if "timestamp" not in pp:
+                pp["timestamp"] = 0
+            if pp not in prev_questions:
+                prev_questions.append(pp)
+        prev_questions = sorted(
+                prev_questions,
+                key=lambda x: x["timestamp"],
+                )
+
     prompt_commands = [
             "/multiline",
             "/debug",
@@ -50,6 +46,7 @@ def ask_user(q, top_k, multiline):
                 x["prompt"]
                 for x in prev_questions
                 ], match_middle=True, ignore_case=True)
+
     try:
         try:
             if multiline:
@@ -110,16 +107,16 @@ def ask_user(q, top_k, multiline):
     except (KeyboardInterrupt, EOFError):
         raise SystemExit()
 
+    # saving new history to file
     prev_questions.append(
             {
-                "prompt": q,
+                "prompt": ans,
                 "timestamp": int(time.time()),
                 })
     prev_questions = sorted(
             prev_questions,
             key=lambda x: x["timestamp"],
             )
-    json.dump(prev_questions, Path(
-        "previous_questions.json").open("w"), indent=4)
+    json.dump(prev_questions, pp_file.open("w"), indent=4)
 
     return ans, top_k, multiline
