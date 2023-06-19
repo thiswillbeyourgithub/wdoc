@@ -22,7 +22,7 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
                 verbose=True,
                 streaming=True,
                 )
-        callback = get_openai_callback()
+        callback = get_openai_callback
     elif model.lower() == "gpt4all":
         whi(f"loading gpt4all: '{gpt4all_model_path}'")
         gpt4all_model_path = Path(gpt4all_model_path)
@@ -37,10 +37,10 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
                 verbose=True,
                 streaming=True,
                 )
-        callback = fakecallback()
+        callback = fakecallback
     elif model.lower() in ["fake", "test", "testing"]:
         llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
-        callback = fakecallback()
+        callback = fakecallback
     else:
         raise ValueError(model)
 

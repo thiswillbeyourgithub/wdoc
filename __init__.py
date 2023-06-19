@@ -32,7 +32,7 @@ def process_task(llm, callback, **kwargs):
 
         while True:
             try:
-                with callback as cb:
+                with callback() as cb:
                     query, top_k, multiline = ask_user(
                             "\n\nWhat is your question? (Q to quit)\n",
                             top_k=top_k,
