@@ -100,4 +100,12 @@ def check_kwargs(**kwargs):
     if "top_k" not in kwargs:
         kwargs["top_k"] = 3
 
+    for k in kwargs:
+        if k not in [
+                "filetype", "path", "task", "anki_profile",
+                "anki_notetype", "anki_fields", "anki_deck",
+                "loadfrom", "saveas", "top_k", "sbert_model", "local_llm_path",
+                "model", "debug"]:
+            raise Exception(f"Unexpected argument: '{k}'")
+
     return kwargs
