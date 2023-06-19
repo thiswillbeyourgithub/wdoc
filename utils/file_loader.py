@@ -17,11 +17,12 @@ from langchain.vectorstores import FAISS
 
 from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red
-from utils.misc import hasher, docstore_cache
+from utils.misc import docstore_cache
 
 text_splitter = CharacterTextSplitter()
 
-def load_doc(**kwargs):
+
+def load_documents(**kwargs):
     red("\nLoading documents.")
     kwargs["loaded_docs"] = _load_doc(**kwargs)
     if kwargs["task"] == "query":

@@ -3,11 +3,19 @@ from bs4 import BeautifulSoup
 import hashlib
 from joblib import Memory
 
+Path(".cache").mkdir(exist_ok=True)
+Path(".cache/docstore_cache").mkdir(exist_ok=True)
+Path(".cache/split_cache").mkdir(exist_ok=True)
+
+docstore_cache = Path(".cache/docstore_cache/")
+split_cache = Memory(".cache/split_cache/")
+
 
 def hasher(text):
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:10]
+
 
 def html_to_text(html, issoup):
     """used to strip any html present in the text files"""
@@ -16,6 +24,7 @@ def html_to_text(html, issoup):
         return soup.get_text()
     else:
         return html.get_text()
+
 
 def check_kwargs(**kwargs):
     """
@@ -67,10 +76,3 @@ def check_kwargs(**kwargs):
     if "task" not in kwargs:
         kwargs["task"] = "query"
     return kwargs
-
-Path(".cache").mkdir(exist_ok=True)
-Path(".cache/docstore_cache").mkdir(exist_ok=True)
-Path(".cache/split_cache").mkdir(exist_ok=True)
-
-docstore_cache = Path(".cache/docstore_cache/")
-split_cache = Memory(".cache/split_cache/")

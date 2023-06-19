@@ -12,8 +12,8 @@ from langchain.chains import RetrievalQA
 
 from utils.prompts import refine_prompt, PROMPT
 from utils.llm import load_llm
-from utils.file_loader import load_doc
-from utils.misc import check_kwargs, hasher, docstore_cache
+from utils.file_loader import load_documents
+from utils.misc import check_kwargs
 from utils.logger import whi, yel, red
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -26,6 +26,7 @@ def process_task(**kwargs):
     docs = kwargs["loaded_docs"]
 
     if kwargs["task"] == "query":
+        db = kwargs["loaded_embeddings"]
         retriever = db.as_retriever(search_kwargs={"k": 5})
         qa = RetrievalQA.from_chain_type(
                 llm=llm,
@@ -34,6 +35,7 @@ def process_task(**kwargs):
                 return_source_documents=True,
                 verbose=True,
                 )
+
         while True:
             try:
                 with callback as cb:
@@ -89,7 +91,7 @@ if __name__ == "__main__":
         with open(str(path), "rb") as f:
             docs = pickle.load(f)
     else:
-        kwargs = load_doc(**kwargs)
+        kwargs = load_documents(**kwargs)
     whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")
 
     out = process_task(**kwargs)
