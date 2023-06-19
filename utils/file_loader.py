@@ -14,7 +14,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
-from langchain.document_loaders import DataFrameLoader
 from langchain.vectorstores import FAISS
 
 from .misc import split_cache, html_to_text, hasher
@@ -30,7 +29,7 @@ clozeregex = re.compile(r"{{c\d+::|}}")
 
 
 def cloze_stripper(clozed):
-    clozed = re.sub(clozeregex, "", clozed)
+    clozed = re.sub(clozeregex, " ", clozed)
     return clozed
 
 

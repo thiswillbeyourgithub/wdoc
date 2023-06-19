@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from bs4 import BeautifulSoup
 import hashlib
@@ -21,7 +22,10 @@ def html_to_text(html, issoup):
     """used to strip any html present in the text files"""
     if not issoup:
         soup = BeautifulSoup(html, 'html.parser')
-        return soup.get_text()
+        text = soup.get_text()
+        if "<img" in text:
+            text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
+        return text
     else:
         return html.get_text()
 
