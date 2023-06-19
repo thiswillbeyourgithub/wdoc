@@ -10,7 +10,7 @@ from langchain.chains import RetrievalQA
 
 from utils.prompts import refine_prompt, PROMPT
 from utils.llm import load_llm
-from utils.file_loader import load_documents
+from utils.file_loader import load_documents, _load_embeddings
 from utils.misc import check_kwargs
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -43,6 +43,10 @@ def process_task(llm, callback, **kwargs):
         red("\n\nSummary:")
         for bulletpoint in out["output_text"].split("\n"):
             red(bulletpoint)
+
+        whi("Switching to query mode.")
+        kwargs["task"] = "query"
+        kwargs["loaded_embeddings"] = _load_embeddings(**kwargs)
 
     if kwargs["task"] == "query":
         db = kwargs["loaded_embeddings"]

@@ -82,6 +82,8 @@ def check_kwargs(**kwargs):
     if "task" not in kwargs:
         kwargs["task"] = "query"
     assert kwargs["task"] in ["query", "summary"], "invalid task value"
+    if kwargs["task"] == "summary":
+        assert not "loadfrom" in kwargs, "can't use loadfrom if task is summary"
     if "saveto" not in kwargs:
         kwargs["saveto"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
     if "filetype" not in kwargs and "loadfrom" not in kwargs:
