@@ -278,7 +278,7 @@ def get_kwargs(**kwargs):
             * txt => --path is path to txt
             * path_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
             * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep
-            * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude can contain regex that excludes some paths --recursed_filetype is the filetype to use for each of the found path
+            * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude can be a list of regex that excludes some paths --recursed_filetype is the filetype to use for each of the found path
     --model str, default gpt4all
         either gpt4all or openai or fake/test/testing to use a fake answer.
     --gpt4all_model_path str
