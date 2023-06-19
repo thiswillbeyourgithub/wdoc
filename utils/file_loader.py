@@ -78,12 +78,14 @@ def _load_doc(**kwargs):
         doclist = [p.strip() for p in doclist]
         doclist = [p for p in doclist if p]
         doclist = [p for p in doclist if not p.startswith("#")]
-        if len(doclist) >= 5:
+        # if number of document is high, shuffling list to even out
+        # the progress bar
+        if len(doclist) >= 50:
             doclist = sorted(doclist, key=lambda x: random.random())
         assert doclist, "empty recursive search!"
 
         docs = []
-        for item in tqdm(doclist, desc="loading list of documents"):
+        def get_item_of_list(filetype, item, kwargs):
             if filetype == "path_list":
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
@@ -96,7 +98,14 @@ def _load_doc(**kwargs):
                 del meta["pattern"]
             else:
                 raise ValueError(filetype)
-            docs.extend(_load_doc(**meta))
+            return _load_doc(**meta)
+
+        # use multithreading only if on long recursion
+        docs = Parallel(
+                n_jobs=-1 if len(doclist) >= 10 and filetype=="recursive" else 1,
+                backend="threading",
+                )(delayed(get_item_of_list)(filetype, doc, kwargs
+                    ) for doc in tqdm(doclist, desc="loading list of documents"))
         return docs
 
     if filetype == "youtube":
