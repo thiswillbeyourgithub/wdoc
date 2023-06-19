@@ -93,7 +93,9 @@ if __name__ == "__main__":
         path = Path(kwargs["loadfrompickle"])
         assert path.exists(), f"pickle file not found at '{path}'"
         with open(str(path), "rb") as f:
-            kwargs["loaded_docs"], kwargs["loaded_embeddings"] = pickle.load(f)
+            loaded = pickle.load(f)
+            kwargs["loaded_docs"] = loaded[0]
+            kwargs["loaded_embeddings"] = loaded[1]
     else:
         kwargs = load_documents(**kwargs)
     whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")

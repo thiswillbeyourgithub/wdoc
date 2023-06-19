@@ -189,5 +189,4 @@ def _load_embeddings(**kwargs):
                 done_list.add(hashcheck)
             else:
                 tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
-    kwargs["loaded_embeddings"] = db
-    return kwargs
+    return db
