@@ -1,32 +1,39 @@
 from langchain import PromptTemplate, LLMChain
 
-prompt_template = """Write a summary of the this text.
-You have to summarize each information of the input text as markdown bullet points.
-You have to organize the informations hierarchically using indentation.
-You have to write the summary in the same language as the input text.
+prompt_template = """Your job is to write a summary of the beginning of a text.
+You have to format each information as markdown bullet points.
+You have to use indentation to organize those bullet points hierarchically.
+You have to write in the same language as the input text.
+You have to ignore information not relevant to the topic of the text (sponsors, advertissement, headers, urls, etc)
 
 '''
 {text}
 '''
 
-SUMMARY AS LOGICALLY INDENTED MARKDOWN BULLET POINTS:"""
+SUMMARY OF INFORMATIONS IN MARKDOWN AND IN THE SAME LANGUAGE:
+"""
 PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
 refine_template = (
-    """Your job is to continue writing a summary of a text.
-    You have to summarize each new information of the supplied text as markdown bullet points.
-    You have to organize the informations hierarchically using indentation.
-    You have to write the summary in the same language as the input text.
+    """You received the summary of the beginning of a text and your job is to continue the summary based on the next part of the text.
+You have to format each information as markdown bullet points.
+You have to use indentation to organize those bullet points hierarchically.
+You have to write in the same language as the input text.
+You have to ignore information not relevant to the topic of the text (sponsors, advertissement, headers, urls, etc)
 
-    We have provided an existing summary up to this point:
-    '''
-    {existing_answer}
-    '''
+Here's the summary of the text so far:
+'''
+{existing_answer}
+'''
 
-    You have to continue the summary by adding the indented bullet points of the following part of the article (only if relevant, stay concise, avoid expliciting what is implied by the previous bullet points):
-    '''
-    {text}
-    '''
-    Given this new section of the document, refine the summary as logically indented markdown bullet points. If the new section is not worth it, simply return the original summary."""
+Here's the next part of the text:
+'''
+{text}
+'''
+
+Given this new part of the document, refine the summary as logically indented markdown bullet points. If the new part is not worth it, simply return the original summary.
+
+SUMMARY OF NEW INFORMATIONS IN MARKDOWN AND IN THE SAME LANGUAGE:
+"""
 )
 refine_prompt = PromptTemplate(
     input_variables=["existing_answer", "text"],
