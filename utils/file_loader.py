@@ -118,14 +118,15 @@ def _load_doc(**kwargs):
         for nk in needed_keys:
             assert nk in kwargs, f"Missing '{nk}' in arguments from load_doc"
         profile = kwargs["anki_profile"]
+        deck = kwargs["anki_deck"]
         whi(f"Loading anki profile: '{profile}'")
         original_db = akp.find_db(user=profile)
         name = f"{profile}".replace(" ", "_")
         temp_db = shutil.copy(original_db, f"./.cache/anki_collection_{name.replace('/', '_')}")
         col = akp.Collection(path=temp_db)
         cards = col.cards.merge_notes()
-        cards["cdeck"] = cards["cdeck"].apply(lambda x: x.replace("\x1f", "::"))
-        cards = cards[cards["cdeck"].str.startswith(kwargs["anki_deck"])]
+        cards["codeck"] = cards["codeck"].apply(lambda x: x.replace("\x1f", "::"))
+        cards = cards[cards["codeck"].str.startswith(deck)]
         cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
         cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
         cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x, issoup=False))
@@ -134,11 +135,12 @@ def _load_doc(**kwargs):
             page_content_column="fields",
             )
         docs = loader.load()
+
         for i in range(len(docs)):
             docs[i].metadata["anki_profile"] = profile
-            docs[i].metadata["anki_deck"] = kwargs["anki_deck"]
+            docs[i].metadata["anki_deck"] = deck
             docs[i].metadata["anki_notetype"] = kwargs["anki_notetype"]
-            docs[i].metadata["path"] = f"Anki profile '{profile}'"
+            docs[i].metadata["path"] = f"Anki profile '{profile}' deck '{deck}'"
 
     elif filetype == "string":
         whi("Loading string")
