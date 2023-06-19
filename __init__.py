@@ -1,5 +1,4 @@
 from pathlib import Path
-from pprint import pprint
 import fire
 import os
 from tqdm import tqdm
@@ -56,9 +55,16 @@ def process_task(**kwargs):
                     whi(cb.total_tokens)
                     whi(cb.total_cost)
                 whi(ans["result"])
+
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
-                    pprint(f"{doc.metadata.items()}")
+                    for toprint in [
+                            "filetype", "nid", "anki_deck", "ntags"]:
+                        if toprint in doc.metadata:
+                            val = doc.metadata[toprint]
+                            yel(f"* {toprint}: {val}")
+                    whi(f"* Head: '{doc.metadata['head']:>20}'")
+
             except Exception as err:
                 whi(f"Error: '{err}'")
                 breakpoint()
