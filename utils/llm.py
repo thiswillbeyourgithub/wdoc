@@ -1,13 +1,16 @@
 import os
 from pathlib import Path
 
+import langchain
 from langchain.llms import GPT4All, FakeListLLM
 from langchain.callbacks import get_openai_callback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
+from langchain.cache import SQLiteCache
 
 from .logger import whi, yel, red
 
+langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
 
 def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
     """load the gpt model"""
