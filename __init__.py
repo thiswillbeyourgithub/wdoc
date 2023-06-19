@@ -26,6 +26,10 @@ def process_task(**kwargs):
     docs = kwargs["loaded_docs"]
 
     if kwargs["task"] == "query":
+        with open(str(kwargs["savetopickle"]), "wb") as f:
+            pickle.dump(
+                    [kwargs["loaded_docs"], kwargs["loaded_embeddings"]],
+                    f)
         db = kwargs["loaded_embeddings"]
         retriever = db.as_retriever(search_kwargs={"k": 5})
         qa = RetrievalQA.from_chain_type(
@@ -85,11 +89,11 @@ if __name__ == "__main__":
 
     llm, callback = load_llm(**kwargs)
     if "loadfrompickle" in kwargs:
-        red("Loading documents from pickle file")
+        red("Loading documents and embeddings from pickle file")
         path = Path(kwargs["loadfrompickle"])
         assert path.exists(), f"pickle file not found at '{path}'"
         with open(str(path), "rb") as f:
-            docs = pickle.load(f)
+            kwargs["loaded_docs"], kwargs["loaded_embeddings"] = pickle.load(f)
     else:
         kwargs = load_documents(**kwargs)
     whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")
