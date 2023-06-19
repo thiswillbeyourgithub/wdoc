@@ -1,3 +1,4 @@
+import random
 import shutil
 import ankipandas as akp
 import ftfy
@@ -77,6 +78,7 @@ def _load_doc(**kwargs):
         doclist = [p.strip() for p in doclist]
         doclist = [p for p in doclist if p]
         doclist = [p for p in doclist if not p.startswith("#")]
+        doclist = sorted(doclist, key=lambda x: random.random())
         assert doclist, "empty recursive search!"
 
         docs = []
