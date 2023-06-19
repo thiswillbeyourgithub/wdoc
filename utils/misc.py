@@ -56,7 +56,7 @@ def check_kwargs(**kwargs):
     --local_llm_path str
         if model is not openai, this needs to point to a compatible model
 
-    --sbert_model str, default "paraphrase-multilingual-mpnet-base-v2"
+    --sbert_model str, default "distiluse-base-multilingual-cased-v1"
         sentence_transformer embedding model to use. If you change this,
         the embedding cache will be populated with new elements (the hash
         used to check for previous values includes the name of the sbert model)
@@ -82,7 +82,7 @@ def check_kwargs(**kwargs):
     assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
     assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
     if "sbert_model" not in kwargs:
-        kwargs["sbert_model"] = "paraphrase-multilingual-mpnet-base-v2"
+        kwargs["sbert_model"] = "distiluse-base-multilingual-cased-v1"
     if "task" not in kwargs:
         kwargs["task"] = "query"
     assert kwargs["task"] in ["query", "summary"], "invalid task value"
