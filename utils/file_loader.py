@@ -122,7 +122,7 @@ def _load_doc(**kwargs):
         #     docs = loader.load_and_split()
 
     elif filetype == "anki":
-        needed_keys = ["anki_deck", "anki_notetype", "anki_profile"]
+        needed_keys = ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]
         for nk in needed_keys:
             assert nk in kwargs, f"Missing '{nk}' in arguments from load_doc"
         profile = kwargs["anki_profile"]
@@ -136,11 +136,27 @@ def _load_doc(**kwargs):
         cards.loc[cards['codeck']=="", 'codeck'] = cards['cdeck'][cards['codeck']==""]
         cards["codeck"] = cards["codeck"].apply(lambda x: x.replace("\x1f", "::"))
         cards = cards[cards["codeck"].str.startswith(deck)]
+        cards["nmodel"] = cards["nmodel"].apply(lambda x: x.lower())
         cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
-        cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
-        cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x, issoup=False))
-        cards["fields"] = cards["fields"].apply(lambda x: cloze_stripper(x))
-        full_df = "\n\n\n".join(cards["fields"].tolist())
+
+        cards["mid"] = col.cards.mid.loc[cards.index]
+        mid2fields = akp.raw.get_mid2fields(col.db)
+        mod2mid = akp.raw.get_model2mid(col.db)
+        cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
+        assert cards.index.tolist(), "empty dataframe!"
+        cards["fields_dict"] = cards.apply(
+                lambda x: {
+                    k: html_to_text(cloze_stripper(v), issoup=False).strip()
+                    for k, v in zip(x["fields_name"], x["nflds"])
+                    if k.lower() in kwargs["anki_fields"]
+                    },
+                axis=1)
+        cards["text"] = cards["fields_dict"].apply(
+            lambda x: "\n".join(
+                f"{k}: {x[k]}" for k in kwargs["anki_fields"]
+                if x[k]
+                ))
+        full_df = "\n\n\n".join(cards["text"].tolist())
         texts = split_cache.eval(text_splitter.split_text, full_df)
         docs = [Document(page_content=t) for t in texts]
 
