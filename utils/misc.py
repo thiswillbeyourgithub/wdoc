@@ -70,6 +70,9 @@ def check_kwargs(**kwargs):
         if not filetype argument is given, loadfrom will be set to the
         same default value as saveto
         For more, see --saveto
+
+    --debug
+        if present as argument, sometimes will open a debugger instead before crashing
     """
     assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
     assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
