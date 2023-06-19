@@ -242,7 +242,7 @@ def _load_embeddings(**kwargs):
     model_hash = hasher(kwargs["sbert_model"])
     docs = kwargs["loaded_docs"]
     if len(docs) >= 50:
-        docs = sorted(docs, key=random.random())
+        docs = sorted(docs, key=lambda x: random.random())
 
     def get_embedding(doc, embeddings, docstore_cache):
         hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
