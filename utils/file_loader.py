@@ -243,7 +243,7 @@ def _load_embeddings(**kwargs):
                 db.merge_from(temp)
                 done_list.add(hashcheck)
             else:
-                whi(f"File '{path}' was already added, skipping.")
+                whi(f"File with path '{path}' with hash '{hashcheck}' was already added, skipping.")
 
 
     # saving embeddings
