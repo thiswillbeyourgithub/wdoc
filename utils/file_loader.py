@@ -84,7 +84,6 @@ def _load_doc(**kwargs):
             doclist = sorted(doclist, key=lambda x: random.random())
         assert doclist, "empty recursive search!"
 
-        docs = []
         def get_item_of_list(filetype, item, kwargs):
             if filetype == "path_list":
                 meta = json.loads(item.strip())
@@ -101,11 +100,13 @@ def _load_doc(**kwargs):
             return _load_doc(**meta)
 
         # use multithreading only if on long recursion
-        docs = Parallel(
+        results = Parallel(
                 n_jobs=-1 if len(doclist) >= 10 and filetype=="recursive" else 1,
                 backend="threading",
                 )(delayed(get_item_of_list)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
+        docs = []
+        [docs.extend(x) for x in results]
         return docs
 
     if filetype == "youtube":
