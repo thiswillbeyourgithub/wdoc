@@ -7,6 +7,7 @@ import re
 from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
+from joblib import Parallel, delayed
 
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
@@ -181,7 +182,13 @@ def _load_doc(**kwargs):
 
 def _load_embeddings(**kwargs):
     """loads embeddings for each document"""
-    embeddings = SentenceTransformerEmbeddings(model_name=kwargs["sbert_model"])
+    embeddings = SentenceTransformerEmbeddings(
+            model_name=kwargs["sbert_model"],
+            encode_kwargs={
+                "batch_size": 1,
+                "show_progress_bar": False,
+                },
+            )
 
     # reload passed embeddings
     if "loadfrom" in kwargs:
@@ -195,27 +202,41 @@ def _load_embeddings(**kwargs):
 
     model_hash = hasher(kwargs["sbert_model"])
     docs = kwargs["loaded_docs"]
-    done_list = set()
-    db = None
 
-    for doc in tqdm(docs, desc="embedding documents"):
+    def get_embedding(doc, embeddings, docstore_cache):
         hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
         if (docstore_cache / hashcheck).exists():
-            tqdm.write("Loaded from cache")
-            temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
-            (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
-        else:
-            tqdm.write("Computing embeddings")
-            temp = FAISS.from_documents([doc], embeddings)
-            temp.save_local(str(docstore_cache / hashcheck))
+            try:
+                temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
+                (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
+                whi("Loaded from cache")
+                return temp, hashcheck, doc.metadata['path']
+            except Exception as err:
+                red(f"Error (will compute embedding instead of loading form file): '{err}'")
+
+        whi("Computing embeddings")
+        temp = FAISS.from_documents([doc], embeddings)
+        temp.save_local(str(docstore_cache / hashcheck))
+        return temp, hashcheck, doc.metadata['path']
+
+    results = Parallel(
+            n_jobs=4,
+            backend="threading",
+            )(delayed(get_embedding)(doc, embeddings, docstore_cache) for doc in tqdm(docs, desc="embedding documents"))
+
+    # merge the results
+    done_list = set()
+    db = None
+    for temp, hashcheck, path in results:
         if db is None:
             db = temp
         else:
-            if not hashcheck in done_list:
+            if hashcheck not in done_list:
                 db.merge_from(temp)
                 done_list.add(hashcheck)
             else:
-                tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
+                whi(f"File '{path}' was already added, skipping.")
+
 
     # saving embeddings
     path = Path(kwargs["saveas"])
