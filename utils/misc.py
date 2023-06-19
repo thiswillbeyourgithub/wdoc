@@ -70,8 +70,8 @@ def check_kwargs(**kwargs):
 
     --loadfrom str, default None
         if not filetype argument is given, loadfrom will be set to the
-        same default value as saveto
-        For more, see --saveto
+        same default value as saveas
+        For more, see --saveas
 
     --debug
         if present as argument, sometimes will open a debugger instead before crashing
@@ -85,8 +85,8 @@ def check_kwargs(**kwargs):
     assert kwargs["task"] in ["query", "summary"], "invalid task value"
     if kwargs["task"] == "summary":
         assert not "loadfrom" in kwargs, "can't use loadfrom if task is summary"
-    if "saveto" not in kwargs:
-        kwargs["saveto"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
+    if "saveas" not in kwargs:
+        kwargs["saveas"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
     if "filetype" not in kwargs and "loadfrom" not in kwargs:
         kwargs["filetype"] = None
         kwargs["loadfrom"] = str(docstore_cache.parent / "latest_docs_and_embeddings")

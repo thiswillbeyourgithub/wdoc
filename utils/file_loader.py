@@ -217,7 +217,7 @@ def _load_embeddings(**kwargs):
                 tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
 
     # saving embeddings
-    path = Path(kwargs["saveto"])
+    path = Path(kwargs["saveas"])
     db.save_local(str(path))
 
     return db
