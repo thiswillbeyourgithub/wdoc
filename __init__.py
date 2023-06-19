@@ -6,10 +6,11 @@ from datetime import datetime
 
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chains import RetrievalQA
+from langchain.chains import ConversationalRetrievalChain
 
 
 from utils.prompts import refine_prompt, PROMPT
-from utils.llm import load_llm
+from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_documents, _load_embeddings
 from utils.misc import check_kwargs
 from utils.logger import whi, yel, red
@@ -54,6 +55,9 @@ def process_task(llm, callback, **kwargs):
         # set default ask_user argument
         multiline = False
         top_k = 3
+        memory = AnswerConversationBufferMemory(
+                memory_key="chat_history",
+                return_messages=True)
 
         while True:
             try:
@@ -64,21 +68,24 @@ def process_task(llm, callback, **kwargs):
                             multiline=multiline,
                             )
                     retriever = db.as_retriever(search_kwargs={"k": top_k})
-                    qa = RetrievalQA.from_chain_type(
+                    qa = ConversationalRetrievalChain.from_llm(
                             llm=llm,
                             chain_type="stuff",
                             retriever=retriever,
                             return_source_documents=True,
                             verbose=True,
+                            memory=memory,
                             )
 
                     ans = qa(
-                            inputs={"query": query},
+                            inputs={
+                                "question": query,
+                                },
                             return_only_outputs=False,
                             include_run_info=True,
                             )
 
-                red(ans["result"])
+                red(ans["answer"])
 
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:

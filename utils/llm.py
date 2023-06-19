@@ -7,10 +7,21 @@ from langchain.callbacks import get_openai_callback
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.cache import SQLiteCache
+from langchain.memory import ConversationBufferMemory
+
+from typing import Dict, Any
 
 from .logger import whi, yel, red
 
 langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
+
+class AnswerConversationBufferMemory(ConversationBufferMemory):
+    """
+    quick fix from https://github.com/hwchase17/langchain/issues/5630
+    """
+    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
+        return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
+
 
 def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
     """load the gpt model"""
