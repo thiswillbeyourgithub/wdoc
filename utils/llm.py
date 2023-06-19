@@ -24,7 +24,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(model, local_llm_path, **kwargs):
+def load_llm(model, **kwargs):
     """load the gpt model"""
     if model.lower() == "openai":
         whi("Loading openai models")
@@ -39,6 +39,7 @@ def load_llm(model, local_llm_path, **kwargs):
         callback = get_openai_callback
     elif model.lower() == "llama":
         whi("Loading llama models")
+        local_llm_path = kwargs["local_llm_path"]
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
         llm = LlamaCpp(
                 model_path=local_llm_path,
@@ -49,6 +50,7 @@ def load_llm(model, local_llm_path, **kwargs):
         callback = fakecallback
 
     elif model.lower() == "gpt4all":
+        local_llm_path = kwargs["local_llm_path"]
         whi(f"loading gpt4all: '{local_llm_path}'")
         local_llm_path = Path(local_llm_path)
         assert local_llm_path.exists(), "local model not found"
