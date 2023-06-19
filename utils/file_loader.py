@@ -22,6 +22,12 @@ from .logger import whi, yel, red, log
 from utils.misc import docstore_cache
 
 text_splitter = CharacterTextSplitter()
+clozeregex = re.compile(r"{{c\d+::|}}")
+
+
+def cloze_stripper(clozed):
+    clozed = re.sub(clozeregex, "")
+    return clozed
 
 
 def load_documents(**kwargs):
@@ -129,6 +135,7 @@ def _load_doc(**kwargs):
         cards = cards[cards["nmodel"].str.startswith(kwargs["anki_notetype"])]
         cards["fields"] = cards["nflds"].apply(lambda x: "\n\n".join(x)[:500])
         cards["fields"] = cards["fields"].apply(lambda x: html_to_text(x, issoup=False))
+        cards["fields"] = cards["fields"].apply(lambda x: cloze_stripper(x))
         loader = DataFrameLoader(
             cards,
             page_content_column="fields",
