@@ -91,8 +91,8 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
                 streaming=True,
                 )
         callback = fakecallback()
-    elif model.lower() == "fake":
-        llm = FakeListLLM(verbose=True, responses=["fake answer"]*10)
+    elif model.lower() in ["fake", "test", "testing"]:
+        llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
         callback = fakecallback()
     else:
         raise ValueError(model)
