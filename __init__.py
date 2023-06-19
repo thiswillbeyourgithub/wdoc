@@ -86,14 +86,14 @@ def process_task(llm, callback, **kwargs):
                             include_run_info=True,
                             )
 
-                red(ans["answer"])
-
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
                     for toprint in [
                             "filetype", "nid", "anki_deck", "ntags"]:
                         if toprint in doc.metadata:
                             val = doc.metadata[toprint]
+                            if toprint == "ntags":
+                                val = ",".join(val)
                             yel(f"    * {toprint}: {val}")
                     content = doc.page_content.strip()
                     wrapped = textwrap.wrap(content, width=120)
@@ -102,7 +102,9 @@ def process_task(llm, callback, **kwargs):
                         whi(f"        {w}")
                     print("\n\n")
 
-                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+                red(f"Answer:\n{ans['answer']}\n")
+
+                yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
 
             except Exception as err:
                 whi(f"Error: '{err}'")
