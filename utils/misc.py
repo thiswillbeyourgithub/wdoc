@@ -81,6 +81,7 @@ def check_kwargs(**kwargs):
         kwargs["sbert_model"] = "paraphrase-multilingual-mpnet-base-v2"
     if "task" not in kwargs:
         kwargs["task"] = "query"
+    assert kwargs["task"] in ["query", "summary"], "invalid task value"
     if "saveto" not in kwargs:
         kwargs["saveto"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
     if "filetype" not in kwargs and "loadfrom" not in kwargs:

@@ -45,9 +45,6 @@ def process_task(llm, callback, **kwargs):
         for bulletpoint in t.split("\n"):
             whi(bulletpoint)
 
-    else:
-        raise ValueError(kwargs["task"])
-
     if kwargs["task"] == "query":
         db = kwargs["loaded_embeddings"]
 
