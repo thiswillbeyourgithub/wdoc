@@ -203,6 +203,7 @@ def _load_embeddings(**kwargs):
         if (docstore_cache / hashcheck).exists():
             tqdm.write("Loaded from cache")
             temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
+            (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
         else:
             tqdm.write("Computing embeddings")
             temp = FAISS.from_documents([doc], embeddings)
