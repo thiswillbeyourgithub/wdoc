@@ -203,8 +203,6 @@ def _load_embeddings(**kwargs):
 
     # saving embeddings
     path = Path(kwargs["saveto"])
-    if path.exists():
-        path.unlink()
-    db.save_local(kwargs["saveto"])
+    db.save_local(str(path))
 
     return db
