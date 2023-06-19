@@ -50,11 +50,11 @@ def check_kwargs(**kwargs):
             * path_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
             * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude can be a list of regex that excludes some paths --recursed_filetype is the filetype to use for each of the found path
 
-    --model str, default gpt4all
-        either gpt4all or openai or fake/test/testing to use a fake answer.
+    --model str
+        either gpt4all, llama, openai or fake/test/testing to use a fake answer.
 
-    --gpt4all_model_path str
-        if model is gpt4all, this needs to point to a compatible model
+    --local_llm_path str
+        if model is not openai, this needs to point to a compatible model
 
     --sbert_model str, default "paraphrase-multilingual-mpnet-base-v2"
         sentence_transformer embedding model to use. If you change this,
@@ -73,6 +73,9 @@ def check_kwargs(**kwargs):
         same default value as saveas
         For more, see --saveas
 
+    --top_k int, default 3
+        retrieval argument
+
     --debug
         if present as argument, sometimes will open a debugger instead before crashing
     """
@@ -90,5 +93,7 @@ def check_kwargs(**kwargs):
     if "filetype" not in kwargs and "loadfrom" not in kwargs:
         kwargs["filetype"] = None
         kwargs["loadfrom"] = str(docstore_cache.parent / "latest_docs_and_embeddings")
+    if "top_k" not in kwargs:
+        kwargs["top_k"] = 3
 
     return kwargs

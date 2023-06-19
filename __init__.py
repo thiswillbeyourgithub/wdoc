@@ -54,7 +54,7 @@ def process_task(llm, callback, **kwargs):
 
         # set default ask_user argument
         multiline = False
-        top_k = 3
+        top_k = kwargs["top_k"]
         memory = AnswerConversationBufferMemory(
                 memory_key="chat_history",
                 return_messages=True)

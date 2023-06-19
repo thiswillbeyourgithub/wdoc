@@ -2,8 +2,9 @@ import os
 from pathlib import Path
 
 import langchain
-from langchain.llms import GPT4All, FakeListLLM
+from langchain.llms import GPT4All, FakeListLLM, LlamaCpp
 from langchain.callbacks import get_openai_callback
+from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.cache import SQLiteCache
@@ -23,7 +24,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
+def load_llm(model, local_llm_path, **kwargs):
     """load the gpt model"""
     if model.lower() == "openai":
         whi("Loading openai models")
@@ -36,14 +37,25 @@ def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", 
                 verbose=True,
                 )
         callback = get_openai_callback
+    elif model.lower() == "llama":
+        whi("Loading llama models")
+        callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+        llm = LlamaCpp(
+                model_path=local_llm_path,
+                callback_manager=callback_manager,
+                verbose=True,
+                n_threads=4,
+                )
+        callback = fakecallback
+
     elif model.lower() == "gpt4all":
-        whi(f"loading gpt4all: '{gpt4all_model_path}'")
-        gpt4all_model_path = Path(gpt4all_model_path)
-        assert gpt4all_model_path.exists(), "local model not found"
+        whi(f"loading gpt4all: '{local_llm_path}'")
+        local_llm_path = Path(local_llm_path)
+        assert local_llm_path.exists(), "local model not found"
         callbacks = [StreamingStdOutCallbackHandler()]
         # Verbose is required to pass to the callback manager
         llm = GPT4All(
-                model=str(gpt4all_model_path.absolute()),
+                model=str(local_llm_path.absolute()),
                 n_ctx=512,
                 n_threads=4,
                 callbacks=callbacks,
