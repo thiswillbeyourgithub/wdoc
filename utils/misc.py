@@ -17,11 +17,11 @@ def html_to_text(html, issoup):
     else:
         return html.get_text()
 
-def get_kwargs(**kwargs):
+def check_kwargs(**kwargs):
     """
     Parameters
     ----------
-    --task str
+    --task str, default query
         either query or summary. query means to load the input files then wait
         for user question. summary means the input will be passed through a
         summarization prompt to get the idea.
@@ -44,7 +44,28 @@ def get_kwargs(**kwargs):
 
     --gpt4all_model_path str
         if model is gpt4all, this needs to point to a compatible model
+
+    --sbert_model str, default "paraphrase-multilingual-mpnet-base-v2"
+        sentence_transformer embedding model to use. If you change this,
+        the embedding cache will be populated with new elements (the hash
+        used to check for previous values includes the name of the sbert model)
+
+    --savetopickle str, default .cache/latest_index.pickle
+        only used if task is query
+        save the latest 'inputs' to a pickle file. Can be loaded again with
+        --loadfrompickle to speed up loading time. This loads both the
+        split documents and embeddings but will not update itself if the
+        original files have changed.
+
+    --loadfrompickle str, default None
+        see --savetopickle
     """
+    assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
+    assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
+    if "sbert_model" not in kwargs:
+        kwargs["sbert_model"] = "paraphrase-multilingual-mpnet-base-v2"
+    if "task" not in kwargs:
+        kwargs["task"] = "query"
     return kwargs
 
 Path(".cache").mkdir(exist_ok=True)

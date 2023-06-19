@@ -7,19 +7,29 @@ import re
 from tqdm import tqdm
 import json
 
+from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import DataFrameLoader
+from langchain.vectorstores import FAISS
 
 from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red
+from utils.misc import hasher, docstore_cache
 
 text_splitter = CharacterTextSplitter()
 
-
 def load_doc(**kwargs):
+    red("\nLoading documents.")
+    kwargs["loaded_docs"] = _load_doc(**kwargs)
+    if kwargs["task"] == "query":
+        kwargs["loaded_embeddings"] = _load_embeddings(**kwargs)
+    return kwargs
+
+
+def _load_doc(**kwargs):
     """load the input"""
     filetype = kwargs["filetype"]
 
@@ -70,7 +80,7 @@ def load_doc(**kwargs):
                 del meta["pattern"]
             else:
                 raise ValueError(filetype)
-            docs.extend(load_doc(**meta))
+            docs.extend(_load_doc(**meta))
         return docs
 
     if filetype == "youtube":
@@ -149,3 +159,34 @@ def load_doc(**kwargs):
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
     return docs
+
+
+def _load_embeddings(**kwargs):
+    """loads embeddings for each document"""
+    red("\nLoading embeddings.")
+    embeddings = SentenceTransformerEmbeddings(model_name=kwargs["sbert_model"])
+    model_hash = hasher(kwargs["sbert_model"])
+
+    docs = kwargs["loaded_docs"]
+
+    done_list = set()
+    db = None
+    for doc in tqdm(docs, desc="embedding documents"):
+        hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
+        if (docstore_cache / hashcheck).exists():
+            tqdm.write("Loaded from cache")
+            temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
+        else:
+            tqdm.write("Computing embeddings")
+            temp = FAISS.from_documents([doc], embeddings)
+            temp.save_local(str(docstore_cache / hashcheck))
+        if db is None:
+            db = temp
+        else:
+            if not hashcheck in done_list:
+                db.merge_from(temp)
+                done_list.add(hashcheck)
+            else:
+                tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
+    kwargs["loaded_embeddings"] = db
+    return kwargs

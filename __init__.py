@@ -1,3 +1,5 @@
+import pickle
+from pathlib import Path
 from pprint import pprint
 import fire
 import os
@@ -5,15 +7,13 @@ from tqdm import tqdm
 from datetime import datetime
 
 from langchain.chains.summarize import load_summarize_chain
-from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
 
 from utils.prompts import refine_prompt, PROMPT
 from utils.llm import load_llm
 from utils.file_loader import load_doc
-from utils.misc import get_kwargs, hasher, docstore_cache
+from utils.misc import check_kwargs, hasher, docstore_cache
 from utils.logger import whi, yel, red
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -23,31 +23,9 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 def process_task(**kwargs):
     whi("Processing task")
-    if kwargs["task"] == "query":
-        if "sbert_model" not in kwargs:
-            kwargs["sbert_model"]="paraphrase-multilingual-mpnet-base-v2"
-        embeddings = SentenceTransformerEmbeddings(model_name=kwargs["sbert_model"])
-        model_hash = hasher(kwargs["sbert_model"])
+    docs = kwargs["loaded_docs"]
 
-        done_list = set()
-        db = None
-        for doc in tqdm(docs, desc="embedding documents"):
-            hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
-            if (docstore_cache / hashcheck).exists():
-                tqdm.write("Loaded from cache")
-                temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
-            else:
-                tqdm.write("Computing embeddings")
-                temp = FAISS.from_documents([doc], embeddings)
-                temp.save_local(str(docstore_cache / hashcheck))
-            if db is None:
-                db = temp
-            else:
-                if not hashcheck in done_list:
-                    db.merge_from(temp)
-                    done_list.add(hashcheck)
-                else:
-                    tqdm.write(f"File '{doc.metadata['path']}' was already added, skipping.")
+    if kwargs["task"] == "query":
         retriever = db.as_retriever(search_kwargs={"k": 5})
         qa = RetrievalQA.from_chain_type(
                 llm=llm,
@@ -101,11 +79,18 @@ def process_task(**kwargs):
 
 
 if __name__ == "__main__":
-    kwargs = fire.Fire(get_kwargs)
+    kwargs = fire.Fire(check_kwargs)
 
     llm, callback = load_llm(**kwargs)
-    docs = load_doc(**kwargs)
-    whi(f"\n\nLoaded '{len(docs)}' documents")
+    if "loadfrompickle" in kwargs:
+        red("Loading documents from pickle file")
+        path = Path(kwargs["loadfrompickle"])
+        assert path.exists(), f"pickle file not found at '{path}'"
+        with open(str(path), "rb") as f:
+            docs = pickle.load(f)
+    else:
+        kwargs = load_doc(**kwargs)
+    whi(f"\n\nLoaded '{len(kwargs['loaded_docs'])}' documents")
 
     out = process_task(**kwargs)
 
