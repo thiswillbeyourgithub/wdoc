@@ -63,7 +63,7 @@ class fakecallback:
     def __exit__(self, *args, **kwargs):
         pass
 
-def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
+def load_llm(model="gpt4all", gpt4all_model_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs):
     if model.lower() == "openai":
         print("Loading openai models")
         assert Path("API_KEY.txt").exists(), "No api key found"
@@ -77,13 +77,13 @@ def load_llm(model="gpt4all", local_path="./ggml-wizardLM-7B.q4_2.bin", **kwargs
                 )
         callback = get_openai_callback()
     elif model.lower() == "gpt4all":
-        print(f"loading gpt4all: '{local_path}'")
-        local_path = Path(local_path)
-        assert local_path.exists(), "local model not found"
+        print(f"loading gpt4all: '{gpt4all_model_path}'")
+        gpt4all_model_path = Path(gpt4all_model_path)
+        assert gpt4all_model_path.exists(), "local model not found"
         callbacks = [StreamingStdOutCallbackHandler()]
         # Verbose is required to pass to the callback manager
         llm = GPT4All(
-                model=str(local_path.absolute()),
+                model=str(gpt4all_model_path.absolute()),
                 n_ctx=512,
                 n_threads=4,
                 callbacks=callbacks,
