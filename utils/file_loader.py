@@ -22,10 +22,13 @@ from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import docstore_cache
 
+clozeregex = re.compile(r"{{c\d+::|}}")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
+
 
 def len_split(tosplit):
     return len(tokenize(tosplit))
+
 
 text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
@@ -33,7 +36,6 @@ text_splitter = RecursiveCharacterTextSplitter(
         chunk_overlap=350,  # default 200
         length_function=len_split,
         )
-clozeregex = re.compile(r"{{c\d+::|}}")
 
 
 def cloze_stripper(clozed):
@@ -275,7 +277,6 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
                 done_list.add(hashcheck)
             else:
                 whi(f"File with path '{path}' with hash '{hashcheck}' was already added, skipping.")
-
 
     # saving embeddings
     path = Path(saveas)
