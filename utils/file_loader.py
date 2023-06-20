@@ -34,7 +34,7 @@ def cloze_stripper(clozed):
     return clozed
 
 
-def load_doc(filetype, **kwargs):
+def load_doc(filetype, debug, **kwargs):
     """load the input"""
 
     if filetype in ["path_list", "recursive"]:
@@ -80,18 +80,21 @@ def load_doc(filetype, **kwargs):
                 assert "filetype" in meta, "no key 'filetype' in meta"
             elif filetype == "recursive":
                 meta = kwargs.copy()
-                meta["filetype"] = kwargs["recursed_filetype"]
                 meta["path"] = item
+                meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
             else:
                 raise ValueError(filetype)
-            return load_doc(**meta)
+            return load_doc(
+                    debug=debug,
+                    **meta,
+                    )
 
         # use multithreading only if on long recursion
         results = Parallel(
                 n_jobs=-1 if len(doclist) >= 10 and filetype=="recursive" else 1,
-                backend="threading",
+                backend="threading" if not debug else "sequential",
                 )(delayed(get_item_of_list)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
         docs = []
@@ -206,7 +209,7 @@ def load_doc(filetype, **kwargs):
     return docs
 
 
-def load_embeddings(sbert_model, loadfrom, saveas, loaded_docs):
+def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     """loads embeddings for each document"""
     embeddings = SentenceTransformerEmbeddings(
             model_name=sbert_model,
@@ -249,7 +252,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, loaded_docs):
 
     results = Parallel(
             n_jobs=2,
-            backend="threading",
+            backend="threading" if not debug else "sequential",
             )(delayed(get_embedding)(doc, embeddings, docstore_cache) for doc in tqdm(docs, desc="embedding documents"))
 
     # merge the results

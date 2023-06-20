@@ -130,7 +130,7 @@ class OmniQA:
 
         # loading documents
         if not loadfrom:
-            self.loaded_docs = load_doc(filetype, **kwargs)
+            self.loaded_docs = load_doc(filetype, debug, **kwargs)
 
         out = self.process_task()
 
@@ -166,7 +166,7 @@ class OmniQA:
 
         # load embeddings, either for query or to query on what was just zummaried
         self.loaded_embeddings = load_embeddings(
-                self.sbert_model, self.loadfrom, self.saveas, self.loaded_docs)
+                self.sbert_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs)
 
         assert self.task == "query"
 
