@@ -9,6 +9,7 @@ from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
 from joblib import Parallel, delayed
+import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -21,10 +22,16 @@ from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import docstore_cache
 
+tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
+
+def len_split(tosplit):
+    return len(tokenize(tosplit))
+
 text_splitter = RecursiveCharacterTextSplitter(
-        separators=["\n\n\n\n", "\n\n\n", "\n\n"],
-        chunk_size=4000,  # default 4000
-        chunk_overlap=1000,  # default 200
+        separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+        chunk_size=2000,  # default 4000
+        chunk_overlap=350,  # default 200
+        length_function=len_split,
         )
 clozeregex = re.compile(r"{{c\d+::|}}")
 
@@ -112,7 +119,8 @@ def load_doc(filetype, debug, **kwargs):
                 translation=kwargs["translation"],
                 )
         loader.load()
-        docs = loader.load_and_split()
+        docs = loader.load()
+        docs = split_cache.eval(text_splitter.transform_documents, docs)
 
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -120,8 +128,8 @@ def load_doc(filetype, debug, **kwargs):
         whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
-        docs = split_cache.eval(loader.load)
-        docs = split_cache.eval(text_splitter.split_documents, docs)
+        docs = loader.load()
+        docs = split_cache.eval(text_splitter.transform_documents, docs)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
