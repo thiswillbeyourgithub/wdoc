@@ -1,3 +1,5 @@
+import uuid
+import shelve
 import random
 import shutil
 import ankipandas as akp
@@ -74,18 +76,27 @@ def load_doc(filetype, debug, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
-            def threaded_load_item(filetype, item, kwargs):
+            # setup shelve and cache
+            shv = shelve.open(".cache/shelve")
+            for k in shv.keys():
+                del shv[k]
+            cached_load_doc = loaddoc_cache.cache(load_doc, ignore=["debug"])
+
+            def threaded_load_item(filetype, item, kwargs, shv):
                 meta = kwargs.copy()
                 meta["path"] = item
                 meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
-                cached_load_doc = loaddoc_cache.cache(load_doc, ignore=["debug"])
+
+                randid = str(uuid.uuid4())
                 try:
-                    return cached_load_doc(
+                    loaded = cached_load_doc(
                             debug=debug,
                             **meta,
                             )
+                    shv[randid] = loaded
+                    return randid
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
                     return None
@@ -93,8 +104,9 @@ def load_doc(filetype, debug, **kwargs):
         elif filetype == "path_list":
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
+            shv = None
 
-            def threaded_load_item(filetype, item, kwargs):
+            def threaded_load_item(filetype, item, kwargs, shv):
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
                 assert "filetype" in meta, "no key 'filetype' in meta"
@@ -116,10 +128,17 @@ def load_doc(filetype, debug, **kwargs):
         results = Parallel(
                 n_jobs=3 if len(doclist) >= 3 else 1,
                 backend="threading" if not debug and filetype != "path_list" else "sequential",
-                )(delayed(threaded_load_item)(filetype, doc, kwargs
+                )(delayed(threaded_load_item)(filetype, doc, kwargs, shv
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
 
         results = [r for r in results if r]
+
+        if shv:
+            for i, r in tqdm(results, desc="loading from shelve"):
+                results[i] = shv[r]
+                del shv[r]
+            shv.close()
+
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
         if n:
