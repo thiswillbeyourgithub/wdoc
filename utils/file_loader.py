@@ -78,7 +78,7 @@ def load_doc(filetype, debug, **kwargs):
         doclist = [p for p in doclist if not p.startswith("#")]
         # if number of document is high, shuffling list to even out
         # the progress bar
-        if len(doclist) >= 50:
+        if len(doclist) >= 3:
             doclist = sorted(doclist, key=lambda x: random.random())
         assert doclist, "empty recursive search!"
 
@@ -106,8 +106,8 @@ def load_doc(filetype, debug, **kwargs):
 
         # use multithreading only if on long recursion
         results = Parallel(
-                n_jobs=-1 if len(doclist) >= 10 and filetype=="recursive" else 1,
-                backend="threading" if not debug else "sequential",
+                n_jobs=-1 if len(doclist) >= 3 else 1,
+                backend="threading" if not debug and filetype != "path_list" else "sequential",
                 )(delayed(get_item_of_list)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
         results = [r for r in results if r]
