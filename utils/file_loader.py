@@ -186,7 +186,11 @@ def load_doc(filetype, debug, **kwargs):
                 f"{k}: {x[k]}" for k in fields
                 if x[k]
                 ))
-        full_df = "\n\n\n".join(cards["text"].tolist())
+        # load each card as a single document
+        # docs = [Document(page_content=t) for t in cards["text"].tolist()]
+
+        # turn all cards into a single wall of text then use text_splitter
+        full_df = "\n\n\n\n".join(cards["text"].tolist())
         texts = split_cache.eval(text_splitter.split_text, full_df)
         docs = [Document(page_content=t) for t in texts]
 
