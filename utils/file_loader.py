@@ -298,8 +298,11 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
             db = temp
         else:
             if hashcheck not in done_list:
-                db.merge_from(temp)
-                done_list.add(hashcheck)
+                try:
+                    db.merge_from(temp)
+                    done_list.add(hashcheck)
+                except Exception as err:
+                    red(f"Error when merging index: '{err}'")
             else:
                 whi(f"File with path '{path}' with hash '{hashcheck}' was already added, skipping.")
 
