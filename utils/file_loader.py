@@ -140,7 +140,7 @@ def load_doc(filetype, debug, **kwargs):
                 )
         loader.load()
         docs = loader.load()
-        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
+        docs = text_splitter.transform_documents(docs)
 
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -149,7 +149,7 @@ def load_doc(filetype, debug, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         docs = loader.load()
-        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
+        docs = text_splitter.transform_documents(docs)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
