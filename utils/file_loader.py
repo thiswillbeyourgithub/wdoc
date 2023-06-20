@@ -54,8 +54,8 @@ def load_doc(filetype, debug, **kwargs):
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             assert "recursed_filetype" in kwargs, "missing 'recursed_filetype' in args"
             assert kwargs["recursed_filetype"] not in [
-                    "recursive", "path_list", "youtube"
-                    ], "'recursed_filetype' cannot be 'recursive', 'path_list' or 'youtube'"
+                    "recursive", "path_list", "youtube", "anki",
+                    ], "'recursed_filetype' cannot be 'recursive', 'path_list', 'anki' or 'youtube'"
             pattern = kwargs["pattern"]
 
             doclist = [p for p in Path(path).rglob(pattern)]
