@@ -18,7 +18,7 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.vectorstores import FAISS
 
-from .misc import split_cache, html_to_text, hasher
+from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import embed_cache
 
@@ -139,7 +139,7 @@ def load_doc(filetype, debug, **kwargs):
                 )
         loader.load()
         docs = loader.load()
-        docs = split_cache.eval(text_splitter.transform_documents, docs)
+        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
 
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -148,7 +148,7 @@ def load_doc(filetype, debug, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         docs = loader.load()
-        docs = split_cache.eval(text_splitter.transform_documents, docs)
+        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
@@ -194,7 +194,7 @@ def load_doc(filetype, debug, **kwargs):
 
         # turn all cards into a single wall of text then use text_splitter
         # full_df = "\n\n\n\n".join(cards["text"].tolist())
-        # texts = split_cache.eval(text_splitter.split_text, full_df)
+        # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
         # docs = [Document(page_content=t) for t in texts]
 
         # turn each X cards into one document
@@ -223,7 +223,7 @@ def load_doc(filetype, debug, **kwargs):
                 multiline=True,
                 )
         log.info(f"Pasted string input:\n{content}")
-        texts = split_cache.eval(text_splitter.split_text, content)
+        texts = loaddoc_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
 
     elif filetype == "txt":
@@ -234,7 +234,7 @@ def load_doc(filetype, debug, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()
-        texts = split_cache.eval(text_splitter.split_text, content)
+        texts = loaddoc_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
 
     # add metadata

@@ -6,10 +6,10 @@ from joblib import Memory
 
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/embed_cache").mkdir(exist_ok=True)
-Path(".cache/split_cache").mkdir(exist_ok=True)
+Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 
 embed_cache = Path(".cache/embed_cache/")
-split_cache = Memory(".cache/split_cache/")
+loaddoc_cache = Memory(".cache/loaddoc_cache/")
 
 
 def hasher(text):
