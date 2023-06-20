@@ -125,7 +125,7 @@ def load_doc(filetype, **kwargs):
             assert nk in kwargs, f"Missing '{nk}' in arguments from load_doc"
         profile = kwargs["anki_profile"]
         deck = kwargs["anki_deck"]
-        note_type = kwargs["anki_notetype"]
+        notetype = kwargs["anki_notetype"]
         fields = kwargs["anki_fields"]
         whi(f"Loading anki profile: '{profile}'")
         original_db = akp.find_db(user=profile)
