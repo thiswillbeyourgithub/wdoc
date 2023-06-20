@@ -237,6 +237,10 @@ def load_doc(filetype, debug, **kwargs):
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
+    assert docs, "empty list of loaded documents!"
+    docs = [d for d in docs if d.page_content]
+    assert docs, "empty list of loaded documents after removing empty docs!"
+
     return docs
 
 
