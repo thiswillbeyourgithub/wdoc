@@ -301,7 +301,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
         return temp, hashcheck, doc.metadata['path']
 
     results = Parallel(
-            n_jobs=2,
+            n_jobs=3,
             backend="threading" if not debug else "sequential",
             )(delayed(get_embedding)(doc, embeddings, docstore_cache) for doc in tqdm(docs, desc="embedding documents"))
 
