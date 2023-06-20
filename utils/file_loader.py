@@ -80,8 +80,9 @@ def load_doc(filetype, debug, **kwargs):
                 meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
+                cached_load_doc = loaddoc_cache.cache(load_doc, ignore=["debug"])
                 try:
-                    return load_doc(
+                    return cached_load_doc(
                             debug=debug,
                             **meta,
                             )
