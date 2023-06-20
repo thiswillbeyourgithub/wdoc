@@ -20,7 +20,7 @@ from langchain.vectorstores import FAISS
 
 from .misc import split_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
-from utils.misc import docstore_cache
+from utils.misc import embed_cache
 
 clozeregex = re.compile(r"{{c\d+::|}}")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
@@ -285,11 +285,11 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    def get_embedding(doc, embeddings, docstore_cache):
+    def get_embedding(doc, embeddings, embed_cache):
         hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
-        if (docstore_cache / hashcheck).exists():
+        if (embed_cache / hashcheck).exists():
             try:
-                temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
+                temp = FAISS.load_local(str(embed_cache / hashcheck), embeddings)
                 whi(f"Loaded from cache '{doc.metadata['path']}'")
                 return temp, hashcheck, doc.metadata['path']
             except Exception as err:
@@ -297,19 +297,19 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
 
         whi("Computing embeddings")
         temp = FAISS.from_documents([doc], embeddings)
-        temp.save_local(str(docstore_cache / hashcheck))
+        temp.save_local(str(embed_cache / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 
     results = Parallel(
             n_jobs=3,
             backend="threading" if not debug else "sequential",
-            )(delayed(get_embedding)(doc, embeddings, docstore_cache) for doc in tqdm(docs, desc="embedding documents"))
+            )(delayed(get_embedding)(doc, embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
 
     # merge the results
     done_list = set()
     db = None
     for temp, hashcheck, path in results:
-        (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
+        (embed_cache / hashcheck).touch()  # this way we know what files where not used in a long time
         if db is None:
             db = temp
         else:

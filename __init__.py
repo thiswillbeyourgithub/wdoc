@@ -15,7 +15,7 @@ from langchain.chains import ConversationalRetrievalChain
 from utils.prompts import refine_prompt, PROMPT
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings
-from utils.misc import docstore_cache
+from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
 
@@ -101,7 +101,7 @@ class OmniQA:
             assert not loadfrom, "can't use loadfrom if task is summary"
         if filetype and loadfrom:
             filetype = None
-            loadfrom = str(docstore_cache.parent / "latest_docs_and_embeddings")
+            loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
 
         for k in kwargs:
             assert k in [
