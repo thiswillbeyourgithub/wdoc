@@ -4,6 +4,8 @@ import fire
 import os
 from tqdm import tqdm
 from datetime import datetime
+import signal
+import pdb
 
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chains import RetrievalQA
@@ -118,6 +120,10 @@ class OmniQA:
         self.top_k = top_k
         self.debug = debug
         self.kwargs = kwargs
+
+        if self.debug:
+            # make the script interruptible
+            signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
 
         # loading llm
         self.llm, self.callback = load_llm(model, local_llm_path)
