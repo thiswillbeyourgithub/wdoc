@@ -49,7 +49,7 @@ def load_doc(filetype, debug, **kwargs):
     if filetype in ["path_list", "recursive"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
-        whi(filetype)
+
         if filetype == "recursive":
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             assert "recursed_filetype" in kwargs, "missing 'recursed_filetype' in args"
@@ -57,8 +57,11 @@ def load_doc(filetype, debug, **kwargs):
                     "recursive", "path_list", "youtube"
                     ], "'recursed_filetype' cannot be 'recursive', 'path_list' or 'youtube'"
             pattern = kwargs["pattern"]
+
             doclist = [p for p in Path(path).rglob(pattern)]
-            doclist = [str(p) for p in doclist if p.is_file()]
+            doclist = [str(p).strip() for p in doclist if p.is_file()]
+            doclist = [p for p in doclist if p]
+
             if "exclude" in kwargs:
                 for exc in kwargs["exclude"]:
                     if exc == exc.lower():
@@ -68,48 +71,53 @@ def load_doc(filetype, debug, **kwargs):
                     doclist = [p for p in doclist if not re.search(exc, p)]
                 del kwargs["exclude"]
 
-        elif filetype == "path_list":
-            doclist = str(Path(path).read_text()).splitlines()
-        else:
-            raise ValueError(filetype)
-
-        doclist = [p.strip() for p in doclist]
-        doclist = [p for p in doclist if p]
-        doclist = [p for p in doclist if not p.startswith("#")]
-        # if number of document is high, shuffling list to even out
-        # the progress bar
-        if len(doclist) >= 3:
+            # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
-        assert doclist, "empty recursive search!"
 
-        def get_item_of_list(filetype, item, kwargs):
-            if filetype == "path_list":
-                meta = json.loads(item.strip())
-                assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
-                assert "filetype" in meta, "no key 'filetype' in meta"
-            elif filetype == "recursive":
+            def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
                 meta["path"] = item
                 meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
-            else:
-                raise ValueError(filetype)
-            try:
-                return load_doc(
-                        debug=debug,
-                        **meta,
-                        )
-            except Exception as err:
-                red(f"Error when loading '{item}': '{err}'")
-                return None
+                try:
+                    return load_doc(
+                            debug=debug,
+                            **meta,
+                            )
+                except Exception as err:
+                    red(f"Error when loading '{item}': '{err}'")
+                    return None
 
-        # use multithreading only if on long recursion
+        elif filetype == "path_list":
+            doclist = str(Path(path).read_text()).splitlines()
+            doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
+
+            def threaded_load_item(filetype, item, kwargs):
+                meta = json.loads(item.strip())
+                assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
+                assert "filetype" in meta, "no key 'filetype' in meta"
+                try:
+                    return load_doc(
+                            debug=debug,
+                            **meta,
+                            )
+                except Exception as err:
+                    red(f"Error when loading '{item}': '{err}'")
+                    return None
+
+        else:
+            raise ValueError(filetype)
+
+        assert doclist, "empty list of documents to load!"
+
+        # use multithreading only if recursive
         results = Parallel(
-                n_jobs=-1 if len(doclist) >= 3 else 1,
+                n_jobs=3 if len(doclist) >= 3 else 1,
                 backend="threading" if not debug and filetype != "path_list" else "sequential",
-                )(delayed(get_item_of_list)(filetype, doc, kwargs
+                )(delayed(threaded_load_item)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
+
         results = [r for r in results if r]
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
