@@ -110,6 +110,11 @@ def load_doc(filetype, debug, **kwargs):
                 backend="threading" if not debug else "sequential",
                 )(delayed(get_item_of_list)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
+        results = [r for r in results if r]
+        assert results, "Empty results after loading documents"
+        n = len(doclist) - len(results)
+        if n:
+            red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
         return docs
