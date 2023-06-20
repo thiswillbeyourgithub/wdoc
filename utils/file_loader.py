@@ -258,8 +258,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
         if (docstore_cache / hashcheck).exists():
             try:
                 temp = FAISS.load_local(str(docstore_cache / hashcheck), embeddings)
-                (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
-                whi("Loaded from cache")
+                whi(f"Loaded from cache '{doc.metadata['path']}'")
                 return temp, hashcheck, doc.metadata['path']
             except Exception as err:
                 red(f"Error (will compute embedding instead of loading form file): '{err}'")
@@ -278,6 +277,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     done_list = set()
     db = None
     for temp, hashcheck, path in results:
+        (docstore_cache / hashcheck).touch()  # this way we know what files where not used in a long time
         if db is None:
             db = temp
         else:
