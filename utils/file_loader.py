@@ -95,10 +95,14 @@ def load_doc(filetype, debug, **kwargs):
                 del meta["pattern"]
             else:
                 raise ValueError(filetype)
-            return load_doc(
-                    debug=debug,
-                    **meta,
-                    )
+            try:
+                return load_doc(
+                        debug=debug,
+                        **meta,
+                        )
+            except Exception as err:
+                red(f"Error when loading '{item}': '{err}'")
+                return None
 
         # use multithreading only if on long recursion
         results = Parallel(
@@ -107,7 +111,7 @@ def load_doc(filetype, debug, **kwargs):
                 )(delayed(get_item_of_list)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
         docs = []
-        [docs.extend(x) for x in results]
+        [docs.extend(x) for x in results if x]
         return docs
 
     if filetype == "youtube":
