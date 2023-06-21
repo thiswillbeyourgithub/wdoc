@@ -289,16 +289,16 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
 
     red("\nLoading embeddings.")
 
-    model_hash = hasher(sbert_model)
     docs = loaded_docs
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
+    (embed_cache / sbert_model).mkdir(exist_ok=True)
 
     def get_embedding(doc, embeddings, embed_cache):
-        hashcheck = f'{doc.metadata["hash"]}_{model_hash}'
-        if (embed_cache / hashcheck).exists():
+        hashcheck = doc.metadata["hash"]
+        if (embed_cache / sbert_model / hashcheck).exists():
             try:
-                temp = FAISS.load_local(str(embed_cache / hashcheck), embeddings)
+                temp = FAISS.load_local(str(embed_cache / sbert_model / hashcheck), embeddings)
                 whi(f"Loaded from cache '{doc.metadata['path']}'")
                 return temp, hashcheck, doc.metadata['path']
             except Exception as err:
@@ -306,7 +306,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
 
         whi("Computing embeddings")
         temp = FAISS.from_documents([doc], embeddings)
-        temp.save_local(str(embed_cache / hashcheck))
+        temp.save_local(str(embed_cache / sbert_model / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 
     results = Parallel(
@@ -318,7 +318,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     done_list = set()
     db = None
     for temp, hashcheck, path in results:
-        (embed_cache / hashcheck).touch()  # this way we know what files where not used in a long time
+        (embed_cache / sbert_model / hashcheck).touch()  # this way we know what files where not used in a long time
         if db is None:
             db = temp
         else:
