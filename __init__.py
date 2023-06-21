@@ -71,10 +71,12 @@ class OmniQA:
         --local_llm_path str
             if model is not openai, this needs to point to a compatible model
 
-        --embed_model str, default "distiluse-base-multilingual-cased-v1"
-            sentence_transformer embedding model to use. If you change this,
-            the embedding cache will be populated with new elements (the hash
-            used to check for previous values includes the name of the sbert model)
+        --embed_model str, default "openai"
+            Either 'openai' or sentence_transformer embedding model to use.
+            If you change this, the embedding cache will be usually
+            need to be recomputed with new elements (the hash
+            used to check for previous values includes the name of the model
+            name)
 
         --saveas str, default .cache/latest_docs_and_embeddings
             only used if task is query
