@@ -34,8 +34,8 @@ def len_split(tosplit):
 
 text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
-        chunk_size=2000,  # default 4000
-        chunk_overlap=350,  # default 200
+        chunk_size=1024,  # default 4000
+        chunk_overlap=386,  # default 200
         length_function=len_split,
         )
 
