@@ -104,16 +104,16 @@ def load_doc(filetype, debug, **kwargs):
             for i, d in enumerate(doclist):
                 keep = True
                 for inc in kwargs["include"]:
-                    if not re.search(inc, p):
+                    if not re.search(inc, d):
                         keep = False
                 if not keep:
                     doclist[i] = None
-            doclist = [p for p in doclist if p]
+            doclist = [d for d in doclist if d]
             del kwargs["include"]
 
         if "exclude" in kwargs:
             for exc in kwargs["exclude"]:
-                doclist = [p for p in doclist if not re.search(exc, p)]
+                doclist = [d for d in doclist if not re.search(exc, d)]
             del kwargs["exclude"]
 
         assert doclist, "empty list of documents to load!"
