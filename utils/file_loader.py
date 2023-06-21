@@ -123,7 +123,7 @@ def load_doc(filetype, debug, **kwargs):
         # use multithreading only if recursive
         results = Parallel(
                 n_jobs=3 if len(doclist) >= 3 else 1,
-                backend="threading" if not debug and filetype != "path_list" else "sequential",
+                backend="threading" if not debug and filetype == "recursive" else "sequential",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
 
@@ -311,7 +311,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
 
     results = Parallel(
             n_jobs=3,
-            backend="threading" if not debug else "sequential",
+            backend=threading" if not debug else "sequential",
             )(delayed(get_embedding)(doc, embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
 
     # merge the results
