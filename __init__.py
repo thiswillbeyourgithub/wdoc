@@ -32,9 +32,10 @@ class OmniQA:
             task="query",
             filetype=None,
             local_llm_path=None,
-            sbert_model="distiluse-base-multilingual-cased-v1",
-            #sbert_model = "paraphrase-multilingual-mpnet-base-v2",
-            #sbert_model = "msmarco-distilbert-cos-v5",
+            #embed_model="distiluse-base-multilingual-cased-v1",
+            #embed_model = "paraphrase-multilingual-mpnet-base-v2",
+            #embed_model = "msmarco-distilbert-cos-v5",
+            #embed_model = "all-mpnet-base-v2",
             saveas=".cache/latest_docs_and_embeddings",
             loadfrom=None,
             top_k=3,
@@ -70,7 +71,7 @@ class OmniQA:
         --local_llm_path str
             if model is not openai, this needs to point to a compatible model
 
-        --sbert_model str, default "distiluse-base-multilingual-cased-v1"
+        --embed_model str, default "distiluse-base-multilingual-cased-v1"
             sentence_transformer embedding model to use. If you change this,
             the embedding cache will be populated with new elements (the hash
             used to check for previous values includes the name of the sbert model)
@@ -115,7 +116,7 @@ class OmniQA:
         self.task = task
         self.filetype = filetype
         self.local_llm_path = local_llm_path
-        self.sbert_model = sbert_model
+        self.embed_model = embed_model
         self.saveas = saveas
         self.loadfrom = loadfrom
         self.top_k = top_k
@@ -183,7 +184,7 @@ class OmniQA:
 
         # load embeddings, either for query or to query on what was just zummaried
         self.loaded_embeddings = load_embeddings(
-                self.sbert_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs)
+                self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs)
 
         assert self.task == "query"
 

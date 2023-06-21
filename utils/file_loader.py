@@ -267,10 +267,10 @@ def load_doc(filetype, debug, **kwargs):
     return docs
 
 
-def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
+def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
     """loads embeddings for each document"""
     embeddings = SentenceTransformerEmbeddings(
-            model_name=sbert_model,
+            model_name=embed_model,
             encode_kwargs={
                 "batch_size": 1,
                 "show_progress_bar": False,
@@ -290,13 +290,13 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     docs = loaded_docs
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
-    (embed_cache / sbert_model).mkdir(exist_ok=True)
+    (embed_cache / embed_model).mkdir(exist_ok=True)
 
     def get_embedding(doc, embeddings, embed_cache):
         hashcheck = doc.metadata["hash"]
-        if (embed_cache / sbert_model / hashcheck).exists():
+        if (embed_cache / embed_model / hashcheck).exists():
             try:
-                temp = FAISS.load_local(str(embed_cache / sbert_model / hashcheck), embeddings)
+                temp = FAISS.load_local(str(embed_cache / embed_model / hashcheck), embeddings)
                 whi(f"Loaded from cache '{doc.metadata['path']}'")
                 return temp, hashcheck, doc.metadata['path']
             except Exception as err:
@@ -304,7 +304,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
 
         whi("Computing embeddings")
         temp = FAISS.from_documents([doc], embeddings)
-        temp.save_local(str(embed_cache / sbert_model / hashcheck))
+        temp.save_local(str(embed_cache / embed_model / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 
     results = Parallel(
@@ -316,7 +316,7 @@ def load_embeddings(sbert_model, loadfrom, saveas, debug, loaded_docs):
     done_list = set()
     db = None
     for temp, hashcheck, path in results:
-        (embed_cache / sbert_model / hashcheck).touch()  # this way we know what files where not used in a long time
+        (embed_cache / embed_model / hashcheck).touch()  # this way we know what files where not used in a long time
         if db is None:
             db = temp
         else:
