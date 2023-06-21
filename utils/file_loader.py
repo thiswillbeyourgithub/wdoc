@@ -1,3 +1,4 @@
+import openai
 import random
 import shutil
 import ankipandas as akp
@@ -12,6 +13,7 @@ from joblib import Parallel, delayed
 import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
@@ -269,13 +271,22 @@ def load_doc(filetype, debug, **kwargs):
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
     """loads embeddings for each document"""
-    embeddings = SentenceTransformerEmbeddings(
-            model_name=embed_model,
-            encode_kwargs={
-                "batch_size": 1,
-                "show_progress_bar": False,
-                },
-            )
+    if embed_model == "openai":
+        red("Using openai embedding model")
+        assert Path("API_KEY.txt").exists(), "No API_KEY.txt found"
+
+        embeddings = OpenAIEmbeddings(
+                openai_api_key = str(Path("API_KEY.txt").read_text()).strip()
+                )
+
+    else:
+        embeddings = SentenceTransformerEmbeddings(
+                model_name=embed_model,
+                encode_kwargs={
+                    "batch_size": 1,
+                    "show_progress_bar": False,
+                    },
+                )
 
     # reload passed embeddings
     if loadfrom:
