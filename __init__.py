@@ -195,7 +195,7 @@ class OmniQA:
                                 "k": self.top_k,
                                 "distance_metric": "cos",
                                 })
-                    qa = ConversationalRetrievalChain.from_llm(
+                    chain = ConversationalRetrievalChain.from_llm(
                             llm=self.llm,
                             chain_type="stuff",
                             retriever=retriever,
@@ -204,7 +204,7 @@ class OmniQA:
                             memory=memory,
                             )
 
-                    ans = qa(
+                    ans = chain(
                             inputs={
                                 "question": query,
                                 },
