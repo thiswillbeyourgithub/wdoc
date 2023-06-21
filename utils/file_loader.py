@@ -71,9 +71,8 @@ def load_doc(filetype, debug, **kwargs):
                 meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
-                cached_load_doc = loaddoc_cache.cache(load_doc, ignore=["debug"])
                 try:
-                    return cached_load_doc(
+                    return load_doc(
                             debug=debug,
                             **meta,
                             )
@@ -158,7 +157,7 @@ def load_doc(filetype, debug, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
         loader = PyPDFLoader(path)
         docs = loader.load()
-        docs = text_splitter.transform_documents(docs)
+        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
