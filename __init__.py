@@ -199,7 +199,7 @@ class OmniQA:
                                 })
                     chain = ConversationalRetrievalChain.from_llm(
                             llm=self.llm,
-                            chain_type="stuff",
+                            chain_type="map_reduce",
                             retriever=retriever,
                             return_source_documents=True,
                             verbose=True,
