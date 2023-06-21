@@ -260,6 +260,7 @@ def load_doc(filetype, debug, **kwargs):
                 f"{k}: {x[k]}" for k in fields
                 if x[k]
                 ))
+        cards = cards[~cards["text"].str.contains("[IMAGE]")]
 
         cards = cards.sort_index()
 
