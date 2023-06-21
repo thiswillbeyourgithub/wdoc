@@ -1,3 +1,4 @@
+import re
 import textwrap
 from pathlib import Path
 import fire
@@ -106,7 +107,7 @@ class OmniQA:
         for k in kwargs:
             assert k in [
                     "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
-                    "path",
+                    "path", "include", "exclude",
                     ], f"Unexpected keyword argument: '{k}'"
 
         # storing as attributes
@@ -124,6 +125,20 @@ class OmniQA:
         if self.debug:
             # make the script interruptible
             signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
+
+        # compile include / exclude regex
+        if "include" in self.kwargs:
+            for i, inc in enumerate(self.kwargs["include"]):
+                if inc == inc.lower():
+                    self.kwargs["include"][i] = re.compile(inc, flags=re.IGNORECASE)
+                else:
+                    self.kwargs["include"][i] = re.compile(inc)
+        if "exclude" in self.kwargs:
+            for i, exc in enumerate(self.kwargs["exclude"]):
+                if exc == exc.lower():
+                    self.kwargs["exclude"][i] = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
         self.llm, self.callback = load_llm(model, local_llm_path)

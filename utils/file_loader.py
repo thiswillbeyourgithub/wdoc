@@ -104,10 +104,6 @@ def load_doc(filetype, debug, **kwargs):
             for i, d in enumerate(doclist):
                 keep = True
                 for inc in kwargs["include"]:
-                    if inc == inc.lower():
-                        inc = re.compile(inc, flags=re.IGNORECASE)
-                    else:
-                        inc = re.compile(inc)
                     if not re.search(inc, p):
                         keep = False
                 if not keep:
@@ -117,10 +113,6 @@ def load_doc(filetype, debug, **kwargs):
 
         if "exclude" in kwargs:
             for exc in kwargs["exclude"]:
-                if exc == exc.lower():
-                    exc = re.compile(exc, flags=re.IGNORECASE)
-                else:
-                    exc = re.compile(exc)
                 doclist = [p for p in doclist if not re.search(exc, p)]
             del kwargs["exclude"]
 
