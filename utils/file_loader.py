@@ -62,15 +62,6 @@ def load_doc(filetype, debug, **kwargs):
             doclist = [str(p).strip() for p in doclist if p.is_file()]
             doclist = [p for p in doclist if p]
 
-            if "exclude" in kwargs:
-                for exc in kwargs["exclude"]:
-                    if exc == exc.lower():
-                        exc = re.compile(exc, flags=re.IGNORECASE)
-                    else:
-                        exc = re.compile(exc)
-                    doclist = [p for p in doclist if not re.search(exc, p)]
-                del kwargs["exclude"]
-
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
@@ -109,6 +100,24 @@ def load_doc(filetype, debug, **kwargs):
 
         else:
             raise ValueError(filetype)
+
+        if "include" in kwargs:
+            for inc in kwargs["include"]:
+                if inc == inc.lower():
+                    inc = re.compile(inc, flags=re.IGNORECASE)
+                else:
+                    inc = re.compile(inc)
+                doclist = [p for p in doclist if not re.search(inc, p)]
+            del kwargs["include"]
+
+        if "exclude" in kwargs:
+            for exc in kwargs["exclude"]:
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                doclist = [p for p in doclist if not re.search(exc, p)]
+            del kwargs["exclude"]
 
         assert doclist, "empty list of documents to load!"
 
