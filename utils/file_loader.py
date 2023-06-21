@@ -284,6 +284,7 @@ def load_doc(filetype, debug, **kwargs):
                 else:
                     cards.loc[index_list[i], "text_concat"] += cards.loc[index_list[i+w-window_size], "text"]
         docs = [Document(page_content=t) for t in cards["text_concat"]]
+        assert docs, "List of loaded anki document is empty!"
 
         for i in range(len(docs)):
             docs[i].metadata["anki_profile"] = profile
