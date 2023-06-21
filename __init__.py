@@ -145,7 +145,7 @@ class OmniQA:
 
         # loading documents
         if not loadfrom:
-            self.loaded_docs = load_doc(filetype, debug, **kwargs)
+            self.loaded_docs = load_doc(self.filetype, self.debug, **self.kwargs)
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
