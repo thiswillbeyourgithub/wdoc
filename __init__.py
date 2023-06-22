@@ -107,6 +107,7 @@ class OmniQA:
         if filetype and loadfrom:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
+        assert "/" not in embed_model, "embed model can't contain slash"
 
         for k in kwargs:
             assert k in [
