@@ -382,7 +382,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
                 red(f"Error (will compute embedding instead of loading form file): '{err}'")
 
         whi("Computing embeddings")
-        temp = FAISS.from_documents([doc], embeddings)
+        temp = FAISS.from_documents([doc], embeddings, normalize_L2=True)
         temp.save_local(str(embed_cache / embed_model / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 
