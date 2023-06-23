@@ -125,7 +125,7 @@ def load_doc(filetype, debug, **kwargs):
 
         # use multithreading only if recursive
         results = Parallel(
-                n_jobs=3 if len(doclist) >= 3 else 1,
+                n_jobs=4 if len(doclist) >= 3 else 1,
                 backend="threading" if not debug and filetype == "recursive" else "sequential",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
