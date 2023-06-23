@@ -151,7 +151,8 @@ def load_doc(filetype, debug, **kwargs):
         else:
             transl = kwargs["translation"]
         whi(f"Loading youtube: '{path}'")
-        loader = YoutubeLoader.from_youtube_url(
+        loader = loaddoc_cache.eval(
+                YoutubeLoader.from_youtube_url,
                 path,
                 add_video_info=True,
                 language=lang,
@@ -332,7 +333,8 @@ def load_doc(filetype, debug, **kwargs):
         docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
-
+        if "title" in kwargs:
+            docs[i].metadata["title"] = kwargs["title"]
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
         if bool(soup.find()):
