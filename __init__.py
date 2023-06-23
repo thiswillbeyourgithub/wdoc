@@ -123,6 +123,10 @@ class OmniQA:
                     "path", "include", "exclude",
                     ], f"Unexpected keyword argument: '{k}'"
 
+        if filetype == "string":
+            top_k = 1
+            red("Input is 'string' so setting 'top_k' to 1")
+
         # storing as attributes
         self.model = model
         self.task = task
