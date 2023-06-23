@@ -20,6 +20,8 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain.document_loaders import PDFMinerLoader
 from langchain.document_loaders import YoutubeLoader
+from langchain.document_loaders import SeleniumURLLoader
+from langchain.document_loaders import PlaywrightURLLoader
 from langchain.vectorstores import FAISS
 
 from .misc import loaddoc_cache, html_to_text, hasher
@@ -32,8 +34,10 @@ inference_rules = {
         # format:
         # key is output filtype, value is list of regex that if match
         # will return the key
+        # the order of the keys is important
         "youtube": ["youtube", "invidi"],
         "pdf": [".*pdf"],
+        "url": ["http"],
         }
 for k, v in  inference_rules.items():
     try:
@@ -366,11 +370,23 @@ def load_doc(filetype, debug, **kwargs):
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         whi(f"Loading txt: '{path}'")
-        whi(path)
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()
         texts = loaddoc_cache.eval(text_splitter.split_text, content)
+        docs = [Document(page_content=t) for t in texts]
+
+    elif filetype == "url":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading url: '{path}'")
+        try:
+            loader = SeleniumURLLoader(urls=[path])
+            texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
+        except Exception as err:
+            red(f"Exception when using selenium to parse text: '{err}'\nUsing playwright as fallback")
+            loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
+            texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
         docs = [Document(page_content=t) for t in texts]
 
     # add metadata
