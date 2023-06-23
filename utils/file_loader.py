@@ -283,9 +283,9 @@ def load_doc(filetype, debug, **kwargs):
         for i in tqdm(range(len(index_list)), desc="combining anki cards"):
             for w in range(window_size):
                 if i + window_size < n:
-                    cards.loc[index_list[i], "text_concat"] += cards.loc[index_list[i+w], "text"]
+                    cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w], "text"]
                 else:
-                    cards.loc[index_list[i], "text_concat"] += cards.loc[index_list[i+w-window_size], "text"]
+                    cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w-window_size], "text"]
         docs = [Document(page_content=t) for t in cards["text_concat"]]
         assert docs, "List of loaded anki document is empty!"
 
