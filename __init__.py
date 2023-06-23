@@ -38,6 +38,7 @@ class OmniQA:
             #embed_model = "paraphrase-multilingual-mpnet-base-v2",
             #embed_model = "msmarco-distilbert-cos-v5",
             #embed_model = "all-mpnet-base-v2",
+            stopwords_lang=None,
             saveas=".cache/latest_docs_and_embeddings",
             loadfrom=None,
             top_k=3,
@@ -79,6 +80,12 @@ class OmniQA:
             need to be recomputed with new elements (the hash
             used to check for previous values includes the name of the model
             name)
+
+        --stopwords_lang, str, default None
+            if not None must be a list like ["french", "english"] of language
+            from which to load stopwords that will be used just before
+            computing embeddings. This is especially useful if you use
+            embedding models like GLOVE for example.
 
         --saveas str, default .cache/latest_docs_and_embeddings
             only used if task is query
@@ -127,21 +134,22 @@ class OmniQA:
         self.top_k = top_k
         self.debug = debug
         self.kwargs = kwargs
-        self.stopwords_lang = ["french", "english"]
+        self.stopwords_lang = stopwords_lang
 
 
         # loading stop words
-        try:
-            stops = []
-            for lang in self.stopwords_lang:
-                stops += stopwords.words(lang)
-            self.stops = list(set(stops))
-        except Exception as e:
-            red(f"Error when extracting stop words: {e}\n\n"
-                 "Setting stop words list to None.")
-            self.stops = None
-        self.stopw_compiled = [re.compile(r"\b" + s + r"\b") for s in self.stops]
-        self.kwargs["stopwords"] = self.stopw_compiled
+        if self.stopwords_lang:
+            try:
+                stops = []
+                for lang in self.stopwords_lang:
+                    stops += stopwords.words(lang)
+                self.stops = list(set(stops))
+            except Exception as e:
+                red(f"Error when extracting stop words: {e}\n\n"
+                     "Setting stop words list to None.")
+                self.stops = None
+            self.stopw_compiled = [re.compile(r"\b" + s + r"\b") for s in self.stops]
+            self.kwargs["stopwords"] = self.stopw_compiled
 
         if self.debug:
             # make the script interruptible
