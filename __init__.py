@@ -269,7 +269,7 @@ class OmniQA:
 
             with open(self.kwargs["path"] + ".summarized.md", "a") as f:
                 f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})\n")
-                f.write(f"Total time saved: at least {total_length_saved:.1f}")
+                f.write(f"Total time saved: plausibly {total_length_saved:.1f} minutes")
 
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
