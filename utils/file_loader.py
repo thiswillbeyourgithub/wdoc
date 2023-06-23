@@ -142,12 +142,20 @@ def load_doc(filetype, debug, **kwargs):
     if filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
+        if "language" not in kwargs:
+            lang = ["fr", "en"]
+        else:
+            lang = kwargs["language"]
+        if "translation" not in kwargs:
+            transl = "en"
+        else:
+            transl = kwargs["translation"]
         whi(f"Loading youtube: '{path}'")
         loader = YoutubeLoader.from_youtube_url(
                 path,
                 add_video_info=True,
-                language=[kwargs["language"]],
-                translation=kwargs["translation"],
+                language=lang,
+                translation=transl,
                 )
         loader.load()
         docs = loader.load()

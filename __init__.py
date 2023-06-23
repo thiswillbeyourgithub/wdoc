@@ -60,7 +60,7 @@ class OmniQA:
             an example of json_list file in utils/file_list.txt
 
             Supported values => relevant parameters
-                * youtube => --path must be a link to youtube --language=fr to use french transcripts --translation=en to use the transcripts after translation to english
+                * youtube => --path must be a link to youtube --language=["fr","en"] to use french transcripts if possible, english otherwise --translation=en to use the transcripts after translation to english
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep
