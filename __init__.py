@@ -13,7 +13,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 
 
-from utils.prompts import refine_prompt, PROMPT
+from utils.prompts import refine_prompt, summarize_prompt
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings
 from utils.misc import embed_cache
@@ -169,7 +169,7 @@ class OmniQA:
                         self.llm,
                         chain_type="refine",
                         return_intermediate_steps=True,
-                        question_prompt=PROMPT,
+                        question_prompt=summarize_prompt,
                         refine_prompt=refine_prompt,
                         verbose=True,
                         )
