@@ -304,6 +304,7 @@ def load_doc(filetype, debug, **kwargs):
         log.info(f"Pasted string input:\n{content}")
         texts = loaddoc_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
+        path = "user_string"
 
     elif filetype == "txt":
         assert "path" in kwargs, "missing 'path' key in args"
