@@ -161,8 +161,10 @@ def load_doc(filetype, debug, **kwargs):
 
         #loader = PyPDFLoader(path)
         loader = PDFMinerLoader(path)
-        docs = loader.load()
-        docs = loaddoc_cache.eval(text_splitter.transform_documents, docs)
+        content  = loader.load()
+        content = "\n".join([d.page_content for d in content])
+        texts = loaddoc_cache.eval(text_splitter.split_text, content)
+        docs = [Document(page_content=t) for t in texts]
 
         # source: https://python.langchain.com/docs/modules/data_connection/document_loaders/how_to/pdf
         # loader = PDFMinerPDFasHTMLLoader(path)
