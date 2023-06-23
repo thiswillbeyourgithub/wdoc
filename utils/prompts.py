@@ -15,12 +15,13 @@ Here are the rules:
             * To be quick to read, use as much as possible common words.
         * If relevant, you can use direct quotation form the text.
         * You absolutely have to be truthful and unbiased.
-    * Additionally, if the text comes with a title, you must explicitely write a sentence that answers directly to the title. i.e. if the title is a question, answer it. if the title is clickbaity, write a satisfactory explainer etc.
+    * Additionally, if the text comes with a title, you must explicitely write a sentence that answers directly to the title. i.e. if the title is a question, answer it. if the title is clickbaity, write a satisfactory explanation etc.
         * In which case, this bullet point must begin with "TITLE EXPLAINER:" and appear as the first bullet point.
 """
 
 prompt_template = """Your job is to write a summary of a text while following some rules.
 
+{title}
 Here's the first part of the text:
 '''
 {text}
@@ -32,10 +33,11 @@ SUMMARY IN MARKDOWN:
 """
 summarize_prompt = PromptTemplate(
         template=prompt_template.replace("[RULES]", summary_rules),
-        input_variables=["text"])
+        input_variables=["text", "title"])
 refine_template = (
     """Your job is to continue the summary of a text while following some rules.
 
+{title}
 Here's the summary so far:
 '''
 {existing_answer}
@@ -55,5 +57,5 @@ SUMMARY IN MARKDOWN:
 )
 refine_prompt = PromptTemplate(
     template=refine_template.replace("[RULES]", summary_rules),
-    input_variables=["existing_answer", "text"],
+    input_variables=["existing_answer", "text", "title"],
 )

@@ -212,14 +212,23 @@ class OmniQA:
             for doc in tqdm(link_list, desc="Summarizing links"):
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["link_file_item"] == doc]
                 assert relevant_docs
+                with open(self.kwargs["path"] + ".summarized.md", "r") as f:
+                    content = f.read()
+                    if doc in content:
+                        whi(f"Skipping already summarized doc: '{doc}'")
+                        continue
 
+                if "title" in relevant_docs[0].metadata:
+                    title = f"Here's the text title:\n'''{relevant_docs[0].metadata}\n'''\n"
+                else:
+                    title = ""
                 with self.callback() as cb:
                     chain = load_summarize_chain(
                             self.llm,
                             chain_type="refine",
                             return_intermediate_steps=True,
-                            question_prompt=summarize_prompt,
-                            refine_prompt=refine_prompt,
+                            question_prompt=summarize_prompt.partial(title=title),
+                            refine_prompt=refine_prompt.partial(title=title),
                             verbose=True,
                             )
 
@@ -238,7 +247,7 @@ class OmniQA:
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
 
                 header = f"* {doc}:    cost: {cb.total_tokens} (${cb.total_cost})"
-                if "title" in relevant_docs[0].metadata:
+                if title:
                     header += f"\n    * {relevant_docs[0].metadata['title']}"
                 if "length" in relevant_docs[0].metadata:
                     leng = int(relevant_docs[0].metadata["length"]) / 60
