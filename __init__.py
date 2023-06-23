@@ -252,6 +252,8 @@ class OmniQA:
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
+                red(f"Total cost so far: '{total_cost[0]}' (${total_cost[1]})")
+
             with open(self.kwargs["path"] + ".summarized.md", "a") as f:
                 f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})")
 
