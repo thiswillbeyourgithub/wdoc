@@ -49,9 +49,11 @@ class OmniQA:
         Parameters
         ----------
         --task str, default query
-            either query, summary, summary_then_query.
+            possibilities:
                 * query means to load the input files then wait for user question.
                 * summary means the input will be passed through a summarization prompt.
+                * summary_then_query
+                * summarize_link_file takes in --filetype must be link_file
 
         --filetype str, default None
             the type of input. Depending on the value, different other parameters
@@ -67,7 +69,8 @@ class OmniQA:
                 * string => no other parameters needed, will ask to provide a string
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * file_links
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be written to a text file next to the input file link with ".summarized.md" appended.
+                * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --model str, default openai
             either gpt4all, llama, openai or fake/test/testing to use a fake answer.
@@ -110,9 +113,14 @@ class OmniQA:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
-        assert task in ["query", "summary", "summary_then_query"], "invalid task value"
+        assert task in ["query", "summary", "summary_then_query", "summarize_link_file"], "invalid task value"
         if task in ["summary", "summary_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
+        assert (task == "summarize_link_file" and filetype == "link_file"
+                ) or (task != "summarize_link_file" and filetype != "link_file"
+                        ), "summarize_link_file must be used with filetype link_file"
+        if task == "summarize_link_file":
+            assert "path" in kwargs, 'missing path arg for summarize_link_file'
         if filetype and loadfrom:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
@@ -191,6 +199,64 @@ class OmniQA:
 
     def process_task(self):
         red("\nProcessing task")
+
+        if self.task == "summarize_link_file":
+            link_list = []
+            for d in self.loaded_docs:
+                assert "link_file_item" in d.metadata, "missing 'link_file_item' in a doc metadata"
+                if d.metadata["link_file_item"] not in link_list:
+                    link_list.append(d.metadata["link_file_item"])
+
+            total_cost = [0, 0]
+            for doc in tqdm(link_list, desc="Summarizing links"):
+                relevant_docs = [d for d in self.loaded_docs if d.metadata["link_file_item"] == doc]
+                assert relevant_docs
+
+                with self.callback() as cb:
+                    chain = load_summarize_chain(
+                            self.llm,
+                            chain_type="refine",
+                            return_intermediate_steps=True,
+                            question_prompt=summarize_prompt,
+                            refine_prompt=refine_prompt,
+                            verbose=True,
+                            )
+
+                    out = chain(
+                            {"input_documents": relevant_docs},
+                            return_only_outputs=True,
+                            )
+
+                outtext = out["output_text"]
+                outtext = outtext.replace("- ", "* ")
+
+                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+                total_cost[0] += cb.total_tokens
+                total_cost[1] += cb.total_cost
+
+                red(f"\n\nSummary of '{doc}':\n{outtext}")
+
+                header = f"* {doc}:    cost: {cb.total_tokens} (${cb.total_cost})"
+                if "title" in relevant_docs[0].metadata:
+                    header += f"\n    * {relevant_docs[0].metadata['title']}"
+                if "length" in relevant_docs[0].metadata:
+                    leng = int(relevant_docs[0].metadata["length"]) / 60
+                    header += f"\n    * {leng:.1f} minutes"
+                if "author" in relevant_docs[0].metadata:
+                    author = relevant_docs[0].metadata["author"]
+                    header += f"\n    * by '{author}'"
+                with open(self.kwargs["path"] + ".summarized.md", "a") as f:
+                    f.write(header)
+                    for bulletpoint in outtext.split("\n"):
+                        f.write("\n")
+                        f.write(f"    {bulletpoint}")
+                    f.write("\n\n\n")
+
+            with open(self.kwargs["path"] + ".summarized.md", "a") as f:
+                f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})")
+
+            whi("Done summarizing link. Exiting.")
+            raise SystemExit()
 
         if self.task in ["summary", "summary_then_query"]:
             with self.callback() as cb:

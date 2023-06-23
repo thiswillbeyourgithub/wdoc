@@ -26,6 +26,24 @@ from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import embed_cache
 
+# rules used to attribute input to proper filetype. For example
+# any link containing youtube will be treated as a youtube link
+inference_rules = {
+        # format:
+        # key is output filtype, value is list of regex that if match
+        # will return the key
+        "youtube": ["youtube", "invidi"],
+        "pdf": [".*pdf"],
+        }
+for k, v in  inference_rules.items():
+    try:
+        for i, vv in enumerate(v):
+            inference_rules[k][i] = re.compile(vv)
+    except Exception as err:
+        red(f"Exception when compiling inference_rules: '{err}' Disabling '{k}' inferences.")
+        inference_rules[k] = []
+
+
 charac_regex = re.compile(r"[^\w\s]")
 clozeregex = re.compile(r"{{c\d+::|}}")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
@@ -51,7 +69,17 @@ def cloze_stripper(clozed):
 def load_doc(filetype, debug, **kwargs):
     """load the input"""
 
-    if filetype in ["json_list", "recursive"]:
+    if filetype == "infer":
+        assert "path" in kwargs, "if filetype is infer, path should be supplied"
+        for k, v in inference_rules.items():
+            for vv in inference_rules[k]:
+                if re.search(vv, kwargs["path"]):
+                    filetype = k
+                    break
+            if filetype != "infer":
+                break
+
+    if filetype in ["json_list", "recursive", "link_file"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
 
@@ -102,6 +130,25 @@ def load_doc(filetype, debug, **kwargs):
                     red(f"Error when loading '{item}': '{err}'")
                     return None
 
+        elif filetype == "link_file":
+            doclist = str(Path(path).read_text()).splitlines()
+            doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
+
+            def threaded_load_item(filetype, item, kwargs):
+                meta = kwargs.copy()
+                meta["path"] = item
+                assert "http" in item, f"item does not appear to be a link: '{item}'"
+                meta["filetype"] = "infer"
+                meta["link_file_item"] = item
+                try:
+                    return load_doc(
+                            debug=debug,
+                            **meta,
+                            )
+                except Exception as err:
+                    red(f"Error when loading '{item}': '{err}'")
+                    return None
+
         else:
             raise ValueError(filetype)
 
@@ -126,7 +173,7 @@ def load_doc(filetype, debug, **kwargs):
         # use multithreading only if recursive
         results = Parallel(
                 n_jobs=4 if len(doclist) >= 3 else 1,
-                backend="threading" if not debug and filetype == "recursive" else "sequential",
+                backend="threading" if not debug and filetype in ["recursive", "link_file"] else "sequential",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
 
@@ -333,6 +380,8 @@ def load_doc(filetype, debug, **kwargs):
         docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
+        if "link_file_item" in kwargs:
+            docs[i].metadata["link_file_item"] = kwargs["link_file_item"]
         if "title" in kwargs:
             docs[i].metadata["title"] = kwargs["title"]
         # if html, parse it
