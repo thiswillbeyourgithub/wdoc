@@ -208,6 +208,7 @@ class OmniQA:
                     link_list.append(d.metadata["link_file_item"])
 
             total_cost = [0, 0]
+            total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["link_file_item"] == doc]
                 assert relevant_docs
@@ -241,6 +242,7 @@ class OmniQA:
                     header += f"\n    * {relevant_docs[0].metadata['title']}"
                 if "length" in relevant_docs[0].metadata:
                     leng = int(relevant_docs[0].metadata["length"]) / 60
+                    total_length_saved += leng
                     header += f"\n    * {leng:.1f} minutes"
                 if "author" in relevant_docs[0].metadata:
                     author = relevant_docs[0].metadata["author"]
@@ -253,9 +255,11 @@ class OmniQA:
                     f.write("\n\n\n")
 
                 red(f"Total cost so far: '{total_cost[0]}' (${total_cost[1]})")
+                red(f"Total time saved so far: {total_length_saved:.1f} minutes")
 
             with open(self.kwargs["path"] + ".summarized.md", "a") as f:
-                f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})")
+                f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})\n")
+                f.write(f"Total time saved: {total_length_saved:.1f}")
 
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
