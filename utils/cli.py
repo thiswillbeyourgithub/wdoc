@@ -8,7 +8,7 @@ from prompt_toolkit.completion import WordCompleter
 from .logger import whi
 
 
-def ask_user(q, top_k, multiline):
+def ask_user(q, top_k, multiline, task):
     """
     Ask the question to the user.
 
@@ -29,6 +29,8 @@ def ask_user(q, top_k, multiline):
         for pp in pp_list:
             if "timestamp" not in pp:
                 pp["timestamp"] = 0
+            if "task" not in pp:
+                pp["task"] = "query"
             if pp not in prev_questions:
                 prev_questions.append(pp)
         prev_questions = sorted(
@@ -41,11 +43,20 @@ def ask_user(q, top_k, multiline):
             "/debug",
             "/top_k=",
             ]
-    autocomplete = WordCompleter(
-            prompt_commands + [
-                x["prompt"]
-                for x in prev_questions
-                ], match_middle=True, ignore_case=True)
+    if task == "query":
+        autocomplete = WordCompleter(
+                prompt_commands + [
+                    x["prompt"]
+                    for x in prev_questions
+                    if x["task"] == task,
+                    ],
+                match_middle=True,
+                ignore_case=True)
+    else:
+        autocomplete = WordCompleter(
+                prompt_commands,
+                match_middle=True,
+                ignore_case=True)
 
     try:
         try:
@@ -117,6 +128,7 @@ def ask_user(q, top_k, multiline):
                 {
                     "prompt": user_question,
                     "timestamp": int(time.time()),
+                    "task": task,
                     })
     prev_questions = sorted(
             prev_questions,

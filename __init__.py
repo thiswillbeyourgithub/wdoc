@@ -236,6 +236,7 @@ class OmniQA:
                             "\n\nWhat is your question? (Q to quit)\n",
                             top_k=self.top_k,
                             multiline=multiline,
+                            task=self.task,
                             )
                     # while True:
                     #     docs_and_scores = self.loaded_embeddings.similarity_search_with_score(
