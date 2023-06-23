@@ -51,7 +51,7 @@ def cloze_stripper(clozed):
 def load_doc(filetype, debug, **kwargs):
     """load the input"""
 
-    if filetype in ["path_list", "recursive"]:
+    if filetype in ["json_list", "recursive"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
 
@@ -59,8 +59,8 @@ def load_doc(filetype, debug, **kwargs):
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             assert "recursed_filetype" in kwargs, "missing 'recursed_filetype' in args"
             assert kwargs["recursed_filetype"] not in [
-                    "recursive", "path_list", "youtube", "anki",
-                    ], "'recursed_filetype' cannot be 'recursive', 'path_list', 'anki' or 'youtube'"
+                    "recursive", "json_list", "youtube", "anki",
+                    ], "'recursed_filetype' cannot be 'recursive', 'json_list', 'anki' or 'youtube'"
             pattern = kwargs["pattern"]
 
             doclist = [p for p in Path(path).rglob(pattern)]
@@ -85,7 +85,7 @@ def load_doc(filetype, debug, **kwargs):
                     red(f"Error when loading '{item}': '{err}'")
                     return None
 
-        elif filetype == "path_list":
+        elif filetype == "json_list":
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 

@@ -55,9 +55,9 @@ class OmniQA:
 
         --filetype str, default None
             the type of input. Depending on the value, different other parameters
-            are needed. If path_list is used, the line of the input file can contain
+            are needed. If json_list is used, the line of the input file can contain
             any of those parameters as long as they are as json. You can find
-            an example of path_list file in utils/file_list.txt
+            an example of json_list file in utils/file_list.txt
 
             Supported values => relevant parameters
                 * youtube => --path must be a link to youtube --language=fr to use french transcripts --translation=en to use the transcripts after translation to english
@@ -65,8 +65,9 @@ class OmniQA:
                 * txt => --path is path to txt
                 * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep
                 * string => no other parameters needed, will ask to provide a string
-                * path_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
+                * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
+                * file_links
 
         --model str, default openai
             either gpt4all, llama, openai or fake/test/testing to use a fake answer.
