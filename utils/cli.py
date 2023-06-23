@@ -49,7 +49,7 @@ def ask_user(q, top_k, multiline, task):
                     [
                     x["prompt"]
                     for x in prev_questions
-                    if x["task"] == task,
+                    if x["task"] == task
                     ], key=lambda x: x["timestamp"]),
                 match_middle=True,
                 ignore_case=True)
