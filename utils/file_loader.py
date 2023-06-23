@@ -26,6 +26,7 @@ from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from utils.misc import embed_cache
 
+charac_regex = re.compile(r"[^\w\s]")
 clozeregex = re.compile(r"{{c\d+::|}}")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
 
@@ -336,8 +337,10 @@ def load_doc(filetype, debug, **kwargs):
     return docs
 
 
-def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
+def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     """loads embeddings for each document"""
+    embed_args = {}
+
     if embed_model == "openai":
         red("Using openai embedding model")
         assert Path("API_KEY.txt").exists(), "No API_KEY.txt found"
@@ -355,6 +358,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
                     "normalize_embeddings": True,
                     },
                 )
+        if "stopwords" in kwargs:
+            embed_args["stopwords"] = kwargs["stopwords"]
 
     # reload passed embeddings
     if loadfrom:
@@ -371,7 +376,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
         docs = sorted(docs, key=lambda x: random.random())
     (embed_cache / embed_model).mkdir(exist_ok=True)
 
-    def get_embedding(doc, embeddings, embed_cache):
+    def get_embedding(doc, embeddings, embed_cache, embed_args=embed_args):
         hashcheck = doc.metadata["hash"]
         if (embed_cache / embed_model / hashcheck).exists():
             try:
@@ -382,7 +387,16 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs):
                 red(f"Error (will compute embedding instead of loading form file): '{err}'")
 
         whi("Computing embeddings")
+        if "stopwords" in embed_args:
+            prev = doc.page_content
+            doc.page_content = re.sub(charac_regex, " ", doc.page_content.lower())
+            for reg in embed_args["stopwords"]:
+                doc.page_content = re.sub(reg, " ", doc.page_content)
         temp = FAISS.from_documents([doc], embeddings, normalize_L2=True)
+        if "stopwords" in embed_args:
+            for k in temp.docstore.__dict__.keys():
+                for kk in temp.docstore.__dict__[k].keys():
+                    temp.docstore.__dict__[k][kk].page_content = prev
         temp.save_local(str(embed_cache / embed_model / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 

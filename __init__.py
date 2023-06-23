@@ -7,6 +7,7 @@ from tqdm import tqdm
 from datetime import datetime
 import signal
 import pdb
+from nltk.corpus import stopwords
 
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chains import RetrievalQA
@@ -126,6 +127,21 @@ class OmniQA:
         self.top_k = top_k
         self.debug = debug
         self.kwargs = kwargs
+        self.stopwords_lang = ["french", "english"]
+
+
+        # loading stop words
+        try:
+            stops = []
+            for lang in self.stopwords_lang:
+                stops += stopwords.words(lang)
+            self.stops = list(set(stops))
+        except Exception as e:
+            red(f"Error when extracting stop words: {e}\n\n"
+                 "Setting stop words list to None.")
+            self.stops = None
+        self.stopw_compiled = [re.compile(r"\b" + s + r"\b") for s in self.stops]
+        self.kwargs["stopwords"] = self.stopw_compiled
 
         if self.debug:
             # make the script interruptible
@@ -186,9 +202,9 @@ class OmniQA:
             whi("Switching to query mode.")
             self.task = "query"
 
-        # load embeddings, either for query or to query on what was just zummaried
+        # load embeddings, either for query or to query on what was just summaried
         self.loaded_embeddings = load_embeddings(
-                self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs)
+                self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs, self.kwargs)
 
         assert self.task == "query"
 
