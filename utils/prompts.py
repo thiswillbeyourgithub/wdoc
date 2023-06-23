@@ -15,6 +15,8 @@ Here are the rules:
             * To be quick to read, use as much as possible common words.
         * If relevant, you can use direct quotation form the text.
         * You absolutely have to be truthful and unbiased.
+    * Additionally, if the text comes with a title, you must explicitely write a sentence that answers directly to the title. i.e. if the title is a question, answer it. if the title is clickbaity, write a satisfactory explainer etc.
+        * In which case, this bullet point must begin with "TITLE EXPLAINER:" and appear as the first bullet point.
 """
 
 prompt_template = """Your job is to write a summary of a text while following some rules.
