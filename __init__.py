@@ -49,9 +49,9 @@ class OmniQA:
         Parameters
         ----------
         --task str, default query
-            either query or summary. query means to load the input files then wait
-            for user question. summary means the input will be passed through a
-            summarization prompt to get the idea.
+            either query, summary, summary_then_query.
+                * query means to load the input files then wait for user question.
+                * summary means the input will be passed through a summarization prompt.
 
         --filetype str, default None
             the type of input. Depending on the value, different other parameters
@@ -109,8 +109,8 @@ class OmniQA:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
-        assert task in ["query", "summary"], "invalid task value"
-        if task == "summary":
+        assert task in ["query", "summary", "summary_then_query"], "invalid task value"
+        if task in ["summary", "summary_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         if filetype and loadfrom:
             filetype = None
@@ -191,7 +191,7 @@ class OmniQA:
     def process_task(self):
         red("\nProcessing task")
 
-        if self.task == "summary":
+        if self.task in ["summary", "summary_then_query"]:
             with self.callback() as cb:
                 chain = load_summarize_chain(
                         self.llm,
@@ -211,14 +211,17 @@ class OmniQA:
             for bulletpoint in out["output_text"].split("\n"):
                 red(bulletpoint)
 
-            whi("Switching to query mode.")
-            self.task = "query"
+            if self.task == "summary_then_query":
+                whi("Done summarizing. Switching to query mode.")
+            else:
+                whi("Done summarizing. Exiting.")
+                raise SystemExit()
 
-        # load embeddings, either for query or to query on what was just summaried
+        # load embeddings, used for querying
         self.loaded_embeddings = load_embeddings(
                 self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs, self.kwargs)
 
-        assert self.task == "query"
+        assert self.task in ["query", "summary_then_query"]
 
         # set default ask_user argument
         multiline = False
