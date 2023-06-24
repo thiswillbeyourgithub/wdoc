@@ -1,3 +1,5 @@
+import youtube_dl
+from youtube_dl.utils import DownloadError, ExtractorError
 import requests
 import openai
 import random
@@ -167,10 +169,11 @@ def load_doc(filetype, debug, **kwargs):
             assert "path" in kwargs, "missing 'path' key in args"
             path = kwargs["path"]
             whi(f"Loading youtube playlist: '{path}'")
-            data = []
-            page = requests.get(path).text
-            soup = BeautifulSoup(page,'html.parser')
-            doclist = [a.get('href') for a in soup.find_all('a')]
+            video = loaddoc_cache.eval(load_youtube_playlist, path)
+
+            kwargs["playlist_title"] = video['title'].strip().replace("\n", "")
+            assert "duration" not in video, f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
+            doclist = [ent["webpage_url"] for ent in video["entries"]]
             doclist = [li for li in doclist if re.search(yt_link_regex, li)]
 
             def threaded_load_item(filetype, item, kwargs):
@@ -458,6 +461,8 @@ def load_doc(filetype, debug, **kwargs):
             docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
         if "title" in kwargs:
             docs[i].metadata["title"] = kwargs["title"]
+        if "playlist_title" in kwargs:
+            docs[i].metadata["title"] = kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
         if bool(soup.find()):
@@ -566,3 +571,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     db.save_local(str(path))
 
     return db
+
+def load_youtube_playlist(playlist_url):
+    with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
+        try:
+            loaded = ydl.extract_info(playlist_url, download=False)
+        except (KeyError, DownloadError, ExtractorError) as e:
+            raise Exception(red(f"ERROR: Youtube playlist link skipped because : error during information \
+        extraction from {playlist_url} : {e}"))
+    return loaded
