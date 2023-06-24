@@ -169,7 +169,7 @@ def load_doc(filetype, debug, **kwargs):
             assert "path" in kwargs, "missing 'path' key in args"
             path = kwargs["path"]
             whi(f"Loading youtube playlist: '{path}'")
-            video = loaddoc_cache.eval(load_youtube_playlist, path)
+            video = load_youtube_playlist(path)
 
             kwargs["playlist_title"] = video['title'].strip().replace("\n", "")
             assert "duration" not in video, f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
@@ -572,6 +572,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
 
     return db
 
+@loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
         try:
