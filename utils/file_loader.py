@@ -445,8 +445,7 @@ def load_doc(filetype, debug, **kwargs):
             red(f"Exception when using selenium to parse text: '{err}'\nUsing playwright as fallback")
             try:
                 loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
-                texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
-                docs = [Document(page_content=t) for t in texts]
+                docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
             except Exception as err:
                 red(f"Exception when using playwright to parse text: '{err}'\nUsing goose as fallback")
                 g = Goose()
