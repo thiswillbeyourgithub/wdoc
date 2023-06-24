@@ -7,6 +7,8 @@
 * query your documents (including large database)
 * query your documents AFTER summarization took place.
 
+## Notes
+* the multilingual embeddings from sentence transformers have a very small max token length and are probably unsuitable. That's why I implemented glove embeddings which are predictably bad. But the current implementation removes the stop words in the documents, but not in the query. If someone is interested I might add a query augmentation strategy. Otherwise the best bet might be to use a rolling window of sentence transformer embeddings then averaging.
 
 ## How to install
 * `git clone`
@@ -46,3 +48,4 @@
 
 ## TODO:
 * fix caching of youtube playlist
+* add example usage
