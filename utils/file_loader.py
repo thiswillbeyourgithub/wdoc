@@ -50,6 +50,7 @@ for k, v in  inference_rules.items():
 
 charac_regex = re.compile(r"[^\w\s]")
 clozeregex = re.compile(r"{{c\d+::|}}")
+markdownlink_regex = re.compile((r'\[.*?\]\((.*?)\)')
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
 
 
@@ -137,6 +138,7 @@ def load_doc(filetype, debug, **kwargs):
         elif filetype == "link_file":
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
+            doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
