@@ -208,9 +208,14 @@ def load_doc(filetype, debug, **kwargs):
         assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
         # use multithreading only if recursive
+        n_thread = 4
+        if debug:
+            n_thread = 1
+        if filetype == "json_list":
+            n_thread = 1
         results = Parallel(
-                n_jobs=4 if len(doclist) >= 3 else 1,
-                backend="threading" if not debug and filetype in ["recursive", "link_file"] else "sequential",
+                n_jobs=n_thread,
+                backend="threading",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
                     ) for doc in tqdm(doclist, desc="loading list of documents"))
 
@@ -512,9 +517,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         temp.save_local(str(embed_cache / embed_model / hashcheck))
         return temp, hashcheck, doc.metadata['path']
 
+    n_thread = 3
+    if debug:
+        n_thread = 1
     results = Parallel(
-            n_jobs=3,
-            backend="threading" if not debug else "sequential",
+            n_jobs=n_thread,
+            backend="threading",
             )(delayed(get_embedding)(doc, embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
 
     # merge the results
