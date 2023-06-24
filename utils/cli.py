@@ -45,12 +45,11 @@ def ask_user(q, top_k, multiline, task):
             ]
     if task == "query":
         autocomplete = WordCompleter(
-                prompt_commands + sorted(
-                    [
+                prompt_commands + [
                     x["prompt"]
                     for x in prev_questions
                     if x["task"] == task
-                    ], key=lambda x: x["timestamp"]),
+                    ],
                 match_middle=True,
                 ignore_case=True)
     else:
