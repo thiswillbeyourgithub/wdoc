@@ -226,6 +226,7 @@ def load_doc(filetype, debug, **kwargs):
     if filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
+        assert re.search(yt_link_regex, path), f"youtube link is not valid: '{path}'"
         if "language" not in kwargs:
             lang = ["fr", "en"]
         else:
