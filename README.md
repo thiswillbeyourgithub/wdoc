@@ -1,5 +1,6 @@
 # OmniDOCS_LLM
 * use [langchain](langchain.readthedocs.io/) to summarize and query from lots of documents
+* if you have issue, questions, etc. Feel free to open an issue.
 
 ## Use case
 * quickly summarize lots of youtube content automatically and add it to a TODO file in logseq
