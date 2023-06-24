@@ -111,6 +111,8 @@ def load_doc(filetype, debug, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
+            n_thread = 4
+
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
                 meta["path"] = item
@@ -131,6 +133,8 @@ def load_doc(filetype, debug, **kwargs):
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
+            n_thread = 1
+
             def threaded_load_item(filetype, item, kwargs):
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
@@ -149,6 +153,8 @@ def load_doc(filetype, debug, **kwargs):
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
             doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
+
+            n_thread = 10
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
@@ -175,6 +181,8 @@ def load_doc(filetype, debug, **kwargs):
             assert "duration" not in video, f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
             doclist = [ent["webpage_url"] for ent in video["entries"]]
             doclist = [li for li in doclist if re.search(yt_link_regex, li)]
+
+            n_thread = 20
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
@@ -213,13 +221,6 @@ def load_doc(filetype, debug, **kwargs):
         assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
         # use multithreading only if recursive
-        n_thread = 4
-        if filetype == "youtube_playlist":
-            n_thread = 20
-        if filetype == "link_file":
-            n_thread = 10
-        if filetype == "json_list":
-            n_thread = 1
         if debug:
             n_thread = 1
         results = Parallel(
