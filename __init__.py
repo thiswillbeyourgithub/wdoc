@@ -44,7 +44,7 @@ class OmniQA:
             loadfrom=None,
             top_k=3,
             debug=False,
-            llm_verbosity=False,
+            llm_verbosity=True,
             help=False,
             h=False,
             **kwargs,
@@ -115,7 +115,7 @@ class OmniQA:
         --debug bool, default False
             if True will open a debugger instead before crashing
 
-        --llm_verbosity, default False
+        --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
 
         --help or -h, default False
