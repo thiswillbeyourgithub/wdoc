@@ -70,7 +70,7 @@ class OmniQA:
                 * string => no other parameters needed, will ask to provide a string
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be written to a text file next to the input file link with ".summarized.md" appended.
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be written to --out_file.
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --model str, default openai
@@ -122,6 +122,8 @@ class OmniQA:
                         ), "summarize_link_file must be used with filetype link_file"
         if task == "summarize_link_file":
             assert "path" in kwargs, 'missing path arg for summarize_link_file'
+            assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
+            assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
         if filetype and loadfrom:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
@@ -213,7 +215,7 @@ class OmniQA:
             for doc in tqdm(link_list, desc="Summarizing links"):
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["link_file_item"] == doc]
                 assert relevant_docs
-                with open(self.kwargs["path"] + ".summarized.md", "r") as f:
+                with open(self.kwargs["out_file"], "r") as f:
                     content = f.read()
                     if doc in content:
                         whi(f"Skipping already summarized doc: '{doc}'")
@@ -257,7 +259,7 @@ class OmniQA:
                 if "author" in relevant_docs[0].metadata:
                     author = relevant_docs[0].metadata["author"]
                     header += f"\n    * by '{author}'"
-                with open(self.kwargs["path"] + ".summarized.md", "a") as f:
+                with open(self.kwargs["out_file"], "a") as f:
                     f.write(header)
                     for bulletpoint in outtext.split("\n"):
                         f.write("\n")
@@ -267,7 +269,7 @@ class OmniQA:
                 red(f"Total cost so far: '{total_cost[0]}' (${total_cost[1]})")
                 red(f"Total time saved so far: {total_length_saved:.1f} minutes")
 
-            with open(self.kwargs["path"] + ".summarized.md", "a") as f:
+            with open(self.kwargs["out_file"], "a") as f:
                 f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})\n")
                 f.write(f"Total time saved: plausibly {total_length_saved:.1f} minutes")
 
