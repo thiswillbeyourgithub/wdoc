@@ -72,7 +72,7 @@ class OmniQA:
                 * string => no other parameters needed, will ask to provide a string
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is True, the formatting will be compatible with logseq.
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is present, the formatting will be compatible with logseq.
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --model str, default openai
@@ -268,7 +268,7 @@ class OmniQA:
                 else:
                     author = None
 
-                if "out_file_logseq_mode" in self.kwargs and self.kwargs["out_file_logseq_mode"]:
+                if "out_file_logseq_mode" in self.kwargs:
                     header = f"- TODO {item_name}"
                     header += "\n  collapsed:: true"
                     header += f"\n  summarization_date:: {today}"
