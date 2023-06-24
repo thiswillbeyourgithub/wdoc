@@ -27,12 +27,12 @@ Here's the first part of the text:
 {text}
 '''
 
-[RULES]
+{rules}
 
 SUMMARY IN MARKDOWN:
 """
 summarize_prompt = PromptTemplate(
-        template=prompt_template.replace("[RULES]", summary_rules),
+        template=prompt_template,
         input_variables=["text", "title"])
 refine_template = (
     """Your job is to continue the summary of a text while following some rules.
@@ -48,7 +48,7 @@ Here's the next section of the text:
 {text}
 '''
 
-[RULES]
+{rules}
 
 Given this new section of the text and the rules, refine the summary. If no changes are needed, simply answer the original summary.
 
@@ -56,6 +56,6 @@ SUMMARY IN MARKDOWN:
 """
 )
 refine_prompt = PromptTemplate(
-    template=refine_template.replace("[RULES]", summary_rules),
+    template=refine_template,
     input_variables=["existing_answer", "text", "title"],
 )

@@ -15,7 +15,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 
 
-from utils.prompts import refine_prompt, summarize_prompt
+from utils.prompts import refine_prompt, summarize_prompt, summary_rules
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings
 from utils.misc import embed_cache
@@ -234,8 +234,8 @@ class OmniQA:
                             self.llm,
                             chain_type="refine",
                             return_intermediate_steps=True,
-                            question_prompt=summarize_prompt.partial(title=title),
-                            refine_prompt=refine_prompt.partial(title=title),
+                            question_prompt=summarize_prompt.partial(title=title, rules=summary_rules),
+                            refine_prompt=refine_prompt.partial(title=title, rules=summary_rules),
                             verbose=True,
                             )
 
@@ -317,8 +317,8 @@ class OmniQA:
                         self.llm,
                         chain_type="refine",
                         return_intermediate_steps=True,
-                        question_prompt=summarize_prompt,
-                        refine_prompt=refine_prompt,
+                        question_prompt=summarize_prompt.partial(rules=summary_rules),
+                        refine_prompt=refine_prompt.partial(rules=summary_rules),
                         verbose=True,
                         )
                 out = chain(
