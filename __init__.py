@@ -253,24 +253,41 @@ class OmniQA:
 
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
 
+                # parse metadata
                 if title:
                     item_name = f"{relevant_docs[0].metadata['title']} - {doc}"
                 else:
                     item_name = doc
-                if "out_file_logseq_mode" in self.kwargs and self.kwargs["out_file_logseq_mode"]:
-                    header = f"- TODO {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
-                    header += "\n  collapsed:: true"
-                    header += f"\n  summarization_date:: {today}"
-                    header += "\n  block_type:: langchain_OnmiQA_summary"
-                else:
-                    header = f"- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
                 if "length" in relevant_docs[0].metadata:
                     leng = int(relevant_docs[0].metadata["length"]) / 60
                     total_length_saved += leng
-                    header += f"    {leng:.1f} minutes"
+                else:
+                    leng = None
                 if "author" in relevant_docs[0].metadata:
                     author = relevant_docs[0].metadata["author"]
-                    header += f"    by '{author}'"
+                else:
+                    author = None
+
+                if "out_file_logseq_mode" in self.kwargs and self.kwargs["out_file_logseq_mode"]:
+                    header = f"- TODO {item_name}"
+                    header += "\n  collapsed:: true"
+                    header += f"\n  summarization_date:: {today}"
+                    header += "\n  block_type:: langchain_OnmiQA_summary"
+                    header += f"\n  token_cost:: {cb.total_tokens}"
+                    header += f"\n  dollar_cost:: {cb.total_cost}"
+                    if leng:
+                        header += f"\n  minutes_saved:: {leng:.1f}"
+                    if author:
+                        header += f"\n  author:: {author}"
+
+                else:
+                    header = f"- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
+                    if leng:
+                        header += f"    {leng:.1f} minutes"
+                    if author:
+                        header += f"    by '{author}'"
+
+                # save to file
                 with open(self.kwargs["out_file"], "a") as f:
                     f.write(header)
                     for bulletpoint in outtext.split("\n"):
