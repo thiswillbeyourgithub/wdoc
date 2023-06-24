@@ -63,7 +63,7 @@ class OmniQA:
             the type of input. Depending on the value, different other parameters
             are needed. If json_list is used, the line of the input file can contain
             any of those parameters as long as they are as json. You can find
-            an example of json_list file in utils/file_list.txt
+            an example of json_list file in utils/json_list_example.txt
 
             Supported values => relevant parameters
                 * youtube => --path must be a link to youtube --language=["fr","en"] to use french transcripts if possible, english otherwise --translation=en to use the transcripts after translation to english
