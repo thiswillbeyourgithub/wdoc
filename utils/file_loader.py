@@ -228,7 +228,7 @@ def load_doc(filetype, debug, **kwargs):
                 n_jobs=n_thread,
                 backend="threading",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
-                    ) for doc in tqdm(doclist, desc=f"loading documents from filetype '{filetype}'"))
+                    ) for doc in tqdm(doclist, desc=f"loading documents from filetype '{filetype}' with n_thread={n_thread}"))
 
         results = [r for r in results if r]
         assert results, "Empty results after loading documents"
