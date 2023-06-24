@@ -48,6 +48,7 @@
 * summarize_link_file: with filetype==link_file this summarizes all the links and adds it to an output file. (logseq format is supported)
 
 ## TODO:
+* add docstrings, more comments, static typing
 * faster caching for documents. Not just for the splitter but also for the loader.
 * fix caching of youtube playlist
 * add example usage
