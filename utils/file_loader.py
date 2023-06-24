@@ -1,3 +1,4 @@
+import requests
 import openai
 import random
 import shutil
@@ -35,6 +36,7 @@ inference_rules = {
         # key is output filtype, value is list of regex that if match
         # will return the key
         # the order of the keys is important
+        "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
         "pdf": [".*pdf"],
         "url": ["http"],
@@ -50,7 +52,8 @@ for k, v in  inference_rules.items():
 
 charac_regex = re.compile(r"[^\w\s]")
 clozeregex = re.compile(r"{{c\d+::|}}")
-markdownlink_regex = re.compile((r'\[.*?\]\((.*?)\)')
+markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')
+yt_link_regex = re.compile("youtube.*watch")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
 
 
@@ -84,11 +87,12 @@ def load_doc(filetype, debug, **kwargs):
             if filetype != "infer":
                 break
 
-    if filetype in ["json_list", "recursive", "link_file"]:
+    if filetype in ["json_list", "recursive", "link_file", "youtube_playlist"]:
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
 
         if filetype == "recursive":
+            whi(f"Loading recursive filetype: '{path}'")
             assert "pattern" in kwargs, "missing 'pattern' key in args"
             assert "recursed_filetype" in kwargs, "missing 'recursed_filetype' in args"
             assert kwargs["recursed_filetype"] not in [
@@ -119,6 +123,7 @@ def load_doc(filetype, debug, **kwargs):
                     return None
 
         elif filetype == "json_list":
+            whi(f"Loading json_list: '{path}'")
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
@@ -136,6 +141,7 @@ def load_doc(filetype, debug, **kwargs):
                     return None
 
         elif filetype == "link_file":
+            whi(f"Loading link_file: '{path}'")
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
             doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
@@ -145,7 +151,32 @@ def load_doc(filetype, debug, **kwargs):
                 meta["path"] = item
                 assert "http" in item, f"item does not appear to be a link: '{item}'"
                 meta["filetype"] = "infer"
-                meta["link_file_item"] = item
+                meta["subitem_link"] = item
+                try:
+                    return load_doc(
+                            debug=debug,
+                            **meta,
+                            )
+                except Exception as err:
+                    red(f"Error when loading '{item}': '{err}'")
+                    return None
+
+        elif filetype == "youtube_playlist":
+            assert "path" in kwargs, "missing 'path' key in args"
+            path = kwargs["path"]
+            whi(f"Loading youtube playlist: '{path}'")
+            data = []
+            page = requests.get(path).text
+            soup = BeautifulSoup(page,'html.parser')
+            doclist = [a.get('href') for a in soup.find_all('a')]
+            doclist = [li for li in doclist if re.search(yt_link_regex, li)]
+
+            def threaded_load_item(filetype, item, kwargs):
+                meta = kwargs.copy()
+                meta["path"] = item
+                assert "http" in item, f"item does not appear to be a link: '{item}'"
+                meta["filetype"] = "youtube"
+                meta["subitem_link"] = item
                 try:
                     return load_doc(
                             debug=debug,
@@ -174,7 +205,7 @@ def load_doc(filetype, debug, **kwargs):
                 doclist = [d for d in doclist if not re.search(exc, d)]
             del kwargs["exclude"]
 
-        assert doclist, "empty list of documents to load!"
+        assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
         # use multithreading only if recursive
         results = Parallel(
@@ -398,8 +429,8 @@ def load_doc(filetype, debug, **kwargs):
         docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in locals():
             docs[i].metadata["path"] = path
-        if "link_file_item" in kwargs:
-            docs[i].metadata["link_file_item"] = kwargs["link_file_item"]
+        if "subitem_link" in kwargs:
+            docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
         if "title" in kwargs:
             docs[i].metadata["title"] = kwargs["title"]
         # if html, parse it

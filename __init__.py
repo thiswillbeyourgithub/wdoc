@@ -63,6 +63,7 @@ class OmniQA:
 
             Supported values => relevant parameters
                 * youtube => --path must be a link to youtube --language=["fr","en"] to use french transcripts if possible, english otherwise --translation=en to use the transcripts after translation to english
+                * youtube_playlist => --path must link to a youtube playlist. language and translation are set to their default value of fr,en and en
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * url => --path must be a valid http(s) link
@@ -206,14 +207,14 @@ class OmniQA:
         if self.task == "summarize_link_file":
             link_list = []
             for d in self.loaded_docs:
-                assert "link_file_item" in d.metadata, "missing 'link_file_item' in a doc metadata"
-                if d.metadata["link_file_item"] not in link_list:
-                    link_list.append(d.metadata["link_file_item"])
+                assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
+                if d.metadata["subitem_link"] not in link_list:
+                    link_list.append(d.metadata["subitem_link"])
 
             total_cost = [0, 0]
             total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
-                relevant_docs = [d for d in self.loaded_docs if d.metadata["link_file_item"] == doc]
+                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
                 assert relevant_docs
                 with open(self.kwargs["out_file"], "r") as f:
                     content = f.read()
