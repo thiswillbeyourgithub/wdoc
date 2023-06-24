@@ -273,15 +273,21 @@ class OmniQA:
                     f.write(header)
                     for bulletpoint in outtext.split("\n"):
                         f.write("\n")
+                        # make sure the line begins with a bullet point
+                        if not bulletpoint.strip().startswith("- "):
+                            begin_space = re.search("^(\s+)", bulletpoint)
+                            if not begin_space:
+                                begin_space = ""
+                            bulletpoint = begin_space += "- " + bulletpoint
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
                 red(f"Total cost of this run: '{total_cost[0]}' (${total_cost[1]})")
-                red(f"Total time of this run: {total_length_saved:.1f} minutes")
+                red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
 
             with open(self.kwargs["out_file"], "a") as f:
-                f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})\n")
-                f.write(f"Total time saved: plausibly {total_length_saved:.1f} minutes")
+                f.write(f"- Total cost of this run: '{total_cost[0]}' (${total_cost[1]})\n")
+                f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes")
 
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
