@@ -212,7 +212,7 @@ class OmniQA:
 
         out = self.process_task()
 
-        whi("Done.\nOpenning debugger.")
+        whi("Done with tasks.\nOpenning debugger.")
         breakpoint()
 
 
@@ -444,10 +444,7 @@ class OmniQA:
 
             except Exception as err:
                 whi(f"Error: '{err}'")
-                if self.debug:
-                    breakpoint()
-                else:
-                    raise
+                raise
 
 
 if __name__ == "__main__":
