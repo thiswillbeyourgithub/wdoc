@@ -373,12 +373,6 @@ class OmniQA:
                             multiline=multiline,
                             task=self.task,
                             )
-                    # while True:
-                    #     docs_and_scores = self.loaded_embeddings.similarity_search_with_score(
-                    #             query,
-                    #             k=self.top_k,
-                    #             )
-                    #     breakpoint()
                     retriever = self.loaded_embeddings.as_retriever(
                             search_kwargs={
                                 "k": self.top_k,
