@@ -16,7 +16,7 @@ Here are the rules:
         - If relevant, you can use direct quotations from the text.
         - You absolutely have to be truthful and unbiased.
     - Additionally, if the text comes with a title, you must explicitly write a sentence that answers directly to the title. i.e. if the title is a question, answer it. If the title is clickbaity, write a satisfactory explanation, etc.
-        - In which case, this bullet point must begin with "TITLE EXPLAINER:" and appear as the first bullet point.
+        - In which case, this bullet point must begin with "- TITLE EXPLAINER:" and appear as the first bullet point.
 """
 
 prompt_template = """Your job is to write a summary of a text while following some rules.
