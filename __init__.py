@@ -227,7 +227,7 @@ class OmniQA:
                         continue
 
                 if "title" in relevant_docs[0].metadata:
-                    title = f"Here's the text title:\n'''{relevant_docs[0].metadata}\n'''\n"
+                    title = f"Here's the text title:\n'''{relevant_docs[0].metadata['title']}\n'''\n"
                 else:
                     title = ""
                 with self.callback() as cb:
