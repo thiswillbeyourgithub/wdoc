@@ -247,6 +247,7 @@ class OmniQA:
 
                 outtext = out["output_text"]
                 outtext = outtext.replace("* ", "- ")
+                outtext = outtext.replace("- - ", "- ")
 
                 red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
                 total_cost[0] += cb.total_tokens
