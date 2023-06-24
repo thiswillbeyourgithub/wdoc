@@ -15,6 +15,7 @@ Here are the rules:
             - To be quick to read, use as much as possible common words.
         - If relevant, you can use direct quotations from the text.
         - You absolutely have to be truthful and unbiased.
+        - You can use pronouns if the subject of the sentence is obvious or implied.
     - Additionally, if the text comes with a title, you must explicitly write a sentence that answers directly to the title. i.e. if the title is a question, answer it. If the title is clickbaity, write a satisfactory explanation, etc.
         - In which case, this bullet point must begin with "- TITLE EXPLAINER:" and appear as the first bullet point.
 """
