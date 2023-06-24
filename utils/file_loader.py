@@ -111,7 +111,7 @@ def load_doc(filetype, debug, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
-            n_thread = 4
+            n_thread = 10
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
@@ -228,7 +228,7 @@ def load_doc(filetype, debug, **kwargs):
                 n_jobs=n_thread,
                 backend="threading",
                 )(delayed(threaded_load_item)(filetype, doc, kwargs
-                    ) for doc in tqdm(doclist, desc="loading list of documents"))
+                    ) for doc in tqdm(doclist, desc=f"loading documents from filetype '{filetype}'"))
 
         results = [r for r in results if r]
         assert results, "Empty results after loading documents"
