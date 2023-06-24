@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 import textwrap
 from pathlib import Path
@@ -71,7 +72,7 @@ class OmniQA:
                 * string => no other parameters needed, will ask to provide a string
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is True, the formatting will be compatible with logseq.
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --model str, default openai
@@ -205,6 +206,8 @@ class OmniQA:
         red("\nProcessing task")
 
         if self.task == "summarize_link_file":
+            d = datetime.today()
+            today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
             link_list = []
             for d in self.loaded_docs:
                 assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
@@ -219,7 +222,7 @@ class OmniQA:
                 with open(self.kwargs["out_file"], "r") as f:
                     content = f.read()
                     if doc in content:
-                        whi(f"Skipping already summarized doc: '{doc}'")
+                        whi(f"Skipping doc that were already summarized in out_file: '{doc}'")
                         continue
 
                 if "title" in relevant_docs[0].metadata:
@@ -250,16 +253,22 @@ class OmniQA:
 
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
 
-                header = f"* {doc}:    cost: {cb.total_tokens} (${cb.total_cost})"
+                if "out_file_logseq_mode" in self.kwargs and self.kwargs["out_file_logseq_mode"]:
+                    header = f"- TODO {doc}    cost: {cb.total_tokens} (${cb.total_cost})"
+                    header += "\n  collapsed:: true"
+                    header += f"\n  summarization_date:: {today}"
+                    header += "\n  block_type:: langchain_OnmiQA_summary"
+                else:
+                    header = f"- {doc}    cost: {cb.total_tokens} (${cb.total_cost})"
                 if title:
-                    header += f"\n    * {relevant_docs[0].metadata['title']}"
+                    header += f"\n    - {relevant_docs[0].metadata['title']}"
                 if "length" in relevant_docs[0].metadata:
                     leng = int(relevant_docs[0].metadata["length"]) / 60
                     total_length_saved += leng
-                    header += f"\n    * {leng:.1f} minutes"
+                    header += f"    {leng:.1f} minutes"
                 if "author" in relevant_docs[0].metadata:
                     author = relevant_docs[0].metadata["author"]
-                    header += f"\n    * by '{author}'"
+                    header += f"    by '{author}'"
                 with open(self.kwargs["out_file"], "a") as f:
                     f.write(header)
                     for bulletpoint in outtext.split("\n"):
@@ -267,8 +276,8 @@ class OmniQA:
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
-                red(f"Total cost so far: '{total_cost[0]}' (${total_cost[1]})")
-                red(f"Total time saved so far: {total_length_saved:.1f} minutes")
+                red(f"Total cost of this run: '{total_cost[0]}' (${total_cost[1]})")
+                red(f"Total time of this run: {total_length_saved:.1f} minutes")
 
             with open(self.kwargs["out_file"], "a") as f:
                 f.write(f"Total cost: '{total_cost[0]}' (${total_cost[1]})\n")
