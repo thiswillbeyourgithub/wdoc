@@ -25,6 +25,7 @@
 * Many caches are used to speed things up
 * Many LLM implemented (by default openai, but can use gpt4all, llamacpp) and can easily support more.
 * Many embeddings supported (by default openai, but can support sentence-transformers, hugging face models etc). If using openai the cost will be computed before and if above $1 you will have to confirm.
+* multithreaded document parsing and embedding.
 * Very customizable
 * I'm nice, just open an issue if you have a feature request or an issue.
 
