@@ -135,6 +135,7 @@ class OmniQA:
             assert k in [
                     "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
                     "path", "include", "exclude",
+                    "out_file", "out_file_logseq_mode",
                     ], f"Unexpected keyword argument: '{k}'"
 
         if filetype == "string":
@@ -294,10 +295,10 @@ class OmniQA:
                         f.write("\n")
                         # make sure the line begins with a bullet point
                         if not bulletpoint.strip().startswith("- "):
-                            begin_space = re.search("^(\s+)", bulletpoint)
+                            begin_space = re.search(r"^(\s+)", bulletpoint)
                             if not begin_space:
                                 begin_space = ""
-                            bulletpoint = begin_space += "- " + bulletpoint
+                            bulletpoint = begin_space + "- " + bulletpoint
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 

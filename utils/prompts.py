@@ -33,7 +33,7 @@ SUMMARY IN MARKDOWN:
 """
 summarize_prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["text", "title"])
+        input_variables=["text", "title", "rules"])
 refine_template = (
     """Your job is to continue the summary of a text while following some rules.
 
@@ -57,5 +57,5 @@ SUMMARY IN MARKDOWN:
 )
 refine_prompt = PromptTemplate(
     template=refine_template,
-    input_variables=["existing_answer", "text", "title"],
+    input_variables=["existing_answer", "text", "title", "rules"],
 )
