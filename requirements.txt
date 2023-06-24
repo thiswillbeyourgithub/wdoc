@@ -1,0 +1,12 @@
+ankipandas>=0.3.13
+beautifulsoup4>=4.10.0
+fire>=0.5.0
+ftfy>=6.1.1
+joblib>=1.2.0
+langchain>=0.0.212
+nltk>=3.8.1
+openai>=0.27.2
+prompt-toolkit>=3.0.28
+requests>=2.25.1
+tiktoken>=0.3.3
+tqdm>=4.57.0
