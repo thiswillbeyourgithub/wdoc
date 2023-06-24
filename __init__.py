@@ -310,9 +310,10 @@ class OmniQA:
                 red(f"Total cost of this run: '{total_cost[0]}' (${total_cost[1]})")
                 red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
 
-            with open(self.kwargs["out_file"], "a") as f:
-                f.write(f"- Total cost of this run: '{total_cost[0]}' (${total_cost[1]})\n")
-                f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
+            if total_cost[0] != 0 and total_cost[1] != 0:
+                with open(self.kwargs["out_file"], "a") as f:
+                    f.write(f"- Total cost of this run: '{total_cost[0]}' (${total_cost[1]})\n")
+                    f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
