@@ -524,6 +524,21 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         docs = sorted(docs, key=lambda x: random.random())
     (embed_cache / embed_model).mkdir(exist_ok=True)
 
+    # check price of embedding
+    full_tkn = sum([len_split(doc.page_content) for doc in docs])
+    red(f"Total number of tokens in documents: '{full_tkn}'")
+    full_tkn_uncached = sum([len_split(doc.page_content) for doc in docs if not (embed_cache / embed_model / doc.metadata["hash"]).exists()])
+    red(f"Total number of tokens in documents that are not in cache: '{full_tkn_uncached}'")
+    if embed_model == "openai":
+        dol_price = full_tkn * 0.0001 / 1000
+        dol_price_uncached = full_tkn_uncached * 0.0001 / 1000
+        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f} and for uncached is ${dol_price_uncached:.4f}")
+        if dol_price_uncached > 1:
+            ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
+            if ans.lower() not in ["y", "yes"]:
+                red("Quitting.")
+                raise SystemExit()
+
     def get_embedding(doc, embeddings, embed_cache, embed_args=embed_args):
         hashcheck = doc.metadata["hash"]
         if (embed_cache / embed_model / hashcheck).exists():
