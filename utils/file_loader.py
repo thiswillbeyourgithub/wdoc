@@ -5,6 +5,7 @@ import shutil
 import ankipandas as akp
 import ftfy
 from bs4 import BeautifulSoup
+from goose3 import Goose
 from pathlib import Path
 import re
 from tqdm import tqdm
@@ -426,11 +427,21 @@ def load_doc(filetype, debug, **kwargs):
         try:
             loader = SeleniumURLLoader(urls=[path])
             texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
+            docs = [Document(page_content=t) for t in texts]
         except Exception as err:
             red(f"Exception when using selenium to parse text: '{err}'\nUsing playwright as fallback")
-            loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
-            texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
-        docs = [Document(page_content=t) for t in texts]
+            try:
+                loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
+                texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
+                docs = [Document(page_content=t) for t in texts]
+            except Exception as err:
+                red(f"Exception when using playwright to parse text: '{err}'\nUsing goose as fallback")
+                g = Goose()
+                article = g.extract(url=path)
+                kwargs["title"] = article.title
+                text = article.cleaned_text
+                texts = loaddoc_cache.eval(text_splitter.split_text, text)
+                docs = [Document(page_content=t) for t in texts]
 
     # add metadata
     for i in range(len(docs)):
