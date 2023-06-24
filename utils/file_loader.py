@@ -39,8 +39,9 @@ inference_rules = {
         # the order of the keys is important
         "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
+        "txt": [".txt$", ".md$"],
+        "url": ["^http"],
         "pdf": [".*pdf"],
-        "url": ["http"],
         }
 for k, v in  inference_rules.items():
     try:
@@ -442,6 +443,9 @@ def load_doc(filetype, debug, **kwargs):
                 text = article.cleaned_text
                 texts = loaddoc_cache.eval(text_splitter.split_text, text)
                 docs = [Document(page_content=t) for t in texts]
+
+    else:
+        raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
     # add metadata
     for i in range(len(docs)):
