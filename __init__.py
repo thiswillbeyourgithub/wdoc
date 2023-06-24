@@ -271,7 +271,7 @@ class OmniQA:
                     author = None
 
                 if "out_file_logseq_mode" in self.kwargs:
-                    header = f"- TODO {item_name}"
+                    header = f"\n- TODO {item_name}"
                     header += "\n  collapsed:: true"
                     header += f"\n  summarization_date:: {today}"
                     header += "\n  block_type:: langchain_OnmiQA_summary"
@@ -283,7 +283,7 @@ class OmniQA:
                         header += f"\n  author:: {author}"
 
                 else:
-                    header = f"- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
+                    header = f"\n- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
                     if leng:
                         header += f"    {leng:.1f} minutes"
                     if author:
