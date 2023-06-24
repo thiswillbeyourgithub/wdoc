@@ -133,6 +133,7 @@ def load_doc(filetype, debug, **kwargs):
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
+            # don't multithread this because a json line can itself be multithreaded.
             n_thread = 1
 
             def threaded_load_item(filetype, item, kwargs):
