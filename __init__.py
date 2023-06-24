@@ -29,6 +29,7 @@ d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 class OmniQA:
+    VERSION = 0.1
     def __init__(
             self,
             model="openai",
@@ -290,6 +291,7 @@ class OmniQA:
                     header += "\n  block_type:: langchain_OnmiQA_summary"
                     header += f"\n  token_cost:: {cb.total_tokens}"
                     header += f"\n  dollar_cost:: {cb.total_cost}"
+                    header += f"\n  omni_docs_llm_version:: {self.VERSION}"
                     if leng:
                         header += f"\n  minutes_saved:: {leng:.1f}"
                     if author:
@@ -301,6 +303,7 @@ class OmniQA:
                         header += f"    {leng:.1f} minutes"
                     if author:
                         header += f"    by '{author}'"
+                    header += f"    (version {self.VERSION}"
 
                 # save to file
                 with open(self.kwargs["out_file"], "a") as f:
