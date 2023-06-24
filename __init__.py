@@ -70,7 +70,7 @@ class OmniQA:
                 * string => no other parameters needed, will ask to provide a string
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be written to --out_file.
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten).
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --model str, default openai
@@ -241,7 +241,7 @@ class OmniQA:
                             )
 
                 outtext = out["output_text"]
-                outtext = outtext.replace("- ", "* ")
+                outtext = outtext.replace("* ", "- ")
 
                 red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
                 total_cost[0] += cb.total_tokens
