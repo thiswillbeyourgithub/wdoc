@@ -3,3 +3,11 @@
 # each line must contain as least a 'filetype' key/value pair
 # correct syntax:
 # {'key': 'value', 'other_key': 'othervalue'}
+
+
+# this will fetch all the pdf recursively inside a dir according to some parameters
+{"path": "../some/path/to/parent/", "filetype": "recursive", "recursed_filetype": "pdf", "pattern": "*pdf", "exclude": ["regex_to_exclude"], "include": ["regex_that_need_to_be_present"]}
+
+
+# anki deck example
+{"filetype": "anki", "anki_profile": "name_of_your_anki_profile_for_ankipandas", "anki_deck": "personnal::paintings", "anki_notetype": "my_note_type", "anki_fields": ["question", "answer"]}

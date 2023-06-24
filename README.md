@@ -35,7 +35,7 @@
 * txt file, markdown etc
 * anki
 * string (just paste your text into the app)
-* json_list (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row)
+* json_list (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `./utils/file_list.txt`
 * recursive (you give a path and a regex pattern and a filetype, it finds all the files)
 * link_file (you give a text file where each line is a url, proper filetype for each url will be infered)
 * infer (will try to guess)
