@@ -15,7 +15,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-from utils.prompts import refine_prompt, summarize_prompt, summary_rules, combine_prompt, query_prompt
+from utils.prompts import refine_prompt, summarize_prompt, summary_rules
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
 from utils.file_loader import load_doc, load_embeddings
