@@ -44,6 +44,7 @@ class OmniQA:
             loadfrom=None,
             top_k=3,
             debug=False,
+            llm_verbosity=False,
             **kwargs,
             ):
         """
@@ -111,6 +112,9 @@ class OmniQA:
 
         --debug bool, default False
             if True will open a debugger instead before crashing
+
+        --llm_verbosity, default False
+            if True, will print the intermediate reasonning steps of LLMs
         """
 
         # checking argument validity
@@ -154,7 +158,7 @@ class OmniQA:
         self.debug = debug
         self.kwargs = kwargs
         self.stopwords_lang = stopwords_lang
-
+        self.llm_verbosity = llm_verbosity
 
         # loading stop words
         if self.stopwords_lang:
@@ -237,7 +241,7 @@ class OmniQA:
                             return_intermediate_steps=True,
                             question_prompt=summarize_prompt.partial(title=title, rules=summary_rules),
                             refine_prompt=refine_prompt.partial(title=title, rules=summary_rules),
-                            verbose=True,
+                            verbose=self.llm_verbosity,
                             )
 
                     out = chain(
@@ -321,7 +325,7 @@ class OmniQA:
                         return_intermediate_steps=True,
                         question_prompt=summarize_prompt.partial(rules=summary_rules),
                         refine_prompt=refine_prompt.partial(rules=summary_rules),
-                        verbose=True,
+                        verbose=self.llm_verbosity,
                         )
                 out = chain(
                         {"input_documents": self.loaded_docs},
@@ -376,7 +380,7 @@ class OmniQA:
                             chain_type="map_reduce",
                             retriever=retriever,
                             return_source_documents=True,
-                            verbose=True,
+                            verbose=self.llm_verbosity,
                             memory=memory,
                             )
 
