@@ -1,4 +1,5 @@
 from langchain import PromptTemplate, LLMChain
+
 summary_rules = """
 Here are the rules:
     - Regarding the formatting of your summary:
@@ -35,6 +36,7 @@ SUMMARY IN MARKDOWN:
 summarize_prompt = PromptTemplate(
         template=prompt_template,
         input_variables=["text", "title", "rules"])
+
 refine_template = (
     """Your job is to continue the summary of a text while following some rules.
 
@@ -60,3 +62,36 @@ refine_prompt = PromptTemplate(
     template=refine_template,
     input_variables=["existing_answer", "text", "title", "rules"],
 )
+
+# combine_template = """Given the following answer you gave to this question on a long document. Create a final answer.
+# If none of your answers were satisfactory, just say that you don't know. But add an extra paragraph starting by "My two cents:" followed by your answer in your own words. Answer in the language the question was asked.
+# 
+# Original question:
+# '''
+# {question}
+# '''
+# 
+# Your answers:
+# '''
+# {answers}
+# '''
+# 
+# Your definitive answer:"""
+# combine_prompt = PromptTemplate(
+#     template=combine_template,
+#     input_variables=["question", "answers"],
+# )
+# 
+# query_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+# 
+# Context:
+# '''
+# {context}
+# '''
+# 
+# Question: {question}
+# Your answer:"""
+# query_prompt = PromptTemplate(
+#     template=query_template,
+#     input_variables=["context", "question"],
+# )

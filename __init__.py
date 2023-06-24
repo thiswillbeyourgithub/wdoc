@@ -13,10 +13,11 @@ from nltk.corpus import stopwords
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-
-from utils.prompts import refine_prompt, summarize_prompt, summary_rules
+from utils.prompts import refine_prompt, summarize_prompt, summary_rules, combine_prompt, query_prompt
 from utils.llm import load_llm, AnswerConversationBufferMemory
+from langchain.chains.question_answering import load_qa_chain
 from utils.file_loader import load_doc, load_embeddings
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
@@ -383,6 +384,7 @@ class OmniQA:
                             chain_type="map_reduce",
                             retriever=retriever,
                             return_source_documents=True,
+                            return_generated_question=True,
                             verbose=self.llm_verbosity,
                             memory=memory,
                             )
@@ -394,6 +396,31 @@ class OmniQA:
                             return_only_outputs=False,
                             include_run_info=True,
                             )
+
+                    # docs = self.loaded_embeddings.similarity_search(
+                    #         query,
+                    #         k=self.top_k,
+                    #         )
+                    # chain = load_qa_with_sources_chain(
+                    #         llm=self.llm,
+                    #         #retriever=retriever,
+                    #         chain_type="map_reduce",
+                    #         #prompt=query_prompt,
+                    #         combine_prompt=combine_prompt,
+                    #         #return_map_steps=True,
+                    #         #return_source_documents=True,
+                    #         verbose=self.llm_verbosity,
+                    #         input_key="question",
+                    #         )
+
+                    # ans = chain(
+                    #         inputs={
+                    #             "question": query,
+                    #             "input_documents": docs,
+                    #             },
+                    #         return_only_outputs=False,
+                    #         include_run_info=True,
+                    #         )
 
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
