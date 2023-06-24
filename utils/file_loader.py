@@ -40,8 +40,8 @@ inference_rules = {
         "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
         "txt": [".txt$", ".md$"],
+        "pdf": [".*pdf$"],
         "url": ["^http"],
-        "pdf": [".*pdf"],
         }
 for k, v in  inference_rules.items():
     try:

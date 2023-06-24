@@ -9,7 +9,7 @@
 ## supported filetype:
     * youtube videos
     * youtube playlist
-    * pdf
+    * pdf (local or via url remote)
     * txt file, markdown etc
     * anki
     * string (just paste your text into the app)
