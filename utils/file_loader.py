@@ -209,9 +209,13 @@ def load_doc(filetype, debug, **kwargs):
 
         # use multithreading only if recursive
         n_thread = 4
-        if debug:
-            n_thread = 1
+        if filetype == "youtube_playlist":
+            n_thread = 20
+        if filetype == "link_file":
+            n_thread = 10
         if filetype == "json_list":
+            n_thread = 1
+        if debug:
             n_thread = 1
         results = Parallel(
                 n_jobs=n_thread,
