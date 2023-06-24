@@ -267,12 +267,19 @@ def load_doc(filetype, debug, **kwargs):
         whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
 
-        #loader = PyPDFLoader(path)
-        loader = PDFMinerLoader(path)
-        content  = loader.load()
-        content = "\n".join([d.page_content for d in content])
-        texts = loaddoc_cache.eval(text_splitter.split_text, content)
-        docs = [Document(page_content=t) for t in texts]
+        try:
+            loader = PDFMinerLoader(path)
+            content  = loader.load()
+            content = "\n".join([d.page_content for d in content])
+            texts = loaddoc_cache.eval(text_splitter.split_text, content)
+            docs = [Document(page_content=t) for t in texts]
+        except Exception as err:
+            red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
+            loader = PyPDFLoader(path)
+            content  = loader.load()
+            content = "\n".join([d.page_content for d in content])
+            texts = loaddoc_cache.eval(text_splitter.split_text, content)
+            docs = [Document(page_content=t) for t in texts]
 
         # source: https://python.langchain.com/docs/modules/data_connection/document_loaders/how_to/pdf
         # loader = PDFMinerPDFasHTMLLoader(path)
