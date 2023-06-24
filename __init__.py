@@ -45,6 +45,8 @@ class OmniQA:
             top_k=3,
             debug=False,
             llm_verbosity=False,
+            help=False,
+            h=False,
             **kwargs,
             ):
         """
@@ -115,7 +117,13 @@ class OmniQA:
 
         --llm_verbosity, default False
             if True, will print the intermediate reasonning steps of LLMs
+
+        --help or -h, default False
+            if True, will return this documentation.
         """
+        if help:
+            print(self.__init__.__doc__)
+            raise SystemExit()
 
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
