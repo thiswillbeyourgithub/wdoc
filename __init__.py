@@ -253,15 +253,17 @@ class OmniQA:
 
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
 
+                if title:
+                    item_name = f"{relevant_docs[0].metadata['title']} - {doc}"
+                else:
+                    item_name = doc
                 if "out_file_logseq_mode" in self.kwargs and self.kwargs["out_file_logseq_mode"]:
-                    header = f"- TODO {doc}    cost: {cb.total_tokens} (${cb.total_cost})"
+                    header = f"- TODO {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
                     header += "\n  collapsed:: true"
                     header += f"\n  summarization_date:: {today}"
                     header += "\n  block_type:: langchain_OnmiQA_summary"
                 else:
-                    header = f"- {doc}    cost: {cb.total_tokens} (${cb.total_cost})"
-                if title:
-                    header += f"\n    - {relevant_docs[0].metadata['title']}"
+                    header = f"- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
                 if "length" in relevant_docs[0].metadata:
                     leng = int(relevant_docs[0].metadata["length"]) / 60
                     total_length_saved += leng
