@@ -1,47 +1,47 @@
 from langchain import PromptTemplate, LLMChain
 
 summary_rules = """
-Here are the rules:
-    - Regarding the formatting of your summary:
-        - You have to use markdown bullet points to format your summary.
-        - The bullet points can be indented to help organize information hierarchically.
-        - These rules are an example of proper formatting.
-    - Regarding the content of your summary:
-        - All relevant information, anecdotes, facts, etc. must appear in your summary.
-        - Your summary has to be written in the same language as the text: if the text is in French, write a summary in French.
-        - Information has to appear in roughly the same order as in the text. You can deviate a bit from the original ordering if it helps with the hierarchization and helps to compress the summary.
-        - Irrelevant information is to be discarded, for example sponsors, advertisements, embellishments, headers, etc.
-        - The summary has to be brief, to the point, and compressed.
-            - A fine example of brevity is the daily staff memo to the US President.
-            - To be quick to read, use as much as possible common words.
+- Here are the rules:
+    - Regarding the formatting of your answer:
+        - You have to use markdown bullet points to format your answer.
+        - The bullet points have to be indented to organize information hierarchically.
+        - These rules are a good example of proper formatting.
+    - Regarding the content of your answer:
+        - All noteworthy information, anecdotes, facts, insights, etc. must appear in your answer.
+        - Information to be discarded include for example sponsors, advertisements, embellishments, headers, etc.
+        - Information has to appear in a similar order as chronologically appearing in the text.
         - If relevant, you can use direct quotations from the text.
-        - You absolutely have to be truthful and unbiased.
-        - You can use pronouns if the subject of the sentence is obvious or implied.
-    - Additionally, if the text comes with a title, you must explicitly write a sentence that answers directly to the title. i.e. if the title is a question, answer it. If the title is clickbaity, write a satisfactory explanation, etc.
-        - In which case, this bullet point must begin with "- TITLE EXPLAINER:" and appear as the first bullet point.
+        - Your answer can be long but has to be brief, quick to skim, to the point, and compressed. You don't have to use full sentences.
+            - A fine example of brevity is the daily staff memo to the US President.
+            - Avoid repetitions, you can use pronouns, especially if subject sentence is implied.
+            - To facilitate reading use common words but keep technical details if noteworthy.
+        - Your answer has to be written in the same language as the text: if the text is in French, write an answer in French.
+        - Your answer has to be unbiased and faithful to the author.
+    - Sometimes, additional information about the text may be given to you such as a title. As it is usually the reason why this text was given to you, your answer also has to contain a satisfactory statement about it. i.e. if the text is clickbaity or a question, add a bullet point that answers it.
+        - In that case, this statement must start with "- TITLE EXPLAINER:" and appear as the first bullet point in your answer.
 """
 
-prompt_template = """Your job is to write a summary of a text while following some rules.
+prompt_template = """Your job is to condense a text section by section while following some rules.
 
 {title}
-Here's the first part of the text:
+Here's the first section of the text:
 '''
 {text}
 '''
 
 {rules}
 
-SUMMARY IN MARKDOWN:
+Your answer:
 """
 summarize_prompt = PromptTemplate(
         template=prompt_template,
         input_variables=["text", "title", "rules"])
 
 refine_template = (
-    """Your job is to continue the summary of a text while following some rules.
+    """Your job is to continue condensing a text while following some rules.
 
 {title}
-Here's the summary so far:
+Here's the condensed version so far:
 '''
 {existing_answer}
 '''
@@ -53,9 +53,9 @@ Here's the next section of the text:
 
 {rules}
 
-Given this new section of the text and the rules, refine the summary. If no changes are needed, simply answer the original summary.
+Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text.
 
-SUMMARY IN MARKDOWN:
+Your answer:
 """
 )
 refine_prompt = PromptTemplate(
