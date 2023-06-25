@@ -397,7 +397,7 @@ def load_doc(filetype, debug, **kwargs):
         # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
         # docs = [Document(page_content=t) for t in texts]
 
-        # set window_size to X turn each X cards into one document, using a rolling window
+        # set window_size to X turn each X cards into one document, overlapping
         window_size = 1
         index_list = cards.index.tolist()
         n = len(index_list)
