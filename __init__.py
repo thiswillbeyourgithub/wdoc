@@ -18,7 +18,7 @@ from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from utils.prompts import refine_prompt, summarize_prompt, summary_rules
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
-from utils.file_loader import load_doc, load_embeddings
+from utils.file_loader import load_doc, load_embeddings, len_split
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -240,6 +240,17 @@ class OmniQA:
                     already_done.add(link)
                     continue
                 link_list.add(link)
+
+            # estimate price before summarizing, in case you put the bible in there
+            full_tkn = sum([len_split(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in link_list])
+            red(f"Total number of tokens to summarize: '{full_tkn}'")
+            # a conservative estimate is that it takes 2 times the number
+            # of tokens of a document to summarize it
+            estimate_tkn = 2.0 * full_tkn
+            estimate_dol = estimate_tkn / 1000 * 0.0017  # input price: 15, completion : 20
+            red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f}")
+            if estimate_dol > 1:
+                raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
 
             total_tkn_cost = 0
             total_dol_cost = 0
