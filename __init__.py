@@ -244,18 +244,18 @@ class OmniQA:
             total_tkn_cost = 0
             total_dol_cost = 0
             total_length_saved = 0
-            for doc in tqdm(link_list, desc="Summarizing links"):
+            for link in tqdm(link_list, desc="Summarizing links"):
 
-                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
+                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
                 assert relevant_docs
 
                 # parse metadata
                 metadata = []
                 if "title" in relevant_docs[0].metadata:
-                    item_name = f"{relevant_docs[0].metadata['title'].strip()} - {doc}"
+                    item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
                     metadata.append(f"Title: '{item_name}'")
                 else:
-                    item_name = doc
+                    item_name = link
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     leng = relevant_docs[0].metadata["docs_reading_time"]
                     total_length_saved += leng
@@ -296,7 +296,7 @@ class OmniQA:
                 total_tkn_cost += cb.total_tokens
                 total_dol_cost += cb.total_cost
 
-                red(f"\n\nSummary of '{doc}':\n{outtext}")
+                red(f"\n\nSummary of '{link}':\n{outtext}")
 
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
