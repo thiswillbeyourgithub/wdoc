@@ -29,7 +29,7 @@ Here are the rules:
 {rules}
 '''
 
-{title}
+{metadata}
 Here's the first section of the text:
 '''
 {text}
@@ -44,12 +44,12 @@ Your answer:
 """
 summarize_prompt = PromptTemplate(
         template=prompt_template,
-        input_variables=["text", "title", "rules"])
+        input_variables=["text", "metadata", "rules"])
 
 refine_template = (
     """Your job is to continue condensing a text while following some rules.
 
-{title}
+{metadata}
 Here's the condensed version so far:
 '''
 {existing_answer}
@@ -72,7 +72,7 @@ Your answer:
 )
 refine_prompt = PromptTemplate(
     template=refine_template,
-    input_variables=["existing_answer", "text", "title", "rules"],
+    input_variables=["existing_answer", "text", "metadata", "rules"],
 )
 
 # combine_template = """Given the following answer you gave to this question on a long document. Create a final answer.

@@ -240,17 +240,37 @@ class OmniQA:
                         whi(f"Skipping doc that were already summarized in out_file: '{doc}'")
                         continue
 
+                # parse metadata
+                metadata = []
                 if "title" in relevant_docs[0].metadata:
-                    title = f"Here's the text title:\n'''\n{relevant_docs[0].metadata['title'].strip()}\n'''\n"
+                    item_name = f"{relevant_docs[0].metadata['title'].strip()} - {doc}"
+                    metadata.append(f"Title: '{item_name}'")
                 else:
-                    title = ""
+                    item_name = doc
+                if "length" in relevant_docs[0].metadata:
+                    leng = int(relevant_docs[0].metadata["length"]) / 60
+                    total_length_saved += leng
+                    metadata.append(f"Duration: {leng:.1} minutes")
+                else:
+                    leng = None
+                if "author" in relevant_docs[0].metadata:
+                    author = relevant_docs[0].metadata["author"].strip()
+                    metadata.append(f"Author: '{author}'")
+                else:
+                    author = None
+
+                if metadata:
+                    metadata = "Here's additional information about the text:\n'''" + "\n".join(metadata) + "\n'''\n"
+                else:
+                    metadata = ""
+
                 with self.callback() as cb:
                     chain = load_summarize_chain(
                             self.llm,
                             chain_type="refine",
                             return_intermediate_steps=True,
-                            question_prompt=summarize_prompt.partial(title=title, rules=summary_rules),
-                            refine_prompt=refine_prompt.partial(title=title, rules=summary_rules),
+                            question_prompt=summarize_prompt.partial(metadata=metadata, rules=summary_rules),
+                            refine_prompt=refine_prompt.partial(metadata=metadata, rules=summary_rules),
                             verbose=self.llm_verbosity,
                             )
 
@@ -268,21 +288,6 @@ class OmniQA:
                 total_cost[1] += cb.total_cost
 
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
-
-                # parse metadata
-                if title:
-                    item_name = f"{relevant_docs[0].metadata['title']} - {doc}"
-                else:
-                    item_name = doc
-                if "length" in relevant_docs[0].metadata:
-                    leng = int(relevant_docs[0].metadata["length"]) / 60
-                    total_length_saved += leng
-                else:
-                    leng = None
-                if "author" in relevant_docs[0].metadata:
-                    author = relevant_docs[0].metadata["author"]
-                else:
-                    author = None
 
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
