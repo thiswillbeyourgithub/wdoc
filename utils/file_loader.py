@@ -163,7 +163,9 @@ def load_doc(filetype, debug, **kwargs):
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
                 meta["path"] = item
-                assert "http" in item, f"item does not appear to be a link: '{item}'"
+                if "http" not in item:
+                    red(f"item does not appear to be a link: '{item}'")
+                    return None
                 meta["filetype"] = "infer"
                 meta["subitem_link"] = item
                 try:
