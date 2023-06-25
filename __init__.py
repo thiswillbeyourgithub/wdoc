@@ -223,22 +223,28 @@ class OmniQA:
         if self.task == "summarize_link_file":
             d = datetime.today()
             today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
-            link_list = []
+
+            link_list = set()
+            already_done = set()
+            with open(self.kwargs["out_file"], "r") as f:
+                output_content = f.read()
+            # assemble list of docs and check if was not already summarized
             for d in self.loaded_docs:
                 assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
-                if d.metadata["subitem_link"] not in link_list:
-                    link_list.append(d.metadata["subitem_link"])
+
+                link = d.metadata["subitem_link"]
+                if link in already_done or link in link_list:
+                    continue
+                if link in output_content:
+                    whi(f"Skipping link : already summarized in out_file: '{link}'")
+                    already_done.add(link)
+                    continue
+                link_list.add(link)
 
             total_tkn_cost = 0
             total_dol_cost = 0
             total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
-                # check if was not already summarized
-                with open(self.kwargs["out_file"], "r") as f:
-                    content = f.read()
-                    if doc in content:
-                        whi(f"Skipping doc that were already summarized in out_file: '{doc}'")
-                        continue
 
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
                 assert relevant_docs
