@@ -20,6 +20,7 @@ summary_rules = """
     - In that case, this statement must start with "- TITLE EXPLAINER:" and appear as the first bullet point in your answer.
 - You are allowed to give an judgement about the author to give a feel of their state of mind.
     - In that case, this statement must start with "- JUDGEMENT:" and appear as the last bullet point in your answer.
+- Sometimes, the text will be followed by comments to the article. You can include them in your answer if you follow the same rules.
 """
 
 prompt_template = """Your job is to condense a text while following some rules. The text is very long so we'll first give you only the first section and you will later have the right to refine it.
