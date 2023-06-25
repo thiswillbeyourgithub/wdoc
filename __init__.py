@@ -229,7 +229,8 @@ class OmniQA:
                 if d.metadata["subitem_link"] not in link_list:
                     link_list.append(d.metadata["subitem_link"])
 
-            total_cost = [0, 0]
+            total_tkn_cost = 0
+            total_dol_cost = 0
             total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
@@ -284,8 +285,8 @@ class OmniQA:
                 outtext = outtext.replace("- - ", "- ")
 
                 red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
-                total_cost[0] += cb.total_tokens
-                total_cost[1] += cb.total_cost
+                total_tkn_cost += cb.total_tokens
+                total_dol_cost += cb.total_cost
 
                 red(f"\n\nSummary of '{doc}':\n{outtext}")
 
@@ -325,12 +326,12 @@ class OmniQA:
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
-                red(f"Total cost of this run: '{total_cost[0]}' (${total_cost[1]})")
+                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost})")
                 red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
 
-            if total_cost[0] != 0 and total_cost[1] != 0:
+            if total_tkn_cost != 0 and total_dol_cost != 0:
                 with open(self.kwargs["out_file"], "a") as f:
-                    f.write(f"- Total cost of this run: '{total_cost[0]}' (${total_cost[1]})\n")
+                    f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost})\n")
                     f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
             whi("Done summarizing link. Exiting.")
