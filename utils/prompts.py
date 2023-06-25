@@ -7,6 +7,7 @@ summary_rules = """
     - These rules are a good example of proper formatting.
 - Regarding the content of your answer:
     - All noteworthy information, anecdotes, facts, insights, etc. must appear in your answer.
+    - Definitions of terms, clarifications, explanations etc are considered noteworthy.
     - Information to be discarded include for example sponsors, advertisements, embellishments, headers, etc.
     - Information has to appear in a similar order as chronologically appearing in the text.
     - If relevant, you can use direct quotations from the text.
