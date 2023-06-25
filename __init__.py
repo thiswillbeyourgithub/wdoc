@@ -247,8 +247,8 @@ class OmniQA:
                     metadata.append(f"Title: '{item_name}'")
                 else:
                     item_name = doc
-                if "length" in relevant_docs[0].metadata:
-                    leng = int(relevant_docs[0].metadata["length"]) / 60
+                if "docs_reading_time" in relevant_docs[0].metadata:
+                    leng = relevant_docs[0].metadata["docs_reading_time"]
                     total_length_saved += leng
                     metadata.append(f"Duration: {leng:.1} minutes")
                 else:

@@ -459,18 +459,11 @@ def load_doc(filetype, debug, **kwargs):
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
     # add metadata
+    # get reading length of the whole document:
+    wpm = 200
+    average_word_length = 6
+    total_reading_length = None
     for i in range(len(docs)):
-        docs[i].metadata["hash"] = hasher(docs[i].page_content)
-        docs[i].metadata["head"] = str(docs[i].page_content)[:50]
-        docs[i].metadata["filetype"] = filetype
-        if "path" not in docs[i].metadata and "path" in locals():
-            docs[i].metadata["path"] = path
-        if "subitem_link" in kwargs:
-            docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
-        if "title" in kwargs:
-            docs[i].metadata["title"] = kwargs["title"]
-        if "playlist_title" in kwargs:
-            docs[i].metadata["title"] = kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
         if bool(soup.find()):
@@ -478,6 +471,28 @@ def load_doc(filetype, debug, **kwargs):
 
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
+
+        docs[i].metadata["hash"] = hasher(docs[i].page_content)
+        if "filetype" not in docs[i].metadata:
+            docs[i].metadata["filetype"] = filetype
+        if "path" not in docs[i].metadata and "path" in locals():
+            docs[i].metadata["path"] = path
+        if "subitem_link" in kwargs and "subitem_link" not in docs[i].metadata:
+            docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
+        if "title" not in docs[i].metadata:
+            if "title" in kwargs:
+                docs[i].metadata["title"] = kwargs["title"]
+            else:
+                docs[i].metadata["title"] = "Untitled"
+        elif "title" in kwargs and kwargs["title"] != docs[i].metadata["title"]:
+            docs[i].metadata["title"] += " - " + kwargs["title"]
+        if "playlist_title" in kwargs:
+            docs[i].metadata["title"] = kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
+
+        if "docs_reading_time" not in docs[i].metadata:
+            if not total_reading_length:
+                total_reading_length = sum([len(d.page_content) for d in docs]) / average_word_length / wpm
+            docs[i].metadata["docs_reading_time"] = total_reading_length
 
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
