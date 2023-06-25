@@ -233,7 +233,7 @@ class OmniQA:
             total_dol_cost = 0
             total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
-                # check if was not already sumamrized
+                # check if was not already summarized
                 with open(self.kwargs["out_file"], "r") as f:
                     content = f.read()
                     if doc in content:
@@ -286,7 +286,7 @@ class OmniQA:
                 outtext = outtext.replace("* ", "- ")
                 outtext = outtext.replace("- - ", "- ")
 
-                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
                 total_tkn_cost += cb.total_tokens
                 total_dol_cost += cb.total_cost
 
@@ -298,7 +298,7 @@ class OmniQA:
                     header += f"\n  summarization_date:: {today}"
                     header += "\n  block_type:: langchain_OnmiQA_summary"
                     header += f"\n  token_cost:: {cb.total_tokens}"
-                    header += f"\n  dollar_cost:: {cb.total_cost}"
+                    header += f"\n  dollar_cost:: {cb.total_cost:.5f}"
                     header += f"\n  omni_docs_llm_version:: {self.VERSION}"
                     header += f"\n  omni_docs_llm_model:: {self.model}"
                     if leng:
@@ -307,7 +307,7 @@ class OmniQA:
                         header += f"\n  author:: {author}"
 
                 else:
-                    header = f"\n- {item_name}    cost: {cb.total_tokens} (${cb.total_cost})"
+                    header = f"\n- {item_name}    cost: {cb.total_tokens} (${cb.total_cost:.5f})"
                     if leng:
                         header += f"    {leng:.1f} minutes"
                     if author:
@@ -328,12 +328,12 @@ class OmniQA:
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
-                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost})")
+                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
                 red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
 
             if total_tkn_cost != 0 and total_dol_cost != 0:
                 with open(self.kwargs["out_file"], "a") as f:
-                    f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost})\n")
+                    f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
             whi("Done summarizing link. Exiting.")
@@ -353,7 +353,7 @@ class OmniQA:
                         {"input_documents": self.loaded_docs},
                         return_only_outputs=True,
                         )
-            red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+            red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
             red("\n\nSummary:")
             for bulletpoint in out["output_text"].split("\n"):
@@ -452,7 +452,7 @@ class OmniQA:
 
                 red(f"Answer:\n{ans['answer']}\n")
 
-                yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost})")
+                yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
             except Exception as err:
                 whi(f"Error: '{err}'")
