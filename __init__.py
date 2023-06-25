@@ -233,13 +233,15 @@ class OmniQA:
             total_dol_cost = 0
             total_length_saved = 0
             for doc in tqdm(link_list, desc="Summarizing links"):
-                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
-                assert relevant_docs
+                # check if was not already sumamrized
                 with open(self.kwargs["out_file"], "r") as f:
                     content = f.read()
                     if doc in content:
                         whi(f"Skipping doc that were already summarized in out_file: '{doc}'")
                         continue
+
+                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == doc]
+                assert relevant_docs
 
                 # parse metadata
                 metadata = []
