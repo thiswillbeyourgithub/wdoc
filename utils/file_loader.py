@@ -45,7 +45,8 @@ inference_rules = {
         "pdf": [".*pdf$"],
         "url": ["^http"],
         }
-for k, v in  inference_rules.items():
+
+for k, v in inference_rules.items():
     try:
         for i, vv in enumerate(v):
             inference_rules[k][i] = re.compile(vv)
@@ -53,13 +54,15 @@ for k, v in  inference_rules.items():
         red(f"Exception when compiling inference_rules: '{err}' Disabling '{k}' inferences.")
         inference_rules[k] = []
 
+# used for reading length estimation
+wpm = 200
+average_word_length = 6
 
 charac_regex = re.compile(r"[^\w\s]")
 clozeregex = re.compile(r"{{c\d+::|}}")
 markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')
 yt_link_regex = re.compile("youtube.*watch")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
-
 
 def len_split(tosplit):
     return len(tokenize(tosplit))
@@ -458,10 +461,7 @@ def load_doc(filetype, debug, **kwargs):
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
-    # add metadata
-    # get reading length of the whole document:
-    wpm = 200
-    average_word_length = 6
+    # add and format metadata
     total_reading_length = None
     for i in range(len(docs)):
         # if html, parse it
@@ -473,6 +473,16 @@ def load_doc(filetype, debug, **kwargs):
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
         docs[i].metadata["hash"] = hasher(docs[i].page_content)
+
+        if "Author" in docs[i].metadata:
+            docs[i].metadata["author"] = docs[i].metadata["Author"]
+            del docs[i].metadata["Author"]
+        if "authors" in docs[i].metadata:
+            docs[i].metadata["author"] = docs[i].metadata["authors"]
+            del docs[i].metadata["authors"]
+        if "Authors" in docs[i].metadata:
+            docs[i].metadata["author"] = docs[i].metadata["Authors"]
+            del docs[i].metadata["Authors"]
         if "filetype" not in docs[i].metadata:
             docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in locals():
