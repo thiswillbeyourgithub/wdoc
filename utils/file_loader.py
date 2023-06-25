@@ -443,16 +443,16 @@ def load_doc(filetype, debug, **kwargs):
         path = kwargs["path"]
         whi(f"Loading url: '{path}'")
         try:
-            loader = SeleniumURLLoader(urls=[path])
-            texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
-            docs = [Document(page_content=t) for t in texts]
+            loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
+            docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
         except Exception as err:
-            red(f"Exception when using selenium to parse text: '{err}'\nUsing playwright as fallback")
+            red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium as fallback")
             try:
-                loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
-                docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                loader = SeleniumURLLoader(urls=[path])
+                texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
+                docs = [Document(page_content=t) for t in texts]
             except Exception as err:
-                red(f"Exception when using playwright to parse text: '{err}'\nUsing goose as fallback")
+                red(f"Exception when using selenium to parse text: '{err}'\nUsing goose as fallback")
                 g = Goose()
                 article = g.extract(url=path)
                 kwargs["title"] = article.title
