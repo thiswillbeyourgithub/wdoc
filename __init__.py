@@ -313,7 +313,7 @@ class DocToolsLLM:
                     header = f"\n- TODO {item_name}"
                     header += "\n  collapsed:: true"
                     header += f"\n  summarization_date:: {today}"
-                    header += "\n  block_type:: langchain_OnmiQA_summary"
+                    header += "\n  block_type:: DocToolsLLM_summary"
                     header += f"\n  token_cost:: {cb.total_tokens}"
                     header += f"\n  dollar_cost:: {cb.total_cost:.5f}"
                     header += f"\n  DocToolsLLM_version:: {self.VERSION}"
