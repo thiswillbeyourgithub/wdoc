@@ -283,6 +283,8 @@ def load_doc(filetype, debug, **kwargs):
             content = "\n".join([d.page_content for d in content])
             texts = loaddoc_cache.eval(text_splitter.split_text, content)
             docs = [Document(page_content=t) for t in texts]
+            if sum([len_split(d.page_content) for d in docs]) < min_token:
+                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
         except Exception as err:
             red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
             loader = PyPDFLoader(path)
@@ -290,8 +292,8 @@ def load_doc(filetype, debug, **kwargs):
             content = "\n".join([d.page_content for d in content])
             texts = loaddoc_cache.eval(text_splitter.split_text, content)
             docs = [Document(page_content=t) for t in texts]
-        if sum([len_split(d.page_content) for d in docs]) < min_token:
-            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+            if sum([len_split(d.page_content) for d in docs]) < min_token:
+                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
         # source: https://python.langchain.com/docs/modules/data_connection/document_loaders/how_to/pdf
         # loader = PDFMinerPDFasHTMLLoader(path)
@@ -454,12 +456,16 @@ def load_doc(filetype, debug, **kwargs):
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
             docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+            if sum([len_split(d.page_content) for d in docs]) < min_token:
+                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
         except Exception as err:
             red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium as fallback")
             try:
                 loader = SeleniumURLLoader(urls=[path])
                 texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
                 docs = [Document(page_content=t) for t in texts]
+                if sum([len_split(d.page_content) for d in docs]) < min_token:
+                    raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
             except Exception as err:
                 red(f"Exception when using selenium to parse text: '{err}'\nUsing goose as fallback")
                 g = Goose()
@@ -468,9 +474,8 @@ def load_doc(filetype, debug, **kwargs):
                 text = article.cleaned_text
                 texts = loaddoc_cache.eval(text_splitter.split_text, text)
                 docs = [Document(page_content=t) for t in texts]
-
-        if sum([len_split(d.page_content) for d in docs]) < min_token:
-            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+                if sum([len_split(d.page_content) for d in docs]) < min_token:
+                    raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
