@@ -29,7 +29,7 @@ d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 class DocToolsLLM:
-    VERSION = 0.1
+    VERSION = 0.2
     def __init__(
             self,
             model="openai",
