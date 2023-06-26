@@ -222,7 +222,7 @@ class DocToolsLLM:
         red("\nProcessing task")
 
         if self.task == "summarize_link_file":
-            link_list = set()
+            links_todo = set()
             already_done = set()
             with open(self.kwargs["out_file"], "r") as f:
                 output_content = f.read()
@@ -231,16 +231,16 @@ class DocToolsLLM:
                 assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
 
                 link = d.metadata["subitem_link"]
-                if link in already_done or link in link_list:
+                if link in already_done or link in links_todo:
                     continue
                 if link in output_content:
                     whi(f"Skipping link : already summarized in out_file: '{link}'")
                     already_done.add(link)
                     continue
-                link_list.add(link)
+                links_todo.add(link)
 
             # estimate price before summarizing, in case you put the bible in there
-            full_tkn = sum([len_split(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in link_list])
+            full_tkn = sum([len_split(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
             red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 2 times the number
             # of tokens of a document to summarize it
@@ -253,7 +253,7 @@ class DocToolsLLM:
             total_tkn_cost = 0
             total_dol_cost = 0
             total_length_saved = 0
-            for link in tqdm(link_list, desc="Summarizing links"):
+            for link in tqdm(links_todo, desc="Summarizing links"):
 
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
                 assert relevant_docs
