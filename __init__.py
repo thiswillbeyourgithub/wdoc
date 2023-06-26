@@ -213,8 +213,9 @@ class DocToolsLLM:
 
         out = self.process_task()
 
-        whi("Done with tasks.\nOpenning debugger.")
-        breakpoint()
+        whi("Done with tasks.")
+        if self.debug:
+            breakpoint()
 
 
     def process_task(self):
