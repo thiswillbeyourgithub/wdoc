@@ -80,6 +80,8 @@ def cloze_stripper(clozed):
     clozed = re.sub(clozeregex, " ", clozed)
     return clozed
 
+min_token = 200
+
 
 def load_doc(filetype, debug, **kwargs):
     """load the input"""
@@ -242,8 +244,8 @@ def load_doc(filetype, debug, **kwargs):
             red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
-        if sum([len_split(d.page_content) for d in docs]) < 200:
-            raise Exception(f"The number of token from '{path}' is less than 200, probably something went wrong?")
+        if sum([len_split(d.page_content) for d in docs]) < min_token:
+            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     if filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -288,8 +290,8 @@ def load_doc(filetype, debug, **kwargs):
             content = "\n".join([d.page_content for d in content])
             texts = loaddoc_cache.eval(text_splitter.split_text, content)
             docs = [Document(page_content=t) for t in texts]
-        if sum([len_split(d.page_content) for d in docs]) < 200:
-            raise Exception(f"The number of token from '{path}' is less than 200, probably something went wrong?")
+        if sum([len_split(d.page_content) for d in docs]) < min_token:
+            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
         # source: https://python.langchain.com/docs/modules/data_connection/document_loaders/how_to/pdf
         # loader = PDFMinerPDFasHTMLLoader(path)
@@ -419,8 +421,8 @@ def load_doc(filetype, debug, **kwargs):
             docs[i].metadata["anki_notetype"] = notetype
             docs[i].metadata["path"] = f"Anki profile '{profile}' deck '{deck}'"
 
-        if sum([len_split(d.page_content) for d in docs]) < 200:
-            raise Exception(f"The number of token from '{path}' is less than 200, probably something went wrong?")
+        if sum([len_split(d.page_content) for d in docs]) < min_token:
+            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     elif filetype == "string":
         whi("Loading string")
@@ -442,8 +444,8 @@ def load_doc(filetype, debug, **kwargs):
             content = f.read()
         texts = loaddoc_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
-        if sum([len_split(d.page_content) for d in docs]) < 200:
-            raise Exception(f"The number of token from '{path}' is less than 200, probably something went wrong?")
+        if sum([len_split(d.page_content) for d in docs]) < min_token:
+            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     elif filetype == "url":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -467,8 +469,8 @@ def load_doc(filetype, debug, **kwargs):
                 texts = loaddoc_cache.eval(text_splitter.split_text, text)
                 docs = [Document(page_content=t) for t in texts]
 
-        if sum([len_split(d.page_content) for d in docs]) < 200:
-            raise Exception(f"The number of token from '{path}' is less than 200, probably something went wrong?")
+        if sum([len_split(d.page_content) for d in docs]) < min_token:
+            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
