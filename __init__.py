@@ -243,12 +243,12 @@ class OmniQA:
 
             # estimate price before summarizing, in case you put the bible in there
             full_tkn = sum([len_split(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in link_list])
-            red(f"Total number of tokens to summarize: '{full_tkn}'")
+            red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 2 times the number
             # of tokens of a document to summarize it
-            estimate_tkn = 2.0 * full_tkn
-            estimate_dol = estimate_tkn / 1000 * 0.0017  # input price: 15, completion : 20
-            red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f}")
+            estimate_tkn = 2.4 * full_tkn  # empirical value: 2.37 times the doc tokens
+            estimate_dol = estimate_tkn / 1000 * 0.0016  # empirical value: $0.001579 for 1k tokens
+            red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
             if estimate_dol > 1:
                 raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
 
