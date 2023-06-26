@@ -351,6 +351,15 @@ class DocToolsLLM:
                     f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
+            # write to input file a summary
+            try:
+                with open(self.kwargs["path"], "a") as f:
+                    f.write(f"\n\n")
+                    f.write(f"- Done with summaries of {today}\n")
+                    f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+                    f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
+                    f.write(f"    - Number of links summarized: '{len(links_todo)}'\n")
+
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
 
