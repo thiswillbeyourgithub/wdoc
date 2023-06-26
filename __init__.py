@@ -222,9 +222,6 @@ class DocToolsLLM:
         red("\nProcessing task")
 
         if self.task == "summarize_link_file":
-            d = datetime.today()
-            today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
-
             link_list = set()
             already_done = set()
             with open(self.kwargs["out_file"], "r") as f:
