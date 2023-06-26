@@ -359,6 +359,8 @@ class DocToolsLLM:
                     f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
                     f.write(f"    - Number of links summarized: '{len(links_todo)}'\n")
+            except Exception as err:
+                red(f"Exception when writing summary to input file: '{err}'")
 
             whi("Done summarizing link. Exiting.")
             raise SystemExit()
