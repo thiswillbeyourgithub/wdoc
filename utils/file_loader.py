@@ -247,7 +247,7 @@ def load_doc(filetype, debug, **kwargs):
         if sum([len_split(d.page_content) for d in docs]) < min_token:
             raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
-    if filetype == "youtube":
+    elif filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         assert re.search(yt_link_regex, path), f"youtube link is not valid: '{path}'"
