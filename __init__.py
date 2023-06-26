@@ -356,9 +356,9 @@ class DocToolsLLM:
                 with open(self.kwargs["path"], "a") as f:
                     f.write(f"\n\n")
                     f.write(f"- Done with summaries of {today}\n")
+                    f.write(f"    - Number of links summarized: {len(links_todo)}/{len(links_todo) + len(already_done)}\n")
                     f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
-                    f.write(f"    - Number of links summarized: '{len(links_todo)}'\n")
             except Exception as err:
                 red(f"Exception when writing summary to input file: '{err}'")
 
