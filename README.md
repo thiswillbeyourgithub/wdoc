@@ -1,4 +1,4 @@
-# OmniDocs_LLM
+# DocToolsLLM
 * **Goal** use [langchain](langchain.readthedocs.io/) to summarize, search, ask questions from lots of documents.
 * **Current status** Under development, heavily used by the author. Accepting pull requests, issues are extremely appreciated for any reason.
 
