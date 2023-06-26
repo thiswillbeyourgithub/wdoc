@@ -242,7 +242,6 @@ def load_doc(filetype, debug, **kwargs):
             red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
-        return docs
 
     if filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -345,7 +344,6 @@ def load_doc(filetype, debug, **kwargs):
         #         semantic_snippets.append(Document(page_content='', metadata=metadata))
         #         cur_idx += 1
         #     docs = text_splitter.transform_documents(semantic_snippets)
-        #     return docs
         # docs = loaddoc_cache.eval(parsePDFasHTML, data)
 
 
