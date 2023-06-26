@@ -211,7 +211,7 @@ class DocToolsLLM:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
-        out = self.process_task()
+        _ = self.process_task()
 
         whi("Done with tasks.")
         if self.debug:
