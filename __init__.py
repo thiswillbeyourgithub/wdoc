@@ -272,7 +272,7 @@ class DocToolsLLM:
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     leng = relevant_docs[0].metadata["docs_reading_time"]
                     total_length_saved += leng
-                    metadata.append(f"Duration: {leng:.1} minutes")
+                    metadata.append(f"Duration: {leng:.1f} minutes")
                 else:
                     leng = None
                 if "author" in relevant_docs[0].metadata:
