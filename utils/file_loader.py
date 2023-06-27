@@ -461,9 +461,8 @@ def load_doc(filetype, debug, **kwargs):
         except Exception as err:
             red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium as fallback")
             try:
-                loader = SeleniumURLLoader(urls=[path])
-                texts = loaddoc_cache.eval(text_splitter.split_text, loader.load())
-                docs = [Document(page_content=t) for t in texts]
+                loader = SeleniumURLLoader(urls=[path], browser="firefox")
+                docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
                 if sum([len_split(d.page_content) for d in docs]) < min_token:
                     raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
             except Exception as err:
