@@ -81,8 +81,8 @@ def get_splitter(task):
     elif "summar" in task:
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=[".\n", ". ", " ", ""],
-                chunk_size=512,  # default 4000
-                chunk_overlap=50,  # default 200
+                chunk_size=1024,
+                chunk_overlap=100,
                 length_function=get_tkn_length,
                 )
     else:

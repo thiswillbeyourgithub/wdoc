@@ -16,10 +16,13 @@ from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-from utils.prompts import refine_prompt, summarize_prompt, summary_rules
+from utils.prompts import reduce_summaries_prompt, map_summarize_prompt, summary_rules
+from langchain.chains.combine_documents.map_reduce import MapReduceDocumentsChain
+from langchain.chains.mapreduce import MapReduceChain
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
-from utils.file_loader import load_doc, load_embeddings, get_tkn_length
+from utils.file_loader import load_doc, load_embeddings, get_tkn_length, get_splitter
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -292,16 +295,15 @@ class DocToolsLLM:
                     metadata = ""
 
                 with self.callback() as cb:
-                    chain = load_summarize_chain(
+                    summarize_chain = load_summarize_chain(
                             self.llm,
-                            chain_type="refine",
+                            chain_type="map_reduce",
                             return_intermediate_steps=True,
-                            question_prompt=summarize_prompt.partial(metadata=metadata, rules=summary_rules),
-                            refine_prompt=refine_prompt.partial(metadata=metadata, rules=summary_rules),
+                            map_prompt=map_summarize_prompt.partial(metadata=metadata, rules=summary_rules),
+                            combine_prompt=reduce_summaries_prompt.partial(metadata=metadata, rules=summary_rules),
                             verbose=self.llm_verbosity,
                             )
-
-                    out = chain(
+                    out = summarize_chain(
                             {"input_documents": relevant_docs},
                             return_only_outputs=True,
                             )
@@ -397,10 +399,10 @@ class DocToolsLLM:
             with self.callback() as cb:
                 chain = load_summarize_chain(
                         self.llm,
-                        chain_type="refine",
+                        chain_type="map_reduce",
                         return_intermediate_steps=True,
-                        question_prompt=summarize_prompt.partial(rules=summary_rules, metadata=""),
-                        refine_prompt=refine_prompt.partial(rules=summary_rules, metadata=""),
+                        map_prompt=map_summarize_prompt.partial(metadata=metadata, rules=summary_rules),
+                        combine_prompt=reduce_summaries_prompt.partial(metadata=metadata, rules=summary_rules),
                         verbose=self.llm_verbosity,
                         )
                 out = chain(
