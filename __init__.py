@@ -373,8 +373,8 @@ class DocToolsLLM:
                         self.llm,
                         chain_type="refine",
                         return_intermediate_steps=True,
-                        question_prompt=summarize_prompt.partial(rules=summary_rules),
-                        refine_prompt=refine_prompt.partial(rules=summary_rules),
+                        question_prompt=summarize_prompt.partial(rules=summary_rules, metadata=""),
+                        refine_prompt=refine_prompt.partial(rules=summary_rules, metadata=""),
                         verbose=self.llm_verbosity,
                         )
                 out = chain(
