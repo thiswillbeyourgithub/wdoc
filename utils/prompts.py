@@ -1,6 +1,7 @@
+from textwrap import dedent
 from langchain import PromptTemplate
 
-summary_rules = """
+summary_rules = dedent("""
 - Regarding the formatting of your answer:
     - Use markdown bullet points to format your answer.
     - Use indentation to organize information hierarchically.
@@ -22,7 +23,7 @@ summary_rules = """
     - You are allowed to judge the author to give a feel of their state of mind.
         - In that case: start with "- JUDGEMENT:" and put this bullet point last.
     - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now condensing comments).
-"""
+""".strip())
 
 prompt_template = """Your job is to condense a text while following some rules. The text is very long so we'll first give you only the first section and you will later have the right to refine it.
 
