@@ -4,14 +4,14 @@ summary_rules = """
 - Regarding the formatting of your answer:
     - You have to use markdown bullet points to format your answer.
     - The bullet points have to be indented to organize information hierarchically.
+    - The order of the bullet points has to follow the chronological order of appearance in the text.
     - These rules are a good example of proper formatting.
 - Regarding the content of your answer:
     - All noteworthy information, anecdotes, facts, insights, etc. must appear in your answer.
     - Definitions of terms, clarifications, explanations etc are considered noteworthy.
     - Information to be discarded include for example sponsors, advertisements, embellishments, headers, etc.
-    - Information has to appear in a similar order as chronologically appearing in the text.
     - If relevant, you can use direct quotations from the text.
-    - Your answer can be long but has to be brief, quick to skim, to the point, and compressed. You don't have to use full sentences.
+    - Your answer can contain many bullet points but each bulletpoint has to be brief and to the point. You don't have to use complete sentences.
         - A fine example of brevity is the daily staff memo to the US President.
         - Avoid repetitions, you can use pronouns, especially if subject sentence is implied.
         - To facilitate reading use common words but keep technical details if noteworthy.
