@@ -1,4 +1,4 @@
-from langchain import PromptTemplate, LLMChain
+from langchain import PromptTemplate
 
 summary_rules = """
 - Regarding the formatting of your answer:
@@ -49,15 +49,15 @@ summarize_prompt = PromptTemplate(
         input_variables=["text", "metadata", "rules"])
 
 refine_template = (
-    """Your job is to continue condensing a text while following some rules.
+        """You are given two texts: 1. a condensed version of the beginning of a text and 2. the following section of the text. Your job is to read the next section of the text then update the condensed version of the text while following some rules.
 
 {metadata}
-Here's the condensed version so far:
+Here's the condensed version of the text so far:
 '''
 {existing_answer}
 '''
 
-Here's a reminder of the rules:
+Here are the rules to follow while refining the condensate:
 '''
 {rules}
 '''
@@ -67,9 +67,9 @@ Here's the next section of the text:
 {text}
 '''
 
-Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text.
+Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text. Pay attention to include all information of the condensed version when writing your refined condensed version of the text!
 
-Your answer:
+Your condensed version of the text:
 """
 )
 refine_prompt = PromptTemplate(
