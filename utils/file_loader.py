@@ -454,35 +454,51 @@ def load_doc(filetype, debug, **kwargs):
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         whi(f"Loading url: '{path}'")
+        # try with playwright
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
             docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
             if sum([len_split(d.page_content) for d in docs]) < min_token:
                 raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+
+        # try with selenium firefox
         except Exception as err:
-            red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium as fallback")
+            red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium firefox as fallback")
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
                 if sum([len_split(d.page_content) for d in docs]) < min_token:
                     raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+
+            # try with selenium chrome
             except Exception as err:
-                red(f"Exception when using selenium to parse text: '{err}'\nUsing goose as fallback")
+                red(f"Exception when using selenium firefox to parse text: '{err}'\nUsing selenium chrome as fallback")
                 try:
-                    g = Goose()
-                    article = g.extract(url=path)
-                    kwargs["title"] = article.title
-                    text = article.cleaned_text
-                    texts = loaddoc_cache.eval(text_splitter.split_text, text)
-                    docs = [Document(page_content=t) for t in texts]
-                    if sum([len_split(d.page_content) for d in docs]) < min_token:
-                        raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
-                except Exception as err:
-                    red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
-                    loader = WebBaseLoader(path)
+                    loader = SeleniumURLLoader(urls=[path], browser="chrome")
                     docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
                     if sum([len_split(d.page_content) for d in docs]) < min_token:
                         raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+
+                # try with goose
+                except Exception as err:
+                    red(f"Exception when using selenium chrome to parse text: '{err}'\nUsing goose as fallback")
+                    try:
+                        g = Goose()
+                        article = g.extract(url=path)
+                        kwargs["title"] = article.title
+                        text = article.cleaned_text
+                        texts = loaddoc_cache.eval(text_splitter.split_text, text)
+                        docs = [Document(page_content=t) for t in texts]
+                        if sum([len_split(d.page_content) for d in docs]) < min_token:
+                            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+
+                    # try with html
+                    except Exception as err:
+                        red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
+                        loader = WebBaseLoader(path)
+                        docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                        if sum([len_split(d.page_content) for d in docs]) < min_token:
+                            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
