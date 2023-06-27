@@ -340,8 +340,8 @@ class DocToolsLLM:
                         if not bulletpoint.strip().startswith("- "):
                             begin_space = re.search(r"^(\s+)", bulletpoint)
                             if not begin_space:
-                                begin_space = ""
-                            bulletpoint = begin_space + "- " + bulletpoint
+                                begin_space = [""]
+                            bulletpoint = begin_space[0] + "- " + bulletpoint
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
