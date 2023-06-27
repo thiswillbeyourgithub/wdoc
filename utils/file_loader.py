@@ -18,7 +18,7 @@ import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import PDFMinerPDFasHTMLLoader
@@ -79,8 +79,7 @@ def get_splitter(task):
                 length_function=get_tkn_length,
                 )
     elif "summar" in task:
-        text_splitter = RecursiveCharacterTextSplitter(
-                separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+        text_splitter = CharacterTextSplitter(
                 chunk_size=512,  # default 4000
                 chunk_overlap=50,  # default 200
                 length_function=get_tkn_length,
