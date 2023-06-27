@@ -60,6 +60,7 @@ Here's the condensed version of the text so far:
 Here are the rules to follow while refining the condensate:
 '''
 {rules}
+- Don't forget any information from the previous condensate: you can reformulate to compress information but don't omit it.
 '''
 
 Here's the next section of the text:
@@ -67,7 +68,7 @@ Here's the next section of the text:
 {text}
 '''
 
-Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text. Pay attention to include all information of the condensed version when writing your refined condensed version of the text!
+Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text. Remember to include all information from the previous condensate in your answer: you can compact and reformulate information but not drop it.
 
 Your condensed version of the text:
 """
