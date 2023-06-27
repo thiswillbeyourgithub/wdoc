@@ -22,10 +22,10 @@ summary_rules = dedent("""
         - In that case: your bullet point must start with "- TITLE EXPLAINER:" and appear first in your answer.
     - You are allowed to judge the author to give a feel of their state of mind.
         - In that case: start with "- JUDGEMENT:" and put this bullet point last.
-    - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now condensing comments).
+    - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now summarizing comments).
 """.strip())
 
-prompt_template = """Your job is to condense a text while following some rules. The text is very long so we'll first give you only the first section and you will later have the right to refine it.
+prompt_template = """Your job is to summarize a text while following some rules. The text is very long so we'll first give you only the first part and you will later have the right to refine it.
 
 Here are the rules:
 '''
@@ -33,7 +33,7 @@ Here are the rules:
 '''
 
 {metadata}
-Here's the first section of the text:
+Here's the first part of the text:
 '''
 {text}
 '''
@@ -43,36 +43,35 @@ Here's a reminder of the rules:
 {rules}
 '''
 
-Your answer:
-"""
+ANSWER:"""
 summarize_prompt = PromptTemplate(
         template=prompt_template,
         input_variables=["text", "metadata", "rules"])
 
 refine_template = (
-        """You are given two texts: 1. a condensed version of the beginning of a text and 2. the following section of the text. Your job is to read the next section of the text then update the condensed version of the text while following some rules.
+        """You are given two texts: 1. a summary of the first part of a text and 2. the next part of the text. Your job is to update the summary with any new information from the new part of the text while following some rules.
 
 {metadata}
-Here's the condensed version of the text so far:
+Here's the summary of the text until the new section:
 '''
 {existing_answer}
 '''
 
-Here are the rules to follow while refining the condensate:
-'''
-{rules}
-- Don't forget any information from the previous condensate: you can reformulate to compress information but don't omit it.
-'''
-
-Here's the next section of the text:
+Here's the new section of the text:
 '''
 {text}
 '''
 
-Given this new section of the text and the rules, refine the condensed version. If no changes are needed, simply answer the condensed text. Remember to include all information from the previous condensate in your answer: you can compact and reformulate information but not drop it.
+Here are the rules to follow while updating the summary:
+'''
+{rules}
+- Don't forget any information from the previous summary: you can reformulate to compress information but cannot omit it.
+- If no changes are needed, simply answer the previous summary without any change.
+'''
 
-Your condensed version of the text:
-"""
+Given this new section of the text and the rules, update the previous summary.
+
+UPDATED SUMMARY:"""
 )
 refine_prompt = PromptTemplate(
     template=refine_template,
