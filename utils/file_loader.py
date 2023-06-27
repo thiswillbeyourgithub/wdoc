@@ -79,7 +79,8 @@ def get_splitter(task):
                 length_function=get_tkn_length,
                 )
     elif "summar" in task:
-        text_splitter = CharacterTextSplitter(
+        text_splitter = RecursiveCharacterTextSplitter(
+                separators=[".\n", ". ", " ", ""],
                 chunk_size=512,  # default 4000
                 chunk_overlap=50,  # default 200
                 length_function=get_tkn_length,
@@ -289,7 +290,6 @@ def load_doc(filetype, debug, task, **kwargs):
                 language=lang,
                 translation=transl,
                 )
-        loader.load()
         docs = loader.load()
         docs = text_splitter.transform_documents(docs)
 
