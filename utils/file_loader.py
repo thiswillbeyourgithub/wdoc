@@ -47,6 +47,7 @@ inference_rules = {
         "url": ["^http"],
         }
 
+# compile the inference rules as regex
 for k, v in inference_rules.items():
     try:
         for i, vv in enumerate(v):
@@ -55,15 +56,15 @@ for k, v in inference_rules.items():
         red(f"Exception when compiling inference_rules: '{err}' Disabling '{k}' inferences.")
         inference_rules[k] = []
 
-# used for reading length estimation
+# for reading length estimation
 wpm = 200
 average_word_length = 6
 
-charac_regex = re.compile(r"[^\w\s]")
-clozeregex = re.compile(r"{{c\d+::|}}")
-markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')
-yt_link_regex = re.compile("youtube.*watch")
-tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
+charac_regex = re.compile(r"[^\w\s]")  # for removing stopwords
+clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
+markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
+yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
+tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
