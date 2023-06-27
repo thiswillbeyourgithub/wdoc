@@ -1,5 +1,5 @@
 # DocToolsLLM
-* **Goal** use [langchain](langchain.readthedocs.io/) to summarize, search, ask questions from lots of documents.
+* **Goal** use [LangChain](https://python.langchain.com/) to summarize, search, ask questions from lots of documents.
 * **Current status** Under development but the main branch should be fine. Used daily by the author. Accepting pull requests, issues are extremely appreciated for any reason.
 
 
