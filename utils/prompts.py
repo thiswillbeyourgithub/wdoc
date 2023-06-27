@@ -10,6 +10,7 @@ summary_rules = """
     - All noteworthy information, anecdotes, facts, insights, etc. must appear in your answer.
     - Definitions of terms, clarifications, explanations etc are considered noteworthy.
     - Information to be discarded include for example sponsors, advertisements, embellishments, headers, etc.
+    - When in doubt about wether to include an information or not, include it in your answer.
     - If relevant, you can use direct quotations from the text.
     - Your answer can contain many bullet points but each bulletpoint has to be brief and to the point. You don't have to use complete sentences.
         - A fine example of brevity is the daily staff memo to the US President.
