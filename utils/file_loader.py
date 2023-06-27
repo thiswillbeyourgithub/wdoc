@@ -65,7 +65,7 @@ markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')
 yt_link_regex = re.compile("youtube.*watch")
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode
 
-def len_split(tosplit):
+def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
 
 
@@ -73,7 +73,7 @@ text_splitter = RecursiveCharacterTextSplitter(
         separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
         chunk_size=1024,  # default 4000
         chunk_overlap=386,  # default 200
-        length_function=len_split,
+        length_function=get_tkn_length,
         )
 
 
@@ -85,7 +85,7 @@ min_token = 200
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
-    if sum([len_split(d.page_content) for d in docs]) < min_token:
+    if sum([get_tkn_length(d.page_content) for d in docs]) < min_token:
         raise Exception(f"The number of token from '{name}' is less than {min_token}, probably something went wrong?")
 
 
@@ -588,9 +588,9 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     (embed_cache / embed_model).mkdir(exist_ok=True)
 
     # check price of embedding
-    full_tkn = sum([len_split(doc.page_content) for doc in docs])
+    full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
     red(f"Total number of tokens in documents: '{full_tkn}'")
-    full_tkn_uncached = sum([len_split(doc.page_content) for doc in docs if not (embed_cache / embed_model / doc.metadata["hash"]).exists()])
+    full_tkn_uncached = sum([get_tkn_length(doc.page_content) for doc in docs if not (embed_cache / embed_model / doc.metadata["hash"]).exists()])
     red(f"Total number of tokens in documents that are not in cache: '{full_tkn_uncached}'")
     if embed_model == "openai":
         dol_price = full_tkn * 0.0001 / 1000
