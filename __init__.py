@@ -228,6 +228,7 @@ class DocToolsLLM:
         if self.task == "summarize_link_file":
             links_todo = set()
             already_done = set()
+            failed = []
             with open(self.kwargs["out_file"], "r") as f:
                 output_content = f.read()
             # assemble list of docs and check if was not already summarized
@@ -301,6 +302,20 @@ class DocToolsLLM:
                             return_only_outputs=True,
                             )
 
+                # check that the summary was not botched halfway
+                summaries_length = [get_tkn_length(s) for s in out["intermediate_steps"] + [out["output_text"]]]
+                should_stop = False
+                for i, summ in enumerate(summaries_length):
+                    if not i:
+                        continue
+                    if summ <= 0.9 * summaries_length[i-1]:
+                        red(f"Error when summarizing {link}: the summary is "
+                            f"getting shorter at some point: '{summaries_length}'")
+                        should_stop = True
+                if should_stop:
+                    failed.append(link)
+                    continue
+
                 outtext = out["output_text"]
                 outtext = outtext.replace("* ", "- ")
                 outtext = outtext.replace("- - ", "- ")
@@ -361,7 +376,11 @@ class DocToolsLLM:
                 with open(self.kwargs["path"], "a") as f:
                     f.write(f"\n\n")
                     f.write(f"- Done with summaries of {today}\n")
-                    f.write(f"    - Number of links summarized: {len(links_todo)}/{len(links_todo) + len(already_done)}\n")
+                    f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(already_done)}\n")
+                    if failed:
+                        f.write(f"    - Number of links failed: {len(failed)}:\n")
+                        for f in failed:
+                            f.write(f"        - {f}\n")
                     f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
             except Exception as err:
