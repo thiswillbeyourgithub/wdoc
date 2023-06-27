@@ -70,12 +70,24 @@ def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
 
 
-text_splitter = RecursiveCharacterTextSplitter(
-        separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
-        chunk_size=1024,  # default 4000
-        chunk_overlap=386,  # default 200
-        length_function=get_tkn_length,
-        )
+def get_splitter(task):
+    if task == "query":
+        text_splitter = RecursiveCharacterTextSplitter(
+                separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+                chunk_size=1024,  # default 4000
+                chunk_overlap=386,  # default 200
+                length_function=get_tkn_length,
+                )
+    elif "summar" in task:
+        text_splitter = RecursiveCharacterTextSplitter(
+                separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+                chunk_size=512,  # default 4000
+                chunk_overlap=150,  # default 200
+                length_function=get_tkn_length,
+                )
+    else:
+        raise Exception(task)
+    return text_splitter
 
 
 def cloze_stripper(clozed):
@@ -90,8 +102,9 @@ def check_docs_tkn_length(docs, name):
         raise Exception(f"The number of token from '{name}' is less than {min_token}, probably something went wrong?")
 
 
-def load_doc(filetype, debug, **kwargs):
+def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
+    text_splitter = get_splitter(task)
 
     if filetype == "infer":
         assert "path" in kwargs, "if filetype is infer, path should be supplied"
@@ -133,6 +146,7 @@ def load_doc(filetype, debug, **kwargs):
                 del meta["pattern"]
                 try:
                     return load_doc(
+                            task=task,
                             debug=debug,
                             **meta,
                             )
@@ -154,6 +168,7 @@ def load_doc(filetype, debug, **kwargs):
                 assert "filetype" in meta, "no key 'filetype' in meta"
                 try:
                     return load_doc(
+                            task=task,
                             debug=debug,
                             **meta,
                             )
@@ -179,6 +194,7 @@ def load_doc(filetype, debug, **kwargs):
                 meta["subitem_link"] = item
                 try:
                     return load_doc(
+                            task=task,
                             debug=debug,
                             **meta,
                             )
@@ -207,6 +223,7 @@ def load_doc(filetype, debug, **kwargs):
                 meta["subitem_link"] = item
                 try:
                     return load_doc(
+                            task=task,
                             debug=debug,
                             **meta,
                             )
