@@ -2,27 +2,26 @@ from langchain import PromptTemplate, LLMChain
 
 summary_rules = """
 - Regarding the formatting of your answer:
-    - You have to use markdown bullet points to format your answer.
-    - The bullet points have to be indented to organize information hierarchically.
-    - The order of the bullet points has to follow the chronological order of appearance in the text.
-    - These rules are a good example of proper formatting.
+    - Use markdown bullet points to format your answer.
+    - Use indentation to organize information hierarchically.
+    - The bullet points for each information have to follow the order of appearance in the text.
+    - The present rules are a good example of adequate formatting.
 - Regarding the content of your answer:
-    - All noteworthy information, anecdotes, facts, insights, etc. must appear in your answer.
-    - Definitions of terms, clarifications, explanations etc are considered noteworthy.
-    - Information to be discarded include for example sponsors, advertisements, embellishments, headers, etc.
-    - When in doubt about wether to include an information or not, include it in your answer.
-    - If relevant, you can use direct quotations from the text.
-    - Your answer can contain many bullet points but each bulletpoint has to be brief and to the point. You don't have to use complete sentences.
-        - A fine example of brevity is the daily staff memo to the US President.
-        - Avoid repetitions, you can use pronouns, especially if subject sentence is implied.
-        - To facilitate reading use common words but keep technical details if noteworthy.
-    - Your answer has to be written in the same language as the text: if the text is in French, write an answer in French.
-    - Your answer has to be unbiased and faithful to the author.
-- Sometimes, additional information about the text may be given to you such as a title. As it is usually the reason why this text was given to you, your answer also has to contain a satisfactory statement about it. i.e. if the text is clickbaity or a question, add a bullet point that answers it.
-    - In that case, this statement must start with "- TITLE EXPLAINER:" and appear as the first bullet point in your answer.
-- You are allowed to give an judgement about the author to give a feel of their state of mind.
-    - In that case, this statement must start with "- JUDGEMENT:" and appear as the last bullet point in your answer.
-- Sometimes, the text will be followed by comments to the article. You can include them in your answer if you follow the same rules.
+    - Include all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, etc.
+    - Exclude sponsors, advertisements, embellishments, headers, etc.
+    - When in doubt about wether to include an information or not, include it.
+    - Direct quotations are allowed.
+    - Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
+        - Good example of brevity : US President's daily staff memo, the present rules.
+        - Avoid repetitions, use pronouns if the subject is implied
+        - Use common words but keep technical details if noteworthy.
+    - Write in the same language as the text: if the text is in French, write an answer in French.
+    - Write without bias and stay faithful to the author.
+    - If additional information about the text is given (e.g. title): your answer must contain a satisfactory statement about it. i.e. if the text is clickbaity or is a question, add a bullet point that answers the title.
+        - In that case: your bullet point must start with "- TITLE EXPLAINER:" and appear first in your answer.
+    - You are allowed to judge the author to give a feel of their state of mind.
+        - In that case: start with "- JUDGEMENT:" and put this bullet point last.
+    - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now condensing comments).
 """
 
 prompt_template = """Your job is to condense a text while following some rules. The text is very long so we'll first give you only the first section and you will later have the right to refine it.
