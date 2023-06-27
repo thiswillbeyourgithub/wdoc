@@ -83,6 +83,11 @@ def cloze_stripper(clozed):
 
 min_token = 200
 
+def check_docs_tkn_length(docs, name):
+    "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
+    if sum([len_split(d.page_content) for d in docs]) < min_token:
+        raise Exception(f"The number of token from '{name}' is less than {min_token}, probably something went wrong?")
+
 
 def load_doc(filetype, debug, **kwargs):
     """load the input"""
@@ -245,8 +250,7 @@ def load_doc(filetype, debug, **kwargs):
             red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
-        if sum([len_split(d.page_content) for d in docs]) < min_token:
-            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+        check_docs_tkn_length(docs, path)
 
     elif filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -284,8 +288,7 @@ def load_doc(filetype, debug, **kwargs):
             content = "\n".join([d.page_content for d in content])
             texts = loaddoc_cache.eval(text_splitter.split_text, content)
             docs = [Document(page_content=t) for t in texts]
-            if sum([len_split(d.page_content) for d in docs]) < min_token:
-                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+            check_docs_tkn_length(docs, path)
         except Exception as err:
             red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
             loader = PyPDFLoader(path)
@@ -293,8 +296,7 @@ def load_doc(filetype, debug, **kwargs):
             content = "\n".join([d.page_content for d in content])
             texts = loaddoc_cache.eval(text_splitter.split_text, content)
             docs = [Document(page_content=t) for t in texts]
-            if sum([len_split(d.page_content) for d in docs]) < min_token:
-                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+            check_docs_tkn_length(docs, path)
 
         # source: https://python.langchain.com/docs/modules/data_connection/document_loaders/how_to/pdf
         # loader = PDFMinerPDFasHTMLLoader(path)
@@ -424,8 +426,7 @@ def load_doc(filetype, debug, **kwargs):
             docs[i].metadata["anki_notetype"] = notetype
             docs[i].metadata["path"] = f"Anki profile '{profile}' deck '{deck}'"
 
-        if sum([len_split(d.page_content) for d in docs]) < min_token:
-            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+        check_docs_tkn_length(docs, f"{filetype}: {profile}")
 
     elif filetype == "string":
         whi("Loading string")
@@ -447,8 +448,7 @@ def load_doc(filetype, debug, **kwargs):
             content = f.read()
         texts = loaddoc_cache.eval(text_splitter.split_text, content)
         docs = [Document(page_content=t) for t in texts]
-        if sum([len_split(d.page_content) for d in docs]) < min_token:
-            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+        check_docs_tkn_length(docs, path)
 
     elif filetype == "url":
         assert "path" in kwargs, "missing 'path' key in args"
@@ -458,8 +458,7 @@ def load_doc(filetype, debug, **kwargs):
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
             docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
-            if sum([len_split(d.page_content) for d in docs]) < min_token:
-                raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+            check_docs_tkn_length(docs, path)
 
         # try with selenium firefox
         except Exception as err:
@@ -467,8 +466,7 @@ def load_doc(filetype, debug, **kwargs):
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
-                if sum([len_split(d.page_content) for d in docs]) < min_token:
-                    raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+                check_docs_tkn_length(docs, path)
 
             # try with selenium chrome
             except Exception as err:
@@ -476,8 +474,7 @@ def load_doc(filetype, debug, **kwargs):
                 try:
                     loader = SeleniumURLLoader(urls=[path], browser="chrome")
                     docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
-                    if sum([len_split(d.page_content) for d in docs]) < min_token:
-                        raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+                    check_docs_tkn_length(docs, path)
 
                 # try with goose
                 except Exception as err:
@@ -489,16 +486,14 @@ def load_doc(filetype, debug, **kwargs):
                         text = article.cleaned_text
                         texts = loaddoc_cache.eval(text_splitter.split_text, text)
                         docs = [Document(page_content=t) for t in texts]
-                        if sum([len_split(d.page_content) for d in docs]) < min_token:
-                            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+                        check_docs_tkn_length(docs, path)
 
                     # try with html
                     except Exception as err:
                         red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
                         loader = WebBaseLoader(path)
                         docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
-                        if sum([len_split(d.page_content) for d in docs]) < min_token:
-                            raise Exception(f"The number of token from '{path}' is less than {min_token}, probably something went wrong?")
+                        check_docs_tkn_length(docs, path)
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
