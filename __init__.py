@@ -116,7 +116,9 @@ class DocToolsLLM:
             retrieval argument
 
         --debug bool, default False
-            if True will open a debugger instead before crashing
+            if True will open a debugger instead before crashing, also use
+            sequential processing instead of multithreading and enable
+            langchain tracing.
 
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
@@ -188,6 +190,7 @@ class DocToolsLLM:
         if self.debug:
             # make the script interruptible
             signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
+            os.environ["LANGCHAIN_TRACING"] = "true"
 
         # compile include / exclude regex
         if "include" in self.kwargs:
