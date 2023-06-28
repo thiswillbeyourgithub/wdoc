@@ -2,34 +2,29 @@ from textwrap import dedent
 from langchain import PromptTemplate
 
 summary_rules = dedent("""
-- Regarding the formatting of your summary:
-    - Use markdown bullet points.
-    - Use indentation to organize information hierarchically.
-    - The bullet points for each information have to follow the order of appearance in the text.
-    - The present rules are a good example of adequate formatting.
-- Regarding the content of your summary:
-    - Include all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, etc.
-    - Exclude sponsors, advertisements, embellishments, headers, etc.
-    - When in doubt about wether to include an information or not, include it.
-    - Direct quotations are allowed.
-    - Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
-        - Good example of brevity : US President's daily staff memo, the present rules.
-        - Use common words but keep technical details if noteworthy.
-        - Don't use pronouns if it's implied by the previous bullet point: write like a technical report.
-    - Write in the same language as the input: if the text is in French, write an answer in French.
-    - Write without bias and stay faithful to the author.
+* Regarding the formatting of your summary:
+    * Use markdown bullet points.
+    * Use indentation to organize information hierarchically.
+    * The bullet points for each information have to follow the order of appearance in the text.
+    * The present rules are a good example of adequate formatting.
+* Regarding the content of your summary:
+    * Include all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, etc.
+    * Exclude sponsors, advertisements, embellishments, headers, etc.
+    * When in doubt about wether to include an information or not, include it.
+    * Direct quotations are allowed.
+    * Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
+        * Good example of brevity : US President's daily staff memo, the present rules.
+        * Use common words but keep technical details if noteworthy.
+        * Don't use pronouns if it's implied by the previous bullet point: write like a technical report.
+    * Write in the same language as the input: if the text is in French, write an answer in French.
+    * Write without bias and stay faithful to the author.
 """.strip())
-#     - If additional information about the text is given (e.g. title): your answer must contain a satisfactory statement about it. i.e. if the text is clickbaity or is a question, add a bullet point that answers the title.
-#         - In that case: your bullet point must start with "- TITLE EXPLAINER:" and appear first in your answer.
-#     - You are allowed to judge the author to give a feel of their state of mind.
-#         - In that case: start with "- JUDGEMENT:" and put this bullet point last.
-#     - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now summarizing comments).
 
-summarize_template = """Your job is to summarize a part of a text while following some rules.
+summarize_template = """Your job is to summarize a chunk of a text while following some rules.
 
 {metadata}
 {previous_summary}
-Here's a part of the text:
+Here's a chunk of the text:
 '''
 {text}
 '''
