@@ -42,8 +42,8 @@ chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
             ],
         )
 
-n_to_combine = 2
-n_check = 1
+n_to_combine = 1  # careful, indices start at 0. So setting n_to_combine at 3 means that the first 4 paragraphs will get combined into one. This will certainly lose meaningful information.
+n_check = 3  # number of check to do
 
 def do_summarize(docs, metadata, model, llm, callback, verbose):
     "summarize each chunk of a long document"

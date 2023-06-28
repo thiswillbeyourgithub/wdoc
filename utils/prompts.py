@@ -46,14 +46,15 @@ MARKDOWN SUMMARY:""".strip())
 
 # templates to make sure the summary follows the rules
 checksummary_rules = dedent("""
-- Avoid repetitions like the plague, especially for pronouns.
-- Remove redundancies like "He says that", use indentation instead.
-- Reformulate every bullet point to make it concise but without losing meaning.
-- Don't use full sentences.
-- Use indentation to hierarchically organize the summary.
-- Don't translate the summary. If it's in French, answer in French.
-- If the summary is already good, simply answer the same unmodified summary.
-- Don't loose any information from the input summary.
+* Avoid repetitions like the plague, especially for pronouns.
+* Remove redundancies like "He says that", use indentation instead.
+* Reformulate every bullet point to make it concise but without losing meaning.
+* Don't use full sentences.
+* Use indentation to hierarchically organize the summary.
+* Don't translate the summary. If it's in French, answer in French.
+* If the summary is already good, simply answer the same unmodified summary.
+* Don't loose any information from the input summary.
+* I prefer a summary that is too long than a summary that is missing information.
 """.strip())
 
 system_checksummary_template = dedent("""You are a helpful assistant. Your job is to fix a summary to make it follow a specific format but without losing information.
