@@ -22,10 +22,12 @@ from langchain.chains.mapreduce import MapReduceChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
+
 from utils.file_loader import load_doc, load_embeddings, get_tkn_length, get_splitter
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
+from utils.tasks import do_summarize
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -308,35 +310,19 @@ class DocToolsLLM:
                 else:
                     metadata = ""
 
-                # summarize each chunk of the link
-                with self.callback() as cb:
-                    previous_summary = ""
-                    summaries = []
-                    for ird, rd in tqdm(enumerate(relevant_docs), desc="Summarising splits"):
-                        summarize_chain = load_summarize_chain(
-                                self.llm,
-                                chain_type="stuff",
-                                prompt=summarize_prompt.partial(
-                                    metadata=metadata.replace("[PROGRESS]", f"{ird+1}/{len(relevant_docs)}"),
-                                    rules=summary_rules,
-                                    previous_summary=previous_summary,
-                                    ),
-                                verbose=self.llm_verbosity,
-                                )
-                        out = summarize_chain(
-                                {"input_documents": [rd]},
-                                return_only_outputs=False,
-                                )
-                        summ = out["output_text"]
-                        summaries.append(summ)
-                        previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''\n"
+                # summarize each chunk of the link and return one text
+                summary, doc_total_tokens, doc_total_cost = do_summarize(
+                        docs=relevant_docs,
+                        metadata=metadata,
+                        llm=self.llm,
+                        callback=self.callback,
+                        verbose=self.llm_verbosity,
+                        )
 
-                total_tkn_cost += cb.total_tokens
-                total_dol_cost += cb.total_cost
+                total_tkn_cost += doc_total_tokens
+                total_dol_cost += doc_total_cost
 
-                red(f"Tokens used for this doc: '{cb.total_tokens}' (${cb.total_cost:.5f})")
-
-                outtext = "- ---".join(summaries)
+                red(f"Tokens used for this doc: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
                 # make sure to use the same markdown formatting
                 outtext = outtext.replace("* ", "- ")
@@ -354,8 +340,8 @@ class DocToolsLLM:
                     header += f"\n  summarization_date:: {today}"
                     header += f"\n  summarization_timestamp:: {int(time.time())}"
                     header += "\n  block_type:: DocToolsLLM_summary"
-                    header += f"\n  token_cost:: {cb.total_tokens}"
-                    header += f"\n  dollar_cost:: {cb.total_cost:.5f}"
+                    header += f"\n  token_cost:: {doc_total_tokens}"
+                    header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                     header += f"\n  DocToolsLLM_version:: {self.VERSION}"
                     header += f"\n  DocToolsLLM_model:: {self.model}"
                     if leng:
@@ -364,7 +350,7 @@ class DocToolsLLM:
                         header += f"\n  author:: {author}"
 
                 else:
-                    header = f"\n- {item_name}    cost: {cb.total_tokens} (${cb.total_cost:.5f})"
+                    header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
                     if leng:
                         header += f"    {leng:.1f} minutes"
                     if author:
