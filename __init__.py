@@ -13,7 +13,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-
 from utils.file_loader import load_doc, load_embeddings, get_tkn_length, average_word_length, wpm
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
