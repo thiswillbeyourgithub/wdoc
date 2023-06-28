@@ -56,6 +56,18 @@ def do_summarize(
     summaries = []
     previous_summary = ""
 
+    summarize_chain = load_summarize_chain(
+            llm,
+            chain_type="stuff",
+            prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
+            verbose=verbose,
+            )
+    checksumm_chain = LLMChain(
+            llm=llm,
+            prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+            verbose=verbose,
+            )
+
     with callback() as cb:
         for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
             # when ird == n_to_combine, the first n_to_combine summaries
@@ -67,12 +79,6 @@ def do_summarize(
             else:
                 fixed_index = f"{ird + 1}/{len(docs)}"
 
-            summarize_chain = load_summarize_chain(
-                    llm,
-                    chain_type="stuff",
-                    prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
-                    verbose=verbose,
-                    )
             out = summarize_chain(
                     {
                         "input_documents": [rd],
@@ -83,34 +89,26 @@ def do_summarize(
                     return_only_outputs=False,
                     )
 
-            summ = out["output_text"]
-
-            summaries.append(summ)
+            summaries.append(out["output_text"])
 
             # given the influence of the first few summaries, make sure it's compact
             # and follows the rules
             if ird == n_to_combine:  # combine the first n summaries and make it more compact
-                summ = "\n".join([s for s in summaries])
+                summaries = ["\n".join(summaries)]
 
-                red(f"Checking '{n_summpasscheck}' times the first '{n_to_combine}' summaries.")
-                red(f"Summary before correction:\n{summ}")
-
-                for trial in range(n_summpasscheck):
-                    checksumm_chain = LLMChain(
-                            llm=llm,
-                            prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
-                            verbose=verbose,
-                            )
-                    summ = checksumm_chain(
-                            {
-                                "summary_to_check": summ,
-                                "rules": checksummary_rules,
-                                }
-                            )["text"]
-
-                summaries = [summ]
-                red(f"Summary after correction:\n{summ}")
-
+            # run the check also on each individual paragraph without
+            # combining
+            for trial in range(n_summpasscheck):
+                if verbose:
+                    red(f"Chunk summary {ird} before check:\n{summaries[-1]}")
+                summaries[-1] = checksumm_chain(
+                        {
+                            "summary_to_check": summaries[-1],
+                            "rules": checksummary_rules,
+                            }
+                        )["text"]
+                if verbose:
+                    red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
 
             previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''"
             if metadata:

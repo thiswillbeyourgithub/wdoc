@@ -44,7 +44,7 @@ class DocToolsLLM:
 
             top_k=3,
             n_to_combine=1,
-            n_summpasscheck=3,
+            n_summpasscheck=1,
 
             debug=False,
             llm_verbosity=True,
@@ -124,7 +124,7 @@ class DocToolsLLM:
             A value of 1 means that when the summarizer is done
             processing the 2nd (reminder that index start at 0)
             chunk of text the summaries of
-            chunk 0 and chunk 1 (up to n_to_combine) will be 
+            chunk 0 and chunk 1 (up to n_to_combine) will be
             concatenated, then will be passed n_summpasscheck times into
             the llm that is prompted with reformulating and compacting the
             summary.
@@ -135,13 +135,16 @@ class DocToolsLLM:
 
             If you increase n_to_combine to more than 1, you will have
             a considerably shorter and to the point summary for the whole
-            document. Same idea for setting n_summpasscheck too high.
+            document. Same idea for setting n_summpasscheck too high, but
+            with an increasing token cost.
 
-        --n_summpasscheck int, default 3
-            see --n_to_combine
+        --n_summpasscheck int, default 1
+            First, read --n_to_combine
 
-n_to_combine = 1  # careful, indices start at 0. So setting n_to_combine at 3 means that the first 4 paragraphs will get combined into one. This will certainly lose meaningful information.
-n_passcheck = 3  # number of check to do
+            Apart when combining the first n_to_combine, the checker is also
+            called for individual chunk summary n_summpasscheck times. Be
+            careful as increase n_summpasscheck will dramatically increase
+            the token count.
 
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
