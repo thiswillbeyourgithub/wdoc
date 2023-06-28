@@ -23,7 +23,7 @@ summary_rules = dedent("""
 # template to summarize
 system_summary_template = dedent("""You are a helpful assistant. Your job is to summarize a chunk of a text while following the rules.
 
-Here are the rules you have to follow:
+RULES YOU HAVE TO FOLLOW:
 '''
 {rules}
 '''
@@ -34,11 +34,6 @@ human_summary_template = dedent("""{metadata}{previous_summary}
 Here's a chunk of the text:
 '''
 {text}
-'''
-
-Here's a reminder of the rules:
-'''
-{rules}
 '''
 
 MARKDOWN SUMMARY:""".strip())
@@ -59,7 +54,7 @@ checksummary_rules = dedent("""
 
 system_checksummary_template = dedent("""You are a helpful assistant. Your job is to format a summary while following some rules.
 
-RULES:
+RULES YOU HAVE TO FOLLOW:
 '''
 {rules}
 '''""".strip())
@@ -67,11 +62,6 @@ RULES:
 human_checksummary_template = dedent("""SUMMARY TO FIX:
 '''
 {summary_to_check}
-'''
-
-RULES REMINDER:
-'''
-{rules}
 '''
 
 FIXED SUMMARY:
