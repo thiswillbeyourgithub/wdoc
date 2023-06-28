@@ -2,12 +2,12 @@ from textwrap import dedent
 
 # rule for the summarization
 summary_rules = dedent("""
-* Regarding the formatting of your summary:
+* Formatting of your summary:
   * Use markdown bullet points.
   * Use indentation to organize information hierarchically.
   * The bullet points for each information have to follow the order of appearance in the text.
   * The present rules are a good example of adequate formatting.
-* Regarding the content of your summary:
+* Content of your summary:
   * Include all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, etc.
   * Exclude sponsors, advertisements, embellishments, headers, etc.
   * When in doubt about wether to include an information or not, include it.
@@ -21,9 +21,9 @@ summary_rules = dedent("""
 """.strip())
 
 # template to summarize
-system_summary_template = dedent("""You are a helpful assistant. Your job is to summarize a chunk of a text while following the rules.
+system_summary_template = dedent("""You are a perfect assistant. Your job is to summarize a chunk of text. There are rules you absolutely have to follow.
 
-RULES YOU HAVE TO FOLLOW:
+RULES YOU ABSOLUTELY HAVE TO FOLLOW:
 '''
 {rules}
 '''
@@ -31,7 +31,7 @@ RULES YOU HAVE TO FOLLOW:
 
 human_summary_template = dedent("""{metadata}{previous_summary}
 
-Here's a chunk of the text:
+Here's the chunk of the text you have to summarize:
 '''
 {text}
 '''
@@ -46,23 +46,22 @@ checksummary_rules = dedent("""
 * reformulate every bullet point to make it concise but without losing meaning
 * don't use complete sentences
 * use indentation to hierarchically organize the summary
-* don't translate the summary. If it's in French, answer in French
+* don't translate the summary. If the input summary is in French, answer in French
 * if the summary is already good, simply answer the same unmodified summary
 * don't omit any information from the input summary in your answer
-* a summary that is too long is better than a summary missing information
+* a formatted summary that is too long is better than a formatted summary that is missing information from the original summary
 """.strip())
 
-system_checksummary_template = dedent("""You are a helpful assistant. Your job is to format a summary while following some rules.
+system_checksummary_template = dedent("""You are a perfect assistant. Your job is to fix the format of a summary. There are rules you absolutely have to follow.
 
-RULES YOU HAVE TO FOLLOW:
+RULES YOU ABSOLUTELY HAVE TO FOLLOW:
 '''
 {rules}
 '''""".strip())
 
-human_checksummary_template = dedent("""SUMMARY TO FIX:
+human_checksummary_template = dedent("""SUMMARY TO FORMAT:
 '''
 {summary_to_check}
 '''
 
-FIXED SUMMARY:
-""".strip())
+FORMATTED SUMMARY:""".strip())
