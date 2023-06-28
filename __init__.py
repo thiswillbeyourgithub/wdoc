@@ -1,3 +1,4 @@
+from pathlib import Path
 import time
 from datetime import datetime
 import re
@@ -270,6 +271,8 @@ n_passcheck = 3  # number of check to do
             # get the list of documents from the same source. Also checks if
             # it's not part of the output file if task is "summarize_link_file"
             if self.task == "summarize_link_file":
+                if not Path(self.kwargs["out_file"]).exists():
+                    Path(self.kwargs["out_file"]).touch()
                 with open(self.kwargs["out_file"], "r") as f:
                     output_content = f.read()
                 for d in self.loaded_docs:
