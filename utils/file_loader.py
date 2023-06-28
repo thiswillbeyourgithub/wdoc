@@ -1,7 +1,5 @@
 import youtube_dl
 from youtube_dl.utils import DownloadError, ExtractorError
-import requests
-import openai
 import random
 import shutil
 import ankipandas as akp
@@ -18,10 +16,10 @@ import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import PDFMinerPDFasHTMLLoader
+# from langchain.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain.document_loaders import PDFMinerLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import SeleniumURLLoader

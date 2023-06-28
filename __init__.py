@@ -2,28 +2,19 @@ import time
 from datetime import datetime
 import re
 import textwrap
-from pathlib import Path
 import fire
 import os
 from tqdm import tqdm
-from datetime import datetime
 import signal
 import pdb
 from nltk.corpus import stopwords
 
-from langchain.chains.summarize import load_summarize_chain
-from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-from utils.prompts import reduce_summaries_prompt, summarize_prompt, summary_rules
-from langchain.chains.combine_documents.map_reduce import MapReduceDocumentsChain
-from langchain.chains.mapreduce import MapReduceChain
-from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from langchain.chains.question_answering import load_qa_chain
 
-from utils.file_loader import load_doc, load_embeddings, get_tkn_length, get_splitter
+from utils.file_loader import load_doc, load_embeddings, get_tkn_length
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
