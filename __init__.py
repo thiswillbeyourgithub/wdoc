@@ -234,24 +234,34 @@ class DocToolsLLM:
     def process_task(self):
         red("\nProcessing task")
 
-        if self.task == "summarize_link_file":
+        if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
+            total_tkn_cost = 0
+            total_dol_cost = 0
+            total_length_saved = 0
             links_todo = set()
             already_done = set()
             failed = []
-            with open(self.kwargs["out_file"], "r") as f:
-                output_content = f.read()
-            # assemble list of docs and check if was not already summarized
-            for d in self.loaded_docs:
-                assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
 
-                link = d.metadata["subitem_link"]
-                if link in already_done or link in links_todo:
-                    continue
-                if link in output_content:
-                    whi(f"Skipping link : already summarized in out_file: '{link}'")
-                    already_done.add(link)
-                    continue
-                links_todo.add(link)
+            # get the list of documents from the same source. Also checks if
+            # it's not part of the output file if task is "summarize_link_file"
+            if self.task == "summarize_link_file":
+                with open(self.kwargs["out_file"], "r") as f:
+                    output_content = f.read()
+                for d in self.loaded_docs:
+                    assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
+
+                    link = d.metadata["subitem_link"]
+                    if link in already_done or link in links_todo:
+                        continue
+                    if link in output_content:
+                        whi(f"Skipping link : already summarized in out_file: '{link}'")
+                        already_done.add(link)
+                        continue
+                    links_todo.add(link)
+            else:
+                for d in self.loaded_docs:
+                    links_todo.add(d.metadata["path"])
+                assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
 
             # estimate price before summarizing, in case you put the bible in there
             full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
@@ -274,15 +284,14 @@ class DocToolsLLM:
                         1635: 5,  # ' *'
                         }
 
-            total_tkn_cost = 0
-            total_dol_cost = 0
-            total_length_saved = 0
+            for link in tqdm(links_todo, desc="Summarizing documents", disable=(not len(links_todo) - 1)):
 
-            for link in tqdm(links_todo, desc="Summarizing links"):
-
-                # get only the docs that match the link
-                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
-                assert relevant_docs
+                if self.task == "summarize_link_file":
+                    # get only the docs that match the link
+                    relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
+                else:
+                    relevant_docs = self.loaded_docs
+                assert relevant_docs, 'Empty relevant_docs!'
 
                 # parse metadata from the doc
                 metadata = []
@@ -325,105 +334,76 @@ class DocToolsLLM:
                 red(f"Tokens used for this doc: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
                 # make sure to use the same markdown formatting
-                outtext = outtext.replace("* ", "- ")
-                outtext = outtext.replace("- - ", "- ")
+                summary = summary.replace("* ", "- ")
+                summary = summary.replace("- - ", "- ")
 
-                red(f"\n\nSummary of '{link}':\n{outtext}")
+                red(f"\n\nSummary of '{link}':\n{summary}")
 
                 red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
                 red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
 
 
-                if "out_file_logseq_mode" in self.kwargs:
-                    header = f"\n- TODO {item_name}"
-                    header += "\n  collapsed:: true"
-                    header += f"\n  summarization_date:: {today}"
-                    header += f"\n  summarization_timestamp:: {int(time.time())}"
-                    header += "\n  block_type:: DocToolsLLM_summary"
-                    header += f"\n  token_cost:: {doc_total_tokens}"
-                    header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
-                    header += f"\n  DocToolsLLM_version:: {self.VERSION}"
-                    header += f"\n  DocToolsLLM_model:: {self.model}"
-                    if leng:
-                        header += f"\n  minutes_saved:: {leng:.1f}"
-                    if author:
-                        header += f"\n  author:: {author}"
+                if "out_file" in self.kwargs:
+                    if "out_file_logseq_mode" in self.kwargs:
+                        header = f"\n- TODO {item_name}"
+                        header += "\n  collapsed:: true"
+                        header += f"\n  summarization_date:: {today}"
+                        header += f"\n  summarization_timestamp:: {int(time.time())}"
+                        header += "\n  block_type:: DocToolsLLM_summary"
+                        header += f"\n  token_cost:: {doc_total_tokens}"
+                        header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
+                        header += f"\n  DocToolsLLM_version:: {self.VERSION}"
+                        header += f"\n  DocToolsLLM_model:: {self.model}"
+                        if leng:
+                            header += f"\n  minutes_saved:: {leng:.1f}"
+                        if author:
+                            header += f"\n  author:: {author}"
 
-                else:
-                    header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
-                    if leng:
-                        header += f"    {leng:.1f} minutes"
-                    if author:
-                        header += f"    by '{author}'"
-                    header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
+                    else:
+                        header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
+                        if leng:
+                            header += f"    {leng:.1f} minutes"
+                        if author:
+                            header += f"    by '{author}'"
+                        header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
 
-                # save to output file
-                with open(self.kwargs["out_file"], "a") as f:
-                    f.write(header)
-                    for bulletpoint in outtext.split("\n"):
-                        f.write("\n")
-                        # make sure the line begins with a bullet point
-                        if not bulletpoint.strip().startswith("- "):
-                            begin_space = re.search(r"^(\s+)", bulletpoint)
-                            if not begin_space:
-                                begin_space = [""]
-                            bulletpoint = begin_space[0] + "- " + bulletpoint
-                        f.write(f"    {bulletpoint}")
-                    f.write("\n\n\n")
+                    # save to output file
+                    with open(self.kwargs["out_file"], "a") as f:
+                        f.write(header)
+                        for bulletpoint in summary.split("\n"):
+                            f.write("\n")
+                            # make sure the line begins with a bullet point
+                            if not bulletpoint.strip().startswith("- "):
+                                begin_space = re.search(r"^(\s+)", bulletpoint)
+                                if not begin_space:
+                                    begin_space = [""]
+                                bulletpoint = begin_space[0] + "- " + bulletpoint
+                            f.write(f"    {bulletpoint}")
+                        f.write("\n\n\n")
 
-            # after summarizing all links, append to output file the total cost
-            if total_tkn_cost != 0 and total_dol_cost != 0:
-                with open(self.kwargs["out_file"], "a") as f:
-                    f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                    f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
+
+            if "out_file" in self.kwargs:
+                # after summarizing all links, append to output file the total cost
+                if total_tkn_cost != 0 and total_dol_cost != 0:
+                    with open(self.kwargs["out_file"], "a") as f:
+                        f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+                        f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
             # and write to input file a summary too
-            try:
-                with open(self.kwargs["path"], "a") as f:
-                    f.write(f"\n\n")
-                    f.write(f"- Done with summaries of {today}\n")
-                    f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(already_done)}\n")
-                    if failed:
-                        f.write(f"    - Number of links failed: {len(failed)}:\n")
-                        for f in failed:
-                            f.write(f"        - {f}\n")
-                    f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                    f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
-            except Exception as err:
-                red(f"Exception when writing summary to input file: '{err}'")
-
-            whi("Done summarizing link. Exiting.")
-            raise SystemExit()
-
-        if self.task in ["summary", "summary_then_query"]:
-
-            if self.model == "openai":
-                # increase likelyhood that chatgpt will use indentation by
-                # biasing towards adding space.
-                self.llm.model_kwargs["logit_bias"] = {
-                        220: 5,  # ' '
-                        532: 5,  # ' -'
-                        9: 5,  # '*'
-                        1635: 5,  # ' *'
-                        }
-
-            # summarize each chunk of the document and return one text
-            summary, doc_total_tokens, doc_total_cost = do_summarize(
-                    docs=self.loaded_docs,
-                    metadata=metadata,
-                    llm=self.llm,
-                    callback=self.callback,
-                    verbose=self.llm_verbosity,
-                    )
-
-            total_tkn_cost += doc_total_tokens
-            total_dol_cost += doc_total_cost
-
-            red(f"Tokens used: '{doc_total_tokens}' (${doc_total_cost:.5f})")
-
-            red("\n\nSummary:")
-            for bulletpoint in summary.split("\n"):
-                red(bulletpoint)
+            if "out_file" in self.kwargs:
+                try:
+                    with open(self.kwargs["path"], "a") as f:
+                        f.write(f"\n\n")
+                        f.write(f"- Done with summaries of {today}\n")
+                        f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(already_done)}\n")
+                        if failed:
+                            f.write(f"    - Number of links failed: {len(failed)}:\n")
+                            for f in failed:
+                                f.write(f"        - {f}\n")
+                        f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+                        f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
+                except Exception as err:
+                    red(f"Exception when writing end of run details to input file: '{err}'")
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
@@ -431,7 +411,7 @@ class DocToolsLLM:
                 whi("Done summarizing. Exiting.")
                 raise SystemExit()
 
-        # load embeddings, used for querying
+        # load embeddings for querying
         self.loaded_embeddings = load_embeddings(
                 self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs, self.kwargs)
 
@@ -439,6 +419,8 @@ class DocToolsLLM:
 
         # set default ask_user argument
         multiline = False
+
+        # conversational memory
         memory = AnswerConversationBufferMemory(
                 memory_key="chat_history",
                 return_messages=True)
