@@ -43,7 +43,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=3,
-            n_to_combine=1,
+            n_to_combine=0,
             n_summpasscheck=1,
 
             debug=False,
@@ -116,7 +116,7 @@ class DocToolsLLM:
         --top_k int, default 3
             retrieval argument
 
-        --n_to_combine int, default 1
+        --n_to_combine int, default 0
             when creating the summary of a long document split into
             chunks, this value is the chunk index number under which
             the summarization check will be called WITH concatenation.
