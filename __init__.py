@@ -300,19 +300,21 @@ class DocToolsLLM:
                     author = None
 
                 if metadata:
-                    metadata = "Here's additional information about the text:\n'''" + "\n".join(metadata) + "\n'''\n"
+                    metadata = "Here's additional information about the text:\n'''" + "\n".join(metadata)
+                    metadata += "\nArticle chunk number: [PROGRESS]"
+                    metadata += "\n'''\n"
                 else:
                     metadata = ""
 
                 with self.callback() as cb:
                     previous_summary = ""
                     summaries = []
-                    for rd in tqdm(relevant_docs, desc="Summarising splits"):
+                    for ird, rd in tqdm(enumerate(relevant_docs), desc="Summarising splits"):
                         summarize_chain = load_summarize_chain(
                                 self.llm,
                                 chain_type="stuff",
                                 prompt=summarize_prompt.partial(
-                                    metadata=metadata,
+                                    metadata=metadata.replace("[PROGRESS]", f"{ird+1}/{len(relevant_docs)}"),
                                     rules=summary_rules,
                                     previous_summary=previous_summary,
                                     ),
