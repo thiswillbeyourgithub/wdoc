@@ -110,7 +110,7 @@ def do_summarize(
             if verbose and n_summpasscheck:
                 red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
 
-            previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''"
+            previous_summary = f"For reference, here's the summary of the previous chunk of text (you can directly continue this summary and use the same indentation as there is an overlap between the two chunks):\n'''\n{summaries[-1]}\n'''"
             if metadata:
                 previous_summary = "\n" + previous_summary
 
