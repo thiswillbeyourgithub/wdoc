@@ -14,7 +14,7 @@ from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 
-from utils.file_loader import load_doc, load_embeddings, get_tkn_length
+from utils.file_loader import load_doc, load_embeddings, get_tkn_length, average_word_length, wpm
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -228,7 +228,8 @@ class DocToolsLLM:
         if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
             total_tkn_cost = 0
             total_dol_cost = 0
-            total_length_saved = 0
+            total_docs_length = 0
+            total_summary_length = 0
             links_todo = set()
             already_done = set()
             failed = []
@@ -293,7 +294,7 @@ class DocToolsLLM:
                     item_name = link
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     leng = relevant_docs[0].metadata["docs_reading_time"]
-                    total_length_saved += leng
+                    total_docs_length += leng
                     metadata.append(f"Duration: {leng:.1f} minutes")
                 else:
                     leng = None
@@ -319,6 +320,10 @@ class DocToolsLLM:
                         verbose=self.llm_verbosity,
                         )
 
+                # get reading length of the summary
+                reading_length = len(summary) / average_word_length / wpm
+                total_summary_length += reading_length
+
                 total_tkn_cost += doc_total_tokens
                 total_dol_cost += doc_total_cost
 
@@ -331,22 +336,23 @@ class DocToolsLLM:
                 red(f"\n\nSummary of '{link}':\n{summary}")
 
                 red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
-                red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
+                red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
 
                 if "out_file" in self.kwargs:
                     if "out_file_logseq_mode" in self.kwargs:
                         header = f"\n- TODO {item_name}"
                         header += "\n  collapsed:: true"
-                        header += f"\n  summarization_date:: {today}"
-                        header += f"\n  summarization_timestamp:: {int(time.time())}"
-                        header += "\n  block_type:: DocToolsLLM_summary"
-                        header += f"\n  token_cost:: {doc_total_tokens}"
-                        header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                         header += f"\n  DocToolsLLM_version:: {self.VERSION}"
                         header += f"\n  DocToolsLLM_model:: {self.model}"
+                        header += "\n  block_type:: DocToolsLLM_summary"
+                        header += f"\n  summarization_date:: {today}"
+                        header += f"\n  summarization_timestamp:: {int(time.time())}"
+                        header += f"\n  token_cost:: {doc_total_tokens}"
+                        header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
+                        header += f"\n  summary_reading_length:: {reading_length}"
                         if leng:
-                            header += f"\n  minutes_saved:: {leng:.1f}"
+                            header += f"\n  doc_reading_length:: {leng}"
                         if author:
                             header += f"\n  author:: {author}"
 
@@ -378,7 +384,7 @@ class DocToolsLLM:
                 if total_tkn_cost != 0 and total_dol_cost != 0:
                     with open(self.kwargs["out_file"], "a") as f:
                         f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                        f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
+                        f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
 
             # and write to input file a summary too
             if "out_file" in self.kwargs:
@@ -392,7 +398,7 @@ class DocToolsLLM:
                             for f in failed:
                                 f.write(f"        - {f}\n")
                         f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                        f.write(f"    - Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n")
+                        f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
                 except Exception as err:
                     red(f"Exception when writing end of run details to input file: '{err}'")
 
