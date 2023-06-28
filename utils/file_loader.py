@@ -508,7 +508,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     # try with html
                     except Exception as err:
                         red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
-                        loader = WebBaseLoader(path)
+                        loader = WebBaseLoader(path, raise_for_status=True)
                         docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
                         check_docs_tkn_length(docs, path)
 
