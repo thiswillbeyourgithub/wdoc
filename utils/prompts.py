@@ -1,6 +1,6 @@
 from textwrap import dedent
-from langchain import PromptTemplate
 
+# rule for the summarization
 summary_rules = dedent("""
 * Regarding the formatting of your summary:
     * Use markdown bullet points.
@@ -20,21 +20,25 @@ summary_rules = dedent("""
     * Write without bias and stay faithful to the author.
 """.strip())
 
-summarize_template = """Your job is to summarize a chunk of a text while following some rules.
-
-{metadata}
-{previous_summary}
-Here's a chunk of the text:
-'''
-{text}
-'''
+# template to summarize
+system_summary_template = dedent("""Your job is to summarize a chunk of a text while following some rules.
 
 Here are the rules you have to follow:
 '''
 {rules}
 '''
+""".strip())
 
-MARKDOWN SUMMARY:"""
-summarize_prompt = PromptTemplate(
-        template=summarize_template,
-        input_variables=["text", "previous_summary", "metadata", "rules"])
+human_summary_template = dedent("""{metadata}{previous_summary}
+
+Here's a chunk of the text:
+'''
+{text}
+'''
+
+Here's a reminder of the rules:
+'''
+{rules}
+'''
+
+MARKDOWN SUMMARY:""".strip())

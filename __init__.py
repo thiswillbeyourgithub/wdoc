@@ -315,6 +315,7 @@ class DocToolsLLM:
                 summary, doc_total_tokens, doc_total_cost = do_summarize(
                         docs=relevant_docs,
                         metadata=metadata,
+                        model=self.model,
                         llm=self.llm,
                         callback=self.callback,
                         verbose=self.llm_verbosity,
