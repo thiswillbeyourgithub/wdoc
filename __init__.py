@@ -396,23 +396,33 @@ class DocToolsLLM:
             raise SystemExit()
 
         if self.task in ["summary", "summary_then_query"]:
-            with self.callback() as cb:
-                chain = load_summarize_chain(
-                        self.llm,
-                        chain_type="map_reduce",
-                        return_intermediate_steps=True,
-                        map_prompt=map_summarize_prompt.partial(metadata=metadata, rules=summary_rules),
-                        combine_prompt=reduce_summaries_prompt.partial(metadata=metadata, rules=summary_rules),
-                        verbose=self.llm_verbosity,
-                        )
-                out = chain(
-                        {"input_documents": self.loaded_docs},
-                        return_only_outputs=True,
-                        )
-            red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
+
+            if self.model == "openai":
+                # increase likelyhood that chatgpt will use indentation by
+                # biasing towards adding space.
+                self.llm.model_kwargs["logit_bias"] = {
+                        220: 5,  # ' '
+                        532: 5,  # ' -'
+                        9: 5,  # '*'
+                        1635: 5,  # ' *'
+                        }
+
+            # summarize each chunk of the document and return one text
+            summary, doc_total_tokens, doc_total_cost = do_summarize(
+                    docs=self.loaded_docs,
+                    metadata=metadata,
+                    llm=self.llm,
+                    callback=self.callback,
+                    verbose=self.llm_verbosity,
+                    )
+
+            total_tkn_cost += doc_total_tokens
+            total_dol_cost += doc_total_cost
+
+            red(f"Tokens used: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
             red("\n\nSummary:")
-            for bulletpoint in out["output_text"].split("\n"):
+            for bulletpoint in summary.split("\n"):
                 red(bulletpoint)
 
             if self.task == "summary_then_query":
