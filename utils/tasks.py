@@ -98,17 +98,17 @@ def do_summarize(
 
             # run the check also on each individual paragraph without
             # combining
+            if verbose and n_summpasscheck:
+                red(f"Chunk summary {ird} before check:\n{summaries[-1]}")
             for trial in range(n_summpasscheck):
-                if verbose:
-                    red(f"Chunk summary {ird} before check:\n{summaries[-1]}")
                 summaries[-1] = checksumm_chain(
                         {
                             "summary_to_check": summaries[-1],
                             "rules": checksummary_rules,
                             }
                         )["text"]
-                if verbose:
-                    red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
+            if verbose and n_summpasscheck:
+                red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
 
             previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''"
             if metadata:
