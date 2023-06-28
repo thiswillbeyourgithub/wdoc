@@ -298,10 +298,15 @@ class DocToolsLLM:
             # estimate price before summarizing, in case you put the bible in there
             full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
             red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
-            # a conservative estimate is that it takes 2 times the number
+            # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
-            estimate_tkn = 2.4 * full_tkn  # empirical value: 2.37 times the doc tokens
-            estimate_dol = estimate_tkn / 1000 * 0.0016  # empirical value: $0.001579 for 1k tokens
+            # for n_summpasscheck=1 and n_to_combine=1 empirical value: 3.85 times the documents tokens, price of 0.001579
+            # for n_summpasscheck=0 and n_to_combine=0 : 2.5 times, price of price of 0.001580
+            if self.n_summpasscheck == 0 and self.n_to_combine == 0:
+                estimate_tkn = 2.4 * full_tkn
+            else:
+                estimate_tkn = (2.4 + 0.5 + self.n_summpasscheck) * full_tkn
+            estimate_dol = estimate_tkn / 1000 * 0.0016
             red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
             if estimate_dol > 1:
                 raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
