@@ -114,6 +114,12 @@ def do_summarize(
             if metadata:
                 previous_summary = "\n" + previous_summary
 
-    outtext = "\n- ---\n".join(summaries)
+    # combine summaries as one string
+    outtext = ""
+    n = len(summaries)
+    for i, s in enumerate(summaries):
+        outtext += s + "\n"
+        if s != summaries[-1]:
+            outtext += f"- ---\n- Chunk {i + 1}/{n}\n"
 
     return outtext, cb.total_tokens, cb.total_cost
