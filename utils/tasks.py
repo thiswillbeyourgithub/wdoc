@@ -43,7 +43,7 @@ chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
         )
 
 n_to_combine = 2
-n_check = 3
+n_check = 1
 
 def do_summarize(docs, metadata, model, llm, callback, verbose):
     "summarize each chunk of a long document"
@@ -61,33 +61,19 @@ def do_summarize(docs, metadata, model, llm, callback, verbose):
             else:
                 fixed_index = f"{ird + 1}/{len(docs)}"
 
-            # use either chat messages or one prompt
-            if model == "openai":
-                # use chat messages
-                call_dict = {
+            summarize_chain = load_summarize_chain(
+                    llm,
+                    chain_type="stuff",
+                    prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
+                    verbose=verbose,
+                    )
+            out = summarize_chain(
+                    {
                         "input_documents": [rd],
                         "metadata": metadata.replace("[PROGRESS]", fixed_index),
                         "rules": summary_rules,
                         "previous_summary": previous_summary,
-                        }
-                promptsum = chatgpt_summary_messages
-            else:
-                # use one prompt
-                call_dict = {"input_documents": [rd]}
-                promptsum = summarize_prompt.partial(
-                        metadata=metadata.replace("[PROGRESS]", fixed_index),
-                        rules=summary_rules,
-                        previous_summary=previous_summary,
-                        )
-
-            summarize_chain = load_summarize_chain(
-                    llm,
-                    chain_type="stuff",
-                    prompt=promptsum,
-                    verbose=verbose,
-                    )
-            out = summarize_chain(
-                    call_dict,
+                        },
                     return_only_outputs=False,
                     )
 
@@ -104,22 +90,17 @@ def do_summarize(docs, metadata, model, llm, callback, verbose):
                 red(f"Summary before correction:\n{summ}")
 
                 for trial in range(n_check):
-                    if model == "openai":
-                        promptcheck = chatgpt_checksummary_messages
-                        call_dict = {
+                    checksumm_chain = LLMChain(
+                            llm=llm,
+                            prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+                            verbose=verbose,
+                            )
+                    summ = checksumm_chain(
+                            {
                                 "summary_to_check": summ,
                                 "rules": checksummary_rules,
                                 }
-                    else:
-                        promptcheck = checksummary_prompt.partial(rules=checksummary_rules)
-                        call_dict = {"input_text": summ}
-
-                    checksumm_chain = LLMChain(
-                            llm=llm,
-                            prompt=promptcheck,
-                            verbose=verbose,
-                            )
-                    summ = checksumm_chain(call_dict)["text"]
+                            )["text"]
 
                 summaries = [summ]
                 red(f"Summary after correction:\n{summ}")
