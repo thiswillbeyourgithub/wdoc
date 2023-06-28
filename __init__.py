@@ -405,6 +405,8 @@ class DocToolsLLM:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
+                if self.model == "openai":
+                    del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing. Exiting.")
                 raise SystemExit()
