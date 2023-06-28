@@ -262,6 +262,11 @@ class DocToolsLLM:
             if estimate_dol > 1:
                 raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
 
+            if self.model == "openai":
+                # increase likelyhood that chatgpt will use indentation by
+                # biasing towards adding space.
+                self.llm.model_kwargs["logit_bias"] = {220: 10}
+
             total_tkn_cost = 0
             total_dol_cost = 0
             total_length_saved = 0
