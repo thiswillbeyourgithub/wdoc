@@ -14,8 +14,8 @@ summary_rules = dedent("""
     - Direct quotations are allowed.
     - Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
         - Good example of brevity : US President's daily staff memo, the present rules.
-        - Avoid repetitions, use pronouns if the subject is implied
         - Use common words but keep technical details if noteworthy.
+        - Don't use pronouns if it's implied by the previous bullet point: write like a technical report.
     - Write in the same language as the input: if the text is in French, write an answer in French.
     - Write without bias and stay faithful to the author.
 """.strip())
@@ -25,45 +25,49 @@ summary_rules = dedent("""
 #         - In that case: start with "- JUDGEMENT:" and put this bullet point last.
 #     - If the text is followed by comments to the article: include them in your answer as if part of the text (but mention that you're now summarizing comments).
 
-summarize_template = """Your job is to summarize a text while following some rules. The text is very long so we give you only one part and you will later have to combine them.
+summarize_template = """Your job is to summarize a part of a text while following some rules.
 
 {metadata}
+{previous_summary}
 Here's a part of the text:
 '''
 {text}
 '''
 
-Here are the rules:
+Here are the rules you have to follow:
 '''
 {rules}
 '''
 
 MARKDOWN SUMMARY:"""
-map_summarize_prompt = PromptTemplate(
+summarize_prompt = PromptTemplate(
         template=summarize_template,
-        input_variables=["text", "metadata", "rules"])
+        input_variables=["text", "previous_summary", "metadata", "rules"])
 
 reduce_summaries_template = (
-        """You are given a summary of a text. Your job is to make the summary a bit more compact and faster to read while following some specific rules.
+        """You are given a summary of a text. Your job is to see if you can make the summary a bit shorter and faster to read without losing any information and while following some specific rules.
 
 {metadata}
-Here's the summary:
+Here's the summary of the text:
 '''
 {text}
 '''
 
-Here are the rules to follow while editing the summary:
+Here are the rules you have to follow:
 '''
-{rules}
+- Keep using markdown bullet points in your summary.
+- Keep as much of the original summary as you can. Modifications can only be used to reformulate bullet points but without losing information.
+- You can split a bullet points into sub bullet points as well as use indentation.
+- The goal is not to get the key points of the summary but to capture the reasonning, thought process and arguments of the author.
 '''
 
-Remember that I prefer a summary that is too long than losing information.
+Now given the summary and the rules, update the summary. Keep in mind that I prefer a summary that is too long rather than losing information.
 
 UPDATED SUMMARY:"""
 )
 reduce_summaries_prompt = PromptTemplate(
     template=reduce_summaries_template,
-    input_variables=["text", "metadata", "rules"],
+    input_variables=["text", "metadata"],
 )
 
 # combine_template = """Given the following answer you gave to this question on a long document. Create a final answer.

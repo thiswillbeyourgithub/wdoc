@@ -16,7 +16,7 @@ from langchain.chains import RetrievalQA
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
-from utils.prompts import reduce_summaries_prompt, map_summarize_prompt, summary_rules
+from utils.prompts import reduce_summaries_prompt, summarize_prompt, summary_rules
 from langchain.chains.combine_documents.map_reduce import MapReduceDocumentsChain
 from langchain.chains.mapreduce import MapReduceChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
@@ -295,18 +295,31 @@ class DocToolsLLM:
                     metadata = ""
 
                 with self.callback() as cb:
-                    summarize_chain = load_summarize_chain(
-                            self.llm,
-                            chain_type="map_reduce",
-                            return_intermediate_steps=True,
-                            map_prompt=map_summarize_prompt.partial(metadata=metadata, rules=summary_rules),
-                            combine_prompt=reduce_summaries_prompt.partial(metadata=metadata, rules=summary_rules),
-                            verbose=self.llm_verbosity,
-                            )
-                    out = summarize_chain(
-                            {"input_documents": relevant_docs},
-                            return_only_outputs=True,
-                            )
+                    previous_summary = ""
+                    summaries = []
+                    for rd in tqdm(relevant_docs, desc="Summarising splits"):
+                        summarize_chain = load_summarize_chain(
+                                self.llm,
+                                chain_type="stuff",
+                                prompt=summarize_prompt.partial(
+                                    metadata=metadata,
+                                    rules=summary_rules,
+                                    previous_summary=previous_summary,
+                                    ),
+                                verbose=self.llm_verbosity,
+                                )
+                        out = summarize_chain(
+                                {"input_documents": [rd]},
+                                return_only_outputs=False,
+                                )
+                        summ = out["output_text"]
+                        summaries.append(summ)
+                        previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''\n"
+
+                total_tkn_cost += cb.total_tokens
+                total_dol_cost += cb.total_cost
+
+                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
                 # check that the summary was not botched halfway
                 summaries_length = [get_tkn_length(s) for s in out["intermediate_steps"] + [out["output_text"]]]
@@ -325,10 +338,6 @@ class DocToolsLLM:
                 outtext = out["output_text"]
                 outtext = outtext.replace("* ", "- ")
                 outtext = outtext.replace("- - ", "- ")
-
-                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
-                total_tkn_cost += cb.total_tokens
-                total_dol_cost += cb.total_cost
 
                 red(f"\n\nSummary of '{link}':\n{outtext}")
 
