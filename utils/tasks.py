@@ -44,7 +44,7 @@ chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
 
 def do_summarize(
         n_to_combine,
-        n_passcheck,
+        n_summpasscheck,
         docs,
         metadata,
         model,
@@ -59,7 +59,7 @@ def do_summarize(
     with callback() as cb:
         for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
             # when ird == n_to_combine, the first n_to_combine summaries
-            # will be checked n_passcheck times for compactness. So the
+            # will be checked n_summpasscheck times for compactness. So the
             # progression number have to be reset to avoid giving
             # false impressions to the LLM.
             if ird > n_to_combine:
@@ -92,10 +92,10 @@ def do_summarize(
             if ird == n_to_combine:  # combine the first n summaries and make it more compact
                 summ = "\n".join([s for s in summaries])
 
-                red(f"Checking '{n_passcheck}' times the first '{n_to_combine}' summaries.")
+                red(f"Checking '{n_summpasscheck}' times the first '{n_to_combine}' summaries.")
                 red(f"Summary before correction:\n{summ}")
 
-                for trial in range(n_passcheck):
+                for trial in range(n_summpasscheck):
                     checksumm_chain = LLMChain(
                             llm=llm,
                             prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,

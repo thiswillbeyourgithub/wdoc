@@ -43,7 +43,7 @@ class DocToolsLLM:
 
             top_k=3,
             n_to_combine=1,
-            n_summpasscheck=3,,
+            n_summpasscheck=3,
 
             debug=False,
             llm_verbosity=True,
@@ -199,7 +199,7 @@ n_passcheck = 3  # number of check to do
         self.kwargs = kwargs
         self.stopwords_lang = stopwords_lang
         self.llm_verbosity = llm_verbosity
-        self.n_summpasscheck = n_summpasscheck,
+        self.n_summpasscheck = n_summpasscheck
         self.n_to_combine = n_to_combine
 
         # loading stop words
