@@ -399,6 +399,7 @@ class DocToolsLLM:
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                         header += f"\n  summary_reading_length:: {reading_length}"
+                        header += f"\n  DocToolsLLM_parameters:: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
                         if leng:
                             header += f"\n  doc_reading_length:: {leng}"
                         if author:
@@ -411,6 +412,7 @@ class DocToolsLLM:
                         if author:
                             header += f"    by '{author}'"
                         header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
+                        header += f"    parameters: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
 
                     # save to output file
                     with open(self.kwargs["out_file"], "a") as f:
