@@ -74,8 +74,8 @@ def do_summarize(
             # will be checked n_summpasscheck times for compactness. So the
             # progression number have to be reset to avoid giving
             # false impressions to the LLM.
-            if ird > n_to_combine:
-                fixed_index = f"{ird + 1 - n_to_combine}/{len(docs) - n_to_combine}"
+            if ird <= n_to_combine:
+                fixed_index = f"{ird + 1 - min(n_to_combine, ird)}/{len(docs) - min(n_to_combine, ird)}"
             else:
                 fixed_index = f"{ird + 1}/{len(docs)}"
 
@@ -93,7 +93,7 @@ def do_summarize(
 
             # given the influence of the first few summaries, make sure it's compact
             # and follows the rules
-            if ird == n_to_combine:  # combine the first n summaries and make it more compact
+            if ird <= n_to_combine:  # combine the first n summaries and make it more compact
                 summaries = ["\n".join(summaries)]
 
             # run the check also on each individual paragraph without

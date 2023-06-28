@@ -118,25 +118,23 @@ class DocToolsLLM:
 
         --n_to_combine int, default 1
             when creating the summary of a long document split into
-            chunks, this value is the chunk index number at which
-            the summarization check will be called.
+            chunks, this value is the chunk index number under which
+            the summarization check will be called WITH concatenation.
+            The 'under' is including equality: if 3, will combine: 0+1 (0+1)+2 ((0+1)+2)+3).
 
-            A value of 1 means that when the summarizer is done
-            processing the 2nd (reminder that index start at 0)
-            chunk of text the summaries of
-            chunk 0 and chunk 1 (up to n_to_combine) will be
-            concatenated, then will be passed n_summpasscheck times into
-            the llm that is prompted with reformulating and compacting the
-            summary.
+            A value of 3 means that while the summarizer is not done
+            processing the 4th (reminder that index start at 0)
+            chunk of text, the summaries of the 2 previous chunks will be
+            concatenated as one. Then the summary checker will be called.
 
             As the summary of the last chunk is shown to the llm as example
             when summarizing its own chunk this has the effect of increasing
-            summary compactness and quality.
+            summary compactness, at the cost of losing context and
+            information.
 
             If you increase n_to_combine to more than 1, you will have
-            a considerably shorter and to the point summary for the whole
-            document. Same idea for setting n_summpasscheck too high, but
-            with an increasing token cost.
+            a considerably shorter and to the point summary for the start
+            of the (and hopefully of the whole) document.
 
         --n_summpasscheck int, default 1
             First, read --n_to_combine
@@ -145,6 +143,9 @@ class DocToolsLLM:
             called for individual chunk summary n_summpasscheck times. Be
             careful as increase n_summpasscheck will dramatically increase
             the token count.
+
+            If you increase n_summpasscheck you increase the token cost
+            but also the likelyhood to lose information along the way.
 
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
