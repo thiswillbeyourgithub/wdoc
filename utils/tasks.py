@@ -31,6 +31,6 @@ def do_summarize(docs, metadata, llm, callback, verbose):
 
             previous_summary = f"For context, here's the summary of the previous section of the text:\n'''\n{summaries[-1]}\n'''\n"
 
-    outtext = "- ---".join(summaries)
+    outtext = "\n- ---\n".join(summaries)
 
     return outtext, cb.total_tokens, cb.total_cost
