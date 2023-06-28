@@ -275,12 +275,14 @@ class DocToolsLLM:
             total_tkn_cost = 0
             total_dol_cost = 0
             total_length_saved = 0
+
             for link in tqdm(links_todo, desc="Summarizing links"):
 
+                # get only the docs that match the link
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
                 assert relevant_docs
 
-                # parse metadata
+                # parse metadata from the doc
                 metadata = []
                 if "title" in relevant_docs[0].metadata:
                     item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
@@ -306,6 +308,7 @@ class DocToolsLLM:
                 else:
                     metadata = ""
 
+                # summarize each chunk of the link
                 with self.callback() as cb:
                     previous_summary = ""
                     summaries = []
@@ -331,27 +334,19 @@ class DocToolsLLM:
                 total_tkn_cost += cb.total_tokens
                 total_dol_cost += cb.total_cost
 
-                red(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
+                red(f"Tokens used for this doc: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
-                # check that the summary was not botched halfway
-                summaries_length = [get_tkn_length(s) for s in out["intermediate_steps"] + [out["output_text"]]]
-                should_stop = False
-                for i, summ in enumerate(summaries_length):
-                    if not i:
-                        continue
-                    if summ <= 0.9 * summaries_length[i-1]:
-                        red(f"Error when summarizing {link}: the summary is "
-                            f"getting shorter at some point: '{summaries_length}'")
-                        should_stop = True
-                if should_stop:
-                    failed.append(link)
-                    continue
+                outtext = "- ---".join(summaries)
 
-                outtext = out["output_text"]
+                # make sure to use the same markdown formatting
                 outtext = outtext.replace("* ", "- ")
                 outtext = outtext.replace("- - ", "- ")
 
                 red(f"\n\nSummary of '{link}':\n{outtext}")
+
+                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
+                red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
+
 
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
@@ -376,7 +371,7 @@ class DocToolsLLM:
                         header += f"    by '{author}'"
                     header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
 
-                # save to file
+                # save to output file
                 with open(self.kwargs["out_file"], "a") as f:
                     f.write(header)
                     for bulletpoint in outtext.split("\n"):
@@ -390,15 +385,13 @@ class DocToolsLLM:
                         f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
 
-                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
-                red(f"Total time saved by this run: {total_length_saved:.1f} minutes")
-
+            # after summarizing all links, append to output file the total cost
             if total_tkn_cost != 0 and total_dol_cost != 0:
                 with open(self.kwargs["out_file"], "a") as f:
                     f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
                     f.write(f"- Total time saved by this run: plausibly {total_length_saved:.1f} minutes\n\n\n")
 
-            # write to input file a summary
+            # and write to input file a summary too
             try:
                 with open(self.kwargs["path"], "a") as f:
                     f.write(f"\n\n")
