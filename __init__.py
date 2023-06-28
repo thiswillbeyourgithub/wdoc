@@ -40,9 +40,14 @@ class DocToolsLLM:
             stopwords_lang=None,
             saveas=".cache/latest_docs_and_embeddings",
             loadfrom=None,
+
             top_k=3,
+            n_to_combine=1,
+            n_summpasscheck=3,,
+
             debug=False,
             llm_verbosity=True,
+
             help=False,
             h=False,
             **kwargs,
@@ -110,6 +115,33 @@ class DocToolsLLM:
         --top_k int, default 3
             retrieval argument
 
+        --n_to_combine int, default 1
+            when creating the summary of a long document split into
+            chunks, this value is the chunk index number at which
+            the summarization check will be called.
+
+            A value of 1 means that when the summarizer is done
+            processing the 2nd (reminder that index start at 0)
+            chunk of text the summaries of
+            chunk 0 and chunk 1 (up to n_to_combine) will be 
+            concatenated, then will be passed n_summpasscheck times into
+            the llm that is prompted with reformulating and compacting the
+            summary.
+
+            As the summary of the last chunk is shown to the llm as example
+            when summarizing its own chunk this has the effect of increasing
+            summary compactness and quality.
+
+            If you increase n_to_combine to more than 1, you will have
+            a considerably shorter and to the point summary for the whole
+            document. Same idea for setting n_summpasscheck too high.
+
+        --n_summpasscheck int, default 3
+            see --n_to_combine
+
+n_to_combine = 1  # careful, indices start at 0. So setting n_to_combine at 3 means that the first 4 paragraphs will get combined into one. This will certainly lose meaningful information.
+n_passcheck = 3  # number of check to do
+
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
             sequential processing instead of multithreading and enable
@@ -167,6 +199,8 @@ class DocToolsLLM:
         self.kwargs = kwargs
         self.stopwords_lang = stopwords_lang
         self.llm_verbosity = llm_verbosity
+        self.n_summpasscheck = n_summpasscheck,
+        self.n_to_combine = n_to_combine
 
         # loading stop words
         if self.stopwords_lang:
@@ -313,6 +347,8 @@ class DocToolsLLM:
                 # summarize each chunk of the link and return one text
                 summary, doc_total_tokens, doc_total_cost = do_summarize(
                         docs=relevant_docs,
+                        n_to_combine=self.n_to_combine,
+                        n_summpasscheck=self.n_summpasscheck,
                         metadata=metadata,
                         model=self.model,
                         llm=self.llm,
