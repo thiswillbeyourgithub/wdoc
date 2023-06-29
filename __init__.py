@@ -46,7 +46,7 @@ class DocToolsLLM:
 
             top_k=3,
             n_to_combine=0,
-            n_summpasscheck=1,
+            n_summpasscheck=0,
 
             debug=False,
             llm_verbosity=True,
@@ -138,7 +138,7 @@ class DocToolsLLM:
             a considerably shorter and to the point summary for the start
             of the (and hopefully of the whole) document.
 
-        --n_summpasscheck int, default 1
+        --n_summpasscheck int, default 0
             First, read --n_to_combine
 
             Apart when combining the first n_to_combine, the checker is also
