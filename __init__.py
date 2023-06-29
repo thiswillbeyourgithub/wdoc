@@ -313,10 +313,10 @@ class DocToolsLLM:
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
                 self.llm.model_kwargs["logit_bias"] = {
-                        220: 5,  # ' '
-                        532: 5,  # ' -'
-                        9: 5,  # '*'
-                        1635: 5,  # ' *'
+                        220: 10,  # ' '
+                        # 532: 10,  # ' -'
+                        9: 10,  # '*'
+                        1635: 10,  # ' *'
                         }
 
             def threaded_summary(link, lock):
