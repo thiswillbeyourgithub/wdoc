@@ -1,3 +1,5 @@
+from joblib import Parallel, delayed
+from threading import Lock
 from pathlib import Path
 import time
 from datetime import datetime
@@ -264,10 +266,6 @@ class DocToolsLLM:
         red("\nProcessing task")
 
         if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
-            total_tkn_cost = 0
-            total_dol_cost = 0
-            total_docs_length = 0
-            total_summary_length = 0
             links_todo = set()
             already_done = set()
             failed = []
@@ -321,8 +319,7 @@ class DocToolsLLM:
                         1635: 5,  # ' *'
                         }
 
-            for link in tqdm(links_todo, desc="Summarizing documents", disable=(not len(links_todo) - 1)):
-
+            def threaded_summary(link, lock):
                 if self.task == "summarize_link_file":
                     # get only the docs that match the link
                     relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
@@ -338,11 +335,10 @@ class DocToolsLLM:
                 else:
                     item_name = link
                 if "docs_reading_time" in relevant_docs[0].metadata:
-                    leng = relevant_docs[0].metadata["docs_reading_time"]
-                    total_docs_length += leng
-                    metadata.append(f"Duration: {leng:.1f} minutes")
+                    doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
+                    metadata.append(f"Duration: {doc_reading_length:.1f} minutes")
                 else:
-                    leng = None
+                    doc_reading_length = None
                 if "author" in relevant_docs[0].metadata:
                     author = relevant_docs[0].metadata["author"].strip()
                     metadata.append(f"Author: '{author}'")
@@ -369,23 +365,16 @@ class DocToolsLLM:
                         )
 
                 # get reading length of the summary
-                reading_length = len(summary) / average_word_length / wpm
-                total_summary_length += reading_length
-
-                total_tkn_cost += doc_total_tokens
-                total_dol_cost += doc_total_cost
-
-                red(f"Tokens used for this doc: '{doc_total_tokens}' (${doc_total_cost:.5f})")
+                sum_reading_length = len(summary) / average_word_length / wpm
 
                 # make sure to use the same markdown formatting
                 summary = summary.replace("* ", "- ")
                 summary = summary.replace("- - ", "- ")
 
-                red(f"\n\nSummary of '{link}':\n{summary}")
+                with lock:
+                    red(f"\n\nSummary of '{link}':\n{summary}")
 
-                red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
-                red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
-
+                    red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
                 if "out_file" in self.kwargs:
                     if "out_file_logseq_mode" in self.kwargs:
@@ -398,36 +387,64 @@ class DocToolsLLM:
                         header += f"\n  summarization_timestamp:: {int(time.time())}"
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
-                        header += f"\n  summary_reading_length:: {reading_length}"
+                        header += f"\n  summary_reading_length:: {sum_reading_length}"
                         header += f"\n  DocToolsLLM_parameters:: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
-                        if leng:
-                            header += f"\n  doc_reading_length:: {leng}"
+                        if doc_reading_length:
+                            header += f"\n  doc_reading_length:: {doc_reading_length}"
                         if author:
                             header += f"\n  author:: {author}"
 
                     else:
                         header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
-                        if leng:
-                            header += f"    {leng:.1f} minutes"
+                        if doc_reading_length:
+                            header += f"    {doc_reading_length:.1f} minutes"
                         if author:
                             header += f"    by '{author}'"
                         header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
                         header += f"    parameters: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
 
                     # save to output file
-                    with open(self.kwargs["out_file"], "a") as f:
-                        f.write(header)
-                        for bulletpoint in summary.split("\n"):
-                            f.write("\n")
-                            # make sure the line begins with a bullet point
-                            if not bulletpoint.strip().startswith("- "):
-                                begin_space = re.search(r"^(\s+)", bulletpoint)
-                                if not begin_space:
-                                    begin_space = [""]
-                                bulletpoint = begin_space[0] + "- " + bulletpoint
-                            f.write(f"    {bulletpoint}")
-                        f.write("\n\n\n")
+                    with lock:
+                        with open(self.kwargs["out_file"], "a") as f:
+                            f.write(header)
+                            for bulletpoint in summary.split("\n"):
+                                f.write("\n")
+                                # make sure the line begins with a bullet point
+                                if not bulletpoint.strip().startswith("- "):
+                                    begin_space = re.search(r"^(\s+)", bulletpoint)
+                                    if not begin_space:
+                                        begin_space = [""]
+                                    bulletpoint = begin_space[0] + "- " + bulletpoint
+                                f.write(f"    {bulletpoint}")
+                            f.write("\n\n\n")
+                return {
+                        "link": link,
+                        "sum_reading_length": sum_reading_length,
+                        "doc_reading_length": doc_reading_length,
+                        "doc_total_tokens": doc_total_tokens,
+                        "doc_total_cost": doc_total_cost,
+                        "summary": summary,
+                        }
 
+            lock = Lock()
+            results = Parallel(
+                    n_jobs=3,
+                    backend="threading" if not self.debug else "sequential",
+                    )(delayed(threaded_summary)(
+                        link=link,
+                        lock=lock,
+                        ) for link in tqdm(
+                            links_todo,
+                            desc="Summarizing documents",
+                            disable=(not len(links_todo) - 1) or self.debug,
+                            ))
+            total_tkn_cost = sum([x["doc_total_tokens"] for x in results])
+            total_dol_cost = sum([x["doc_total_cost"] for x in results])
+            total_docs_length = sum([x["doc_reading_length"] for x in results])
+            total_summary_length = sum([x["sum_reading_length"] for x in results])
+
+            red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
+            red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
             if "out_file" in self.kwargs:
                 # after summarizing all links, append to output file the total cost
