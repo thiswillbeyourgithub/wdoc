@@ -16,7 +16,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc, load_embeddings, get_tkn_length, average_word_length, wpm
+from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -480,7 +480,7 @@ class DocToolsLLM:
                 raise SystemExit()
 
         # load embeddings for querying
-        self.loaded_embeddings = load_embeddings(
+        self.loaded_embeddings, self.embeddings = load_embeddings(
                 self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs, self.kwargs)
 
         assert self.task in ["query", "summary_then_query"]
@@ -493,20 +493,35 @@ class DocToolsLLM:
                 memory_key="chat_history",
                 return_messages=True)
 
+        cli_commands = {
+                "top_k": self.top_k,
+                "multiline": multiline,
+                "use_hyde": False,
+                "task": self.task,
+                }
         while True:
             try:
                 with self.callback() as cb:
-                    query, self.top_k, multiline = ask_user(
+                    query, cli_commands = ask_user(
                             "\n\nWhat is your question? (Q to quit)\n",
-                            top_k=self.top_k,
-                            multiline=multiline,
-                            task=self.task,
+                            cli_commands,
                             )
-                    retriever = self.loaded_embeddings.as_retriever(
-                            search_kwargs={
-                                "k": self.top_k,
-                                "distance_metric": "cos",
-                                })
+
+                    if cli_commands["use_hyde"]:
+                        retriever = create_hyde_retriever(
+                                query=query,
+                                filetype=self.filetype,
+                                llm=self.llm,
+                                top_k=cli_commands["top_k"],
+                                embeddings=self.loaded_embeddings,
+                                embeddings_engine=self.embeddings,
+                                )
+                    else:
+                        retriever = self.loaded_embeddings.as_retriever(
+                                search_kwargs={
+                                    "k": cli_commands["top_k"],
+                                    "distance_metric": "cos",
+                                    })
                     chain = ConversationalRetrievalChain.from_llm(
                             llm=self.llm,
                             chain_type="map_reduce",
@@ -516,6 +531,7 @@ class DocToolsLLM:
                             verbose=self.llm_verbosity,
                             memory=memory,
                             )
+
 
                     ans = chain(
                             inputs={
@@ -527,7 +543,7 @@ class DocToolsLLM:
 
                     # docs = self.loaded_embeddings.similarity_search(
                     #         query,
-                    #         k=self.top_k,
+                    #         k=cli_commands["top_k"],
                     #         )
                     # chain = load_qa_with_sources_chain(
                     #         llm=self.llm,

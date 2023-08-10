@@ -26,6 +26,8 @@ from langchain.document_loaders import SeleniumURLLoader
 from langchain.document_loaders import PlaywrightURLLoader
 from langchain.document_loaders import WebBaseLoader
 from langchain.vectorstores import FAISS
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 
 from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
@@ -674,7 +676,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     path = Path(saveas)
     db.save_local(str(path))
 
-    return db
+    return db, embeddings
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
@@ -685,3 +687,51 @@ def load_youtube_playlist(playlist_url):
             raise Exception(red(f"ERROR: Youtube playlist link skipped because : error during information \
         extraction from {playlist_url} : {e}"))
     return loaded
+
+
+def create_hyde_retriever(
+        query,
+        filetype,
+        llm,
+        top_k,
+        embeddings,
+        embeddings_engine,
+        ):
+    """
+    create a retriever only for the subset of documents from the
+    loaded_embeddings that were found using HyDE technique (i.e. asking
+    the llm to create a hypothetical answer and use the embedding of this
+    answer to search similar content)
+
+    https://python.langchain.com/docs/use_cases/question_answering/how_to/hyde
+    """
+
+    HyDE_template = """Please imagine the answer to the user's question about a document:
+    Document type: [[filetype]]
+    User question: {question}
+    Answer:""".replace("[[filetype]]", filetype)
+    hyde_prompt = PromptTemplate(
+            input_variables=["question"],
+            template=HyDE_template,
+            )
+    hyde_chain = LLMChain(
+            llm=llm,
+            prompt=hyde_prompt,
+            )
+    hyde_embeddings = HypotheticalDocumentEmbedder(
+        llm_chain=hyde_chain,
+        base_embeddings=embeddings_engine,
+        )
+    hyde_vector = hyde_embeddings.embed_query(query)
+    hyde_doc = embeddings.similarity_search_by_vector(
+            embedding=hyde_vector,
+            k=top_k,
+            )
+    retriever = FAISS.from_documents(
+            hyde_doc,
+            embedding=embeddings_engine,
+            normalize_L2=True,
+            ).as_retriever(search_kwargs={
+                "k": top_k, "distance_metric": "cos"
+                })
+    return retriever

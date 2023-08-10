@@ -8,7 +8,7 @@ from prompt_toolkit.completion import WordCompleter
 from .logger import whi
 
 
-def ask_user(q, top_k, multiline, task):
+def ask_user(q, commands):
     """
     Ask the question to the user.
 
@@ -16,6 +16,7 @@ def ask_user(q, top_k, multiline, task):
         /top_k=3 to change the top_k value.
         /debug to open a console.
         /multiline to write your question over multiple lines.
+        /hyde to use Hypothetical Document Embedding search
     """
     # loading history from files
     prev_questions = []
@@ -42,13 +43,14 @@ def ask_user(q, top_k, multiline, task):
             "/multiline",
             "/debug",
             "/top_k=",
+            "/hyde",
             ]
-    if task == "query":
+    if commands["task"] == "query":
         autocomplete = WordCompleter(
                 prompt_commands + [
                     x["prompt"]
                     for x in prev_questions
-                    if x["task"] == task
+                    if x["task"] == commands["task"]
                     ],
                 match_middle=True,
                 ignore_case=True)
@@ -60,14 +62,14 @@ def ask_user(q, top_k, multiline, task):
 
     try:
         try:
-            if multiline:
+            if commands["multiline"]:
                 whi("Multiline mode activated. Use ctrl+D to send.")
             user_question = prompt(q,
                          completer=autocomplete,
                          vi_mode=True,
-                         multiline=multiline)
+                         multiline=commands["multiline"])
         except (KeyboardInterrupt, EOFError):
-            if multiline:
+            if commands["multiline"]:
                 pass
             else:
                 raise
@@ -79,42 +81,41 @@ def ask_user(q, top_k, multiline, task):
 
         # auto remove duplicate "slash" (i.e. //) before prompts commands
         for pc in prompt_commands:
-            if f"/{pc}" in user_question:
+            while f"/{pc}" in user_question:
                 user_question = user_question.replace(f"/{pc}", f"{pc}")
-
-        # retry if user entered multiple commands
-        if len([pc
-                for pc in prompt_commands
-                if (pc in user_question and 'keywords' not in pc)]) not in [0, 1]:
-            whi("You can use at most 1 prompt command in a given query ("
-               "excluding keywords).")
-            return ask_user(q, top_k, multiline)
 
         # parse prompt commands
         if "/top_k=" in user_question:
             try:
-                prev = top_k
-                top_k = int(re.search(r"/top_k=(\d+)", user_question).group(1))
+                prev = commands["top_k"]
+                commands["top_k"] = int(re.search(r"/top_k=(\d+)", user_question).group(1))
                 user_question = re.sub(r"/top_k=(\d+)", "", user_question)
-                whi(f"Changed top_k from '{prev}' to '{top_k}'")
+                whi(f"Changed top_k from '{prev}' to '{commands['top_k']}'")
             except Exception as err:
                 whi(f"Error when changing top_k: '{err}'")
-                return ask_user(q, top_k, multiline)
+                return ask_user(q, commands)
+
+        if "/hyde" in user_question:
+            whi("Using Hypothetical Document Embedding")
+            commands["use_hyde"] = True
+            user_question = user_question.replace("/hyde", "").strip()
+        else:
+            commands["use_hyde"] = False
 
         if "/debug" in user_question:
             whi("Entering debug mode.")
             breakpoint()
             whi("Restarting prompt.")
-            return ask_user(q, top_k, multiline)
+            return ask_user(q, commands)
 
         if "/multiline" in user_question:
-            if multiline is False:
-                multiline = True
+            if not commands["multiline"]:
+                commands["multiline"] = True
                 whi("Multiline turned on.")
             else:
-                multiline = False
+                commands["multiline"] = False
                 whi("Multiline turned off.")
-            return ask_user(q, top_k, multiline)
+            return ask_user(q, commands)
     except (KeyboardInterrupt, EOFError):
         raise SystemExit()
 
@@ -128,7 +129,7 @@ def ask_user(q, top_k, multiline, task):
                 {
                     "prompt": user_question,
                     "timestamp": int(time.time()),
-                    "task": task,
+                    "task": commands["task"],
                     })
     prev_questions = sorted(
             prev_questions,
@@ -136,4 +137,4 @@ def ask_user(q, top_k, multiline, task):
             )
     json.dump(prev_questions, pp_file.open("w"), indent=4)
 
-    return user_question, top_k, multiline
+    return user_question, commands
