@@ -271,6 +271,9 @@ def load_doc(filetype, debug, task, **kwargs):
     elif filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
+        if "\\" in path:
+            red(f"Removed backslash found in '{path}'")
+            path = path.replace("\\", "")
         assert re.search(yt_link_regex, path), f"youtube link is not valid: '{path}'"
         if "language" not in kwargs:
             lang = ["fr", "en"]
