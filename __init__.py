@@ -160,7 +160,7 @@ class DocToolsLLM:
         --help or -h, default False
             if True, will return this documentation.
         """
-        if help:
+        if help or h:
             print(self.__init__.__doc__)
             raise SystemExit()
 
