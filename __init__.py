@@ -188,6 +188,7 @@ class DocToolsLLM:
                     "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
+                    "language", "translation"
                     ], f"Unexpected keyword argument: '{k}'"
 
         if filetype == "string":
