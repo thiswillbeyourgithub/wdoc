@@ -673,8 +673,9 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 whi(f"File with path '{path}' with hash '{hashcheck}' was already added, skipping.")
 
     # saving embeddings
-    path = Path(saveas)
-    db.save_local(str(path))
+    if saveas:
+        path = Path(saveas)
+        db.save_local(str(path))
 
     return db, embeddings
 
