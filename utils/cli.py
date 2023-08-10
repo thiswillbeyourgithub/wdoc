@@ -16,7 +16,9 @@ def ask_user(q, commands):
         /top_k=3 to change the top_k value.
         /debug to open a console.
         /multiline to write your question over multiple lines.
-        /hyde to use Hypothetical Document Embedding search
+        /retriever=hyde to use Hypothetical Document Embedding search
+        /retriever=simple to use regular embedding search
+        /retriever=all to combine all retrievers
     """
     # loading history from files
     prev_questions = []
@@ -43,7 +45,7 @@ def ask_user(q, commands):
             "/multiline",
             "/debug",
             "/top_k=",
-            "/hyde",
+            "/retriever",
             ]
     if commands["task"] == "query":
         autocomplete = WordCompleter(
@@ -95,12 +97,16 @@ def ask_user(q, commands):
                 whi(f"Error when changing top_k: '{err}'")
                 return ask_user(q, commands)
 
-        if "/hyde" in user_question:
-            whi("Using Hypothetical Document Embedding")
-            commands["use_hyde"] = True
-            user_question = user_question.replace("/hyde", "").strip()
+        if "/retriever=" in user_question:
+            assert user_question.count("/retriever=") == 1, (
+                f"multiple retriever commands found: '{user_question}'")
+            for retr in ["hyde", "simple", "all"]:
+                if f"/retriever={retr}" in user_question:
+                    commands["retriever"] = retr
+                    user_question = user_question.replace(f"/retriever={retr}", "").strip()
+                    whi("Using as retriever: '{retr}'")
         else:
-            commands["use_hyde"] = False
+            commands["retriever"] = "simple"
 
         if "/debug" in user_question:
             whi("Entering debug mode.")

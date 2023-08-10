@@ -14,6 +14,10 @@ from nltk.corpus import stopwords
 
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+from langchain.retrievers import ContextualCompressionRetriever
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm
@@ -496,7 +500,7 @@ class DocToolsLLM:
         cli_commands = {
                 "top_k": self.top_k,
                 "multiline": multiline,
-                "use_hyde": True,
+                "retriever": "all",
                 "task": self.task,
                 }
         while True:
@@ -507,28 +511,47 @@ class DocToolsLLM:
                             cli_commands,
                             )
 
-                    if cli_commands["use_hyde"]:
-                        retriever = create_hyde_retriever(
-                                query=query,
-                                filetype=self.filetype,
+                    retrievers = []
+                    if cli_commands["retriever"] in ["hyde", "all"]:
+                        retrievers.append(
+                                create_hyde_retriever(
+                                    query=query,
+                                    filetype=self.filetype,
 
-                                llm=self.llm,
-                                top_k=cli_commands["top_k"],
+                                    llm=self.llm,
+                                    top_k=cli_commands["top_k"],
 
-                                embed_model=self.embed_model,
-                                embeddings=self.loaded_embeddings,
-                                embeddings_engine=self.embeddings,
+                                    embed_model=self.embed_model,
+                                    embeddings=self.loaded_embeddings,
+                                    embeddings_engine=self.embeddings,
 
-                                loadfrom=self.loadfrom,
-                                kwargs=self.kwargs,
-                                debug=self.debug,
+                                    loadfrom=self.loadfrom,
+                                    kwargs=self.kwargs,
+                                    debug=self.debug,
+                                    )
                                 )
+                    if cli_commands["retriever"] in ["simple", "all"]:
+                        retrievers.append(
+                                self.loaded_embeddings.as_retriever(
+                                    search_kwargs={
+                                        "k": cli_commands["top_k"],
+                                        "distance_metric": "cos",
+                                        })
+                                    )
+
+                    if len(retrievers) == 1:
+                        retriever = retrievers[0]
                     else:
-                        retriever = self.loaded_embeddings.as_retriever(
-                                search_kwargs={
-                                    "k": cli_commands["top_k"],
-                                    "distance_metric": "cos",
-                                    })
+                        whi("Merging multiple retrievers")
+                        retriever = MergerRetriever(retrievers)
+
+                        # remove redundant results from the merged retrievers:
+                        filtered = EmbeddingsRedundantFilter(embeddings=self.embeddings)
+                        pipeline = DocumentCompressorPipeline(transformers=[filtered])
+                        retriever = ContextualCompressionRetriever(
+                            base_compressor=pipeline, base_retriever=retriever
+                        )
+
                     chain = ConversationalRetrievalChain.from_llm(
                             llm=self.llm,
                             chain_type="map_reduce",
