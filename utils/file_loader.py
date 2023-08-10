@@ -711,6 +711,9 @@ def create_hyde_retriever(
     the llm to create a hypothetical answer and use the embedding of this
     answer to search similar content)
 
+    The code is a little strange because it actually reloads only a portion
+    of the embeddings from cache if possible.
+
     https://python.langchain.com/docs/use_cases/question_answering/how_to/hyde
     """
 
