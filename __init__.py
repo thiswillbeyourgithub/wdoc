@@ -168,6 +168,7 @@ class DocToolsLLM:
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         assert task in ["query", "summary", "summary_then_query", "summarize_link_file"], "invalid task value"
+        assert filetype is not None, "filetype can't be None"
         if task in ["summary", "summary_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         assert (task == "summarize_link_file" and filetype == "link_file"
