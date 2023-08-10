@@ -13,7 +13,7 @@ summary_rules = dedent("""
   * When in doubt about wether to include an information or not, include it.
   * Direct quotations are allowed.
   * Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
-    * Good example of brevity : US President's daily staff memo, the present rules.
+    * Good example of brevity: US President's daily staff memo, the present rules.
     * Use common words but keep technical details if noteworthy.
     * Don't use pronouns if it's implied by the previous bullet point: write like a technical report.
   * Write in the same language as the input: if the text is in French, write an answer in French.
