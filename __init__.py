@@ -496,7 +496,7 @@ class DocToolsLLM:
         cli_commands = {
                 "top_k": self.top_k,
                 "multiline": multiline,
-                "use_hyde": False,
+                "use_hyde": True,
                 "task": self.task,
                 }
         while True:
