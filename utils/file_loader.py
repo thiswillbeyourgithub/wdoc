@@ -692,10 +692,17 @@ def load_youtube_playlist(playlist_url):
 def create_hyde_retriever(
         query,
         filetype,
+
         llm,
         top_k,
+
+        embed_model,
         embeddings,
         embeddings_engine,
+
+        kwargs,
+        loadfrom,
+        debug
         ):
     """
     create a retriever only for the subset of documents from the
@@ -714,24 +721,33 @@ def create_hyde_retriever(
             input_variables=["question"],
             template=HyDE_template,
             )
+
     hyde_chain = LLMChain(
             llm=llm,
             prompt=hyde_prompt,
             )
+
     hyde_embeddings = HypotheticalDocumentEmbedder(
         llm_chain=hyde_chain,
         base_embeddings=embeddings_engine,
         )
     hyde_vector = hyde_embeddings.embed_query(query)
+
     hyde_doc = embeddings.similarity_search_by_vector(
             embedding=hyde_vector,
             k=top_k,
             )
-    retriever = FAISS.from_documents(
-            hyde_doc,
-            embedding=embeddings_engine,
-            normalize_L2=True,
-            ).as_retriever(search_kwargs={
-                "k": top_k, "distance_metric": "cos"
-                })
+    vecstore, _ = load_embeddings(
+            embed_model=embed_model,
+            loadfrom = loadfrom,
+            saveas=None,
+            debug=debug,
+            loaded_docs=hyde_doc,
+            kwargs=kwargs,
+            )
+
+    retriever = vecstore.as_retriever(
+        search_kwargs={"k": top_k, "distance_metric": "cos"}
+        )
+
     return retriever

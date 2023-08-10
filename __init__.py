@@ -511,10 +511,17 @@ class DocToolsLLM:
                         retriever = create_hyde_retriever(
                                 query=query,
                                 filetype=self.filetype,
+
                                 llm=self.llm,
                                 top_k=cli_commands["top_k"],
+
+                                embed_model=self.embed_model,
                                 embeddings=self.loaded_embeddings,
                                 embeddings_engine=self.embeddings,
+
+                                loadfrom=self.loadfrom,
+                                kwargs=self.kwargs,
+                                debug=self.debug,
                                 )
                     else:
                         retriever = self.loaded_embeddings.as_retriever(
