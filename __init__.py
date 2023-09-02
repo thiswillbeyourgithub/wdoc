@@ -13,11 +13,13 @@ import pdb
 from nltk.corpus import stopwords
 
 from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers import ContextualCompressionRetriever
+from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm
@@ -552,10 +554,22 @@ class DocToolsLLM:
                             base_compressor=pipeline, base_retriever=retriever
                         )
 
-                    chain = ConversationalRetrievalChain.from_llm(
-                            llm=self.llm,
-                            chain_type="map_reduce",
+                    _template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+
+                    Chat History:
+                    {chat_history}
+
+                    Follow Up Input: {question}
+
+                    Standalone question:"""
+                    CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
+                    question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
+                    doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
+
+                    chain = ConversationalRetrievalChain(
                             retriever=retriever,
+                            question_generator=question_generator,
+                            combine_docs_chain=doc_chain,
                             return_source_documents=True,
                             return_generated_question=True,
                             verbose=self.llm_verbosity,
