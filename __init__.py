@@ -194,7 +194,8 @@ class DocToolsLLM:
                     "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
-                    "language", "translation"
+                    "language", "translation",
+                    "out_check_file",
                     ], f"Unexpected keyword argument: '{k}'"
 
         if filetype == "string":
@@ -285,6 +286,16 @@ class DocToolsLLM:
                     Path(self.kwargs["out_file"]).touch()
                 with open(self.kwargs["out_file"], "r") as f:
                     output_content = f.read()
+
+                if "out_check_file" in self.kwargs:
+                    # this is an undocumented function for the author. It
+                    # allows to specify a second path for which to check if
+                    # a document has already been summaried. I use this because
+                    # I made a script to automatically move my DONE tasks
+                    # from logseq to another near by file.
+                    with open(self.kwargs["out_check_file"], "r") as f:
+                        output_content += f.read()
+
                 for d in self.loaded_docs:
                     assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
 
