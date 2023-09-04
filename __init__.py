@@ -307,13 +307,17 @@ class DocToolsLLM:
                         already_done.add(link)
                         continue
                     links_todo.add(link)
+
+                # estimate price before summarizing, in case you put the bible in there
+                full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
+
             else:
                 for d in self.loaded_docs:
                     links_todo.add(d.metadata["path"])
                 assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
 
-            # estimate price before summarizing, in case you put the bible in there
-            full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
+                full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs])
+
             red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
