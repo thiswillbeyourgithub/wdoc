@@ -53,6 +53,7 @@ class DocToolsLLM:
             top_k=3,
             n_to_combine=0,
             n_summpasscheck=0,
+            nsummaries_limit=10,
 
             debug=False,
             llm_verbosity=True,
@@ -155,6 +156,10 @@ class DocToolsLLM:
             If you increase n_summpasscheck you increase the token cost
             but also the likelyhood to lose information along the way.
 
+        --nsummaries_limit int, default 10
+            Only active if query is 'summarize_link_file'. Set a limit to
+            the number of links that will be summarized.
+
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
             sequential processing instead of multithreading and enable
@@ -188,6 +193,7 @@ class DocToolsLLM:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
         assert "/" not in embed_model, "embed model can't contain slash"
+        assert isinstance(nsummaries_limit, int), "invalid type of nsummaries_limit"
 
         for k in kwargs:
             assert k in [
@@ -217,6 +223,7 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_summpasscheck = n_summpasscheck
         self.n_to_combine = n_to_combine
+        self.nsummaries_limit = nsummaries_limit
 
         # loading stop words
         if self.stopwords_lang:
@@ -306,7 +313,11 @@ class DocToolsLLM:
                         whi(f"Skipping link : already summarized in out_file: '{link}'")
                         already_done.add(link)
                         continue
-                    links_todo.add(link)
+
+                    if len(links_todo) < self.nsummaries_limit:
+                        links_todo.add(link)
+                    else:
+                        yel("'nsummaries_limit' limit reached, will not add more links to summarize for this run.")
 
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
