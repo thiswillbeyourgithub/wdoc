@@ -201,7 +201,7 @@ class DocToolsLLM:
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
-                    "out_check_file",
+                    "out_check_file", "only_fill_ntodos",
                     ], f"Unexpected keyword argument: '{k}'"
 
         if filetype == "string":
@@ -303,6 +303,24 @@ class DocToolsLLM:
                     assert Path(self.kwargs["out_check_file"]).exists()
                     with open(self.kwargs["out_check_file"], "r") as f:
                         output_content += f.read()
+
+                if "only_fill_ntodos" in self.kwargs:
+                    # this is an undocumented function for the author. It
+                    # allows to run DocTools to summarise from a link file
+                    # only if there are less than 'only_fill_ntodos' TODOS
+                    # blocks in the target file. This way we can have a
+                    # list of TODOS that will never be larger than this.
+                    # Avoiding both having too many summaries and not enough
+                    # as it allows to run this frequently
+                    n_todos_desired = self.kwargs["only_fill_ntodos"]
+                    assert isinstance(n_todos_desired, int)
+                    n_todos_present = output_content.count("- TODO ")
+                    if n_todos_present >= n_todos_desired:
+                        return f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                    else:
+                        self.nsummaries_limit = n_todos_desired - n_todos_present
+                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.nsummaries_limit}")
+                        assert self.nsummaries_limit > 0
 
                 for d in self.loaded_docs:
                     assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
