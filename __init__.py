@@ -316,7 +316,7 @@ class DocToolsLLM:
                     assert isinstance(n_todos_desired, int)
                     n_todos_present = output_content.count("- TODO ")
                     if n_todos_present >= n_todos_desired:
-                        return f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                        return f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."
                     else:
                         self.nsummaries_limit = n_todos_desired - n_todos_present
                         red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.nsummaries_limit}")
