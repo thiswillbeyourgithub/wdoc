@@ -300,6 +300,7 @@ class DocToolsLLM:
                     # a document has already been summaried. I use this because
                     # I made a script to automatically move my DONE tasks
                     # from logseq to another near by file.
+                    assert Path(self.kwargs["out_check_file"]).exists()
                     with open(self.kwargs["out_check_file"], "r") as f:
                         output_content += f.read()
 
