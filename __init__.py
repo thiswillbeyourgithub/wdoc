@@ -302,7 +302,7 @@ class DocToolsLLM:
                         for t in temp:
                             for done_link in already_done:
                                 if done_link in t:
-                                    t = f"# already done as of {today}# {t}"
+                                    t = f"#already done as of {today}# {t}"
                                     break
                             f.write(t.strip() + "\n")
 
