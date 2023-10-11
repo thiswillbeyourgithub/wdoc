@@ -322,6 +322,8 @@ class DocToolsLLM:
                         red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
                         assert self.n_summaries_target > 0
 
+                    links_todo = links_todo[:self.n_summaries_target]
+
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
 
