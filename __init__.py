@@ -333,7 +333,6 @@ class DocToolsLLM:
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
             estimate_tkn = 2.4 * full_tkn
-            if isinstance(self.n_recursive_summary, int):
             if self.n_recursive_summary > 0:
                 estimate_tkn += sum([estimate_tkn / ((i + 1) * 2) for i, ii in enumerate(range(self.n_recursive_summary))])
             estimate_dol = estimate_tkn / 1000 * 0.0016
