@@ -43,8 +43,6 @@ chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
         )
 
 def do_summarize(
-        n_to_combine,
-        n_summpasscheck,
         docs,
         metadata,
         model,
@@ -70,14 +68,7 @@ def do_summarize(
 
     with callback() as cb:
         for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
-            # when ird == n_to_combine, the first n_to_combine summaries
-            # will be checked n_summpasscheck times for compactness. So the
-            # progression number have to be reset to avoid giving
-            # false impressions to the LLM.
-            if ird <= n_to_combine:
-                fixed_index = f"{ird + 1 - min(n_to_combine, ird)}/{len(docs) - min(n_to_combine, ird)}"
-            else:
-                fixed_index = f"{ird + 1}/{len(docs)}"
+            fixed_index = f"{ird + 1}/{len(docs)}"
 
             out = summarize_chain(
                     {
@@ -90,25 +81,6 @@ def do_summarize(
                     )
 
             summaries.append(out["output_text"])
-
-            # given the influence of the first few summaries, make sure it's compact
-            # and follows the rules
-            if ird <= n_to_combine:  # combine the first n summaries and make it more compact
-                summaries = ["\n".join(summaries)]
-
-            # run the check also on each individual paragraph without
-            # combining
-            if verbose and n_summpasscheck:
-                red(f"Chunk summary {ird} before check:\n{summaries[-1]}")
-            for trial in range(n_summpasscheck):
-                summaries[-1] = checksumm_chain(
-                        {
-                            "summary_to_check": summaries[-1],
-                            "rules": checksummary_rules,
-                            }
-                        )["text"]
-            if verbose and n_summpasscheck:
-                red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
 
             previous_summary = f"For reference, here's the summary of the previous chunk of text (you can directly continue this summary and use the same indentation as there is an overlap between the two chunks):\n'''\n{summaries[-1]}\n'''"
             if metadata:

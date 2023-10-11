@@ -51,8 +51,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=3,
-            n_to_combine=0,
-            n_summpasscheck=0,
+            n_recursive_summary=0,
             nsummaries_limit=10,
 
             debug=False,
@@ -125,36 +124,8 @@ class DocToolsLLM:
         --top_k int, default 3
             retrieval argument
 
-        --n_to_combine int, default 0
-            when creating the summary of a long document split into
-            chunks, this value is the chunk index number under which
-            the summarization check will be called WITH concatenation.
-            The 'under' is including equality: if 3, will combine: 0+1 (0+1)+2 ((0+1)+2)+3).
-
-            A value of 3 means that while the summarizer is not done
-            processing the 4th (reminder that index start at 0)
-            chunk of text, the summaries of the 2 previous chunks will be
-            concatenated as one. Then the summary checker will be called.
-
-            As the summary of the last chunk is shown to the llm as example
-            when summarizing its own chunk this has the effect of increasing
-            summary compactness, at the cost of losing context and
-            information.
-
-            If you increase n_to_combine to more than 1, you will have
-            a considerably shorter and to the point summary for the start
-            of the (and hopefully of the whole) document.
-
-        --n_summpasscheck int, default 0
-            First, read --n_to_combine
-
-            Apart when combining the first n_to_combine, the checker is also
-            called for individual chunk summary n_summpasscheck times. Be
-            careful as increase n_summpasscheck will dramatically increase
-            the token count.
-
-            If you increase n_summpasscheck you increase the token cost
-            but also the likelyhood to lose information along the way.
+        --n_recursive_summary int, default 0
+            will always recursively summarize
 
         --nsummaries_limit int, default 10
             Only active if query is 'summarize_link_file'. Set a limit to
@@ -221,9 +192,7 @@ class DocToolsLLM:
         self.kwargs = kwargs
         self.stopwords_lang = stopwords_lang
         self.llm_verbosity = llm_verbosity
-        self.n_summpasscheck = n_summpasscheck
-        self.n_to_combine = n_to_combine
-        self.nsummaries_limit = nsummaries_limit
+        self.n_recursive_summary = n_recursive_summary
 
         # loading stop words
         if self.stopwords_lang:
@@ -363,12 +332,10 @@ class DocToolsLLM:
             red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
-            # for n_summpasscheck=1 and n_to_combine=1 empirical value: 3.85 times the documents tokens, price of 0.001579
-            # for n_summpasscheck=0 and n_to_combine=0 : 2.5 times, price of price of 0.001580
-            if self.n_summpasscheck == 0 and self.n_to_combine == 0:
-                estimate_tkn = 2.4 * full_tkn
-            else:
-                estimate_tkn = (2.4 + 0.5 + self.n_summpasscheck) * full_tkn
+            estimate_tkn = 2.4 * full_tkn
+            if isinstance(self.n_recursive_summary, int):
+            if self.n_recursive_summary > 0:
+                estimate_tkn += sum([estimate_tkn / ((i + 1) * 2) for i, ii in enumerate(range(self.n_recursive_summary))])
             estimate_dol = estimate_tkn / 1000 * 0.0016
             red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
             if estimate_dol > 1:
@@ -420,8 +387,6 @@ class DocToolsLLM:
                 # summarize each chunk of the link and return one text
                 summary, doc_total_tokens, doc_total_cost = do_summarize(
                         docs=relevant_docs,
-                        n_to_combine=self.n_to_combine,
-                        n_summpasscheck=self.n_summpasscheck,
                         metadata=metadata,
                         model=self.model,
                         llm=self.llm,
@@ -453,7 +418,7 @@ class DocToolsLLM:
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                         header += f"\n  summary_reading_length:: {sum_reading_length}"
-                        header += f"\n  DocToolsLLM_parameters:: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
+                        header += f"\n  DocToolsLLM_parameters:: n_recursion={self.n_recursive_summary}"
                         if doc_reading_length:
                             header += f"\n  doc_reading_length:: {doc_reading_length}"
                         if author:
@@ -466,7 +431,7 @@ class DocToolsLLM:
                         if author:
                             header += f"    by '{author}'"
                         header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
-                        header += f"    parameters: n_to_combine={self.n_to_combine};n_summpasscheck={self.n_summpasscheck}"
+                        header += f"    parameters: n_recursion={self.n_recursive_summary}"
 
                     # save to output file
                     with lock:
