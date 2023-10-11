@@ -298,7 +298,7 @@ class DocToolsLLM:
                 if already_done:
                     with open(self.kwargs["path"], "r") as f:
                         temp = f.read().split("\n")
-                    with open(self.kwargs["path"] + "_copy", "w") as f:
+                    with open(self.kwargs["path"], "w") as f:
                         for t in temp:
                             for done_link in already_done:
                                 if done_link in t:
