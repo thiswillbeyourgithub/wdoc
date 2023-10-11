@@ -136,7 +136,7 @@ def load_doc(filetype, debug, task, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
-            n_thread = 10
+            n_thread = 20
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
@@ -182,7 +182,7 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
             doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
 
-            n_thread = 10
+            n_thread = 20
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
