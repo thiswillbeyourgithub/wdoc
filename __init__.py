@@ -16,13 +16,14 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.docstore.document import Document
 from langchain.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm
+from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length
 from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
@@ -393,6 +394,34 @@ class DocToolsLLM:
                         verbose=self.llm_verbosity,
                         )
 
+                n_recursion_done = 0
+                if self.n_recursive_summary > 0:
+                    splitter = get_splitter(self.task)
+                    summary_text = summary
+                    for n_recur in range(self.n_recursive_summary):
+                        red(f"Doing recursive summary #{n_recur} of {item_name}")
+                        summary_docs = splitter.transform_documents(summary_text)
+                        summary_docs = [Document(page_content=t) for t in summary_docs]
+                        try:
+                            check_docs_tkn_length(summary_docs, item_name)
+                        except Exception as err:
+                            red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
+                            break
+                        summary_text, new_doc_total_tokens, new_doc_total_cost = do_summarize(
+                                docs=summary_docs,
+                                metadata=metadata,
+                                model=self.model,
+                                llm=self.llm,
+                                callback=self.callback,
+                                verbose=self.verbosity,
+                                )
+                        doc_total_tokens += new_doc_total_tokens
+                        doc_total_cost += new_doc_total_cost
+                        n_recursion_done += 1
+                    summary = summary_text
+
+
+
                 # get reading length of the summary
                 sum_reading_length = len(summary) / average_word_length / wpm
 
@@ -417,7 +446,7 @@ class DocToolsLLM:
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                         header += f"\n  summary_reading_length:: {sum_reading_length}"
-                        header += f"\n  DocToolsLLM_parameters:: n_recursion={self.n_recursive_summary}"
+                        header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
                         if doc_reading_length:
                             header += f"\n  doc_reading_length:: {doc_reading_length}"
                         if author:
@@ -430,7 +459,7 @@ class DocToolsLLM:
                         if author:
                             header += f"    by '{author}'"
                         header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
-                        header += f"    parameters: n_recursion={self.n_recursive_summary}"
+                        header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
                     # save to output file
                     with lock:
