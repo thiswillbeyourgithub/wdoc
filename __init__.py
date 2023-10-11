@@ -53,7 +53,7 @@ class DocToolsLLM:
 
             top_k=3,
             n_recursive_summary=0,
-            n_summaries_limit=10,
+            n_summaries_target=-1,
 
             debug=False,
             llm_verbosity=True,
@@ -128,9 +128,11 @@ class DocToolsLLM:
         --n_recursive_summary int, default 0
             will always recursively summarize
 
-        --n_summaries_limit int, default 10
+        --n_summaries_target int, default -1
             Only active if query is 'summarize_link_file'. Set a limit to
-            the number of links that will be summarized.
+            the number of links that will be summarized. If the number of
+            TODO in the output is higher, exit. If it's lower, only do the
+            difference. -1 to disable.
 
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
@@ -165,7 +167,7 @@ class DocToolsLLM:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
         assert "/" not in embed_model, "embed model can't contain slash"
-        assert isinstance(n_summaries_limit, int), "invalid type of n_summaries_limit"
+        assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
         for k in kwargs:
             assert k in [
@@ -173,7 +175,7 @@ class DocToolsLLM:
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
-                    "out_check_file", "only_fill_ntodos",
+                    "out_check_file",
                     ], f"Unexpected keyword argument: '{k}'"
 
         if filetype == "string":
@@ -194,7 +196,7 @@ class DocToolsLLM:
         self.stopwords_lang = stopwords_lang
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
-        self.n_summaries_limit = n_summaries_limit
+        self.n_summaries_target = n_summaries_target
 
         # loading stop words
         if self.stopwords_lang:
@@ -286,10 +288,10 @@ class DocToolsLLM:
                         already_done.add(link)
                         continue
 
-                    if len(links_todo) < self.n_summaries_limit:
+                    if len(links_todo) < self.n_summaries_target:
                         links_todo.add(link)
                     else:
-                        yel("'n_summaries_limit' limit reached, will not add more links to summarize for this run.")
+                        yel("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
 
                 # comment out the links that are marked as already done
                 if already_done:
@@ -303,23 +305,22 @@ class DocToolsLLM:
                                     break
                             f.write(t + "\n")
 
-                if "only_fill_ntodos" in self.kwargs:
-                    # this is an undocumented function for the author. It
+                if self.n_summaries_target > 0:
                     # allows to run DocTools to summarise from a link file
-                    # only if there are less than 'only_fill_ntodos' TODOS
+                    # only if there are less than 'n_summaries_target' TODOS
                     # blocks in the target file. This way we can have a
                     # list of TODOS that will never be larger than this.
                     # Avoiding both having too many summaries and not enough
                     # as it allows to run this frequently
-                    n_todos_desired = self.kwargs["only_fill_ntodos"]
+                    n_todos_desired = self.n_summaries_target
                     assert isinstance(n_todos_desired, int)
                     n_todos_present = output_content.count("- TODO ")
                     if n_todos_present >= n_todos_desired:
                         return red(f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                     else:
-                        self.n_summaries_limit = n_todos_desired - n_todos_present
-                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_limit}")
-                        assert self.n_summaries_limit > 0
+                        self.n_summaries_target = n_todos_desired - n_todos_present
+                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                        assert self.n_summaries_target > 0
 
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
