@@ -338,6 +338,18 @@ class DocToolsLLM:
                     else:
                         yel("'nsummaries_limit' limit reached, will not add more links to summarize for this run.")
 
+                # comment out the links that are marked as already done
+                if already_done:
+                    with open(self.kwargs["path"], "r") as f:
+                        temp = f.read().split("\n")
+                    with open(self.kwargs["path"], "w") as f:
+                        for done_link in already_done:
+                            for t in temp:
+                                if done_link in t:
+                                    t = f"# already done as of {today}# {t}"
+                                    break
+                            f.write(t + "\n")
+
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
 
