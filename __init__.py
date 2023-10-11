@@ -52,7 +52,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=3,
-            n_recursive_summary=1,
+            n_recursive_summary=2,
             n_summaries_target=-1,
 
             debug=False,
@@ -125,7 +125,7 @@ class DocToolsLLM:
         --top_k int, default 3
             retrieval argument
 
-        --n_recursive_summary int, default 1
+        --n_recursive_summary int, default 2
             will always recursively summarize
 
         --n_summaries_target int, default -1
