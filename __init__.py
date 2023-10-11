@@ -406,8 +406,8 @@ class DocToolsLLM:
                     summary_text = summary
                     for n_recur in range(self.n_recursive_summary):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
-                        summary_docs = splitter.transform_documents(summary_text)
-                        summary_docs = [Document(page_content=t) for t in summary_docs]
+                        summary_docs = Document(page_content=summary_text)
+                        summary_docs = splitter.transform_documents(summary_docs)
                         try:
                             check_docs_tkn_length(summary_docs, item_name)
                         except Exception as err:
