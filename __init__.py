@@ -292,18 +292,19 @@ class DocToolsLLM:
                         links_todo.add(link)
                     else:
                         yel("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                        break
 
                 # comment out the links that are marked as already done
                 if already_done:
                     with open(self.kwargs["path"], "r") as f:
                         temp = f.read().split("\n")
-                    with open(self.kwargs["path"], "w") as f:
-                        for done_link in already_done:
-                            for t in temp:
+                    with open(self.kwargs["path"] + "_copy", "w") as f:
+                        for t in temp:
+                            for done_link in already_done:
                                 if done_link in t:
                                     t = f"# already done as of {today}# {t}"
                                     break
-                            f.write(t + "\n")
+                            f.write(t.strip() + "\n")
 
                 if self.n_summaries_target > 0:
                     # allows to run DocTools to summarise from a link file
