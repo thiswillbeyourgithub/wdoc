@@ -279,7 +279,7 @@ class DocToolsLLM:
 
 
     def process_task(self):
-        red("\nProcessing task")
+        red(f"\nProcessing task '{self.task}'")
 
         if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
             links_todo = set()
