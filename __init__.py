@@ -53,7 +53,7 @@ class DocToolsLLM:
 
             top_k=3,
             n_recursive_summary=0,
-            nsummaries_limit=10,
+            n_summaries_limit=10,
 
             debug=False,
             llm_verbosity=True,
@@ -128,7 +128,7 @@ class DocToolsLLM:
         --n_recursive_summary int, default 0
             will always recursively summarize
 
-        --nsummaries_limit int, default 10
+        --n_summaries_limit int, default 10
             Only active if query is 'summarize_link_file'. Set a limit to
             the number of links that will be summarized.
 
@@ -165,7 +165,7 @@ class DocToolsLLM:
             filetype = None
             loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
         assert "/" not in embed_model, "embed model can't contain slash"
-        assert isinstance(nsummaries_limit, int), "invalid type of nsummaries_limit"
+        assert isinstance(n_summaries_limit, int), "invalid type of n_summaries_limit"
 
         for k in kwargs:
             assert k in [
@@ -194,6 +194,7 @@ class DocToolsLLM:
         self.stopwords_lang = stopwords_lang
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
+        self.n_summaries_limit = n_summaries_limit
 
         # loading stop words
         if self.stopwords_lang:
@@ -285,10 +286,10 @@ class DocToolsLLM:
                         already_done.add(link)
                         continue
 
-                    if len(links_todo) < self.nsummaries_limit:
+                    if len(links_todo) < self.n_summaries_limit:
                         links_todo.add(link)
                     else:
-                        yel("'nsummaries_limit' limit reached, will not add more links to summarize for this run.")
+                        yel("'n_summaries_limit' limit reached, will not add more links to summarize for this run.")
 
                 # comment out the links that are marked as already done
                 if already_done:
@@ -316,9 +317,9 @@ class DocToolsLLM:
                     if n_todos_present >= n_todos_desired:
                         return red(f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                     else:
-                        self.nsummaries_limit = n_todos_desired - n_todos_present
-                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.nsummaries_limit}")
-                        assert self.nsummaries_limit > 0
+                        self.n_summaries_limit = n_todos_desired - n_todos_present
+                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_limit}")
+                        assert self.n_summaries_limit > 0
 
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
