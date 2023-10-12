@@ -391,7 +391,7 @@ class DocToolsLLM:
                     metadata = ""
 
                 # summarize each chunk of the link and return one text
-                summary, doc_total_tokens, doc_total_cost = do_summarize(
+                summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                         docs=relevant_docs,
                         metadata=metadata,
                         model=self.model,
@@ -413,7 +413,7 @@ class DocToolsLLM:
                         except Exception as err:
                             red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                             break
-                        summary_text, new_doc_total_tokens, new_doc_total_cost = do_summarize(
+                        summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                                 docs=summary_docs,
                                 metadata=metadata,
                                 model=self.model,
@@ -453,6 +453,7 @@ class DocToolsLLM:
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
                         header += f"\n  summary_reading_length:: {sum_reading_length:.1f}"
                         header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+                        header += f"\n  number_of_chunks:: {n_chunk}"
                         if doc_reading_length:
                             header += f"\n  doc_reading_length:: {doc_reading_length:.1f}"
                         if author:

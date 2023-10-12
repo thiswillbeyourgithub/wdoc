@@ -95,4 +95,4 @@ def do_summarize(
         if n > 1 and s != summaries[-1]:
             outtext += f"- ---\n- Chunk {i + 2}/{n}\n"
 
-    return outtext, cb.total_tokens, cb.total_cost
+    return outtext, n, cb.total_tokens, cb.total_cost
