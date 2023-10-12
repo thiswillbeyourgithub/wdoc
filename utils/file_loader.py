@@ -292,15 +292,15 @@ def load_doc(filetype, debug, task, **kwargs):
             transl = "en"
         else:
             transl = kwargs["translation"]
+
         whi(f"Loading youtube: '{path}'")
-        loader = loaddoc_cache.eval(
-                YoutubeLoader.from_youtube_url,
-                path,
+        docs = cached_yt_loader(
+                loader=YoutubeLoader.from_youtube_url,
+                path=path,
                 add_video_info=True,
                 language=lang,
                 translation=transl,
                 )
-        docs = loader.load()
         docs = text_splitter.transform_documents(docs)
 
     elif filetype == "pdf":
@@ -696,6 +696,15 @@ def load_youtube_playlist(playlist_url):
         extraction from {playlist_url} : {e}"))
     return loaded
 
+@loaddoc_cache.cache(ignore=["loader"])
+def cached_yt_loader(loader, path, add_video_info, language, translation):
+    docs = loader(
+            path,
+            add_video_info=add_video_info,
+            language=language,
+            translation=translation,
+            ).load()
+    return docs
 
 def create_hyde_retriever(
         query,
