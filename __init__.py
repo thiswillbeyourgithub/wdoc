@@ -328,27 +328,34 @@ class DocToolsLLM:
                         del links_todo[list(links_todo.keys())[-1]]
 
                 # estimate price before summarizing, in case you put the bible in there
-                full_tkn = sum(
-                        [
-                            get_tkn_length(doc.page_content)
-                            for doc in self.loaded_docs
-                            if doc.metadata["subitem_link"] in links_todo
-                            ]
-                        )
+                docs_tkn_cost = {}
+                for doc in self.loaded_docs:
+                    meta = doc.metadata["subitem_link"]
+                    if meta in links_todo:
+                        if meta not in docs_tkn_cost:
+                            docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
+                        else:
+                            docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
             else:
                 for d in self.loaded_docs:
                     links_todo[d.metadata["path"]] = None
                 assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
 
-                full_tkn = sum(
-                        [
-                            get_tkn_length(doc.page_content)
-                            for doc in self.loaded_docs
-                            ]
-                        )
+                docs_tkn_cost = {}
+                for doc in self.loaded_docs:
+                    meta = doc.metadata["path"]
+                    if meta not in docs_tkn_cost:
+                        docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
+                    else:
+                        docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
-            red(f"Total number of tokens in documments to summarize: '{full_tkn}'")
+            full_tkn = sum(list(docs_tkn_cost.values()))
+            red("Token price of each document:")
+            for k, v in docs_tkn_cost.items():
+                red(f"- {v:>6}: {k}")
+
+            red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
             estimate_tkn = 2.4 * full_tkn
