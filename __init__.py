@@ -451,10 +451,10 @@ class DocToolsLLM:
                         header += f"\n  summarization_timestamp:: {int(time.time())}"
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
-                        header += f"\n  summary_reading_length:: {sum_reading_length}"
+                        header += f"\n  summary_reading_length:: {sum_reading_length:.1f}"
                         header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
                         if doc_reading_length:
-                            header += f"\n  doc_reading_length:: {doc_reading_length}"
+                            header += f"\n  doc_reading_length:: {doc_reading_length:.1f}"
                         if author:
                             header += f"\n  author:: {author}"
 
