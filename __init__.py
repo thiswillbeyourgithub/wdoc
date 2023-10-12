@@ -387,10 +387,10 @@ class DocToolsLLM:
 
                 if metadata:
                     metadata = "- Text metadata\n  - " + "\n  - ".join(metadata) + "\n"
-                    metadata += "  - Article chunk number: [PROGRESS]\n"
+                    metadata += "  - Section chunk: [PROGRESS]\n"
+                    metadata += "\n"
                 else:
                     metadata = ""
-                metadata += "\n"
 
                 # summarize each chunk of the link and return one text
                 summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
