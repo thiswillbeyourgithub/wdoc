@@ -698,6 +698,7 @@ def load_youtube_playlist(playlist_url):
 
 @loaddoc_cache.cache(ignore=["loader"])
 def cached_yt_loader(loader, path, add_video_info, language, translation):
+    yel(f"Not using cache for youtube {path}")
     docs = loader(
             path,
             add_video_info=add_video_info,
