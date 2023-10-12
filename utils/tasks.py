@@ -88,10 +88,11 @@ def do_summarize(
 
     # combine summaries as one string
     n = len(summaries)
-    outtext = f"- Chunk 1/{n}\n"
+    if n > 1:
+        outtext = f"- Chunk 1/{n}\n"
     for i, s in enumerate(summaries):
         outtext += s + "\n"
-        if s != summaries[-1]:
+        if n > 1 and s != summaries[-1]:
             outtext += f"- ---\n- Chunk {i + 2}/{n}\n"
 
     return outtext, cb.total_tokens, cb.total_cost
