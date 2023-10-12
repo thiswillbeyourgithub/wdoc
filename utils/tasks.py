@@ -66,6 +66,7 @@ def do_summarize(
             verbose=verbose,
             )
 
+    assert "[PROGRESS]" in metadata
     with callback() as cb:
         for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
             fixed_index = f"{ird + 1}/{len(docs)}"
