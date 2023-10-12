@@ -371,12 +371,12 @@ class DocToolsLLM:
                 metadata = []
                 if "title" in relevant_docs[0].metadata:
                     item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
-                    metadata.append(f"Title: '{item_name}'")
+                    metadata.append(f"Title: '{item_name.strip()}'")
                 else:
                     item_name = link
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
-                    metadata.append(f"Duration: {doc_reading_length:.1f} minutes")
+                    metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
                 else:
                     doc_reading_length = None
                 if "author" in relevant_docs[0].metadata:
@@ -386,11 +386,11 @@ class DocToolsLLM:
                     author = None
 
                 if metadata:
-                    metadata = "Here's additional information about the text:\n'''" + "\n".join(metadata)
-                    metadata += "\nArticle chunk number: [PROGRESS]"
-                    metadata += "\n'''\n"
+                    metadata = "- Text metadata\n  - " + "\n  - ".join(metadata) + "\n"
+                    metadata += "  - Article chunk number: [PROGRESS]\n"
                 else:
                     metadata = ""
+                metadata += "\n"
 
                 # summarize each chunk of the link and return one text
                 summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
