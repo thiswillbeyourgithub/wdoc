@@ -82,7 +82,7 @@ def do_summarize(
 
             summaries.append(out["output_text"])
 
-            previous_summary = f"For reference, here's the summary of the previous chunk of text (you can directly continue this summary and use the same indentation as there is an overlap between the two chunks):\n'''\n{summaries[-1]}\n'''"
+            previous_summary = f"\nEnd of the summary of the previous section (continue directly to avoid overlapping information):\n'''\n{summaries[-1]}\n'''"
             if metadata:
                 previous_summary = "\n" + previous_summary
 

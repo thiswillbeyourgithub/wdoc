@@ -387,7 +387,7 @@ class DocToolsLLM:
 
                 if metadata:
                     metadata = "- Text metadata\n  - " + "\n  - ".join(metadata) + "\n"
-                    metadata += "  - Section chunk: [PROGRESS]\n"
+                    metadata += "  - Section chunk order: [PROGRESS]\n"
                     metadata += "\n"
                 else:
                     metadata = ""
