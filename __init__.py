@@ -445,18 +445,20 @@ class DocToolsLLM:
                     if "out_file_logseq_mode" in self.kwargs:
                         header = f"\n- TODO {item_name}"
                         header += "\n  collapsed:: true"
+                        header += "\n  block_type:: DocToolsLLM_summary"
                         header += f"\n  DocToolsLLM_version:: {self.VERSION}"
                         header += f"\n  DocToolsLLM_model:: {self.model}"
-                        header += "\n  block_type:: DocToolsLLM_summary"
-                        header += f"\n  summarization_date:: {today}"
-                        header += f"\n  summarization_timestamp:: {int(time.time())}"
+                        header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+                        header += f"\n  summary_date:: {today}"
+                        header += f"\n  summary_timestamp:: {int(time.time())}"
                         header += f"\n  token_cost:: {doc_total_tokens}"
                         header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
-                        header += f"\n  summary_reading_length:: {sum_reading_length:.1f}"
-                        header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-                        header += f"\n  number_of_chunks:: {n_chunk}"
+                        header += f"\n  summary_reading_time:: {sum_reading_length:.1f}"
                         if doc_reading_length:
-                            header += f"\n  doc_reading_length:: {doc_reading_length:.1f}"
+                            header += f"\n  doc_reading_time:: {doc_reading_length:.1f}"
+                            header += f"\n  reading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
+                        if n_chunk > 1:
+                            header += f"\n  chunks:: {n_chunk}"
                         if author:
                             header += f"\n  author:: {author}"
 
