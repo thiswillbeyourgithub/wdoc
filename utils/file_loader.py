@@ -294,8 +294,9 @@ def load_doc(filetype, debug, task, **kwargs):
             transl = kwargs["translation"]
 
         whi(f"Loading youtube: '{path}'")
+        fyu = YoutubeDL.from_youtube_url
         docs = cached_yt_loader(
-                loader=YoutubeLoader.from_youtube_url,
+                loader=fyu,
                 path=path,
                 add_video_info=True,
                 language=lang,
