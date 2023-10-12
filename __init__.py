@@ -404,7 +404,7 @@ class DocToolsLLM:
                     author = None
 
                 if metadata:
-                    metadata = "- Text metadata\n  - " + "\n  - ".join(metadata) + "\n"
+                    metadata = "- Text metadata:\n  - " + "\n  - ".join(metadata) + "\n"
                     metadata += "  - Section chunk order: [PROGRESS]\n"
                 else:
                     metadata = ""
