@@ -272,7 +272,10 @@ def load_doc(filetype, debug, task, **kwargs):
             red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
-        check_docs_tkn_length(docs, path)
+
+        size = sum([get_tkn_length(d.page_content) for d in docs])
+        if size <= min_token:
+            raise Exception(f"The number of token from '{path}' is {size} <= {min_token} tokens, probably something went wrong?")
 
     elif filetype == "youtube":
         assert "path" in kwargs, "missing 'path' key in args"
