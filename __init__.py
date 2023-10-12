@@ -342,7 +342,7 @@ class DocToolsLLM:
             # of tokens of a document to summarize it
             estimate_tkn = 2.4 * full_tkn
             if self.n_recursive_summary > 0:
-                estimate_tkn += sum([estimate_tkn / ((i + 1) * 2) for i, ii in enumerate(range(self.n_recursive_summary))])
+                estimate_tkn += sum([full_tkn / ((i + 1) * 4) for i, ii in enumerate(range(self.n_recursive_summary))])
             estimate_dol = estimate_tkn / 1000 * 0.0016
             red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
             if estimate_dol > 1:
