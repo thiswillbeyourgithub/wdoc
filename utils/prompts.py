@@ -1,7 +1,7 @@
 from textwrap import dedent, indent
 
 # rule for the summarization
-summary_rules = dedent("""
+summary_rules = indent(dedent("""
 - Summary format
   - Use markdown bullet points, with indentation
   - Maintain the rough chronological order of the text
@@ -17,13 +17,13 @@ summary_rules = dedent("""
       - Ignore sponsors, advertisements, etc
       - When in doubt about an information, keep it
       - Use as many bullet points as you need
-""".strip())
+""".strip()), 2)
 
 # template to summarize
 system_summary_template = dedent("""You are my best assistant. Your job is to summarize a section of text.
 
-- Rules you absolutely have to follow
-{indent(rules, 2)}
+- Rules
+{rules}
 
 """.strip())
 
@@ -53,8 +53,8 @@ checksummary_rules = dedent("""
 
 system_checksummary_template = dedent("""You are my best assistant. Your job is to fix the format of a summary.
 
-- Rules you absolutely have to follow:
-{indent(rules, 2)}
+- Rules
+{rules}
 """.strip())
 
 human_checksummary_template = dedent("""Summary to format:
