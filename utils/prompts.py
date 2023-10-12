@@ -5,6 +5,7 @@ summary_rules = indent(dedent("""
 - Summary format
   - Use markdown bullet points, with indentation
   - Maintain the rough chronological order of the text
+  - If the text is already a summary, make it better but don't remove any information without checking the rules first
   - You can use direct quotations
   - If the text is in french, reply in french. otherwise reply in english
   - Write in a journalistic tone to stay faithful to the author
