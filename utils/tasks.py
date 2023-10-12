@@ -88,7 +88,7 @@ def do_summarize(
 
     # combine summaries as one string
     n = len(summaries)
-    outtext = f"-Chunk 1/{n}\n"
+    outtext = f"- Chunk 1/{n}\n"
     for i, s in enumerate(summaries):
         outtext += s + "\n"
         if s != summaries[-1]:
