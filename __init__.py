@@ -255,8 +255,9 @@ class DocToolsLLM:
         red(f"\nProcessing task '{self.task}'")
 
         if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
-            links_todo = set()
-            already_done = set()
+            # storing links in dict instead of set to keep the original ordering
+            links_todo = {}
+            already_done = {}
             failed = []
 
             # get the list of documents from the same source. Also checks if
@@ -285,11 +286,11 @@ class DocToolsLLM:
                         continue
                     if link in output_content:
                         whi(f"Skipping link : already summarized in out_file: '{link}'")
-                        already_done.add(link)
+                        already_done[link] = None
                         continue
 
                     if len(links_todo) < self.n_summaries_target:
-                        links_todo.add(link)
+                        links_todo[link] = None
                     else:
                         yel("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
                         break
@@ -324,14 +325,14 @@ class DocToolsLLM:
                         assert self.n_summaries_target > 0
 
                     while len(links_todo) > self.n_summaries_target:
-                        links_todo = set(list(links_todo)[:self.n_summaries_target])
+                        del links_todo[list(links_todo.keys())[-1]]
 
                 # estimate price before summarizing, in case you put the bible in there
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs if doc.metadata["subitem_link"] in links_todo])
 
             else:
                 for d in self.loaded_docs:
-                    links_todo.add(d.metadata["path"])
+                    links_todo[d.metadata["path"]] = None
                 assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
 
                 full_tkn = sum([get_tkn_length(doc.page_content) for doc in self.loaded_docs])
