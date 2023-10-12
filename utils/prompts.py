@@ -18,7 +18,7 @@ summary_rules = indent(dedent("""
       - Ignore sponsors, advertisements, etc
       - When in doubt about an information, keep it
       - Use as many bullet points as you need
-""".strip()), 2)
+""".strip()), "  ")
 
 # template to summarize
 system_summary_template = dedent("""You are my best assistant. Your job is to summarize a section of text.
@@ -40,7 +40,7 @@ Summary:
 
 
 # templates to make sure the summary follows the rules
-checksummary_rules = dedent("""
+checksummary_rules = indent(dedent("""
 - Remove redundancies like "he says that" "he mentions that" etc and use indentation instead because it's implied
 - Remove repetitions, especially for pronouns and use implicit reference instead
 - Reformulate every bullet point to make it concise but without losing meaning
@@ -50,7 +50,7 @@ checksummary_rules = dedent("""
 - If the summary is already good, simply answer the same unmodified summary
 - Don't omit any information from the input summary in your answer
 - A formatted summary that is too long is better than a formatted summary that is missing information from the original summary
-""".strip())
+""".strip()), "  ")
 
 system_checksummary_template = dedent("""You are my best assistant. Your job is to fix the format of a summary.
 
