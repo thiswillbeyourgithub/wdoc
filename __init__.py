@@ -401,6 +401,10 @@ class DocToolsLLM:
                         verbose=self.llm_verbosity,
                         )
 
+                # get reading length of the summary
+                sum_reading_length = len(summary) / average_word_length / wpm
+                whi(f"{item_name} reading length is {sum_reading_length:.1f}")
+
                 n_recursion_done = 0
                 if self.n_recursive_summary > 0:
                     splitter = get_splitter(self.task)
@@ -425,12 +429,11 @@ class DocToolsLLM:
                         doc_total_tokens += new_doc_total_tokens
                         doc_total_cost += new_doc_total_cost
                         n_recursion_done += 1
+                        sum_reading_length = len(summary_text) / average_word_length / wpm
+                        whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     summary = summary_text
 
 
-
-                # get reading length of the summary
-                sum_reading_length = len(summary) / average_word_length / wpm
 
                 # make sure to use the same markdown formatting
                 summary = summary.replace("* ", "- ")
