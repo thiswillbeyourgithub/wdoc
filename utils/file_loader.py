@@ -95,11 +95,15 @@ def cloze_stripper(clozed):
     return clozed
 
 min_token = 200
+max_token = 50_000
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
-    if sum([get_tkn_length(d.page_content) for d in docs]) < min_token:
-        raise Exception(f"The number of token from '{name}' is less than {min_token}, probably something went wrong?")
+    size = sum([get_tkn_length(d.page_content) for d in docs])
+    if size <= min_token:
+        raise Exception(f"The number of token from '{name}' is {size} <= {min_token} tokens, probably something went wrong?")
+    elif size >= max_token:
+        raise Exception(f"The number of token from '{name}' is {size} >= {max_token} tokens, probably something went wrong?")
 
 
 def load_doc(filetype, debug, task, **kwargs):
