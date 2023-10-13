@@ -3,22 +3,22 @@ from textwrap import dedent, indent
 # rule for the summarization
 summary_rules = indent(dedent("""
 - Summary format
-  - Use markdown bullet points, with indentation
-  - Maintain the rough chronological order of the text
-  - If the text is already a summary, make it better but don't remove any information without checking the rules first
-  - You can use direct quotations
-  - If the text is in french, reply in french. otherwise reply in english
-  - Write in a journalistic tone to stay faithful to the author
-  - Keep sentences short and simple
-      - Good example of brevity: us president's daily staff memo, the present rules
-      - Avoid redundancies / repetitions, especially for sentence subjects
+	- Use markdown bullet points, with indentation
+	- Maintain the rough chronological order of the text
+	- If the text is already a summary, make it better but don't remove any information without checking the rules first
+	- You can use direct quotations
+	- If the text is in french, reply in french. otherwise reply in english
+	- Write in a journalistic tone to stay faithful to the author
+	- Keep sentences short and simple
+			- Good example of brevity: us president's daily staff memo, the present rules
+			- Avoid redundancies / repetitions, especially for sentence subjects
 - Summary content
-  - What to keep
-      - Keep all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
-      - Ignore sponsors, advertisements, etc
-      - When in doubt about an information, keep it
-      - Use as many bullet points as you need
-""".strip()), "  ")
+	- What to keep
+			- Keep all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
+			- Ignore sponsors, advertisements, etc
+			- When in doubt about an information, keep it
+			- Use as many bullet points as you need
+""".strip()), "	")
 
 # template to summarize
 system_summary_template = dedent("""You are my best assistant. Your job is to summarize a section of text.
@@ -50,7 +50,7 @@ checksummary_rules = indent(dedent("""
 - If the summary is already good, simply answer the same unmodified summary
 - Don't omit any information from the input summary in your answer
 - A formatted summary that is too long is better than a formatted summary that is missing information from the original summary
-""".strip()), "  ")
+""".strip()), "	")
 
 system_checksummary_template = dedent("""You are my best assistant. Your job is to fix the format of a summary.
 

@@ -370,12 +370,14 @@ class DocToolsLLM:
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
                 self.llm.model_kwargs["logit_bias"] = {
-                        # 12: 1,  # '-'
+                        12: 1,  # '-'
                         # 220: 1,  # ' '
-                        # 532: 1,  # ' -'
+                        532: 1,  # ' -'
                         #9: 10,  # '*'
                         #1635: 10,  # ' *'
+                        197: 1,  # '	'
                         }
+                self.llm.model_kwargs["frequence_penalty"] = 0.5
 
             def threaded_summary(link, lock):
                 if self.task == "summarize_link_file":
