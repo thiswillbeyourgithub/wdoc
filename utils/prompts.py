@@ -3,11 +3,11 @@ from textwrap import dedent, indent
 # rule for the summarization
 summary_rules = indent(dedent("""
 - Summary format
-\t- Use markdown bullet points, with indentation
+\t- Use markdown bullet points, USE INDENTATION TO SHOW THE LOGIC
 \t- Maintain the rough chronological order of the text
 \t- If the text is already a summary, make it better but don't remove any information without checking the rules first
 \t- You can use direct quotations
-\t- If the text is in french, reply in french. otherwise reply in english
+\t- If the text is in French, write in French. otherwise reply in English
 \t- Write in a journalistic tone to stay faithful to the author
 \t- Keep sentences short and simple
 \t\t\t- Good example of brevity: us president's daily staff memo, the present rules
