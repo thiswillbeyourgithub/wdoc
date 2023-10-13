@@ -378,6 +378,7 @@ class DocToolsLLM:
                         197: 1,  # '\t'
                         }
                 self.llm.model_kwargs["frequence_penalty"] = 0.5
+                self.llm.model_kwargs["temperature"] = 0.0
 
             def threaded_summary(link, lock):
                 if self.task == "summarize_link_file":
