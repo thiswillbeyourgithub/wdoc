@@ -87,13 +87,6 @@ def do_summarize(
             if metadata:
                 previous_summary = "\n\n" + previous_summary
 
-    # check if some line is only made of repeated character
-    for i, s in enumerate(summaries):
-        if s.strip() != "- ---":
-            if "a" not in s and "e" not in s:
-                if len(set(s.replace(" ", "").replace("-", "").strip().split(""))) <= 2:
-                    raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{summaries}\n'''")
-
     # combine summaries as one string
     n = len(summaries)
     if n > 1:
@@ -104,5 +97,13 @@ def do_summarize(
                 outtext += f"- ---\n- Chunk {i + 2}/{n}\n"
     else:
         outtext = "\n".join(summaries)
+
+    # check if some line is only made of repeated character
+    for i, s in enumerate(outtext.split("\n")):
+        if not s.replace("-", "").strip():
+            continue
+        if len(s) > 10:  # notable skips the '- ---' lines if present
+            if not any(char.isalpha() for char in s):
+                raise Exception(f"One line was only made of repeated characters?:\n'''\n{ss}\n'''\nsummary:\n'''\n{outtext}\n'''")
 
     return outtext, n, cb.total_tokens, cb.total_cost
