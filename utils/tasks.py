@@ -87,6 +87,13 @@ def do_summarize(
             if metadata:
                 previous_summary = "\n\n" + previous_summary
 
+    # check if some line is only made of repeated character
+    for i, s in enumerate(summaries):
+        if s.strip() != "- ---":
+            if "a" not in s and "e" not in s:
+                if len(set(s.replace(" ", "").replace("-", "").strip().split(""))) <= 2:
+                    raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{summaries}\n'''")
+
     # combine summaries as one string
     n = len(summaries)
     if n > 1:
