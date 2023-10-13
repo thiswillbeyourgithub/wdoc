@@ -100,10 +100,11 @@ def do_summarize(
 
     # check if some line is only made of repeated character
     for i, s in enumerate(outtext.split("\n")):
-        if not s.replace("-", "").strip():
+        if s == "- ---":
             continue
-        if len(s) > 10:  # notable skips the '- ---' lines if present
-            if not any(char.isalpha() for char in s):
-                raise Exception(f"One line was only made of repeated characters?:\n'''\n{ss}\n'''\nsummary:\n'''\n{outtext}\n'''")
+        if not s.strip():
+            continue
+        if not any(char.isalpha() for char in s):
+            raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
 
     return outtext, n, cb.total_tokens, cb.total_cost
