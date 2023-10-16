@@ -554,12 +554,16 @@ def load_doc(filetype, debug, task, **kwargs):
             docs[i].metadata["path"] = path
         if "subitem_link" in kwargs and "subitem_link" not in docs[i].metadata:
             docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
-        if "title" not in docs[i].metadata:
-            if "title" in kwargs:
+        if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
+            if "title" in kwargs and kwargs["title"] != "Untitled":
                 docs[i].metadata["title"] = kwargs["title"]
             else:
-                docs[i].metadata["title"] = "Untitled"
-        elif "title" in kwargs and kwargs["title"] != docs[i].metadata["title"]:
+                try:
+                    docs[i].metadata["title"] = soup.title.string
+                except Exception as err:
+                    red(f"Error when getting doc title: '{err}'")
+                    docs[i].metadata["title"] = "Untitled"
+        if "title" in kwargs and kwargs["title"] != docs[i].metadata["title"]:
             docs[i].metadata["title"] += " - " + kwargs["title"]
         if "playlist_title" in kwargs:
             docs[i].metadata["title"] = kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
