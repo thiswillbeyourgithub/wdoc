@@ -83,7 +83,7 @@ def do_summarize(
 
             summaries.append(out["output_text"])
 
-            previous_summary = f"End of the summary of the previous section (continue directly to avoid overlapping information):\n'''\n{summaries[-1]}\n'''"
+            previous_summary = f"End of the summary of the previous section (avoid overlap by directly starting a new bullet point):\n'''\n{summaries[-1]}\n'''"
             if metadata:
                 previous_summary = "\n\n" + previous_summary
 
