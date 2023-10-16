@@ -8,7 +8,7 @@ summary_rules = indent(dedent("""
 \t- If the text is already a summary, make it better but don't remove any information without checking the rules first
 \t- You can use direct quotations
 \t- If the text is in French, write in French. otherwise reply in English
-\t- Write in a journalistic tone to stay faithful to the author
+\t- Use the style and tone of the original text
 \t- Keep sentences short and simple
 \t\t\t- Good example of brevity: us president's daily staff memo, the present rules
 \t\t\t- Avoid redundancies / repetitions, especially for sentence subjects
