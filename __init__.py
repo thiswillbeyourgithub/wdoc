@@ -550,12 +550,12 @@ class DocToolsLLM:
             red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
             red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
-            if "out_file" in self.kwargs:
-                # after summarizing all links, append to output file the total cost
-                if total_tkn_cost != 0 and total_dol_cost != 0:
-                    with open(self.kwargs["out_file"], "a") as f:
-                        f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                        f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
+            # if "out_file" in self.kwargs:
+            #     # after summarizing all links, append to output file the total cost
+            #     if total_tkn_cost != 0 and total_dol_cost != 0:
+            #         with open(self.kwargs["out_file"], "a") as f:
+            #             f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+            #             f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
 
             # and write to input file a summary too
             if "out_file" in self.kwargs:
@@ -568,8 +568,8 @@ class DocToolsLLM:
                             f.write(f"    - Number of links failed: {len(failed)}:\n")
                             for f in failed:
                                 f.write(f"        - {f}\n")
-                        f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                        f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
+                        # f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+                        # f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
                 except Exception as err:
                     red(f"Exception when writing end of run details to input file: '{err}'")
 
