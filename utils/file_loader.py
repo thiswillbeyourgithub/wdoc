@@ -647,6 +647,11 @@ def load_doc(filetype, debug, task, **kwargs):
                 total_reading_length = sum([len(d.page_content) for d in docs]) / average_word_length / wpm
                 assert total_reading_length > 0.5, f"Failing doc: total reading length is suspiciously low for {docs[i].metadata}"
             docs[i].metadata["docs_reading_time"] = total_reading_length
+        if "source" not in docs[i].metadata:
+            if "path" in docs[i].metadata:
+                docs[i].metadata["source"] = docs[i].metadata["path"]
+            else:
+                docs[i].metadata["source"] = docs[i].metadata["title"]
 
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
