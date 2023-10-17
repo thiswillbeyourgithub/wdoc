@@ -210,4 +210,8 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
         normalizer = Normalizer(norm="l2")
         vectors = normalizer.transform(vectors)
 
+        assert not any(np.isnan(vectors.ravel())), "found nan in embedding vectors"
+        if vectors.dtype != float:
+            vectors = vectors.astype(float)
+
         return vectors
