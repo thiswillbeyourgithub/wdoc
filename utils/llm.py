@@ -1,6 +1,10 @@
-import numpy as np
 import os
 from pathlib import Path
+from typing import Dict, Any
+from pydantic import Extra
+
+import numpy as np
+from sklearn.preprocessing import Normalizer
 
 import langchain
 from langchain.llms import GPT4All, FakeListLLM, LlamaCpp
@@ -11,10 +15,6 @@ from langchain.chat_models import ChatOpenAI
 from langchain.cache import SQLiteCache
 from langchain.memory import ConversationBufferMemory
 from langchain.embeddings import SentenceTransformerEmbeddings
-
-from sklearn.preprocessing import Normalizer
-
-from typing import Dict, Any
 
 from .logger import whi, yel, red
 
@@ -96,14 +96,14 @@ class fakecallback:
         pass
 
 
-class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
+class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
         if "encode_kwargs" not in kwargs:
             kwargs["encode_kwargs"] = {}
         if "normalize_embeddings" not in kwargs["encode_kwargs"]:
             kwargs["encode_kwargs"]["normalize_embeddings"] = False
-        self._do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
         super().__init__(*args, **kwargs)
+        self.__do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
 
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
@@ -215,7 +215,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
             vectors = vectors[:offset]
 
         # normalize
-        if self._do_normalize:
+        if self.__do_normalize:
             normalizer = Normalizer(norm="l2")
             vectors = normalizer.transform(vectors)
 
