@@ -202,6 +202,9 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         vectors = super().embed_documents(sentences + add_sent)
         t = type(vectors)
 
+        if isinstance(vectors, list):
+            vectors = np.array(vectors)
+
         if add_sent:
             # at the position of the original sentence (not split)
             # add the vectors of the corresponding sub_sentence
@@ -221,7 +224,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             normalizer = Normalizer(norm="l2")
             vectors = normalizer.transform(vectors)
 
-        if not isinstance(vectors, list):
+        if not isinstance(vectors, t):
             vectors = vectors.tolist()
-        assert isinstance(vectors, t), f"wrong type?"
+        assert isinstance(vectors, t), "wrong type?"
         return vectors
