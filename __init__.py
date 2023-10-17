@@ -370,12 +370,12 @@ class DocToolsLLM:
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
                 self.llm.model_kwargs["logit_bias"] = {
-                        12: 1,  # '-'
+                        12: 2,  # '-'
                         # 220: 1,  # ' '
-                        532: 1,  # ' -'
+                        # 532: 1,  # ' -'
                         #9: 10,  # '*'
                         #1635: 10,  # ' *'
-                        197: 1,  # '\t'
+                        197: 2,  # '\t'
                         }
                 self.llm.model_kwargs["frequency_penalty"] = 0.5
                 self.llm.model_kwargs["temperature"] = 0.2
