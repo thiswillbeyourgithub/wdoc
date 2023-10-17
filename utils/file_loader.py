@@ -102,7 +102,7 @@ def cloze_stripper(clozed):
     return clozed
 
 min_token = 200
-max_token = 50_000
+max_token = 500_000
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
