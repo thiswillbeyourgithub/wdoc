@@ -30,6 +30,8 @@ from langchain.document_loaders import WebBaseLoader
 from langchain.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
+from langchain.retrievers import ParentDocumentRetriever
+from langchain.storage import InMemoryStore
 
 from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
@@ -848,3 +850,23 @@ def create_hyde_retriever(
         )
 
     return retriever
+
+
+def create_parent_retriever(
+        task,
+        loaded_embeddings,
+        loaded_docs,
+        ):
+    "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
+    # parent retriever
+    csp = get_splitter(task)
+    psp = get_splitter(task)
+    psp._chunk_size *= 4
+    parent = ParentDocumentRetriever(
+            vectorstore=loaded_embeddings,
+            docstore=InMemoryStore(),
+            child_splitter=csp,
+            parent_splitter=psp,
+            )
+    parent.add_documents(loaded_docs)
+    return parent
