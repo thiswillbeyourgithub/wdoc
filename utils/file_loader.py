@@ -185,6 +185,9 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = str(Path(path).read_text()).splitlines()
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
             doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
+            if task == "summarize_link_file":
+                # if summarize, start from bottom
+                doclist.reverse()
 
             n_thread = 20
 
