@@ -37,7 +37,7 @@ from langchain.embeddings import CacheBackedEmbeddings
 
 from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
-from .llm import rolling_window_encoder
+from .llm import RollingWindowEmbeddings
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -668,7 +668,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 )
 
     else:
-        embeddings = SentenceTransformerEmbeddings(
+        embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
                     "batch_size": 1,
@@ -676,9 +676,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                     "normalize_embeddings": True,
                     },
                 )
-        embeddings.embed_documents = rolling_window_encoder
-        if "stopwords" in kwargs:
-            embed_args["stopwords"] = kwargs["stopwords"]
+        if "stopwords" in kwargs: embed_args["stopwords"] = kwargs["stopwords"]
 
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
@@ -744,10 +742,11 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 db.merge_from(temp)
     else:
         t = time.time()
-        whi("Creating FAISS index for {len(docs)} documents")
+        whi(f"Creating FAISS index for {len(docs)} documents")
         db = FAISS.from_documents(
                 docs,
                 cached_embeddings,
+                normalize_L2=True,
                 )
         whi(f"Done creating index in {time.time()-t:.2f}s")
 
