@@ -1,3 +1,4 @@
+import numpy as np
 import os
 from pathlib import Path
 
@@ -96,6 +97,7 @@ class fakecallback:
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
+    normalizer = Normalizer(norm="l2")
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
         so we do a windowing embedding then maxpool then normalization.
@@ -188,13 +190,8 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
                     ]
             assert sum(sent_check + addsent_check) == 0, (
                 f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
-        vectors = model.encode(
-                sentences=sentences + add_sent,
-                show_progress_bar=False,
-                output_value="sentence_embedding",
-                convert_to_numpy=True,
-                normalize_embeddings=False,
-                )
+
+        vectors = super().embed_documents(sentences + add_sent)
 
         if add_sent:
             # at the position of the original sentence (not split)
@@ -211,8 +208,6 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
             vectors = vectors[:offset]
 
         # normalize
-        if not hasattr(self, "normalizer"):
-            self.normalizer = Normalizer(norm="l2")
         vectors = self.normalizer.transform(vectors)
 
         return vectors
