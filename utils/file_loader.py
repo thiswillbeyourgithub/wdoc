@@ -105,6 +105,15 @@ def check_docs_tkn_length(docs, name):
     elif size >= max_token:
         raise Exception(f"The number of token from '{name}' is {size} >= {max_token} tokens, probably something went wrong?")
 
+def get_url_title(url):
+    """if the title of the url is not loaded from the loader, trying as last
+    resort with this one"""
+    loader = WebBaseLoader(url, raise_for_status=True)
+    docs = loader.load()
+    if "title" in docs[0].metadata and docs[0].metadata["title"]:
+        return docs[0].metadata["title"]
+    else:
+        return None
 
 def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
@@ -485,10 +494,20 @@ def load_doc(filetype, debug, task, **kwargs):
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
         whi(f"Loading url: '{path}'")
+
+        # even if loading fails the title might be found so trying to keep
+        # the first working title across trials
+        if "title" not in kwargs or kwargs["title"] == "Untitled":
+            title = None
+        else:
+            title = kwargs["title"]
+
         # try with playwright
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
             docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+            if not title and "title" in docs[0].metadata:
+                title = docs[0].metadata["title"]
             check_docs_tkn_length(docs, path)
 
         # try with selenium firefox
@@ -497,6 +516,8 @@ def load_doc(filetype, debug, task, **kwargs):
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
+                    title = docs[0].metadata["title"]
                 check_docs_tkn_length(docs, path)
 
             # try with selenium chrome
@@ -505,6 +526,8 @@ def load_doc(filetype, debug, task, **kwargs):
                 try:
                     loader = SeleniumURLLoader(urls=[path], browser="chrome")
                     docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                    if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
+                        title = docs[0].metadata["title"]
                     check_docs_tkn_length(docs, path)
 
                 # try with goose
@@ -516,10 +539,11 @@ def load_doc(filetype, debug, task, **kwargs):
                         text = article.cleaned_text
                         texts = loaddoc_cache.eval(text_splitter.split_text, text)
                         docs = [Document(page_content=t) for t in texts]
-                        if article.title:
-                            for d in docs:
-                                if "title" not in d.metadata or not d.metadata["title"]:
-                                    d.metadata["title"] = article.title
+                        if not title:
+                            if "title" in docs[0].metadata and docs[0].metadata["title"]:
+                                title = docs[0].metadata["title"]
+                            elif article.title:
+                                title = article.title
                         check_docs_tkn_length(docs, path)
 
                     # try with html
@@ -527,7 +551,22 @@ def load_doc(filetype, debug, task, **kwargs):
                         red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
                         loader = WebBaseLoader(path, raise_for_status=True)
                         docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                        if not title and "title" in docs[0].metadata and docs[0].metadata["title"]:
+                            title = docs[0].metadata["title"]
                         check_docs_tkn_length(docs, path)
+
+        # last resort, try to get the title from the most basic loader
+        if not title:
+            title = get_url_title(path)
+
+        # store the title as metadata if missing
+        if title:
+            for d in docs:
+                if "title" not in d.metadata or not d.metadata["title"]:
+                    d.metadata["title"] = title
+                else:
+                    if d.metadata["title"] != title:
+                        d.metadata["title"] = f"{title} - {d.metadata['title']}"
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
@@ -561,15 +600,14 @@ def load_doc(filetype, debug, task, **kwargs):
         if "subitem_link" in kwargs and "subitem_link" not in docs[i].metadata:
             docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
         if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
-            if "title" in kwargs and kwargs["title"] != "Untitled":
+            if "title" in kwargs and kwargs["title"] and kwargs["title"] != "Untitled":
                 docs[i].metadata["title"] = kwargs["title"]
-            else:
-                try:
-                    docs[i].metadata["title"] = soup.title.string
-                except Exception as err:
-                    red(f"Error when getting doc title: '{err}'")
+            elif "http" in docs[i].metadata["path"].lower():
+                docs[i].metadata["title"] = get_url_title(docs[i].metadata["path"])
+                if not docs[i].metadata["title"]:
                     docs[i].metadata["title"] = "Untitled"
-        if "title" in kwargs and kwargs["title"] != docs[i].metadata["title"]:
+                    red(f"Could not get title from {path}")
+        if "title" in kwargs and kwargs["title"] != docs[i].metadata["title"] and kwargs["title"] not in docs[i].metadata["title"]:
             docs[i].metadata["title"] += " - " + kwargs["title"]
         if "playlist_title" in kwargs:
             docs[i].metadata["title"] = kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
