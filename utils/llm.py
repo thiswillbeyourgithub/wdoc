@@ -97,7 +97,6 @@ class fakecallback:
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
-    normalizer = Normalizer(norm="l2")
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
         so we do a windowing embedding then maxpool then normalization.
@@ -208,6 +207,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
             vectors = vectors[:offset]
 
         # normalize
-        vectors = self.normalizer.transform(vectors)
+        normalizer = Normalizer(norm="l2")
+        vectors = normalizer.transform(vectors)
 
         return vectors
