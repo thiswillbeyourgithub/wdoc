@@ -200,6 +200,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                 f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
 
         vectors = super().embed_documents(sentences + add_sent)
+        t = type(vectors)
 
         if add_sent:
             # at the position of the original sentence (not split)
@@ -222,4 +223,5 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
 
         if not isinstance(vectors, list):
             vectors = vectors.tolist()
+        assert isinstance(vectors, t), f"wrong type?"
         return vectors
