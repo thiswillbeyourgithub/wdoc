@@ -513,10 +513,13 @@ def load_doc(filetype, debug, task, **kwargs):
                     try:
                         g = Goose()
                         article = g.extract(url=path)
-                        kwargs["title"] = article.title
                         text = article.cleaned_text
                         texts = loaddoc_cache.eval(text_splitter.split_text, text)
                         docs = [Document(page_content=t) for t in texts]
+                        if article.title:
+                            for d in docs:
+                                if "title" not in d.metadata or not d.metadata["title"]:
+                                    d.metadata["title"] = article.title
                         check_docs_tkn_length(docs, path)
 
                     # try with html
