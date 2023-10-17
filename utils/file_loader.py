@@ -681,7 +681,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                     "normalize_embeddings": True,
                     },
                 )
-        if "stopwords" in kwargs: embed_args["stopwords"] = kwargs["stopwords"]
+        if "stopwords" in kwargs:
+            embed_args["stopwords"] = kwargs["stopwords"]
 
     lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
