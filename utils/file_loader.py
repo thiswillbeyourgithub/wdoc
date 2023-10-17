@@ -288,7 +288,7 @@ def load_doc(filetype, debug, task, **kwargs):
             path = path.replace("\\", "")
         assert re.search(yt_link_regex, path), f"youtube link is not valid: '{path}'"
         if "language" not in kwargs:
-            lang = ["fr", "en", "en-US", "en-UK"]
+            lang = ["fr-FR", "fr", "en", "en-US", "en-UK"]
         else:
             lang = kwargs["language"]
         if "translation" not in kwargs:
