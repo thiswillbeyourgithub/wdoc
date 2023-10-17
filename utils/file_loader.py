@@ -29,9 +29,9 @@ from langchain.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 
-from .misc import loaddoc_cache, html_to_text, hasher
+from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
-from utils.misc import embed_cache
+from .llm import rolling_window_encoder
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -605,6 +605,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                     "normalize_embeddings": True,
                     },
                 )
+        embeddings.embed_documents = rolling_window_encoder
         if "stopwords" in kwargs:
             embed_args["stopwords"] = kwargs["stopwords"]
 
