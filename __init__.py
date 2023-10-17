@@ -532,8 +532,8 @@ class DocToolsLLM:
 
             lock = Lock()
             results = Parallel(
-                    n_jobs=3,
-                    backend="threading" if not self.debug else "sequential",
+                    n_jobs=3 if not self.debug else 1,
+                    backend="threading",
                     )(delayed(threaded_summary)(
                         link=link,
                         lock=lock,
