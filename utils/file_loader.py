@@ -356,7 +356,7 @@ def load_doc(filetype, debug, task, **kwargs):
             loader = PDFMinerLoader(path)
             content  = loader.load()
             content = "\n".join([d.page_content for d in content])
-            texts = loaddoc_cache.eval(text_splitter.split_text, content)
+            texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
             check_docs_tkn_length(docs, path)
         except Exception as err:
@@ -364,7 +364,7 @@ def load_doc(filetype, debug, task, **kwargs):
             loader = PyPDFLoader(path)
             content  = loader.load()
             content = "\n".join([d.page_content for d in content])
-            texts = loaddoc_cache.eval(text_splitter.split_text, content)
+            texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
             check_docs_tkn_length(docs, path)
 
@@ -509,7 +509,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 multiline=True,
                 )
         log.info(f"Pasted string input:\n{content}")
-        texts = loaddoc_cache.eval(text_splitter.split_text, content)
+        texts = text_splitter.split_text(content)
         docs = [Document(page_content=t) for t in texts]
         path = "user_string"
 
@@ -520,7 +520,7 @@ def load_doc(filetype, debug, task, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
         with open(path) as f:
             content = f.read()
-        texts = loaddoc_cache.eval(text_splitter.split_text, content)
+        texts = text_splitter.split_text(content)
         docs = [Document(page_content=t) for t in texts]
         check_docs_tkn_length(docs, path)
 
@@ -539,7 +539,7 @@ def load_doc(filetype, debug, task, **kwargs):
         # try with playwright
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
-            docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+            docs = text_splitter.transform_documents(loader.load())
             if not title and "title" in docs[0].metadata:
                 title = docs[0].metadata["title"]
             check_docs_tkn_length(docs, path)
@@ -549,7 +549,7 @@ def load_doc(filetype, debug, task, **kwargs):
             red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium firefox as fallback")
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
-                docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                docs = text_splitter.transform_documents(loader.load())
                 if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
                     title = docs[0].metadata["title"]
                 check_docs_tkn_length(docs, path)
@@ -559,7 +559,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 red(f"Exception when using selenium firefox to parse text: '{err}'\nUsing selenium chrome as fallback")
                 try:
                     loader = SeleniumURLLoader(urls=[path], browser="chrome")
-                    docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                    docs = text_splitter.transform_documents(loader.load())
                     if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
                         title = docs[0].metadata["title"]
                     check_docs_tkn_length(docs, path)
@@ -571,7 +571,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         g = Goose()
                         article = g.extract(url=path)
                         text = article.cleaned_text
-                        texts = loaddoc_cache.eval(text_splitter.split_text, text)
+                        texts = text_splitter.split_text(text)
                         docs = [Document(page_content=t) for t in texts]
                         if not title:
                             if "title" in docs[0].metadata and docs[0].metadata["title"]:
@@ -584,7 +584,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     except Exception as err:
                         red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
                         loader = WebBaseLoader(path, raise_for_status=True)
-                        docs = loaddoc_cache.eval(text_splitter.transform_documents, loader.load())
+                        docs = text_splitter.transform_documents(loader.load())
                         if not title and "title" in docs[0].metadata and docs[0].metadata["title"]:
                             title = docs[0].metadata["title"]
                         check_docs_tkn_length(docs, path)
