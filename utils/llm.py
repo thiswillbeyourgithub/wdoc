@@ -102,6 +102,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             kwargs["encode_kwargs"] = {}
         if "normalize_embeddings" not in kwargs["encode_kwargs"]:
             kwargs["encode_kwargs"]["normalize_embeddings"] = False
+
         super().__init__(*args, **kwargs)
         self.__do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
 
@@ -219,8 +220,6 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             normalizer = Normalizer(norm="l2")
             vectors = normalizer.transform(vectors)
 
-        assert not any(np.isnan(vectors.ravel())), "found nan in embedding vectors"
-        if vectors.dtype != float:
-            vectors = vectors.astype(float)
-
+        if not isinstance(vectors, list):
+            vectors = vectors.tolist()
         return vectors
