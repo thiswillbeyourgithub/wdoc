@@ -32,6 +32,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
+from langchain.embeddings import CacheBackedEmbeddings
 
 from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
@@ -678,12 +679,18 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         if "stopwords" in kwargs:
             embed_args["stopwords"] = kwargs["stopwords"]
 
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
+            embeddings,
+            LocalFileStore(f".cache/embeddings/{embed_model}"),
+            namespace=embed_model,
+            )
+
     # reload passed embeddings
     if loadfrom:
         red("Reloading documents and embeddings from file")
         path = Path(loadfrom)
         assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), embeddings)
+        db = FAISS.load_local(str(path), cached_embeddings)
         return db
 
     red("\nLoading embeddings.")
@@ -738,7 +745,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     results = Parallel(
             n_jobs=n_thread,
             backend="threading",
-            )(delayed(get_embedding)(doc, embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
+            )(delayed(get_embedding)(doc, cached_embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
 
     # merge the results
     done_list = set()
@@ -762,7 +769,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         path = Path(saveas)
         db.save_local(str(path))
 
-    return db, embeddings
+    return db, cached_embeddings
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
