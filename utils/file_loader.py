@@ -488,6 +488,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 else:
                     cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w-window_size], "text"]
         docs = [Document(page_content=t) for t in cards["text_concat"]]
+        docs = text_splitter.transform_documents(docs)
         assert docs, "List of loaded anki document is empty!"
 
         for i in range(len(docs)):
