@@ -19,7 +19,7 @@ from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
 from langchain.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
-from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers import ContextualCompressionRetriever, KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
@@ -633,6 +633,19 @@ class DocToolsLLM:
                                     debug=self.debug,
                                     )
                                 )
+
+                        # retrievers.append(
+                        #         KNNRetriever.from_texts(
+                        #             [d.page_content for d in self.loaded_docs],
+                        #             self.embeddings,
+                        #             )
+                        #         )
+                        # retrievers.append(
+                        #         SVMRetriever.from_texts(
+                        #             [d.page_content for d in self.loaded_docs],
+                        #             self.embeddings,
+                        #             )
+                        #         )
 
                         retrievers.append(
                                 create_parent_retriever(
