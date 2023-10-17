@@ -102,7 +102,7 @@ def cloze_stripper(clozed):
     return clozed
 
 min_token = 200
-max_token = 500_000
+max_token = 50_000
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
@@ -496,7 +496,10 @@ def load_doc(filetype, debug, task, **kwargs):
             docs[i].metadata["anki_notetype"] = notetype
             docs[i].metadata["path"] = f"Anki profile '{profile}' deck '{deck}'"
 
-        check_docs_tkn_length(docs, f"{filetype}: {profile}")
+        try:
+            check_docs_tkn_length(docs, f"{filetype}: {profile}")
+        except Exception as err:
+            red(f"Number of token in anki document is surprising. Not quitting because anki can causethis: '{err}'")
 
     elif filetype == "string":
         whi("Loading string")
