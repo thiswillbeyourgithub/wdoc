@@ -7,6 +7,7 @@ summary_rules = indent(dedent("""
 \t- Maintain the rough chronological order of the text
 \t- If the text is already a summary, make it better but don't remove any information without checking the rules first
 \t- You can use direct quotations
+\t- Highlight important words using **bold** format
 \t- If the text is in French, write in French. otherwise reply in English
 \t- Use the style and tone of the original text
 \t- Keep sentences short and simple
