@@ -31,7 +31,7 @@ from langchain.vectorstores import FAISS
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
-from langchain.storage import InMemoryStore
+from langchain.storage import LocalFileStore
 
 from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
@@ -864,7 +864,7 @@ def create_parent_retriever(
     psp._chunk_size *= 4
     parent = ParentDocumentRetriever(
             vectorstore=loaded_embeddings,
-            docstore=InMemoryStore(),
+            docstore=LocalFileStore(".cache/parent_retriever"),
             child_splitter=csp,
             parent_splitter=psp,
             )
