@@ -97,6 +97,14 @@ class fakecallback:
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
+    def __init__(self, *args, **kwargs):
+        if "encode_kwargs" not in kwargs:
+            kwargs["encode_kwargs"] = {}
+        if "normalize_embeddings" not in kwargs["encode_kwargs"]:
+            kwargs["encode_kwargs"]["normalize_embeddings"] = False
+        self._do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
+        super().__init__(*args, **kwargs)
+
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
         so we do a windowing embedding then maxpool then normalization.
@@ -207,8 +215,9 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings):
             vectors = vectors[:offset]
 
         # normalize
-        normalizer = Normalizer(norm="l2")
-        vectors = normalizer.transform(vectors)
+        if self._do_normalize:
+            normalizer = Normalizer(norm="l2")
+            vectors = normalizer.transform(vectors)
 
         assert not any(np.isnan(vectors.ravel())), "found nan in embedding vectors"
         if vectors.dtype != float:
