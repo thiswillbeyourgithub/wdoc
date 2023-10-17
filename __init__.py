@@ -583,7 +583,12 @@ class DocToolsLLM:
 
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
-                self.embed_model, self.loadfrom, self.saveas, self.debug, self.loaded_docs, self.kwargs)
+                self.embed_model,
+                self.loadfrom,
+                self.saveas,
+                self.debug,
+                self.loaded_docs,
+                self.kwargs)
 
         assert self.task in ["query", "summary_then_query"]
 
