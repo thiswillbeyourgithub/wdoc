@@ -1,3 +1,5 @@
+import tempfile
+import requests
 import youtube_dl
 from youtube_dl.utils import DownloadError, ExtractorError
 import random
@@ -43,6 +45,7 @@ inference_rules = {
         "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
         "txt": [".txt$", ".md$"],
+        "online_pdf": ["^http.*pdf.*"],
         "pdf": [".*pdf$"],
         "url": ["^http"],
         }
@@ -315,6 +318,29 @@ def load_doc(filetype, debug, task, **kwargs):
                 translation=transl,
                 )
         docs = text_splitter.transform_documents(docs)
+
+    elif filetype == "online_pdf":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading online pdf: '{path}'")
+
+        response = requests.get(path)
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+            temp_file.write(response.content)
+            temp_file.flush()
+
+        meta = kwargs.copy()
+        meta["filetype"] == "pdf"
+        meta["path"] = temp_file.name
+        try:
+            return load_doc(
+                    task=task,
+                    debug=debug,
+                    **meta,
+                    )
+        except Exception as err:
+            red(f"Error when parsing online pdf from {path} downloaded to {temp_file.name}: '{err}'")
+            raise
 
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
