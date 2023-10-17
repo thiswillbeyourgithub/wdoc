@@ -1,3 +1,4 @@
+import time
 import tempfile
 import requests
 import youtube_dl
@@ -698,71 +699,57 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     docs = loaded_docs
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
-    (embed_cache / embed_model).mkdir(exist_ok=True)
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
-    red(f"Total number of tokens in documents: '{full_tkn}'")
-    full_tkn_uncached = sum([get_tkn_length(doc.page_content) for doc in docs if not (embed_cache / embed_model / doc.metadata["hash"]).exists()])
-    red(f"Total number of tokens in documents that are not in cache: '{full_tkn_uncached}'")
+    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if embed_model == "openai":
         dol_price = full_tkn * 0.0001 / 1000
-        dol_price_uncached = full_tkn_uncached * 0.0001 / 1000
-        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f} and for uncached is ${dol_price_uncached:.4f}")
-        if dol_price_uncached > 1:
+        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
+        if dol_price > 1:
             ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
             if ans.lower() not in ["y", "yes"]:
                 red("Quitting.")
                 raise SystemExit()
 
-    def get_embedding(doc, embeddings, embed_cache, embed_args=embed_args):
-        hashcheck = doc.metadata["hash"]
-        if (embed_cache / embed_model / hashcheck).exists():
-            try:
-                temp = FAISS.load_local(str(embed_cache / embed_model / hashcheck), embeddings)
-                whi(f"Loaded from cache '{doc.metadata['path']}'")
-                return temp, hashcheck, doc.metadata['path']
-            except Exception as err:
-                red(f"Error (will compute embedding instead of loading form file): '{err}'")
-
+    def get_embedding_stripping_stopwords(doc, embeddings, embed_args=embed_args):
         whi("Computing embeddings")
-        if "stopwords" in embed_args:
-            prev = doc.page_content
-            doc.page_content = re.sub(charac_regex, " ", doc.page_content.lower())
-            for reg in embed_args["stopwords"]:
-                doc.page_content = re.sub(reg, " ", doc.page_content)
+        prev = doc.page_content
+        doc.page_content = re.sub(charac_regex, " ", doc.page_content.lower())
+        for reg in embed_args["stopwords"]:
+            doc.page_content = re.sub(reg, " ", doc.page_content)
         temp = FAISS.from_documents([doc], embeddings, normalize_L2=True)
-        if "stopwords" in embed_args:
-            for k in temp.docstore.__dict__.keys():
-                for kk in temp.docstore.__dict__[k].keys():
-                    temp.docstore.__dict__[k][kk].page_content = prev
-        temp.save_local(str(embed_cache / embed_model / hashcheck))
-        return temp, hashcheck, doc.metadata['path']
+        for k in temp.docstore.__dict__.keys():
+            for kk in temp.docstore.__dict__[k].keys():
+                temp.docstore.__dict__[k][kk].page_content = prev
+        return temp, doc.metadata['path']
 
-    n_thread = 3
-    if debug:
-        n_thread = 1
-    results = Parallel(
-            n_jobs=n_thread,
-            backend="threading",
-            )(delayed(get_embedding)(doc, cached_embeddings, embed_cache) for doc in tqdm(docs, desc="embedding documents"))
-
-    # merge the results
-    done_list = set()
-    db = None
-    for temp, hashcheck, path in results:
-        (embed_cache / embed_model / hashcheck).touch()  # this way we know what files where not used in a long time
-        if db is None:
-            db = temp
-        else:
-            if hashcheck not in done_list:
-                try:
-                    db.merge_from(temp)
-                    done_list.add(hashcheck)
-                except Exception as err:
-                    red(f"Error when merging index: '{err}'")
+    if any("stopwords" in d.metadata for d in docs):
+        whi("Using diy embedding function that strips stopwords")
+        results = Parallel(
+                n_jobs=1 if not debug else 3,
+                backend="threading",
+                )(delayed(get_embedding_stripping_stopwords
+                          )(
+                              doc=doc,
+                              embeddings=cached_embeddings
+                              ) for doc in tqdm(
+                                  docs,
+                                  desc="embedding documents"))
+        # merge the results
+        for i, temp, path in enumerate(results):
+            if not i:
+                db = temp
             else:
-                whi(f"File with path '{path}' with hash '{hashcheck}' was already added, skipping.")
+                db.merge_from(temp)
+    else:
+        t = time.time()
+        whi("Creating FAISS index for {len(docs)} documents")
+        db = FAISS.from_documents(
+                docs,
+                cached_embeddings,
+                )
+        whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
     if saveas:
