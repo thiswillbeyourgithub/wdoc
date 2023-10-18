@@ -7,17 +7,20 @@ from pathlib import Path
 # adds logger, restrict it to X lines
 local_dir = "/".join(__file__.split("/")[:-2])
 Path(f"{local_dir}/logs.txt").touch(exist_ok=True)
-logging.basicConfig(
-        level=logging.INFO,
-        force=True,
-        )
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 handler = logging.handlers.RotatingFileHandler(
         filename=f"{local_dir}/logs.txt",
+        mode="a",
+        encoding=None,
+        delay=0,
         maxBytes=1024*1024*100,  # max 50mb
-        backupCount=2)
-handler.setFormatter(logging.Formatter('%(asctime)s: %(message)s'))
+        backupCount=2,
+        )
+handler.setLevel(logging.INFO)
+handler.setFormatter(log_formatter)
 
 log = logging.getLogger()
+log.setLevel(logging.INFO)
 log.addHandler(handler)
 
 
