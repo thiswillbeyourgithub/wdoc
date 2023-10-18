@@ -146,8 +146,7 @@ class DocToolsLLM:
             if True, will return this documentation.
         """
         if help or h:
-            print(self.__init__.__doc__)
-            raise SystemExit()
+            return self.__init__.__doc__
 
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
