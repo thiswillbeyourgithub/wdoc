@@ -2,5 +2,5 @@ API_KEY.txt
 ggml*bin
 .cache
 medical_indexes.txt
-logs.txt
+logs.txt*
 author_dir
