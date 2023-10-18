@@ -81,7 +81,7 @@ def do_summarize(
                     return_only_outputs=False,
                     )
 
-            summaries.append(out["output_text"])
+            summaries.append(out["output_text"].strip())
 
             previous_summary = f"End of the summary of the previous section (avoid overlap by directly starting a new bullet point):\n'''\n{summaries[-1]}\n'''"
             if metadata:
@@ -102,7 +102,7 @@ def do_summarize(
     for i, s in enumerate(outtext.split("\n")):
         if s == "- ---":
             continue
-        if not s.strip():
+        if not s.replace("-", " ").strip():
             continue
         if not any(char.isalpha() for char in s):
             raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
