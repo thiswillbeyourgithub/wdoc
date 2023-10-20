@@ -2,29 +2,29 @@ from textwrap import dedent, indent
 
 # rule for the summarization
 summary_rules = indent(dedent("""
-- Summary format
-\t- Use markdown bullet points, USE INDENTATION TO SHOW THE LOGIC
-\t- Maintain the rough chronological order of the text
-\t- If the text is already a summary, make it better but don't remove any information without checking the rules first
-\t- You can use direct quotations
-\t- Show emphasis using **bold** format
-\t- If the text is in French, write in French. otherwise reply in English
-\t- Use the style and tone of the original text
-\t- Keep sentences short and simple
-\t\t\t- Good example of brevity: us president's daily staff memo, the present rules
-\t\t\t- Avoid redundancies / repetitions, especially for sentence subjects
-- Summary content
-\t- What to keep
-\t\t\t- Keep all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
-\t\t\t- Ignore sponsors, advertisements, etc
-\t\t\t- When in doubt about an information, keep it
-\t\t\t- Use as many bullet points as you need
+\t- On the content
+\t\t- What to keep
+\t\t\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
+\t\t- What to discard
+\t\t\t- sponsors, advertisements, etc.
+\t\t- When in doubt, keep the information in your summary.
+\t- On the format
+\t\t- Use as many bullet points as you need.
+\t\t- The top level bullet points have to follow the order they appear in the text.
+\t\t- When summarizing a summary, be careful to NOT FORGET THE RULES.
+\t\t- Quotations are allowed.
+\t\t- Make it quicker to read by showing emphasis (using bold format, e.g. **this is important**).
+\t\t- Write your summary IN THE SAME LANGUAGE as the input text.
+\t\t- Keep the style and tone of the input text.
+\t\t- Keep sentences short and simple, but don't get rid of details.
+\t\t- Example of summary: the US president's daily staff memo, also those rules.
+\t\t- Avoid redundancies / repetitions, especially for sentence subjects. (E.g. don't begin several bullet points by 'The author says that', just use smart indentation to make it obvious.)
 """.strip()), "\t")
 
 # template to summarize
-system_summary_template = dedent("""You are my best assistant. Your job is to summarize a section of text.
+system_summary_template = dedent("""You are my best assistant. I give you a text, section by section and you reply a summary of each section so that I can concatenate them afterwards. I'm not actually interested in the high level take aways, what I want is to know the though process of the authors, what their arguments were etc. To that end I wrote you very specific SUMMARY RULES below. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
 
-- Rules
+- SUMMARY RULES
 {rules}
 
 """.strip())
