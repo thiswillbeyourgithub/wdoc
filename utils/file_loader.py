@@ -81,7 +81,7 @@ def get_splitter(task):
     if task == "query":
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
-                chunk_size=1024,  # default 4000
+                chunk_size=3000,  # default 4000
                 chunk_overlap=386,  # default 200
                 length_function=get_tkn_length,
                 )
