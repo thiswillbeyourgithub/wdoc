@@ -13,8 +13,8 @@ from langchain.prompts.chat import (
 from utils.prompts import (
         summary_rules,
         system_summary_template, human_summary_template,
-        checksummary_rules,
-        system_checksummary_template, human_checksummary_template,
+        # checksummary_rules,
+        # system_checksummary_template, human_checksummary_template,
         )
 from utils.logger import whi, yel, red
 
@@ -30,17 +30,17 @@ chatgpt_summary_messages = ChatPromptTemplate.from_messages(
             ],
         )
 
-# prompt to check the summarization quality
-checksummary_prompt = PromptTemplate(
-        template=system_checksummary_template + "\n\n" + human_checksummary_template,
-        input_variables=["summary_to_check", "rules"],
-        )
-chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
-        [
-            SystemMessagePromptTemplate.from_template(system_checksummary_template),
-            HumanMessagePromptTemplate.from_template(human_checksummary_template),
-            ],
-        )
+# # prompt to check the summarization quality
+# checksummary_prompt = PromptTemplate(
+#         template=system_checksummary_template + "\n\n" + human_checksummary_template,
+#         input_variables=["summary_to_check", "rules"],
+#         )
+# chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
+#         [
+#             SystemMessagePromptTemplate.from_template(system_checksummary_template),
+#             HumanMessagePromptTemplate.from_template(human_checksummary_template),
+#             ],
+#         )
 
 def do_summarize(
         docs,
@@ -60,11 +60,11 @@ def do_summarize(
             prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
             verbose=verbose,
             )
-    checksumm_chain = LLMChain(
-            llm=llm,
-            prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
-            verbose=verbose,
-            )
+    # checksumm_chain = LLMChain(
+    #         llm=llm,
+    #         prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+    #         verbose=verbose,
+    #         )
 
     assert "[PROGRESS]" in metadata
     with callback() as cb:
