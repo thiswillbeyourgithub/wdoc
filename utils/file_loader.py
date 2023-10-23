@@ -15,7 +15,7 @@ import re
 from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, Memory
 import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
@@ -748,11 +748,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-            embeddings,
-            lfs,
-            namespace=embed_model,
-            )
+    cached_embeddings = embeddings
+    # cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
+    #         embeddings,
+    #         lfs,
+    #         namespace=embed_model,
+    #         )
 
     # reload passed embeddings
     if loadfrom:
@@ -811,16 +812,29 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
             else:
                 db.merge_from(temp)
     else:
+
+        embeddings_cache = Memory(lfs.root_path)
+
+        @embeddings_cache.cache
+        def _threaded_faiss_embeddings(doc embed):
+            return FAISS.from_documents([doc], embed, normalize_L2=True)
+
         t = time.time()
         whi(f"Creating FAISS index for {len(docs)} documents")
-        db = FAISS.from_documents(
-                [docs[0]],
-                cached_embeddings,
-                normalize_L2=True,
-                )
 
-        for doc in tqdm(docs[1:], desc="Embdding documents"):
-            db.add_documents([doc])
+        result = Parallel(
+                n_jobs=3 if not debug else 1,
+                backend="threading"
+                )(delayed(_threaded_faiss_embeddings)(
+                    doc=doc,
+                    embed=cached_embeddings,
+                    ) for doc in tqdm(docs, desc="Embedding documents"))
+        for i, temp in enumerate(results):
+            if not i:
+                db = temp
+            else:
+                db.merge_from(temp)
+
 
         whi(f"Done creating index in {time.time()-t:.2f}s")
 
