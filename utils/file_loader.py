@@ -153,7 +153,7 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [p for p in Path(path).rglob(pattern)]
             doclist = [str(p).strip() for p in doclist if p.is_file()]
             doclist = [p for p in doclist if p]
-            doclist = [p[1:].strip() for p in doclist if p.startswith("-")]
+            doclist = [p[1:].strip() if p.startswith("-") else p for p in doclist]
 
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
@@ -179,7 +179,7 @@ def load_doc(filetype, debug, task, **kwargs):
         elif filetype == "json_list":
             whi(f"Loading json_list: '{path}'")
             doclist = str(Path(path).read_text()).splitlines()
-            doclist = [p[1:].strip() for p in doclist if p.startswith("-")]
+            doclist = [p[1:].strip() if p.startswith("-") else p for p in doclist]
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
             # don't multithread this because a json line can itself be multithreaded.
@@ -202,7 +202,7 @@ def load_doc(filetype, debug, task, **kwargs):
         elif filetype == "link_file":
             whi(f"Loading link_file: '{path}'")
             doclist = str(Path(path).read_text()).splitlines()
-            doclist = [p[1:].strip() for p in doclist if p.startswith("-")]
+            doclist = [p[1:].strip() if p.startswith("-") else p for p in doclist]
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
             doclist = [re.findall(markdownlink_regex, d)[0] if re.search(markdownlink_regex, d) else d for d in doclist]
             if task == "summarize_link_file":
