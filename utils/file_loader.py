@@ -473,7 +473,7 @@ def load_doc(filetype, debug, task, **kwargs):
         cards = cards.sort_index()
 
         # load each card as a single document
-        docs = [Document(page_content=t) for t in cards["text"].tolist()]
+        # docs = [Document(page_content=t) for t in cards["text"].tolist()]
 
         # turn all cards into a single wall of text then use text_splitter
         # pro: fill the context window as much I possible I guess
@@ -482,18 +482,18 @@ def load_doc(filetype, debug, task, **kwargs):
         # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
         # docs = [Document(page_content=t) for t in texts]
 
-        # # set window_size to X turn each X cards into one document, overlapping
-        # window_size = 1
-        # index_list = cards.index.tolist()
-        # n = len(index_list)
-        # cards["text_concat"] = ""
-        # for i in tqdm(range(len(index_list)), desc="combining anki cards"):
-        #     for w in range(window_size):
-        #         if i + window_size < n:
-        #             cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w], "text"]
-        #         else:
-        #             cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w-window_size], "text"]
-        # docs = [Document(page_content=t) for t in cards["text_concat"]]
+        # set window_size to X turn each X cards into one document, overlapping
+        window_size = 5
+        index_list = cards.index.tolist()
+        n = len(index_list)
+        cards["text_concat"] = ""
+        for i in tqdm(range(len(index_list)), desc="combining anki cards"):
+            for w in range(window_size):
+                if i + window_size < n:
+                    cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w], "text"]
+                else:
+                    cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w-window_size], "text"]
+        docs = [Document(page_content=t) for t in cards["text_concat"]]
 
         assert docs, "List of loaded anki document is empty!"
 
