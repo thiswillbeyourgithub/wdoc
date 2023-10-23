@@ -736,7 +736,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
-                    # "batch_size": 1,
+                    "batch_size": 1,
                     "show_progress_bar": True,
                     "normalize_embeddings": True,
                     },
