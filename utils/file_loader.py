@@ -745,6 +745,9 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
             embed_args["stopwords"] = kwargs["stopwords"]
 
     lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
+    cache_content = list(lfs.yield_keys())
+    red(f"Found {len(cache_content)} embeddings in local cache")
+
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
             lfs,
