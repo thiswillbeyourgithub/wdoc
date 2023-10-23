@@ -482,6 +482,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 if x[k]
                 ))
         cards = cards[~cards["text"].str.contains("[IMAGE]")]
+        cards.drop_duplicates(subset="text", inplace=True)
 
         cards = cards.sort_index()
 
