@@ -834,8 +834,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
 
     # saving embeddings
     if saveas:
-        path = Path(saveas)
-        db.save_local(str(path))
+        db.save_local(saveas)
 
     return db, cached_embeddings
 
