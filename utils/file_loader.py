@@ -1,3 +1,4 @@
+import pdb
 import time
 import tempfile
 import requests
@@ -174,7 +175,10 @@ def load_doc(filetype, debug, task, **kwargs):
                             )
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
-                    return None
+                    if debug:
+                        pdb.post_mortem()
+                    else:
+                        return None
 
         elif filetype == "json_list":
             whi(f"Loading json_list: '{path}'")
@@ -197,7 +201,10 @@ def load_doc(filetype, debug, task, **kwargs):
                             )
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
-                    return None
+                    if debug:
+                        pdb.post_mortem()
+                    else:
+                        return None
 
         elif filetype == "link_file":
             whi(f"Loading link_file: '{path}'")
@@ -227,7 +234,10 @@ def load_doc(filetype, debug, task, **kwargs):
                             )
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
-                    return None
+                    if debug:
+                        pdb.post_mortem()
+                    else:
+                        return None
 
         elif filetype == "youtube_playlist":
             assert "path" in kwargs, "missing 'path' key in args"
@@ -256,7 +266,10 @@ def load_doc(filetype, debug, task, **kwargs):
                             )
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
-                    return None
+                    if debug:
+                        pdb.post_mortem()
+                    else:
+                        return None
 
         else:
             raise ValueError(filetype)
@@ -472,12 +485,23 @@ def load_doc(filetype, debug, task, **kwargs):
 
         cards = cards.sort_index()
 
-        # load each card as a single document
-        # docs = [Document(page_content=t) for t in cards["text"].tolist()]
+        # # load each card as a single document
+        # docs = []
+        # for cid in cards.index:
+        #     c = cards.loc[cid, :]
+        #     docs.append(
+        #             Document(
+        #                 page_content=c["text"],
+        #                 metadata={
+        #                     "anki_tags": " ".join(c["ntags"]),
+        #                     }
+        #                 )
+        #             )
 
         # turn all cards into a single wall of text then use text_splitter
         # pro: fill the context window as much I possible I guess
-        # con: editing cards will force re-embedding a lot of cards
+        # con: - editing cards will force re-embedding a lot of cards
+        #      - ignores tags
         # full_df = "\n\n\n\n".join(cards["text"].tolist())
         # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
         # docs = [Document(page_content=t) for t in texts]
@@ -487,13 +511,25 @@ def load_doc(filetype, debug, task, **kwargs):
         index_list = cards.index.tolist()
         n = len(index_list)
         cards["text_concat"] = ""
+        cards["tags_concat"] = ""
         for i in tqdm(range(len(index_list)), desc="combining anki cards"):
             for w in range(window_size):
                 if i + window_size < n:
                     cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w], "text"]
+                    cards.loc[index_list[i], "tags_concat"] += cards.loc[index_list[i+w], "ntags"]
                 else:
                     cards.loc[index_list[i], "text_concat"] += "\n\n" + cards.loc[index_list[i+w-window_size], "text"]
+                    cards.loc[index_list[i], "tags_concat"] += cards.loc[index_list[i+w], "ntags"]
         docs = [Document(page_content=t) for t in cards["text_concat"]]
+        for c in cards.iterrows():
+            docs.append(
+                    Document(
+                        page_content=c["text_concat"],
+                        metadata={
+                            "anki_tags": " ".join(list(set(c["tags_concat"])))
+                            }
+                        )
+                    )
 
         assert docs, "List of loaded anki document is empty!"
 
