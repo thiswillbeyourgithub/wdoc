@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import hashlib
 from joblib import Memory
 
+from .logger import red
+
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/embed_cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
@@ -28,6 +30,8 @@ def html_to_text(html, issoup):
         text = soup.get_text()
         if "<img" in text:
             text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
+            if "<img" in text:
+                red("Failed to remove <img from anki card")
         return text
     else:
         return html.get_text()
