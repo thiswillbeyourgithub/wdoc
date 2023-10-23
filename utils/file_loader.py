@@ -810,11 +810,27 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     else:
         t = time.time()
         whi(f"Creating FAISS index for {len(docs)} documents")
-        db = FAISS.from_documents(
-                docs,
-                cached_embeddings,
-                normalize_L2=True,
-                )
+        doc_limit = 1000
+        if len(docs) < doc_limit:
+            db = FAISS.from_documents(
+                    docs,
+                    cached_embeddings,
+                    normalize_L2=True,
+                    )
+        else:
+            whi("Many documents found, using meta batches to use caching in case of interruption")
+            db = FAISS.from_documents(
+                    docs[:doc_limit],
+                    cached_embeddings,
+                    normalize_L2=True,
+                    )
+            batches = [[i * doc_limit, (i+1)*doc_limit] for i in range(1, len(docs) // doc_limit + 2)]
+            for batch in tqdm(batches, desc="Meta batch"):
+                db.add_documents(
+                        docs[batch[0]: batch[1]],
+                        )
+
+
         whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
