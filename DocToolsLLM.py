@@ -118,9 +118,7 @@ class DocToolsLLM:
             original files have changed.
 
         --loadfrom str, default None
-            if not filetype argument is given, loadfrom will be set to the
-            same default value as saveas
-            For more, see --saveas
+            path to the file saved using --saveas
 
         --top_k int, default 3
             retrieval argument
@@ -164,9 +162,6 @@ class DocToolsLLM:
             assert "path" in kwargs, 'missing path arg for summarize_link_file'
             assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
             assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
-        if filetype and loadfrom:
-            filetype = None
-            loadfrom = str(embed_cache.parent / "latest_docs_and_embeddings")
         assert "/" not in embed_model, "embed model can't contain slash"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
