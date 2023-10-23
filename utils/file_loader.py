@@ -518,16 +518,21 @@ def load_doc(filetype, debug, task, **kwargs):
         for i in tqdm(range(len(index_list)), desc="combining anki cards"):
             text_concat = ""
             tags_concat = ""
+            skip = 0
             for w in range(0, window_size):
-                if i + window_size >= n:
-                    w = -w  # when at the end of the list, apply the window in reverse
-                if cards.loc[index_list[i+w], "text"] in cards.loc[index_list[i], "text_concat"]:
-                    red(f"Skipping card with cid {index_list[i]} because already in window (w={w})")
-                    continue
-                text_concat += "\n\n" + cards.at[index_list[i+w], "text"]
-                tags_concat += cards.at[index_list[i+w], "ntags_t"]
+                if i + window_size + skip >= n:
+                    s = -1  # when at the end of the list, apply the window in reverse
+                    # s for 'sign'
+                else:
+                    s = 1
+                if cards.at[index_list[i+w*s], "text"] in cards.at[index_list[i], "text_concat"]:
+                    # skipping this card because it's a duplicate
+                    skip += 1
+                text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
+                tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
             cards.at[index_list[i], "text_concat"] = text_concat
             cards.at[index_list[i], "tags_concat"] = tags_concat
+
         docs = []
         for cid in cards.index:
             c = cards.loc[cid, ]
