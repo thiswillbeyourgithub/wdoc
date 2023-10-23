@@ -796,7 +796,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     if any("stopwords" in d.metadata for d in docs):
         whi("Using diy embedding function that strips stopwords")
         results = Parallel(
-                n_jobs=1 if not debug else 3,
+                n_jobs=1 if debug else 3,
                 backend="threading",
                 )(delayed(get_embedding_stripping_stopwords
                           )(
