@@ -102,6 +102,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             kwargs["encode_kwargs"] = {}
         if "normalize_embeddings" not in kwargs["encode_kwargs"]:
             kwargs["encode_kwargs"]["normalize_embeddings"] = False
+        # kwargs["encode_kwargs"]["show_progress_bar"] = True
 
         super().__init__(*args, **kwargs)
         self.__do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
