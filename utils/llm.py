@@ -18,6 +18,7 @@ from langchain.embeddings import SentenceTransformerEmbeddings
 
 from .logger import whi, yel, red
 
+Path(".cache").mkdir(exist_ok=True)
 langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
