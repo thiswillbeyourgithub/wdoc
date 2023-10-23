@@ -813,27 +813,27 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 db.merge_from(temp)
     else:
 
-        embeddings_cache = Memory(lfs.root_path)
-
-        @embeddings_cache.cache
-        def _threaded_faiss_embeddings(doc, embed):
-            return FAISS.from_documents([doc], embed, normalize_L2=True)
-
+        embeddings_cache = Memory(lfs.root_path, verbose=0)
         t = time.time()
         whi(f"Creating FAISS index for {len(docs)} documents")
 
-        results = Parallel(
-                n_jobs=3 if not debug else 1,
-                backend="threading"
-                )(delayed(_threaded_faiss_embeddings)(
-                    doc=doc,
-                    embed=cached_embeddings,
-                    ) for doc in tqdm(docs, desc="Embedding documents"))
-        for i, temp in enumerate(results):
-            if not i:
-                db = temp
-            else:
-                db.merge_from(temp)
+        @embeddings_cache.cache(ignore=["doc", "embed"])
+        async def _threaded_faiss_embeddings(doc, embed, doc_hash):
+            return FAISS.from_documents([doc], embed, normalize_L2=True)
+
+        results = []
+        for doc in tqdm(docs, desc="Embedding documents"):
+            results.append(
+                    _threaded_faiss_embeddings(
+                        doc=doc,
+                        embed=cached_embeddings,
+                        doc_hash=doc.metadata["hash"],
+                        )
+                    )
+
+        db = results[0]
+        for temp in results[1:]:
+            db.merge_from(temp)
 
         whi(f"Done creating index in {time.time()-t:.2f}s")
 
