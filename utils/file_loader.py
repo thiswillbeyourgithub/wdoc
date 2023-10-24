@@ -1,3 +1,4 @@
+import copy
 import pdb
 import time
 import tempfile
@@ -737,7 +738,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 model_name=embed_model,
                 encode_kwargs={
                     "batch_size": 1,
-                    "show_progress_bar": False,
+                    "show_progress_bar": True,
                     "normalize_embeddings": True,
                     },
                 )
@@ -748,12 +749,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
-    cached_embeddings = embeddings
-    # cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-    #         embeddings,
-    #         lfs,
-    #         namespace=embed_model,
-    #         )
+    # cached_embeddings = embeddings
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
+            embeddings,
+            lfs,
+            namespace=embed_model,
+            )
 
     # reload passed embeddings
     if loadfrom:
@@ -813,27 +814,55 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 db.merge_from(temp)
     else:
 
-        embeddings_cache = Memory(lfs.root_path, verbose=0)
+        embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
         t = time.time()
         whi(f"Creating FAISS index for {len(docs)} documents")
 
-        @embeddings_cache.cache(ignore=["doc", "embed"])
-        async def _threaded_faiss_embeddings(doc, embed, doc_hash):
-            return FAISS.from_documents([doc], embed, normalize_L2=True)
+        in_cache = [p for p in embeddings_cache.iterdir()]
+        whi(f"Found {len(in_cache)} embeddings in cache")
+        db = None
+        to_embed = []
 
-        results = []
-        for doc in tqdm(docs, desc="Embedding documents"):
-            results.append(
-                    _threaded_faiss_embeddings(
-                        doc=doc,
-                        embed=cached_embeddings,
-                        doc_hash=doc.metadata["hash"],
+        # load previous faiss index from cache
+        for doc in tqdm(docs, desc="Loading embeddings from cache"):
+            fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
+            if fi.exists():
+                temp = FAISS.load_local(fi, cached_embeddings)
+                if not db and temp:
+                    db = temp
+                else:
+                    try:
+                        db.merge_from(temp)
+                    except Exception as err:
+                        red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
+                        fi.unlink()
+            else:
+                to_embed.append(doc)
+
+        whi(f"Docs left to embed: {len(to_embed)}")
+        # create a faiss index for batch of documents, then save them
+        # as 1 document faiss index to cache
+        if to_embed:
+            batch_size = 1000
+            batches = [
+                    [i * batch_size, (i + 1) * batch_size]
+                    for i in range(len(to_embed) // batch_size + 1)
+                    ]
+            for batch in tqdm(batches, desc="Embedding by batch"):
+                temp = FAISS.from_documents(
+                        to_embed[batch[0]:batch[1]],
+                        cached_embeddings,
+                        normalize_L2=True
                         )
-                    )
 
-        db = results[0]
-        for temp in results[1:]:
-            db.merge_from(temp)
+                recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0)
+                if not db:
+                    db = temp
+                else:
+                    db.merge_from(temp)
+
+        # to get vectors from a faiss index
+        # vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(to_embed) * temp.index.d).reshape(len(to_embed), temp.index.d)
 
         whi(f"Done creating index in {time.time()-t:.2f}s")
 
@@ -842,6 +871,53 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
         db.save_local(saveas)
 
     return db, cached_embeddings
+
+def recursive_faiss_saver(index, documents, path, depth):
+    """split the faiss index by hand into 1 docstore index and save
+    it to cache. To split it, as the copy.deepcopy is long we
+    use a recursive call to only copy fewer times the full index"""
+    doc_ids = [k for k in index.docstore._dict.keys()]
+    assert doc_ids, "unexpected empty doc_ids"
+    n = 10
+    le = len(doc_ids)
+    nn = len(doc_ids) // n
+    if depth:
+        spacer = " " * depth * 2
+    else:
+        spacer = ""
+    info = f"(n={n}, nn={nn}, le={le}, d={depth})"
+    if nn > n:  # more than 1 order of magnitude
+        for i in range(len(doc_ids) // nn + 1):
+            whi(f"{spacer}Creating larger subindex #{i} {info}")
+            sub_index = copy.deepcopy(index)
+            sub_docids = doc_ids[i * nn: (i + 1) * nn]
+            to_del = [d for d in doc_ids if d not in sub_docids]
+            if not to_del or not sub_docids:
+                continue
+            sub_index.delete(to_del)
+            recursive_faiss_saver(sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1)
+
+    elif len(doc_ids) > n:
+        for i in range(len(doc_ids) // n + 1):
+            whi(f"{spacer}Creating subindex #{i} {info}")
+            sub_index = copy.deepcopy(index)
+            sub_docids = doc_ids[i * n: (i + 1) * n]
+            to_del = [d for d in doc_ids if d not in sub_docids]
+            if not to_del or not sub_docids:
+                continue
+            sub_index.delete(to_del)
+            recursive_faiss_saver(sub_index, documents[i * n:(i + 1) * n], path, depth + 1)
+
+    else:
+        red(f"{spacer}{info}")
+        for i, did in enumerate(doc_ids):
+            whi(f"{spacer}Saving {documents[i].metadata['hash']}.faiss_index {info}")
+            sub_index = copy.deepcopy(index)
+            to_del = [d for d in doc_ids if d != did]
+            if not to_del:
+                continue
+            sub_index.delete(to_del)
+            sub_index.save_local(path / str(documents[i].metadata["hash"] + ".faiss_index"))
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
