@@ -909,7 +909,6 @@ def recursive_faiss_saver(index, documents, path, depth):
             recursive_faiss_saver(sub_index, documents[i * n:(i + 1) * n], path, depth + 1)
 
     else:
-        red(f"{spacer}{info}")
         for i, did in enumerate(doc_ids):
             whi(f"{spacer}Saving {documents[i].metadata['hash']}.faiss_index {info}")
             sub_index = copy.deepcopy(index)
