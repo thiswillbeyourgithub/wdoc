@@ -1,3 +1,4 @@
+import threading
 import copy
 import pdb
 import time
@@ -882,6 +883,7 @@ def recursive_faiss_saver(index, documents, path, depth, pbar):
     doc_ids = [k for k in index.docstore._dict.keys()]
     assert doc_ids, "unexpected empty doc_ids"
     n = 10
+    threads = []
     le = len(doc_ids)
     nn = len(doc_ids) // n
     if depth:
@@ -898,7 +900,10 @@ def recursive_faiss_saver(index, documents, path, depth, pbar):
             if not to_del or not sub_docids:
                 continue
             sub_index.delete(to_del)
-            recursive_faiss_saver(sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1, pbar)
+            threads.extend(
+                    recursive_faiss_saver(
+                        sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1, pbar)
+                    )
 
     elif len(doc_ids) > n:
         for i in range(len(doc_ids) // n + 1):
@@ -909,19 +914,34 @@ def recursive_faiss_saver(index, documents, path, depth, pbar):
             if not to_del or not sub_docids:
                 continue
             sub_index.delete(to_del)
-            recursive_faiss_saver(sub_index, documents[i * n:(i + 1) * n], path, depth + 1, pbar)
-
+            threads.extend(
+                    recursive_faiss_saver(
+                        sub_index, documents[i * n:(i + 1) * n], path, depth + 1, pbar)
+                    )
+            while sum([t.is_alive() for t in threads]) > 3 * n:
+                time.sleep(0.1)
     else:
         for i, did in enumerate(doc_ids):
             whi(f"{spacer}Saving {documents[i].metadata['hash']}.faiss_index {info}")
-            sub_index = copy.deepcopy(index)
             to_del = [d for d in doc_ids if d != did]
             if not to_del:
                 continue
-            assert not (path / str(documents[i].metadata["hash"] + ".faiss_index")).exists(), "cache file already exists!"
-            sub_index.delete(to_del)
-            sub_index.save_local(path / str(documents[i].metadata["hash"] + ".faiss_index"))
-            pbar.update(1)
+            file = (path / str(documents[i].metadata["hash"] + ".faiss_index"))
+            assert not file.exists(), "cache file already exists!"
+            thread = threading.Thread(
+                    target=save_one_index,
+                    args=(copy.deepcopy(index), to_del, file, pbar),
+                    )
+            thread.start()
+            threads.append(thread)
+        return threads
+    [t.join() for t in threads]
+    return []
+
+def save_one_index(index, to_del, file, pbar):
+    index.delete(to_del)
+    index.save_local(file)
+    pbar.update(1)
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
