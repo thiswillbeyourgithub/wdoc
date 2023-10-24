@@ -835,7 +835,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                         db.merge_from(temp)
                     except Exception as err:
                         red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                        fi.unlink()
+                        [p.unlink() for p in fi.iterdir()]
+                        fi.rmdir()
             else:
                 to_embed.append(doc)
 
