@@ -857,6 +857,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                         )
 
                 recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0)
+
                 if not db:
                     db = temp
                 else:
@@ -916,6 +917,7 @@ def recursive_faiss_saver(index, documents, path, depth):
             to_del = [d for d in doc_ids if d != did]
             if not to_del:
                 continue
+            assert not (path / str(documents[i].metadata["hash"] + ".faiss_index")).exists(), "cache file already exists!"
             sub_index.delete(to_del)
             sub_index.save_local(path / str(documents[i].metadata["hash"] + ".faiss_index"))
 
