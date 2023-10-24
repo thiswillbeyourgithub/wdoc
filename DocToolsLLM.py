@@ -731,13 +731,16 @@ class DocToolsLLM:
 
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
+                    keys = doc.metadata.keys()
                     for toprint in [
                             "filetype", "path", "nid", "anki_deck", "anki_tags"]:
-                        if toprint in doc.metadata:
+                        if toprint in keys:
                             val = doc.metadata[toprint]
-                            if toprint == "ntags":
-                                val = ",".join(val)
                             yel(f"    * {toprint}: {val}")
+
+                    toignore = [k for k in keys if k not in toprint]
+                    whi(f"Metadata not printed: '{','.join(toignore)}'")
+
                     content = doc.page_content.strip()
                     wrapped = "\n".join(textwrap.wrap(content, width=120))
                     whi("    * content:")
