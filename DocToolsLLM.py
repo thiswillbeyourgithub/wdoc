@@ -732,17 +732,16 @@ class DocToolsLLM:
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
                     for toprint in [
-                            "filetype", "path", "nid", "anki_deck", "ntags"]:
+                            "filetype", "path", "nid", "anki_deck", "anki_tags"]:
                         if toprint in doc.metadata:
                             val = doc.metadata[toprint]
                             if toprint == "ntags":
                                 val = ",".join(val)
                             yel(f"    * {toprint}: {val}")
                     content = doc.page_content.strip()
-                    wrapped = textwrap.wrap(content, width=120)
-                    whi(f"    * content: {wrapped[0]}")
-                    for w in wrapped[1:]:
-                        whi(f"        {w}")
+                    wrapped = "\n".join(textwrap.wrap(content, width=120))
+                    whi("    * content:")
+                    whi(f"{wrapped:>10}")
                     print("\n\n")
 
                 red(f"Answer:\n{ans['answer']}\n")
