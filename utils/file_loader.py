@@ -856,7 +856,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                         normalize_L2=True
                         )
 
-                recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0)
+                pbar = tqdm(total=len(to_embed), desc="Saving to cache")
+                recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
 
                 if not db:
                     db = temp
@@ -874,7 +875,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
 
     return db, cached_embeddings
 
-def recursive_faiss_saver(index, documents, path, depth):
+def recursive_faiss_saver(index, documents, path, depth, pbar):
     """split the faiss index by hand into 1 docstore index and save
     it to cache. To split it, as the copy.deepcopy is long we
     use a recursive call to only copy fewer times the full index"""
@@ -897,7 +898,7 @@ def recursive_faiss_saver(index, documents, path, depth):
             if not to_del or not sub_docids:
                 continue
             sub_index.delete(to_del)
-            recursive_faiss_saver(sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1)
+            recursive_faiss_saver(sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1, pbar)
 
     elif len(doc_ids) > n:
         for i in range(len(doc_ids) // n + 1):
@@ -908,7 +909,7 @@ def recursive_faiss_saver(index, documents, path, depth):
             if not to_del or not sub_docids:
                 continue
             sub_index.delete(to_del)
-            recursive_faiss_saver(sub_index, documents[i * n:(i + 1) * n], path, depth + 1)
+            recursive_faiss_saver(sub_index, documents[i * n:(i + 1) * n], path, depth + 1, pbar)
 
     else:
         for i, did in enumerate(doc_ids):
@@ -920,6 +921,7 @@ def recursive_faiss_saver(index, documents, path, depth):
             assert not (path / str(documents[i].metadata["hash"] + ".faiss_index")).exists(), "cache file already exists!"
             sub_index.delete(to_del)
             sub_index.save_local(path / str(documents[i].metadata["hash"] + ".faiss_index"))
+            pbar.update(1)
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
