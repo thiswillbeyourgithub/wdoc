@@ -237,6 +237,17 @@ class DocToolsLLM:
                     debug=self.debug,
                     task=self.task,
                     **self.kwargs)
+            hashes = [d.metadata["hash"] for d in self.loaded_docs]
+            if len(set(hashes)) != len(hashes):
+                red("Found duplicate hashes after loading documents:")
+                for i, doc in enumerate(self.loaded_docs):
+                    n = hashes.count(doc.metadata["hash"])
+                    while n > 1:
+                        red(f"  * Removed #{i}: {doc}")
+                        self.loaded_docs[i] = None
+                        n -= 1
+                self.loaded_docs = [d for d in self.loaded_docs if d is not None]
+
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
