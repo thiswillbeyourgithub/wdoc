@@ -67,7 +67,7 @@ for k, v in inference_rules.items():
         inference_rules[k] = []
 
 # for reading length estimation
-wpm = 200
+wpm = 250
 average_word_length = 6
 
 charac_regex = re.compile(r"[^\w\s]")  # for removing stopwords
