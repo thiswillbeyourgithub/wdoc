@@ -453,7 +453,7 @@ class DocToolsLLM:
                     splitter = get_splitter(self.task)
                     summary_text = summary
                     if metadata:
-                        metadata = metadata.strip() + "\n\t- is summary: True"
+                        metadata = metadata.strip() + "\n\t- New task: enhance this summary while respecting the rules\n"
                     for n_recur in range(self.n_recursive_summary):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
 
