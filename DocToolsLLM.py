@@ -11,6 +11,7 @@ from tqdm import tqdm
 import signal
 import pdb
 from nltk.corpus import stopwords
+from ftlangdetect import detect as language_detect
 
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import LLMChain
@@ -413,6 +414,19 @@ class DocToolsLLM:
                 else:
                     author = None
 
+                # detect language
+                lang_info = language_detect(relevant_docs[0].page_content)
+                if lang_info["score"] >= 0.8:
+                    lang = lang_info['lang']
+                    if lang == "fr":
+                        lang = "French"
+                    elif lang == "en":
+                        lang = "English"
+                    metadata.append(f"Language: {lang}")
+                else:
+                    lang = None
+                    red(f"Language detection failed: '{lang_info}'")
+
                 if metadata:
                     metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
                     metadata += "\t- Section number: [PROGRESS]\n"
@@ -504,6 +518,8 @@ class DocToolsLLM:
                             header += f"\n\tchunks:: {n_chunk}"
                         if author:
                             header += f"\n\tauthor:: {author}"
+                        if lang:
+                            header += f"\n\tlanguage:: {lang}"
 
                     else:
                         header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"

@@ -10,3 +10,4 @@ prompt-toolkit>=3.0.28
 requests>=2.25.1
 tiktoken>=0.3.3
 tqdm>=4.57.0
+fasttext-langdetect>=1.0.5
