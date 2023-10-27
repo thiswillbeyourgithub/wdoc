@@ -14,7 +14,7 @@ summary_rules = indent(dedent("""
 \t\t- When summarizing a summary, be careful to FOLLOW THE RULES and to deduplicate lines.
 \t\t- Quotations are allowed.
 \t\t- Make it quicker to read by showing emphasis (using bold format, e.g. **this is important**).
-\t\t- Write your summary IN THE SAME LANGUAGE as the input text.
+\t\t- Write your summary in same language of the text, don't translate.
 \t\t- Keep the style and tone of the input text.
 \t\t- Keep sentences short and simple, but don't get rid of details.
 \t\t- Example of summary: the US president's daily staff memo, also those rules.
