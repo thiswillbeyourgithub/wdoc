@@ -425,6 +425,7 @@ class DocToolsLLM:
                     metadata.append(f"Language: {lang}")
                 else:
                     lang = None
+                    metadata.append("Language: assume english")
                     red(f"Language detection failed: '{lang_info}'")
 
                 if metadata:
