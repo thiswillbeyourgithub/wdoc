@@ -11,7 +11,6 @@ summary_rules = indent(dedent("""
 \t- On the format
 \t\t- Use as many bullet points as you need.
 \t\t- The top level bullet points have to follow the order they appear in the text.
-\t\t- When summarizing a summary, be careful to FOLLOW THE RULES and to deduplicate lines.
 \t\t- Quotations are allowed.
 \t\t- Make it quicker to read by showing emphasis (using bold format, e.g. **this is important**).
 \t\t- Write your summary in same language of the text, don't translate.
