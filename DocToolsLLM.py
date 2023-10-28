@@ -415,7 +415,7 @@ class DocToolsLLM:
                     author = None
 
                 # detect language
-                lang_info = language_detect(relevant_docs[0].page_content)
+                lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
                 if lang_info["score"] >= 0.8:
                     lang = lang_info['lang']
                     if lang == "fr":
