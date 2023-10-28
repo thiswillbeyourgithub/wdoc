@@ -422,10 +422,10 @@ class DocToolsLLM:
                         lang = "French"
                     elif lang == "en":
                         lang = "English"
-                    metadata.append(f"Language: {lang}")
+                    metadata.append(f"Target language: {lang}")
                 else:
                     lang = None
-                    metadata.append("Language: assume english")
+                    metadata.append("Target language: English")
                     red(f"Language detection failed: '{lang_info}'")
 
                 if metadata:
