@@ -819,6 +819,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     else:
 
         embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
+        embeddings_cache.mkdir(exist_ok=True)
         t = time.time()
         whi(f"Creating FAISS index for {len(docs)} documents")
 
