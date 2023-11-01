@@ -9,15 +9,10 @@ summary_rules = indent(dedent("""
 \t\t\t- sponsors, advertisements, etc.
 \t\t- When in doubt, keep the information in your summary.
 \t- On the format
-\t\t- Use as many bullet points as you need.
-\t\t- The top level bullet points have to follow the order they appear in the text.
-\t\t- Quotations are allowed.
-\t\t- Make it quicker to read by showing emphasis (using bold format, e.g. **this is important**).
-\t\t- Write your summary in the target language.
-\t\t- Keep the style and tone of the input text.
-\t\t- Keep sentences short and simple, but don't get rid of details.
-\t\t- Example of summary: the US president's daily staff memo, also those rules.
-\t\t- Avoid redundancies / repetitions, especially for sentence subjects. (E.g. don't begin several bullet points by 'The author says that', just use smart indentation to make it obvious.)
+\t\t- Reformulate direct quotes to be concise whilst keeping the idea and tone of the author.
+\t\t- Highlight keywords using bold: e.g. **keyword**.
+\t\t- DON'T TRANSLATE, use the target language.
+\t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied.
 """.strip()), "\t")
 
 # template to summarize
