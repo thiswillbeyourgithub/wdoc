@@ -492,18 +492,19 @@ def load_doc(filetype, debug, task, **kwargs):
 
         cards = cards.sort_index()
 
-        # # load each card as a single document
-        # docs = []
-        # for cid in cards.index:
-        #     c = cards.loc[cid, :]
-        #     docs.append(
-        #             Document(
-        #                 page_content=c["text"],
-        #                 metadata={
-        #                     "anki_tags": " ".join(c["ntags"]),
-        #                     }
-        #                 )
-        #             )
+        docs = []
+
+        # load each card as a single document
+        for cid in cards.index:
+            c = cards.loc[cid, :]
+            docs.append(
+                    Document(
+                        page_content=c["text"],
+                        metadata={
+                            "anki_tags": " ".join(c["ntags"]),
+                            }
+                        )
+                    )
 
         # turn all cards into a single wall of text then use text_splitter
         # pro: fill the context window as much I possible I guess
@@ -511,7 +512,7 @@ def load_doc(filetype, debug, task, **kwargs):
         #      - ignores tags
         # full_df = "\n\n\n\n".join(cards["text"].tolist())
         # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
-        # docs = [Document(page_content=t) for t in texts]
+        # docs.extend([Document(page_content=t) for t in texts])
 
         # set window_size to X turn each X cards into one document, overlapping
         window_size = 5
@@ -538,7 +539,6 @@ def load_doc(filetype, debug, task, **kwargs):
             cards.at[index_list[i], "text_concat"] = text_concat
             cards.at[index_list[i], "tags_concat"] = tags_concat
 
-        docs = []
         for cid in cards.index:
             c = cards.loc[cid, ]
             docs.append(
