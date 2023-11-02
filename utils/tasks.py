@@ -45,6 +45,7 @@ chatgpt_summary_messages = ChatPromptTemplate.from_messages(
 def do_summarize(
         docs,
         metadata,
+        language,
         model,
         llm,
         callback,
@@ -75,7 +76,7 @@ def do_summarize(
                     {
                         "input_documents": [rd],
                         "metadata": metadata.replace("[PROGRESS]", fixed_index),
-                        "rules": summary_rules,
+                        "rules": summary_rules.replace("LANGUAGE", language),
                         "previous_summary": previous_summary,
                         },
                     return_only_outputs=False,

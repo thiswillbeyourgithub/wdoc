@@ -9,9 +9,9 @@ summary_rules = indent(dedent("""
 \t\t\t- sponsors, advertisements, etc.
 \t\t- When in doubt, keep the information in your summary.
 \t- On the format
+\t\t- Write in LANGUAGE.
 \t\t- Reformulate direct quotes to be concise whilst keeping the idea and tone of the author.
 \t\t- Highlight keywords using bold: e.g. **keyword**.
-\t\t- DON'T TRANSLATE, use the target language.
 \t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied.
 """.strip()), "\t")
 

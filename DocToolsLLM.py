@@ -419,13 +419,11 @@ class DocToolsLLM:
                 if lang_info["score"] >= 0.8:
                     lang = lang_info['lang']
                     if lang == "fr":
-                        lang = "French"
-                    elif lang == "en":
-                        lang = "English"
-                    metadata.append(f"Target language: {lang}")
+                        lang = "FRENCH"
+                    else:  # prefer english to anything other than french
+                        lang = "ENGLISH"
                 else:
-                    lang = None
-                    metadata.append("Target language: English")
+                    lang = "ENGLISH"
                     red(f"Language detection failed: '{lang_info}'")
 
                 if metadata:
@@ -438,6 +436,7 @@ class DocToolsLLM:
                 summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                         docs=relevant_docs,
                         metadata=metadata,
+                        language=lang,
                         model=self.model,
                         llm=self.llm,
                         callback=self.callback,
@@ -476,6 +475,7 @@ class DocToolsLLM:
                         summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                                 docs=summary_docs,
                                 metadata=metadata,
+                                language=lang,
                                 model=self.model,
                                 llm=self.llm,
                                 callback=self.callback,
