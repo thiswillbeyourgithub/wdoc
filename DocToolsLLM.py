@@ -53,7 +53,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=3,
-            n_recursive_summary=2,
+            n_recursive_summary=3,
             n_summaries_target=-1,
 
             debug=False,
