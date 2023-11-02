@@ -16,7 +16,7 @@ summary_rules = indent(dedent("""
 """.strip()), "\t")
 
 # template to summarize
-system_summary_template = dedent("""You are my best assistant. I give you a text, section by section and you reply a summary of each section so that I can concatenate them afterwards. I'm not actually interested in the high level take aways, what I want is to know the thought process of the authors, what their arguments were etc. To that end I wrote you very specific SUMMARY RULES below. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
+system_summary_template = dedent("""You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
 
 - SUMMARY RULES
 {rules}
