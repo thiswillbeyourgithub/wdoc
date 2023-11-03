@@ -17,7 +17,7 @@ import re
 from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
-from joblib import Parallel, delayed, Memory
+from joblib import Parallel, delayed
 import tiktoken
 
 from langchain.embeddings import SentenceTransformerEmbeddings
