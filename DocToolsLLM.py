@@ -41,7 +41,7 @@ class DocToolsLLM:
             self,
             model="openai",
             task="query",
-            filetype=None,
+            filetype="infer",
             local_llm_path=None,
             # embed_model="openai",
             embed_model = "paraphrase-multilingual-mpnet-base-v2",
@@ -73,7 +73,7 @@ class DocToolsLLM:
                 * summary_then_query
                 * summarize_link_file takes in --filetype must be link_file
 
-        --filetype str, default None
+        --filetype str, default infer
             the type of input. Depending on the value, different other parameters
             are needed. If json_list is used, the line of the input file can contain
             any of those parameters as long as they are as json. You can find
@@ -152,8 +152,7 @@ class DocToolsLLM:
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         assert task in ["query", "summary", "summary_then_query", "summarize_link_file"], "invalid task value"
-        if not loadfrom:
-            assert filetype is not None, "filetype can't be None except if loadfrom is set"
+        assert isinstance(filetype, str), "filetype must be a string"
         if task in ["summary", "summary_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         assert (task == "summarize_link_file" and filetype == "link_file"
