@@ -106,6 +106,7 @@ def do_summarize(
         if not s.replace("-", " ").strip():
             continue
         if not any(char.isalpha() for char in s):
-            raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
+            red(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
+            # raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
 
     return outtext, n, cb.total_tokens, cb.total_cost
