@@ -507,39 +507,39 @@ class DocToolsLLM:
 
                     red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
+                if "out_file_logseq_mode" in self.kwargs:
+                    header = f"\n- TODO {item_name}"
+                    header += "\n\tcollapsed:: true"
+                    header += "\n\tblock_type:: DocToolsLLM_summary"
+                    header += f"\n\tDocToolsLLM_version:: {self.VERSION}"
+                    header += f"\n\tDocToolsLLM_model:: {self.model}"
+                    header += f"\n\tDocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+                    header += f"\n\tsummary_date:: {today}"
+                    header += f"\n\tsummary_timestamp:: {int(time.time())}"
+                    header += f"\n\ttoken_cost:: {doc_total_tokens}"
+                    header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
+                    header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
+                    if doc_reading_length:
+                        header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
+                        header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
+                    if n_chunk > 1:
+                        header += f"\n\tchunks:: {n_chunk}"
+                    if author:
+                        header += f"\n\tauthor:: {author}"
+                    if lang:
+                        header += f"\n\tlanguage:: {lang}"
+
+                else:
+                    header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
+                    if doc_reading_length:
+                        header += f"    {doc_reading_length:.1f} minutes"
+                    if author:
+                        header += f"    by '{author}'"
+                    header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
+                    header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+
+                # save to output file
                 if "out_file" in self.kwargs:
-                    if "out_file_logseq_mode" in self.kwargs:
-                        header = f"\n- TODO {item_name}"
-                        header += "\n\tcollapsed:: true"
-                        header += "\n\tblock_type:: DocToolsLLM_summary"
-                        header += f"\n\tDocToolsLLM_version:: {self.VERSION}"
-                        header += f"\n\tDocToolsLLM_model:: {self.model}"
-                        header += f"\n\tDocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-                        header += f"\n\tsummary_date:: {today}"
-                        header += f"\n\tsummary_timestamp:: {int(time.time())}"
-                        header += f"\n\ttoken_cost:: {doc_total_tokens}"
-                        header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
-                        header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
-                        if doc_reading_length:
-                            header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
-                            header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
-                        if n_chunk > 1:
-                            header += f"\n\tchunks:: {n_chunk}"
-                        if author:
-                            header += f"\n\tauthor:: {author}"
-                        if lang:
-                            header += f"\n\tlanguage:: {lang}"
-
-                    else:
-                        header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
-                        if doc_reading_length:
-                            header += f"    {doc_reading_length:.1f} minutes"
-                        if author:
-                            header += f"    by '{author}'"
-                        header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
-                        header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-
-                    # save to output file
                     with lock:
                         with open(self.kwargs["out_file"], "a") as f:
                             f.write(header)
