@@ -69,8 +69,8 @@ class DocToolsLLM:
         --task str, default query
             possibilities:
                 * query means to load the input files then wait for user question.
-                * summary means the input will be passed through a summarization prompt.
-                * summary_then_query
+                * summarize means the input will be passed through a summarization prompt.
+                * summarize_then_query
                 * summarize_link_file takes in --filetype must be link_file
 
         --filetype str, default infer
@@ -154,9 +154,9 @@ class DocToolsLLM:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
-        assert task in ["query", "summary", "summary_then_query", "summarize_link_file"], "invalid task value"
+        assert task in ["query", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         assert isinstance(filetype, str), "filetype must be a string"
-        if task in ["summary", "summary_then_query"]:
+        if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         assert (task == "summarize_link_file" and filetype == "link_file"
                 ) or (task != "summarize_link_file" and filetype != "link_file"
@@ -266,7 +266,7 @@ class DocToolsLLM:
     def process_task(self):
         red(f"\nProcessing task '{self.task}'")
 
-        if self.task in ["summarize_link_file", "summary", "summary_then_query"]:
+        if self.task in ["summarize_link_file", "summarize", "summarize_then_query"]:
             # storing links in dict instead of set to keep the original ordering
             links_todo = {}
             already_done = {}
@@ -618,7 +618,7 @@ class DocToolsLLM:
                 self.loaded_docs,
                 self.kwargs)
 
-        assert self.task in ["query", "summary_then_query"]
+        assert self.task in ["query", "summarize_then_query"]
 
         # set default ask_user argument
         multiline = False
