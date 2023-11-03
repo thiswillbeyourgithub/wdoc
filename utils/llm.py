@@ -1,3 +1,4 @@
+import time
 import os
 from pathlib import Path
 from typing import Dict, Any
@@ -15,6 +16,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.cache import SQLiteCache
 from langchain.memory import ConversationBufferMemory
 from langchain.embeddings import SentenceTransformerEmbeddings
+
+import openai
 
 from .logger import whi, yel, red
 
@@ -230,3 +233,23 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             vectors = vectors.tolist()
         assert isinstance(vectors, t), "wrong type?"
         return vectors
+
+def transcribe(audio_path, audio_hash, language, prompt):
+    red(f"Calling whisper to transcribe file {audio_path}")
+
+    assert Path("API_KEY.txt").exists(), "No api key found"
+    os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+    t = time.time()
+    with open(audio_path, "rb") as audio_file:
+        transcript = openai.Audio.transcribe(
+            model="whisper-1",
+            file=audio_file,
+            prompt=prompt,
+            language=language,
+            temperature=0,
+            response_format="verbose_json",
+            )
+    whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
+    return transcript

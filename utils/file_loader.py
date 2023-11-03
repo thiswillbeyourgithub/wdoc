@@ -40,7 +40,7 @@ from langchain.embeddings import CacheBackedEmbeddings
 
 from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
 from .logger import whi, yel, red, log
-from .llm import RollingWindowEmbeddings
+from .llm import RollingWindowEmbeddings, transcribe
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -55,6 +55,7 @@ inference_rules = {
         "online_pdf": ["^http.*pdf.*"],
         "pdf": [".*pdf$"],
         "url": ["^http"],
+        "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
         }
 
 # compile the inference rules as regex
@@ -579,6 +580,42 @@ def load_doc(filetype, debug, task, **kwargs):
             content = f.read()
         texts = text_splitter.split_text(content)
         docs = [Document(page_content=t) for t in texts]
+        check_docs_tkn_length(docs, path)
+
+    elif filetype == "local_audio":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        assert Path(path).exists(), f"file not found: '{path}'"
+        cache_transcribe = loaddoc_cache.cache(transcribe, ignore=["audio_path"])
+        assert "whisper_lang" in kwargs, (
+            f"No whisper_lang argument found in kwargs but is needed "
+            f"to transcribe '{path}'")
+        assert "whisper_prompt" in kwargs, (
+            f"No whisper_prompt argument found in kwargs but is needed "
+            f"to transcribe '{path}'")
+
+        # get audio hash
+        with open(path, "rb") as f:
+            audio_hash = hasher(str(f.read()))
+
+        content = cache_transcribe(
+                audio_path=path,
+                audio_hash=audio_hash,
+                language=kwargs["whisper_lang"],
+                prompt=kwargs["whisper_prompt"],
+                )
+        metadata = {
+                "duration": content["duration"],
+                "language": content["language"],
+                "whisper_task": content["task"],
+                "source": path,
+                }
+        texts = text_splitter.split_text(content["text"])
+        docs = [
+                Document(
+                    page_content=t,
+                    metadata=metadata)
+                for t in texts]
         check_docs_tkn_length(docs, path)
 
     elif filetype == "url":
