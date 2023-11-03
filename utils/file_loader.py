@@ -59,12 +59,8 @@ inference_rules = {
 
 # compile the inference rules as regex
 for k, v in inference_rules.items():
-    try:
-        for i, vv in enumerate(v):
-            inference_rules[k][i] = re.compile(vv)
-    except Exception as err:
-        red(f"Exception when compiling inference_rules: '{err}' Disabling '{k}' inferences.")
-        inference_rules[k] = []
+    for i, vv in enumerate(v):
+        inference_rules[k][i] = re.compile(vv)
 
 # for reading length estimation
 wpm = 250
