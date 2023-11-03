@@ -15,7 +15,11 @@ embed_cache = Path(".cache/embed_cache/")
 loaddoc_cache = Memory(".cache/loaddoc_cache/")
 
 # remove cache files older than 90 days
-loaddoc_cache.reduce_size(age_limit=timedelta(90))
+try:
+    loaddoc_cache.reduce_size(age_limit=timedelta(90))
+except Exception as err:
+    red(f"Error when reducing cache size: '{err}'")
+
 
 
 def hasher(text):
