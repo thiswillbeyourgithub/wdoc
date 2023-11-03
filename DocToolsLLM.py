@@ -166,13 +166,14 @@ class DocToolsLLM:
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
         for k in kwargs:
-            assert k in [
+            if k not in [
                     "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
                     "out_check_file",
-                    ], f"Unexpected keyword argument: '{k}'"
+                    ]:
+                red(f"Found unexpected keyword argument: '{k}'")
 
         if filetype == "string":
             top_k = 1
