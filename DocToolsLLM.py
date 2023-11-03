@@ -52,7 +52,7 @@ class DocToolsLLM:
             saveas=".cache/latest_docs_and_embeddings",
             loadfrom=None,
 
-            top_k=3,
+            top_k=10,
             n_recursive_summary=3,
             n_summaries_target=-1,
 
@@ -124,8 +124,8 @@ class DocToolsLLM:
         --loadfrom str, default None
             path to the file saved using --saveas
 
-        --top_k int, default 3
-            retrieval argument
+        --top_k int, default 10
+            number of chunks to look for when querying
 
         --n_recursive_summary int, default 2
             will always recursively summarize
