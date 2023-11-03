@@ -604,17 +604,17 @@ def load_doc(filetype, debug, task, **kwargs):
                 language=kwargs["whisper_lang"],
                 prompt=kwargs["whisper_prompt"],
                 )
-        metadata = {
-                "duration": content["duration"],
-                "language": content["language"],
-                "whisper_task": content["task"],
-                "source": path,
-                }
         texts = text_splitter.split_text(content["text"])
         docs = [
                 Document(
                     page_content=t,
-                    metadata=metadata)
+                    metadata={
+                        "duration": content["duration"],
+                        "language": content["language"],
+                        "whisper_task": content["task"],
+                        "source": path,
+                        },
+                    )
                 for t in texts]
         check_docs_tkn_length(docs, path)
 
@@ -754,7 +754,6 @@ def load_doc(filetype, debug, task, **kwargs):
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
     assert docs, "empty list of loaded documents after removing empty docs!"
-
     return docs
 
 
