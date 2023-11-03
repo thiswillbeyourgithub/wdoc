@@ -242,6 +242,10 @@ class DocToolsLLM:
                     debug=self.debug,
                     task=self.task,
                     **self.kwargs)
+            if len(self.loaded_docs) > 1:
+                assert id(self.loaded_docs[0].metadata) != id(self.loaded_docs[-1].metadata), (
+                        "Same metadata object is used to store information on "
+                        "multiple documents!")
             hashes = [d.metadata["hash"] for d in self.loaded_docs]
             if len(set(hashes)) != len(hashes):
                 red("Found duplicate hashes after loading documents:")
