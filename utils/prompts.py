@@ -9,6 +9,7 @@ summary_rules = indent(dedent("""
 \t\t\t- sponsors, advertisements, etc.
 \t\t- When in doubt, keep the information in your summary.
 \t- On the format
+\t\t- Use ONE bullet point per sentence. Use indentation to make it easily readable.
 \t\t- Write in LANGUAGE.
 \t\t- Reformulate direct quotes to be concise whilst keeping the idea and tone of the author.
 \t\t- Highlight keywords using bold: e.g. **keyword**.
