@@ -88,7 +88,22 @@ def do_summarize(
             if metadata:
                 previous_summary = "\n\n" + previous_summary
 
-    # combine summaries as one string
+    # for each summary, remove any empty lines:
+    for i, s in enumerate(summaries):
+        splits = s.split("\n")
+        new_sum = "\n".join(
+                [ss.strip()
+                 for ss in splits
+                 if any(char.isalpha() for char in ss)
+                 ]
+                ).strip()
+        if new_sum:
+            summaries[i] = new_sum
+        else:
+            summaries[i] = None
+    summaries = [s for s in summaries if s]
+
+    # combine summaries as one string separated by markdown separator
     n = len(summaries)
     if n > 1:
         outtext = f"- Chunk 1/{n}\n"
@@ -99,14 +114,4 @@ def do_summarize(
     else:
         outtext = "\n".join(summaries)
 
-    # check if some line is only made of repeated character
-    for i, s in enumerate(outtext.split("\n")):
-        if s == "- ---":
-            continue
-        if not s.replace("-", " ").strip():
-            continue
-        if not any(char.isalpha() for char in s):
-            red(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
-            # raise Exception(f"One line was only made of repeated characters?:\n'''\n{s}\n'''\nsummary:\n'''\n{outtext}\n'''")
-
-    return outtext, n, cb.total_tokens, cb.total_cost
+    return outtext.strip(), n, cb.total_tokens, cb.total_cost
