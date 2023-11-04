@@ -886,6 +886,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                     [i * batch_size, (i + 1) * batch_size]
                     for i in range(len(to_embed) // batch_size + 1)
                     ]
+            pbar = tqdm(total=len(to_embed), desc="Saving to cache")
             for batch in tqdm(batches, desc="Embedding by batch"):
                 temp = FAISS.from_documents(
                         to_embed[batch[0]:batch[1]],
@@ -893,7 +894,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                         normalize_L2=True
                         )
 
-                pbar = tqdm(total=len(to_embed), desc="Saving to cache")
                 recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
 
                 if not db:
