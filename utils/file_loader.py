@@ -169,16 +169,15 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = sorted(doclist, key=lambda x: random.random())
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
-                meta = kwargs.copy()
-                meta["path"] = item
-                meta["filetype"] = meta["recursed_filetype"]
-                assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
-                del meta["pattern"]
+                kwargs["path"] = item
+                kwargs["filetype"] = kwargs["recursed_filetype"]
+                assert Path(kwargs["path"]).exists(), f"file '{item}' does not exist"
+                del kwargs["pattern"]
                 try:
                     res = load_doc(
                             task=task,
                             debug=debug,
-                            **meta,
+                            **kwargs,
                             )
                     with lock:
                         pbar.update(1)
@@ -202,6 +201,9 @@ def load_doc(filetype, debug, task, **kwargs):
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 meta = json.loads(item.strip())
+                for k, v in kwargs.items():
+                    if k not in meta:
+                        meta[k] = v
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
                 assert "filetype" in meta, "no key 'filetype' in meta"
                 try:
@@ -235,18 +237,17 @@ def load_doc(filetype, debug, task, **kwargs):
                 doclist.reverse()
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
-                meta = kwargs.copy()
-                meta["path"] = item
+                kwargs["path"] = item
                 if "http" not in item:
                     red(f"item does not appear to be a link: '{item}'")
                     return None
-                meta["filetype"] = "infer"
-                meta["subitem_link"] = item
+                kwargs["filetype"] = "infer"
+                kwargs["subitem_link"] = item
                 try:
                     res = load_doc(
                             task=task,
                             debug=debug,
-                            **meta,
+                            **kwargs,
                             )
                     with lock:
                         pbar.update(1)
@@ -274,16 +275,15 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [li for li in doclist if re.search(yt_link_regex, li)]
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
-                meta = kwargs.copy()
-                meta["path"] = item
+                kwargs["path"] = item
                 assert "http" in item, f"item does not appear to be a link: '{item}'"
-                meta["filetype"] = "youtube"
-                meta["subitem_link"] = item
+                kwargs["filetype"] = "youtube"
+                kwargs["subitem_link"] = item
                 try:
                     res = load_doc(
                             task=task,
                             debug=debug,
-                            **meta,
+                            **kwargs,
                             )
                     with lock:
                         pbar.update(1)
@@ -337,7 +337,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 time.sleep(0.1)
             thread = threading.Thread(
                     target=threaded_load_item,
-                    args=(filetype, doc, kwargs, pbar, q, lock),
+                    args=(filetype, doc, kwargs.copy(), pbar, q, lock),
                     daemon=True,  # exit when the main program exits
                     )
             thread.start()
