@@ -371,21 +371,8 @@ def load_doc(filetype, debug, task, **kwargs):
         whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
 
-        try:
-            loader = PDFMinerLoader(path)
-            content  = loader.load()
-            content = "\n".join([d.page_content for d in content])
-            texts = text_splitter.split_text(content)
-            docs = [Document(page_content=t) for t in texts]
-            check_docs_tkn_length(docs, path)
-        except Exception as err:
-            red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
-            loader = PyPDFLoader(path)
-            content  = loader.load()
-            content = "\n".join([d.page_content for d in content])
-            texts = text_splitter.split_text(content)
-            docs = [Document(page_content=t) for t in texts]
-            check_docs_tkn_length(docs, path)
+        docs = cached_pdf_loader(path, text_splitter)
+        check_docs_tkn_length(docs, path)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
@@ -938,6 +925,23 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
             language=language,
             translation=translation,
             ).load()
+    return docs
+
+@loaddoc_cache.cache
+def cached_pdf_loader(path, text_splitter):
+    try:
+        loader = PDFMinerLoader(path)
+        content  = loader.load()
+        content = "\n".join([d.page_content for d in content])
+        texts = text_splitter.split_text(content)
+        docs = [Document(page_content=t) for t in texts]
+    except Exception as err:
+        red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
+        loader = PyPDFLoader(path)
+        content  = loader.load()
+        content = "\n".join([d.page_content for d in content])
+        texts = text_splitter.split_text(content)
+        docs = [Document(page_content=t) for t in texts]
     return docs
 
 def create_hyde_retriever(
