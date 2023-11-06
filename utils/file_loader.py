@@ -76,7 +76,7 @@ emptyline_regex = re.compile(r'^\s*$')
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 20
+max_threads = 50
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -108,7 +108,7 @@ def cloze_stripper(clozed):
     return clozed
 
 min_token = 200
-max_token = 50_000
+max_token = 500_000
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
