@@ -794,18 +794,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    # check price of embedding
-    full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
-    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
-    if embed_model == "openai":
-        dol_price = full_tkn * 0.0001 / 1000
-        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
-        if dol_price > 1:
-            ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
-            if ans.lower() not in ["y", "yes"]:
-                red("Quitting.")
-                raise SystemExit()
-
     embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
@@ -834,6 +822,19 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
             to_embed.append(doc)
 
     whi(f"Docs left to embed: {len(to_embed)}")
+
+    # check price of embedding
+    full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
+    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+    if embed_model == "openai":
+        dol_price = full_tkn * 0.0001 / 1000
+        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
+        if dol_price > 1:
+            ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
+            if ans.lower() not in ["y", "yes"]:
+                red("Quitting.")
+                raise SystemExit()
+
     # create a faiss index for batch of documents, then save them
     # as 1 document faiss index to cache
     if to_embed:
