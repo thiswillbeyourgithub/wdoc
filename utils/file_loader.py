@@ -750,7 +750,6 @@ def load_doc(filetype, debug, task, **kwargs):
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     """loads embeddings for each document"""
-    embed_args = {}
 
     if embed_model == "openai":
         red("Using openai embedding model")
