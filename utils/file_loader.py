@@ -445,10 +445,9 @@ def load_doc(filetype, debug, task, **kwargs):
         random_val = str(uuid.uuid4()).split("-")[-1]
         new_db_path = f"./.cache/anki_collection_{name.replace('/', '_')}_{random_val}"
         assert not Path(new_db_path).exists(), f"{new_db_path} already existing!"
-        temp_db = shutil.copy(original_db, new_db_path)
-        col = akp.Collection(path=temp_db)
+        shutil.copy(original_db, new_db_path)
+        col = akp.Collection(path=new_db_path)
         cards = col.cards.merge_notes()
-        Path(new_db_path).unlink()
 
         cards.loc[cards['codeck']=="", 'codeck'] = cards['cdeck'][cards['codeck']==""]
         cards["codeck"] = cards["codeck"].apply(lambda x: x.replace("\x1f", "::"))
@@ -549,6 +548,9 @@ def load_doc(filetype, debug, task, **kwargs):
             check_docs_tkn_length(docs, f"{filetype}: {profile}")
         except Exception as err:
             red(f"Number of token in anki document is surprising. Not quitting because anki can cause this: '{err}'")
+
+        # delete temporary db file
+        Path(new_db_path).unlink()
 
     elif filetype == "string":
         whi("Loading string")
