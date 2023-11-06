@@ -371,7 +371,7 @@ def load_doc(filetype, debug, task, **kwargs):
         whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
 
-        docs = cached_pdf_loader(path, text_splitter)
+        docs = cached_pdf_loader(path, text_splitter, text_splitter._chunk_size)
         check_docs_tkn_length(docs, path)
 
     elif filetype == "anki":
@@ -927,8 +927,9 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
             ).load()
     return docs
 
-@loaddoc_cache.cache
-def cached_pdf_loader(path, text_splitter):
+@loaddoc_cache.cache(ignore=["text_splitter"])
+def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
+    assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     try:
         loader = PDFMinerLoader(path)
         content  = loader.load()
