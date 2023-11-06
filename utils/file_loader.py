@@ -69,7 +69,6 @@ for k, v in inference_rules.items():
 wpm = 250
 average_word_length = 6
 
-charac_regex = re.compile(r"[^\w\s]")  # for removing stopwords
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
 yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
@@ -770,8 +769,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                     "normalize_embeddings": True,
                     },
                 )
-        if "stopwords" in kwargs:
-            embed_args["stopwords"] = kwargs["stopwords"]
 
     lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
     cache_content = list(lfs.yield_keys())
@@ -810,93 +807,61 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 red("Quitting.")
                 raise SystemExit()
 
-    def get_embedding_stripping_stopwords(doc, embeddings, embed_args=embed_args):
-        whi("Computing embeddings")
-        prev = doc.page_content
-        doc.page_content = re.sub(charac_regex, " ", doc.page_content.lower())
-        for reg in embed_args["stopwords"]:
-            doc.page_content = re.sub(reg, " ", doc.page_content)
-        temp = FAISS.from_documents([doc], embeddings, normalize_L2=True)
-        for k in temp.docstore.__dict__.keys():
-            for kk in temp.docstore.__dict__[k].keys():
-                temp.docstore.__dict__[k][kk].page_content = prev
-        return temp, doc.metadata['path']
+    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
+    embeddings_cache.mkdir(exist_ok=True)
+    t = time.time()
+    whi(f"Creating FAISS index for {len(docs)} documents")
 
-    if any("stopwords" in d.metadata for d in docs):
-        whi("Using diy embedding function that strips stopwords")
-        results = Parallel(
-                n_jobs=1 if debug else 3,
-                backend="threading",
-                )(delayed(get_embedding_stripping_stopwords
-                          )(
-                              doc=doc,
-                              embeddings=cached_embeddings
-                              ) for doc in tqdm(
-                                  docs,
-                                  desc="embedding documents"))
-        # merge the results
-        for i, temp, path in enumerate(results):
-            if not i:
+    in_cache = [p for p in embeddings_cache.iterdir()]
+    whi(f"Found {len(in_cache)} embeddings in cache")
+    db = None
+    to_embed = []
+
+    # load previous faiss index from cache
+    for doc in tqdm(docs, desc="Loading embeddings from cache"):
+        fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
+        if fi.exists():
+            temp = FAISS.load_local(fi, cached_embeddings)
+            if not db and temp:
+                db = temp
+            else:
+                try:
+                    db.merge_from(temp)
+                except Exception as err:
+                    red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
+                    [p.unlink() for p in fi.iterdir()]
+                    fi.rmdir()
+        else:
+            to_embed.append(doc)
+
+    whi(f"Docs left to embed: {len(to_embed)}")
+    # create a faiss index for batch of documents, then save them
+    # as 1 document faiss index to cache
+    if to_embed:
+        batch_size = 1000
+        batches = [
+                [i * batch_size, (i + 1) * batch_size]
+                for i in range(len(to_embed) // batch_size + 1)
+                ]
+        pbar = tqdm(total=len(to_embed), desc="Saving to cache")
+        for batch in tqdm(batches, desc="Embedding by batch"):
+            temp = FAISS.from_documents(
+                    to_embed[batch[0]:batch[1]],
+                    cached_embeddings,
+                    normalize_L2=True
+                    )
+
+            recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
+
+            if not db:
                 db = temp
             else:
                 db.merge_from(temp)
-    else:
 
-        embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
-        embeddings_cache.mkdir(exist_ok=True)
-        t = time.time()
-        whi(f"Creating FAISS index for {len(docs)} documents")
+    # to get vectors from a faiss index
+    # vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(to_embed) * temp.index.d).reshape(len(to_embed), temp.index.d)
 
-        in_cache = [p for p in embeddings_cache.iterdir()]
-        whi(f"Found {len(in_cache)} embeddings in cache")
-        db = None
-        to_embed = []
-
-        # load previous faiss index from cache
-        for doc in tqdm(docs, desc="Loading embeddings from cache"):
-            fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
-            if fi.exists():
-                temp = FAISS.load_local(fi, cached_embeddings)
-                if not db and temp:
-                    db = temp
-                else:
-                    try:
-                        db.merge_from(temp)
-                    except Exception as err:
-                        red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                        [p.unlink() for p in fi.iterdir()]
-                        fi.rmdir()
-            else:
-                to_embed.append(doc)
-
-        whi(f"Docs left to embed: {len(to_embed)}")
-        # create a faiss index for batch of documents, then save them
-        # as 1 document faiss index to cache
-        if to_embed:
-            batch_size = 1000
-            batches = [
-                    [i * batch_size, (i + 1) * batch_size]
-                    for i in range(len(to_embed) // batch_size + 1)
-                    ]
-            pbar = tqdm(total=len(to_embed), desc="Saving to cache")
-            for batch in tqdm(batches, desc="Embedding by batch"):
-                temp = FAISS.from_documents(
-                        to_embed[batch[0]:batch[1]],
-                        cached_embeddings,
-                        normalize_L2=True
-                        )
-
-                recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
-
-                if not db:
-                    db = temp
-                else:
-                    db.merge_from(temp)
-
-        # to get vectors from a faiss index
-        # vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(to_embed) * temp.index.d).reshape(len(to_embed), temp.index.d)
-
-        whi(f"Done creating index in {time.time()-t:.2f}s")
+    whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
     if saveas:
