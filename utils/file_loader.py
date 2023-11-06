@@ -190,7 +190,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(res)
+                            q.put(None)
                         return None
 
         elif filetype == "json_list":
@@ -223,7 +223,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(res)
+                            q.put(None)
                         return None
 
         elif filetype == "link_file":
@@ -260,7 +260,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(res)
+                            q.put(None)
                         return None
 
         elif filetype == "youtube_playlist":
@@ -296,7 +296,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(res)
+                            q.put(None)
                         return None
 
         else:
