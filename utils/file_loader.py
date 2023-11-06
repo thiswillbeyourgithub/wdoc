@@ -73,7 +73,7 @@ charac_regex = re.compile(r"[^\w\s]")  # for removing stopwords
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
 yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
-emptyline_regex = re.compile(r'^\s*$')
+emptyline_regex = re.compile(r'^\s*$', re.MULTILINE)
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
