@@ -71,6 +71,8 @@ charac_regex = re.compile(r"[^\w\s]")  # for removing stopwords
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
 yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
+emptyline_regex = re.compile(r'^\s*$')
+
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
 def get_tkn_length(tosplit):
@@ -935,16 +937,17 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
     try:
         loader = PDFMinerLoader(path)
         content  = loader.load()
-        content = "\n".join([d.page_content for d in content])
-        texts = text_splitter.split_text(content)
-        docs = [Document(page_content=t) for t in texts]
+        content = "\n".join([d.page_content.strip() for d in content])
     except Exception as err:
         red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
         loader = PyPDFLoader(path)
         content  = loader.load()
-        content = "\n".join([d.page_content for d in content])
-        texts = text_splitter.split_text(content)
-        docs = [Document(page_content=t) for t in texts]
+        content = "\n".join([d.page_content.strip() for d in content])
+
+    # remove empty lines. frequent in pdfs
+    content = re.sub(emptyline_regex, '', content)
+    texts = text_splitter.split_text(content)
+    docs = [Document(page_content=t) for t in texts]
     return docs
 
 def create_hyde_retriever(
