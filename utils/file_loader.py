@@ -313,6 +313,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
         size = sum([get_tkn_length(d.page_content) for d in docs])
         if size <= min_token:
+            red(f"Example of page from document with too many tokens : {docs[len(docs)//2]).page_content}")
             raise Exception(f"The number of token from '{path}' is {size} <= {min_token} tokens, probably something went wrong?")
 
     elif filetype == "youtube":
