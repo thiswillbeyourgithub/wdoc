@@ -161,7 +161,7 @@ def load_doc(filetype, debug, task, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
-            n_thread = 20
+            n_thread = 50
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = kwargs.copy()
@@ -189,7 +189,7 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
             # don't multithread this because a json line can itself be multithreaded.
-            n_thread = 1
+            n_thread = 2
 
             def threaded_load_item(filetype, item, kwargs):
                 meta = json.loads(item.strip())
