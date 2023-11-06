@@ -1,4 +1,5 @@
 import threading
+import queue
 import copy
 import pdb
 import time
@@ -74,6 +75,8 @@ yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is 
 emptyline_regex = re.compile(r'^\s*$')
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
+
+max_threads = 20
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -165,25 +168,30 @@ def load_doc(filetype, debug, task, **kwargs):
             # randomize order to even out the progress bar
             doclist = sorted(doclist, key=lambda x: random.random())
 
-            n_thread = 50
-
-            def threaded_load_item(filetype, item, kwargs):
+            def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 meta = kwargs.copy()
                 meta["path"] = item
                 meta["filetype"] = meta["recursed_filetype"]
                 assert Path(meta["path"]).exists(), f"file '{item}' does not exist"
                 del meta["pattern"]
                 try:
-                    return load_doc(
+                    res = load_doc(
                             task=task,
                             debug=debug,
                             **meta,
                             )
+                    with lock:
+                        pbar.update(1)
+                        q.put(res)
+                    return res
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
                     if debug:
                         pdb.post_mortem()
                     else:
+                        with lock:
+                            pbar.update(1)
+                            q.put(res)
                         return None
 
         elif filetype == "json_list":
@@ -192,24 +200,28 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")]
 
-            # don't multithread this because a json line can itself be multithreaded.
-            n_thread = 2
-
-            def threaded_load_item(filetype, item, kwargs):
+            def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 meta = json.loads(item.strip())
                 assert isinstance(meta, dict), f"meta from line '{item}' is not dict but '{type(meta)}'"
                 assert "filetype" in meta, "no key 'filetype' in meta"
                 try:
-                    return load_doc(
+                    res = load_doc(
                             task=task,
                             debug=debug,
                             **meta,
                             )
+                    with lock:
+                        pbar.update(1)
+                        q.put(res)
+                    return res
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
                     if debug:
                         pdb.post_mortem()
                     else:
+                        with lock:
+                            pbar.update(1)
+                            q.put(res)
                         return None
 
         elif filetype == "link_file":
@@ -222,9 +234,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 # if summarize, start from bottom
                 doclist.reverse()
 
-            n_thread = 20
-
-            def threaded_load_item(filetype, item, kwargs):
+            def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 meta = kwargs.copy()
                 meta["path"] = item
                 if "http" not in item:
@@ -233,16 +243,23 @@ def load_doc(filetype, debug, task, **kwargs):
                 meta["filetype"] = "infer"
                 meta["subitem_link"] = item
                 try:
-                    return load_doc(
+                    res = load_doc(
                             task=task,
                             debug=debug,
                             **meta,
                             )
+                    with lock:
+                        pbar.update(1)
+                        q.put(res)
+                    return res
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
                     if debug:
                         pdb.post_mortem()
                     else:
+                        with lock:
+                            pbar.update(1)
+                            q.put(res)
                         return None
 
         elif filetype == "youtube_playlist":
@@ -256,25 +273,30 @@ def load_doc(filetype, debug, task, **kwargs):
             doclist = [ent["webpage_url"] for ent in video["entries"]]
             doclist = [li for li in doclist if re.search(yt_link_regex, li)]
 
-            n_thread = 20
-
-            def threaded_load_item(filetype, item, kwargs):
+            def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 meta = kwargs.copy()
                 meta["path"] = item
                 assert "http" in item, f"item does not appear to be a link: '{item}'"
                 meta["filetype"] = "youtube"
                 meta["subitem_link"] = item
                 try:
-                    return load_doc(
+                    res = load_doc(
                             task=task,
                             debug=debug,
                             **meta,
                             )
+                    with lock:
+                        pbar.update(1)
+                        q.put(res)
+                    return res
                 except Exception as err:
                     red(f"Error when loading '{item}': '{err}'")
                     if debug:
                         pdb.post_mortem()
                     else:
+                        with lock:
+                            pbar.update(1)
+                            q.put(res)
                         return None
 
         else:
@@ -298,16 +320,46 @@ def load_doc(filetype, debug, task, **kwargs):
 
         assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
-        # use multithreading only if recursive
-        if debug:
-            n_thread = 1
-        results = Parallel(
-                n_jobs=n_thread,
-                backend="threading",
-                )(delayed(threaded_load_item)(filetype, doc, kwargs
-                    ) for doc in tqdm(doclist, desc=f"loading documents from filetype '{filetype}' with n_thread={n_thread}"))
 
-        results = [r for r in results if r]
+        lock = threading.Lock()
+        q = queue.Queue()
+        threads = []
+        if "depth" in kwargs:
+            depth = kwargs["depth"]
+            kwargs["depth"] += 1
+        else:
+            depth = 0
+            kwargs["depth"] = 1
+        message = f"loading documents using {max_threads} threads (depth={depth})"
+        pbar = tqdm(total=len(doclist), desc=message)
+        for doc in doclist:
+            while sum([t.is_alive() for t in threads]) > max_threads:
+                time.sleep(0.1)
+            thread = threading.Thread(
+                    target=threaded_load_item,
+                    args=(filetype, doc, kwargs, pbar, q, lock),
+                    daemon=True,  # exit when the main program exits
+                    )
+            thread.start()
+            threads.append(thread)
+
+        # waiting for threads to finish
+        n = sum([t.is_alive() for t in threads])
+        i = 0
+        while n:
+            i += 1
+            time.sleep(1)
+            if i % 10 == 0:
+                whi(f"Waiting for {n} threads to finish")
+            n = sum([t.is_alive() for t in threads])
+
+        # get the values from the queue
+        results = []
+        while not q.empty():
+            doc = q.get()
+            if doc:
+                results.append(doc)
+
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
         if n:
