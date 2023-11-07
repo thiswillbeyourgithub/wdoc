@@ -24,7 +24,6 @@ from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever
-from utils.misc import embed_cache
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
 from utils.tasks import do_summarize
