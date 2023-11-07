@@ -40,7 +40,7 @@ def load_llm(model, local_llm_path):
         os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
 
         llm = ChatOpenAI(
-                model_name="gpt-3.5-turbo",
+                model_name="gpt-3.5-turbo-1106",
                 temperature=0,
                 verbose=True,
                 )
