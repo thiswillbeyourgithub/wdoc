@@ -14,7 +14,7 @@ handler = logging.handlers.RotatingFileHandler(
         encoding=None,
         delay=0,
         maxBytes=1024*1024*100,  # max 50mb
-        backupCount=2,
+        backupCount=3,
         )
 handler.setLevel(logging.INFO)
 handler.setFormatter(log_formatter)
@@ -22,6 +22,8 @@ handler.setFormatter(log_formatter)
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 log.addHandler(handler)
+# delete any additional log file
+Path(f"{local_dir}/logs.txt.3").unlink(missing_ok=True)
 
 
 def coloured_log(color_asked):
