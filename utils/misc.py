@@ -8,10 +8,8 @@ from joblib import Memory
 from .logger import red
 
 Path(".cache").mkdir(exist_ok=True)
-Path(".cache/embed_cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 
-embed_cache = Path(".cache/embed_cache/")
 loaddoc_cache = Memory(".cache/loaddoc_cache/")
 
 # remove cache files older than 90 days

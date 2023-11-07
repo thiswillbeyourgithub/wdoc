@@ -40,7 +40,7 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
 
-from .misc import loaddoc_cache, html_to_text, hasher, embed_cache
+from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from .llm import RollingWindowEmbeddings, transcribe
 
