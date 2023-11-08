@@ -447,7 +447,7 @@ class DocToolsLLM:
                                 sp[i] = None
                             elif re.search(r"- Chunk \d+/\d+", l):
                                 sp[i] = None
-                        summary_text = "\n".join([s for s in sp if s])
+                        summary_text = "\n".join([s.rstrip() for s in sp if s])
 
                         summary_docs = [Document(page_content=summary_text)]
                         summary_docs = splitter.transform_documents(summary_docs)
