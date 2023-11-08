@@ -368,6 +368,7 @@ class DocToolsLLM:
                         #9: 10,  # '*'
                         #1635: 10,  # ' *'
                         197: 4,  # '\t'
+                        334: 4,  # '**'
                         }
                 self.llm.model_kwargs["frequency_penalty"] = 0.5
                 self.llm.model_kwargs["temperature"] = 0.0
