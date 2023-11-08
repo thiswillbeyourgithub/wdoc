@@ -82,7 +82,7 @@ def do_summarize(
                     return_only_outputs=False,
                     )
 
-            summaries.append(out["output_text"].strip())
+            summaries.append(out["output_text"].rstrip())
 
             previous_summary = f"End of the summary of the previous section (avoid overlap by directly starting a new bullet point):\n'''\n{summaries[-1]}\n'''"
             if metadata:
@@ -92,11 +92,11 @@ def do_summarize(
     for i, s in enumerate(summaries):
         splits = s.split("\n")
         new_sum = "\n".join(
-                [ss.strip()
+                [ss.rstrip()
                  for ss in splits
                  if any(char.isalpha() for char in ss)
                  ]
-                ).strip()
+                ).rstrip()
         if new_sum:
             summaries[i] = new_sum
         else:
@@ -114,4 +114,4 @@ def do_summarize(
     else:
         outtext = "\n".join(summaries)
 
-    return outtext.strip(), n, cb.total_tokens, cb.total_cost
+    return outtext.rstrip(), n, cb.total_tokens, cb.total_cost
