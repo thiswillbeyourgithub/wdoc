@@ -223,6 +223,7 @@ class DocToolsLLM:
                         "Same metadata object is used to store information on "
                         "multiple documents!")
                 hashes = [d.metadata["hash"] for d in self.loaded_docs]
+                nremoved = 0
                 if len(set(hashes)) != len(hashes):
                     red("Found duplicate hashes after loading documents:")
                     for i, doc in enumerate(self.loaded_docs):
@@ -231,7 +232,10 @@ class DocToolsLLM:
                             red(f"  * Removed #{i}: {doc}")
                             self.loaded_docs[i] = None
                             n -= 1
+                            nremoved += 1
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
+                    red(f"Removed {nremoved}/{len(hashes)} documents because they had the same hash")
+
 
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
