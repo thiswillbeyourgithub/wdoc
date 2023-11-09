@@ -1,3 +1,4 @@
+import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
 from pathlib import Path
@@ -388,7 +389,11 @@ class DocToolsLLM:
                 # parse metadata from the doc
                 metadata = []
                 if "title" in relevant_docs[0].metadata:
-                    item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
+                    if "http" in link:
+                        domain = tldextract.extract(link).registered_domain
+                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {domain}"
+                    else:
+                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
                     metadata.append(f"Title: '{item_name.strip()}'")
                 else:
                     item_name = link
