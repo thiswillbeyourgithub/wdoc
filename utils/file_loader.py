@@ -94,8 +94,8 @@ def get_splitter(task):
     elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=[".\n", ". ", " ", ""],
-                chunk_size=512,
-                chunk_overlap=50,
+                chunk_size=1024,
+                chunk_overlap=150,
                 length_function=get_tkn_length,
                 )
     else:
