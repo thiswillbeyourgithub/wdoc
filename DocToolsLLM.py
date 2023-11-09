@@ -24,7 +24,7 @@ from langchain.retrievers import ContextualCompressionRetriever, KNNRetriever, S
 from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever
+from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever, markdownlink_regex
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
 from utils.tasks import do_summarize
@@ -212,6 +212,38 @@ class DocToolsLLM:
         # loading llm
         self.llm, self.callback = load_llm(model, local_llm_path)
 
+        # if task is to summarize lots of links, check first if there are
+        # links already summarized as it would greatly reduce the number of
+        # documents to load
+        if self.task == "summarize_link_file":
+            if not Path(self.kwargs["out_file"]).exists():
+                Path(self.kwargs["out_file"]).touch()
+            with open(self.kwargs["out_file"], "r") as f:
+                output_content = f.read()
+
+            if self.n_summaries_target > 0:
+                self.n_todos_present = output_content.count("- TODO ")
+
+            if "out_check_file" in self.kwargs:
+                # this is an undocumented function for the author. It
+                # allows to specify a second path for which to check if
+                # a document has already been summaried. I use this because
+                # I made a script to automatically move my DONE tasks
+                # from logseq to another near by file.
+                assert Path(self.kwargs["out_check_file"]).exists()
+                with open(self.kwargs["out_check_file"], "r") as f:
+                    output_content += f.read()
+
+            # parse just the links already present in the output
+            doclist = output_content.splitlines()
+            doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
+            doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
+            links_regex = re.compile(r'(https?://\S+)')
+            doclist = [re.findall(links_regex, d)[0] if re.search(links_regex, d) else d for d in doclist]
+
+            self.done_links = set(doclist)
+            self.kwargs["done_links"] = doclist
+
         # loading documents
         if not loadfrom:
             self.loaded_docs = load_doc(
@@ -254,36 +286,18 @@ class DocToolsLLM:
         if self.task in ["summarize_link_file", "summarize", "summarize_then_query"]:
             # storing links in dict instead of set to keep the original ordering
             links_todo = {}
-            already_done = {}
+            self.done_links = {}
             failed = []
 
             # get the list of documents from the same source. Also checks if
             # it's not part of the output file if task is "summarize_link_file"
             if self.task == "summarize_link_file":
-                if not Path(self.kwargs["out_file"]).exists():
-                    Path(self.kwargs["out_file"]).touch()
-                with open(self.kwargs["out_file"], "r") as f:
-                    output_content = f.read()
-
-                if "out_check_file" in self.kwargs:
-                    # this is an undocumented function for the author. It
-                    # allows to specify a second path for which to check if
-                    # a document has already been summaried. I use this because
-                    # I made a script to automatically move my DONE tasks
-                    # from logseq to another near by file.
-                    assert Path(self.kwargs["out_check_file"]).exists()
-                    with open(self.kwargs["out_check_file"], "r") as f:
-                        output_content += f.read()
 
                 for d in self.loaded_docs:
                     assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
 
                     link = d.metadata["subitem_link"]
-                    if link in already_done or link in links_todo:
-                        continue
-                    if link in output_content:
-                        whi(f"Skipping link : already summarized in out_file: '{link}'")
-                        already_done[link] = None
+                    if link in self.done_links or link in links_todo:
                         continue
 
                     if len(links_todo) < self.n_summaries_target:
@@ -293,12 +307,12 @@ class DocToolsLLM:
                         break
 
                 # comment out the links that are marked as already done
-                # if already_done:
+                # if self.done_links:
                 #     with open(self.kwargs["path"], "r") as f:
                 #         temp = f.read().split("\n")
                 #     with open(self.kwargs["path"], "w") as f:
                 #         for t in temp:
-                #             for done_link in already_done:
+                #             for done_link in self.done_links:
                 #                 if done_link in t:
                 #                     t = f"#already done as of {today}# {t}"
                 #                     break
@@ -313,12 +327,11 @@ class DocToolsLLM:
                     # as it allows to run this frequently
                     n_todos_desired = self.n_summaries_target
                     assert isinstance(n_todos_desired, int)
-                    n_todos_present = output_content.count("- TODO ")
-                    if n_todos_present >= n_todos_desired:
-                        return red(f"Found {n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                    if self.n_todos_present >= n_todos_desired:
+                        return red(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                     else:
-                        self.n_summaries_target = n_todos_desired - n_todos_present
-                        red(f"Found {n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                        self.n_summaries_target = n_todos_desired - self.n_todos_present
+                        red(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
                         assert self.n_summaries_target > 0
 
                     while len(links_todo) > self.n_summaries_target:
@@ -584,7 +597,7 @@ class DocToolsLLM:
                     with open(self.kwargs["path"], "a") as f:
                         f.write(f"\n\n")
                         f.write(f"- Done with summaries of {today}\n")
-                        f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(already_done)}\n")
+                        f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(self.done_links)}\n")
                         if failed:
                             f.write(f"    - Number of links failed: {len(failed)}:\n")
                             for f in failed:
