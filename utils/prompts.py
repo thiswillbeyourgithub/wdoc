@@ -2,17 +2,17 @@ from textwrap import dedent, indent
 
 # rule for the summarization
 summary_rules = indent(dedent("""
-\t- On the content :
-\t\t- What to keep :
+\t- Content of the summary:
+\t\t- What you should keep:
 \t\t\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
-\t\t- What to discard :
-\t\t\t- sponsors, advertisements, etc
+\t\t- What you should ignore:
+\t\t\t- Sponsors, advertisements, etc
 \t\t- When in doubt, keep the information in your summary
-\t- On the format :
-\t\t- Use ONE bullet point per sentence. Use indentation to make it easily readable
-\t\t- Write in LANGUAGE
-\t\t- Reformulate direct quotes to be concise whilst keeping the idea and tone of the author
-\t\t- Highlight keywords using bold: e.g. **keyword**
+\t- What formatting you should use for the summary:
+\t\t- Use ONE bullet point per information. Use indentation to make the whole piece easy to skim
+\t\t- Write your summary in LANGUAGE
+\t\t- Reformulate direct quotes to be concise whilst staying faithful to the tone and idea of the author
+\t\t- Highlight keywords using bold like in "**keyword**"
 \t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied
 """.strip()), "\t")
 
