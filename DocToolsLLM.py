@@ -389,9 +389,14 @@ class DocToolsLLM:
                 # parse metadata from the doc
                 metadata = []
                 if "title" in relevant_docs[0].metadata:
+                    # only give to summarizer the top level domain if url
+                    # or the filename if file
                     if "http" in link:
                         domain = tldextract.extract(link).registered_domain
                         item_name = f"{relevant_docs[0].metadata['title'].strip()} - {domain}"
+                    elif "/" in link and Path(link).exists():
+                        filename = Path(link).name
+                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {filename}"
                     else:
                         item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
                     metadata.append(f"Title: '{item_name.strip()}'")
