@@ -632,6 +632,7 @@ def load_doc(filetype, debug, task, **kwargs):
         # try with selenium firefox
         except Exception as err:
             red(f"Exception when using playwright to parse text: '{err}'\nUsing selenium firefox as fallback")
+            time.sleep(1)
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = text_splitter.transform_documents(loader.load())
@@ -642,6 +643,7 @@ def load_doc(filetype, debug, task, **kwargs):
             # try with selenium chrome
             except Exception as err:
                 red(f"Exception when using selenium firefox to parse text: '{err}'\nUsing selenium chrome as fallback")
+                time.sleep(1)
                 try:
                     loader = SeleniumURLLoader(urls=[path], browser="chrome")
                     docs = text_splitter.transform_documents(loader.load())
@@ -652,6 +654,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 # try with goose
                 except Exception as err:
                     red(f"Exception when using selenium chrome to parse text: '{err}'\nUsing goose as fallback")
+                    time.sleep(1)
                     try:
                         g = Goose()
                         article = g.extract(url=path)
@@ -668,6 +671,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     # try with html
                     except Exception as err:
                         red(f"Exception when using goose to parse text: '{err}'\nUsing html as fallback")
+                        time.sleep(1)
                         loader = WebBaseLoader(path, raise_for_status=True)
                         docs = text_splitter.transform_documents(loader.load())
                         if not title and "title" in docs[0].metadata and docs[0].metadata["title"]:
