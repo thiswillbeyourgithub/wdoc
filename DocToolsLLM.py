@@ -563,7 +563,8 @@ class DocToolsLLM:
                         ) for link in tqdm(
                             links_todo,
                             desc="Summarizing documents",
-                            disable=(not len(links_todo) - 1) or self.debug,
+                            # disable=(not len(links_todo) - 1) or self.debug,
+                            color="magenta",
                             ))
             total_tkn_cost = sum([x["doc_total_tokens"] for x in results])
             total_dol_cost = sum([x["doc_total_cost"] for x in results])
