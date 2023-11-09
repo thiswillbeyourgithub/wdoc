@@ -490,12 +490,6 @@ class DocToolsLLM:
                         whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     summary = summary_text
 
-
-
-                # make sure to use the same markdown formatting
-                summary = summary.replace("* ", "- ")
-                summary = summary.replace("- - ", "- ")
-
                 with lock:
                     red(f"\n\nSummary of '{link}':\n{summary}")
 
