@@ -346,8 +346,6 @@ def load_doc(filetype, debug, task, **kwargs):
                     )
             thread.start()
             threads.append(thread)
-        pbar.close()
-
         # waiting for threads to finish
         n = sum([t.is_alive() for t in threads])
         i = 0
@@ -371,6 +369,8 @@ def load_doc(filetype, debug, task, **kwargs):
             red(f"There were errors when loading documents: '{n}' documents failed")
         docs = []
         [docs.extend(x) for x in results if x]
+
+        pbar.close()
 
         size = sum([get_tkn_length(d.page_content) for d in docs])
         if size <= min_token:
