@@ -547,6 +547,7 @@ class DocToolsLLM:
                             f.write(header)
                             for bulletpoint in summary.split("\n"):
                                 f.write("\n")
+                                bulletpoint = bulletpoint.rstrip()
                                 # # make sure the line begins with a bullet point
                                 # if not bulletpoint.lstrip().startswith("- "):
                                 #     begin_space = re.search(r"^(\s+)", bulletpoint)
