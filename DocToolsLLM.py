@@ -51,7 +51,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=10,
-            n_recursive_summary=1,
+            n_recursive_summary=0,
             n_summaries_target=-1,
 
             debug=False,
@@ -119,7 +119,7 @@ class DocToolsLLM:
         --top_k int, default 10
             number of chunks to look for when querying
 
-        --n_recursive_summary int, default 1
+        --n_recursive_summary int, default 0
             will always recursively summarize
 
         --n_summaries_target int, default -1
