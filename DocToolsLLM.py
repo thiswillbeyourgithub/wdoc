@@ -547,13 +547,13 @@ class DocToolsLLM:
                             f.write(header)
                             for bulletpoint in summary.split("\n"):
                                 f.write("\n")
-                                # make sure the line begins with a bullet point
-                                if not bulletpoint.strip().startswith("- "):
-                                    begin_space = re.search(r"^(\s+)", bulletpoint)
-                                    if not begin_space:
-                                        begin_space = [""]
-                                    bulletpoint = begin_space[0] + "- " + bulletpoint
-                                f.write(f"    {bulletpoint}")
+                                # # make sure the line begins with a bullet point
+                                # if not bulletpoint.lstrip().startswith("- "):
+                                #     begin_space = re.search(r"^(\s+)", bulletpoint)
+                                #     if not begin_space:
+                                #         begin_space = [""]
+                                #     bulletpoint = begin_space[0] + "- " + bulletpoint
+                                f.write(f"\t{bulletpoint}")
                             f.write("\n\n\n")
                 return {
                         "link": link,
