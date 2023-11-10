@@ -594,20 +594,20 @@ class DocToolsLLM:
             #             f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
 
             # and write to input file a summary too
-            if "out_file" in self.kwargs:
-                try:
-                    with open(self.kwargs["path"], "a") as f:
-                        f.write(f"\n\n")
-                        f.write(f"- Done with summaries of {today}\n")
-                        f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(self.done_links)}\n")
-                        if failed:
-                            f.write(f"    - Number of links failed: {len(failed)}:\n")
-                            for f in failed:
-                                f.write(f"        - {f}\n")
-                        # f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-                        # f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
-                except Exception as err:
-                    red(f"Exception when writing end of run details to input file: '{err}'")
+            # if "out_file" in self.kwargs:
+            #     try:
+            #         with open(self.kwargs["path"], "a") as f:
+            #             f.write(f"\n\n")
+            #             f.write(f"- Done with summaries of {today}\n")
+            #             f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(self.done_links)}\n")
+            #             if failed:
+            #                 f.write(f"    - Number of links failed: {len(failed)}:\n")
+            #                 for f in failed:
+            #                     f.write(f"        - {f}\n")
+            #             # f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
+            #             # f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
+            #     except Exception as err:
+            #         red(f"Exception when writing end of run details to input file: '{err}'")
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
