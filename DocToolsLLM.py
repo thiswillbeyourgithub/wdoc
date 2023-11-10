@@ -286,7 +286,6 @@ class DocToolsLLM:
         if self.task in ["summarize_link_file", "summarize", "summarize_then_query"]:
             # storing links in dict instead of set to keep the original ordering
             links_todo = {}
-            self.done_links = {}
             failed = []
 
             # get the list of documents from the same source. Also checks if
