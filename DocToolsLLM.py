@@ -520,7 +520,7 @@ class DocToolsLLM:
                     header += f"\n\ttoken_cost:: {doc_total_tokens}"
                     header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
                     header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
-                    header += f"\n\link:: {link}"
+                    header += f"\n\tlink:: {link}"
                     if doc_reading_length:
                         header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
                         header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
