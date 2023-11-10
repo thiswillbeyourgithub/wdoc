@@ -346,6 +346,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     )
             thread.start()
             threads.append(thread)
+        pbar.close()
 
         # waiting for threads to finish
         n = sum([t.is_alive() for t in threads])
