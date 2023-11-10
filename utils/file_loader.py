@@ -76,7 +76,7 @@ emptyline_regex = re.compile(r'^\s*$', re.MULTILINE)
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 50
+max_threads = 10
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
