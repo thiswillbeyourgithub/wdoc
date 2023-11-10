@@ -520,6 +520,7 @@ class DocToolsLLM:
                     header += f"\n\ttoken_cost:: {doc_total_tokens}"
                     header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
                     header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
+                    header += f"\n\link:: {link}"
                     if doc_reading_length:
                         header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
                         header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
@@ -536,6 +537,7 @@ class DocToolsLLM:
                         header += f"    {doc_reading_length:.1f} minutes"
                     if author:
                         header += f"    by '{author}'"
+                    header += f"    original link: '{link}'"
                     header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
                     header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
