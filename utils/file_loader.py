@@ -326,7 +326,7 @@ def load_doc(filetype, debug, task, **kwargs):
         temp = []
         for d in doclist:
             if d in temp:
-                red(f"Removed document {d['path']} that is a duplicate")
+                red(f"Removed document {d} (duplicate)")
             else:
                 temp.append(d)
         doclist = temp
