@@ -95,7 +95,7 @@ def get_splitter(task):
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=[".\n", ". ", " ", ""],
                 chunk_size=1024,
-                chunk_overlap=150,
+                chunk_overlap=300,
                 length_function=get_tkn_length,
                 )
     else:
