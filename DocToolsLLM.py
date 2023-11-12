@@ -251,23 +251,36 @@ class DocToolsLLM:
                     debug=self.debug,
                     task=self.task,
                     **self.kwargs)
+
+            # check that the hash are unique
             if len(self.loaded_docs) > 1:
-                assert id(self.loaded_docs[0].metadata) != id(self.loaded_docs[-1].metadata), (
+                ids = [id(d.metadata) for d in self.loaded_docs]
+                assert len(ids) == len(set(ids)), (
                         "Same metadata object is used to store information on "
                         "multiple documents!")
+
                 hashes = [d.metadata["hash"] for d in self.loaded_docs]
-                nremoved = 0
-                if len(set(hashes)) != len(hashes):
+                removed_paths = []
+                if len(hashes) != len(set(hashes)):
                     red("Found duplicate hashes after loading documents:")
+
                     for i, doc in enumerate(self.loaded_docs):
                         n = hashes.count(doc.metadata["hash"])
-                        while n > 1:
-                            red(f"  * Removed #{i}: {doc}")
+                        if n > 1:
+                            removed_paths.append(self.loaded_docs[i].metadata["path"])
                             self.loaded_docs[i] = None
-                            n -= 1
-                            nremoved += 1
+
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
-                    red(f"Removed {nremoved}/{len(hashes)} documents because they had the same hash")
+                    present_path = [d.metadata["path"] for d in self.loaded_docs]
+
+                    intersect = set(removed_paths).intersection(set(present_path))
+                    if intersect:
+                        red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
+                        for i, inte in enumerate(intersect):
+                            red(f"  * #{i}: {inte}")
+                        raise Exception()
+                    else:
+                        red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
 
 
         else:
