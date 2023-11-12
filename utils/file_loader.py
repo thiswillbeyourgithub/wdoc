@@ -322,8 +322,16 @@ def load_doc(filetype, debug, task, **kwargs):
                 doclist = [d for d in doclist if not re.search(exc, d)]
             del kwargs["exclude"]
 
-        assert doclist, f"empty list of documents to load from filetype '{filetype}'"
+        # remove duplicate documents
+        temp = []
+        for d in doclist:
+            if d in temp:
+                red(f"Removed document {d['path']} that is a duplicate")
+            else:
+                temp.append(d)
+        doclist = temp
 
+        assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
         lock = threading.Lock()
         q = queue.Queue()
