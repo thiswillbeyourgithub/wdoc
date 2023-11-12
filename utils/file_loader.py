@@ -630,6 +630,7 @@ def load_doc(filetype, debug, task, **kwargs):
         try:
             loader = PlaywrightURLLoader(urls=[path], remove_selectors=["header", "footer"])
             docs = text_splitter.transform_documents(loader.load())
+            assert docs, f"Empty docs when using playwright"
             if not title and "title" in docs[0].metadata:
                 title = docs[0].metadata["title"]
             check_docs_tkn_length(docs, path)
@@ -641,6 +642,7 @@ def load_doc(filetype, debug, task, **kwargs):
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = text_splitter.transform_documents(loader.load())
+                assert docs, f"Empty docs when using selenium firefox"
                 if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
                     title = docs[0].metadata["title"]
                 check_docs_tkn_length(docs, path)
@@ -652,6 +654,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 try:
                     loader = SeleniumURLLoader(urls=[path], browser="chrome")
                     docs = text_splitter.transform_documents(loader.load())
+                    assert docs, f"Empty docs when using selenium chrome"
                     if not title and "title" in docs[0].metadata and docs[0].metadata["title"] != "No title found.":
                         title = docs[0].metadata["title"]
                     check_docs_tkn_length(docs, path)
@@ -666,6 +669,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         text = article.cleaned_text
                         texts = text_splitter.split_text(text)
                         docs = [Document(page_content=t) for t in texts]
+                        assert docs, f"Empty docs when using goose"
                         if not title:
                             if "title" in docs[0].metadata and docs[0].metadata["title"]:
                                 title = docs[0].metadata["title"]
@@ -679,6 +683,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         time.sleep(1)
                         loader = WebBaseLoader(path, raise_for_status=True)
                         docs = text_splitter.transform_documents(loader.load())
+                        assert docs, f"Empty docs when using html"
                         if not title and "title" in docs[0].metadata and docs[0].metadata["title"]:
                             title = docs[0].metadata["title"]
                         check_docs_tkn_length(docs, path)
