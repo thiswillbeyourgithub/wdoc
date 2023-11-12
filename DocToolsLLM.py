@@ -286,7 +286,7 @@ class DocToolsLLM:
         if self.task in ["summarize_link_file", "summarize", "summarize_then_query"]:
             # storing links in dict instead of set to keep the original ordering
             links_todo = {}
-            failed = []
+            # failed = []
 
             # get the list of documents from the same source. Also checks if
             # it's not part of the output file if task is "summarize_link_file"
@@ -581,7 +581,7 @@ class DocToolsLLM:
             total_tkn_cost = sum([x["doc_total_tokens"] for x in results])
             total_dol_cost = sum([x["doc_total_cost"] for x in results])
             total_docs_length = sum([x["doc_reading_length"] for x in results])
-            total_summary_length = sum([x["sum_reading_length"] for x in results])
+            # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
             red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
             red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
