@@ -422,7 +422,7 @@ def load_doc(filetype, debug, task, **kwargs):
             temp_file.flush()
 
         meta = kwargs.copy()
-        meta["filetype"] == "pdf"
+        meta["filetype"] = "pdf"
         meta["path"] = temp_file.name
         try:
             return load_doc(
