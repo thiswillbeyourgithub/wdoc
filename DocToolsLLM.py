@@ -399,7 +399,7 @@ class DocToolsLLM:
                         # 9: logit_val,  # '*'
                         # 1635: logit_val,  # ' *'
                         197: logit_val,  # '\t'
-                        334: logit_val,  # '**'
+                        334: logit_val * 2,  # '**'
                         25: logit_val,  # ':'
                         551: logit_val,  # ' :'
                         13: -1,  # '.'
