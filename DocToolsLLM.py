@@ -391,16 +391,17 @@ class DocToolsLLM:
             if self.model == "openai":
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
+                logit_val = 4
                 self.llm.model_kwargs["logit_bias"] = {
-                        12: 4,  # '-'
-                        # 220: 1,  # ' '
-                        # 532: 1,  # ' -'
-                        #9: 10,  # '*'
-                        #1635: 10,  # ' *'
-                        197: 4,  # '\t'
-                        334: 4,  # '**'
-                        25: 4,  # ':'
-                        551: 4,  # ' :'
+                        12: logit_val,  # '-'
+                        # 220: logit_val,  # ' '
+                        # 532: logit_val,  # ' -'
+                        # 9: logit_val,  # '*'
+                        # 1635: logit_val,  # ' *'
+                        197: logit_val,  # '\t'
+                        334: logit_val,  # '**'
+                        25: logit_val,  # ':'
+                        551: logit_val,  # ' :'
                         13: -1,  # '.'
                         }
                 self.llm.model_kwargs["frequency_penalty"] = 0.5
