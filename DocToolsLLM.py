@@ -404,7 +404,7 @@ class DocToolsLLM:
                         551: logit_val,  # ' :'
                         13: -1,  # '.'
                         }
-                # self.llm.model_kwargs["frequency_penalty"] = 0.5
+                self.llm.model_kwargs["frequency_penalty"] = 0.5
                 self.llm.model_kwargs["temperature"] = 0.0
 
             def threaded_summary(link, lock):
