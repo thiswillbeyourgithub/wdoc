@@ -244,6 +244,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 kwargs["path"] = item
                 if "http" not in item:
                     red(f"item does not appear to be a link: '{item}'")
+                    q.put(None)
                     return None
                 kwargs["filetype"] = "infer"
                 kwargs["subitem_link"] = item
