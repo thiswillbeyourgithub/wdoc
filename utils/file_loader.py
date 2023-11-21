@@ -190,8 +190,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(None)
-                        return None
+                            q.put(item)
+                        return item
 
         elif filetype == "json_list":
             whi(f"Loading json_list: '{path}'")
@@ -223,8 +223,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(None)
-                        return None
+                            q.put(item)
+                        return item
 
         elif filetype == "link_file":
             whi(f"Loading link_file: '{path}'")
@@ -244,8 +244,8 @@ def load_doc(filetype, debug, task, **kwargs):
                 kwargs["path"] = item
                 if "http" not in item:
                     red(f"item does not appear to be a link: '{item}'")
-                    q.put(None)
-                    return None
+                    q.put(item)
+                    return item
                 kwargs["filetype"] = "infer"
                 kwargs["subitem_link"] = item
                 try:
@@ -265,8 +265,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(None)
-                        return None
+                            q.put(item)
+                        return item
 
         elif filetype == "youtube_playlist":
             assert "path" in kwargs, "missing 'path' key in args"
@@ -301,8 +301,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(None)
-                        return None
+                            q.put(item)
+                        return item
 
         else:
             raise ValueError(filetype)
@@ -367,15 +367,22 @@ def load_doc(filetype, debug, task, **kwargs):
 
         # get the values from the queue
         results = []
+        failed = []
         while not q.empty():
             doc = q.get()
-            if doc:
+            if not isinstance(doc, str):
                 results.append(doc)
+            else:
+                # when failed: we returned the name of the item
+                failed.append(doc)
 
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
-        if n:
-            red(f"There were errors when loading documents: '{n}' documents failed")
+        assert n == len(failed), "Unexpected number of failed documents"
+        if failed:
+            red(f"List of {n} failed documents:\n")
+            for f in sorted(failed):
+                red(f"* {f}")
         docs = []
         [docs.extend(x) for x in results if x]
 
