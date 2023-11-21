@@ -379,7 +379,7 @@ def load_doc(filetype, debug, task, **kwargs):
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
         assert n == len(failed), "Unexpected number of failed documents"
-        if failed:
+        if depth == 0 and failed:
             red(f"List of {n} failed documents:\n")
             for f in sorted(failed):
                 red(f"* {f}")
