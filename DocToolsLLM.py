@@ -267,7 +267,9 @@ class DocToolsLLM:
                     for i, doc in enumerate(self.loaded_docs):
                         n = hashes.count(doc.metadata["hash"])
                         if n > 1:
-                            removed_paths.append(self.loaded_docs[i].metadata["path"])
+                            if not doc.metadata["path"].startswith("Anki_profile="):
+                                removed_paths.append(self.loaded_docs[i].metadata["path"])
+                                # allow partially removed when it's from anki
                             self.loaded_docs[i] = None
 
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
