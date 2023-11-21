@@ -550,11 +550,12 @@ def load_doc(filetype, debug, task, **kwargs):
 
         assert docs, "List of loaded anki document is empty!"
 
+        path = f"Anki_profile='{profile}',deck='{deck}'notetype={notetype},fields={','.join(fields)}"
         for i in range(len(docs)):
             docs[i].metadata["anki_profile"] = profile
             docs[i].metadata["anki_deck"] = deck
             docs[i].metadata["anki_notetype"] = notetype
-            docs[i].metadata["path"] = f"Anki profile '{profile}' deck '{deck}'"
+            docs[i].metadata["path"] = path
 
         # try:
         #     check_docs_tkn_length(docs, f"{filetype}: {profile}")
