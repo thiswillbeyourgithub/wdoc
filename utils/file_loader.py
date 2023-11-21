@@ -190,7 +190,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(item)
+                            q.put(f"{item}: {err}")
                         return item
 
         elif filetype == "json_list":
@@ -223,7 +223,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(item)
+                            q.put(f"{item}: {err}")
                         return item
 
         elif filetype == "link_file":
@@ -244,7 +244,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 kwargs["path"] = item
                 if "http" not in item:
                     red(f"item does not appear to be a link: '{item}'")
-                    q.put(item)
+                    q.put(f"{item}: does not appear to be a link")
                     return item
                 kwargs["filetype"] = "infer"
                 kwargs["subitem_link"] = item
@@ -265,7 +265,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(item)
+                            q.put(f"{item}: {err}")
                         return item
 
         elif filetype == "youtube_playlist":
@@ -301,7 +301,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     else:
                         with lock:
                             pbar.update(1)
-                            q.put(item)
+                            q.put(f"{item}: {err}")
                         return item
 
         else:
