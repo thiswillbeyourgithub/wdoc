@@ -1079,7 +1079,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
                 probs[i] /= 2
     max_prob = max([v for v in probs.values()])
 
-    return loaded_docs[[i for i in probs if probs[i] == max_prob]]
+    return loaded_docs[[i for i in probs if probs[i] == max_prob][0]]
 
 def create_hyde_retriever(
         query,
