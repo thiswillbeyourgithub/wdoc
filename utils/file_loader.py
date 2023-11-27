@@ -22,6 +22,8 @@ from prompt_toolkit import prompt
 from joblib import Parallel, delayed
 import tiktoken
 
+from ftlangdetect import detect as language_detect
+
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -1041,7 +1043,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
             "PyMuPDF": PyMuPDFLoader,
             "PdfPlumber": PDFPlumberLoader,
             }
-    done = False
+    loaded_docs = []
     for loader_name, loader_func in loaders.items():
         try:
             loader = loader_func(path)
@@ -1055,15 +1057,29 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
             docs = [Document(page_content=t) for t in texts]
 
             check_docs_tkn_length(docs, path)
-            done = True
-            break
+            loaded_docs.append(docs)
         except Exception as err:
             red(f"Error when parsing '{path}' with {loader_name}: {err}")
 
-    if done:
-        return docs
-    else:
+    # no loader worked, exiting
+    if not loaded_docs:
         raise Exception(f"No pdf parser worked for {path}")
+
+    # using language detection to keep the parsing with the highest lang
+    # probability
+    probs = {}
+    for i, ld in enumerate(loaded_docs):
+        probs[i] = language_detect(ld[0].page_content.replace("\n", "<br>"))
+        if len(ld) > 1:
+            probs[i] += language_detect(ld[-1].page_content.replace("\n", "<br>"))
+            if len(ld) > 2:
+                probs[i] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))
+                probs[i] /= 3
+            else:
+                probs[i] /= 2
+    max_prob = max([v for v in probs.values()])
+
+    return loaded_docs[[i for i in probs if probs[i] == max_prob]]
 
 def create_hyde_retriever(
         query,
