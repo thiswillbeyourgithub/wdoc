@@ -117,16 +117,21 @@ def cloze_stripper(clozed):
 
 min_token = 200
 max_token = 500_000
+max_lines = 100_000
 
 def check_docs_tkn_length(docs, name):
     "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
     size = sum([get_tkn_length(d.page_content) for d in docs])
+    nline = len("\n".join([d.page_content for d in docs]).splitlines())
+    if nline > max_lines:
+        red(f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}")
+        raise Exception(f"The number of lines from '{name}' is {nline} > {max_lines}, probably something went wrong?")
     if size <= min_token:
         red(f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}")
-        raise Exception(f"The number of token from '{name}' is {size} <= {min_token} tokens, probably something went wrong?")
+        raise Exception(f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?")
     elif size >= max_token:
         red(f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}")
-        raise Exception(f"The number of token from '{name}' is {size} >= {max_token} tokens, probably something went wrong?")
+        raise Exception(f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?")
 
 def get_url_title(url):
     """if the title of the url is not loaded from the loader, trying as last
