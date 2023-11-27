@@ -344,38 +344,65 @@ def load_doc(filetype, debug, task, **kwargs):
         else:
             depth = 0
             kwargs["depth"] = 1
-        message = f"loading documents using {max_threads} threads (depth={depth})"
-        pbar = tqdm(total=len(doclist), desc=message)
-        for doc in doclist:
-            while sum([t.is_alive() for t in threads]) > max_threads:
-                time.sleep(0.1)
-            thread = threading.Thread(
-                    target=threaded_load_item,
-                    args=(filetype, doc, kwargs.copy(), pbar, q, lock),
-                    daemon=True,  # exit when the main program exits
-                    )
-            thread.start()
-            threads.append(thread)
-        # waiting for threads to finish
-        n = sum([t.is_alive() for t in threads])
-        i = 0
-        while n:
-            i += 1
-            time.sleep(1)
-            if i % 10 == 0:
-                whi(f"Waiting for {n} threads to finish")
-            n = sum([t.is_alive() for t in threads])
 
-        # get the values from the queue
-        results = []
-        failed = []
-        while not q.empty():
-            doc = q.get()
-            if not isinstance(doc, str):
-                results.append(doc)
-            else:
-                # when failed: we returned the name of the item
-                failed.append(doc)
+        # if debugging, don't multithread
+        if not debug:
+            message = f"loading documents using {max_threads} threads (depth={depth})"
+            pbar = tqdm(total=len(doclist), desc=message)
+            for doc in doclist:
+                while sum([t.is_alive() for t in threads]) > max_threads:
+                    time.sleep(0.1)
+                thread = threading.Thread(
+                        target=threaded_load_item,
+                        args=(filetype, doc, kwargs.copy(), pbar, q, lock),
+                        daemon=True,  # exit when the main program exits
+                        )
+                thread.start()
+                threads.append(thread)
+            # waiting for threads to finish
+            n = sum([t.is_alive() for t in threads])
+            i = 0
+            while n:
+                i += 1
+                time.sleep(1)
+                if i % 10 == 0:
+                    whi(f"Waiting for {n} threads to finish")
+                n = sum([t.is_alive() for t in threads])
+
+            # get the values from the queue
+            results = []
+            failed = []
+            while not q.empty():
+                doc = q.get()
+                if not isinstance(doc, str):
+                    results.append(doc)
+                else:
+                    # when failed: we returned the name of the item
+                    failed.append(doc)
+        else:
+            message = "loading documents using 1 thread because debug"
+            pbar = tqdm(total=len(doclist), desc=message)
+            temp = []
+            for doc in doclist:
+                res = threaded_load_item(
+                        filetype,
+                        doc,
+                        kwargs.copy(),
+                        pbar,
+                        q,
+                        lock,
+                        )
+                temp.append(res)
+
+            # get the values from the queue
+            results = []
+            failed = []
+            for doc in temp:
+                if not isinstance(doc, str):
+                    results.append(doc)
+                else:
+                    # when failed: we returned the name of the item
+                    failed.append(doc)
 
         assert results, "Empty results after loading documents"
         n = len(doclist) - len(results)
