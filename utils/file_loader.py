@@ -1075,7 +1075,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
-    for i, name, ld in enumerate(loaded_docs.items()):
+    for name, ld in loaded_docs.items():
         probs[name] = language_detect(ld[0].page_content.replace("\n", "<br>"))["score"]
         if len(ld) > 1:
             probs[name] += language_detect(ld[-1].page_content.replace("\n", "<br>"))["score"]
