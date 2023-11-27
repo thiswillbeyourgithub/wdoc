@@ -29,6 +29,7 @@ from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
 # from langchain.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain.document_loaders import PDFMinerLoader
+from langchain.document_loaders import OnlinePDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import SeleniumURLLoader
 from langchain.document_loaders import PlaywrightURLLoader
@@ -452,23 +453,32 @@ def load_doc(filetype, debug, task, **kwargs):
         path = kwargs["path"]
         whi(f"Loading online pdf: '{path}'")
 
-        response = requests.get(path)
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
-            temp_file.write(response.content)
-            temp_file.flush()
-
-        meta = kwargs.copy()
-        meta["filetype"] = "pdf"
-        meta["path"] = temp_file.name
         try:
-            return load_doc(
-                    task=task,
-                    debug=debug,
-                    **meta,
-                    )
+            loader = OnlinePDFLoader(path)
+            docs = loader.load()
+            docs = text_splitter.transform_documents(docs)
+            check_docs_tkn_length(docs, path)
+
         except Exception as err:
-            red(f"Error when parsing online pdf from {path} downloaded to {temp_file.name}: '{err}'")
-            raise
+            red(f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly.")
+
+            response = requests.get(path)
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                temp_file.write(response.content)
+                temp_file.flush()
+
+            meta = kwargs.copy()
+            meta["filetype"] = "pdf"
+            meta["path"] = temp_file.name
+            try:
+                return load_doc(
+                        task=task,
+                        debug=debug,
+                        **meta,
+                        )
+            except Exception as err:
+                red(f"Error when parsing online pdf from {path} downloaded to {temp_file.name}: '{err}'")
+                raise
 
     elif filetype == "pdf":
         assert "path" in kwargs, "missing 'path' key in args"
