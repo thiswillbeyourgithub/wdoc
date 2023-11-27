@@ -492,7 +492,12 @@ def load_doc(filetype, debug, task, **kwargs):
         whi(f"Loading pdf: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
 
-        docs = cached_pdf_loader(path, text_splitter, text_splitter._chunk_size)
+        docs = cached_pdf_loader(
+                path=path,
+                text_splitter=text_splitter,
+                splitter_chunk_size=text_splitter._chunk_size,
+                debug=debug
+                )
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
@@ -1033,7 +1038,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
     return docs
 
 @loaddoc_cache.cache(ignore=["text_splitter"])
-def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
+def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
             "PDFMiner": PDFMinerLoader,
@@ -1046,6 +1051,8 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
     loaded_docs = []
     for loader_name, loader_func in loaders.items():
         try:
+            if debug:
+                red(f"Trying to parse {path} using {loader_name}")
             loader = loader_func(path)
             content = loader.load()
             content = "\n".join([d.page_content.strip() for d in content])
