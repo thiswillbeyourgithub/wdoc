@@ -73,6 +73,7 @@ clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
 yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
 emptyline_regex = re.compile(r'^\s*$', re.MULTILINE)
+emptyline2_regex = re.compile(r'\n\n+', re.MULTILINE)
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
@@ -1004,6 +1005,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
 
     # remove empty lines. frequent in pdfs
     content = re.sub(emptyline_regex, '', content)
+    content = re.sub(emptyline2_regex, '\n', content)
     texts = text_splitter.split_text(content)
     docs = [Document(page_content=t) for t in texts]
     return docs
