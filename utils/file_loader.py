@@ -1048,7 +1048,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             "PyMuPDF": PyMuPDFLoader,
             "PdfPlumber": PDFPlumberLoader,
             }
-    loaded_docs = []
+    loaded_docs = {}
     for loader_name, loader_func in loaders.items():
         try:
             if debug:
@@ -1064,7 +1064,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             docs = [Document(page_content=t) for t in texts]
 
             check_docs_tkn_length(docs, path)
-            loaded_docs.append(docs)
+            loaded_docs[loader_name] = docs
         except Exception as err:
             red(f"Error when parsing '{path}' with {loader_name}: {err}")
 
@@ -1075,18 +1075,21 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
-    for i, ld in enumerate(loaded_docs):
-        probs[i] = language_detect(ld[0].page_content.replace("\n", "<br>"))["score"]
+    for i, name, ld in enumerate(loaded_docs.items()):
+        probs[name] = language_detect(ld[0].page_content.replace("\n", "<br>"))["score"]
         if len(ld) > 1:
-            probs[i] += language_detect(ld[-1].page_content.replace("\n", "<br>"))["score"]
+            probs[name] += language_detect(ld[-1].page_content.replace("\n", "<br>"))["score"]
             if len(ld) > 2:
-                probs[i] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))["score"]
-                probs[i] /= 3
+                probs[name] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))["score"]
+                probs[name] /= 3
             else:
-                probs[i] /= 2
+                probs[name] /= 2
     max_prob = max([v for v in probs.values()])
 
-    return loaded_docs[[i for i in probs if probs[i] == max_prob][0]]
+    if debug:
+        red(f"Language probability after parsing {path}: {probs}")
+
+    return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
 
 def create_hyde_retriever(
         query,
