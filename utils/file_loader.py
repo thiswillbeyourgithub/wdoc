@@ -116,7 +116,7 @@ def cloze_stripper(clozed):
     return clozed
 
 min_token = 200
-max_token = 500_000
+max_token = 1_000_000
 max_lines = 100_000
 
 def check_docs_tkn_length(docs, name):
