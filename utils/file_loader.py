@@ -995,7 +995,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     try:
         loader = PDFMinerLoader(path)
-        content  = loader.load()
+        content = loader.load()
         content = "\n".join([d.page_content.strip() for d in content])
     except Exception as err:
         red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
