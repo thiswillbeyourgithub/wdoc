@@ -13,6 +13,7 @@ import signal
 import pdb
 from ftlangdetect import detect as language_detect
 
+from langchain.globals import set_verbose, set_debug
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
@@ -194,6 +195,8 @@ class DocToolsLLM:
             # make the script interruptible
             signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
             os.environ["LANGCHAIN_TRACING"] = "true"
+            set_verbose(True)
+            set_verbose(True)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
