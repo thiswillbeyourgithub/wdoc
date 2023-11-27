@@ -450,7 +450,6 @@ def load_doc(filetype, debug, task, **kwargs):
         assert Path(path).exists(), f"file not found: '{path}'"
 
         docs = cached_pdf_loader(path, text_splitter, text_splitter._chunk_size)
-        check_docs_tkn_length(docs, path)
 
     elif filetype == "anki":
         for nk in ["anki_deck", "anki_notetype", "anki_profile", "anki_fields"]:
@@ -997,17 +996,28 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
         loader = PDFMinerLoader(path)
         content = loader.load()
         content = "\n".join([d.page_content.strip() for d in content])
+
+        # remove empty lines. frequent in pdfs
+        content = re.sub(emptyline_regex, '', content)
+        content = re.sub(emptyline2_regex, '\n', content)
+        texts = text_splitter.split_text(content)
+        docs = [Document(page_content=t) for t in texts]
+
+        check_docs_tkn_length(docs, path)
     except Exception as err:
         red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
         loader = PyPDFLoader(path)
         content  = loader.load()
         content = "\n".join([d.page_content.strip() for d in content])
 
-    # remove empty lines. frequent in pdfs
-    content = re.sub(emptyline_regex, '', content)
-    content = re.sub(emptyline2_regex, '\n', content)
-    texts = text_splitter.split_text(content)
-    docs = [Document(page_content=t) for t in texts]
+        # remove empty lines. frequent in pdfs
+        content = re.sub(emptyline_regex, '', content)
+        content = re.sub(emptyline2_regex, '\n', content)
+        texts = text_splitter.split_text(content)
+        docs = [Document(page_content=t) for t in texts]
+
+        check_docs_tkn_length(docs, path)
+
     return docs
 
 def create_hyde_retriever(
