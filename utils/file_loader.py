@@ -27,8 +27,12 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import UnstructuredPDFLoader
+from langchain.document_loaders import PyPDFium2Loader
+from langchain.document_loaders import PyMuPDFLoader
 # from langchain.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain.document_loaders import PDFMinerLoader
+from langchain.document_loaders import PDFPlumberLoader
 from langchain.document_loaders import OnlinePDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import SeleniumURLLoader
@@ -1029,33 +1033,37 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
 @loaddoc_cache.cache(ignore=["text_splitter"])
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
-    try:
-        loader = PDFMinerLoader(path)
-        content = loader.load()
-        content = "\n".join([d.page_content.strip() for d in content])
+    loaders = {
+            "PDFMiner": PDFMinerLoader,
+            "PyPDFLoader": PyPDFLoader,
+            "Unstructured": UnstructuredPDFLoader,
+            "PyPDFium2": PyPDFium2Loader,
+            "PyMuPDF": PyMuPDFLoader,
+            "PdfPlumber": PDFPlumberLoader,
+            }
+    done = False
+    for loader_name, loader_func in loaders.items():
+        try:
+            loader = loader_func(path)
+            content = loader.load()
+            content = "\n".join([d.page_content.strip() for d in content])
 
-        # remove empty lines. frequent in pdfs
-        content = re.sub(emptyline_regex, '', content)
-        content = re.sub(emptyline2_regex, '\n', content)
-        texts = text_splitter.split_text(content)
-        docs = [Document(page_content=t) for t in texts]
+            # remove empty lines. frequent in pdfs
+            content = re.sub(emptyline_regex, '', content)
+            content = re.sub(emptyline2_regex, '\n', content)
+            texts = text_splitter.split_text(content)
+            docs = [Document(page_content=t) for t in texts]
 
-        check_docs_tkn_length(docs, path)
-    except Exception as err:
-        red(f"Error when parsing '{path}' with PDFMiner. Using PyPDF as fallback.")
-        loader = PyPDFLoader(path)
-        content  = loader.load()
-        content = "\n".join([d.page_content.strip() for d in content])
+            check_docs_tkn_length(docs, path)
+            done = True
+            break
+        except Exception as err:
+            red(f"Error when parsing '{path}' with {loader_name}: {err}")
 
-        # remove empty lines. frequent in pdfs
-        content = re.sub(emptyline_regex, '', content)
-        content = re.sub(emptyline2_regex, '\n', content)
-        texts = text_splitter.split_text(content)
-        docs = [Document(page_content=t) for t in texts]
-
-        check_docs_tkn_length(docs, path)
-
-    return docs
+    if done:
+        return docs
+    else:
+        raise Exception(f"No pdf parser worked for {path}")
 
 def create_hyde_retriever(
         query,
