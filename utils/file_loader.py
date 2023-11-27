@@ -1069,11 +1069,11 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size):
     # probability
     probs = {}
     for i, ld in enumerate(loaded_docs):
-        probs[i] = language_detect(ld[0].page_content.replace("\n", "<br>"))
+        probs[i] = language_detect(ld[0].page_content.replace("\n", "<br>"))["score"]
         if len(ld) > 1:
-            probs[i] += language_detect(ld[-1].page_content.replace("\n", "<br>"))
+            probs[i] += language_detect(ld[-1].page_content.replace("\n", "<br>"))["score"]
             if len(ld) > 2:
-                probs[i] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))
+                probs[i] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))["score"]
                 probs[i] /= 3
             else:
                 probs[i] /= 2
