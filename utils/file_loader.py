@@ -120,7 +120,9 @@ max_token = 1_000_000
 max_lines = 100_000
 
 def check_docs_tkn_length(docs, name):
-    "checks that the number of tokens in the document is high enough, otherwise it probably means something went wrong."
+    """checks that the number of tokens in the document is high enough,
+    not too low, and has a high enough language probability,
+    otherwise something probably went wrong."""
     size = sum([get_tkn_length(d.page_content) for d in docs])
     nline = len("\n".join([d.page_content for d in docs]).splitlines())
     if nline > max_lines:
@@ -129,9 +131,23 @@ def check_docs_tkn_length(docs, name):
     if size <= min_token:
         red(f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}")
         raise Exception(f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?")
-    elif size >= max_token:
+    if size >= max_token:
         red(f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}")
         raise Exception(f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?")
+
+    # check if language check is above a threshold
+    prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
+    if len(docs) > 1:
+        prob += language_detect(docs[-1].page_content.replace("\n", "<br>"))["score"]
+        if len(docs) > 2:
+            prob += language_detect(docs[len(docs)//2].page_content.replace("\n", "<br>"))["score"]
+            prob /= 3
+        else:
+            prob /= 2
+    if prob <= 0.75:
+        red(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
+        raise Exception(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
+    return prob
 
 def get_url_title(url):
     """if the title of the url is not loaded from the loader, trying as last
@@ -1054,6 +1070,9 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             "PdfPlumber": PDFPlumberLoader,
             }
     loaded_docs = {}
+    # using language detection to keep the parsing with the highest lang
+    # probability
+    probs = {}
     for loader_name, loader_func in loaders.items():
         try:
             if debug:
@@ -1068,7 +1087,8 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
-            check_docs_tkn_length(docs, path)
+            prob = check_docs_tkn_length(docs, path)
+            probs[loader_name] = prob
             loaded_docs[loader_name] = docs
         except Exception as err:
             red(f"Error when parsing '{path}' with {loader_name}: {err}")
@@ -1077,18 +1097,6 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     if not loaded_docs:
         raise Exception(f"No pdf parser worked for {path}")
 
-    # using language detection to keep the parsing with the highest lang
-    # probability
-    probs = {}
-    for name, ld in loaded_docs.items():
-        probs[name] = language_detect(ld[0].page_content.replace("\n", "<br>"))["score"]
-        if len(ld) > 1:
-            probs[name] += language_detect(ld[-1].page_content.replace("\n", "<br>"))["score"]
-            if len(ld) > 2:
-                probs[name] += language_detect(ld[len(ld)//2].page_content.replace("\n", "<br>"))["score"]
-                probs[name] /= 3
-            else:
-                probs[name] /= 2
     max_prob = max([v for v in probs.values()])
 
     if debug:
