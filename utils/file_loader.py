@@ -82,6 +82,7 @@ markdownlink_regex = re.compile(r'\[.*?\]\((.*?)\)')  # to parse markdown links"
 yt_link_regex = re.compile("youtube.*watch")  # to check that a youtube link is valid
 emptyline_regex = re.compile(r'^\s*$', re.MULTILINE)
 emptyline2_regex = re.compile(r'\n\n+', re.MULTILINE)
+linebreak_before_letter = re.compile(r'\n([a-záéíóúü])', re.MULTILINE)  # match any linebreak that is followed by a lowercase letter
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
@@ -412,7 +413,7 @@ def load_doc(filetype, debug, task, **kwargs):
                                 doc_print[ii] = Path(d).name
                             except:
                                 pass
-                    whi(f"(Depth={depth)} Waiting for {n} threads to finish: {','.join(doc_print)}")
+                    whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
                 n = sum([t.is_alive() for t in threads.values()])
 
             # get the values from the queue
@@ -1102,6 +1103,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             # remove empty lines. frequent in pdfs
             content = re.sub(emptyline_regex, '', content)
             content = re.sub(emptyline2_regex, '\n', content)
+            content = re.sub(linebreak_before_letter, r'\1', content)
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
