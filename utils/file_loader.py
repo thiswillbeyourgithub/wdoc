@@ -1106,10 +1106,10 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     loaders = {
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            "Unstructured": UnstructuredPDFLoader,
+            # "Unstructured": UnstructuredPDFLoader,
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
-            "PdfPlumber": PDFPlumberLoader,
+            # "PdfPlumber": PDFPlumberLoader,
             }
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
