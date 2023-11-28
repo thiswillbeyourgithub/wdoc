@@ -405,7 +405,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         if d.startswith("{") and d.endswith("}"):
                             # print only path if recursive
                             try:
-                                doc_print[ii] = json.loads(d)["path"]
+                                doc_print[ii] = json.loads(d)["path"].replace("../", "")
                                 continue
                             except:
                                 pass
