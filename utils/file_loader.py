@@ -1,3 +1,4 @@
+import tldextract
 import uuid
 import threading
 import queue
@@ -365,7 +366,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
         lock = threading.Lock()
         q = queue.Queue()
-        threads = []
+        threads = {}
         if "depth" in kwargs:
             depth = kwargs["depth"]
             kwargs["depth"] += 1
@@ -378,7 +379,7 @@ def load_doc(filetype, debug, task, **kwargs):
             message = f"loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             for doc in doclist:
-                while sum([t.is_alive() for t in threads]) > max_threads:
+                while sum([t.is_alive() for t in threads.values()]) > max_threads:
                     time.sleep(0.1)
                 thread = threading.Thread(
                         target=threaded_load_item,
@@ -386,16 +387,33 @@ def load_doc(filetype, debug, task, **kwargs):
                         daemon=True,  # exit when the main program exits
                         )
                 thread.start()
-                threads.append(thread)
+                threads[doc] = thread
             # waiting for threads to finish
-            n = sum([t.is_alive() for t in threads])
+            n = sum([t.is_alive() for t in threads.values()])
             i = 0
             while n:
                 i += 1
                 time.sleep(1)
                 if i % 10 == 0:
-                    whi(f"Waiting for {n} threads to finish")
-                n = sum([t.is_alive() for t in threads])
+                    doc_print = [k for k, v in threads.items() if v.is_alive()]
+                    for ii, d in enumerate(doc_print):
+                        d = d.strip()
+                        if d.startswith("http"):  # print only domain name
+                            doc_print[ii] = tldextract.extract(d).registered_domain
+                        if d.startswith("{") and d.endswith("}"):
+                            # print only path if recursive
+                            try:
+                                doc_print[ii] = json.loads(d)["path"]
+                            except:
+                                pass
+                        if "/" in d:
+                            # print filename
+                            try:
+                                doc_print[ii] = Path(d).name
+                            except:
+                                pass
+                    whi(f"(Depth={depth)} Waiting for {n} threads to finish: {','.join(doc_print)}")
+                n = sum([t.is_alive() for t in threads.values()])
 
             # get the values from the queue
             results = []
