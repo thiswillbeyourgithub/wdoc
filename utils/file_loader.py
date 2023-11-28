@@ -381,21 +381,36 @@ def load_doc(filetype, debug, task, **kwargs):
             message = f"loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             for doc in doclist:
-                while sum([t.is_alive() for t in threads.values()]) > max_threads:
-                    time.sleep(0.1)
                 thread = threading.Thread(
                         target=threaded_load_item,
                         args=(filetype, doc, kwargs.copy(), pbar, q, lock),
                         daemon=True,  # exit when the main program exits
                         )
-                thread.start()
+                if sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
+                    thread.is_started = False
+                else:
+                    thread.is_started = True
+                    thread.start()
+                assert doc not in threads, f"{doc} already present as thread"
                 threads[doc] = thread
             # waiting for threads to finish
-            n = sum([t.is_alive() for t in threads.values()])
+            n = sum([t.is_alive() for t in threads.values() if t.is_started])
+            nn = len([t for t in threads.values() if not t.is_started])
             i = 0
-            while n:
-                i += 1
+            while n or nn:
+
+                if n < max_threads:
+                    # launch one more thread
+                    sub_thread = [k for k, t in threads.items() if not t.is_started]
+                    if sub_thread:
+                        k = sub_thread[0]
+                        threads[k].start()
+                        threads[k].is_started = True
+                        n += 1
+                        nn -= 1
+                        continue
                 time.sleep(1)
+                i += 1
                 if i % 10 == 0:
                     doc_print = [k for k, v in threads.items() if v.is_alive()]
                     for ii, d in enumerate(doc_print):
@@ -418,7 +433,11 @@ def load_doc(filetype, debug, task, **kwargs):
                             except:
                                 pass
                     whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
-                n = sum([t.is_alive() for t in threads.values()])
+                n = sum([t.is_alive() for t in threads.values() if t.is_started])
+                nn = len([t for t in threads.values() if not t.is_started])
+
+            assert sum([t.is_alive() for t in threads.values() if t.is_started]) == 0
+            assert len([t for t in threads.values() if not t.is_started]) == 0
 
             # get the values from the queue
             results = []
