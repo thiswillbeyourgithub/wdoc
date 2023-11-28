@@ -120,6 +120,7 @@ def cloze_stripper(clozed):
 min_token = 200
 max_token = 1_000_000
 max_lines = 100_000
+min_lang_prob = 0.50
 
 def check_docs_tkn_length(docs, name):
     """checks that the number of tokens in the document is high enough,
@@ -146,8 +147,8 @@ def check_docs_tkn_length(docs, name):
             prob /= 3
         else:
             prob /= 2
-    if prob <= 0.75:
-        red(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
+    if prob <= min_lang_prob:
+        red(f"Low language probability for {name}: prob={prob}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}")
         raise Exception(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
     return prob
 
