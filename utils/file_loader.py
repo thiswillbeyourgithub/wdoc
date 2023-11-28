@@ -401,16 +401,19 @@ def load_doc(filetype, debug, task, **kwargs):
                         d = d.strip()
                         if d.startswith("http"):  # print only domain name
                             doc_print[ii] = tldextract.extract(d).registered_domain
+                            continue
                         if d.startswith("{") and d.endswith("}"):
                             # print only path if recursive
                             try:
                                 doc_print[ii] = json.loads(d)["path"]
+                                continue
                             except:
                                 pass
                         if "/" in d:
                             # print filename
                             try:
                                 doc_print[ii] = Path(d).name
+                                continue
                             except:
                                 pass
                     whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
