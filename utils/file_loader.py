@@ -379,7 +379,7 @@ def load_doc(filetype, debug, task, **kwargs):
             kwargs["depth"] = 1
 
         # if debugging, don't multithread
-        if not debug and depth >= 1:
+        if not debug:
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             for doc in doclist:
@@ -388,11 +388,11 @@ def load_doc(filetype, debug, task, **kwargs):
                         args=(filetype, doc, kwargs.copy(), pbar, q, lock),
                         daemon=True,  # exit when the main program exits
                         )
-                if sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
+                if depth > 0 and sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
                     thread.is_started = False
                 else:
-                    thread.is_started = True
                     thread.start()
+                    thread.is_started = True
                 assert doc not in threads, f"{doc} already present as thread"
                 with lock:
                     threads[doc] = thread
