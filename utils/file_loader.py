@@ -383,6 +383,7 @@ def load_doc(filetype, debug, task, **kwargs):
         if not debug:
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
+            recursion_id = str(uuid.uuid4())
             for doc in doclist:
                 thread = threading.Thread(
                         target=threaded_load_item,
@@ -396,19 +397,20 @@ def load_doc(filetype, debug, task, **kwargs):
                         n_recursive += 1
                     thread.start()
                     thread.is_started = True
+                thread.recursion_id = recursion_id
                 assert doc not in threads, f"{doc} already present as thread"
                 with lock:
                     threads[doc] = thread
             # waiting for threads to finish
             with lock:
-                n = sum([t.is_alive() for t in threads.values() if t.is_started])
-                nn = len([t for t in threads.values() if not t.is_started])
+                n = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
+                nn = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
             i = 0
             while n or nn:
                 if n < max_threads + n_recursive:
                     # launch one more thread
                     with lock:
-                        sub_thread = [k for k, t in threads.items() if not t.is_started]
+                        sub_thread = [k for k, t in threads.items() if not t.is_started and t.recursion_id == recursion_id]
                         if sub_thread:
                             k = sub_thread[0]
                             threads[k].start()
@@ -420,7 +422,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 i += 1
                 with lock:
                     if i % 10 == 0:
-                        doc_print = [k for k, v in threads.items() if v.is_alive()]
+                        doc_print = [k for k, v in threads.items() if v.is_alive() and v.recursion_id == recursion_id]
                         for ii, d in enumerate(doc_print):
                             d = d.strip()
                             if d.startswith("http"):  # print only domain name
@@ -445,8 +447,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     nn = len([t for t in threads.values() if not t.is_started])
 
             with lock:
-                assert sum([t.is_alive() for t in threads.values() if t.is_started]) == 0
-                assert len([t for t in threads.values() if not t.is_started]) == 0
+                assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
+                assert len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id]) == 0
 
             # get the values from the queue
             results = []
