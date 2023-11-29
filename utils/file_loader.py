@@ -86,7 +86,8 @@ linebreak_before_letter = re.compile(r'\n([a-záéíóúü])', re.MULTILINE)  # 
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 5
+max_threads = 10
+threads = {}
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -368,7 +369,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
         lock = threading.Lock()
         q = queue.Queue()
-        threads = {}
+        global threads
         if "depth" in kwargs:
             depth = kwargs["depth"]
             kwargs["depth"] += 1
@@ -377,7 +378,7 @@ def load_doc(filetype, debug, task, **kwargs):
             kwargs["depth"] = 1
 
         # if debugging, don't multithread
-        if not debug:
+        if not debug and depth >= 1:
             message = f"loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             for doc in doclist:
@@ -392,52 +393,57 @@ def load_doc(filetype, debug, task, **kwargs):
                     thread.is_started = True
                     thread.start()
                 assert doc not in threads, f"{doc} already present as thread"
-                threads[doc] = thread
+                with lock:
+                    threads[doc] = thread
             # waiting for threads to finish
-            n = sum([t.is_alive() for t in threads.values() if t.is_started])
-            nn = len([t for t in threads.values() if not t.is_started])
+            with lock:
+                n = sum([t.is_alive() for t in threads.values() if t.is_started])
+                nn = len([t for t in threads.values() if not t.is_started])
             i = 0
             while n or nn:
 
                 if n < max_threads:
                     # launch one more thread
-                    sub_thread = [k for k, t in threads.items() if not t.is_started]
-                    if sub_thread:
-                        k = sub_thread[0]
-                        threads[k].start()
-                        threads[k].is_started = True
-                        n += 1
-                        nn -= 1
-                        continue
+                    with lock:
+                        sub_thread = [k for k, t in threads.items() if not t.is_started]
+                        if sub_thread:
+                            k = sub_thread[0]
+                            threads[k].start()
+                            threads[k].is_started = True
+                            n += 1
+                            nn -= 1
+                            continue
                 time.sleep(1)
                 i += 1
-                if i % 10 == 0:
-                    doc_print = [k for k, v in threads.items() if v.is_alive()]
-                    for ii, d in enumerate(doc_print):
-                        d = d.strip()
-                        if d.startswith("http"):  # print only domain name
-                            doc_print[ii] = tldextract.extract(d).registered_domain
-                            continue
-                        if d.startswith("{") and d.endswith("}"):
-                            # print only path if recursive
-                            try:
-                                doc_print[ii] = json.loads(d)["path"].replace("../", "")
+                with lock:
+                    if i % 10 == 0:
+                        doc_print = [k for k, v in threads.items() if v.is_alive()]
+                        for ii, d in enumerate(doc_print):
+                            d = d.strip()
+                            if d.startswith("http"):  # print only domain name
+                                doc_print[ii] = tldextract.extract(d).registered_domain
                                 continue
-                            except:
-                                pass
-                        if "/" in d:
-                            # print filename
-                            try:
-                                doc_print[ii] = Path(d).name
-                                continue
-                            except:
-                                pass
-                    whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
-                n = sum([t.is_alive() for t in threads.values() if t.is_started])
-                nn = len([t for t in threads.values() if not t.is_started])
+                            if d.startswith("{") and d.endswith("}"):
+                                # print only path if recursive
+                                try:
+                                    doc_print[ii] = json.loads(d)["path"].replace("../", "")
+                                    continue
+                                except:
+                                    pass
+                            if "/" in d:
+                                # print filename
+                                try:
+                                    doc_print[ii] = Path(d).name
+                                    continue
+                                except:
+                                    pass
+                        whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
+                    n = sum([t.is_alive() for t in threads.values() if t.is_started])
+                    nn = len([t for t in threads.values() if not t.is_started])
 
-            assert sum([t.is_alive() for t in threads.values() if t.is_started]) == 0
-            assert len([t for t in threads.values() if not t.is_started]) == 0
+            with lock:
+                assert sum([t.is_alive() for t in threads.values() if t.is_started]) == 0
+                assert len([t for t in threads.values() if not t.is_started]) == 0
 
             # get the values from the queue
             results = []
@@ -450,7 +456,10 @@ def load_doc(filetype, debug, task, **kwargs):
                     # when failed: we returned the name of the item
                     failed.append(doc)
         else:
-            message = "loading documents using 1 thread because debug"
+            if debug:
+                message = "loading documents using 1 thread because debug"
+            else:
+                message = "loading documents using 1 thread because depth is 0"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
