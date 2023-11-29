@@ -89,6 +89,7 @@ tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get to
 max_threads = 10
 threads = {}
 lock = threading.Lock()
+n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -369,7 +370,7 @@ def load_doc(filetype, debug, task, **kwargs):
         assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
         q = queue.Queue()
-        global threads, lock
+        global threads, lock, n_recursive
 
         if "depth" in kwargs:
             depth = kwargs["depth"]
@@ -391,6 +392,8 @@ def load_doc(filetype, debug, task, **kwargs):
                 if depth > 0 and sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
                     thread.is_started = False
                 else:
+                    if depth == 0:
+                        n_recursive += 1
                     thread.start()
                     thread.is_started = True
                 assert doc not in threads, f"{doc} already present as thread"
@@ -402,7 +405,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 nn = len([t for t in threads.values() if not t.is_started])
             i = 0
             while n or nn:
-                if n < max_threads:
+                if n < max_threads + n_recursive:
                     # launch one more thread
                     with lock:
                         sub_thread = [k for k, t in threads.items() if not t.is_started]
