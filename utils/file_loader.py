@@ -403,11 +403,11 @@ def load_doc(filetype, debug, task, **kwargs):
                     threads[doc] = thread
             # waiting for threads to finish
             with lock:
-                n = sum([t.is_alive() for t in threads.values() if t.is_started])
-                nn = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                n_threads_alive= sum([t.is_alive() for t in threads.values() if t.is_started])
+                n_threads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
             i = 0
-            while n or nn:
-                if n < max_threads + n_recursive:
+            while n_threads_aliveor n_threads_todo:
+                if n_threads_alive< max_threads + n_recursive:
                     # launch one more thread
                     with lock:
                         sub_thread = [k for k, t in threads.items() if not t.is_started and t.recursion_id == recursion_id]
@@ -415,8 +415,8 @@ def load_doc(filetype, debug, task, **kwargs):
                             k = sub_thread[0]
                             threads[k].start()
                             threads[k].is_started = True
-                            n += 1
-                            nn -= 1
+                            n_threads_alive+= 1
+                            n_threads_todo -= 1
                             continue
                 time.sleep(1)
                 i += 1
@@ -446,8 +446,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     whi(f"(Depth={depth}) Waiting for {sub_n} threads to finish: {','.join(doc_print)}")
 
                 with lock:
-                    n = sum([t.is_alive() for t in threads.values() if t.is_started])
-                    nn = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                    n_threads_alive= sum([t.is_alive() for t in threads.values() if t.is_started])
+                    n_threads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
 
             # check that all its subthreads are done
             with lock:
