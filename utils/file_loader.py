@@ -446,7 +446,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
                 with lock:
                     n = sum([t.is_alive() for t in threads.values() if t.is_started])
-                    nn = len([t for t in threads.values() if not t.is_started])
+                    nn = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
 
             with lock:
                 assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
