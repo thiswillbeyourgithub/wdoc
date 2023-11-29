@@ -405,21 +405,25 @@ def load_doc(filetype, debug, task, **kwargs):
             # waiting for threads to finish
             with lock:
                 n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                n_threads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
+                n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
             i = 0
-            while n_threads_alive or n_threads_todo:
-                if n_threads_alive < max_threads + n_recursive:
-                    # launch one more thread
-                    with lock:
-                        sub_thread = [k for k, t in threads.items() if not t.is_started and t.recursion_id == recursion_id]
-                        if sub_thread:
-                            k = sub_thread[0]
-                            threads[k].start()
-                            threads[k].is_started = True
-                            n_threads_alive += 1
-                            n_threads_todo -= 1
-                            continue
+            while n_subthreads_alive or n_subthreads_todo:
+
+                with lock:
+                    n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
+                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
+                    n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+
+                    if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
+                        # launch one more thread
+                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].start()
+                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].is_started = True
+                        continue
+
                 time.sleep(1)
+
+                # display progress every 10s
                 i += 1
                 if i % 10 == 0:
                     with lock:
@@ -443,12 +447,7 @@ def load_doc(filetype, debug, task, **kwargs):
                                 continue
                             except:
                                 pass
-                    sub_n = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
-                    whi(f"(Depth={depth}) Waiting for {sub_n} threads to finish: {','.join(doc_print)}")
-
-                with lock:
-                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                    n_threads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                    whi(f"(Depth={depth}) Waiting for {n_subthreads_alive} subthreads to finish: {','.join(doc_print)}")
 
             # check that all its subthreads are done
             with lock:
