@@ -708,6 +708,8 @@ def load_doc(filetype, debug, task, **kwargs):
 
         # delete temporary db file
         Path(new_db_path).unlink()
+        (Path(new_db_path) + "-shm").unlink(missing_ok=True)
+        (Path(new_db_path) + "-wal").unlink(missing_ok=True)
 
     elif filetype == "string":
         whi("Loading string")
