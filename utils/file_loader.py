@@ -448,6 +448,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     n = sum([t.is_alive() for t in threads.values() if t.is_started])
                     nn = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
 
+            # check that all its subthreads are done
             with lock:
                 assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
                 assert len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id]) == 0
@@ -463,10 +464,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     # when failed: we returned the name of the item
                     failed.append(doc)
         else:
-            if debug:
-                message = "Loading documents using 1 thread because debug"
-            else:
-                message = "Loading documents using 1 thread because depth is 0"
+            message = "Loading documents using 1 thread because debug"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
