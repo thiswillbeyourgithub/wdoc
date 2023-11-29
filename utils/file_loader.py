@@ -420,29 +420,31 @@ def load_doc(filetype, debug, task, **kwargs):
                             continue
                 time.sleep(1)
                 i += 1
-                with lock:
-                    if i % 10 == 0:
+                if i % 10 == 0:
+                    with lock:
                         doc_print = [k for k, v in threads.items() if v.is_alive() and v.recursion_id == recursion_id]
-                        for ii, d in enumerate(doc_print):
-                            d = d.strip()
-                            if d.startswith("http"):  # print only domain name
-                                doc_print[ii] = tldextract.extract(d).registered_domain
+                    for ii, d in enumerate(doc_print):
+                        d = d.strip()
+                        if d.startswith("http"):  # print only domain name
+                            doc_print[ii] = tldextract.extract(d).registered_domain
+                            continue
+                        if d.startswith("{") and d.endswith("}"):
+                            # print only path if recursive
+                            try:
+                                doc_print[ii] = json.loads(d)["path"].replace("../", "")
                                 continue
-                            if d.startswith("{") and d.endswith("}"):
-                                # print only path if recursive
-                                try:
-                                    doc_print[ii] = json.loads(d)["path"].replace("../", "")
-                                    continue
-                                except:
-                                    pass
-                            if "/" in d:
-                                # print filename
-                                try:
-                                    doc_print[ii] = Path(d).name
-                                    continue
-                                except:
-                                    pass
-                        whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
+                            except:
+                                pass
+                        if "/" in d:
+                            # print filename
+                            try:
+                                doc_print[ii] = Path(d).name
+                                continue
+                            except:
+                                pass
+                    whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
+
+                with lock:
                     n = sum([t.is_alive() for t in threads.values() if t.is_started])
                     nn = len([t for t in threads.values() if not t.is_started])
 
