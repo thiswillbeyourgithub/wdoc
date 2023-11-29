@@ -10,7 +10,7 @@ from .logger import red
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 
-loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=0)
+loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
 
 # remove cache files older than 90 days
 try:
