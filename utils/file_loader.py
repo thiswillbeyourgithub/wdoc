@@ -88,6 +88,7 @@ tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get to
 
 max_threads = 10
 threads = {}
+lock = threading.Lock()
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -367,9 +368,9 @@ def load_doc(filetype, debug, task, **kwargs):
 
         assert doclist, f"empty list of documents to load from filetype '{filetype}'"
 
-        lock = threading.Lock()
         q = queue.Queue()
-        global threads
+        global threads, lock
+
         if "depth" in kwargs:
             depth = kwargs["depth"]
             kwargs["depth"] += 1
