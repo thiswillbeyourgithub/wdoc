@@ -1,3 +1,4 @@
+import asyncio
 import tldextract
 import uuid
 import threading
@@ -975,7 +976,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     to_embed = []
 
     # load previous faiss index from cache
-    for doc in tqdm(docs, desc="Loading embeddings from cache"):
+    async def load_from_cache(doc):
         fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
         if fi.exists():
             temp = FAISS.load_local(fi, cached_embeddings)
@@ -983,13 +984,23 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
                 db = temp
             else:
                 try:
-                    db.merge_from(temp)
+                    async with merge_lock:
+                        db.merge_from(temp)
                 except Exception as err:
                     red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
                     [p.unlink() for p in fi.iterdir()]
                     fi.rmdir()
         else:
             to_embed.append(doc)
+
+    # Create a lock to synchronize merge operations
+    merge_lock = asyncio.Lock()
+
+    # load previous faiss index from cache
+    loop = asyncio.get_event_loop()
+    load_tasks = [asyncio.create_task(load_from_cache(doc)) for doc in tqdm(docs, desc="Loading embeddings from cache")]
+    loop.run_until_complete(asyncio.gather(*load_tasks))
+    loop.close()
 
     whi(f"Docs left to embed: {len(to_embed)}")
 
