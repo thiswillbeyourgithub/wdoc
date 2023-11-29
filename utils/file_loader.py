@@ -442,7 +442,8 @@ def load_doc(filetype, debug, task, **kwargs):
                                 continue
                             except:
                                 pass
-                    whi(f"(Depth={depth}) Waiting for {n} threads to finish: {','.join(doc_print)}")
+                    sub_n = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
+                    whi(f"(Depth={depth}) Waiting for {sub_n} threads to finish: {','.join(doc_print)}")
 
                 with lock:
                     n = sum([t.is_alive() for t in threads.values() if t.is_started])
