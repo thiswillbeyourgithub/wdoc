@@ -475,7 +475,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     # when failed: we returned the name of the item
                     failed.append(doc)
         else:
-            message = "Loading documents using 1 thread because debug"
+            message = "Loading documents without multithreading because debug is on"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
