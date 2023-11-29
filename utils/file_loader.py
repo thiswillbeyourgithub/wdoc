@@ -380,7 +380,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
         # if debugging, don't multithread
         if not debug and depth >= 1:
-            message = f"loading documents using {max_threads} threads (depth={depth})"
+            message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             for doc in doclist:
                 thread = threading.Thread(
@@ -402,7 +402,6 @@ def load_doc(filetype, debug, task, **kwargs):
                 nn = len([t for t in threads.values() if not t.is_started])
             i = 0
             while n or nn:
-
                 if n < max_threads:
                     # launch one more thread
                     with lock:
@@ -458,9 +457,9 @@ def load_doc(filetype, debug, task, **kwargs):
                     failed.append(doc)
         else:
             if debug:
-                message = "loading documents using 1 thread because debug"
+                message = "Loading documents using 1 thread because debug"
             else:
-                message = "loading documents using 1 thread because depth is 0"
+                message = "Loading documents using 1 thread because depth is 0"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
