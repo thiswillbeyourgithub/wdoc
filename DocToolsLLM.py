@@ -282,8 +282,8 @@ class DocToolsLLM:
                     if intersect:
                         red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
                         for i, inte in enumerate(intersect):
-                            red(f"  * #{i}: {inte}")
-                        raise Exception()
+                            red(f"  * #{i + 1}: {inte}")
+                        # raise Exception()
                     else:
                         red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
 
