@@ -461,6 +461,9 @@ def load_doc(filetype, debug, task, **kwargs):
                 assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
                 assert len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id]) == 0
 
+                # remove old finished threads
+                threads = [t for t in threads if t.recursion_id != recursion_id]
+
             # get the values from the queue
             results = []
             failed = []
