@@ -439,7 +439,14 @@ def load_doc(filetype, debug, task, **kwargs):
                                 doc_print[ii] = json.loads(d)["path"].replace("../", "")
                                 continue
                             except:
-                                pass
+                                try:  # for other recursion, show all key:values
+                                    temp = json.loads(d)
+                                    doc_print[ii] = ""
+                                    for k, v in temp.items():
+                                        doc_print[ii] += f"{k}:{v},"
+                                    doc_print[ii] = doc_print[ii][:-1]  # remove comma
+                                except:
+                                    pass
                         if "/" in d:
                             # print filename
                             try:
