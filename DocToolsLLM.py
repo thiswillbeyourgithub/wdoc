@@ -700,19 +700,18 @@ class DocToolsLLM:
                                     )
                                 )
 
-                        retrievers.append(
-                                KNNRetriever.from_texts(
-                                    [d.page_content for d in self.loaded_docs],
-                                    self.embeddings,
-                                    )
-                                )
-                        retrievers.append(
-                                SVMRetriever.from_texts(
-                                    [d.page_content for d in self.loaded_docs],
-                                    self.embeddings,
-                                    )
-                                )
-
+                        # retrievers.append(
+                        #         KNNRetriever.from_texts(
+                        #             [d.page_content for d in self.loaded_docs],
+                        #             self.embeddings,
+                        #             )
+                        #         )
+                        # retrievers.append(
+                        #         SVMRetriever.from_texts(
+                        #             [d.page_content for d in self.loaded_docs],
+                        #             self.embeddings,
+                        #             )
+                        #         )
                         # retrievers.append(
                         #         create_parent_retriever(
                         #             task=self.task,
