@@ -41,6 +41,7 @@ class DocToolsLLM:
             self,
             model="openai",
             task="query",
+            query=None,
             filetype="infer",
             local_llm_path=None,
             # embed_model="openai",
@@ -71,6 +72,9 @@ class DocToolsLLM:
                 * summarize means the input will be passed through a summarization prompt.
                 * summarize_then_query
                 * summarize_link_file takes in --filetype must be link_file
+
+        --query str, default None
+            if str, will be directly used for the first query if task in ["query", "search"]
 
         --filetype str, default infer
             the type of input. Depending on the value, different other parameters
@@ -179,6 +183,7 @@ class DocToolsLLM:
         # storing as attributes
         self.model = model
         self.task = task
+        self.query = query
         self.filetype = filetype
         self.local_llm_path = local_llm_path
         self.embed_model = embed_model
@@ -664,10 +669,15 @@ class DocToolsLLM:
         while True:
             try:
                 with self.callback() as cb:
-                    query, cli_commands = ask_user(
-                            "\n\nWhat is your question? (Q to quit)\n",
-                            cli_commands,
-                            )
+                    if not self.query:
+                        query, cli_commands = ask_user(
+                                "\n\nWhat is your question? (Q to quit)\n",
+                                cli_commands,
+                                )
+                    else:
+                        query = self.query
+                        self.query = None
+                        whi(f"Query: {query}")
 
                     retrievers = []
                     if cli_commands["retriever"] in ["hyde", "all"]:
