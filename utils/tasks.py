@@ -82,7 +82,27 @@ def do_summarize(
                     return_only_outputs=False,
                     )
 
-            summaries.append(out["output_text"].rstrip())
+            output_lines = out["output_text"].rstrip().splitlines()
+            for il, ll in output_lines:
+                stripped = ll.lstrip()
+                if not stripped.startswith("-") and not stripped.startswith("*"):
+
+            # for each summary, remove any empty lines:
+            for il, ll in enumerate(output_lines):
+                # remove if contains no alphanumeric character
+                if not any(char.isalpha() for char in ll.strip()):
+                    output_lines[il] = None
+                    continue
+
+                # if a line does not start with - or *, fix it
+                stripped = ll.lstrip()
+                if not stripped.startswith("-") and not stripped.startswith("*"):
+                    ll = ll.replace(stripped[0], "- " + stripped[0], 1)
+                    output_lines[il] = ll
+
+            output_text = "\n".join([s for s in output_lines if s])
+
+            summaries.append(output_text)
 
             # finding the end of the summary to give as context to the next one
             lines = "\n".join(summaries).splitlines()
@@ -97,21 +117,6 @@ def do_summarize(
             previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
             if metadata:
                 previous_summary = "\n\n" + previous_summary
-
-    # for each summary, remove any empty lines:
-    for i, s in enumerate(summaries):
-        splits = s.split("\n")
-        new_sum = "\n".join(
-                [ss.rstrip()
-                 for ss in splits
-                 if any(char.isalpha() for char in ss)
-                 ]
-                ).rstrip()
-        if new_sum:
-            summaries[i] = new_sum
-        else:
-            summaries[i] = None
-    summaries = [s for s in summaries if s]
 
     # combine summaries as one string separated by markdown separator
     n = len(summaries)
