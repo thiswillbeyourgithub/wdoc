@@ -45,6 +45,7 @@
 
 ## Supported tasks:
 * **query** give documents and asks questions about it.
+* **search** only returns the documents and their metadata.
 * **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
 * **summarize_then_query** summarize the document then allow you to query directly about it.
 * **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
