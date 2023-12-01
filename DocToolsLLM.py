@@ -712,13 +712,13 @@ class DocToolsLLM:
                                     )
                                 )
 
-                        retrievers.append(
-                                create_parent_retriever(
-                                    task=self.task,
-                                    loaded_embeddings=self.loader_embeddings,
-                                    loaded_docs=self.loaded_docs,
-                                    )
-                                )
+                        # retrievers.append(
+                        #         create_parent_retriever(
+                        #             task=self.task,
+                        #             loaded_embeddings=self.loader_embeddings,
+                        #             loaded_docs=self.loaded_docs,
+                        #             )
+                        #         )
 
                     if cli_commands["retriever"] in ["simple", "all"]:
                         retrievers.append(
