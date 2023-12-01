@@ -773,31 +773,6 @@ class DocToolsLLM:
                             include_run_info=True,
                             )
 
-                    # docs = self.loaded_embeddings.similarity_search(
-                    #         query,
-                    #         k=cli_commands["top_k"],
-                    #         )
-                    # chain = load_qa_with_sources_chain(
-                    #         llm=self.llm,
-                    #         #retriever=retriever,
-                    #         chain_type="map_reduce",
-                    #         #prompt=query_prompt,
-                    #         combine_prompt=combine_prompt,
-                    #         #return_map_steps=True,
-                    #         #return_source_documents=True,
-                    #         verbose=self.llm_verbosity,
-                    #         input_key="question",
-                    #         )
-
-                    # ans = chain(
-                    #         inputs={
-                    #             "question": query,
-                    #             "input_documents": docs,
-                    #             },
-                    #         return_only_outputs=False,
-                    #         include_run_info=True,
-                    #         )
-
                 whi("\n\nSources:")
                 for doc in ans["source_documents"]:
                     keys = doc.metadata.keys()
