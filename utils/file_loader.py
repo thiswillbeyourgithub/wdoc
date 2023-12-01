@@ -1292,7 +1292,6 @@ def create_parent_retriever(
         loaded_docs,
         ):
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
-    # parent retriever
     csp = get_splitter(task)
     psp = get_splitter(task)
     psp._chunk_size *= 4
