@@ -12,7 +12,7 @@ summary_rules = indent(dedent("""
 \t\t- Use ONE bullet point per information. Use indentation to make the whole piece easy to skim
 \t\t- Write your summary in LANGUAGE
 \t\t- Reformulate direct quotes to be concise whilst staying faithful to the tone and idea of the author
-\t\t- Highlight keywords using bold like in "**keyword**"
+\t\t- Use bold like in "**keyword**" to highlight important concepts
 \t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied
 """.strip()), "\t")
 
