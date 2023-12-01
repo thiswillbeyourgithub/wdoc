@@ -84,18 +84,26 @@ def do_summarize(
 
             output_lines = out["output_text"].rstrip().splitlines()
 
-            # for each summary, remove any empty lines:
             for il, ll in enumerate(output_lines):
                 # remove if contains no alphanumeric character
                 if not any(char.isalpha() for char in ll.strip()):
                     output_lines[il] = None
                     continue
 
+                ll = ll.rstrip()
+
                 # if a line does not start with - or *, fix it
                 stripped = ll.lstrip()
-                if not stripped.startswith("-") and not stripped.startswith("*"):
+                if not stripped.startswith("- ") and not stripped.startswith("* "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
-                    output_lines[il] = ll
+
+                # if contains uneven number of bold markers
+                if ll.count("**") % 2 == 1:
+                    ll += "**"  # and the bold
+                if ll.count("*") % 2 == 1 and not ll.lstrip().startswith("* "):
+                    ll += "*"  # end the italic
+
+                output_lines[il] = ll
 
             output_text = "\n".join([s for s in output_lines if s])
 
