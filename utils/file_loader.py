@@ -742,7 +742,7 @@ def load_doc(filetype, debug, task, **kwargs):
         path = f"Anki_profile='{profile}',deck='{deck}'notetype={notetype},fields={','.join(fields)}"
         for i in range(len(docs)):
             docs[i].metadata["anki_profile"] = profile
-            docs[i].metadata["anki_deck"] = deck
+            docs[i].metadata["anki_topdeck"] = deck
             docs[i].metadata["anki_notetype"] = notetype
             docs[i].metadata["path"] = path
 
