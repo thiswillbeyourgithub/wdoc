@@ -19,7 +19,7 @@
     * for youtube: `python -m pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git"` (this is the latest youtube_dl from the git repo, much more recent than their latest release).
     * for urls: `python -m pip install goose3`
 * if you want to use OpenAI's API: add a file "API_KEY.txt" to the root that contains your API key.
-* Read the documentation at `python __init__.py --help`
+* Read the documentation at `python DocToolsLLM.py --help`
 
 ## Features
 * Several tasks implemented. See below.
@@ -45,6 +45,7 @@
 
 ## Supported tasks:
 * **query** give documents and asks questions about it.
-* **summary** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
-* **summary_then_query** summarize the document then allow you to query directly about it.
+* **search** only returns the documents and their metadata.
+* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
+* **summarize_then_query** summarize the document then allow you to query directly about it.
 * **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)

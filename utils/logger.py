@@ -1,21 +1,29 @@
 import time
 from tqdm import tqdm
 import logging
+import logging.handlers
 from pathlib import Path
 
 # adds logger, restrict it to X lines
 local_dir = "/".join(__file__.split("/")[:-2])
 Path(f"{local_dir}/logs.txt").touch(exist_ok=True)
-Path(f"{local_dir}/logs.txt").write_text(
-    "\n".join(
-        Path(f"{local_dir}/logs.txt").read_text().split("\n")[-100_000:]))
-logging.basicConfig(filename=f"{local_dir}/logs.txt",
-                    filemode='a',
-                    format=f"{time.ctime()}: %(message)s",
-                    force=True,
-                    )
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
+handler = logging.handlers.RotatingFileHandler(
+        filename=f"{local_dir}/logs.txt",
+        mode="a",
+        encoding=None,
+        delay=0,
+        maxBytes=1024*1024*100,  # max 50mb
+        backupCount=3,
+        )
+handler.setLevel(logging.INFO)
+handler.setFormatter(log_formatter)
+
 log = logging.getLogger()
 log.setLevel(logging.INFO)
+log.addHandler(handler)
+# delete any additional log file
+Path(f"{local_dir}/logs.txt.3").unlink(missing_ok=True)
 
 
 def coloured_log(color_asked):

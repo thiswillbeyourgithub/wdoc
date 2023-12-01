@@ -1,67 +1,63 @@
-from textwrap import dedent
+from textwrap import dedent, indent
 
 # rule for the summarization
-summary_rules = dedent("""
-* Formatting of your summary:
-  * Use markdown bullet points.
-  * Use indentation to organize information hierarchically.
-  * The bullet points for each information have to follow the order of appearance in the text.
-  * The present rules are a good example of adequate formatting.
-* Content of your summary:
-  * Include all noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, etc.
-  * Exclude sponsors, advertisements, embellishments, headers, etc.
-  * When in doubt about wether to include an information or not, include it.
-  * Direct quotations are allowed.
-  * Your answer can contain many bullet points but each one has to be brief and to the point. You don't have to use complete sentences.
-    * Good example of brevity : US President's daily staff memo, the present rules.
-    * Use common words but keep technical details if noteworthy.
-    * Don't use pronouns if it's implied by the previous bullet point: write like a technical report.
-  * Write in the same language as the input: if the text is in French, write an answer in French.
-  * Write without bias and stay faithful to the author.
-""".strip())
+summary_rules = indent(dedent("""
+\t- Content of the summary:
+\t\t- What you should keep:
+\t\t\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
+\t\t- What you should ignore:
+\t\t\t- Sponsors, advertisements, etc
+\t\t- When in doubt, keep the information in your summary
+\t- What formatting you should use for the summary:
+\t\t- Use ONE bullet point per information. Use indentation to make the whole piece easy to skim
+\t\t- Write your summary in LANGUAGE
+\t\t- Reformulate direct quotes to be concise whilst staying faithful to the tone and idea of the author
+\t\t- Highlight keywords using bold like in "**keyword**"
+\t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied
+""".strip()), "\t")
 
 # template to summarize
-system_summary_template = dedent("""You are a perfect assistant. Your job is to summarize a chunk of text. There are rules you absolutely have to follow.
+system_summary_template = dedent("""You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
 
-RULES YOU ABSOLUTELY HAVE TO FOLLOW:
-'''
+- SUMMARY RULES
 {rules}
-'''
+
 """.strip())
 
 human_summary_template = dedent("""{metadata}{previous_summary}
 
-Here's the chunk of the text you have to summarize:
+Text section:
 '''
 {text}
 '''
 
-MARKDOWN SUMMARY:""".strip())
-
-
-# templates to make sure the summary follows the rules
-checksummary_rules = dedent("""
-* remove redundancies like "He says that" "He mentions that" etc and use indentation instead because it's implied
-* remove repetitions, especially for pronouns and use implicit reference instead
-* reformulate every bullet point to make it concise but without losing meaning
-* don't use complete sentences
-* use indentation to hierarchically organize the summary
-* don't translate the summary. If the input summary is in French, answer in French
-* if the summary is already good, simply answer the same unmodified summary
-* don't omit any information from the input summary in your answer
-* a formatted summary that is too long is better than a formatted summary that is missing information from the original summary
+Summary:
 """.strip())
 
-system_checksummary_template = dedent("""You are a perfect assistant. Your job is to fix the format of a summary. There are rules you absolutely have to follow.
 
-RULES YOU ABSOLUTELY HAVE TO FOLLOW:
-'''
-{rules}
-'''""".strip())
-
-human_checksummary_template = dedent("""SUMMARY TO FORMAT:
-'''
-{summary_to_check}
-'''
-
-FORMATTED SUMMARY:""".strip())
+# # templates to make sure the summary follows the rules
+# checksummary_rules = indent(dedent("""
+# - Remove redundancies like "he says that" "he mentions that" etc and use indentation instead because it's implied
+# - Remove repetitions, especially for pronouns and use implicit reference instead
+# - Reformulate every bullet point to make it concise but without losing meaning
+# - Don't use complete sentences
+# - Use indentation to hierarchically organize the summary
+# - Don't translate the summary. if the input summary is in french, answer in french
+# - If the summary is already good, simply answer the same unmodified summary
+# - Don't omit any information from the input summary in your answer
+# - A formatted summary that is too long is better than a formatted summary that is missing information from the original summary
+# """.strip()), "\t")
+# 
+# system_checksummary_template = dedent("""You are my best assistant. Your job is to fix the format of a summary.
+# 
+# - Rules
+# {rules}
+# """.strip())
+# 
+# human_checksummary_template = dedent("""Summary to format:
+# '''
+# {summary_to_check}
+# '''
+# 
+# Formatted summary:
+# """.strip())

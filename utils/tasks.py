@@ -13,8 +13,8 @@ from langchain.prompts.chat import (
 from utils.prompts import (
         summary_rules,
         system_summary_template, human_summary_template,
-        checksummary_rules,
-        system_checksummary_template, human_checksummary_template,
+        # checksummary_rules,
+        # system_checksummary_template, human_checksummary_template,
         )
 from utils.logger import whi, yel, red
 
@@ -30,23 +30,22 @@ chatgpt_summary_messages = ChatPromptTemplate.from_messages(
             ],
         )
 
-# prompt to check the summarization quality
-checksummary_prompt = PromptTemplate(
-        template=system_checksummary_template + "\n\n" + human_checksummary_template,
-        input_variables=["summary_to_check", "rules"],
-        )
-chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
-        [
-            SystemMessagePromptTemplate.from_template(system_checksummary_template),
-            HumanMessagePromptTemplate.from_template(human_checksummary_template),
-            ],
-        )
+# # prompt to check the summarization quality
+# checksummary_prompt = PromptTemplate(
+#         template=system_checksummary_template + "\n\n" + human_checksummary_template,
+#         input_variables=["summary_to_check", "rules"],
+#         )
+# chatgpt_checksummary_messages = ChatPromptTemplate.from_messages(
+#         [
+#             SystemMessagePromptTemplate.from_template(system_checksummary_template),
+#             HumanMessagePromptTemplate.from_template(human_checksummary_template),
+#             ],
+#         )
 
 def do_summarize(
-        n_to_combine,
-        n_summpasscheck,
         docs,
         metadata,
+        language,
         model,
         llm,
         callback,
@@ -62,64 +61,67 @@ def do_summarize(
             prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
             verbose=verbose,
             )
-    checksumm_chain = LLMChain(
-            llm=llm,
-            prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
-            verbose=verbose,
-            )
+    # checksumm_chain = LLMChain(
+    #         llm=llm,
+    #         prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+    #         verbose=verbose,
+    #         )
 
+    assert "[PROGRESS]" in metadata
     with callback() as cb:
         for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
-            # when ird == n_to_combine, the first n_to_combine summaries
-            # will be checked n_summpasscheck times for compactness. So the
-            # progression number have to be reset to avoid giving
-            # false impressions to the LLM.
-            if ird <= n_to_combine:
-                fixed_index = f"{ird + 1 - min(n_to_combine, ird)}/{len(docs) - min(n_to_combine, ird)}"
-            else:
-                fixed_index = f"{ird + 1}/{len(docs)}"
+            fixed_index = f"{ird + 1}/{len(docs)}"
 
             out = summarize_chain(
                     {
                         "input_documents": [rd],
                         "metadata": metadata.replace("[PROGRESS]", fixed_index),
-                        "rules": summary_rules,
+                        "rules": summary_rules.replace("LANGUAGE", language),
                         "previous_summary": previous_summary,
                         },
                     return_only_outputs=False,
                     )
 
-            summaries.append(out["output_text"])
+            summaries.append(out["output_text"].rstrip())
 
-            # given the influence of the first few summaries, make sure it's compact
-            # and follows the rules
-            if ird <= n_to_combine:  # combine the first n summaries and make it more compact
-                summaries = ["\n".join(summaries)]
-
-            # run the check also on each individual paragraph without
-            # combining
-            if verbose and n_summpasscheck:
-                red(f"Chunk summary {ird} before check:\n{summaries[-1]}")
-            for trial in range(n_summpasscheck):
-                summaries[-1] = checksumm_chain(
-                        {
-                            "summary_to_check": summaries[-1],
-                            "rules": checksummary_rules,
-                            }
-                        )["text"]
-            if verbose and n_summpasscheck:
-                red(f"Chunk summary {ird} after check:\n{summaries[-1]}")
-
-            previous_summary = f"For reference, here's the summary of the previous chunk of text (you can directly continue this summary and use the same indentation as there is an overlap between the two chunks):\n'''\n{summaries[-1]}\n'''"
+            # finding the end of the summary to give as context to the next one
+            lines = "\n".join(summaries).splitlines()
+            end_of_latest_summary = []
+            # add the lines of the previous summary in reverse order
+            # and stop when there is no indentation
+            for line in lines[::-1]:
+                end_of_latest_summary.insert(0, line.rstrip())
+                if not line.startswith("\t"):
+                    break
+            end_of_latest_summary = "\n".join(end_of_latest_summary)
+            previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
             if metadata:
-                previous_summary = "\n" + previous_summary
+                previous_summary = "\n\n" + previous_summary
 
-    # combine summaries as one string
-    n = len(summaries)
-    outtext = f"-Chunk 1/{n}\n"
+    # for each summary, remove any empty lines:
     for i, s in enumerate(summaries):
-        outtext += s + "\n"
-        if s != summaries[-1]:
-            outtext += f"- ---\n- Chunk {i + 2}/{n}\n"
+        splits = s.split("\n")
+        new_sum = "\n".join(
+                [ss.rstrip()
+                 for ss in splits
+                 if any(char.isalpha() for char in ss)
+                 ]
+                ).rstrip()
+        if new_sum:
+            summaries[i] = new_sum
+        else:
+            summaries[i] = None
+    summaries = [s for s in summaries if s]
 
-    return outtext, cb.total_tokens, cb.total_cost
+    # combine summaries as one string separated by markdown separator
+    n = len(summaries)
+    if n > 1:
+        outtext = f"- Chunk 1/{n}\n"
+        for i, s in enumerate(summaries):
+            outtext += s + "\n"
+            if n > 1 and s != summaries[-1]:
+                outtext += f"- ---\n- Chunk {i + 2}/{n}\n"
+    else:
+        outtext = "\n".join(summaries)
+
+    return outtext.rstrip(), n, cb.total_tokens, cb.total_cost

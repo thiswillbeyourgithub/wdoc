@@ -1,3 +1,4 @@
+tldextract>=3.4.1
 ankipandas>=0.3.13
 beautifulsoup4>=4.10.0
 fire>=0.5.0
@@ -10,3 +11,4 @@ prompt-toolkit>=3.0.28
 requests>=2.25.1
 tiktoken>=0.3.3
 tqdm>=4.57.0
+fasttext-langdetect>=1.0.5

@@ -1,18 +1,23 @@
+from datetime import timedelta
 import re
 from pathlib import Path
 from bs4 import BeautifulSoup
 import hashlib
 from joblib import Memory
 
+from .logger import red
+
 Path(".cache").mkdir(exist_ok=True)
-Path(".cache/embed_cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 
-embed_cache = Path(".cache/embed_cache/")
-loaddoc_cache = Memory(".cache/loaddoc_cache/")
+loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
 
 # remove cache files older than 90 days
-#loaddoc_cache.reduce_size(age_limit=90)
+try:
+    loaddoc_cache.reduce_size(age_limit=timedelta(90))
+except Exception as err:
+    red(f"Error when reducing cache size: '{err}'")
+
 
 
 def hasher(text):
@@ -28,6 +33,8 @@ def html_to_text(html, issoup):
         text = soup.get_text()
         if "<img" in text:
             text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
+            if "<img" in text:
+                red("Failed to remove <img from anki card")
         return text
     else:
         return html.get_text()
