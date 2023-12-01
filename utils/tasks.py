@@ -83,9 +83,6 @@ def do_summarize(
                     )
 
             output_lines = out["output_text"].rstrip().splitlines()
-            for il, ll in output_lines:
-                stripped = ll.lstrip()
-                if not stripped.startswith("-") and not stripped.startswith("*"):
 
             # for each summary, remove any empty lines:
             for il, ll in enumerate(output_lines):
