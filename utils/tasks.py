@@ -102,6 +102,9 @@ def do_summarize(
 
             output_text = "\n".join([s for s in output_lines if s])
 
+            if verbose:
+                whi(output_text)
+
             summaries.append(output_text)
 
             # finding the end of the summary to give as context to the next one
