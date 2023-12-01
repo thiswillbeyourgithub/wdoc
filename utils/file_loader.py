@@ -636,63 +636,63 @@ def load_doc(filetype, debug, task, **kwargs):
 
         docs = []
 
-        # load each card as a single document
-        for cid in cards.index:
-            c = cards.loc[cid, :]
-            docs.append(
-                    Document(
-                        page_content=c["text"],
-                        metadata={
-                            "anki_tags": " ".join(c["ntags"]),
-                            "cid": cid,
-                            }
-                        )
-                    )
+        # # load each card as a single document
+        # for cid in cards.index:
+        #     c = cards.loc[cid, :]
+        #     docs.append(
+        #             Document(
+        #                 page_content=c["text"],
+        #                 metadata={
+        #                     "anki_tags": " ".join(c["ntags"]),
+        #                     "cid": cid,
+        #                     }
+        #                 )
+        #             )
 
-        # turn all cards into a single wall of text then use text_splitter
+        # # turn all cards into a single wall of text then use text_splitter
         # pro: fill the context window as much I possible I guess
         # con: - editing cards will force re-embedding a lot of cards
         #      - ignores tags
-        # full_df = "\n\n\n\n".join(cards["text"].tolist())
-        # texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
-        # docs.extend([Document(page_content=t) for t in texts])
+        full_df = "\n\n\n\n".join(cards["text"].tolist())
+        texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
+        docs.extend([Document(page_content=t) for t in texts])
 
-        # set window_size to X turn each X cards into one document, overlapping
-        window_size = 5
-        index_list = cards.index.tolist()
-        n = len(index_list)
-        cards["text_concat"] = ""
-        cards["tags_concat"] = ""
-        cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
-        for i in tqdm(range(len(index_list)), desc="combining anki cards"):
-            text_concat = ""
-            tags_concat = ""
-            skip = 0
-            for w in range(0, window_size):
-                if i + window_size + skip >= n:
-                    s = -1  # when at the end of the list, apply the window in reverse
-                    # s for 'sign'
-                else:
-                    s = 1
-                if cards.at[index_list[i+w*s], "text"] in cards.at[index_list[i], "text_concat"]:
-                    # skipping this card because it's a duplicate
-                    skip += 1
-                text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
-                tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
-            cards.at[index_list[i], "text_concat"] = text_concat
-            cards.at[index_list[i], "tags_concat"] = tags_concat
+        # # set window_size to X turn each X cards into one document, overlapping
+        # window_size = 5
+        # index_list = cards.index.tolist()
+        # n = len(index_list)
+        # cards["text_concat"] = ""
+        # cards["tags_concat"] = ""
+        # cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
+        # for i in tqdm(range(len(index_list)), desc="combining anki cards"):
+        #     text_concat = ""
+        #     tags_concat = ""
+        #     skip = 0
+        #     for w in range(0, window_size):
+        #         if i + window_size + skip >= n:
+        #             s = -1  # when at the end of the list, apply the window in reverse
+        #             # s for 'sign'
+        #         else:
+        #             s = 1
+        #         if cards.at[index_list[i+w*s], "text"] in cards.at[index_list[i], "text_concat"]:
+        #             # skipping this card because it's a duplicate
+        #             skip += 1
+        #         text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
+        #         tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
+        #     cards.at[index_list[i], "text_concat"] = text_concat
+        #     cards.at[index_list[i], "tags_concat"] = tags_concat
 
-        for cid in cards.index:
-            c = cards.loc[cid, ]
-            docs.append(
-                    Document(
-                        page_content=c["text_concat"].strip(),
-                        metadata={
-                            "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
-                            "cid": cid,
-                            }
-                        )
-                    )
+        # for cid in cards.index:
+        #     c = cards.loc[cid, ]
+        #     docs.append(
+        #             Document(
+        #                 page_content=c["text_concat"].strip(),
+        #                 metadata={
+        #                     "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
+        #                     "cid": cid,
+        #                     }
+        #                 )
+        #             )
 
         assert docs, "List of loaded anki document is empty!"
 
