@@ -659,6 +659,7 @@ def load_doc(filetype, debug, task, **kwargs):
         metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
         for cid in cards.index:
             c = cards.loc[cid, :]
+            cid = str(cid)
             tags = c["ntags"]
             text = ftfy.fix_text(c["text"].strip())
             card_deck = c["codeck"]
