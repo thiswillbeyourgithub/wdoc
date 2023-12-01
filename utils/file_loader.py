@@ -644,6 +644,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         page_content=c["text"],
                         metadata={
                             "anki_tags": " ".join(c["ntags"]),
+                            "cid": cid,
                             }
                         )
                     )
@@ -687,7 +688,8 @@ def load_doc(filetype, debug, task, **kwargs):
                     Document(
                         page_content=c["text_concat"].strip(),
                         metadata={
-                            "anki_tags": " ".join(list(set(c["tags_concat"].split(" "))))
+                            "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
+                            "cid": cid,
                             }
                         )
                     )
