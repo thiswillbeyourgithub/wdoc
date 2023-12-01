@@ -69,6 +69,7 @@ class DocToolsLLM:
         --task str, default query
             possibilities:
                 * query means to load the input files then wait for user question.
+                * search means only return the document corresponding to the search
                 * summarize means the input will be passed through a summarization prompt.
                 * summarize_then_query
                 * summarize_link_file takes in --filetype must be link_file
@@ -151,7 +152,7 @@ class DocToolsLLM:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
-        assert task in ["query", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
+        assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         assert isinstance(filetype, str), "filetype must be a string"
         if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
@@ -650,7 +651,7 @@ class DocToolsLLM:
                 self.loaded_docs,
                 self.kwargs)
 
-        assert self.task in ["query", "summarize_then_query"]
+        assert self.task in ["query", "search", "summarize_then_query"]
 
         # set default ask_user argument
         multiline = False
@@ -742,56 +743,53 @@ class DocToolsLLM:
                             base_compressor=pipeline, base_retriever=retriever
                         )
 
-                    _template = textwrap.dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+                    if self.task == "search":
+                        docs = retriever.get_relevant_documents(query)
 
-                    Chat History:
-                    {chat_history}
+                    else:
+                        _template = textwrap.dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
-                    Follow Up Input: {question}
+                        Chat History:
+                        {chat_history}
 
-                    Standalone question:""")
-                    CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
-                    question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
-                    doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
+                        Follow Up Input: {question}
 
-                    chain = ConversationalRetrievalChain(
-                            retriever=retriever,
-                            question_generator=question_generator,
-                            combine_docs_chain=doc_chain,
-                            return_source_documents=True,
-                            return_generated_question=True,
-                            verbose=self.llm_verbosity,
-                            memory=memory,
-                            )
+                        Standalone question:""")
+                        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
+                        question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
+                        doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
+
+                        chain = ConversationalRetrievalChain(
+                                retriever=retriever,
+                                question_generator=question_generator,
+                                combine_docs_chain=doc_chain,
+                                return_source_documents=True,
+                                return_generated_question=True,
+                                verbose=self.llm_verbosity,
+                                memory=memory,
+                                )
 
 
-                    ans = chain(
-                            inputs={
-                                "question": query,
-                                },
-                            return_only_outputs=False,
-                            include_run_info=True,
-                            )
+                        ans = chain(
+                                inputs={
+                                    "question": query,
+                                    },
+                                return_only_outputs=False,
+                                include_run_info=True,
+                                )
+
+                        red(f"Answer:\n{ans['answer']}\n")
+                        docs = ans["source_documents"]
 
                 whi("\n\nSources:")
-                for doc in ans["source_documents"]:
-                    keys = doc.metadata.keys()
-                    for toprint in [
-                            "filetype", "path", "nid", "anki_deck", "anki_tags"]:
-                        if toprint in keys:
-                            val = doc.metadata[toprint]
-                            yel(f"    * {toprint}: {val}")
-
-                    toignore = [k for k in keys if k not in toprint]
-                    whi(f"Metadata not printed: '{','.join(toignore)}'")
-
+                for doc in docs:
+                    whi("  * content:")
                     content = doc.page_content.strip()
-                    wrapped = "\n".join(textwrap.wrap(content, width=120))
-                    whi("    * content:")
+                    wrapped = "\n".join(textwrap.wrap(content, width=240))
                     whi(f"{wrapped:>10}")
-                    print("\n\n")
-
-                red(f"Answer:\n{ans['answer']}\n")
+                    for k, v in doc.metadata.items():
+                        yel(f"    * {k}: {v}")
+                    print("\n")
 
                 yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
