@@ -653,9 +653,52 @@ def load_doc(filetype, debug, task, **kwargs):
         # pro: fill the context window as much I possible I guess
         # con: - editing cards will force re-embedding a lot of cards
         #      - ignores tags
-        full_df = "\n\n\n\n".join(cards["text"].tolist())
-        texts = loaddoc_cache.eval(text_splitter.split_text, full_df)
-        docs.extend([Document(page_content=t) for t in texts])
+        chunksize = text_splitter._chunk_size
+        full_text = ""
+        spacer = "\n\n#####\n\n"
+        metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
+        for cid in cards.index:
+            c = cards.loc[cid, :]
+            tags = c["ntags"]
+            text = ftfy.fix_text(c["text"].strip())
+            card_deck = c["codeck"]
+            assert card_deck, f"empty card_deck for cid {cid}"
+
+            if not full_text:  # always add first
+                full_text = text
+                metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
+                continue
+
+            # if too many token, add the current chunk of text and start
+            # the next chunk with this card
+            if get_tkn_length(full_text + spacer + text) >= chunksize:
+                assert full_text, f"An anki card is too large for the text splitter: {text}"
+                assert metadata["anki_cid"], "No anki_cid in metadata"
+                docs.append(
+                        Document(
+                            page_content=full_text,
+                            metadata=metadata,
+                            )
+                        )
+
+                metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
+                full_text = text
+            else:
+                for t in tags:
+                    if t not in metadata["anki_tags"]:
+                        metadata["anki_tags"] += f" {t}"
+                metadata["anki_cid"] += " " + cid
+                if card_deck not in metadata["anki_deck"]:
+                    metadata["anki_deck"] += " " + card_deck
+                full_text += spacer + text
+
+        if full_text:  # add latest chunk
+            docs.append(
+                    Document(
+                        page_content=full_text,
+                        metadata=metadata,
+                        )
+                    )
 
         # # set window_size to X turn each X cards into one document, overlapping
         # window_size = 5
