@@ -790,6 +790,7 @@ class DocToolsLLM:
                                 include_run_info=True,
                                 )
 
+                        docs = ans["source_documents"]
                         whi("\n\nSources:")
                         for doc in docs:
                             whi("  * content:")
@@ -801,7 +802,6 @@ class DocToolsLLM:
                             print("\n")
 
                         red(f"Answer:\n{ans['answer']}\n")
-                        docs = ans["source_documents"]
 
 
                 yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
