@@ -746,6 +746,17 @@ class DocToolsLLM:
                     if self.task == "search":
                         docs = retriever.get_relevant_documents(query)
 
+                        whi("\n\nSources:")
+                        for doc in docs:
+                            whi("  * content:")
+                            content = doc.page_content.strip()
+                            wrapped = "\n".join(textwrap.wrap(content, width=240))
+                            whi(f"{wrapped:>10}")
+                            for k, v in doc.metadata.items():
+                                yel(f"    * {k}: {v}")
+                            print("\n")
+
+
                     else:
                         _template = textwrap.dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
@@ -778,18 +789,19 @@ class DocToolsLLM:
                                 include_run_info=True,
                                 )
 
+                        whi("\n\nSources:")
+                        for doc in docs:
+                            whi("  * content:")
+                            content = doc.page_content.strip()
+                            wrapped = "\n".join(textwrap.wrap(content, width=240))
+                            whi(f"{wrapped:>10}")
+                            for k, v in doc.metadata.items():
+                                yel(f"    * {k}: {v}")
+                            print("\n")
+
                         red(f"Answer:\n{ans['answer']}\n")
                         docs = ans["source_documents"]
 
-                whi("\n\nSources:")
-                for doc in docs:
-                    whi("  * content:")
-                    content = doc.page_content.strip()
-                    wrapped = "\n".join(textwrap.wrap(content, width=240))
-                    whi(f"{wrapped:>10}")
-                    for k, v in doc.metadata.items():
-                        yel(f"    * {k}: {v}")
-                    print("\n")
 
                 yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 
