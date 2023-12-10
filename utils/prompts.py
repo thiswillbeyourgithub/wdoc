@@ -14,17 +14,19 @@ summary_rules = indent(dedent("""
 \t\t- Reformulate direct quotes to be concise whilst staying faithful to the tone and idea of the author
 \t\t- Use bold like in "**keyword**" to highlight important concepts
 \t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied
-""".strip()), "\t")
+""").strip(), "\t")
 
 # template to summarize
-system_summary_template = dedent("""You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
+system_summary_template = dedent("""
+You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
 
 - SUMMARY RULES
 {rules}
 
-""".strip())
+""").strip()
 
-human_summary_template = dedent("""{metadata}{previous_summary}
+human_summary_template = dedent("""
+{metadata}{previous_summary}
 
 Text section:
 '''
@@ -32,7 +34,7 @@ Text section:
 '''
 
 Summary:
-""".strip())
+""").strip()
 
 
 # # templates to make sure the summary follows the rules
@@ -46,18 +48,20 @@ Summary:
 # - If the summary is already good, simply answer the same unmodified summary
 # - Don't omit any information from the input summary in your answer
 # - A formatted summary that is too long is better than a formatted summary that is missing information from the original summary
-# """.strip()), "\t")
+# """).strip(), "\t")
 # 
-# system_checksummary_template = dedent("""You are my best assistant. Your job is to fix the format of a summary.
+# system_checksummary_template = dedent("""
+# You are my best assistant. Your job is to fix the format of a summary.
 # 
 # - Rules
 # {rules}
-# """.strip())
+# """).strip()
 # 
-# human_checksummary_template = dedent("""Summary to format:
+# human_checksummary_template = dedent("""
+# Summary to format:
 # '''
 # {summary_to_check}
 # '''
 # 
 # Formatted summary:
-# """.strip())
+# """).strip()
