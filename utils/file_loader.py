@@ -181,6 +181,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     break
             if filetype != "infer":
                 break
+        assert filetype != "infer", f"Could not infer filetype of {kwargs['path']}. Use the 'filetype' argument."
 
     if filetype in ["json_list", "recursive", "link_file", "youtube_playlist"]:
         assert "path" in kwargs, "missing 'path' key in args"
