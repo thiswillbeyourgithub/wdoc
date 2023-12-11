@@ -29,6 +29,7 @@ from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, 
 from utils.logger import whi, yel, red
 from utils.cli import ask_user
 from utils.tasks import do_summarize
+from utils.misc import ankiconnect
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -747,6 +748,7 @@ class DocToolsLLM:
                         docs = retriever.get_relevant_documents(query)
 
                         whi("\n\nSources:")
+                        anki_cids = ""
                         for doc in docs:
                             whi("  * content:")
                             content = doc.page_content.strip()
@@ -755,7 +757,21 @@ class DocToolsLLM:
                             for k, v in doc.metadata.items():
                                 yel(f"    * {k}: {v}")
                             print("\n")
+                            if "anki_cid" in doc.metadata:
+                                anki_cids += " " + doc.metadata["anki_cids"]
 
+                        if anki_cids:
+                            anki_cids = anki_cids.split(" ")
+                            open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cids})\n> ")
+                            if open_answ == "debug":
+                                breakpoint()
+                            elif open_answ in ["y", "yes"]:
+                                whi("Openning anki.")
+                                query = f"cid:{','.join(anki_cids)}"
+                                ankiconnect(
+                                        action="guiBrowse",
+                                        query=query,
+                                        )
 
                     else:
                         _template = textwrap.dedent("""

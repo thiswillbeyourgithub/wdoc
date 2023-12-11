@@ -1,3 +1,5 @@
+import urllib
+import json
 from datetime import timedelta
 import re
 from pathlib import Path
@@ -38,3 +40,30 @@ def html_to_text(html, issoup):
         return text
     else:
         return html.get_text()
+
+def ankiconnect(action, **params):
+    "talk to anki via ankiconnect addon"
+    def request_wrapper(action, **params):
+        return {'action': action, 'params': params, 'version': 6}
+
+    requestJson = json.dumps(request_wrapper(action, **params)
+                             ).encode('utf-8')
+
+    try:
+        response = json.load(urllib.request.urlopen(
+            urllib.request.Request(
+                'http://localhost:8765',
+                requestJson)))
+    except (ConnectionRefusedError, urllib.error.URLError) as e:
+        raise Exception(f"{str(e)}: is Anki open and 'ankiconnect "
+                        "addon' enabled? Firewall issue?")
+
+    if len(response) != 2:
+        raise Exception('response has an unexpected number of fields')
+    if 'error' not in response:
+        raise Exception('response is missing required error field')
+    if 'result' not in response:
+        raise Exception('response is missing required result field')
+    if response['error'] is not None:
+        raise Exception(response['error'])
+    return response['result']
