@@ -97,7 +97,7 @@ def get_tkn_length(tosplit):
 
 def get_splitter(task):
     "we don't use the same text splitter depending on the task"
-    if task == "query":
+    if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
                 chunk_size=3000,  # default 4000
