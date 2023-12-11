@@ -748,7 +748,7 @@ class DocToolsLLM:
                         docs = retriever.get_relevant_documents(query)
 
                         whi("\n\nSources:")
-                        anki_cids = ""
+                        anki_cid = []
                         for doc in docs:
                             whi("  * content:")
                             content = doc.page_content.strip()
@@ -758,16 +758,18 @@ class DocToolsLLM:
                                 yel(f"    * {k}: {v}")
                             print("\n")
                             if "anki_cid" in doc.metadata:
-                                anki_cids += " " + doc.metadata["anki_cids"]
+                                cid_str = doc.metadata["anki_cid"].split(" ")
+                                for cid in cid_str:
+                                    if cid not in anki_cid:
+                                        anki_cid.append(cid)
 
-                        if anki_cids:
-                            anki_cids = anki_cids.split(" ")
-                            open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cids})\n> ")
+                        if anki_cid:
+                            open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cid})\n> ")
                             if open_answ == "debug":
                                 breakpoint()
                             elif open_answ in ["y", "yes"]:
                                 whi("Openning anki.")
-                                query = f"cid:{','.join(anki_cids)}"
+                                query = f"cid:{','.join(anki_cid)}"
                                 ankiconnect(
                                         action="guiBrowse",
                                         query=query,
