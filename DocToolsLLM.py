@@ -46,7 +46,7 @@ class DocToolsLLM:
             filetype="infer",
             local_llm_path=None,
             # embed_model="openai",
-            embed_model = "paraphrase-multilingual-mpnet-base-v2",
+            embed_model="paraphrase-multilingual-mpnet-base-v2",
             # embed_model = "distiluse-base-multilingual-cased-v1",
             # embed_model = "msmarco-distilbert-cos-v5",
             # embed_model = "all-mpnet-base-v2",
