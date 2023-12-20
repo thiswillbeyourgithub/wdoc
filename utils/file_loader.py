@@ -275,6 +275,7 @@ def load_doc(filetype, debug, task, **kwargs):
             if "done_links" in kwargs:
                 # discard any links that are already present in the output
                 doclist = [d for d in doclist if d not in kwargs["done_links"]]
+                del kwargs["done_links"]
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 kwargs["path"] = item
