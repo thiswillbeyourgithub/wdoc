@@ -32,39 +32,39 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(model, local_llm_path):
+def load_llm(modelname, modelbackend):
     """load language model"""
-    if model.lower() == "openai":
+    if modelbackend.lower() == "openai":
         whi("Loading openai models")
         assert Path("API_KEY.txt").exists(), "No api key found"
         os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
 
         llm = ChatOpenAI(
-                model_name="gpt-3.5-turbo-1106",
+                model_name=modelname,
                 temperature=0,
                 verbose=True,
                 )
         callback = get_openai_callback
 
-    elif model.lower() == "llama":
+    elif modelbackend.lower() == "llama":
         whi("Loading llama models")
         callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
         llm = LlamaCpp(
-                model_path=local_llm_path,
+                model_path=modelname,
                 callback_manager=callback_manager,
                 verbose=True,
                 n_threads=4,
                 )
         callback = fakecallback
 
-    elif model.lower() == "gpt4all":
-        whi(f"loading gpt4all: '{local_llm_path}'")
-        local_llm_path = Path(local_llm_path)
-        assert local_llm_path.exists(), "local model not found"
+    elif modelbackend.lower() == "gpt4all":
+        whi(f"loading gpt4all: '{modelname}'")
+        modelname = Path(modelname)
+        assert modelname.exists(), "local model not found"
         callbacks = [StreamingStdOutCallbackHandler()]
         # Verbose is required to pass to the callback manager
         llm = GPT4All(
-                model=str(local_llm_path.absolute()),
+                model=str(modelname.absolute()),
                 n_ctx=512,
                 n_threads=4,
                 callbacks=callbacks,
@@ -72,7 +72,7 @@ def load_llm(model, local_llm_path):
                 streaming=True,
                 )
         callback = fakecallback
-    elif model.lower() in ["fake", "test", "testing"]:
+    elif modelbackend.lower() in ["fake", "test", "testing"]:
         llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
         callback = fakecallback
     else:

@@ -46,7 +46,7 @@ def do_summarize(
         docs,
         metadata,
         language,
-        model,
+        modelbackend,
         llm,
         callback,
         verbose,
@@ -58,12 +58,12 @@ def do_summarize(
     summarize_chain = load_summarize_chain(
             llm,
             chain_type="stuff",
-            prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
+            prompt=chatgpt_summary_messages if modelbackend == "openai" else summarize_prompt,
             verbose=verbose,
             )
     # checksumm_chain = LLMChain(
     #         llm=llm,
-    #         prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+    #         prompt=chatgpt_checksummary_messages if modelbackend == "openai" else checksummary_prompt,
     #         verbose=verbose,
     #         )
 

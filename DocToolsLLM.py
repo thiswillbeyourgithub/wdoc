@@ -40,11 +40,11 @@ class DocToolsLLM:
     VERSION = 0.9
     def __init__(
             self,
-            model="openai",
+            modelbackend="openai",
+            modelname="gpt-3.5-turbo-1106",
             task="query",
             query=None,
             filetype="infer",
-            local_llm_path=None,
             # embed_model="openai",
             embed_model="paraphrase-multilingual-mpnet-base-v2",
             # embed_model = "distiluse-base-multilingual-cased-v1",
@@ -100,11 +100,12 @@ class DocToolsLLM:
 
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
-        --model str, default openai
+        --modelbackend str, default openai
             either gpt4all, llama, openai or fake/test/testing to use a fake answer.
 
-        --local_llm_path str
-            if model is not openai, this needs to point to a compatible model
+        --modelname str, default gpt-3.5-turbo-1106
+            name of the model. Available values depend on modelbackend. If it's
+            llama or gpt4all then it must be a path to the model
 
         --embed_model str, default "openai"
             Either 'openai' or sentence_transformer embedding model to use.
@@ -184,11 +185,11 @@ class DocToolsLLM:
             red("Input is 'string' so setting 'top_k' to 1")
 
         # storing as attributes
-        self.model = model
+        self.modelbackend = modelbackend
+        self.modelname = modelname
         self.task = task
         self.query = query
         self.filetype = filetype
-        self.local_llm_path = local_llm_path
         self.embed_model = embed_model
         self.saveas = saveas
         self.loadfrom = loadfrom
@@ -221,7 +222,7 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(model, local_llm_path)
+        self.llm, self.callback = load_llm(modelname, modelbackend)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -401,7 +402,7 @@ class DocToolsLLM:
             if estimate_dol > 1:
                 raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
 
-            if self.model == "openai":
+            if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
                 logit_val = 4
@@ -478,7 +479,7 @@ class DocToolsLLM:
                         docs=relevant_docs,
                         metadata=metadata,
                         language=lang,
-                        model=self.model,
+                        modelbackend=self.modelbackend,
                         llm=self.llm,
                         callback=self.callback,
                         verbose=self.llm_verbosity,
@@ -517,7 +518,7 @@ class DocToolsLLM:
                                 docs=summary_docs,
                                 metadata=metadata,
                                 language=lang,
-                                model=self.model,
+                                modelbackend=self.modelbackend,
                                 llm=self.llm,
                                 callback=self.callback,
                                 verbose=self.llm_verbosity,
@@ -539,7 +540,7 @@ class DocToolsLLM:
                     header += "\n\tcollapsed:: true"
                     header += "\n\tblock_type:: DocToolsLLM_summary"
                     header += f"\n\tDocToolsLLM_version:: {self.VERSION}"
-                    header += f"\n\tDocToolsLLM_model:: {self.model}"
+                    header += f"\n\tDocToolsLLM_model:: {self.modelname} of {self.modelbackend}"
                     header += f"\n\tDocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
                     header += f"\n\tsummary_date:: {today}"
                     header += f"\n\tsummary_timestamp:: {int(time.time())}"
@@ -564,7 +565,7 @@ class DocToolsLLM:
                     if author:
                         header += f"    by '{author}'"
                     header += f"    original link: '{link}'"
-                    header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
+                    header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
                     header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
                 # save to output file
@@ -638,7 +639,7 @@ class DocToolsLLM:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if self.model == "openai":
+                if self.modelbackend == "openai":
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing. Exiting.")
