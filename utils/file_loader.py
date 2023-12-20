@@ -386,16 +386,17 @@ def load_doc(filetype, debug, task, **kwargs):
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
             for doc in doclist:
-                thread = threading.Thread(
-                        target=threaded_load_item,
-                        args=(filetype, doc, kwargs.copy(), pbar, q, lock),
-                        daemon=True,  # exit when the main program exits
-                        )
+                thread = {
+                        "target": threaded_load_item,
+                        "args": (filetype, doc, kwargs.copy(), pbar, q, lock),
+                        "daemon": True,  # exit when the main program exits
+                        }
                 if depth > 0 and sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
                     thread.is_started = False
                 else:
                     if depth == 0:
                         n_recursive += 1
+                    thread = threading.Thread(**thread)
                     thread.start()
                     thread.is_started = True
                 thread.recursion_id = recursion_id
@@ -418,8 +419,12 @@ def load_doc(filetype, debug, task, **kwargs):
 
                     if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
                         # launch one more thread
-                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].start()
-                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].is_started = True
+                        docid = [docid for docid, t in threads.items() if not t.is_started and t.recursion_id == recursion_id][0]
+                        assert isinstance(threads[docid], dict)
+                        threads[docid] = threading.Thread(**threads[docid])
+                        threads[docid].start()
+                        threads[docid].is_started = True
+                        threads[docid].recursion_id = recursion_id[0]
                         continue
 
                 time.sleep(1)
