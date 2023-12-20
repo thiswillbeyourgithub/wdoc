@@ -86,7 +86,7 @@ linebreak_before_letter = re.compile(r'\n([a-záéíóúü])', re.MULTILINE)  # 
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 10
+max_threads = 20
 threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
@@ -386,46 +386,43 @@ def load_doc(filetype, debug, task, **kwargs):
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
+
+            class thread_args(dict):
+                """used to store the arguments used to create the thread and
+                create it at the last minute"""
+                _is_started = False
+                _recursion_id = recursion_id
+
             for doc in doclist:
-                thread = {
-                        "target": threaded_load_item,
-                        "args": (filetype, doc, kwargs.copy(), pbar, q, lock),
-                        "daemon": True,  # exit when the main program exits
-                        }
-                if depth > 0 and sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
-                    thread.is_started = False
-                else:
-                    if depth == 0:
-                        n_recursive += 1
-                    thread = threading.Thread(**thread)
-                    thread.start()
-                    thread.is_started = True
-                thread.recursion_id = recursion_id
+                thread = thread_args()
+                thread["target"] = threaded_load_item
+                thread["args"] = (filetype, doc, kwargs.copy(), pbar, q, lock)
+                thread["daemon"] = True  # exit when the main program exits
+                thread._recursion_id = recursion_id
                 assert doc not in threads, f"{doc} already present as thread"
-                with lock:
-                    threads[doc] = thread
+                threads[doc] = thread
 
             # waiting for threads to finish
             with lock:
-                n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
-                n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
+                n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id])
+                n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
             i = 0
             while n_subthreads_alive or n_subthreads_todo:
 
                 with lock:
-                    n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
-                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                    n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                    n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id])
+                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
+                    n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
 
                     if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
                         # launch one more thread
-                        docid = [docid for docid, t in threads.items() if not t.is_started and t.recursion_id == recursion_id][0]
+                        docid = [docid for docid, t in threads.items() if not t._is_started and t._recursion_id == recursion_id][0]
                         assert isinstance(threads[docid], dict)
                         threads[docid] = threading.Thread(**threads[docid])
                         threads[docid].start()
-                        threads[docid].is_started = True
-                        threads[docid].recursion_id = recursion_id
+                        threads[docid]._is_started = True
+                        threads[docid]._recursion_id = recursion_id
                         continue
 
                 time.sleep(1)
@@ -437,11 +434,11 @@ def load_doc(filetype, debug, task, **kwargs):
                         doc_print = []
                         to_del = []
                         for k, v in threads.items():
-                            if v.recursion_id != recursion_id:
+                            if v._recursion_id != recursion_id:
                                 continue
-                            if v.is_started and v.is_alive():
+                            if v._is_started and v.is_alive():
                                 doc_print.append(k)
-                            elif v.is_started and not v.is_alive():
+                            elif v._is_started and not v.is_alive():
                                 to_del.append(k)
                         for k in to_del:
                             del threads[k]
@@ -475,11 +472,11 @@ def load_doc(filetype, debug, task, **kwargs):
 
             # check that all its subthreads are done
             with lock:
-                assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
-                assert len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id]) == 0
+                assert sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id]) == 0
+                assert len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id]) == 0
 
                 # remove old finished threads
-                threads = {k: t for k, t in threads.items() if t.recursion_id != recursion_id}
+                threads = {k: t for k, t in threads.items() if t._recursion_id != recursion_id}
 
             # get the values from the queue
             results = []
