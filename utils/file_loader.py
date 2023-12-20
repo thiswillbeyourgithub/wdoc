@@ -433,7 +433,17 @@ def load_doc(filetype, debug, task, **kwargs):
                 i += 1
                 if i % 10 == 0:
                     with lock:
-                        doc_print = [k for k, v in threads.items() if v.is_alive() and v.recursion_id == recursion_id]
+                        doc_print = []
+                        to_del = []
+                        for k, v in threads.items():
+                            if v.recursion_id != recursion_id:
+                                continue
+                            if v.is_started and v.is_alive():
+                                doc_print.append(k)
+                            elif v.is_started and not v.is_alive():
+                                to_del.append(k)
+                        for k in to_del:
+                            del threads[k]
                     for ii, d in enumerate(doc_print):
                         d = d.strip()
                         if d.startswith("http"):  # print only domain name
