@@ -424,7 +424,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         threads[docid] = threading.Thread(**threads[docid])
                         threads[docid].start()
                         threads[docid].is_started = True
-                        threads[docid].recursion_id = recursion_id[0]
+                        threads[docid].recursion_id = recursion_id
                         continue
 
                 time.sleep(1)
