@@ -255,6 +255,7 @@ class DocToolsLLM:
 
             self.done_links = " ".join(doclist)
             self.kwargs["done_links"] = doclist
+            self.kwargs["n_summaries_target"] = self.n_summaries_target
 
         # loading documents
         if not loadfrom:
