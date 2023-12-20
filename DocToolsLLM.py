@@ -397,9 +397,8 @@ class DocToolsLLM:
             estimate_tkn = 2.4 * full_tkn
             if self.n_recursive_summary > 0:
                 estimate_tkn += sum([full_tkn / ((i + 1) * 4) for i, ii in enumerate(range(self.n_recursive_summary))])
-            if self.modelname == "gpt-3.5-turbo-1106":
-                prices = [0.001, 0.002]
-            elif self.modelname == "gpt-4-preview-1106":
+            prices = [0.001, 0.002]
+            if self.modelname == "gpt-4-1106-preview":
                 prices = [0.01, 0.03]
             price = (prices[0] * 4 + prices[1]) / 5
             estimate_dol = estimate_tkn / 1000 * price
