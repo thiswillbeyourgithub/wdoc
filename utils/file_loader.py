@@ -425,11 +425,11 @@ def load_doc(filetype, debug, task, **kwargs):
                         threads[docid]._recursion_id = recursion_id
                         continue
 
-                time.sleep(1)
+                time.sleep(0.1)
 
                 # display progress every 10s
                 i += 1
-                if i % 10 == 0:
+                if i % 100 == 0:
                     with lock:
                         doc_print = []
                         to_del = []
