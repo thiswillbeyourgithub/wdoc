@@ -18,7 +18,7 @@ summary_rules = indent(dedent("""
 
 # template to summarize
 system_summary_template = dedent("""
-You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read!
+You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read! The summary has to be as quick and easy to read as possible while following the rules. If you succeed, I'll give you $200!
 
 - SUMMARY RULES
 {rules}
