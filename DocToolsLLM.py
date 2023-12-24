@@ -26,7 +26,7 @@ from langchain.prompts.prompt import PromptTemplate
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever, markdownlink_regex
-from utils.logger import whi, yel, red
+from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect
@@ -35,6 +35,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
+
 
 class DocToolsLLM:
     VERSION = 0.9
@@ -59,6 +60,7 @@ class DocToolsLLM:
 
             debug=False,
             llm_verbosity=True,
+            ntfy_url=None,
 
             help=False,
             h=False,
@@ -145,6 +147,10 @@ class DocToolsLLM:
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
 
+        --ntfy_url, default None
+            must be a url to ntfy.sh to receive notifications for summaries.
+            Especially useful to keep track of costs when using cron.
+
         --help or -h, default False
             if True, will return this documentation.
         """
@@ -199,6 +205,15 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
+
+        global ntfy
+        if ntfy_url:
+            ntfy = create_ntfy_func(ntfy_url)
+            ntfy("Starting DocTools")
+        else:
+            def ntfy(text):
+                red(text)
+                return text
 
         if self.debug:
             # make the script interruptible
@@ -330,7 +345,7 @@ class DocToolsLLM:
                     if len(links_todo) < self.n_summaries_target:
                         links_todo[link] = None
                     else:
-                        yel("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                        ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
                         break
 
                 # comment out the links that are marked as already done
@@ -355,10 +370,10 @@ class DocToolsLLM:
                     n_todos_desired = self.n_summaries_target
                     assert isinstance(n_todos_desired, int)
                     if self.n_todos_present >= n_todos_desired:
-                        return red(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                        return ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                     else:
                         self.n_summaries_target = n_todos_desired - self.n_todos_present
-                        red(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                        ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
                         assert self.n_summaries_target > 0
 
                     while len(links_todo) > self.n_summaries_target:
@@ -405,7 +420,7 @@ class DocToolsLLM:
             estimate_dol = estimate_tkn / 1000 * price
             red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
             if estimate_dol > 1:
-                raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
+                raise Exception(ntfy("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
 
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
@@ -616,8 +631,8 @@ class DocToolsLLM:
             total_docs_length = sum([x["doc_reading_length"] for x in results])
             # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-            red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
-            red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
+            ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
+            ntfy(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
             # if "out_file" in self.kwargs:
             #     # after summarizing all links, append to output file the total cost

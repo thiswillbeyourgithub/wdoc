@@ -31,6 +31,7 @@
 * Multithreaded document parsing and embedding.
 * Very customizable.
 * I'm a nice person so just open an issue if you have a feature request or anything else.
+* Phone notification via [ntfy.sh](ntfy.sh) to tell you about costs, useful when using GPT-4 and cron.
 
 ## Supported filetype so far (they can all be combined in the same index):
 * **youtube** (videos and playlist)
