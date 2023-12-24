@@ -54,7 +54,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=10,
-            n_recursive_summary=1,
+            n_recursive_summary=0,
             n_summaries_target=-1,
 
             debug=False,
@@ -127,7 +127,7 @@ class DocToolsLLM:
         --top_k int, default 10
             number of chunks to look for when querying
 
-        --n_recursive_summary int, default 1
+        --n_recursive_summary int, default 0
             will recursively summarize the summary this many times.
             1 means that the original summary will be summarize. 0 means disabled.
 
