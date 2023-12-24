@@ -23,7 +23,7 @@ You are my best assistant. I give you a section of a text for you to summarize. 
 - SUMMARY RULES
 {rules}
 
-""").strip()
+""")
 
 human_summary_template = dedent("""
 {metadata}{previous_summary}
@@ -34,7 +34,7 @@ Text section:
 '''
 
 Summary:
-""").strip()
+""")
 
 
 # # templates to make sure the summary follows the rules
