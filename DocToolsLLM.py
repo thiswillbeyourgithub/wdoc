@@ -513,8 +513,7 @@ class DocToolsLLM:
                 if self.n_recursive_summary > 0:
                     splitter = get_splitter(self.task)
                     summary_text = summary
-                    if metadata:
-                        metadata = metadata.strip() + "\n\t- New task: enhance this summary while respecting the rules\n"
+
                     for n_recur in range(self.n_recursive_summary):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
 
@@ -542,6 +541,7 @@ class DocToolsLLM:
                                 llm=self.llm,
                                 callback=self.callback,
                                 verbose=self.llm_verbosity,
+                                n_recursion=n_recur,
                                 )
                         doc_total_tokens += new_doc_total_tokens
                         doc_total_cost += new_doc_total_cost

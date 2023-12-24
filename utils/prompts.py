@@ -1,30 +1,43 @@
 from textwrap import dedent, indent
 
 # rule for the summarization
-summary_rules = indent(dedent("""
-\t- Content of the summary:
-\t\t- What you should keep:
-\t\t\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
-\t\t- What you should ignore:
-\t\t\t- Sponsors, advertisements, etc
-\t\t- When in doubt, keep the information in your summary
-\t- What formatting you should use for the summary:
-\t\t- Use ONE bullet point per information. Use indentation to make the whole piece easy to skim
-\t\t- Write your summary in LANGUAGE
-\t\t- Reformulate direct quotes to be concise whilst staying faithful to the tone and idea of the author
-\t\t- Use bold like in "**keyword**" to highlight important concepts
-\t\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied
-""").strip(), "\t")
+summary_rules = """
+- Include:
+\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
+- Exclude:
+\t- Sponsors, advertisements, etc.
+\t- Jokes, ramblings.
+\t- When in doubt, keep the information in your summary.
+- Format:
+\t- Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
+\t- Don't use complete sentence, I'm in a hurry and need bullet points.
+\t- Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
+\t- Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
+\t- Write in [LANGUAGE].
+\t- Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
+\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
+""".strip()
 
 # template to summarize
 system_summary_template = dedent("""
-You are my best assistant. I give you a section of a text for you to summarize. What I want is to know the thought process of the authors, their arguments etc and not just high level takeaways. Note that after the whole text has been summarized, I sometime give it back to you to further increase the quality so be careful not to omit information I would want to read! The summary has to be as quick and easy to read as possible while following the rules. If you succeed, I'll give you $200!
+You are Alfred, my best journalist. Your job today is to summarize in a specific way a text section I just sent you. But I'm not interested simply in high level takeaways, what I'm interested in is the thought process of the authors, their arguments etc. The summary has to be as quick and easy to read as possible while following the rules. This is very important so if you succeed, I'll tip you up to $2000![RECURSION_INSTRUCTION]
 
-- SUMMARY RULES
+- Detailed instructions:
+ '''
 {rules}
+ '''
 
 """)
 
+# if the summary is recursive, add those instructions
+system_summary_template_recursive = system_summary_template.replace(
+        "[RECURSION_INSTRUCTION]",
+        "\nFor this specific job, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
+        )
+
+system_summary_template = system_summary_template.replace("[RECURSION_INSTRUCTION]", "")
+
+# summary in a model that is not a chat model
 human_summary_template = dedent("""
 {metadata}{previous_summary}
 
@@ -32,8 +45,6 @@ Text section:
 '''
 {text}
 '''
-
-Summary:
 """)
 
 

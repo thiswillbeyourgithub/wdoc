@@ -12,7 +12,9 @@ from langchain.prompts.chat import (
 
 from utils.prompts import (
         summary_rules,
-        system_summary_template, human_summary_template,
+        system_summary_template,
+        human_summary_template,
+        system_summary_template_recursive,
         # checksummary_rules,
         # system_checksummary_template, human_checksummary_template,
         )
@@ -20,12 +22,24 @@ from utils.logger import whi, yel, red
 
 # prompts to summarize
 summarize_prompt = PromptTemplate(
-        template=system_summary_template + "\n\n" + human_summary_template,
+        template=system_summary_template + "\n\n" + human_summary_template + "\n\nYour summary:\n",
         input_variables=["text", "previous_summary", "metadata", "rules"],
         )
+summarize_prompt_recursive = PromptTemplate(
+        template=system_summary_template_recursive + "\n\n" + human_summary_template + "\n\nYour summary:\n",
+        input_variables=["text", "previous_summary", "metadata", "rules"],
+        )
+
+# chat models
 chatgpt_summary_messages = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(system_summary_template),
+            HumanMessagePromptTemplate.from_template(human_summary_template),
+            ],
+        )
+chatgpt_summary_messages_recursive = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(system_summary_template_recursive),
             HumanMessagePromptTemplate.from_template(human_summary_template),
             ],
         )
@@ -50,17 +64,27 @@ def do_summarize(
         llm,
         callback,
         verbose,
+        n_recursion=0,
         ):
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
 
-    summarize_chain = load_summarize_chain(
-            llm,
-            chain_type="stuff",
-            prompt=chatgpt_summary_messages if modelbackend == "openai" else summarize_prompt,
-            verbose=verbose,
-            )
+
+    if n_recursion:
+        summarize_chain = load_summarize_chain(
+                llm,
+                chain_type="stuff",
+                prompt=chatgpt_summary_messages_recursive if modelbackend == "openai" else summarize_prompt_recursive,
+                verbose=verbose,
+                )
+    else:
+        summarize_chain = load_summarize_chain(
+                llm,
+                chain_type="stuff",
+                prompt=chatgpt_summary_messages if modelbackend == "openai" else summarize_prompt,
+                verbose=verbose,
+                )
     # checksumm_chain = LLMChain(
     #         llm=llm,
     #         prompt=chatgpt_checksummary_messages if modelbackend == "openai" else checksummary_prompt,
@@ -76,7 +100,7 @@ def do_summarize(
                     {
                         "input_documents": [rd],
                         "metadata": metadata.replace("[PROGRESS]", fixed_index),
-                        "rules": summary_rules.replace("LANGUAGE", language),
+                        "rules": summary_rules.replace("[LANGUAGE]", language),
                         "previous_summary": previous_summary,
                         },
                     return_only_outputs=False,
