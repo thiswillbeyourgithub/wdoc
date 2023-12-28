@@ -402,10 +402,15 @@ class DocToolsLLM:
                     else:
                         docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
+            prices = [0.001, 0.002]
+            if self.modelname == "gpt-4-1106-preview":
+                prices = [0.01, 0.03]
+
             full_tkn = sum(list(docs_tkn_cost.values()))
             red("Token price of each document:")
             for k, v in docs_tkn_cost.items():
-                red(f"- {v:>6}: {k}")
+                pr = v * (prices[0] * 4 + prices[1]) / 5 / 1000
+                red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
             red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
@@ -413,9 +418,6 @@ class DocToolsLLM:
             estimate_tkn = 2.4 * full_tkn
             if self.n_recursive_summary > 0:
                 estimate_tkn += sum([full_tkn / ((i + 1) * 4) for i, ii in enumerate(range(self.n_recursive_summary))])
-            prices = [0.001, 0.002]
-            if self.modelname == "gpt-4-1106-preview":
-                prices = [0.01, 0.03]
             price = (prices[0] * 4 + prices[1]) / 5
             estimate_dol = estimate_tkn / 1000 * price
             red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
