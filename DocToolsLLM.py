@@ -38,7 +38,7 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 
 class DocToolsLLM:
-    VERSION = 0.10
+    VERSION = "0.10"
     def __init__(
             self,
             modelbackend="openai",
