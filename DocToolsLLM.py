@@ -419,10 +419,11 @@ class DocToolsLLM:
             if self.n_recursive_summary > 0:
                 estimate_tkn += sum([full_tkn / ((i + 1) * 4) for i, ii in enumerate(range(self.n_recursive_summary))])
             price = (prices[0] * 4 + prices[1]) / 5
+            dol_limit = 1
             estimate_dol = estimate_tkn / 1000 * price
             red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
-            if estimate_dol > 1:
-                raise Exception(ntfy("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
+            if estimate_dol > dol_limit:
+                raise Exception(ntfy(f"Cost estimate > ${dol_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
