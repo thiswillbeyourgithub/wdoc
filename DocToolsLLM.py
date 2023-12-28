@@ -58,6 +58,7 @@ class DocToolsLLM:
             n_recursive_summary=1,
             n_summaries_target=-1,
 
+            dollar_limit=1,
             debug=False,
             llm_verbosity=True,
             ntfy_url=None,
@@ -139,6 +140,9 @@ class DocToolsLLM:
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
 
+        --dollar_limit int, default 1
+            If the estimated price is above this limit, stop instead.
+
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
             sequential processing instead of multithreading and enable
@@ -205,6 +209,7 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
+        self.dollar_limit = dollar_limit
 
         global ntfy
         if ntfy_url:
@@ -416,11 +421,10 @@ class DocToolsLLM:
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
             price = (prices[0] * 4 + prices[1]) / 5
-            dol_limit = 1
             estimate_dol = full_tkn / 1000 * price
             red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
-            if estimate_dol > dol_limit:
-                raise Exception(ntfy(f"Cost estimate > ${dol_limit} which is absurdly high. Has something gone wrong? Quitting."))
+            if estimate_dol > self.dollar_limit:
+                raise Exception(ntfy(f"Cost estimate > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
