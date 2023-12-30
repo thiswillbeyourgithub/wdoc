@@ -116,9 +116,13 @@ def do_summarize(
 
                 ll = ll.rstrip()
 
-                # if a line does not start with - or *, fix it
+                # if a line starts with * instead of -, fix it
+                if ll.rstrip().startswith("* "):
+                    ll = ll.replace("*", "-", 1)
+
+                # if a line does not start with - fix it
                 stripped = ll.lstrip()
-                if not stripped.startswith("- ") and not stripped.startswith("* "):
+                if not stripped.startswith("- "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
 
                 ll == ll.replace("****", "**")
