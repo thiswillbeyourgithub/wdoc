@@ -138,19 +138,19 @@ def do_summarize(
 
             summaries.append(output_text)
 
-            # finding the end of the summary to give as context to the next one
-            lines = "\n".join(summaries).splitlines()
-            end_of_latest_summary = []
-            # add the lines of the previous summary in reverse order
-            # and stop when there is no indentation
-            for line in lines[::-1]:
-                end_of_latest_summary.insert(0, line.rstrip())
-                if not line.startswith("\t"):
-                    break
-            end_of_latest_summary = "\n".join(end_of_latest_summary)
-            previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
-            if metadata:
-                previous_summary = "\n\n" + previous_summary
+            # # finding the end of the summary to give as context to the next one
+            # lines = "\n".join(summaries).splitlines()
+            # end_of_latest_summary = []
+            # # add the lines of the previous summary in reverse order
+            # # and stop when there is no indentation
+            # for line in lines[::-1]:
+            #     end_of_latest_summary.insert(0, line.rstrip())
+            #     if not line.startswith("\t"):
+            #         break
+            # end_of_latest_summary = "\n".join(end_of_latest_summary)
+            # previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
+            # if metadata:
+            #     previous_summary = "\n\n" + previous_summary
 
     # combine summaries as one string separated by markdown separator
     n = len(summaries)
