@@ -129,8 +129,9 @@ def do_summarize(
 
                 # if contains uneven number of bold markers
                 if ll.count("**") % 2 == 1:
-                    ll += "**"  # and the bold
-                if ll.count("*") % 2 == 1 and not ll.lstrip().startswith("* "):
+                    ll += "**"  # end the bold
+                # and italic
+                if ll.count("*") % 2 == 1:
                     ll += "*"  # end the italic
 
                 output_lines[il] = ll
