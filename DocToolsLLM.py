@@ -563,27 +563,27 @@ class DocToolsLLM:
 
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
-                    header += "\n\tcollapsed:: true"
-                    header += "\n\tblock_type:: DocToolsLLM_summary"
-                    header += f"\n\tDocToolsLLM_version:: {self.VERSION}"
-                    header += f"\n\tDocToolsLLM_model:: {self.modelname} of {self.modelbackend}"
-                    header += f"\n\tDocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-                    header += f"\n\tsummary_date:: {today}"
-                    header += f"\n\tsummary_timestamp:: {int(time.time())}"
-                    header += f"\n\ttoken_cost:: {doc_total_tokens}"
-                    header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
-                    header += f"\n\tsummary_token_length:: {summary_tkn_length}"
-                    header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
-                    header += f"\n\tlink:: {link}"
+                    header += "\n  collapsed:: true"
+                    header += "\n  block_type:: DocToolsLLM_summary"
+                    header += f"\n  DocToolsLLM_version:: {self.VERSION}"
+                    header += f"\n  DocToolsLLM_model:: {self.modelname} of {self.modelbackend}"
+                    header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+                    header += f"\n  summary_date:: {today}"
+                    header += f"\n  summary_timestamp:: {int(time.time())}"
+                    header += f"\n  token_cost:: {doc_total_tokens}"
+                    header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
+                    header += f"\n  summary_token_length:: {summary_tkn_length}"
+                    header += f"\n  summary_reading_time:: {sum_reading_length:.1f}"
+                    header += f"\n  link:: {link}"
                     if doc_reading_length:
-                        header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
-                        header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
+                        header += f"\n  doc_reading_time:: {doc_reading_length:.1f}"
+                        header += f"\n  reading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
                     if n_chunk > 1:
-                        header += f"\n\tchunks:: {n_chunk}"
+                        header += f"\n  chunks:: {n_chunk}"
                     if author:
-                        header += f"\n\tauthor:: {author}"
+                        header += f"\n  author:: {author}"
                     if lang:
-                        header += f"\n\tlanguage:: {lang}"
+                        header += f"\n  language:: {lang}"
 
                 else:
                     header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
