@@ -134,6 +134,14 @@ def do_summarize(
                 if ll.count("*") % 2 == 1:
                     ll += "*"  # end the italic
 
+                # replace leading double spaces by tabs
+                cnt_inside = ll.lstrip().count("  ")
+                cnt_leading = ll.count("  ") - cnt_inside
+                if cnt_leading:
+                    ll = ll.replace("  ", "\t", cnt_leading)
+                # make sure no space have been forgotten
+                ll = ll.replace("\t ", "\t\t")
+
                 output_lines[il] = ll
 
             output_text = "\n".join([s for s in output_lines if s])
