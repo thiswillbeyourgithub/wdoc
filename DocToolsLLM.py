@@ -424,7 +424,7 @@ class DocToolsLLM:
             estimate_dol = full_tkn / 1000 * price
             red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
             if estimate_dol > self.dollar_limit:
-                raise Exception(ntfy(f"Cost estimate > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+                raise Exception(ntfy(f"Cost estimate ${estimate_dol} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
