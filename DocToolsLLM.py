@@ -422,9 +422,9 @@ class DocToolsLLM:
             # of tokens of a document to summarize it
             price = (prices[0] * 4 + prices[1] * 1) / 5
             estimate_dol = full_tkn / 1000 * price * 1.1
-            red(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+            ntfy(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
             if estimate_dol > self.dollar_limit:
-                raise Exception(ntfy(f"Cost estimate ${estimate_dol} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
@@ -635,7 +635,7 @@ class DocToolsLLM:
             total_docs_length = sum([x["doc_reading_length"] for x in results])
             # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-            ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
+            ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
             ntfy(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
             # if "out_file" in self.kwargs:
