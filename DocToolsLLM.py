@@ -559,6 +559,8 @@ class DocToolsLLM:
 
                     red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
+                summary_tkn_length = get_tkn_length(summary)
+
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
                     header += "\n\tcollapsed:: true"
@@ -570,6 +572,7 @@ class DocToolsLLM:
                     header += f"\n\tsummary_timestamp:: {int(time.time())}"
                     header += f"\n\ttoken_cost:: {doc_total_tokens}"
                     header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
+                    header += f"\n\tsummary_token_length:: {summary_tkn_length}"
                     header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
                     header += f"\n\tlink:: {link}"
                     if doc_reading_length:
