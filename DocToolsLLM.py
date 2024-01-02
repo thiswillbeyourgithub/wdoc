@@ -698,7 +698,7 @@ class DocToolsLLM:
         cli_commands = {
                 "top_k": self.top_k,
                 "multiline": multiline,
-                "retriever": "hyde_knn_svm_default",
+                "retriever": "hyde_default",
                 "task": self.task,
                 "relevancy": 0.5,
                 }
