@@ -92,7 +92,7 @@ linebreak_before_letter = re.compile(r'\n([a-záéíóúü])', re.MULTILINE)  # 
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 20
+max_threads = 10
 threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
