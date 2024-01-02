@@ -19,6 +19,7 @@ def ask_user(q, commands):
         /retriever=hyde to use Hypothetical Document Embedding search
         /retriever=simple to use regular embedding search
         /retriever=all to combine all retrievers
+        /relevancy=0.5 to set the relevancy threshold for retrievers that support it
     """
     # loading history from files
     prev_questions = []
@@ -46,6 +47,7 @@ def ask_user(q, commands):
             "/debug",
             "/top_k=",
             "/retriever",
+            "/relevancy=",
             ]
     if commands["task"] == "query":
         autocomplete = WordCompleter(
@@ -95,6 +97,16 @@ def ask_user(q, commands):
                 whi(f"Changed top_k from '{prev}' to '{commands['top_k']}'")
             except Exception as err:
                 whi(f"Error when changing top_k: '{err}'")
+                return ask_user(q, commands)
+
+        if "/relevancy=" in user_question:
+            try:
+                prev = commands["relevancy"]
+                commands["relevancy"] = float(re.search(r"/relevancy=([0-9.]+)", user_question).group(1))
+                user_question = re.sub(r"/relevancy=([0-9.]+)", "", user_question)
+                whi(f"Changed relevancy from '{prev}' to '{commands['relevancy']}'")
+            except Exception as err:
+                whi(f"Error when changing relevancy: '{err}'")
                 return ask_user(q, commands)
 
         if "/retriever=" in user_question:
