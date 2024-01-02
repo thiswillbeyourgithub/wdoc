@@ -740,6 +740,7 @@ class DocToolsLLM:
                                     all_texts,
                                     self.embeddings,
                                     relevancy_threshold=0.5,
+                                    k=cli_commands["top_k"],
                                     )
                                 )
                         retrievers.append(
