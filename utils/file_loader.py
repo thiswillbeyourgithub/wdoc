@@ -1222,6 +1222,22 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
                 strategy="hi_res",
                 mode="elements",
                 post_processors=[clean_extra_whitespace]),
+            "Unstructured2": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="fast",
+                mode="elements",
+                post_processors=[clean_extra_whitespace]),
+            "Unstructured3": partial(
+                UnstructuredPDFLoader,
+                strategy="hi_res",
+                mode="elements",
+                post_processors=[clean_extra_whitespace]),
+            "Unstructured4": partial(
+                UnstructuredPDFLoader,
+                strategy="fast",
+                mode="elements",
+                post_processors=[clean_extra_whitespace]),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
             # "PdfPlumber": PDFPlumberLoader,
@@ -1237,7 +1253,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             loader = loader_func(path)
             content = loader.load()
 
-            if loader_name != "Unstructured":
+            if "Unstructured" in loader_name:
                 content = "\n".join([d.page_content.strip() for d in content])
                 # remove empty lines. frequent in pdfs
                 content = re.sub(emptyline_regex, '', content)
