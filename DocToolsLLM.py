@@ -738,12 +738,14 @@ class DocToolsLLM:
                         #         KNNRetriever.from_texts(
                         #             [d.page_content for d in self.loaded_docs],
                         #             self.embeddings,
+                        #             relevancy_threshold=0.5,
                         #             )
                         #         )
                         # retrievers.append(
                         #         SVMRetriever.from_texts(
                         #             [d.page_content for d in self.loaded_docs],
                         #             self.embeddings,
+                        #             relevancy_threshold=0.5,
                         #             )
                         #         )
                         # retrievers.append(
