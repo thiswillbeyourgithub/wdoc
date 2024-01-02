@@ -1335,7 +1335,7 @@ def create_parent_retriever(
             docstore=LocalFileStore(".cache/parent_retriever"),
             child_splitter=csp,
             parent_splitter=psp,
-            search_type="similarity_score_threshold",
+            search_type="similarity",
             search_kwargs={
                 "k": top_k,
                 "distance_metric": "cos",
