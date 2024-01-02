@@ -309,6 +309,7 @@ class DocToolsLLM:
                             removed_docs.append(self.loaded_docs[i])
                             self.loaded_docs[i] = None
                             hashes[hashes.index(doc.metadata["hash"])] = None
+                    red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
 
                     # check if deduplication likely amputated documents
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
