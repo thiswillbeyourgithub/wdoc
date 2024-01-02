@@ -756,7 +756,7 @@ def load_doc(filetype, debug, task, **kwargs):
                             page_content=c["text_concat"].strip(),
                             metadata={
                                 "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
-                                "cid": cid,
+                                "anki_cid": cid,
                                 }
                             )
                         )
