@@ -66,6 +66,7 @@ inference_rules = {
         "pdf": [".*pdf$"],
         "url": ["^http"],
         "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
+        "json_list": [".*.json"],
         }
 
 # compile the inference rules as regex
