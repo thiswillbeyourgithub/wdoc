@@ -665,7 +665,7 @@ def load_doc(filetype, debug, task, **kwargs):
                             page_content=c["text"],
                             metadata={
                                 "anki_tags": " ".join(c["ntags"]),
-                                "cid": cid,
+                                "anki_cid": cid,
                                 }
                             )
                         )
