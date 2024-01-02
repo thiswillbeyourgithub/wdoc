@@ -730,10 +730,12 @@ def load_doc(filetype, debug, task, **kwargs):
             n = len(index_list)
             cards["text_concat"] = ""
             cards["tags_concat"] = ""
+            cards["cids"] = ""
             cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
             for i in tqdm(range(len(index_list)), desc="combining anki cards"):
                 text_concat = ""
                 tags_concat = ""
+                cids = ""
                 skip = 0
                 for w in range(0, window_size):
                     if i + window_size + skip >= n:
@@ -746,8 +748,10 @@ def load_doc(filetype, debug, task, **kwargs):
                         skip += 1
                     text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
                     tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
+                    cids += f"{index_list[i+(w+skip)*s]} "
                 cards.at[index_list[i], "text_concat"] = text_concat
                 cards.at[index_list[i], "tags_concat"] = tags_concat
+                cards.at[index_list[i], "cids"] = cids
 
             for cid in cards.index:
                 c = cards.loc[cid, ]
@@ -756,7 +760,7 @@ def load_doc(filetype, debug, task, **kwargs):
                             page_content=c["text_concat"].strip(),
                             metadata={
                                 "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
-                                "anki_cid": cid,
+                                "anki_cid": c["cids"].strip(),
                                 }
                             )
                         )
