@@ -58,7 +58,7 @@ class DocToolsLLM:
             n_recursive_summary=1,
             n_summaries_target=-1,
 
-            dollar_limit=1,
+            dollar_limit=5,
             debug=False,
             llm_verbosity=True,
             ntfy_url=None,
@@ -140,7 +140,7 @@ class DocToolsLLM:
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
 
-        --dollar_limit int, default 1
+        --dollar_limit int, default 5
             If the estimated price is above this limit, stop instead.
 
         --debug bool, default False
