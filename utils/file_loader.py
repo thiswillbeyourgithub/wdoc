@@ -613,8 +613,6 @@ def load_doc(filetype, debug, task, **kwargs):
             anki_mode = "window_single_note"
         else:
             anki_mode = kwargs["anki_mode"]
-        if anki_mode == "all":
-            anki_mode = "window_concatenate_single_note"
         assert anki_mode.replace("window", "").replace("concatenate", "").replace("single_note", "").replace("_", "") == "", f"Unexpected anki_mode: {anki_mode}"
 
         whi(f"Loading anki profile: '{profile}'")
