@@ -1281,9 +1281,13 @@ def create_hyde_retriever(
         )
     hyde_vector = hyde_embeddings.embed_query(query)
 
-    hyde_doc = embeddings.similarity_search_by_vector(
+    hyde_doc = embeddings.similarity_search_with_score_by_vector(
             embedding=hyde_vector,
             k=top_k,
+            search_kwargs={
+                "distance_metric": "cos",
+                "score_threshold": 0.5,
+                },
             )
     vecstore, _ = load_embeddings(
             embed_model=embed_model,
