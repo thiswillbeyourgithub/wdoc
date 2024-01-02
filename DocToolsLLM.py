@@ -718,7 +718,7 @@ class DocToolsLLM:
                         whi(f"Query: {query}")
 
                     retrievers = []
-                    if "hyde" in cli_commands["retrievers"].lower():
+                    if "hyde" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 create_hyde_retriever(
                                     query=query,
@@ -733,7 +733,7 @@ class DocToolsLLM:
                                     )
                                 )
 
-                    if "knn" in cli_commands["retrievers"].lower():
+                    if "knn" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 KNNRetriever.from_texts(
                                     all_texts,
@@ -742,7 +742,7 @@ class DocToolsLLM:
                                     k=cli_commands["top_k"],
                                     )
                                 )
-                    if "svm" in cli_commands["retrievers"].lower():
+                    if "svm" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 SVMRetriever.from_texts(
                                     all_texts,
@@ -751,7 +751,7 @@ class DocToolsLLM:
                                     k=cli_commands["top_k"],
                                     )
                                 )
-                    if "parent" in cli_commands["retrievers"].lower():
+                    if "parent" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 create_parent_retriever(
                                     task=self.task,
@@ -762,7 +762,7 @@ class DocToolsLLM:
                                     )
                                 )
 
-                    if "default" in cli_commands["retrievers"].lower():
+                    if "default" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 self.loaded_embeddings.as_retriever(
                                     search_type="similarity_score_threshold",
