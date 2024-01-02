@@ -23,6 +23,7 @@ from langchain.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers import ContextualCompressionRetriever, KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
+from langchain.llms import FakeListLLM
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever, markdownlink_regex
@@ -63,6 +64,7 @@ class DocToolsLLM:
             debug=False,
             llm_verbosity=True,
             ntfy_url=None,
+            skip_condenser=False,
 
             help=False,
             h=False,
@@ -159,6 +161,10 @@ class DocToolsLLM:
             must be a url to ntfy.sh to receive notifications for summaries.
             Especially useful to keep track of costs when using cron.
 
+        --skip_condenser, default False
+            if True, will not use a special LLM call to reformulate the question
+            when task is "query"
+
         --help or -h, default False
             if True, will return this documentation.
         """
@@ -215,6 +221,7 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
+        self.skip_condenser = skip_condenser
 
         global ntfy
         if ntfy_url:
@@ -708,7 +715,6 @@ class DocToolsLLM:
                 }
         all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
         CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
-        question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
 
         while True:
             try:
@@ -832,6 +838,11 @@ class DocToolsLLM:
                                 chain_type="map_reduce",
                                 verbose=self.llm_verbosity,
                                 )
+
+                        if not self.skip_condenser:
+                            question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
+                        else:
+                            question_generator = LLMChain(llm=FakeListLLM(responses=[query]), prompt=PromptTemplate.from_template(""))
 
                         chain = ConversationalRetrievalChain(
                                 retriever=retriever,
