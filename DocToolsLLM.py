@@ -93,7 +93,10 @@ class DocToolsLLM:
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * url => --path must be a valid http(s) link
-                * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep
+                * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep --anki_mode: any of 'window', 'concatenate', 'single_note': (or _ separated value like 'concatenate_window'). By default 'window_single_note' is used.
+                    * 'single_note': 1 document is 1 anki note.
+                    * 'window': 1 documents is 5 anki note, overlapping
+                    * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
                 * string => no other parameters needed, will ask to provide a string
                 * local_audio => needs whisper_prompt and whisper_lang
 
@@ -181,7 +184,8 @@ class DocToolsLLM:
 
         for k in kwargs:
             if k not in [
-                    "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
+                    "anki_profile", "anki_notetype", "anki_fields",
+                    "anki_deck", "anki_mode",
                     "whisper_lang", "whisper_prompt",
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
