@@ -1216,21 +1216,21 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     loaders = {
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            "Unstructured": partial(
+            "Unstructured_elements_hires": partial(
                 UnstructuredPDFLoader,
                 mode="elements",
                 strategy="hi_res",
                 post_processors=[clean_extra_whitespace]),
-            "Unstructured2": partial(
+            "Unstructured_elements_fast": partial(
                 UnstructuredPDFLoader,
                 mode="elements",
                 strategy="fast",
                 post_processors=[clean_extra_whitespace]),
-            "Unstructured3": partial(
+            "Unstructured_hires": partial(
                 UnstructuredPDFLoader,
                 strategy="hi_res",
                 post_processors=[clean_extra_whitespace]),
-            "Unstructured4": partial(
+            "Unstructured_fast": partial(
                 UnstructuredPDFLoader,
                 strategy="fast",
                 post_processors=[clean_extra_whitespace]),
