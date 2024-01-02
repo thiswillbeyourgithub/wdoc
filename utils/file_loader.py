@@ -943,9 +943,6 @@ def load_doc(filetype, debug, task, **kwargs):
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
-        if "hash" not in docs[i].metadata or not docs[i].metadata["hash"]:
-            docs[i].metadata["hash"] = hasher(docs[i].page_content)
-
         if "Author" in docs[i].metadata:
             docs[i].metadata["author"] = docs[i].metadata["Author"]
             del docs[i].metadata["Author"]
@@ -984,6 +981,10 @@ def load_doc(filetype, debug, task, **kwargs):
                 docs[i].metadata["source"] = docs[i].metadata["path"]
             else:
                 docs[i].metadata["source"] = docs[i].metadata["title"]
+
+        if "hash" not in docs[i].metadata:
+            docs[i].metadata["hash"] = hasher(docs[i].page_content + json.dumps(docs[i].metadata))
+        assert docs[i].metadata["hash"], f"Invalid hash for document: {docs[i]}"
 
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
