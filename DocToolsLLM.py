@@ -753,6 +753,7 @@ class DocToolsLLM:
                         #             task=self.task,
                         #             loaded_embeddings=self.loader_embeddings,
                         #             loaded_docs=self.loaded_docs,
+                        #             top_k=cli_commands["top_k"],
                         #             )
                         #         )
 

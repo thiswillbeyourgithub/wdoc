@@ -1324,6 +1324,7 @@ def create_parent_retriever(
         task,
         loaded_embeddings,
         loaded_docs,
+        top_k,
         ):
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
@@ -1334,6 +1335,12 @@ def create_parent_retriever(
             docstore=LocalFileStore(".cache/parent_retriever"),
             child_splitter=csp,
             parent_splitter=psp,
+            search_type="similarity_score_threshold",
+            search_kwargs={
+                "k": top_k,
+                "distance_metric": "cos",
+                "score_threshold": 0.5,
+                }
             )
     parent.add_documents(loaded_docs)
     return parent
