@@ -1220,23 +1220,19 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
                 UnstructuredPDFLoader,
                 mode="elements",
                 strategy="hi_res",
-                mode="elements",
                 post_processors=[clean_extra_whitespace]),
             "Unstructured2": partial(
                 UnstructuredPDFLoader,
                 mode="elements",
                 strategy="fast",
-                mode="elements",
                 post_processors=[clean_extra_whitespace]),
             "Unstructured3": partial(
                 UnstructuredPDFLoader,
                 strategy="hi_res",
-                mode="elements",
                 post_processors=[clean_extra_whitespace]),
             "Unstructured4": partial(
                 UnstructuredPDFLoader,
                 strategy="fast",
-                mode="elements",
                 post_processors=[clean_extra_whitespace]),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
