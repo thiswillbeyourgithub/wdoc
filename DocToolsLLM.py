@@ -301,7 +301,7 @@ class DocToolsLLM:
                 if len(hashes) != len(set(hashes)):
                     red("Found duplicate hashes after loading documents:")
 
-                    for i, doc in enumerate(self.loaded_docs):
+                    for i, doc in enumerate(tqdm(self.loaded_docs, desc="Deduplicating")):
                         n = hashes.count(doc.metadata["hash"])
                         if n > 1:
                             if not doc.metadata["path"].startswith("Anki_profile="):
