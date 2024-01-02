@@ -707,6 +707,8 @@ class DocToolsLLM:
                 "relevancy": 0.5,
                 }
         all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
+        question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
 
         while True:
             try:
@@ -825,9 +827,11 @@ class DocToolsLLM:
                                         )
 
                     else:
-                        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
-                        question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
-                        doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
+                        doc_chain = load_qa_with_sources_chain(
+                                self.llm,
+                                chain_type="map_reduce",
+                                verbose=self.llm_verbosity,
+                                )
 
                         chain = ConversationalRetrievalChain(
                                 retriever=retriever,
