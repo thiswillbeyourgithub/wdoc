@@ -1252,13 +1252,8 @@ def create_hyde_retriever(
         top_k,
         relevancy,
 
-        embed_model,
-        embeddings,
         embeddings_engine,
-
-        kwargs,
-        loadfrom,
-        debug
+        embeddings,
         ):
     """
     create a retriever only for the subset of documents from the
@@ -1290,26 +1285,16 @@ def create_hyde_retriever(
         llm_chain=hyde_chain,
         base_embeddings=embeddings_engine,
         )
-    hyde_vector = hyde_embeddings.embed_query(query)
-
-    hyde_doc = embeddings.similarity_search_with_score_by_vector(
-            embedding=hyde_vector,
-            k=top_k,
-            search_kwargs={
-                "distance_metric": "cos",
-                "score_threshold": relevancy,
-                },
+    db = FAISS.from_documents(
+            documents=[Document(page_content="")],
+            embedding=hyde_embeddings,
             )
-    vecstore, _ = load_embeddings(
-            embed_model=embed_model,
-            loadfrom = loadfrom,
-            saveas=None,
-            debug=debug,
-            loaded_docs=hyde_doc,
-            kwargs=kwargs,
-            )
+    # get id of the dummy doc
+    dummy = list(db.docstore._dict.keys())
+    db.delete(dummy)
+    db.merge_from(embeddings)
 
-    retriever = vecstore.as_retriever(
+    retriever = db.as_retriever(
         search_type="similarity_score_threshold",
         search_kwargs={
             "k": top_k,
@@ -1317,7 +1302,6 @@ def create_hyde_retriever(
             "score_threshold": relevancy,
             }
         )
-
     return retriever
 
 
