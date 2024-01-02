@@ -30,6 +30,7 @@ from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect
+from utils.prompts import condense_question
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -824,16 +825,7 @@ class DocToolsLLM:
                                         )
 
                     else:
-                        _template = textwrap.dedent("""
-                        Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
-
-                        Chat History:
-                        {chat_history}
-
-                        Follow Up Input: {question}
-
-                        Standalone question:""")
-                        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
+                        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
                         question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
                         doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
 
