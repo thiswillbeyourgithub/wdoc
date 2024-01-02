@@ -297,18 +297,20 @@ class DocToolsLLM:
                         "multiple documents!")
 
                 hashes = [d.metadata["hash"] for d in self.loaded_docs]
+                uniq_hashes = list(set(hashes))
                 removed_paths = []
-                if len(hashes) != len(set(hashes)):
+                removed_docs = []
+                if len(hashes) != len(uniq_hashes):
                     red("Found duplicate hashes after loading documents:")
 
                     for i, doc in enumerate(tqdm(self.loaded_docs, desc="Looking for duplicates")):
                         n = hashes.count(doc.metadata["hash"])
                         if n > 1:
-                            if not doc.metadata["path"].startswith("Anki_profile="):
-                                removed_paths.append(self.loaded_docs[i].metadata["path"])
-                                # allow partially removed when it's from anki
+                            removed_docs.append(self.loaded_docs[i])
                             self.loaded_docs[i] = None
+                            hashes[hashes.index(doc.metadata["hash"])] = None
 
+                    # check if deduplication likely amputated documents
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
                     present_path = [d.metadata["path"] for d in self.loaded_docs]
 
