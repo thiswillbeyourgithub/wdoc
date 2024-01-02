@@ -1225,12 +1225,14 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
                 red(f"Trying to parse {path} using {loader_name}")
             loader = loader_func(path)
             content = loader.load()
-            content = "\n".join([d.page_content.strip() for d in content])
 
-            # remove empty lines. frequent in pdfs
-            content = re.sub(emptyline_regex, '', content)
-            content = re.sub(emptyline2_regex, '\n', content)
-            content = re.sub(linebreak_before_letter, r'\1', content)
+            if loader_name != "Unstructured":
+                content = "\n".join([d.page_content.strip() for d in content])
+                # remove empty lines. frequent in pdfs
+                content = re.sub(emptyline_regex, '', content)
+                content = re.sub(emptyline2_regex, '\n', content)
+                content = re.sub(linebreak_before_letter, r'\1', content)
+
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
