@@ -16,7 +16,13 @@ def ask_user(q, commands):
         /top_k=3 to change the top_k value.
         /debug to open a console.
         /multiline to write your question over multiple lines.
-        /retriever=hyde to use Hypothetical Document Embedding search
+        /retriever=X with X:
+            'default' to use regular embedding search
+            'knn' to use KNN
+            'svm' to use SVM
+            'hyde' to use Hypothetical Document Embedding search
+            'parent' to use parent retriever
+            Can use several (i.e 'knn_svm_default')
         /retriever=simple to use regular embedding search
         /retriever=all to combine all retrievers
         /relevancy=0.5 to set the relevancy threshold for retrievers that support it

@@ -698,10 +698,11 @@ class DocToolsLLM:
         cli_commands = {
                 "top_k": self.top_k,
                 "multiline": multiline,
-                "retriever": "all",
+                "retriever": "hyde_knn_svm_default",
                 "task": self.task,
                 "relevancy": 0.5,
                 }
+        all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
 
         while True:
             try:
@@ -717,7 +718,7 @@ class DocToolsLLM:
                         whi(f"Query: {query}")
 
                     retrievers = []
-                    if cli_commands["retriever"] in ["hyde", "all"]:
+                    if "hyde" in cli_commands["retrievers"].lower():
                         retrievers.append(
                                 create_hyde_retriever(
                                     query=query,
@@ -732,7 +733,7 @@ class DocToolsLLM:
                                     )
                                 )
 
-                        all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
+                    if "knn" in cli_commands["retrievers"].lower():
                         retrievers.append(
                                 KNNRetriever.from_texts(
                                     all_texts,
@@ -741,6 +742,7 @@ class DocToolsLLM:
                                     k=cli_commands["top_k"],
                                     )
                                 )
+                    if "svm" in cli_commands["retrievers"].lower():
                         retrievers.append(
                                 SVMRetriever.from_texts(
                                     all_texts,
@@ -749,17 +751,18 @@ class DocToolsLLM:
                                     k=cli_commands["top_k"],
                                     )
                                 )
-                        # retrievers.append(
-                        #         create_parent_retriever(
-                        #             task=self.task,
-                        #             loaded_embeddings=self.loaded_embeddings,
-                        #             loaded_docs=self.loaded_docs,
-                        #             top_k=cli_commands["top_k"],
-                        #             relevancy=cli_commands["relevancy"],
-                        #             )
-                        #         )
+                    if "parent" in cli_commands["retrievers"].lower():
+                        retrievers.append(
+                                create_parent_retriever(
+                                    task=self.task,
+                                    loaded_embeddings=self.loaded_embeddings,
+                                    loaded_docs=self.loaded_docs,
+                                    top_k=cli_commands["top_k"],
+                                    relevancy=cli_commands["relevancy"],
+                                    )
+                                )
 
-                    if cli_commands["retriever"] in ["simple", "all"]:
+                    if "default" in cli_commands["retrievers"].lower():
                         retrievers.append(
                                 self.loaded_embeddings.as_retriever(
                                     search_type="similarity_score_threshold",
