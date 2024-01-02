@@ -1038,6 +1038,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
+    Path(".cache").mkdir(exist_ok=True)
+    Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
     embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
