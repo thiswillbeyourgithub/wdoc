@@ -753,9 +753,11 @@ class DocToolsLLM:
                     if cli_commands["retriever"] in ["simple", "all"]:
                         retrievers.append(
                                 self.loaded_embeddings.as_retriever(
+                                    search_type="similarity_score_threshold",
                                     search_kwargs={
                                         "k": cli_commands["top_k"],
                                         "distance_metric": "cos",
+                                        "score_threshold": 0.5,
                                         })
                                     )
 
