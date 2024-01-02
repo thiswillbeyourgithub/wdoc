@@ -1,3 +1,4 @@
+from functools import partial
 import tldextract
 import uuid
 import threading
@@ -1209,7 +1210,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     loaders = {
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            # "Unstructured": UnstructuredPDFLoader,
+            "Unstructured": partial(UnstructuredPDFLoader, mode="elements", strategy="hi_res"),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
             # "PdfPlumber": PDFPlumberLoader,
