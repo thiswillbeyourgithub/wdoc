@@ -49,6 +49,8 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
 
+from unstructured.cleaners.core import clean_extra_whitespace
+
 from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from .llm import RollingWindowEmbeddings, transcribe
@@ -1214,7 +1216,12 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     loaders = {
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            "Unstructured": partial(UnstructuredPDFLoader, mode="elements", strategy="hi_res"),
+            "Unstructured": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="hi_res",
+                mode="elements",
+                post_processors=[clean_extra_whitespace]),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
             # "PdfPlumber": PDFPlumberLoader,
