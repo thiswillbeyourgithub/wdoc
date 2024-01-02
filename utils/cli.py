@@ -105,8 +105,6 @@ def ask_user(q, commands):
                     commands["retriever"] = retr
                     user_question = user_question.replace(f"/retriever={retr}", "").strip()
                     whi("Using as retriever: '{retr}'")
-        else:
-            commands["retriever"] = "simple"
 
         if "/debug" in user_question:
             whi("Entering debug mode.")
