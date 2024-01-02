@@ -734,20 +734,21 @@ class DocToolsLLM:
                                     )
                                 )
 
-                        # retrievers.append(
-                        #         KNNRetriever.from_texts(
-                        #             [d.page_content for d in self.loaded_docs],
-                        #             self.embeddings,
-                        #             relevancy_threshold=0.5,
-                        #             )
-                        #         )
-                        # retrievers.append(
-                        #         SVMRetriever.from_texts(
-                        #             [d.page_content for d in self.loaded_docs],
-                        #             self.embeddings,
-                        #             relevancy_threshold=0.5,
-                        #             )
-                        #         )
+                        all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
+                        retrievers.append(
+                                KNNRetriever.from_texts(
+                                    all_texts,
+                                    self.embeddings,
+                                    relevancy_threshold=0.5,
+                                    )
+                                )
+                        retrievers.append(
+                                SVMRetriever.from_texts(
+                                    all_texts,
+                                    self.embeddings,
+                                    relevancy_threshold=0.5,
+                                    )
+                                )
                         # retrievers.append(
                         #         create_parent_retriever(
                         #             task=self.task,
