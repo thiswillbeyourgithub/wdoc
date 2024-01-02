@@ -53,6 +53,10 @@ from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from .llm import RollingWindowEmbeddings, transcribe
 
+import os
+# needed in case of buggy unstructured install
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
 inference_rules = {
