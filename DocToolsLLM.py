@@ -779,7 +779,6 @@ class DocToolsLLM:
                     if len(retrievers) == 1:
                         retriever = retrievers[0]
                     else:
-                        whi("Merging multiple retrievers")
                         retriever = MergerRetriever(retrievers=retrievers)
 
                         # remove redundant results from the merged retrievers:
