@@ -773,6 +773,7 @@ class DocToolsLLM:
                                         })
                                     )
 
+                    assert retrievers, f"No retriever selected. Probably cause by a wrong cli_command."
                     if len(retrievers) == 1:
                         retriever = retrievers[0]
                     else:
