@@ -763,7 +763,7 @@ class DocToolsLLM:
                         retriever = retrievers[0]
                     else:
                         whi("Merging multiple retrievers")
-                        retriever = MergerRetriever(retrievers)
+                        retriever = MergerRetriever(retrievers=retrievers)
 
                         # remove redundant results from the merged retrievers:
                         filtered = EmbeddingsRedundantFilter(embeddings=self.embeddings)
