@@ -64,7 +64,7 @@ class DocToolsLLM:
             debug=False,
             llm_verbosity=True,
             ntfy_url=None,
-            skip_condenser=False,
+            condense_question=False,
 
             help=False,
             h=False,
@@ -161,9 +161,11 @@ class DocToolsLLM:
             must be a url to ntfy.sh to receive notifications for summaries.
             Especially useful to keep track of costs when using cron.
 
-        --skip_condenser, default False
+        --condense_question, default False
             if True, will not use a special LLM call to reformulate the question
-            when task is "query"
+            when task is "query". Otherwise, the query will be reformulated as
+            a standalone question. Useful when you have multiple questions in
+            a row.
 
         --help or -h, default False
             if True, will return this documentation.
@@ -221,7 +223,7 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
-        self.skip_condenser = skip_condenser
+        self.condense_question = condense_question
 
         global ntfy
         if ntfy_url:
@@ -839,7 +841,7 @@ class DocToolsLLM:
                                 verbose=self.llm_verbosity,
                                 )
 
-                        if not self.skip_condenser:
+                        if self.condense_question:
                             question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
                         else:
                             question_generator = LLMChain(llm=FakeListLLM(responses=[query]), prompt=PromptTemplate.from_template(""))
