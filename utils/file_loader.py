@@ -1295,7 +1295,12 @@ def create_hyde_retriever(
             )
 
     retriever = vecstore.as_retriever(
-        search_kwargs={"k": top_k, "distance_metric": "cos"}
+        search_type="similarity_score_threshold",
+        search_kwargs={
+            "k": top_k,
+            "distance_metric": "cos",
+            "score_threshold": 0.5,
+            }
         )
 
     return retriever
