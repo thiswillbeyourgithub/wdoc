@@ -806,7 +806,7 @@ class DocToolsLLM:
                                 yel(f"    * {k}: {v}")
                             print("\n")
                             if "anki_cid" in doc.metadata:
-                                cid_str = doc.metadata["anki_cid"].split(" ")
+                                cid_str = str(doc.metadata["anki_cid"]).split(" ")
                                 for cid in cid_str:
                                     if cid not in anki_cid:
                                         anki_cid.append(cid)

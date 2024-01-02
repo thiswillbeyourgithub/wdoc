@@ -665,7 +665,7 @@ def load_doc(filetype, debug, task, **kwargs):
                             page_content=c["text"],
                             metadata={
                                 "anki_tags": " ".join(c["ntags"]),
-                                "anki_cid": cid,
+                                "anki_cid": str(cid),
                                 }
                             )
                         )
@@ -689,7 +689,7 @@ def load_doc(filetype, debug, task, **kwargs):
 
                 if not full_text:  # always add first
                     full_text = text
-                    metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
+                    metadata = {"anki_tags": " ".join(tags), "anki_cid": str(cid), "anki_deck": card_deck}
                     continue
 
                 # if too many token, add the current chunk of text and start
@@ -704,13 +704,13 @@ def load_doc(filetype, debug, task, **kwargs):
                                 )
                             )
 
-                    metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
+                    metadata = {"anki_tags": " ".join(tags), "anki_cid": str(cid), "anki_deck": card_deck}
                     full_text = text
                 else:
                     for t in tags:
                         if t not in metadata["anki_tags"]:
                             metadata["anki_tags"] += f" {t}"
-                    metadata["anki_cid"] += " " + cid
+                    metadata["anki_cid"] += " " + str(cid)
                     if card_deck not in metadata["anki_deck"]:
                         metadata["anki_deck"] += " " + card_deck
                     full_text += spacer + text
