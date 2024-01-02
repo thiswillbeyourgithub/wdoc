@@ -700,6 +700,7 @@ class DocToolsLLM:
                 "multiline": multiline,
                 "retriever": "all",
                 "task": self.task,
+                "relevancy": 0.5,
                 }
         while True:
             try:
@@ -723,6 +724,7 @@ class DocToolsLLM:
 
                                     llm=self.llm,
                                     top_k=cli_commands["top_k"],
+                                    relevancy=cli_commands["relevancy"],
 
                                     embed_model=self.embed_model,
                                     embeddings=self.loaded_embeddings,
@@ -739,7 +741,7 @@ class DocToolsLLM:
                                 KNNRetriever.from_texts(
                                     all_texts,
                                     self.embeddings,
-                                    relevancy_threshold=0.5,
+                                    relevancy_threshold=cli_commands["relevancy"],
                                     k=cli_commands["top_k"],
                                     )
                                 )
@@ -747,7 +749,7 @@ class DocToolsLLM:
                                 SVMRetriever.from_texts(
                                     all_texts,
                                     self.embeddings,
-                                    relevancy_threshold=0.5,
+                                    relevancy_threshold=cli_commands["relevancy"],
                                     k=cli_commands["top_k"],
                                     )
                                 )
@@ -757,6 +759,7 @@ class DocToolsLLM:
                         #             loaded_embeddings=self.loaded_embeddings,
                         #             loaded_docs=self.loaded_docs,
                         #             top_k=cli_commands["top_k"],
+                        #             relevancy=cli_commands["relevancy"],
                         #             )
                         #         )
 
@@ -767,7 +770,7 @@ class DocToolsLLM:
                                     search_kwargs={
                                         "k": cli_commands["top_k"],
                                         "distance_metric": "cos",
-                                        "score_threshold": 0.5,
+                                        "score_threshold": cli_commands["relevancy"],
                                         })
                                     )
 

@@ -1250,6 +1250,7 @@ def create_hyde_retriever(
 
         llm,
         top_k,
+        relevancy,
 
         embed_model,
         embeddings,
@@ -1296,7 +1297,7 @@ def create_hyde_retriever(
             k=top_k,
             search_kwargs={
                 "distance_metric": "cos",
-                "score_threshold": 0.5,
+                "score_threshold": relevancy,
                 },
             )
     vecstore, _ = load_embeddings(
@@ -1313,7 +1314,7 @@ def create_hyde_retriever(
         search_kwargs={
             "k": top_k,
             "distance_metric": "cos",
-            "score_threshold": 0.5,
+            "score_threshold": relevancy,
             }
         )
 
@@ -1325,6 +1326,7 @@ def create_parent_retriever(
         loaded_embeddings,
         loaded_docs,
         top_k,
+        relevancy,
         ):
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
@@ -1339,7 +1341,7 @@ def create_parent_retriever(
             search_kwargs={
                 "k": top_k,
                 "distance_metric": "cos",
-                "score_threshold": 0.5,
+                "score_threshold": relevancy,
                 }
             )
     parent.add_documents(loaded_docs)
