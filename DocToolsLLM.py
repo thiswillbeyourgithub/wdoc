@@ -702,6 +702,7 @@ class DocToolsLLM:
                 "task": self.task,
                 "relevancy": 0.5,
                 }
+
         while True:
             try:
                 with self.callback() as cb:
@@ -717,24 +718,24 @@ class DocToolsLLM:
 
                     retrievers = []
                     if cli_commands["retriever"] in ["hyde", "all"]:
-                        retrievers.append(
-                                create_hyde_retriever(
-                                    query=query,
-                                    filetype=self.filetype,
+                        # retrievers.append(
+                        #         create_hyde_retriever(
+                        #             query=query,
+                        #             filetype=self.filetype,
 
-                                    llm=self.llm,
-                                    top_k=cli_commands["top_k"],
-                                    relevancy=cli_commands["relevancy"],
+                        #             llm=self.llm,
+                        #             top_k=cli_commands["top_k"],
+                        #             relevancy=cli_commands["relevancy"],
 
-                                    embed_model=self.embed_model,
-                                    embeddings=self.loaded_embeddings,
-                                    embeddings_engine=self.embeddings,
+                        #             embed_model=self.embed_model,
+                        #             embeddings=self.loaded_embeddings,
+                        #             embeddings_engine=self.embeddings,
 
-                                    loadfrom=self.loadfrom,
-                                    kwargs=self.kwargs,
-                                    debug=self.debug,
-                                    )
-                                )
+                        #             loadfrom=self.loadfrom,
+                        #             kwargs=self.kwargs,
+                        #             debug=self.debug,
+                        #             )
+                        #         )
 
                         all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
                         retrievers.append(
