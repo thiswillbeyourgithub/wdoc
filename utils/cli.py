@@ -24,7 +24,6 @@ def ask_user(q, commands):
             'parent' to use parent retriever
             Can use several (i.e 'knn_svm_default')
         /retriever=simple to use regular embedding search
-        /retriever=all to combine all retrievers
         /relevancy=0.5 to set the relevancy threshold for retrievers that support it
     """
     # loading history from files
@@ -118,11 +117,10 @@ def ask_user(q, commands):
         if "/retriever=" in user_question:
             assert user_question.count("/retriever=") == 1, (
                 f"multiple retriever commands found: '{user_question}'")
-            for retr in ["hyde", "simple", "all"]:
-                if f"/retriever={retr}" in user_question:
-                    commands["retriever"] = retr
-                    user_question = user_question.replace(f"/retriever={retr}", "").strip()
-                    whi("Using as retriever: '{retr}'")
+            retr = user_question.split("/retriever=")[1].split(" ")[0]
+            commands["retriever"] = retr
+            user_question = user_question.replace(f"/retriever={retr}", "").strip()
+            whi("Using as retriever: '{retr}'")
 
         if "/debug" in user_question:
             whi("Entering debug mode.")
