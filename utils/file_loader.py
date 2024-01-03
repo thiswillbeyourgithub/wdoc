@@ -89,6 +89,12 @@ threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
 
+min_token = 200
+max_token = 1_000_000
+max_lines = 100_000
+min_lang_prob = 0.50
+
+
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
 
@@ -118,10 +124,6 @@ def cloze_stripper(clozed):
     clozed = re.sub(clozeregex, " ", clozed)
     return clozed
 
-min_token = 200
-max_token = 1_000_000
-max_lines = 100_000
-min_lang_prob = 0.50
 
 def check_docs_tkn_length(docs, name):
     """checks that the number of tokens in the document is high enough,
@@ -153,6 +155,7 @@ def check_docs_tkn_length(docs, name):
         raise Exception(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
     return prob
 
+
 def get_url_title(url):
     """if the title of the url is not loaded from the loader, trying as last
     resort with this one"""
@@ -162,6 +165,7 @@ def get_url_title(url):
         return docs[0].metadata["title"]
     else:
         return None
+
 
 def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
@@ -999,6 +1003,7 @@ def load_youtube_playlist(playlist_url):
         extraction from {playlist_url} : {e}"))
     return loaded
 
+
 @loaddoc_cache.cache(ignore=["loader"])
 def cached_yt_loader(loader, path, add_video_info, language, translation):
     yel(f"Not using cache for youtube {path}")
@@ -1009,6 +1014,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
             translation=translation,
             ).load()
     return docs
+
 
 @loaddoc_cache.cache(ignore=["text_splitter"])
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):

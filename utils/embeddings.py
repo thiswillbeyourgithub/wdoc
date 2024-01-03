@@ -15,7 +15,7 @@ from langchain.embeddings import CacheBackedEmbeddings
 from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
 
-from .logger import whi, yel, red, log
+from .logger import whi, red
 from .file_loader import get_tkn_length
 
 

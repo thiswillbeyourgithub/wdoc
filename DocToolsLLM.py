@@ -53,6 +53,7 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 class DocToolsLLM:
     VERSION = "0.10"
+
     def __init__(
             self,
             modelbackend="openai",
@@ -346,7 +347,6 @@ class DocToolsLLM:
                     else:
                         red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
 
-
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
@@ -355,7 +355,6 @@ class DocToolsLLM:
         whi("Done with tasks.")
         if self.debug:
             breakpoint()
-
 
     def process_task(self):
         red(f"\nProcessing task '{self.task}'")
@@ -799,7 +798,7 @@ class DocToolsLLM:
                                         })
                                     )
 
-                    assert retrievers, f"No retriever selected. Probably cause by a wrong cli_command."
+                    assert retrievers, "No retriever selected. Probably cause by a wrong cli_command."
                     if len(retrievers) == 1:
                         retriever = retrievers[0]
                     else:
