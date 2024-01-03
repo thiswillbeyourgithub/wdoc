@@ -707,6 +707,7 @@ class DocToolsLLM:
                 saveas=self.saveas,
                 debug=self.debug,
                 loaded_docs=self.loaded_docs,
+                dollar_limit=self.dollar_limit,
                 kwargs=self.kwargs)
 
         assert self.task in ["query", "search", "summarize_then_query"]

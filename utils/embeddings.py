@@ -19,7 +19,7 @@ from .logger import whi, red
 from .file_loader import get_tkn_length
 
 
-def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
+def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
     """loads embeddings for each document"""
 
     if embed_model == "openai":
@@ -102,8 +102,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
     if embed_model == "openai":
         dol_price = full_tkn * 0.0001 / 1000
         red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
-        if dol_price > 1:
-            ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
+        if dol_price > dollar_limit:
+            ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
             if ans.lower() not in ["y", "yes"]:
                 red("Quitting.")
                 raise SystemExit()
