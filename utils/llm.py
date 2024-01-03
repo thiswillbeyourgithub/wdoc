@@ -97,6 +97,7 @@ class fakecallback:
 
 
 def transcribe(audio_path, audio_hash, language, prompt):
+    "Use whisper to transcribe an audio file"
     red(f"Calling whisper to transcribe file {audio_path}")
 
     assert Path("API_KEY.txt").exists(), "No api key found"

@@ -146,7 +146,11 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 def recursive_faiss_saver(index, documents, path, depth, pbar):
     """split the faiss index by hand into 1 docstore index and save
     it to cache. To split it, as the copy.deepcopy is long we
-    use a recursive call to only copy fewer times the full index"""
+    use a recursive call to only copy fewer times the full index.
+
+    I'm aware that this is a bonkers workaround but I didn't have time to
+    reliably find how to extract a single embedding and document from a faiss
+    vectorstore."""
     doc_ids = [k for k in index.docstore._dict.keys()]
     assert doc_ids, "unexpected empty doc_ids"
     n = 10
@@ -207,6 +211,7 @@ def recursive_faiss_saver(index, documents, path, depth, pbar):
 
 
 def save_one_index(index, to_del, file, pbar):
+    "called by recursive_faiss_saver to save a faiss index with only 1 document"
     index.delete(to_del)
     index.save_local(file)
     pbar.update(1)
