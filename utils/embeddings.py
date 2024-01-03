@@ -1,3 +1,5 @@
+import queue
+import faiss
 import random
 import time
 import copy
@@ -108,15 +110,24 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 red("Quitting.")
                 raise SystemExit()
 
-    # create a faiss index for batch of documents, then save them
-    # as 1 document faiss index to cache
+    # create a faiss index for batch of documents
     if to_embed:
         batch_size = 1000
         batches = [
                 [i * batch_size, (i + 1) * batch_size]
                 for i in range(len(to_embed) // batch_size + 1)
                 ]
-        pbar = tqdm(total=len(to_embed), desc="Saving to cache")
+        n_saver = 10
+        saver_queues = [(queue.Queue(), queue.Queue()) for i in range(n_saver)]
+        saver_workers = [
+                threading.Thread(
+                    target=faiss_saver,
+                    args=(embeddings_cache, cached_embeddings, qin, qout),
+                    daemon=False,
+                    ) for qin, qout in saver_queues]
+        [t.start() for t in saver_workers]
+
+        save_counter = -1
         for batch in tqdm(batches, desc="Embedding by batch"):
             temp = FAISS.from_documents(
                     to_embed[batch[0]:batch[1]],
@@ -124,15 +135,31 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                     normalize_L2=True
                     )
 
-            recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
+            # save the faiss index as 1 embedding for 1 document
+            # get the id of each document
+            doc_ids = list(temp.docstore._dict.keys())
+            # get the embedding of each document
+            vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
+            vecs = np.vsplit(vecs, vecs.shape[0])
+            for docuid, docu, embe in zip(temp.docstore._dict.items(), vecs):
+                save_counter += 1
+                saver_queues[save_counter % n_saver][0].put(
+                        [docuid, docu, embe.queeze()],
+                        )
+
+            results = [q[1].get() for q in saver_queues]
+            assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
+
 
             if not db:
                 db = temp
             else:
                 db.merge_from(temp)
 
-    # to get vectors from a faiss index
-    # vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(to_embed) * temp.index.d).reshape(len(to_embed), temp.index.d)
+    whi("Waiting for saver workers to finish.")
+    [q[0].put(False, None, None) for q in saver_queues]
+    [t.join() for t in saver_workers]
+    whi("Done saving.")
 
     whi(f"Done creating index in {time.time()-t:.2f}s")
 
@@ -143,78 +170,23 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     return db, cached_embeddings
 
 
-def recursive_faiss_saver(index, documents, path, depth, pbar):
-    """split the faiss index by hand into 1 docstore index and save
-    it to cache. To split it, as the copy.deepcopy is long we
-    use a recursive call to only copy fewer times the full index.
+def faiss_saver(path, cached_embeddings, qin, qout):
+    """create a faiss index containing only a single document then save it"""
+    while True:
+        docid, document, embedding = qin.get()
+        if docid is False:
+            qout.put("Stopped")
+            return
 
-    I'm aware that this is a bonkers workaround but I didn't have time to
-    reliably find how to extract a single embedding and document from a faiss
-    vectorstore."""
-    doc_ids = [k for k in index.docstore._dict.keys()]
-    assert doc_ids, "unexpected empty doc_ids"
-    n = 10
-    threads = []
-    le = len(doc_ids)
-    nn = len(doc_ids) // n
-    if depth:
-        spacer = " " * depth * 2
-    else:
-        spacer = ""
-    info = f"(n={n}, nn={nn}, le={le}, d={depth})"
-    if nn > n:  # more than 1 order of magnitude
-        for i in range(len(doc_ids) // nn + 1):
-            whi(f"{spacer}Creating larger subindex #{i} {info}")
-            sub_index = copy.deepcopy(index)
-            sub_docids = doc_ids[i * nn: (i + 1) * nn]
-            to_del = [d for d in doc_ids if d not in sub_docids]
-            if not to_del or not sub_docids:
-                continue
-            sub_index.delete(to_del)
-            threads.extend(
-                    recursive_faiss_saver(
-                        sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1, pbar)
-                    )
-
-    elif len(doc_ids) > n:
-        for i in range(len(doc_ids) // n + 1):
-            whi(f"{spacer}Creating subindex #{i} {info}")
-            sub_index = copy.deepcopy(index)
-            sub_docids = doc_ids[i * n: (i + 1) * n]
-            to_del = [d for d in doc_ids if d not in sub_docids]
-            if not to_del or not sub_docids:
-                continue
-            sub_index.delete(to_del)
-            threads.extend(
-                    recursive_faiss_saver(
-                        sub_index, documents[i * n:(i + 1) * n], path, depth + 1, pbar)
-                    )
-            while sum([t.is_alive() for t in threads]) > 3 * n:
-                time.sleep(0.1)
-    else:
-        for i, did in enumerate(doc_ids):
-            whi(f"{spacer}Saving {documents[i].metadata['hash']}.faiss_index {info}")
-            to_del = [d for d in doc_ids if d != did]
-            if not to_del:
-                continue
-            file = (path / str(documents[i].metadata["hash"] + ".faiss_index"))
-            assert not file.exists(), "cache file already exists!"
-            thread = threading.Thread(
-                    target=save_one_index,
-                    args=(copy.deepcopy(index), to_del, file, pbar),
-                    )
-            thread.start()
-            threads.append(thread)
-        return threads
-    [t.join() for t in threads]
-    return []
-
-
-def save_one_index(index, to_del, file, pbar):
-    "called by recursive_faiss_saver to save a faiss index with only 1 document"
-    index.delete(to_del)
-    index.save_local(file)
-    pbar.update(1)
+        file = (path / str(document.metadata["hash"] + ".faiss_index"))
+        db = FAISS.from_embeddings(
+                text_embeddings=[document.page_content, embedding],
+                embedding=cached_embeddings,
+                metadatas=document.metadata,
+                ids=[docid],
+                normalize_L2=True)
+        db.save_local(file)
+        qin.put(f"Saved {docid}")
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
