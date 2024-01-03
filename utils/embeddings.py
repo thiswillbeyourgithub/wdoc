@@ -142,6 +142,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
     return db, cached_embeddings
 
+
 def recursive_faiss_saver(index, documents, path, depth, pbar):
     """split the faiss index by hand into 1 docstore index and save
     it to cache. To split it, as the copy.deepcopy is long we
@@ -204,10 +205,12 @@ def recursive_faiss_saver(index, documents, path, depth, pbar):
     [t.join() for t in threads]
     return []
 
+
 def save_one_index(index, to_del, file, pbar):
     index.delete(to_del)
     index.save_local(file)
     pbar.update(1)
+
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
