@@ -251,7 +251,7 @@ class DocToolsLLM:
             signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
             os.environ["LANGCHAIN_TRACING"] = "true"
             set_verbose(True)
-            set_verbose(True)
+            set_debug(True)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
