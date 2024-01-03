@@ -548,10 +548,10 @@ def load_doc(filetype, debug, task, **kwargs):
             lang = ["fr-FR", "fr", "en", "en-US", "en-UK"]
         else:
             lang = kwargs["language"]
-        if "translation" not in kwargs:
-            transl = "en"
-        else:
+        if "translation" in kwargs:
             transl = kwargs["translation"]
+        else:
+            transl = None
 
         whi(f"Loading youtube: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
