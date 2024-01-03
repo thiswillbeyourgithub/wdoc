@@ -21,12 +21,12 @@ import re
 from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
-from joblib import Parallel, delayed
+from joblib import Parallel
 import tiktoken
 
 from ftlangdetect import detect as language_detect
 
-from langchain.embeddings import SentenceTransformerEmbeddings
+# from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
