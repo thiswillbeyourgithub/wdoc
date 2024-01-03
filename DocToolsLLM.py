@@ -26,7 +26,8 @@ from langchain.prompts.prompt import PromptTemplate
 from langchain.llms import FakeListLLM
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc, load_embeddings, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, markdownlink_regex
+from utils.file_loader import load_doc, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, markdownlink_regex
+from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
