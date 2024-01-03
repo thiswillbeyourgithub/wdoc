@@ -76,7 +76,7 @@ def load_llm(modelname, modelbackend):
         llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
         callback = fakecallback
     else:
-        raise ValueError(model)
+        raise ValueError(modelbackend)
 
     whi("done loading model.\n")
     return llm, callback
