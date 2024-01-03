@@ -36,7 +36,7 @@ from langchain.document_loaders import PyPDFium2Loader
 from langchain.document_loaders import PyMuPDFLoader
 # from langchain.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain.document_loaders import PDFMinerLoader
-from langchain.document_loaders import PDFPlumberLoader
+# from langchain.document_loaders import PDFPlumberLoader
 from langchain.document_loaders import OnlinePDFLoader
 from langchain.document_loaders import YoutubeLoader
 from langchain.document_loaders import SeleniumURLLoader
