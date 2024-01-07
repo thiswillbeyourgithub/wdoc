@@ -1078,6 +1078,8 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             docs = [Document(page_content=t) for t in texts]
 
             prob = check_docs_tkn_length(docs, path)
+            if prob > 0.95:
+                break
             probs[loader_name] = prob
             loaded_docs[loader_name] = docs
         except Exception as err:
