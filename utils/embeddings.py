@@ -254,7 +254,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
 
                     # remove first word until 1/3 of the max_token was removed
                     # this way we have a rolling window
-                    jj = int((max_len // 3) / avg_tkn * 0.8)
+                    jj = max(1, int((max_len // 3) / avg_tkn * 0.8))
                     while len(encode(" ".join(words[jj:j-jjj]))) > n23:
                         jj += 1
                     words = words[jj:]
