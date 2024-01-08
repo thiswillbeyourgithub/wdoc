@@ -403,6 +403,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 thread["args"] = (filetype, doc, kwargs.copy(), pbar, q, lock)
                 thread["daemon"] = True  # exit when the main program exits
                 thread._recursion_id = recursion_id
+                thread._depth = depth
                 assert doc not in threads, f"{doc} already present as thread"
                 threads[doc] = thread
 
@@ -415,11 +416,12 @@ def load_doc(filetype, debug, task, **kwargs):
             while n_subthreads_alive or n_subthreads_todo:
 
                 with lock:
+                    max_depth = max([t._depth for t in threads.values() if not t._is_started])
                     n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id])
                     n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
                     n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
 
-                    if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
+                    if (n_threads_alive < max_threads + n_recursive and n_subthreads_todo) or (n_subthreads_alive == 0 and max_depth == depth):
                         # launch one more thread
                         docid = [docid for docid, t in threads.items() if not t._is_started and t._recursion_id == recursion_id][0]
                         assert isinstance(threads[docid], dict)
@@ -427,6 +429,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         threads[docid].start()
                         threads[docid]._is_started = True
                         threads[docid]._recursion_id = recursion_id
+                        threads[docid]._depth = depth
                         continue
 
                 time.sleep(0.1)
