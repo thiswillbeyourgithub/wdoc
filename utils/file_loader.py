@@ -420,7 +420,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
                     n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
 
-                    if (n_threads_alive < max_threads + n_recursive and n_subthreads_todo) or (n_subthreads_alive == 0):
+                    if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
                         # launch one more thread
                         docid = [docid for docid, t in threads.items() if not t._is_started and t._recursion_id == recursion_id][0]
                         assert isinstance(threads[docid], dict)
