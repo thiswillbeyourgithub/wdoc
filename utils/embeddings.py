@@ -141,10 +141,11 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             # get the embedding of each document
             vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
             vecs = np.vsplit(vecs, vecs.shape[0])
-            for docuid, docu, embe in zip(temp.docstore._dict.items(), vecs):
+            for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
+                docu = temp.docstore._dict[docuid]
                 save_counter += 1
                 saver_queues[save_counter % n_saver][0].put(
-                        [docuid, docu, embe.queeze()],
+                        [docuid, docu, embe.squeeze()],
                         )
 
             results = [q[1].get() for q in saver_queues]
