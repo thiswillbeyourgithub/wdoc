@@ -474,7 +474,7 @@ def load_doc(filetype, debug, task, **kwargs):
                                 continue
                             except:
                                 pass
-                    whi(f"(Depth={depth}) Waiting for {n_subthreads_alive} / {n_subthreads_todo} subthreads to finish: {','.join(doc_print)}")
+                    whi(f"(Depth={depth}) Waiting for {n_subthreads_alive} / {n_subthreads_todo + n_subthreads_alive} subthreads to finish: {','.join(doc_print)}")
 
             # check that all its subthreads are done
             with lock:
