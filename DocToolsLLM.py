@@ -19,15 +19,13 @@ from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
-from langchain.document_transformers import EmbeddingsRedundantFilter
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import (
         DocumentCompressorPipeline)
-from langchain.retrievers import (ContextualCompressionRetriever,
-                                  KNNRetriever,
-                                  SVMRetriever
-                                  )
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
-from langchain.llms import FakeListLLM
+from langchain_community.llms import FakeListLLM
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import (load_doc,

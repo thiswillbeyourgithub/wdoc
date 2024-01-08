@@ -11,11 +11,11 @@ import numpy as np
 from sklearn.preprocessing import Normalizer
 from pydantic import Extra
 
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 
 from .logger import whi, red
 from .file_loader import get_tkn_length

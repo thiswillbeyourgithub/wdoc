@@ -5,11 +5,11 @@ from typing import Dict, Any
 
 
 import langchain
-from langchain.llms import GPT4All, FakeListLLM, LlamaCpp
-from langchain.callbacks import get_openai_callback
+from langchain_community.llms import GPT4All, FakeListLLM, LlamaCpp
+from langchain_community.callbacks import get_openai_callback
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.cache import SQLiteCache
 from langchain.memory import ConversationBufferMemory
 

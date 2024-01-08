@@ -26,18 +26,18 @@ from ftlangdetect import detect as language_detect
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import UnstructuredPDFLoader
-from langchain.document_loaders import PyPDFium2Loader
-from langchain.document_loaders import PyMuPDFLoader
-# from langchain.document_loaders import PDFMinerPDFasHTMLLoader
-from langchain.document_loaders import PDFMinerLoader
-# from langchain.document_loaders import PDFPlumberLoader
-from langchain.document_loaders import OnlinePDFLoader
-from langchain.document_loaders import YoutubeLoader
-from langchain.document_loaders import SeleniumURLLoader
-from langchain.document_loaders import PlaywrightURLLoader
-from langchain.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import PyPDFium2Loader
+from langchain_community.document_loaders import PyMuPDFLoader
+# from langchain_community.document_loaders import PDFMinerPDFasHTMLLoader
+from langchain_community.document_loaders import PDFMinerLoader
+# from langchain_community.document_loaders import PDFPlumberLoader
+from langchain_community.document_loaders import OnlinePDFLoader
+from langchain_community.document_loaders import YoutubeLoader
+from langchain_community.document_loaders import SeleniumURLLoader
+from langchain_community.document_loaders import PlaywrightURLLoader
+from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
