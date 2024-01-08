@@ -388,6 +388,8 @@ def load_doc(filetype, debug, task, **kwargs):
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
+            with lock:
+                n_recursive += 1
 
             class thread_args(dict):
                 """used to store the arguments used to create the thread and
