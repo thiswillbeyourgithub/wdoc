@@ -385,7 +385,7 @@ def load_doc(filetype, debug, task, **kwargs):
             kwargs["depth"] = 1
 
         # if debugging, don't multithread
-        if not debug:
+        if (not debug) and (depth > 0):
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
@@ -496,7 +496,10 @@ def load_doc(filetype, debug, task, **kwargs):
                     # when failed: we returned the name of the item
                     failed.append(doc)
         else:
-            message = "Loading documents without multithreading because debug is on"
+            if debug:
+                message = "Loading documents without multithreading because debug is on"
+            else:
+                message = f"Loading documents without multithreading (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
@@ -1090,21 +1093,25 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             docs = [Document(page_content=t) for t in texts]
 
             prob = check_docs_tkn_length(docs, path)
-            if prob >= 0.7:
+
+            if prob >= 0.5:
                 # only consider it okay if decent quality
                 probs[loader_name] = prob
                 loaded_docs[loader_name] = docs
+                if prob > 0.90:
+                    # select this one as its bound to be okay
+                    whi(f"Early stopping of PDF parsing because {loader_name} has prob {prob} for {path}")
+                    break
             else:
-                red(f"Ignore parsing of '{path}' with {loader_name}: seems of poor quality: prob={prob}")
-            if prob > 0.95:
-                # select this one as its bound to be okay
-                break
+                whi(f"Ignore parsing by {loader_name} of '{path}' as it seems of poor quality: prob={prob}")
+                continue
+
             if len(probs.keys()) >= 3:
                 # if more than 3 worked, take the best amon them to save
                 # time on running all the others
                 break
         except Exception as err:
-            red(f"Error when parsing '{path}' with {loader_name}: {err}")
+            yel(f"Error when parsing '{path}' with {loader_name}: {err}")
 
     assert probs.keys(), f"No pdf parser succedded to parse {path}"
 
