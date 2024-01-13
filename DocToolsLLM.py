@@ -69,6 +69,7 @@ class DocToolsLLM:
 
             top_k=10,
             n_recursive_summary=1,
+
             n_summaries_target=-1,
 
             dollar_limit=5,
