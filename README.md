@@ -18,7 +18,7 @@
 * some package used to load files will not be installed by this command. Pay attention to the error message then use pip install as needed. For example :
     * for youtube: `python -m pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git"` (this is the latest youtube_dl from the git repo, much more recent than their latest release).
     * for urls: `python -m pip install goose3`
-* if you want to use OpenAI's API: add a file "API_KEY.txt" to the root that contains your API key.
+* if you want to use OpenAI's API: add a file "OPENAI_API_KEY.txt" to the root that contains your API key.
 * Read the documentation at `python DocToolsLLM.py --help`
 
 ## Features
