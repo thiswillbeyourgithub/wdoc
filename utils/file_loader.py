@@ -23,6 +23,7 @@ from prompt_toolkit import prompt
 import tiktoken
 
 from ftlangdetect import detect as language_detect
+import pdftotext
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
@@ -1024,6 +1025,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
+            "pdftotext": pdftotext.PDF,
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
             "Unstructured_elements_hires": partial(
@@ -1068,8 +1070,14 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
-            loader = loader_func(path)
-            content = loader.load()
+
+            if loader_name == "pdftotext":
+                with open(path, "rb") as f:
+                    loader = loader_func(f)
+                content = "\n\n".join(loader)
+            else:
+                loader = loader_func(path)
+                content = loader.load()
 
             if "Unstructured" in loader_name:
                 content = "\n".join([d.page_content.strip() for d in content])
