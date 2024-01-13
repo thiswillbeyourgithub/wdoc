@@ -495,6 +495,10 @@ class DocToolsLLM:
                     metadata.append(f"Title: '{item_name.strip()}'")
                 else:
                     item_name = link
+
+                # replace # in title as it would be parsed as a tag
+                item_name = item_name.replace("#", r"\#")
+
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
                     metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
