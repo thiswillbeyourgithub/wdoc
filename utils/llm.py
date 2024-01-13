@@ -32,8 +32,8 @@ def load_llm(modelname, modelbackend):
     """load language model"""
     if modelbackend.lower() == "openai":
         whi("Loading openai models")
-        assert Path("API_KEY.txt").exists(), "No api key found"
-        os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
+        assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
+        os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         llm = ChatOpenAI(
                 model_name=modelname,
@@ -100,8 +100,8 @@ def transcribe(audio_path, audio_hash, language, prompt):
     "Use whisper to transcribe an audio file"
     red(f"Calling whisper to transcribe file {audio_path}")
 
-    assert Path("API_KEY.txt").exists(), "No api key found"
-    os.environ["OPENAI_API_KEY"] = str(Path("API_KEY.txt").read_text()).strip()
+    assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
+    os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
     t = time.time()
