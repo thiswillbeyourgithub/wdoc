@@ -1098,7 +1098,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
         except Exception as err:
             red(f"Error when parsing '{path}' with {loader_name}: {err}")
 
-    assert probs(f"No pdf parser succedded to parse {path}")
+    assert probs.keys(), f"No pdf parser succedded to parse {path}"
 
     # no loader worked, exiting
     if not loaded_docs:
