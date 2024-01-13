@@ -1,8 +1,8 @@
+from functools import partial
 import tldextract
 import uuid
 import threading
 import queue
-import copy
 import pdb
 import time
 import tempfile
@@ -20,37 +20,35 @@ import re
 from tqdm import tqdm
 import json
 from prompt_toolkit import prompt
-from joblib import Parallel, delayed
 import tiktoken
 
 from ftlangdetect import detect as language_detect
+import pdftotext
 
-from langchain.embeddings import SentenceTransformerEmbeddings
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
-from langchain.document_loaders import PyPDFLoader
-from langchain.document_loaders import UnstructuredPDFLoader
-from langchain.document_loaders import PyPDFium2Loader
-from langchain.document_loaders import PyMuPDFLoader
-# from langchain.document_loaders import PDFMinerPDFasHTMLLoader
-from langchain.document_loaders import PDFMinerLoader
-from langchain.document_loaders import PDFPlumberLoader
-from langchain.document_loaders import OnlinePDFLoader
-from langchain.document_loaders import YoutubeLoader
-from langchain.document_loaders import SeleniumURLLoader
-from langchain.document_loaders import PlaywrightURLLoader
-from langchain.document_loaders import WebBaseLoader
-from langchain.vectorstores import FAISS
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
-from langchain.retrievers import ParentDocumentRetriever
-from langchain.storage import LocalFileStore
-from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import PyPDFium2Loader
+from langchain_community.document_loaders import PyMuPDFLoader
+# from langchain_community.document_loaders import PDFMinerPDFasHTMLLoader
+from langchain_community.document_loaders import PDFMinerLoader
+from langchain_community.document_loaders import PDFPlumberLoader
+from langchain_community.document_loaders import OnlinePDFLoader
+from langchain_community.document_loaders import YoutubeLoader
+from langchain_community.document_loaders import SeleniumURLLoader
+from langchain_community.document_loaders import PlaywrightURLLoader
+from langchain_community.document_loaders import WebBaseLoader
+
+from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
-from .llm import RollingWindowEmbeddings, transcribe
+from .llm import transcribe
+
+import os
+# needed in case of buggy unstructured install
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -66,6 +64,7 @@ inference_rules = {
         "pdf": [".*pdf$"],
         "url": ["^http"],
         "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
+        "json_list": [".*.json"],
         }
 
 # compile the inference rules as regex
@@ -91,13 +90,19 @@ threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
 
+min_token = 200
+max_token = 1_000_000
+max_lines = 100_000
+min_lang_prob = 0.50
+
+
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
 
 
 def get_splitter(task):
     "we don't use the same text splitter depending on the task"
-    if task == "query":
+    if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
                 chunk_size=3000,  # default 4000
@@ -107,7 +112,7 @@ def get_splitter(task):
     elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
                 separators=[".\n", ". ", " ", ""],
-                chunk_size=2048,
+                chunk_size=3000,
                 chunk_overlap=300,
                 length_function=get_tkn_length,
                 )
@@ -120,10 +125,6 @@ def cloze_stripper(clozed):
     clozed = re.sub(clozeregex, " ", clozed)
     return clozed
 
-min_token = 200
-max_token = 1_000_000
-max_lines = 100_000
-min_lang_prob = 0.50
 
 def check_docs_tkn_length(docs, name):
     """checks that the number of tokens in the document is high enough,
@@ -155,6 +156,7 @@ def check_docs_tkn_length(docs, name):
         raise Exception(f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}")
     return prob
 
+
 def get_url_title(url):
     """if the title of the url is not loaded from the loader, trying as last
     resort with this one"""
@@ -164,6 +166,7 @@ def get_url_title(url):
         return docs[0].metadata["title"]
     else:
         return None
+
 
 def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
@@ -181,6 +184,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     break
             if filetype != "infer":
                 break
+        assert filetype != "infer", f"Could not infer filetype of {kwargs['path']}. Use the 'filetype' argument."
 
     if filetype in ["json_list", "recursive", "link_file", "youtube_playlist"]:
         assert "path" in kwargs, "missing 'path' key in args"
@@ -273,7 +277,8 @@ def load_doc(filetype, debug, task, **kwargs):
 
             if "done_links" in kwargs:
                 # discard any links that are already present in the output
-                doclist = [d for d in doclist if d not in kwargs["done_links"]]
+                doclist = [d.strip() for d in doclist if d.strip() not in kwargs["done_links"]][:kwargs["n_summaries_target"]]
+                del kwargs["done_links"]
 
             def threaded_load_item(filetype, item, kwargs, pbar, q, lock):
                 kwargs["path"] = item
@@ -384,50 +389,66 @@ def load_doc(filetype, debug, task, **kwargs):
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
+            with lock:
+                n_recursive += 1
+
+            class thread_args(dict):
+                """used to store the arguments used to create the thread and
+                create it at the last minute"""
+                _is_started = False
+                _recursion_id = recursion_id
+                _depth = depth
+
             for doc in doclist:
-                thread = threading.Thread(
-                        target=threaded_load_item,
-                        args=(filetype, doc, kwargs.copy(), pbar, q, lock),
-                        daemon=True,  # exit when the main program exits
-                        )
-                if depth > 0 and sum([t.is_alive() for t in threads.values() if t.is_started]) > max_threads:
-                    thread.is_started = False
-                else:
-                    if depth == 0:
-                        n_recursive += 1
-                    thread.start()
-                    thread.is_started = True
-                thread.recursion_id = recursion_id
+                thread = thread_args()
+                thread["target"] = threaded_load_item
+                thread["args"] = (filetype, doc, kwargs.copy(), pbar, q, lock)
+                thread["daemon"] = True  # exit when the main program exits
+                thread._recursion_id = recursion_id
                 assert doc not in threads, f"{doc} already present as thread"
-                with lock:
-                    threads[doc] = thread
+                threads[doc] = thread
 
             # waiting for threads to finish
             with lock:
-                n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
-                n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
+                n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id])
+                n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
             i = 0
             while n_subthreads_alive or n_subthreads_todo:
 
                 with lock:
-                    n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id])
-                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t.is_started])
-                    n_subthreads_todo = len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id])
+                    n_subthreads_alive = sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id])
+                    n_threads_alive = sum([t.is_alive() for t in threads.values() if t._is_started])
+                    n_subthreads_todo = len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id])
 
                     if n_threads_alive < max_threads + n_recursive and n_subthreads_todo:
                         # launch one more thread
-                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].start()
-                        [t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id][0].is_started = True
+                        docid = [docid for docid, t in threads.items() if not t._is_started and t._recursion_id == recursion_id][0]
+                        assert isinstance(threads[docid], dict)
+                        threads[docid] = threading.Thread(**threads[docid])
+                        threads[docid].start()
+                        threads[docid]._is_started = True
+                        threads[docid]._recursion_id = recursion_id
+                        threads[docid]._depth = depth
                         continue
 
-                time.sleep(1)
+                time.sleep(0.1)
 
                 # display progress every 10s
                 i += 1
-                if i % 10 == 0:
+                if i % 100 == 0:
                     with lock:
-                        doc_print = [k for k, v in threads.items() if v.is_alive() and v.recursion_id == recursion_id]
+                        doc_print = []
+                        to_del = []
+                        for k, v in threads.items():
+                            if v._recursion_id != recursion_id:
+                                continue
+                            if v._is_started and v.is_alive():
+                                doc_print.append(k)
+                            elif v._is_started and not v.is_alive():
+                                to_del.append(k)
+                        for k in to_del:
+                            del threads[k]
                     for ii, d in enumerate(doc_print):
                         d = d.strip()
                         if d.startswith("http"):  # print only domain name
@@ -454,15 +475,15 @@ def load_doc(filetype, debug, task, **kwargs):
                                 continue
                             except:
                                 pass
-                    whi(f"(Depth={depth}) Waiting for {n_subthreads_alive} subthreads to finish: {','.join(doc_print)}")
+                    whi(f"(Depth={depth}) Waiting for {n_subthreads_alive} / {n_subthreads_todo + n_subthreads_alive} subthreads to finish: {','.join(doc_print)}")
 
             # check that all its subthreads are done
             with lock:
-                assert sum([t.is_alive() for t in threads.values() if t.is_started and t.recursion_id == recursion_id]) == 0
-                assert len([t for t in threads.values() if not t.is_started and t.recursion_id == recursion_id]) == 0
+                assert sum([t.is_alive() for t in threads.values() if t._is_started and t._recursion_id == recursion_id]) == 0
+                assert len([t for t in threads.values() if not t._is_started and t._recursion_id == recursion_id]) == 0
 
                 # remove old finished threads
-                threads = {k: t for k, t in threads.items() if t.recursion_id != recursion_id}
+                threads = {k: t for k, t in threads.items() if t._recursion_id != recursion_id}
 
             # get the values from the queue
             results = []
@@ -526,10 +547,10 @@ def load_doc(filetype, debug, task, **kwargs):
             lang = ["fr-FR", "fr", "en", "en-US", "en-UK"]
         else:
             lang = kwargs["language"]
-        if "translation" not in kwargs:
-            transl = "en"
-        else:
+        if "translation" in kwargs:
             transl = kwargs["translation"]
+        else:
+            transl = None
 
         whi(f"Loading youtube: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
@@ -594,6 +615,11 @@ def load_doc(filetype, debug, task, **kwargs):
         deck = kwargs["anki_deck"]
         notetype = kwargs["anki_notetype"]
         fields = kwargs["anki_fields"]
+        if "anki_mode" not in kwargs:
+            anki_mode = "window_single_note"
+        else:
+            anki_mode = kwargs["anki_mode"]
+        assert anki_mode.replace("window", "").replace("concatenate", "").replace("single_note", "").replace("_", "") == "", f"Unexpected anki_mode: {anki_mode}"
 
         whi(f"Loading anki profile: '{profile}'")
         original_db = akp.find_db(user=profile)
@@ -636,44 +662,66 @@ def load_doc(filetype, debug, task, **kwargs):
 
         docs = []
 
-        # # load each card as a single document
-        # for cid in cards.index:
-        #     c = cards.loc[cid, :]
-        #     docs.append(
-        #             Document(
-        #                 page_content=c["text"],
-        #                 metadata={
-        #                     "anki_tags": " ".join(c["ntags"]),
-        #                     "cid": cid,
-        #                     }
-        #                 )
-        #             )
+        if "single_note" in anki_mode:
+            # load each card as a single document
+            for cid in cards.index:
+                c = cards.loc[cid, :]
+                docs.append(
+                        Document(
+                            page_content=c["text"],
+                            metadata={
+                                "anki_tags": " ".join(c["ntags"]),
+                                "anki_cid": str(cid),
+                                }
+                            )
+                        )
 
-        # # turn all cards into a single wall of text then use text_splitter
-        # pro: fill the context window as much I possible I guess
-        # con: - editing cards will force re-embedding a lot of cards
-        #      - ignores tags
-        chunksize = text_splitter._chunk_size
-        full_text = ""
-        spacer = "\n\n#####\n\n"
-        metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
-        for cid in cards.index:
-            c = cards.loc[cid, :]
-            tags = c["ntags"]
-            text = ftfy.fix_text(c["text"].strip())
-            card_deck = c["codeck"]
-            assert card_deck, f"empty card_deck for cid {cid}"
+        if "concatenate" in anki_mode:
+            # # turn all cards into a single wall of text then use text_splitter
+            # pro: fill the context window as much I possible I guess
+            # con: - editing cards will force re-embedding a lot of cards
+            #      - ignores tags
+            chunksize = text_splitter._chunk_size
+            full_text = ""
+            spacer = "\n\n#####\n\n"
+            metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
+            for cid in cards.index:
+                c = cards.loc[cid, :]
+                cid = str(cid)
+                tags = c["ntags"]
+                text = ftfy.fix_text(c["text"].strip())
+                card_deck = c["codeck"]
+                assert card_deck, f"empty card_deck for cid {cid}"
 
-            if not full_text:  # always add first
-                full_text = text
-                metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
-                continue
+                if not full_text:  # always add first
+                    full_text = text
+                    metadata = {"anki_tags": " ".join(tags), "anki_cid": str(cid), "anki_deck": card_deck}
+                    continue
 
-            # if too many token, add the current chunk of text and start
-            # the next chunk with this card
-            if get_tkn_length(full_text + spacer + text) >= chunksize:
-                assert full_text, f"An anki card is too large for the text splitter: {text}"
-                assert metadata["anki_cid"], "No anki_cid in metadata"
+                # if too many token, add the current chunk of text and start
+                # the next chunk with this card
+                if get_tkn_length(full_text + spacer + text) >= chunksize:
+                    assert full_text, f"An anki card is too large for the text splitter: {text}"
+                    assert metadata["anki_cid"], "No anki_cid in metadata"
+                    docs.append(
+                            Document(
+                                page_content=full_text,
+                                metadata=metadata,
+                                )
+                            )
+
+                    metadata = {"anki_tags": " ".join(tags), "anki_cid": str(cid), "anki_deck": card_deck}
+                    full_text = text
+                else:
+                    for t in tags:
+                        if t not in metadata["anki_tags"]:
+                            metadata["anki_tags"] += f" {t}"
+                    metadata["anki_cid"] += " " + str(cid)
+                    if card_deck not in metadata["anki_deck"]:
+                        metadata["anki_deck"] += " " + card_deck
+                    full_text += spacer + text
+
+            if full_text:  # add latest chunk
                 docs.append(
                         Document(
                             page_content=full_text,
@@ -681,61 +729,47 @@ def load_doc(filetype, debug, task, **kwargs):
                             )
                         )
 
-                metadata = {"anki_tags": " ".join(tags), "anki_cid": cid, "anki_deck": card_deck}
-                full_text = text
-            else:
-                for t in tags:
-                    if t not in metadata["anki_tags"]:
-                        metadata["anki_tags"] += f" {t}"
-                metadata["anki_cid"] += " " + cid
-                if card_deck not in metadata["anki_deck"]:
-                    metadata["anki_deck"] += " " + card_deck
-                full_text += spacer + text
+        if "window" in anki_mode:
+            # # set window_size to X turn each X cards into one document, overlapping
+            window_size = 5
+            index_list = cards.index.tolist()
+            n = len(index_list)
+            cards["text_concat"] = ""
+            cards["tags_concat"] = ""
+            cards["cids"] = ""
+            cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
+            for i in tqdm(range(len(index_list)), desc="combining anki cards"):
+                text_concat = ""
+                tags_concat = ""
+                cids = ""
+                skip = 0
+                for w in range(0, window_size):
+                    if i + window_size + skip >= n:
+                        s = -1  # when at the end of the list, apply the window in reverse
+                        # s for 'sign'
+                    else:
+                        s = 1
+                    if cards.at[index_list[i+w*s], "text"] in cards.at[index_list[i], "text_concat"]:
+                        # skipping this card because it's a duplicate
+                        skip += 1
+                    text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
+                    tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
+                    cids += f"{index_list[i+(w+skip)*s]} "
+                cards.at[index_list[i], "text_concat"] = text_concat
+                cards.at[index_list[i], "tags_concat"] = tags_concat
+                cards.at[index_list[i], "cids"] = cids
 
-        if full_text:  # add latest chunk
-            docs.append(
-                    Document(
-                        page_content=full_text,
-                        metadata=metadata,
+            for cid in cards.index:
+                c = cards.loc[cid, ]
+                docs.append(
+                        Document(
+                            page_content=c["text_concat"].strip(),
+                            metadata={
+                                "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
+                                "anki_cid": c["cids"].strip(),
+                                }
+                            )
                         )
-                    )
-
-        # # set window_size to X turn each X cards into one document, overlapping
-        # window_size = 5
-        # index_list = cards.index.tolist()
-        # n = len(index_list)
-        # cards["text_concat"] = ""
-        # cards["tags_concat"] = ""
-        # cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
-        # for i in tqdm(range(len(index_list)), desc="combining anki cards"):
-        #     text_concat = ""
-        #     tags_concat = ""
-        #     skip = 0
-        #     for w in range(0, window_size):
-        #         if i + window_size + skip >= n:
-        #             s = -1  # when at the end of the list, apply the window in reverse
-        #             # s for 'sign'
-        #         else:
-        #             s = 1
-        #         if cards.at[index_list[i+w*s], "text"] in cards.at[index_list[i], "text_concat"]:
-        #             # skipping this card because it's a duplicate
-        #             skip += 1
-        #         text_concat += "\n\n" + cards.at[index_list[i+(w+skip)*s], "text"]
-        #         tags_concat += cards.at[index_list[i+(w+skip)*s], "ntags_t"]
-        #     cards.at[index_list[i], "text_concat"] = text_concat
-        #     cards.at[index_list[i], "tags_concat"] = tags_concat
-
-        # for cid in cards.index:
-        #     c = cards.loc[cid, ]
-        #     docs.append(
-        #             Document(
-        #                 page_content=c["text_concat"].strip(),
-        #                 metadata={
-        #                     "anki_tags": " ".join(list(set(c["tags_concat"].split(" ")))),
-        #                     "cid": cid,
-        #                     }
-        #                 )
-        #             )
 
         assert docs, "List of loaded anki document is empty!"
 
@@ -915,9 +949,6 @@ def load_doc(filetype, debug, task, **kwargs):
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
-        if "hash" not in docs[i].metadata or not docs[i].metadata["hash"]:
-            docs[i].metadata["hash"] = hasher(docs[i].page_content)
-
         if "Author" in docs[i].metadata:
             docs[i].metadata["author"] = docs[i].metadata["Author"]
             del docs[i].metadata["Author"]
@@ -957,199 +988,15 @@ def load_doc(filetype, debug, task, **kwargs):
             else:
                 docs[i].metadata["source"] = docs[i].metadata["title"]
 
+        if "hash" not in docs[i].metadata:
+            docs[i].metadata["hash"] = hasher(docs[i].page_content + json.dumps(docs[i].metadata))
+        assert docs[i].metadata["hash"], f"Invalid hash for document: {docs[i]}"
+
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
     assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
-
-def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, kwargs):
-    """loads embeddings for each document"""
-
-    if embed_model == "openai":
-        red("Using openai embedding model")
-        assert Path("API_KEY.txt").exists(), "No API_KEY.txt found"
-
-        embeddings = OpenAIEmbeddings(
-                openai_api_key = str(Path("API_KEY.txt").read_text()).strip()
-                )
-
-    else:
-        embeddings = RollingWindowEmbeddings(
-                model_name=embed_model,
-                encode_kwargs={
-                    "batch_size": 1,
-                    "show_progress_bar": True,
-                    "normalize_embeddings": True,
-                    },
-                )
-
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
-    cache_content = list(lfs.yield_keys())
-    red(f"Found {len(cache_content)} embeddings in local cache")
-
-    # cached_embeddings = embeddings
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-            embeddings,
-            lfs,
-            namespace=embed_model,
-            )
-
-    # reload passed embeddings
-    if loadfrom:
-        red("Reloading documents and embeddings from file")
-        path = Path(loadfrom)
-        assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), cached_embeddings)
-        return db, cached_embeddings
-
-    red("\nLoading embeddings.")
-
-    docs = loaded_docs
-    if len(docs) >= 50:
-        docs = sorted(docs, key=lambda x: random.random())
-
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
-    embeddings_cache.mkdir(exist_ok=True)
-    t = time.time()
-    whi(f"Creating FAISS index for {len(docs)} documents")
-
-    in_cache = [p for p in embeddings_cache.iterdir()]
-    whi(f"Found {len(in_cache)} embeddings in cache")
-    db = None
-    to_embed = []
-
-    # load previous faiss index from cache
-    for doc in tqdm(docs, desc="Loading embeddings from cache"):
-        fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
-        if fi.exists():
-            temp = FAISS.load_local(fi, cached_embeddings)
-            if not db and temp:
-                db = temp
-            else:
-                try:
-                    db.merge_from(temp)
-                except Exception as err:
-                    red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                    [p.unlink() for p in fi.iterdir()]
-                    fi.rmdir()
-        else:
-            to_embed.append(doc)
-
-    whi(f"Docs left to embed: {len(to_embed)}")
-
-    # check price of embedding
-    full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
-    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
-    if embed_model == "openai":
-        dol_price = full_tkn * 0.0001 / 1000
-        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
-        if dol_price > 1:
-            ans = input(f"Do you confirm you are okay to pay this? (y/n)\n>")
-            if ans.lower() not in ["y", "yes"]:
-                red("Quitting.")
-                raise SystemExit()
-
-    # create a faiss index for batch of documents, then save them
-    # as 1 document faiss index to cache
-    if to_embed:
-        batch_size = 1000
-        batches = [
-                [i * batch_size, (i + 1) * batch_size]
-                for i in range(len(to_embed) // batch_size + 1)
-                ]
-        pbar = tqdm(total=len(to_embed), desc="Saving to cache")
-        for batch in tqdm(batches, desc="Embedding by batch"):
-            temp = FAISS.from_documents(
-                    to_embed[batch[0]:batch[1]],
-                    cached_embeddings,
-                    normalize_L2=True
-                    )
-
-            recursive_faiss_saver(temp, to_embed[batch[0]:batch[1]], embeddings_cache, 0, pbar)
-
-            if not db:
-                db = temp
-            else:
-                db.merge_from(temp)
-
-    # to get vectors from a faiss index
-    # vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(to_embed) * temp.index.d).reshape(len(to_embed), temp.index.d)
-
-    whi(f"Done creating index in {time.time()-t:.2f}s")
-
-    # saving embeddings
-    if saveas:
-        db.save_local(saveas)
-
-    return db, cached_embeddings
-
-def recursive_faiss_saver(index, documents, path, depth, pbar):
-    """split the faiss index by hand into 1 docstore index and save
-    it to cache. To split it, as the copy.deepcopy is long we
-    use a recursive call to only copy fewer times the full index"""
-    doc_ids = [k for k in index.docstore._dict.keys()]
-    assert doc_ids, "unexpected empty doc_ids"
-    n = 10
-    threads = []
-    le = len(doc_ids)
-    nn = len(doc_ids) // n
-    if depth:
-        spacer = " " * depth * 2
-    else:
-        spacer = ""
-    info = f"(n={n}, nn={nn}, le={le}, d={depth})"
-    if nn > n:  # more than 1 order of magnitude
-        for i in range(len(doc_ids) // nn + 1):
-            whi(f"{spacer}Creating larger subindex #{i} {info}")
-            sub_index = copy.deepcopy(index)
-            sub_docids = doc_ids[i * nn: (i + 1) * nn]
-            to_del = [d for d in doc_ids if d not in sub_docids]
-            if not to_del or not sub_docids:
-                continue
-            sub_index.delete(to_del)
-            threads.extend(
-                    recursive_faiss_saver(
-                        sub_index, documents[i * nn:(i + 1) * nn], path, depth + 1, pbar)
-                    )
-
-    elif len(doc_ids) > n:
-        for i in range(len(doc_ids) // n + 1):
-            whi(f"{spacer}Creating subindex #{i} {info}")
-            sub_index = copy.deepcopy(index)
-            sub_docids = doc_ids[i * n: (i + 1) * n]
-            to_del = [d for d in doc_ids if d not in sub_docids]
-            if not to_del or not sub_docids:
-                continue
-            sub_index.delete(to_del)
-            threads.extend(
-                    recursive_faiss_saver(
-                        sub_index, documents[i * n:(i + 1) * n], path, depth + 1, pbar)
-                    )
-            while sum([t.is_alive() for t in threads]) > 3 * n:
-                time.sleep(0.1)
-    else:
-        for i, did in enumerate(doc_ids):
-            whi(f"{spacer}Saving {documents[i].metadata['hash']}.faiss_index {info}")
-            to_del = [d for d in doc_ids if d != did]
-            if not to_del:
-                continue
-            file = (path / str(documents[i].metadata["hash"] + ".faiss_index"))
-            assert not file.exists(), "cache file already exists!"
-            thread = threading.Thread(
-                    target=save_one_index,
-                    args=(copy.deepcopy(index), to_del, file, pbar),
-                    )
-            thread.start()
-            threads.append(thread)
-        return threads
-    [t.join() for t in threads]
-    return []
-
-def save_one_index(index, to_del, file, pbar):
-    index.delete(to_del)
-    index.save_local(file)
-    pbar.update(1)
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
@@ -1160,6 +1007,7 @@ def load_youtube_playlist(playlist_url):
             raise Exception(red(f"ERROR: Youtube playlist link skipped because : error during information \
         extraction from {playlist_url} : {e}"))
     return loaded
+
 
 @loaddoc_cache.cache(ignore=["loader"])
 def cached_yt_loader(loader, path, add_video_info, language, translation):
@@ -1172,16 +1020,47 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
             ).load()
     return docs
 
+
 @loaddoc_cache.cache(ignore=["text_splitter"])
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
+            "pdftotext": pdftotext.PDF,
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            # "Unstructured": UnstructuredPDFLoader,
+            "Unstructured_elements_hires": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="hi_res",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_elements_fast": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="fast",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_hires": partial(
+                UnstructuredPDFLoader,
+                strategy="hi_res",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_fast": partial(
+                UnstructuredPDFLoader,
+                strategy="fast",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
-            # "PdfPlumber": PDFPlumberLoader,
+            "PdfPlumber": PDFPlumberLoader,
             }
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
@@ -1191,22 +1070,43 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
-            loader = loader_func(path)
-            content = loader.load()
-            content = "\n".join([d.page_content.strip() for d in content])
 
-            # remove empty lines. frequent in pdfs
-            content = re.sub(emptyline_regex, '', content)
-            content = re.sub(emptyline2_regex, '\n', content)
-            content = re.sub(linebreak_before_letter, r'\1', content)
+            if loader_name == "pdftotext":
+                with open(path, "rb") as f:
+                    loader = loader_func(f)
+                content = "\n\n".join(loader)
+            else:
+                loader = loader_func(path)
+                content = loader.load()
+
+            if "Unstructured" in loader_name:
+                content = "\n".join([d.page_content.strip() for d in content])
+                # remove empty lines. frequent in pdfs
+                content = re.sub(emptyline_regex, '', content)
+                content = re.sub(emptyline2_regex, '\n', content)
+                content = re.sub(linebreak_before_letter, r'\1', content)
+
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
             prob = check_docs_tkn_length(docs, path)
-            probs[loader_name] = prob
-            loaded_docs[loader_name] = docs
+            if prob >= 0.7:
+                # only consider it okay if decent quality
+                probs[loader_name] = prob
+                loaded_docs[loader_name] = docs
+            else:
+                red(f"Ignore parsing of '{path}' with {loader_name}: seems of poor quality: prob={prob}")
+            if prob > 0.95:
+                # select this one as its bound to be okay
+                break
+            if len(probs.keys()) >= 3:
+                # if more than 3 worked, take the best amon them to save
+                # time on running all the others
+                break
         except Exception as err:
             red(f"Error when parsing '{path}' with {loader_name}: {err}")
+
+    assert probs.keys(), f"No pdf parser succedded to parse {path}"
 
     # no loader worked, exiting
     if not loaded_docs:
@@ -1218,88 +1118,3 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
         red(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
-
-def create_hyde_retriever(
-        query,
-        filetype,
-
-        llm,
-        top_k,
-
-        embed_model,
-        embeddings,
-        embeddings_engine,
-
-        kwargs,
-        loadfrom,
-        debug
-        ):
-    """
-    create a retriever only for the subset of documents from the
-    loaded_embeddings that were found using HyDE technique (i.e. asking
-    the llm to create a hypothetical answer and use the embedding of this
-    answer to search similar content)
-
-    The code is a little strange because it actually reloads only a portion
-    of the embeddings from cache if possible.
-
-    https://python.langchain.com/docs/use_cases/question_answering/how_to/hyde
-    """
-
-    HyDE_template = """Please imagine the answer to the user's question about a document:
-    Document type: [[filetype]]
-    User question: {question}
-    Answer:""".replace("[[filetype]]", filetype)
-    hyde_prompt = PromptTemplate(
-            input_variables=["question"],
-            template=HyDE_template,
-            )
-
-    hyde_chain = LLMChain(
-            llm=llm,
-            prompt=hyde_prompt,
-            )
-
-    hyde_embeddings = HypotheticalDocumentEmbedder(
-        llm_chain=hyde_chain,
-        base_embeddings=embeddings_engine,
-        )
-    hyde_vector = hyde_embeddings.embed_query(query)
-
-    hyde_doc = embeddings.similarity_search_by_vector(
-            embedding=hyde_vector,
-            k=top_k,
-            )
-    vecstore, _ = load_embeddings(
-            embed_model=embed_model,
-            loadfrom = loadfrom,
-            saveas=None,
-            debug=debug,
-            loaded_docs=hyde_doc,
-            kwargs=kwargs,
-            )
-
-    retriever = vecstore.as_retriever(
-        search_kwargs={"k": top_k, "distance_metric": "cos"}
-        )
-
-    return retriever
-
-
-def create_parent_retriever(
-        task,
-        loaded_embeddings,
-        loaded_docs,
-        ):
-    "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
-    csp = get_splitter(task)
-    psp = get_splitter(task)
-    psp._chunk_size *= 4
-    parent = ParentDocumentRetriever(
-            vectorstore=loaded_embeddings,
-            docstore=LocalFileStore(".cache/parent_retriever"),
-            child_splitter=csp,
-            parent_splitter=psp,
-            )
-    parent.add_documents(loaded_docs)
-    return parent

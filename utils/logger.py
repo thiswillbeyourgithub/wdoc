@@ -1,3 +1,4 @@
+import requests
 import time
 from tqdm import tqdm
 import logging
@@ -62,3 +63,15 @@ def coloured_log(color_asked):
 whi = coloured_log("white")
 yel = coloured_log("yellow")
 red = coloured_log("red")
+
+# phone notification
+def create_ntfy_func(url):
+    def ntfy_func(text):
+        red(text)
+        requests.post(
+                url=url,
+                headers={"Title": "DocTools Summary"},
+                data=text.encode("utf-8"),
+                )
+        return text
+    return ntfy_func

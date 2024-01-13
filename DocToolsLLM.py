@@ -19,33 +19,48 @@ from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
-from langchain.document_transformers import EmbeddingsRedundantFilter
-from langchain.retrievers.document_compressors import DocumentCompressorPipeline
-from langchain.retrievers import ContextualCompressionRetriever, KNNRetriever, SVMRetriever
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import (
+        DocumentCompressorPipeline)
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
+from langchain_community.llms import FakeListLLM
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc, load_embeddings, create_hyde_retriever, get_tkn_length, average_word_length, wpm, get_splitter, check_docs_tkn_length, create_parent_retriever, markdownlink_regex
-from utils.logger import whi, yel, red
+from utils.file_loader import (load_doc,
+                               get_tkn_length,
+                               average_word_length,
+                               wpm,
+                               get_splitter,
+                               check_docs_tkn_length
+                               )
+from utils.embeddings import load_embeddings
+from utils.retrievers import create_hyde_retriever, create_parent_retriever
+from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
+from utils.misc import ankiconnect
+from utils.prompts import condense_question
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
+
 class DocToolsLLM:
-    VERSION = 0.9
+    VERSION = "0.10"
+
     def __init__(
             self,
-            model="openai",
+            modelbackend="openai",
+            modelname="gpt-3.5-turbo-1106",
             task="query",
             query=None,
             filetype="infer",
-            local_llm_path=None,
             # embed_model="openai",
-            embed_model = "paraphrase-multilingual-mpnet-base-v2",
+            embed_model="paraphrase-multilingual-mpnet-base-v2",
             # embed_model = "distiluse-base-multilingual-cased-v1",
             # embed_model = "msmarco-distilbert-cos-v5",
             # embed_model = "all-mpnet-base-v2",
@@ -53,11 +68,15 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=10,
-            n_recursive_summary=0,
+            n_recursive_summary=1,
+
             n_summaries_target=-1,
 
+            dollar_limit=5,
             debug=False,
             llm_verbosity=True,
+            ntfy_url=None,
+            condense_question=False,
 
             help=False,
             h=False,
@@ -89,7 +108,10 @@ class DocToolsLLM:
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * url => --path must be a valid http(s) link
-                * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep
+                * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep --anki_mode: any of 'window', 'concatenate', 'single_note': (or _ separated value like 'concatenate_window'). By default 'window_single_note' is used.
+                    * 'single_note': 1 document is 1 anki note.
+                    * 'window': 1 documents is 5 anki note, overlapping
+                    * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
                 * string => no other parameters needed, will ask to provide a string
                 * local_audio => needs whisper_prompt and whisper_lang
 
@@ -99,11 +121,12 @@ class DocToolsLLM:
 
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
-        --model str, default openai
+        --modelbackend str, default openai
             either gpt4all, llama, openai or fake/test/testing to use a fake answer.
 
-        --local_llm_path str
-            if model is not openai, this needs to point to a compatible model
+        --modelname str, default gpt-3.5-turbo-1106
+            name of the model. Available values depend on modelbackend. If it's
+            llama or gpt4all then it must be a path to the model
 
         --embed_model str, default "openai"
             Either 'openai' or sentence_transformer embedding model to use.
@@ -125,14 +148,18 @@ class DocToolsLLM:
         --top_k int, default 10
             number of chunks to look for when querying
 
-        --n_recursive_summary int, default 0
-            will always recursively summarize
+        --n_recursive_summary int, default 1
+            will recursively summarize the summary this many times.
+            1 means that the original summary will be summarize. 0 means disabled.
 
         --n_summaries_target int, default -1
             Only active if query is 'summarize_link_file'. Set a limit to
             the number of links that will be summarized. If the number of
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
+
+        --dollar_limit int, default 5
+            If the estimated price is above this limit, stop instead.
 
         --debug bool, default False
             if True will open a debugger instead before crashing, also use
@@ -141,6 +168,16 @@ class DocToolsLLM:
 
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
+
+        --ntfy_url, default None
+            must be a url to ntfy.sh to receive notifications for summaries.
+            Especially useful to keep track of costs when using cron.
+
+        --condense_question, default False
+            if True, will not use a special LLM call to reformulate the question
+            when task is "query". Otherwise, the query will be reformulated as
+            a standalone question. Useful when you have multiple questions in
+            a row.
 
         --help or -h, default False
             if True, will return this documentation.
@@ -168,7 +205,8 @@ class DocToolsLLM:
 
         for k in kwargs:
             if k not in [
-                    "anki_profile", "anki_notetype", "anki_fields", "anki_deck",
+                    "anki_profile", "anki_notetype", "anki_fields",
+                    "anki_deck", "anki_mode",
                     "whisper_lang", "whisper_prompt",
                     "path", "include", "exclude",
                     "out_file", "out_file_logseq_mode",
@@ -182,11 +220,11 @@ class DocToolsLLM:
             red("Input is 'string' so setting 'top_k' to 1")
 
         # storing as attributes
-        self.model = model
+        self.modelbackend = modelbackend
+        self.modelname = modelname
         self.task = task
         self.query = query
         self.filetype = filetype
-        self.local_llm_path = local_llm_path
         self.embed_model = embed_model
         self.saveas = saveas
         self.loadfrom = loadfrom
@@ -196,13 +234,24 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
+        self.dollar_limit = dollar_limit
+        self.condense_question = condense_question
+
+        global ntfy
+        if ntfy_url:
+            ntfy = create_ntfy_func(ntfy_url)
+            ntfy("Starting DocTools")
+        else:
+            def ntfy(text):
+                red(text)
+                return text
 
         if self.debug:
             # make the script interruptible
             signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
             os.environ["LANGCHAIN_TRACING"] = "true"
             set_verbose(True)
-            set_verbose(True)
+            set_debug(True)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -219,7 +268,7 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(model, local_llm_path)
+        self.llm, self.callback = load_llm(modelname, modelbackend)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -252,6 +301,7 @@ class DocToolsLLM:
 
             self.done_links = " ".join(doclist)
             self.kwargs["done_links"] = doclist
+            self.kwargs["n_summaries_target"] = self.n_summaries_target
 
         # loading documents
         if not loadfrom:
@@ -269,18 +319,21 @@ class DocToolsLLM:
                         "multiple documents!")
 
                 hashes = [d.metadata["hash"] for d in self.loaded_docs]
+                uniq_hashes = list(set(hashes))
                 removed_paths = []
-                if len(hashes) != len(set(hashes)):
+                removed_docs = []
+                if len(hashes) != len(uniq_hashes):
                     red("Found duplicate hashes after loading documents:")
 
-                    for i, doc in enumerate(self.loaded_docs):
+                    for i, doc in enumerate(tqdm(self.loaded_docs, desc="Looking for duplicates")):
                         n = hashes.count(doc.metadata["hash"])
                         if n > 1:
-                            if not doc.metadata["path"].startswith("Anki_profile="):
-                                removed_paths.append(self.loaded_docs[i].metadata["path"])
-                                # allow partially removed when it's from anki
+                            removed_docs.append(self.loaded_docs[i])
                             self.loaded_docs[i] = None
+                            hashes[hashes.index(doc.metadata["hash"])] = None
+                    red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
 
+                    # check if deduplication likely amputated documents
                     self.loaded_docs = [d for d in self.loaded_docs if d is not None]
                     present_path = [d.metadata["path"] for d in self.loaded_docs]
 
@@ -289,10 +342,9 @@ class DocToolsLLM:
                         red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
                         for i, inte in enumerate(intersect):
                             red(f"  * #{i + 1}: {inte}")
-                        # raise Exception()
+                        raise Exception()
                     else:
                         red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
-
 
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
@@ -302,7 +354,6 @@ class DocToolsLLM:
         whi("Done with tasks.")
         if self.debug:
             breakpoint()
-
 
     def process_task(self):
         red(f"\nProcessing task '{self.task}'")
@@ -326,7 +377,7 @@ class DocToolsLLM:
                     if len(links_todo) < self.n_summaries_target:
                         links_todo[link] = None
                     else:
-                        yel("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                        ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
                         break
 
                 # comment out the links that are marked as already done
@@ -351,10 +402,10 @@ class DocToolsLLM:
                     n_todos_desired = self.n_summaries_target
                     assert isinstance(n_todos_desired, int)
                     if self.n_todos_present >= n_todos_desired:
-                        return red(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                        return ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                     else:
                         self.n_summaries_target = n_todos_desired - self.n_todos_present
-                        red(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                        ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
                         assert self.n_summaries_target > 0
 
                     while len(links_todo) > self.n_summaries_target:
@@ -383,23 +434,29 @@ class DocToolsLLM:
                     else:
                         docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
+            prices = [0.001, 0.002]
+            if self.modelname == "gpt-4-1106-preview":
+                prices = [0.01, 0.03]
+
             full_tkn = sum(list(docs_tkn_cost.values()))
             red("Token price of each document:")
             for k, v in docs_tkn_cost.items():
-                red(f"- {v:>6}: {k}")
+                pr = v * (prices[0] * 4 + prices[1]) / 5 / 1000
+                red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
             red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
-            estimate_tkn = 2.4 * full_tkn
-            if self.n_recursive_summary > 0:
-                estimate_tkn += sum([full_tkn / ((i + 1) * 4) for i, ii in enumerate(range(self.n_recursive_summary))])
-            estimate_dol = estimate_tkn / 1000 * 0.0016
-            red(f"Conservative estimate of the cost to summarize: ${estimate_dol:.4f} for {estimate_tkn} tokens.")
-            if estimate_dol > 1:
-                raise Exception(red("Cost estimate > $1 which is absurdly high. Has something gone wrong? Quitting."))
+            price = (prices[0] * 3 + prices[1] * 2) / 5
+            estimate_dol = full_tkn / 1000 * price * 1.1
+            if self.n_recursive_summary:
+                for i in range(1, self.n_recursive_summary + 1):
+                    estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
+            ntfy(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+            if estimate_dol > self.dollar_limit:
+                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
-            if self.model == "openai":
+            if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
                 logit_val = 4
@@ -410,10 +467,10 @@ class DocToolsLLM:
                         # 9: logit_val,  # '*'
                         # 1635: logit_val,  # ' *'
                         197: logit_val,  # '\t'
-                        334: logit_val * 2,  # '**'
-                        25: logit_val,  # ':'
-                        551: logit_val,  # ' :'
-                        13: -1,  # '.'
+                        334: logit_val,  # '**'
+                        # 25: logit_val,  # ':'
+                        # 551: logit_val,  # ' :'
+                        # 13: -1,  # '.'
                         }
                 self.llm.model_kwargs["frequency_penalty"] = 0.5
                 self.llm.model_kwargs["temperature"] = 0.0
@@ -442,6 +499,10 @@ class DocToolsLLM:
                     metadata.append(f"Title: '{item_name.strip()}'")
                 else:
                     item_name = link
+
+                # replace # in title as it would be parsed as a tag
+                item_name = item_name.replace("#", r"\#")
+
                 if "docs_reading_time" in relevant_docs[0].metadata:
                     doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
                     metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
@@ -476,7 +537,7 @@ class DocToolsLLM:
                         docs=relevant_docs,
                         metadata=metadata,
                         language=lang,
-                        model=self.model,
+                        modelbackend=self.modelbackend,
                         llm=self.llm,
                         callback=self.callback,
                         verbose=self.llm_verbosity,
@@ -490,8 +551,7 @@ class DocToolsLLM:
                 if self.n_recursive_summary > 0:
                     splitter = get_splitter(self.task)
                     summary_text = summary
-                    if metadata:
-                        metadata = metadata.strip() + "\n\t- New task: enhance this summary while respecting the rules\n"
+
                     for n_recur in range(self.n_recursive_summary):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
 
@@ -515,10 +575,11 @@ class DocToolsLLM:
                                 docs=summary_docs,
                                 metadata=metadata,
                                 language=lang,
-                                model=self.model,
+                                modelbackend=self.modelbackend,
                                 llm=self.llm,
                                 callback=self.callback,
                                 verbose=self.llm_verbosity,
+                                n_recursion=n_recur,
                                 )
                         doc_total_tokens += new_doc_total_tokens
                         doc_total_cost += new_doc_total_cost
@@ -532,28 +593,31 @@ class DocToolsLLM:
 
                     red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
+                summary_tkn_length = get_tkn_length(summary)
+
                 if "out_file_logseq_mode" in self.kwargs:
                     header = f"\n- TODO {item_name}"
-                    header += "\n\tcollapsed:: true"
-                    header += "\n\tblock_type:: DocToolsLLM_summary"
-                    header += f"\n\tDocToolsLLM_version:: {self.VERSION}"
-                    header += f"\n\tDocToolsLLM_model:: {self.model}"
-                    header += f"\n\tDocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-                    header += f"\n\tsummary_date:: {today}"
-                    header += f"\n\tsummary_timestamp:: {int(time.time())}"
-                    header += f"\n\ttoken_cost:: {doc_total_tokens}"
-                    header += f"\n\tdollar_cost:: {doc_total_cost:.5f}"
-                    header += f"\n\tsummary_reading_time:: {sum_reading_length:.1f}"
-                    header += f"\n\tlink:: {link}"
+                    header += "\n  collapsed:: true"
+                    header += "\n  block_type:: DocToolsLLM_summary"
+                    header += f"\n  DocToolsLLM_version:: {self.VERSION}"
+                    header += f"\n  DocToolsLLM_model:: {self.modelname} of {self.modelbackend}"
+                    header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+                    header += f"\n  summary_date:: {today}"
+                    header += f"\n  summary_timestamp:: {int(time.time())}"
+                    header += f"\n  token_cost:: {doc_total_tokens}"
+                    header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
+                    header += f"\n  summary_token_length:: {summary_tkn_length}"
+                    header += f"\n  summary_reading_time:: {sum_reading_length:.1f}"
+                    header += f"\n  link:: {link}"
                     if doc_reading_length:
-                        header += f"\n\tdoc_reading_time:: {doc_reading_length:.1f}"
-                        header += f"\n\treading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
+                        header += f"\n  doc_reading_time:: {doc_reading_length:.1f}"
+                        header += f"\n  reading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
                     if n_chunk > 1:
-                        header += f"\n\tchunks:: {n_chunk}"
+                        header += f"\n  chunks:: {n_chunk}"
                     if author:
-                        header += f"\n\tauthor:: {author}"
+                        header += f"\n  author:: {author}"
                     if lang:
-                        header += f"\n\tlanguage:: {lang}"
+                        header += f"\n  language:: {lang}"
 
                 else:
                     header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
@@ -562,7 +626,7 @@ class DocToolsLLM:
                     if author:
                         header += f"    by '{author}'"
                     header += f"    original link: '{link}'"
-                    header += f"    DocToolsLLM version {self.VERSION} with model {self.model}"
+                    header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
                     header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
                 # save to output file
@@ -608,8 +672,8 @@ class DocToolsLLM:
             total_docs_length = sum([x["doc_reading_length"] for x in results])
             # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-            red(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})")
-            red(f"Total time saved by this run: {total_docs_length:.1f} minutes")
+            ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
+            ntfy(f"Total time saved by this run: {total_docs_length:.1f} minutes")
 
             # if "out_file" in self.kwargs:
             #     # after summarizing all links, append to output file the total cost
@@ -636,7 +700,7 @@ class DocToolsLLM:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if self.model == "openai":
+                if self.modelbackend == "openai":
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing. Exiting.")
@@ -644,12 +708,13 @@ class DocToolsLLM:
 
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
-                self.embed_model,
-                self.loadfrom,
-                self.saveas,
-                self.debug,
-                self.loaded_docs,
-                self.kwargs)
+                embed_model=self.embed_model,
+                loadfrom=self.loadfrom,
+                saveas=self.saveas,
+                debug=self.debug,
+                loaded_docs=self.loaded_docs,
+                dollar_limit=self.dollar_limit,
+                kwargs=self.kwargs)
 
         assert self.task in ["query", "search", "summarize_then_query"]
 
@@ -664,9 +729,13 @@ class DocToolsLLM:
         cli_commands = {
                 "top_k": self.top_k,
                 "multiline": multiline,
-                "retriever": "all",
+                "retriever": "hyde_default",
                 "task": self.task,
+                "relevancy": 0.5,
                 }
+        all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
+        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
+
         while True:
             try:
                 with self.callback() as cb:
@@ -681,7 +750,7 @@ class DocToolsLLM:
                         whi(f"Query: {query}")
 
                     retrievers = []
-                    if cli_commands["retriever"] in ["hyde", "all"]:
+                    if "hyde" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 create_hyde_retriever(
                                     query=query,
@@ -689,54 +758,64 @@ class DocToolsLLM:
 
                                     llm=self.llm,
                                     top_k=cli_commands["top_k"],
+                                    relevancy=cli_commands["relevancy"],
 
-                                    embed_model=self.embed_model,
                                     embeddings=self.loaded_embeddings,
                                     embeddings_engine=self.embeddings,
-
-                                    loadfrom=self.loadfrom,
-                                    kwargs=self.kwargs,
-                                    debug=self.debug,
                                     )
                                 )
 
-                        # retrievers.append(
-                        #         KNNRetriever.from_texts(
-                        #             [d.page_content for d in self.loaded_docs],
-                        #             self.embeddings,
-                        #             )
-                        #         )
-                        # retrievers.append(
-                        #         SVMRetriever.from_texts(
-                        #             [d.page_content for d in self.loaded_docs],
-                        #             self.embeddings,
-                        #             )
-                        #         )
-                        # retrievers.append(
-                        #         create_parent_retriever(
-                        #             task=self.task,
-                        #             loaded_embeddings=self.loader_embeddings,
-                        #             loaded_docs=self.loaded_docs,
-                        #             )
-                        #         )
+                    if "knn" in cli_commands["retriever"].lower():
+                        retrievers.append(
+                                KNNRetriever.from_texts(
+                                    all_texts,
+                                    self.embeddings,
+                                    relevancy_threshold=cli_commands["relevancy"],
+                                    k=cli_commands["top_k"],
+                                    )
+                                )
+                    if "svm" in cli_commands["retriever"].lower():
+                        retrievers.append(
+                                SVMRetriever.from_texts(
+                                    all_texts,
+                                    self.embeddings,
+                                    relevancy_threshold=cli_commands["relevancy"],
+                                    k=cli_commands["top_k"],
+                                    )
+                                )
+                    if "parent" in cli_commands["retriever"].lower():
+                        retrievers.append(
+                                create_parent_retriever(
+                                    task=self.task,
+                                    loaded_embeddings=self.loaded_embeddings,
+                                    loaded_docs=self.loaded_docs,
+                                    top_k=cli_commands["top_k"],
+                                    relevancy=cli_commands["relevancy"],
+                                    )
+                                )
 
-                    if cli_commands["retriever"] in ["simple", "all"]:
+                    if "default" in cli_commands["retriever"].lower():
                         retrievers.append(
                                 self.loaded_embeddings.as_retriever(
+                                    search_type="similarity_score_threshold",
                                     search_kwargs={
                                         "k": cli_commands["top_k"],
                                         "distance_metric": "cos",
+                                        "score_threshold": cli_commands["relevancy"],
                                         })
                                     )
 
+                    assert retrievers, "No retriever selected. Probably cause by a wrong cli_command."
                     if len(retrievers) == 1:
                         retriever = retrievers[0]
                     else:
-                        whi("Merging multiple retrievers")
-                        retriever = MergerRetriever(retrievers)
+                        retriever = MergerRetriever(retrievers=retrievers)
 
                         # remove redundant results from the merged retrievers:
-                        filtered = EmbeddingsRedundantFilter(embeddings=self.embeddings)
+                        filtered = EmbeddingsRedundantFilter(
+                                embeddings=self.embeddings,
+                                similarity_threshold=0.99,
+                                )
                         pipeline = DocumentCompressorPipeline(transformers=[filtered])
                         retriever = ContextualCompressionRetriever(
                             base_compressor=pipeline, base_retriever=retriever
@@ -745,18 +824,45 @@ class DocToolsLLM:
                     if self.task == "search":
                         docs = retriever.get_relevant_documents(query)
 
+                        whi("\n\nSources:")
+                        anki_cid = []
+                        for doc in docs:
+                            whi("  * content:")
+                            content = doc.page_content.strip()
+                            wrapped = "\n".join(textwrap.wrap(content, width=240))
+                            whi(f"{wrapped:>10}")
+                            for k, v in doc.metadata.items():
+                                yel(f"    * {k}: {v}")
+                            print("\n")
+                            if "anki_cid" in doc.metadata:
+                                cid_str = str(doc.metadata["anki_cid"]).split(" ")
+                                for cid in cid_str:
+                                    if cid not in anki_cid:
+                                        anki_cid.append(cid)
+
+                        if anki_cid:
+                            open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cid})\n> ")
+                            if open_answ == "debug":
+                                breakpoint()
+                            elif open_answ in ["y", "yes"]:
+                                whi("Openning anki.")
+                                query = f"cid:{','.join(anki_cid)}"
+                                ankiconnect(
+                                        action="guiBrowse",
+                                        query=query,
+                                        )
+
                     else:
-                        _template = textwrap.dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+                        doc_chain = load_qa_with_sources_chain(
+                                self.llm,
+                                chain_type="map_reduce",
+                                verbose=self.llm_verbosity,
+                                )
 
-                        Chat History:
-                        {chat_history}
-
-                        Follow Up Input: {question}
-
-                        Standalone question:""")
-                        CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
-                        question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
-                        doc_chain = load_qa_with_sources_chain(self.llm, chain_type="map_reduce")
+                        if self.condense_question:
+                            question_generator = LLMChain(llm=self.llm, prompt=CONDENSE_QUESTION_PROMPT)
+                        else:
+                            question_generator = LLMChain(llm=FakeListLLM(responses=[query]), prompt=PromptTemplate.from_template(""))
 
                         chain = ConversationalRetrievalChain(
                                 retriever=retriever,
@@ -777,18 +883,19 @@ class DocToolsLLM:
                                 include_run_info=True,
                                 )
 
-                        red(f"Answer:\n{ans['answer']}\n")
                         docs = ans["source_documents"]
+                        whi("\n\nSources:")
+                        for doc in docs:
+                            whi("  * content:")
+                            content = doc.page_content.strip()
+                            wrapped = "\n".join(textwrap.wrap(content, width=240))
+                            whi(f"{wrapped:>10}")
+                            for k, v in doc.metadata.items():
+                                yel(f"    * {k}: {v}")
+                            print("\n")
 
-                whi("\n\nSources:")
-                for doc in docs:
-                    whi("  * content:")
-                    content = doc.page_content.strip()
-                    wrapped = "\n".join(textwrap.wrap(content, width=240))
-                    whi(f"{wrapped:>10}")
-                    for k, v in doc.metadata.items():
-                        yel(f"    * {k}: {v}")
-                    print("\n")
+                        red(f"Answer:\n{ans['answer']}\n")
+
 
                 yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
 

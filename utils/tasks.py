@@ -12,7 +12,9 @@ from langchain.prompts.chat import (
 
 from utils.prompts import (
         summary_rules,
-        system_summary_template, human_summary_template,
+        system_summary_template,
+        human_summary_template,
+        system_summary_template_recursive,
         # checksummary_rules,
         # system_checksummary_template, human_checksummary_template,
         )
@@ -20,12 +22,24 @@ from utils.logger import whi, yel, red
 
 # prompts to summarize
 summarize_prompt = PromptTemplate(
-        template=system_summary_template + "\n\n" + human_summary_template,
+        template=system_summary_template + "\n\n" + human_summary_template + "\n\nYour summary:\n",
         input_variables=["text", "previous_summary", "metadata", "rules"],
         )
+summarize_prompt_recursive = PromptTemplate(
+        template=system_summary_template_recursive + "\n\n" + human_summary_template + "\n\nYour summary:\n",
+        input_variables=["text", "previous_summary", "metadata", "rules"],
+        )
+
+# chat models
 chatgpt_summary_messages = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(system_summary_template),
+            HumanMessagePromptTemplate.from_template(human_summary_template),
+            ],
+        )
+chatgpt_summary_messages_recursive = ChatPromptTemplate.from_messages(
+        [
+            SystemMessagePromptTemplate.from_template(system_summary_template_recursive),
             HumanMessagePromptTemplate.from_template(human_summary_template),
             ],
         )
@@ -46,24 +60,34 @@ def do_summarize(
         docs,
         metadata,
         language,
-        model,
+        modelbackend,
         llm,
         callback,
         verbose,
+        n_recursion=0,
         ):
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
 
-    summarize_chain = load_summarize_chain(
-            llm,
-            chain_type="stuff",
-            prompt=chatgpt_summary_messages if model == "openai" else summarize_prompt,
-            verbose=verbose,
-            )
+
+    if n_recursion:
+        summarize_chain = load_summarize_chain(
+                llm,
+                chain_type="stuff",
+                prompt=chatgpt_summary_messages_recursive if modelbackend == "openai" else summarize_prompt_recursive,
+                verbose=verbose,
+                )
+    else:
+        summarize_chain = load_summarize_chain(
+                llm,
+                chain_type="stuff",
+                prompt=chatgpt_summary_messages if modelbackend == "openai" else summarize_prompt,
+                verbose=verbose,
+                )
     # checksumm_chain = LLMChain(
     #         llm=llm,
-    #         prompt=chatgpt_checksummary_messages if model == "openai" else checksummary_prompt,
+    #         prompt=chatgpt_checksummary_messages if modelbackend == "openai" else checksummary_prompt,
     #         verbose=verbose,
     #         )
 
@@ -76,42 +100,70 @@ def do_summarize(
                     {
                         "input_documents": [rd],
                         "metadata": metadata.replace("[PROGRESS]", fixed_index),
-                        "rules": summary_rules.replace("LANGUAGE", language),
+                        "rules": summary_rules.replace("[LANGUAGE]", language),
                         "previous_summary": previous_summary,
                         },
                     return_only_outputs=False,
                     )
 
-            summaries.append(out["output_text"].rstrip())
+            output_lines = out["output_text"].rstrip().splitlines()
 
-            # finding the end of the summary to give as context to the next one
-            lines = "\n".join(summaries).splitlines()
-            end_of_latest_summary = []
-            # add the lines of the previous summary in reverse order
-            # and stop when there is no indentation
-            for line in lines[::-1]:
-                end_of_latest_summary.insert(0, line.rstrip())
-                if not line.startswith("\t"):
-                    break
-            end_of_latest_summary = "\n".join(end_of_latest_summary)
-            previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
-            if metadata:
-                previous_summary = "\n\n" + previous_summary
+            for il, ll in enumerate(output_lines):
+                # remove if contains no alphanumeric character
+                if not any(char.isalpha() for char in ll.strip()):
+                    output_lines[il] = None
+                    continue
 
-    # for each summary, remove any empty lines:
-    for i, s in enumerate(summaries):
-        splits = s.split("\n")
-        new_sum = "\n".join(
-                [ss.rstrip()
-                 for ss in splits
-                 if any(char.isalpha() for char in ss)
-                 ]
-                ).rstrip()
-        if new_sum:
-            summaries[i] = new_sum
-        else:
-            summaries[i] = None
-    summaries = [s for s in summaries if s]
+                ll = ll.rstrip()
+
+                # if a line starts with * instead of -, fix it
+                if ll.rstrip().startswith("* "):
+                    ll = ll.replace("*", "-", 1)
+
+                # if a line does not start with - fix it
+                stripped = ll.lstrip()
+                if not stripped.startswith("- "):
+                    ll = ll.replace(stripped[0], "- " + stripped[0], 1)
+
+                ll == ll.replace("****", "**")
+
+                # if contains uneven number of bold markers
+                if ll.count("**") % 2 == 1:
+                    ll += "**"  # end the bold
+                # and italic
+                if ll.count("*") % 2 == 1:
+                    ll += "*"  # end the italic
+
+                # replace leading double spaces by tabs
+                cnt_inside = ll.lstrip().count("  ")
+                cnt_leading = ll.count("  ") - cnt_inside
+                if cnt_leading:
+                    ll = ll.replace("  ", "\t", cnt_leading)
+                # make sure no space have been forgotten
+                ll = ll.replace("\t ", "\t\t")
+
+                output_lines[il] = ll
+
+            output_text = "\n".join([s for s in output_lines if s])
+
+            if verbose:
+                whi(output_text)
+
+            summaries.append(output_text)
+
+            # # finding the end of the summary to give as context to the next one
+            # lines = "\n".join(summaries).splitlines()
+            # end_of_latest_summary = []
+            # # add the lines of the previous summary in reverse order
+            # # and stop when there is no indentation
+            # for line in lines[::-1]:
+            #     end_of_latest_summary.insert(0, line.rstrip())
+            #     if not line.startswith("\t"):
+            #         break
+            # end_of_latest_summary = "\n".join(end_of_latest_summary)
+            # previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
+            # if metadata:
+            #     previous_summary = "\n\n" + previous_summary
 
     # combine summaries as one string separated by markdown separator
     n = len(summaries)

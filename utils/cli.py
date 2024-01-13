@@ -16,9 +16,15 @@ def ask_user(q, commands):
         /top_k=3 to change the top_k value.
         /debug to open a console.
         /multiline to write your question over multiple lines.
-        /retriever=hyde to use Hypothetical Document Embedding search
+        /retriever=X with X:
+            'default' to use regular embedding search
+            'knn' to use KNN
+            'svm' to use SVM
+            'hyde' to use Hypothetical Document Embedding search
+            'parent' to use parent retriever
+            Can use several (i.e 'knn_svm_default')
         /retriever=simple to use regular embedding search
-        /retriever=all to combine all retrievers
+        /relevancy=0.5 to set the relevancy threshold for retrievers that support it
     """
     # loading history from files
     prev_questions = []
@@ -46,6 +52,7 @@ def ask_user(q, commands):
             "/debug",
             "/top_k=",
             "/retriever",
+            "/relevancy=",
             ]
     if commands["task"] == "query":
         autocomplete = WordCompleter(
@@ -97,16 +104,23 @@ def ask_user(q, commands):
                 whi(f"Error when changing top_k: '{err}'")
                 return ask_user(q, commands)
 
+        if "/relevancy=" in user_question:
+            try:
+                prev = commands["relevancy"]
+                commands["relevancy"] = float(re.search(r"/relevancy=([0-9.]+)", user_question).group(1))
+                user_question = re.sub(r"/relevancy=([0-9.]+)", "", user_question)
+                whi(f"Changed relevancy from '{prev}' to '{commands['relevancy']}'")
+            except Exception as err:
+                whi(f"Error when changing relevancy: '{err}'")
+                return ask_user(q, commands)
+
         if "/retriever=" in user_question:
             assert user_question.count("/retriever=") == 1, (
                 f"multiple retriever commands found: '{user_question}'")
-            for retr in ["hyde", "simple", "all"]:
-                if f"/retriever={retr}" in user_question:
-                    commands["retriever"] = retr
-                    user_question = user_question.replace(f"/retriever={retr}", "").strip()
-                    whi("Using as retriever: '{retr}'")
-        else:
-            commands["retriever"] = "simple"
+            retr = user_question.split("/retriever=")[1].split(" ")[0]
+            commands["retriever"] = retr
+            user_question = user_question.replace(f"/retriever={retr}", "").strip()
+            whi("Using as retriever: '{retr}'")
 
         if "/debug" in user_question:
             whi("Entering debug mode.")
