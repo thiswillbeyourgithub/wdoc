@@ -385,7 +385,7 @@ def load_doc(filetype, debug, task, **kwargs):
             kwargs["depth"] = 1
 
         # if debugging, don't multithread
-        if not debug:
+        if (not debug) and (depth > 0):
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())
@@ -496,7 +496,10 @@ def load_doc(filetype, debug, task, **kwargs):
                     # when failed: we returned the name of the item
                     failed.append(doc)
         else:
-            message = "Loading documents without multithreading because debug is on"
+            if debug:
+                message = "Loading documents without multithreading because debug is on"
+            else:
+                message = f"Loading documents without multithreading (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             temp = []
             for doc in doclist:
