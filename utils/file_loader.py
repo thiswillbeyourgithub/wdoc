@@ -1095,8 +1095,8 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
                 probs[loader_name] = prob
                 loaded_docs[loader_name] = docs
             else:
-                red(f"Ignore parsing of '{path}' with {loader_name}: seems of poor quality: prob={prob}")
-            if prob > 0.95:
+                whi(f"Ignore parsing of '{path}' with {loader_name}: seems of poor quality: prob={prob}")
+            if prob > 0.90:
                 # select this one as its bound to be okay
                 break
             if len(probs.keys()) >= 3:
