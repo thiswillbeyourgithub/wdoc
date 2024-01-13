@@ -32,7 +32,7 @@ from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 # from langchain_community.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain_community.document_loaders import PDFMinerLoader
-# from langchain_community.document_loaders import PDFPlumberLoader
+from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.document_loaders import OnlinePDFLoader
 from langchain_community.document_loaders import YoutubeLoader
 from langchain_community.document_loaders import SeleniumURLLoader
@@ -1026,39 +1026,39 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     loaders = {
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
-            # "Unstructured_elements_hires": partial(
-            #     UnstructuredPDFLoader,
-            #     mode="elements",
-            #     strategy="hi_res",
-            #     post_processors=[clean_extra_whitespace],
-            #     infer_table_structure=True,
-            #     # languages=["fr"],
-            #     ),
-            # "Unstructured_elements_fast": partial(
-            #     UnstructuredPDFLoader,
-            #     mode="elements",
-            #     strategy="fast",
-            #     post_processors=[clean_extra_whitespace],
-            #     infer_table_structure=True,
-            #     # languages=["fr"],
-            #     ),
-            # "Unstructured_hires": partial(
-            #     UnstructuredPDFLoader,
-            #     strategy="hi_res",
-            #     post_processors=[clean_extra_whitespace],
-            #     infer_table_structure=True,
-            #     # languages=["fr"],
-            #     ),
-            # "Unstructured_fast": partial(
-            #     UnstructuredPDFLoader,
-            #     strategy="fast",
-            #     post_processors=[clean_extra_whitespace],
-            #     infer_table_structure=True,
-            #     # languages=["fr"],
-            #     ),
+            "Unstructured_elements_hires": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="hi_res",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_elements_fast": partial(
+                UnstructuredPDFLoader,
+                mode="elements",
+                strategy="fast",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_hires": partial(
+                UnstructuredPDFLoader,
+                strategy="hi_res",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
+            "Unstructured_fast": partial(
+                UnstructuredPDFLoader,
+                strategy="fast",
+                post_processors=[clean_extra_whitespace],
+                infer_table_structure=True,
+                # languages=["fr"],
+                ),
             "PyPDFium2": PyPDFium2Loader,
             "PyMuPDF": PyMuPDFLoader,
-            # "PdfPlumber": PDFPlumberLoader,
+            "PdfPlumber": PDFPlumberLoader,
             }
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
