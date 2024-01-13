@@ -1094,11 +1094,7 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
 
             prob = check_docs_tkn_length(docs, path)
 
-            if prob < 0.7:
-                whi(f"Ignore parsing by {loader_name} of '{path}' as it seems of poor quality: prob={prob}")
-                continue
-
-            if prob >= 0.7:
+            if prob >= 0.5:
                 # only consider it okay if decent quality
                 probs[loader_name] = prob
                 loaded_docs[loader_name] = docs
@@ -1106,6 +1102,9 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
                     # select this one as its bound to be okay
                     whi(f"Early stopping of PDF parsing because {loader_name} has prob {prob} for {path}")
                     break
+            else:
+                whi(f"Ignore parsing by {loader_name} of '{path}' as it seems of poor quality: prob={prob}")
+                continue
 
             if len(probs.keys()) >= 3:
                 # if more than 3 worked, take the best amon them to save
