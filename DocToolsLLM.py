@@ -447,8 +447,11 @@ class DocToolsLLM:
             red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
             # a conservative estimate is that it takes 4 times the number
             # of tokens of a document to summarize it
-            price = (prices[0] * 3 + prices[1] * 2) / 5
+            price = (prices[0] * 4 + prices[1] * 1) / 5
             estimate_dol = full_tkn / 1000 * price * 1.1
+            if self.n_recursive_summary:
+                for i in range(1, self.n_recursive_summary + 1):
+                    estimate_dol += full_tkn / (5 ** i) * price * 1.1
             ntfy(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
             if estimate_dol > self.dollar_limit:
                 raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
