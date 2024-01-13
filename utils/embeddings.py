@@ -26,10 +26,10 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
     if embed_model == "openai":
         red("Using openai embedding model")
-        assert Path("API_KEY.txt").exists(), "No API_KEY.txt found"
+        assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
 
         embeddings = OpenAIEmbeddings(
-                openai_api_key=str(Path("API_KEY.txt").read_text()).strip()
+                openai_api_key=str(Path("OPENAI_API_KEY.txt").read_text()).strip()
                 )
 
     else:
