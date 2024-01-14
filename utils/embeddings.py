@@ -80,21 +80,39 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     to_embed = []
 
     # load previous faiss index from cache
+    n_loader = 10
+    loader_queues = [(queue.Queue(), queue.Queue()) for i in range(n_loader)]
+    loader_workers = [
+            threading.Thread(
+                target=faiss_loader,
+                args=(cached_embeddings, qin, qout),
+                daemon=False,
+                ) for qin, qout in loader_queues]
+    [t.start() for t in loader_workers]
+    load_counter = -1
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
         if fi.exists():
-            temp = FAISS.load_local(fi, cached_embeddings)
-            if not db and temp:
-                db = temp
-            else:
-                try:
-                    db.merge_from(temp)
-                except Exception as err:
-                    red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                    [p.unlink() for p in fi.iterdir()]
-                    fi.rmdir()
+            # wait for the worker to be ready otherwise tqdm is irrelevant
+            load_counter += 1
+            assert loader_queues[load_counter % n_loader][1].get() == "Waiting"
+            loader_queues[load_counter % n_loader][0].put(fi)
         else:
             to_embed.append(doc)
+
+    # ask workers to stop and return their db then get the merged dbs
+    assert all(q[1].get() == "Waiting" for q in loader_queues)
+    [q[0].put(False) for q in loader_queues]
+    merged_dbs = [q[1].get() for q in loader_queues]
+    merged_dbs = [m for m in merged_dbs if m is not None]
+    assert all(q[1].get() == "Stopped" for q in loader_queues)
+    [t.join() for t in loader_workers]
+
+    # merge dbs as one
+    if merged_dbs and db is None:
+        db = merged_dbs.pop(0)
+    if merged_dbs:
+        [db.merge_from(m) for m in merged_dbs]
 
     whi(f"Docs left to embed: {len(to_embed)}")
 
@@ -149,16 +167,15 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             results = [q[1].get() for q in saver_queues]
             assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
 
-
             if not db:
                 db = temp
             else:
                 db.merge_from(temp)
 
-    whi("Waiting for saver workers to finish.")
-    [q[0].put((False, None, None, None)) for q in saver_queues]
-    assert all(q[1].get().startswith("Saved ") for q in saver_queues), "No saved answer from worker"
-    [t.join() for t in saver_workers]
+        whi("Waiting for saver workers to finish.")
+        [q[0].put((False, None, None, None)) for q in saver_queues]
+        assert all(q[1].get().startswith("Saved ") for q in saver_queues), "No saved answer from worker"
+        [t.join() for t in saver_workers]
     whi("Done saving.")
 
     whi(f"Done creating index in {time.time()-t:.2f}s")
@@ -168,6 +185,30 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         db.save_local(saveas)
 
     return db, cached_embeddings
+
+
+def faiss_loader(cached_embeddings, qin, qout):
+    """load a faiss index. Merge many other index to it. Then return the
+    merged index. This makes it way fast to load a very large number of index
+    """
+    db = None
+    while True:
+        qout.put("Waiting")
+        fi = qin.get()
+        if fi is False:
+            qout.put(db)
+            qout.put("Stopped")
+            return
+        temp = FAISS.load_local(fi, cached_embeddings)
+        if not db:
+            db = temp
+        else:
+            try:
+                db.merge_from(temp)
+            except Exception as err:
+                red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
+                [p.unlink() for p in fi.iterdir()]
+                fi.rmdir()
 
 
 def faiss_saver(path, cached_embeddings, qin, qout):

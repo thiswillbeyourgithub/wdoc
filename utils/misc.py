@@ -25,7 +25,7 @@ except Exception as err:
 def hasher(text):
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
-    return hashlib.sha256(text.encode()).hexdigest()[:10]
+    return hashlib.sha256(text.encode()).hexdigest()[:20]
 
 
 def html_to_text(html, issoup):
