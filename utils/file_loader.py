@@ -688,7 +688,7 @@ def load_doc(filetype, debug, task, **kwargs):
             full_text = ""
             spacer = "\n\n#####\n\n"
             metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
-            for cid in cards.index:
+            for cid in sorted(cards.index):
                 c = cards.loc[cid, :]
                 cid = str(cid)
                 tags = c["ntags"]
@@ -762,7 +762,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 cards.at[index_list[i], "tags_concat"] = tags_concat
                 cards.at[index_list[i], "cids"] = cids
 
-            for cid in cards.index:
+            for cid in sorted(cards.index):
                 c = cards.loc[cid, ]
                 docs.append(
                         Document(
@@ -782,6 +782,8 @@ def load_doc(filetype, debug, task, **kwargs):
             docs[i].metadata["anki_topdeck"] = deck
             docs[i].metadata["anki_notetype"] = notetype
             docs[i].metadata["path"] = path
+            docs[i].metadata["anki_tags"] = " ".join(sorted(list(set(docs[i].metadata["anki_tags"].split(" ")))))
+            docs[i].metadata["anki_cid"] = " ".join(sorted(docs[i].metadata["anki_cid"].split(" ")))
 
         # try:
         #     check_docs_tkn_length(docs, f"{filetype}: {profile}")
