@@ -144,9 +144,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
                 docu = temp.docstore._dict[docuid]
                 save_counter += 1
-                saver_queues[save_counter % n_saver][0].put(
-                        [docuid, docu, embe.squeeze()],
-                        )
+                saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
             results = [q[1].get() for q in saver_queues]
             assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
@@ -158,7 +156,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 db.merge_from(temp)
 
     whi("Waiting for saver workers to finish.")
-    [q[0].put(False, None, None) for q in saver_queues]
+    [q[0].put((False, None, None, None)) for q in saver_queues]
+    assert all(q[1].get().startswith("Saved ") for q in saver_queues), "No saved answer from worker"
     [t.join() for t in saver_workers]
     whi("Done saving.")
 
@@ -174,20 +173,20 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 def faiss_saver(path, cached_embeddings, qin, qout):
     """create a faiss index containing only a single document then save it"""
     while True:
-        docid, document, embedding = qin.get()
-        if docid is False:
+        message, docid, document, embedding = qin.get()
+        if message is False:
             qout.put("Stopped")
             return
 
         file = (path / str(document.metadata["hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
-                text_embeddings=[document.page_content, embedding],
+                text_embeddings=[[document.page_content, embedding]],
                 embedding=cached_embeddings,
-                metadatas=document.metadata,
+                metadatas=[document.metadata],
                 ids=[docid],
                 normalize_L2=True)
         db.save_local(file)
-        qin.put(f"Saved {docid}")
+        qout.put(f"Saved {docid}")
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
