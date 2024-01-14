@@ -322,15 +322,18 @@ class DocToolsLLM:
                 uniq_hashes = list(set(hashes))
                 removed_paths = []
                 removed_docs = []
+                counter = {h: hashes.count(h) for h in uniq_hashes}
                 if len(hashes) != len(uniq_hashes):
                     red("Found duplicate hashes after loading documents:")
 
                     for i, doc in enumerate(tqdm(self.loaded_docs, desc="Looking for duplicates")):
-                        n = hashes.count(doc.metadata["hash"])
+                        h = doc.metadata['hash']
+                        n = counter[h]
                         if n > 1:
                             removed_docs.append(self.loaded_docs[i])
                             self.loaded_docs[i] = None
-                            hashes[hashes.index(doc.metadata["hash"])] = None
+                            counter[h] -= 1
+                        assert counter[h] > 0
                     red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
 
                     # check if deduplication likely amputated documents
