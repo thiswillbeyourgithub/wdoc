@@ -120,8 +120,13 @@ def do_summarize(
                 if ll.lstrip().startswith("* "):
                     ll = ll.replace("*", "-", 1)
 
-                # if a line does not start with - fix it
                 stripped = ll.lstrip()
+                # begin by '-' but not by '- '
+                if stripped.startswith("-") and not stripped.startswith("- "):
+                    ll == ll.replace("-", "- ", 1)
+
+                stripped = ll.lstrip()
+                # if a line does not start with - fix it
                 if not stripped.startswith("- "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
 
