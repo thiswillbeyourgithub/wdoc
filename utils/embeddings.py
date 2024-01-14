@@ -104,13 +104,15 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     assert all(q[1].get() == "Waiting" for q in loader_queues)
     [q[0].put(False) for q in loader_queues]
     merged_dbs = [q[1].get() for q in loader_queues]
+    merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get() == "Stopped" for q in loader_queues)
     [t.join() for t in loader_workers]
 
     # merge dbs as one
-    if db is None:
+    if merged_dbs and db is None:
         db = merged_dbs.pop(0)
-    [db.merge_from(m) for m in merged_dbs]
+    if merged_dbs:
+        [db.merge_from(m) for m in merged_dbs]
 
     whi(f"Docs left to embed: {len(to_embed)}")
 
