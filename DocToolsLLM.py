@@ -223,7 +223,7 @@ class DocToolsLLM:
         self.modelbackend = modelbackend
         self.modelname = modelname
         self.task = task
-        self.query = query
+        self.query = query.strip() if isinstance(query, str) else None
         self.filetype = filetype
         self.embed_model = embed_model
         self.saveas = saveas
