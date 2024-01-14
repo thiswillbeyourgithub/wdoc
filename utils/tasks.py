@@ -117,7 +117,7 @@ def do_summarize(
                 ll = ll.rstrip()
 
                 # if a line starts with * instead of -, fix it
-                if ll.rstrip().startswith("* "):
+                if ll.lstrip().startswith("* "):
                     ll = ll.replace("*", "-", 1)
 
                 # if a line does not start with - fix it
