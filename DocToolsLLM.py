@@ -545,7 +545,7 @@ class DocToolsLLM:
                         )
 
                 # get reading length of the summary
-                real_text = "".join([sp.strip() for sp in summary.split(" ")])
+                real_text = "".join([letter for letter in summary.split("") if letter.isalpha()]
                 sum_reading_length = len(real_text) / average_word_length / wpm
                 whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
@@ -610,7 +610,7 @@ class DocToolsLLM:
                         assert "- ---" not in real_text, "Found chunk separator"
                         assert "- Chunk " not in real_text, "Found chunk marker"
                         assert "- BEFORE RECURSION # " not in real_text, "Found recursion block"
-                        real_text = "".join([rt.strip() for rt in real_text.split(" ")])
+                        real_text = "".join([letter for letter in real_text.split("") if letter.isalpha()]
                         sum_reading_length = len(real_text) / average_word_length / wpm
                         whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     summary = summary_text
