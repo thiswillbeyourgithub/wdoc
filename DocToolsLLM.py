@@ -552,7 +552,7 @@ class DocToolsLLM:
 
                 n_recursion_done = 0
                 if self.n_recursive_summary > 0:
-                    splitter = get_splitter(self.task)
+                    splitter = get_splitter("recursive_summary")
                     summary_text = summary
 
                     for n_recur in range(self.n_recursive_summary):

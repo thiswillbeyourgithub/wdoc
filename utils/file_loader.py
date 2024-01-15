@@ -116,6 +116,13 @@ def get_splitter(task):
                 chunk_overlap=300,
                 length_function=get_tkn_length,
                 )
+    elif task == "recursive_summary":
+        text_splitter = RecursiveCharacterTextSplitter(
+                separators=[".\n", ". ", " ", ""],
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=get_tkn_length,
+                )
     else:
         raise Exception(task)
     return text_splitter
