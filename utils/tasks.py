@@ -155,13 +155,6 @@ def do_summarize(
 
                 output_lines[il] = ll
 
-            output_text = "\n".join([s for s in output_lines if s])
-
-            if verbose:
-                whi(output_text)
-
-            summaries.append(output_text)
-
             # # finding the end of the summary to give as context to the next one
             # lines = "\n".join(summaries).splitlines()
             # end_of_latest_summary = []
@@ -175,6 +168,13 @@ def do_summarize(
             # previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
             # if metadata:
             #     previous_summary = "\n\n" + previous_summary
+
+            output_text = "\n".join([s for s in output_lines if s])
+
+            if verbose:
+                whi(output_text)
+
+            summaries.append(output_text)
 
     # combine summaries as one string separated by markdown separator
     n = len(summaries)
