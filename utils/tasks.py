@@ -122,6 +122,8 @@ def do_summarize(
 
                 # begin by '-' but not by '- '
                 stripped = ll.lstrip()
+                if stripped.startswith("—"):  # beginning with long dash
+                    ll = ll.replace("—", "-")
                 if stripped.startswith("-") and not stripped.startswith("- "):
                     ll == ll.replace("-", "- ", 1)
 
