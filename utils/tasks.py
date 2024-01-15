@@ -115,17 +115,28 @@ def do_summarize(
                     continue
 
                 ll = ll.rstrip()
+                stripped = ll.lstrip()
 
                 # if a line starts with * instead of -, fix it
-                if ll.rstrip().startswith("* "):
+                if stripped.startswith("* "):
                     ll = ll.replace("*", "-", 1)
+
+                stripped = ll.lstrip()
+                # beginning with long dash
+                if stripped.startswith("—"):
+                    ll = ll.replace("—", "-")
+
+                # begin by '-' but not by '- '
+                stripped = ll.lstrip()
+                if stripped.startswith("-") and not stripped.startswith("- "):
+                    ll = ll.replace("-", "- ", 1)
 
                 # if a line does not start with - fix it
                 stripped = ll.lstrip()
                 if not stripped.startswith("- "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
 
-                ll == ll.replace("****", "**")
+                ll = ll.replace("****", "")
 
                 # if contains uneven number of bold markers
                 if ll.count("**") % 2 == 1:
@@ -144,13 +155,6 @@ def do_summarize(
 
                 output_lines[il] = ll
 
-            output_text = "\n".join([s for s in output_lines if s])
-
-            if verbose:
-                whi(output_text)
-
-            summaries.append(output_text)
-
             # # finding the end of the summary to give as context to the next one
             # lines = "\n".join(summaries).splitlines()
             # end_of_latest_summary = []
@@ -164,6 +168,13 @@ def do_summarize(
             # previous_summary = f"Here's the end of the summary of the previous section. Take this into consideration to avoid repeating information (there is a huge overlap between both sections). If relevant, you can start with the same indentation.\n'''\{end_of_latest_summary}\n'''"
             # if metadata:
             #     previous_summary = "\n\n" + previous_summary
+
+            output_text = "\n".join([s for s in output_lines if s])
+
+            if verbose:
+                whi(output_text)
+
+            summaries.append(output_text)
 
     # combine summaries as one string separated by markdown separator
     n = len(summaries)

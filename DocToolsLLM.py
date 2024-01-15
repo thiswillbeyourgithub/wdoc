@@ -223,7 +223,7 @@ class DocToolsLLM:
         self.modelbackend = modelbackend
         self.modelname = modelname
         self.task = task
-        self.query = query
+        self.query = query.strip() if isinstance(query, str) else None
         self.filetype = filetype
         self.embed_model = embed_model
         self.saveas = saveas
@@ -462,7 +462,7 @@ class DocToolsLLM:
             if self.modelbackend == "openai":
                 # increase likelyhood that chatgpt will use indentation by
                 # biasing towards adding space.
-                logit_val = 4
+                logit_val = 3
                 self.llm.model_kwargs["logit_bias"] = {
                         12: logit_val,  # '-'
                         # 220: logit_val,  # ' '
@@ -488,20 +488,18 @@ class DocToolsLLM:
 
                 # parse metadata from the doc
                 metadata = []
-                if "title" in relevant_docs[0].metadata:
-                    # only give to summarizer the top level domain if url
-                    # or the filename if file
-                    if "http" in link:
-                        domain = tldextract.extract(link).registered_domain
-                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {domain}"
-                    elif "/" in link and Path(link).exists():
-                        filename = Path(link).name
-                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {filename}"
-                    else:
-                        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {link}"
-                    metadata.append(f"Title: '{item_name.strip()}'")
+                if "http" in link:
+                    item_name = tldextract.extract(link).registered_domain
+                elif "/" in link and Path(link).exists():
+                    item_name = Path(link).name
                 else:
                     item_name = link
+
+                if "title" in relevant_docs[0].metadata:
+                    item_name = f"{relevant_docs[0].metadata['title'].strip()} - {item_name}"
+                else:
+                    metadata.append(f"Title: '{item_name.strip()}'")
+
 
                 # replace # in title as it would be parsed as a tag
                 item_name = item_name.replace("#", r"\#")
@@ -552,10 +550,10 @@ class DocToolsLLM:
 
                 n_recursion_done = 0
                 if self.n_recursive_summary > 0:
-                    splitter = get_splitter(self.task)
+                    splitter = get_splitter("recursive_summary")
                     summary_text = summary
 
-                    for n_recur in range(self.n_recursive_summary):
+                    for n_recur in range(1, self.n_recursive_summary + 1):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
 
                         # remove any chunk count that is not needed to summarize
@@ -566,6 +564,8 @@ class DocToolsLLM:
                             elif re.search(r"- Chunk \d+/\d+", l):
                                 sp[i] = None
                         summary_text = "\n".join([s.rstrip() for s in sp if s])
+                        assert "- ---" not in summary_text, "Found chunk separator"
+                        assert "- Chunk " not in summary_text, "Found chunk marker"
 
                         summary_docs = [Document(page_content=summary_text)]
                         summary_docs = splitter.transform_documents(summary_docs)
