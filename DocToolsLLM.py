@@ -593,7 +593,24 @@ class DocToolsLLM:
                         doc_total_tokens += new_doc_total_tokens
                         doc_total_cost += new_doc_total_cost
                         n_recursion_done += 1
-                        sum_reading_length = len(summary_text) / average_word_length / wpm
+
+                        # clean text again to compute the reading length
+                        sp = summary_text.split("\n")
+                        for i, l in enumerate(sp):
+                            if l.strip() == "- ---":
+                                sp[i] = None
+                            elif re.search(r"- Chunk \d+/\d+", l):
+                                sp[i] = None
+                            elif l.strip().startswith("- BEFORE RECURSION #"):
+                                for new_i in range(i, len(sp)):
+                                    sp[new_i] = None
+                                break
+                        real_text = "\n".join([s.rstrip() for s in sp if s])
+                        assert "- ---" not in real_text, "Found chunk separator"
+                        assert "- Chunk " not in real_text, "Found chunk marker"
+                        assert "- BEFORE RECURSION # " not in real_text, "Found recursion block"
+                        real_text = "".join([rt.strip() for rt in real_text.split(" ")])
+                        sum_reading_length = len(real_text) / average_word_length / wpm
                         whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     summary = summary_text
 
