@@ -125,14 +125,14 @@ def do_summarize(
                 if stripped.startswith("—"):  # beginning with long dash
                     ll = ll.replace("—", "-")
                 if stripped.startswith("-") and not stripped.startswith("- "):
-                    ll == ll.replace("-", "- ", 1)
+                    ll = ll.replace("-", "- ", 1)
 
                 # if a line does not start with - fix it
                 stripped = ll.lstrip()
                 if not stripped.startswith("- "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
 
-                ll == ll.replace("****", "**")
+                ll = ll.replace("****", "**")
 
                 # if contains uneven number of bold markers
                 if ll.count("**") % 2 == 1:
