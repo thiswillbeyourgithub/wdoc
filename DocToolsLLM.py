@@ -566,7 +566,8 @@ class DocToolsLLM:
                             elif re.search(r"- Chunk \d+/\d+", l):
                                 sp[i] = None
                         summary_text = "\n".join([s.rstrip() for s in sp if s])
-                        assert "- Chunk " not in summary_text, f"Found chunk marker"
+                        assert "- ---" not in summary_text, "Found chunk separator"
+                        assert "- Chunk " not in summary_text, "Found chunk marker"
 
                         summary_docs = [Document(page_content=summary_text)]
                         summary_docs = splitter.transform_documents(summary_docs)
