@@ -563,9 +563,14 @@ class DocToolsLLM:
                                 sp[i] = None
                             elif re.search(r"- Chunk \d+/\d+", l):
                                 sp[i] = None
+                            elif l.strip().startswith("- BEFORE RECURSION #"):
+                                for new_i in range(i, len(sp)):
+                                    sp[new_i] = None
+                                break
                         summary_text = "\n".join([s.rstrip() for s in sp if s])
                         assert "- ---" not in summary_text, "Found chunk separator"
                         assert "- Chunk " not in summary_text, "Found chunk marker"
+                        assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
                         summary_docs = [Document(page_content=summary_text)]
                         summary_docs = splitter.transform_documents(summary_docs)
@@ -583,6 +588,7 @@ class DocToolsLLM:
                                 callback=self.callback,
                                 verbose=self.llm_verbosity,
                                 n_recursion=n_recur,
+                                logseq_mode="out_file_logseq_mode" in self.kwargs,
                                 )
                         doc_total_tokens += new_doc_total_tokens
                         doc_total_cost += new_doc_total_cost

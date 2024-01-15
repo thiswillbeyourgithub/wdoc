@@ -1,3 +1,4 @@
+from textwrap import indent
 from tqdm import tqdm
 
 from langchain import LLMChain
@@ -65,6 +66,7 @@ def do_summarize(
         callback,
         verbose,
         n_recursion=0,
+        logseq_mode=False,
         ):
     "summarize each chunk of a long document"
     summaries = []
@@ -170,6 +172,14 @@ def do_summarize(
             #     previous_summary = "\n\n" + previous_summary
 
             output_text = "\n".join([s for s in output_lines if s])
+
+            # if recursive, keep the previous summary and store it as a collapsed
+            # block
+            if n_recursion and logseq_mode:
+                old = [f"- BEFORE RECURSION #{n_recursion}\n  collapsed:: true"]
+                old += [indent(o.rstrip(), "\t") for o in rd.page_content.splitlines()]
+                old = "\n".join(old)
+                output_text += "\n" + old
 
             if verbose:
                 whi(output_text)
