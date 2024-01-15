@@ -115,15 +115,19 @@ def do_summarize(
                     continue
 
                 ll = ll.rstrip()
+                stripped = ll.lstrip()
 
                 # if a line starts with * instead of -, fix it
-                if ll.lstrip().startswith("* "):
+                if stripped.startswith("* "):
                     ll = ll.replace("*", "-", 1)
+
+                stripped = ll.lstrip()
+                # beginning with long dash
+                if stripped.startswith("—"):
+                    ll = ll.replace("—", "-")
 
                 # begin by '-' but not by '- '
                 stripped = ll.lstrip()
-                if stripped.startswith("—"):  # beginning with long dash
-                    ll = ll.replace("—", "-")
                 if stripped.startswith("-") and not stripped.startswith("- "):
                     ll = ll.replace("-", "- ", 1)
 
