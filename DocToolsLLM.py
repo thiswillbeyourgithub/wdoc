@@ -555,7 +555,7 @@ class DocToolsLLM:
                     splitter = get_splitter("recursive_summary")
                     summary_text = summary
 
-                    for n_recur in range(self.n_recursive_summary):
+                    for n_recur in range(1, self.n_recursive_summary + 1):
                         red(f"Doing recursive summary #{n_recur} of {item_name}")
 
                         # remove any chunk count that is not needed to summarize
