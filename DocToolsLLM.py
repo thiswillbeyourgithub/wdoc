@@ -545,7 +545,8 @@ class DocToolsLLM:
                         )
 
                 # get reading length of the summary
-                sum_reading_length = len(summary) / average_word_length / wpm
+                real_text = "".join([sp.strip() for sp in summary.split(" ")])
+                sum_reading_length = len(real_text) / average_word_length / wpm
                 whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
                 n_recursion_done = 0
