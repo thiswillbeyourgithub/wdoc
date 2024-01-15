@@ -136,7 +136,7 @@ def do_summarize(
                 if not stripped.startswith("- "):
                     ll = ll.replace(stripped[0], "- " + stripped[0], 1)
 
-                ll = ll.replace("****", "**")
+                ll = ll.replace("****", "")
 
                 # if contains uneven number of bold markers
                 if ll.count("**") % 2 == 1:
