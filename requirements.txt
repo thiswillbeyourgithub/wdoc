@@ -12,6 +12,7 @@ prompt-toolkit>=3.0.28
 requests>=2.25.1
 tiktoken>=0.3.3
 tqdm>=4.57.0
+unstructured>=0.6.2
 
 # buggy in windows so optionnal:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
