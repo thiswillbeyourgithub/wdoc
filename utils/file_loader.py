@@ -22,7 +22,10 @@ import json
 from prompt_toolkit import prompt
 import tiktoken
 
-from ftlangdetect import detect as language_detect
+try:
+    from ftlangdetect import detect as language_detect
+except Exception as err:
+    print(f"Couldn't import ftlangdetect: '{err}'")
 try:
     import pdftotext
 except Exception as err:
@@ -153,6 +156,9 @@ def check_docs_tkn_length(docs, name):
         raise Exception(f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?")
 
     # check if language check is above a threshold
+    if "language_detect" not in globals():
+        # bypass if language_detect not imported
+        return 1
     prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
     if len(docs) > 1:
         prob += language_detect(docs[-1].page_content.replace("\n", "<br>"))["score"]
