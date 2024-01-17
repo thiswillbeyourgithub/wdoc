@@ -23,7 +23,10 @@ from prompt_toolkit import prompt
 import tiktoken
 
 from ftlangdetect import detect as language_detect
-import pdftotext
+try:
+    import pdftotext
+except Exception as err:
+    print(f"Failed to import pdftotext: '{err}'")
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
@@ -1037,7 +1040,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
-            "pdftotext": pdftotext.PDF,
+            "pdftotext": None,
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
             "Unstructured_elements_hires": partial(
@@ -1074,6 +1077,11 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             "PyMuPDF": PyMuPDFLoader,
             "PdfPlumber": PDFPlumberLoader,
             }
+    # optionnal support for pdftotext as windows is terrible shit
+    try:
+        loaders["pdftotext"] = pdftotext.PDF
+    except:
+        del loaders["pdftotext"]
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
