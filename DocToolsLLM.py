@@ -11,7 +11,10 @@ import os
 from tqdm import tqdm
 import signal
 import pdb
-from ftlangdetect import detect as language_detect
+try:
+    from ftlangdetect import detect as language_detect
+except Exception as err:
+    print(f"Couldn't import ftlangdetect: '{err}'")
 
 from langchain.globals import set_verbose, set_debug
 from langchain.chains import ConversationalRetrievalChain
@@ -516,16 +519,20 @@ class DocToolsLLM:
                     author = None
 
                 # detect language
-                lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
-                if lang_info["score"] >= 0.8:
-                    lang = lang_info['lang']
-                    if lang == "fr":
-                        lang = "FRENCH"
-                    else:  # prefer english to anything other than french
+                try:
+                    lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
+                    if lang_info["score"] >= 0.8:
+                        lang = lang_info['lang']
+                        if lang == "fr":
+                            lang = "FRENCH"
+                        else:  # prefer english to anything other than french
+                            lang = "ENGLISH"
+                    else:
                         lang = "ENGLISH"
-                else:
-                    lang = "ENGLISH"
-                    red(f"Language detection failed: '{lang_info}'")
+                        red(f"Language detection failed: '{lang_info}'")
+                except Exception as err:
+                    red(f"Couldn't import ftlangdetect: '{err}'")
+                    lang = "[SAME AS INPUT TEXT]"
 
                 if metadata:
                     metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
