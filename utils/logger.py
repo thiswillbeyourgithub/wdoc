@@ -6,11 +6,11 @@ import logging.handlers
 from pathlib import Path
 
 # adds logger, restrict it to X lines
-local_dir = "/".join(__file__.split("/")[:-2])
-Path(f"{local_dir}/logs.txt").touch(exist_ok=True)
+local_dir = Path.cwd()
+(local_dir / "logs.txt").touch(exist_ok=True)
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 handler = logging.handlers.RotatingFileHandler(
-        filename=f"{local_dir}/logs.txt",
+        filename=local_dir / "logs.txt",
         mode="a",
         encoding=None,
         delay=0,
@@ -24,7 +24,7 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 log.addHandler(handler)
 # delete any additional log file
-Path(f"{local_dir}/logs.txt.3").unlink(missing_ok=True)
+(local_dir / "logs.txt.3").unlink(missing_ok=True)
 
 
 def coloured_log(color_asked):
