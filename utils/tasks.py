@@ -176,7 +176,7 @@ def do_summarize(
             # if recursive, keep the previous summary and store it as a collapsed
             # block
             if n_recursion and logseq_mode:
-                old = [f"- BEFORE RECURSION #{n_recursion}\n  collapsed:: true"]
+                old = [f"- BEFORE RECURSION \#{n_recursion}\n  collapsed:: true"]
                 old += [indent(o.rstrip(), "\t") for o in rd.page_content.splitlines()]
                 old = "\n".join(old)
                 output_text += "\n" + old
