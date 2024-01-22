@@ -380,11 +380,14 @@ class DocToolsLLM:
                     if link in self.done_links or link in links_todo:
                         continue
 
-                    if len(links_todo) < self.n_summaries_target:
+                    if self.n_summaries_target == -1:
                         links_todo[link] = None
                     else:
-                        ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
-                        break
+                        if len(links_todo) < self.n_summaries_target:
+                            links_todo[link] = None
+                        else:
+                            ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                            break
 
                 # comment out the links that are marked as already done
                 # if self.done_links:
