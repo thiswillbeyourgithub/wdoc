@@ -32,8 +32,10 @@ def load_llm(modelname, modelbackend):
     """load language model"""
     if modelbackend.lower() == "openai":
         whi("Loading openai models")
-        assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
-        os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
+
+        if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
+            assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
+            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         llm = ChatOpenAI(
                 model_name=modelname,

@@ -1,3 +1,4 @@
+import os
 import queue
 import faiss
 import random
@@ -26,10 +27,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
     if embed_model == "openai":
         red("Using openai embedding model")
-        assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
+        if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
+            assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
+            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
-                openai_api_key=str(Path("OPENAI_API_KEY.txt").read_text()).strip()
+                openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
     else:
