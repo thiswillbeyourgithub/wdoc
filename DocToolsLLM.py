@@ -83,6 +83,7 @@ class DocToolsLLM:
 
             help=False,
             h=False,
+            import_mode=False,
             **kwargs,
             ):
         """
@@ -182,6 +183,9 @@ class DocToolsLLM:
             a standalone question. Useful when you have multiple questions in
             a row.
 
+        --import_mode: bool, default False
+            if True, will return the answer from query instead of printing it
+
         --help or -h, default False
             if True, will return this documentation.
         """
@@ -239,6 +243,7 @@ class DocToolsLLM:
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
         self.condense_question = condense_question
+        self.import_mode = import_mode
 
         global ntfy
         if ntfy_url:
@@ -355,7 +360,7 @@ class DocToolsLLM:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
-        _ = self.process_task()
+        self.output_value = self.process_task()
 
         whi("Done with tasks.")
         if self.debug:
@@ -932,6 +937,9 @@ class DocToolsLLM:
                             print("\n")
 
                         red(f"Answer:\n{ans['answer']}\n")
+
+                        if self.import_mode:
+                            return ans["answer"]
 
 
                 yel(f"Tokens used: '{cb.total_tokens}' (${cb.total_cost:.5f})")
