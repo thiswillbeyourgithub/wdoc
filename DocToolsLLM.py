@@ -765,9 +765,12 @@ class DocToolsLLM:
         multiline = False
 
         # conversational memory
-        memory = AnswerConversationBufferMemory(
-                memory_key="chat_history",
-                return_messages=True)
+        if not hasattr(self, "memory"):
+            # don't reinit the memory for import mode
+            assert self.import_mode
+            self.memory = AnswerConversationBufferMemory(
+                    memory_key="chat_history",
+                    return_messages=True)
 
         cli_commands = {
                 "top_k": self.top_k,
@@ -914,7 +917,7 @@ class DocToolsLLM:
                                 return_source_documents=True,
                                 return_generated_question=True,
                                 verbose=self.llm_verbosity,
-                                memory=memory,
+                                memory=self.memory,
                                 )
 
 
