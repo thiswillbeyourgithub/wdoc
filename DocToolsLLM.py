@@ -360,11 +360,12 @@ class DocToolsLLM:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
-        self.output_value = self.process_task()
+        if not import_mode:
+            self.process_task()
 
-        whi("Done with tasks.")
-        if self.debug:
-            breakpoint()
+            whi("Done with tasks.")
+            if self.debug:
+                breakpoint()
 
     def process_task(self):
         red(f"\nProcessing task '{self.task}'")
