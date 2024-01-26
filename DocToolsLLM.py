@@ -58,7 +58,7 @@ class DocToolsLLM:
     def __init__(
             self,
             modelbackend="openai",
-            modelname="gpt-3.5-turbo-1106",
+            modelname="gpt-3.5-turbo-0125",
             task="query",
             query=None,
             filetype="infer",
@@ -128,7 +128,7 @@ class DocToolsLLM:
         --modelbackend str, default openai
             either gpt4all, llama, openai or fake/test/testing to use a fake answer.
 
-        --modelname str, default gpt-3.5-turbo-1106
+        --modelname str, default gpt-3.5-turbo-0125
             name of the model. Available values depend on modelbackend. If it's
             llama or gpt4all then it must be a path to the model
 
