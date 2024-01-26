@@ -449,8 +449,8 @@ class DocToolsLLM:
                     else:
                         docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
-            prices = [0.001, 0.002]
-            if self.modelname == "gpt-4-1106-preview":
+            prices = [0.0005, 0.0015]
+            if self.modelname == "gpt-4-0125-preview":
                 prices = [0.01, 0.03]
 
             full_tkn = sum(list(docs_tkn_cost.values()))
