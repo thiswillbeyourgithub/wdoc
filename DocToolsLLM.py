@@ -913,7 +913,6 @@ class DocToolsLLM:
                     memory=self.memory,
                     )
 
-
             ans = chain(
                     inputs={
                         "question": query,
