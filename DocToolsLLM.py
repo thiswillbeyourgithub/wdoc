@@ -58,7 +58,8 @@ class DocToolsLLM:
     def __init__(
             self,
             modelbackend="openai",
-            modelname="gpt-3.5-turbo-0125",
+            #modelname="gpt-3.5-turbo-0125",
+            modelname="gpt-3.5-turbo-1106",
             task="query",
             query=None,
             filetype="infer",
