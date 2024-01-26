@@ -32,6 +32,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
+                model="text-embedding-3-small",
                 openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
@@ -123,7 +124,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
     red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if embed_model == "openai":
-        dol_price = full_tkn * 0.0001 / 1000
+        dol_price = full_tkn * 0.00002 / 1000
         red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
         if dol_price > dollar_limit:
             ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
