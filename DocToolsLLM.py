@@ -767,7 +767,6 @@ class DocToolsLLM:
         # conversational memory
         if not hasattr(self, "memory"):
             # don't reinit the memory for import mode
-            assert self.import_mode
             self.memory = AnswerConversationBufferMemory(
                     memory_key="chat_history",
                     return_messages=True)
