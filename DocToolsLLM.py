@@ -57,9 +57,9 @@ class DocToolsLLM:
 
     def __init__(
             self,
-            modelbackend="openai",
-            #modelname="gpt-3.5-turbo-0125",
-            modelname="gpt-3.5-turbo-1106",
+            modelbackend="litellm",
+            #modelname="openai/gpt-3.5-turbo-0125",
+            modelname="openai/gpt-3.5-turbo-1106",
             task="query",
             query=None,
             filetype="infer",
@@ -126,12 +126,14 @@ class DocToolsLLM:
 
                 * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
-        --modelbackend str, default openai
-            either gpt4all, llama, openai or fake/test/testing to use a fake answer.
+        --modelbackend str, default litellm
+            either litellm, gpt4all, llama, openai or fake/test/testing to use a fake answer.
 
-        --modelname str, default gpt-3.5-turbo-0125
+        --modelname str, default openai/gpt-3.5-turbo-0125
             name of the model. Available values depend on modelbackend. If it's
             llama or gpt4all then it must be a path to the model
+            Keep in mind that given that the default modelbackend is litellm
+            the part of modelname before the slash (/) is the serveur name.
 
         --embed_model str, default "openai"
             Either 'openai' or sentence_transformer embedding model to use.

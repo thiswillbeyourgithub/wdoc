@@ -10,6 +10,7 @@ from langchain_community.callbacks import get_openai_callback
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatLiteLLM
 from langchain.cache import SQLiteCache
 from langchain.memory import ConversationBufferMemory
 
@@ -38,6 +39,21 @@ def load_llm(modelname, modelbackend):
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         llm = ChatOpenAI(
+                model_name=modelname,
+                temperature=0,
+                verbose=True,
+                )
+        callback = get_openai_callback
+
+    elif modelbackend.lower() == "litellm":
+        whi("Loading model via litellm")
+
+        serv = modelname.split("/")[0]
+        if not (f"{serv.upper()}_API_KEY" in os.environ or os.environ[f"{serv.upper()}_API_KEY"]):
+            assert Path(f"{serv.upper()}_API_KEY.txt").exists(), f"No api key found for {serv} via litellm"
+            os.environ[f"{serv.upper()}_API_KEY"] = str(Path(f"{serv.upper()}_API_KEY.txt").read_text()).strip()
+
+        llm = ChatLiteLLM(
                 model_name=modelname,
                 temperature=0,
                 verbose=True,
