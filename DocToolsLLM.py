@@ -865,7 +865,7 @@ class DocToolsLLM:
 
         if self.task == "search":
             docs = retriever.get_relevant_documents(query)
-            if len(docs) < self.cli_command["top_k"]:
+            if len(docs) < self.cli_commands["top_k"]:
                 red(f"Only found {len(docs)} relevant documents")
 
             whi("\n\nSources:")
@@ -938,7 +938,7 @@ class DocToolsLLM:
                 print("\n")
 
             red(f"Answer:\n{ans['answer']}\n")
-            if len(docs) < self.cli_command["top_k"]:
+            if len(docs) < self.cli_commands["top_k"]:
                 red(f"Only found {len(docs)} relevant documents")
 
             if self.import_mode:
