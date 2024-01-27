@@ -81,7 +81,7 @@ class DocToolsLLM:
             debug=False,
             llm_verbosity=True,
             ntfy_url=None,
-            condense_question=False,
+            condense_question=True,
 
             help=False,
             h=False,
@@ -178,7 +178,7 @@ class DocToolsLLM:
             must be a url to ntfy.sh to receive notifications for summaries.
             Especially useful to keep track of costs when using cron.
 
-        --condense_question, default False
+        --condense_question, default True
             if True, will not use a special LLM call to reformulate the question
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
