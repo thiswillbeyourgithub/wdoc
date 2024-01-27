@@ -16,6 +16,7 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
+import langchain
 from langchain.globals import set_verbose, set_debug
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import LLMChain
@@ -29,6 +30,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
 from langchain_community.llms import FakeListLLM
+from langchain.cache import SQLiteCache
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import (load_doc,
