@@ -778,7 +778,7 @@ class DocToolsLLM:
                 "multiline": False,
                 "retriever": "hyde_default",
                 "task": self.task,
-                "relevancy": 0.5,
+                "relevancy": 0.1,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
         self.CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
@@ -865,6 +865,8 @@ class DocToolsLLM:
 
         if self.task == "search":
             docs = retriever.get_relevant_documents(query)
+            if len(docs) < self.cli_command["top_k"]:
+                red(f"Only found {len(docs)} relevant documents")
 
             whi("\n\nSources:")
             anki_cid = []
