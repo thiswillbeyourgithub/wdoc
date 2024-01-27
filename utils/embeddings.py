@@ -63,6 +63,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         path = Path(loadfrom)
         assert path.exists(), f"file not found at '{path}'"
         db = FAISS.load_local(str(path), cached_embeddings)
+        n_doc = len(db.index_to_docstore_id.keys())
+        red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
 
     red("\nLoading embeddings.")
