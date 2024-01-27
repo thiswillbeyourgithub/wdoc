@@ -385,6 +385,9 @@ class DocToolsLLM:
         links_todo = {}
         # failed = []
 
+        # caching is only used for summary
+        langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
+
         # get the list of documents from the same source. Also checks if
         # it's not part of the output file if task is "summarize_link_file"
         if self.task == "summarize_link_file":
