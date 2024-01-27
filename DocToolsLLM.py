@@ -938,6 +938,8 @@ class DocToolsLLM:
                 print("\n")
 
             red(f"Answer:\n{ans['answer']}\n")
+            if len(docs) < self.cli_command["top_k"]:
+                red(f"Only found {len(docs)} relevant documents")
 
             if self.import_mode:
                 return ans["answer"]
