@@ -53,6 +53,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
+langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
 
 class DocToolsLLM:
     VERSION = "0.10"
@@ -389,9 +390,6 @@ class DocToolsLLM:
         # storing links in dict instead of set to keep the original ordering
         links_todo = {}
         # failed = []
-
-        # caching is only used for summary
-        langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
 
         # get the list of documents from the same source. Also checks if
         # it's not part of the output file if task is "summarize_link_file"
