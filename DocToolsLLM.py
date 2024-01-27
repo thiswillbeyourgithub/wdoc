@@ -228,6 +228,7 @@ class DocToolsLLM:
             red("Input is 'string' so setting 'top_k' to 1")
 
         # storing as attributes
+        assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
         self.modelbackend = modelname.split("/")[0].lower()
         self.modelname = modelname
         self.task = task
