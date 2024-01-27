@@ -229,6 +229,8 @@ class DocToolsLLM:
 
         # storing as attributes
         assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
+        if isinstance(query, str):
+            query = query.strip() or None
         self.modelbackend = modelname.split("/")[0].lower()
         self.modelname = modelname
         self.task = task
