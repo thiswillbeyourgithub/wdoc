@@ -781,7 +781,7 @@ class DocToolsLLM:
                 "multiline": False,
                 "retriever": "hyde_default",
                 "task": self.task,
-                "relevancy": 0.5,
+                "relevancy": 0.1,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
         self.CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
