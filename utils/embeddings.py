@@ -33,6 +33,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
         embeddings = OpenAIEmbeddings(
                 model="text-embedding-3-small",
+                # model="text-embedding-ada-002",
                 openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
