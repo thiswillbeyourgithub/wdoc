@@ -48,6 +48,8 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
+import LogseqMarkdownParser
+
 from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from .llm import transcribe
@@ -65,6 +67,7 @@ inference_rules = {
         # the order of the keys is important
         "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
+        "logseq_markdown": [".*logseq.*.md"],
         "txt": [".txt$", ".md$"],
         "online_pdf": ["^http.*pdf.*"],
         "pdf": [".*pdf$"],
@@ -831,6 +834,52 @@ def load_doc(filetype, debug, task, **kwargs):
             content = f.read()
         texts = text_splitter.split_text(content)
         docs = [Document(page_content=t) for t in texts]
+        check_docs_tkn_length(docs, path)
+
+    elif filetype == "logseq_markdown":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading logseq markdown file: '{path}'")
+        assert Path(path).exists(), f"file not found: '{path}'"
+        parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+        blocks = parsed.blocks
+
+        # group blocks by parent block
+        pblocks = []
+        for b in blocks:
+            if b.indentation_level == 0:
+                pblocks.append([b])
+            else:
+                pblocks[-1].append(b)
+        whi(f"Found {len(pblocks)} parent blocks")
+
+        page_props = parsed.page_property
+        if not page_props:
+            page_props = {}
+        else:
+            lines = page_props.splitlines()
+            page_props = {}
+            for li in lines:
+                li = li.strip()
+                li = li.replace("- ", "", 1)
+                li = li.split(":: ")
+                page_props[li[0]] = li[1]
+
+        docs = []
+        for grou in pblocks:
+            # store in metadata the properties of the blocks inside a given
+            # parent block
+            meta = page_props.copy()
+            for b in grou:
+                print(b)
+                for k, v in b.get_properties().items():
+                    meta[k] = v
+            doc = Document(
+                    page_content="\n".join([b.content for b in grou]),
+                    metadata=meta,
+                    )
+            docs.append(doc)
+
         check_docs_tkn_length(docs, path)
 
     elif filetype == "local_audio":
