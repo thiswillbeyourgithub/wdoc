@@ -870,12 +870,17 @@ def load_doc(filetype, debug, task, **kwargs):
             # store in metadata the properties of the blocks inside a given
             # parent block
             meta = page_props.copy()
+            content = ""  # and remove the metadata from the page content
             for b in grou:
-                print(b)
+                cont = b.content
                 for k, v in b.get_properties().items():
                     meta[k] = v
+                    cont = cont.replace(f"{k}:: {v}", "")
+                cont = "\n".join(cont.splitlines()).strip()
+                content += "\n" + cont
+
             doc = Document(
-                    page_content="\n".join([b.content for b in grou]),
+                    page_content=content,
                     metadata=meta,
                     )
             docs.append(doc)
