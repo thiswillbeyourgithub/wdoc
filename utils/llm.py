@@ -29,7 +29,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
 
 def load_llm(modelname, backend):
     """load language model"""
-    if backend in ["fake", "test", "testing"]:
+    if backend == "testing":
         whi("Loading testing model")
         llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
         callback = fakecallback

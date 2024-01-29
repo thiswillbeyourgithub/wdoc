@@ -74,6 +74,7 @@ class DocToolsLLM:
             loadfrom=None,
 
             top_k=10,
+            query_retrievers="hyde_default",
             n_recursive_summary=0,
 
             n_summaries_target=-1,
@@ -153,6 +154,18 @@ class DocToolsLLM:
 
         --top_k int, default 10
             number of chunks to look for when querying
+
+        --query_retrievers: str, default 'hyde_default'
+            must be a string that specifies which retriever will be used for
+            queries depending on which keyword is inside this string:
+                "default": cosine similarity retriever
+                "hyde": hyde retriever
+                "knn": knn
+                "svm": svm
+                "parent": parent chunk
+
+            if contains 'hyde' but modelname contains "testing" then hyde will
+            be removed.
 
         --n_recursive_summary int, default 0
             will recursively summarize the summary this many times.
@@ -240,6 +253,7 @@ class DocToolsLLM:
         self.saveas = saveas
         self.loadfrom = loadfrom
         self.top_k = top_k
+        self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
         self.debug = debug
         self.kwargs = kwargs
         self.llm_verbosity = llm_verbosity
@@ -777,7 +791,7 @@ class DocToolsLLM:
         self.cli_commands = {
                 "top_k": self.top_k,
                 "multiline": False,
-                "retriever": "hyde_default",
+                "retriever": self.query_retrievers,
                 "task": self.task,
                 "relevancy": 0.1,
                 }
@@ -848,7 +862,7 @@ class DocToolsLLM:
                             })
                         )
 
-        assert retrievers, "No retriever selected. Probably cause by a wrong cli_command."
+        assert retrievers, "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
         if len(retrievers) == 1:
             retriever = retrievers[0]
         else:
