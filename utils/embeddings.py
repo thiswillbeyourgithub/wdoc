@@ -46,6 +46,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 encode_kwargs={
                     "batch_size": 1,
                     "show_progress_bar": True,
+                    "pooling": "meanpool",
                     },
                 )
 
@@ -239,18 +240,19 @@ def faiss_saver(path, cached_embeddings, qin, qout):
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
-        if "encode_kwargs" not in kwargs:
-            kwargs["encode_kwargs"] = {}
+        assert "encode_kwargs" in kwargs
         if "normalize_embeddings" in kwargs["encode_kwargs"]:
             assert kwargs["encode_kwargs"]["normalize_embeddings"] == False, (
                 "Not supposed to normalize embeddings using RollingWindowEmbeddings")
-        # kwargs["encode_kwargs"]["show_progress_bar"] = True
+        assert kwargs["encode_kwargs"]["pooling"] in ["maxpool", "meanpool"]
+        self.__pool_technique = kwargs["encode_kwargs"]["pooling"]
+        del kwargs["encode_kwargs"]["pooling"]
 
         super().__init__(*args, **kwargs)
 
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
-        so we do a windowing embedding then maxpool.
+        so we do a windowing embedding then pool (maxpool or meanpool)
         No normalization is done because the faiss index does it for us
         """
         model = self.client
@@ -285,7 +287,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
 
             # otherwise, split the sentence at regular interval
             # then do the embedding of each
-            # and finally maxpool those sub embeddings together
+            # and finally pool those sub embeddings together
             sub_sentences = []
             words = s.split(" ")
             avg_tkn = length / len(words)
@@ -318,7 +320,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             sub_sentences.append(" ".join(words))
 
             sentences[i] = " "  # discard this sentence as we will keep only
-            # the sub sentences maxpooled
+            # the sub sentences pooled
 
             # remove empty text just in case
             if "" in sub_sentences:
@@ -350,7 +352,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         if add_sent:
             # at the position of the original sentence (not split)
             # add the vectors of the corresponding sub_sentence
-            # then return only the 'maxpooled' section
+            # then return only the 'pooled' section
             assert len(add_sent) == len(add_sent_idx), (
                 "Invalid add_sent length")
             offset = len(sentences)
@@ -358,7 +360,12 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                 id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                 add_sent_vec = vectors[
                         offset + min(id_range): offset + max(id_range), :]
-                vectors[sid] = np.amax(add_sent_vec, axis=0)
+                if self.__pool_technique == "maxpool":
+                    vectors[sid] = np.amax(add_sent_vec, axis=0)
+                elif self.__pool_technique == "meanpool":
+                    vectors[sid] = np.sum(add_sent_vec, axis=0)
+                else:
+                    raise ValueError(self.__pool_technique)
             vectors = vectors[:offset]
 
         if not isinstance(vectors, t):
