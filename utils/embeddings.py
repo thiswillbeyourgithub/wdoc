@@ -242,13 +242,14 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
         assert "encode_kwargs" in kwargs
         if "normalize_embeddings" in kwargs["encode_kwargs"]:
-            assert kwargs["encode_kwargs"]["normalize_embeddings"] == False, (
+            assert kwargs["encode_kwargs"]["normalize_embeddings"] is False, (
                 "Not supposed to normalize embeddings using RollingWindowEmbeddings")
         assert kwargs["encode_kwargs"]["pooling"] in ["maxpool", "meanpool"]
-        self.__pool_technique = kwargs["encode_kwargs"]["pooling"]
+        pooltech = kwargs["encode_kwargs"]["pooling"]
         del kwargs["encode_kwargs"]["pooling"]
 
         super().__init__(*args, **kwargs)
+        self.__pool_technique = pooltech
 
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
