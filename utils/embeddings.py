@@ -9,7 +9,6 @@ from tqdm import tqdm
 import threading
 
 import numpy as np
-from sklearn.preprocessing import Normalizer
 from pydantic import Extra
 
 from langchain_community.vectorstores import FAISS
@@ -47,7 +46,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 encode_kwargs={
                     "batch_size": 1,
                     "show_progress_bar": True,
-                    "normalize_embeddings": True,
                     },
                 )
 
@@ -243,16 +241,17 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
         if "encode_kwargs" not in kwargs:
             kwargs["encode_kwargs"] = {}
-        if "normalize_embeddings" not in kwargs["encode_kwargs"]:
-            kwargs["encode_kwargs"]["normalize_embeddings"] = False
+        if "normalize_embeddings" in kwargs["encode_kwargs"]:
+            assert kwargs["encode_kwargs"]["normalize_embeddings"] == False, (
+                "Not supposed to normalize embeddings using RollingWindowEmbeddings")
         # kwargs["encode_kwargs"]["show_progress_bar"] = True
 
         super().__init__(*args, **kwargs)
-        self.__do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
 
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
-        so we do a windowing embedding then maxpool then normalization.
+        so we do a windowing embedding then maxpool.
+        No normalization is done because the faiss index does it for us
         """
         model = self.client
         sentences = texts
@@ -287,7 +286,6 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             # otherwise, split the sentence at regular interval
             # then do the embedding of each
             # and finally maxpool those sub embeddings together
-            # the renormalization happens later in the code
             sub_sentences = []
             words = s.split(" ")
             avg_tkn = length / len(words)
@@ -362,11 +360,6 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                         offset + min(id_range): offset + max(id_range), :]
                 vectors[sid] = np.amax(add_sent_vec, axis=0)
             vectors = vectors[:offset]
-
-        # normalize
-        if self.__do_normalize:
-            normalizer = Normalizer(norm="l2")
-            vectors = normalizer.transform(vectors)
 
         if not isinstance(vectors, t):
             vectors = vectors.tolist()
