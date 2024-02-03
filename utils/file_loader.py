@@ -104,6 +104,9 @@ max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
 
+# separators used for the text splitter
+recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
+
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -113,21 +116,21 @@ def get_splitter(task):
     "we don't use the same text splitter depending on the task"
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+                separators=recur_separator,
                 chunk_size=3000,  # default 4000
                 chunk_overlap=386,  # default 200
                 length_function=get_tkn_length,
                 )
     elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=[".\n", ". ", " ", ""],
+                separators=recur_separator,
                 chunk_size=2000,
                 chunk_overlap=300,
                 length_function=get_tkn_length,
                 )
     elif task == "recursive_summary":
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=[".\n", ". ", " ", ""],
+                separators=recur_separator,
                 chunk_size=1000,
                 chunk_overlap=200,
                 length_function=get_tkn_length,
