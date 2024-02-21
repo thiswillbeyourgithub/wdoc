@@ -167,7 +167,7 @@ def check_docs_tkn_length(docs, name):
         return 1
     prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
     if len(docs) > 1:
-        prob += language_detect(docs[-1].page_content.replace("\n", "<br>"))["score"]
+        prob += language_detect(docs[1].page_content.replace("\n", "<br>"))["score"]
         if len(docs) > 2:
             prob += language_detect(docs[len(docs)//2].page_content.replace("\n", "<br>"))["score"]
             prob /= 3
