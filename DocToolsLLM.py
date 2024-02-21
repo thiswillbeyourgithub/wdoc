@@ -726,6 +726,9 @@ class DocToolsLLM:
                     "summary": summary,
                     }
 
+        # create file if missing
+        Path(self.kwargs["out_file"]).touch()
+
         lock = Lock()
         results = Parallel(
                 n_jobs=3 if not self.debug else 1,
