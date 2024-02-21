@@ -182,7 +182,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
         whi("Waiting for saver workers to finish.")
         [q[0].put((False, None, None, None)) for q in saver_queues]
-        assert all(q[1].get().startswith("Saved ") for q in saver_queues), "No saved answer from worker"
+        _ = [q[1].get().startswith("Saved ") for q in saver_queues]
+        assert all(_), f"No saved answer from worker: {_}"
         [t.join() for t in saver_workers]
     whi("Done saving.")
 
