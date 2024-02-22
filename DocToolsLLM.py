@@ -110,23 +110,20 @@ class DocToolsLLM:
             an example of json_list file in utils/json_list_example.txt
 
             Supported values => relevant parameters
-                * youtube => --path must be a link to youtube --language=["fr","en"] to use french transcripts if possible, english otherwise --translation=en to use the transcripts after translation to english
-                * youtube_playlist => --path must link to a youtube playlist. language and translation are set to their default value of fr,en and en
+                * infer => will guess the appropriate filetype based on --path (so does not work with all filetypes, for example not with --filetype=anki)
+                * youtube => --path must link to a youtube video
+                * youtube_playlist => --path must link to a youtube playlist
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * url => --path must be a valid http(s) link
-                * anki => --anki_profile is the name of the profile --anki_deck the beginning of the deckname --anki_notetype the beginning of the notetype to keep --anki_fields list of fields to keep --anki_mode: any of 'window', 'concatenate', 'single_note': (or _ separated value like 'concatenate_window'). By default 'window_single_note' is used.
-                    * 'single_note': 1 document is 1 anki note.
-                    * 'window': 1 documents is 5 anki note, overlapping
-                    * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
-                * string => no other parameters needed, will ask to provide a string
-                * local_audio => needs whisper_prompt and whisper_lang
+                * anki => must be set: --anki_profile, --anki_deck, --anki_notetype, --anki_mode. See in loader specific arguments below for details.
+                * string => no other parameters needed, will provide a field where you must type or paste the string
+                * local_audio => must be set: --whisper_prompt, --whisper_lang
 
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
                 * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is present, the formatting will be compatible with logseq.
 
-                * "infer" => can often be used in the backend to try to guess the proper filetype. Experimental.
 
         --modelname str, default openai/gpt-3.5-turbo-0125
             Keep in mind that given that the default backend used is litellm
@@ -171,7 +168,8 @@ class DocToolsLLM:
             1 means that the original summary will be summarize. 0 means disabled.
 
         --n_summaries_target int, default -1
-            Only active if query is 'summarize_link_file'. Set a limit to
+            Only active if query is 'summarize_link_file' and
+            --out_file_logseq_mode is True. Set a limit to
             the number of links that will be summarized. If the number of
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
@@ -202,6 +200,71 @@ class DocToolsLLM:
 
         --help or -h, default False
             if True, will return this documentation.
+
+
+        Loader specific arguments
+        --------------------------
+        (meaning they apply depending on the value of --filetype):
+
+        --path
+            Used by most loaders. For example for --filetype=youtube the path
+            must point to a youtube video.
+
+        --anki_profile
+            The name of the profile
+        --anki_deck
+            The beginning of the deckname
+            e.g. "science::physics::freshman_year::lesson1"
+        --anki_notetype
+            The beginning of the notetype to keep
+        --anki_fields
+            List of fields to keep
+        --anki_mode:
+            any of 'window', 'concatenate', 'single_note': (or _ separated value like 'concatenate_window'). By default 'window_single_note' is used.
+                * 'single_note': 1 document is 1 anki note.
+                * 'window': 1 documents is 5 anki note, overlapping
+                * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
+
+        --whisper_lang
+            if using whisper to transcribe an audio file, this if the language
+            specified to whisper
+        --whisper_prompt
+            if using whisper to transcribe an audio file, this if the prompt
+            given to whisper
+
+        --language
+            For youtube. e.g. ["fr","en"] to use french transcripts if
+            possible and english otherwise
+        --translation
+            For youtube. e.g. "en" to use the transcripts after translation to english
+
+        --include
+            Only active if --filetype is one of json_list, recursive,
+            link_file, youtube_playlist.
+            --include can be a list of regex that must be present in the
+            document PATH (not content!)
+            --exclude can be a list of regex that if present in the PATH
+            will exclude it.
+            Exclude is run AFTER include
+        --exclude
+            See --include
+
+        Other specific arguments
+        ------------------------
+        --out_file
+            If doctools must create a summary, if out_file given the summary will
+            be written to this file. Note that the file is not erased and
+            Doctools will simply append to it.
+            Related: see --out_file_logseq_mode
+        --out_file_logseq_mode
+            If --out_file is specified, this argument tells Doctools to export
+            in a logseq friendly format. This means adding metadata of the run
+            as block properties as well as setting TODO states.
+        --out_check_file
+            If --out_file_logseq_mode is True and --out_check_file is set:
+            it must point to a file where each present TODO string will be
+            counted and taken into account when calculating --n_summaries_target
+
         """
         if help or h:
             print(self.__init__.__doc__)
