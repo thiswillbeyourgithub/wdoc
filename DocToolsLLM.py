@@ -361,7 +361,7 @@ class DocToolsLLM:
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
         # documents to load
-        if self.task == "summarize_link_file":
+        if self.task == "summarize_link_file" and out_file_logseq_mode:
             if not Path(self.kwargs["out_file"]).exists():
                 Path(self.kwargs["out_file"]).touch()
             with open(self.kwargs["out_file"], "r") as f:
