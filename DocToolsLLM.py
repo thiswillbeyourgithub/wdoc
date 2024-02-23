@@ -265,6 +265,19 @@ class DocToolsLLM:
             it must point to a file where each present TODO string will be
             counted and taken into account when calculating --n_summaries_target
 
+        --filter_metadata
+            list of string to use as filter.
+            Each filter must be a regex string beginning with
+            either '+' or '-' to respectively restrict to or exclude from
+            the search/query.
+            Filters are only relevant for task related to queries.
+            This will only filter through the values of each document and
+            not the keys. Also values that depend on the key are not
+            currently supported.
+        --filter_content
+            Like --filter_metadata but filters through the page_content of
+            each document instead of the metadata
+
         """
         if help or h:
             print(self.__init__.__doc__)
@@ -863,6 +876,46 @@ class DocToolsLLM:
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
         self.CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
 
+        # parse filters as callable for faiss filtering
+        if "filter_metadata" in self.kwargs or "filter_content" in self.kwargs:
+            if "filter_metadata" in self.kwargs:
+                assert isinstance(self.kwargs["filter_metadata"], list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
+                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_metadata"]), f"Each item of filter_metadata must start with either + or -"
+                incl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("+")]
+                excl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("-")]
+                def filter_meta(meta):
+                    for v in meta.values():
+                        if any(re.search(e, v) for e in excl):
+                            return False
+                        if not all(re.search(e, v) for e in incl):
+                            return False
+                   return True
+            else:
+                def filter_meta(meta):
+                    return True
+            if "filter_content" in self.kwargs:
+                assert isinstance(self.kwargs["filter_content"], list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
+                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_content"]), f"Each item of filter_content must start with either + or -"
+                incl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("+")]
+                excl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("-")]
+                def filter_cont(cont):
+                    if any(re.search(e, cont) for e in excl):
+                        return False
+                    if not all(re.search(e, cont) for e in incl):
+                        return False
+                   return True
+            else:
+                def filter_cont(cont):
+                    return True
+            def query_filter(doc):
+                if filter_meta(doc.metadata) and filter_content(doc.page_content):
+                    return True
+                return False
+            self.query_filter = query_filter
+        else:
+            self.query_filter = None
+
+
     def query(self, query):
         if not query:
             query, self.cli_commands = ask_user(
@@ -881,6 +934,7 @@ class DocToolsLLM:
                         llm=self.llm,
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
+                        filter=self.query_filter,
 
                         embeddings=self.loaded_embeddings,
                         embeddings_engine=self.embeddings,
@@ -894,6 +948,7 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_commands["relevancy"],
                         k=self.cli_commands["top_k"],
+                        filter=self.query_filter,
                         )
                     )
         if "svm" in self.cli_commands["retriever"].lower():
@@ -903,6 +958,7 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_commands["relevancy"],
                         k=self.cli_commands["top_k"],
+                        filter=self.query_filter,
                         )
                     )
         if "parent" in self.cli_commands["retriever"].lower():
@@ -913,6 +969,7 @@ class DocToolsLLM:
                         loaded_docs=self.loaded_docs,
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
+                        filter=self.query_filter,
                         )
                     )
 
@@ -924,6 +981,7 @@ class DocToolsLLM:
                             "k": self.cli_commands["top_k"],
                             "distance_metric": "cos",
                             "score_threshold": self.cli_commands["relevancy"],
+                            "filter": self.query_filter,
                             })
                         )
 
