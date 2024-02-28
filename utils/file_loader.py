@@ -22,8 +22,14 @@ import json
 from prompt_toolkit import prompt
 import tiktoken
 
-from ftlangdetect import detect as language_detect
-import pdftotext
+try:
+    from ftlangdetect import detect as language_detect
+except Exception as err:
+    print(f"Couldn't import ftlangdetect: '{err}'")
+try:
+    import pdftotext
+except Exception as err:
+    print(f"Failed to import pdftotext: '{err}'")
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
@@ -42,6 +48,8 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
+import LogseqMarkdownParser
+
 from .misc import loaddoc_cache, html_to_text, hasher
 from .logger import whi, yel, red, log
 from .llm import transcribe
@@ -59,6 +67,7 @@ inference_rules = {
         # the order of the keys is important
         "youtube_playlist": ["youtube.*playlist"],
         "youtube": ["youtube", "invidi"],
+        "logseq_markdown": [".*logseq.*.md"],
         "txt": [".txt$", ".md$"],
         "online_pdf": ["^http.*pdf.*"],
         "pdf": [".*pdf$"],
@@ -85,7 +94,7 @@ linebreak_before_letter = re.compile(r'\n([a-záéíóúü])', re.MULTILINE)  # 
 
 tokenize = tiktoken.encoding_for_model("gpt-3.5-turbo").encode  # used to get token length estimation
 
-max_threads = 20
+max_threads = 5
 threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
@@ -94,6 +103,9 @@ min_token = 200
 max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
+
+# separators used for the text splitter
+recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
 
 def get_tkn_length(tosplit):
@@ -104,21 +116,21 @@ def get_splitter(task):
     "we don't use the same text splitter depending on the task"
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=["\n\n\n\n", "\n\n\n", "\n\n", "\n", " ", ""],
+                separators=recur_separator,
                 chunk_size=3000,  # default 4000
                 chunk_overlap=386,  # default 200
                 length_function=get_tkn_length,
                 )
     elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=[".\n", ". ", " ", ""],
+                separators=recur_separator,
                 chunk_size=2000,
                 chunk_overlap=300,
                 length_function=get_tkn_length,
                 )
     elif task == "recursive_summary":
         text_splitter = RecursiveCharacterTextSplitter(
-                separators=[".\n", ". ", " ", ""],
+                separators=recur_separator,
                 chunk_size=1000,
                 chunk_overlap=200,
                 length_function=get_tkn_length,
@@ -150,9 +162,12 @@ def check_docs_tkn_length(docs, name):
         raise Exception(f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?")
 
     # check if language check is above a threshold
+    if "language_detect" not in globals():
+        # bypass if language_detect not imported
+        return 1
     prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
     if len(docs) > 1:
-        prob += language_detect(docs[-1].page_content.replace("\n", "<br>"))["score"]
+        prob += language_detect(docs[1].page_content.replace("\n", "<br>"))["score"]
         if len(docs) > 2:
             prob += language_detect(docs[len(docs)//2].page_content.replace("\n", "<br>"))["score"]
             prob /= 3
@@ -824,6 +839,57 @@ def load_doc(filetype, debug, task, **kwargs):
         docs = [Document(page_content=t) for t in texts]
         check_docs_tkn_length(docs, path)
 
+    elif filetype == "logseq_markdown":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading logseq markdown file: '{path}'")
+        assert Path(path).exists(), f"file not found: '{path}'"
+        parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+        blocks = parsed.blocks
+
+        # group blocks by parent block
+        pblocks = []
+        for b in blocks:
+            if b.indentation_level == 0:
+                pblocks.append([b])
+            else:
+                pblocks[-1].append(b)
+        whi(f"Found {len(pblocks)} parent blocks")
+
+        page_props = parsed.page_property
+        if not page_props:
+            page_props = {}
+        else:
+            lines = page_props.splitlines()
+            page_props = {}
+            for li in lines:
+                li = li.strip()
+                li = li.replace("- ", "", 1)
+                li = li.split(":: ")
+                page_props[li[0]] = li[1]
+
+        docs = []
+        for grou in pblocks:
+            # store in metadata the properties of the blocks inside a given
+            # parent block
+            meta = page_props.copy()
+            content = ""  # and remove the metadata from the page content
+            for b in grou:
+                cont = b.content
+                for k, v in b.get_properties().items():
+                    meta[k] = v
+                    cont = cont.replace(f"{k}:: {v}", "")
+                cont = "\n".join(cont.splitlines()).strip()
+                content += "\n" + cont
+
+            doc = Document(
+                    page_content=content,
+                    metadata=meta,
+                    )
+            docs.append(doc)
+
+        check_docs_tkn_length(docs, path)
+
     elif filetype == "local_audio":
         assert "path" in kwargs, "missing 'path' key in args"
         path = kwargs["path"]
@@ -1037,7 +1103,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
-            "pdftotext": pdftotext.PDF,
+            "pdftotext": None,
             "PDFMiner": PDFMinerLoader,
             "PyPDFLoader": PyPDFLoader,
             "Unstructured_elements_hires": partial(
@@ -1074,6 +1140,11 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             "PyMuPDF": PyMuPDFLoader,
             "PdfPlumber": PDFPlumberLoader,
             }
+    # optionnal support for pdftotext as windows is terrible shit
+    try:
+        loaders["pdftotext"] = pdftotext.PDF
+    except:
+        del loaders["pdftotext"]
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability

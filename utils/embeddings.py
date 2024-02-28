@@ -1,3 +1,4 @@
+import os
 import queue
 import faiss
 import random
@@ -8,7 +9,6 @@ from tqdm import tqdm
 import threading
 
 import numpy as np
-from sklearn.preprocessing import Normalizer
 from pydantic import Extra
 
 from langchain_community.vectorstores import FAISS
@@ -21,15 +21,23 @@ from .logger import whi, red
 from .file_loader import get_tkn_length
 
 
+Path(".cache").mkdir(exist_ok=True)
+Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
+
+
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
     """loads embeddings for each document"""
 
     if embed_model == "openai":
         red("Using openai embedding model")
-        assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
+        if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
+            assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
+            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
-                openai_api_key=str(Path("OPENAI_API_KEY.txt").read_text()).strip()
+                model="text-embedding-3-small",
+                # model="text-embedding-ada-002",
+                openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
     else:
@@ -38,7 +46,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 encode_kwargs={
                     "batch_size": 1,
                     "show_progress_bar": True,
-                    "normalize_embeddings": True,
+                    "pooling": "meanpool",
                     },
                 )
 
@@ -59,6 +67,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         path = Path(loadfrom)
         assert path.exists(), f"file not found at '{path}'"
         db = FAISS.load_local(str(path), cached_embeddings)
+        n_doc = len(db.index_to_docstore_id.keys())
+        red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
 
     red("\nLoading embeddings.")
@@ -67,8 +77,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    Path(".cache").mkdir(exist_ok=True)
-    Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
     embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
@@ -120,7 +128,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
     red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if embed_model == "openai":
-        dol_price = full_tkn * 0.0001 / 1000
+        dol_price = full_tkn * 0.00002 / 1000
         red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
         if dol_price > dollar_limit:
             ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
@@ -174,7 +182,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
         whi("Waiting for saver workers to finish.")
         [q[0].put((False, None, None, None)) for q in saver_queues]
-        assert all(q[1].get().startswith("Saved ") for q in saver_queues), "No saved answer from worker"
+        _ = [q[1].get().startswith("Saved ") for q in saver_queues]
+        assert all(_), f"No saved answer from worker: {_}"
         [t.join() for t in saver_workers]
     whi("Done saving.")
 
@@ -232,18 +241,21 @@ def faiss_saver(path, cached_embeddings, qin, qout):
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     def __init__(self, *args, **kwargs):
-        if "encode_kwargs" not in kwargs:
-            kwargs["encode_kwargs"] = {}
-        if "normalize_embeddings" not in kwargs["encode_kwargs"]:
-            kwargs["encode_kwargs"]["normalize_embeddings"] = False
-        # kwargs["encode_kwargs"]["show_progress_bar"] = True
+        assert "encode_kwargs" in kwargs
+        if "normalize_embeddings" in kwargs["encode_kwargs"]:
+            assert kwargs["encode_kwargs"]["normalize_embeddings"] is False, (
+                "Not supposed to normalize embeddings using RollingWindowEmbeddings")
+        assert kwargs["encode_kwargs"]["pooling"] in ["maxpool", "meanpool"]
+        pooltech = kwargs["encode_kwargs"]["pooling"]
+        del kwargs["encode_kwargs"]["pooling"]
 
         super().__init__(*args, **kwargs)
-        self.__do_normalize = kwargs["encode_kwargs"]["normalize_embeddings"]
+        self.__pool_technique = pooltech
 
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
-        so we do a windowing embedding then maxpool then normalization.
+        so we do a windowing embedding then pool (maxpool or meanpool)
+        No normalization is done because the faiss index does it for us
         """
         model = self.client
         sentences = texts
@@ -277,8 +289,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
 
             # otherwise, split the sentence at regular interval
             # then do the embedding of each
-            # and finally maxpool those sub embeddings together
-            # the renormalization happens later in the code
+            # and finally pool those sub embeddings together
             sub_sentences = []
             words = s.split(" ")
             avg_tkn = length / len(words)
@@ -311,7 +322,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             sub_sentences.append(" ".join(words))
 
             sentences[i] = " "  # discard this sentence as we will keep only
-            # the sub sentences maxpooled
+            # the sub sentences pooled
 
             # remove empty text just in case
             if "" in sub_sentences:
@@ -343,7 +354,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         if add_sent:
             # at the position of the original sentence (not split)
             # add the vectors of the corresponding sub_sentence
-            # then return only the 'maxpooled' section
+            # then return only the 'pooled' section
             assert len(add_sent) == len(add_sent_idx), (
                 "Invalid add_sent length")
             offset = len(sentences)
@@ -351,13 +362,13 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                 id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                 add_sent_vec = vectors[
                         offset + min(id_range): offset + max(id_range), :]
-                vectors[sid] = np.amax(add_sent_vec, axis=0)
+                if self.__pool_technique == "maxpool":
+                    vectors[sid] = np.amax(add_sent_vec, axis=0)
+                elif self.__pool_technique == "meanpool":
+                    vectors[sid] = np.sum(add_sent_vec, axis=0)
+                else:
+                    raise ValueError(self.__pool_technique)
             vectors = vectors[:offset]
-
-        # normalize
-        if self.__do_normalize:
-            normalizer = Normalizer(norm="l2")
-            vectors = normalizer.transform(vectors)
 
         if not isinstance(vectors, t):
             vectors = vectors.tolist()

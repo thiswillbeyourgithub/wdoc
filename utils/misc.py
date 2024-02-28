@@ -18,7 +18,8 @@ loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
 try:
     loaddoc_cache.reduce_size(age_limit=timedelta(90))
 except Exception as err:
-    red(f"Error when reducing cache size: '{err}'")
+    # red(f"Error when reducing cache size: '{err}'")
+    pass
 
 
 

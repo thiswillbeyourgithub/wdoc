@@ -10,7 +10,7 @@ from langchain_community.callbacks import get_openai_callback
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.chat_models import ChatOpenAI
-from langchain.cache import SQLiteCache
+from langchain_community.chat_models import ChatLiteLLM
 from langchain.memory import ConversationBufferMemory
 
 import openai
@@ -18,7 +18,6 @@ import openai
 from .logger import whi, yel, red
 
 Path(".cache").mkdir(exist_ok=True)
-langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
@@ -28,53 +27,25 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(modelname, modelbackend):
+def load_llm(modelname, backend):
     """load language model"""
-    if modelbackend.lower() == "openai":
-        whi("Loading openai models")
-        assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
-        os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
-
-        llm = ChatOpenAI(
-                model_name=modelname,
-                temperature=0,
-                verbose=True,
-                )
-        callback = get_openai_callback
-
-    elif modelbackend.lower() == "llama":
-        whi("Loading llama models")
-        callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-        llm = LlamaCpp(
-                model_path=modelname,
-                callback_manager=callback_manager,
-                verbose=True,
-                n_threads=4,
-                )
-        callback = fakecallback
-
-    elif modelbackend.lower() == "gpt4all":
-        whi(f"loading gpt4all: '{modelname}'")
-        modelname = Path(modelname)
-        assert modelname.exists(), "local model not found"
-        callbacks = [StreamingStdOutCallbackHandler()]
-        # Verbose is required to pass to the callback manager
-        llm = GPT4All(
-                model=str(modelname.absolute()),
-                n_ctx=512,
-                n_threads=4,
-                callbacks=callbacks,
-                verbose=True,
-                streaming=True,
-                )
-        callback = fakecallback
-    elif modelbackend.lower() in ["fake", "test", "testing"]:
+    if backend == "testing":
+        whi("Loading testing model")
         llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
         callback = fakecallback
-    else:
-        raise ValueError(modelbackend)
+        return llm, callback
 
-    whi("done loading model.\n")
+    whi("Loading model via litellm")
+    if not (f"{backend.upper()}_API_KEY" in os.environ or os.environ[f"{backend.upper()}_API_KEY"]):
+        assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
+        os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+
+    llm = ChatLiteLLM(
+            model_name=modelname,
+            temperature=0,
+            verbose=True,
+            )
+    callback = get_openai_callback
     return llm, callback
 
 
