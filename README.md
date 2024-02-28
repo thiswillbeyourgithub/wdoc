@@ -9,17 +9,19 @@
 * Summarize a documents then ask questions about it immediately.
 
 ## Notes
-* the multilingual embeddings from [sentence transformers](https://www.sbert.net/docs/pretrained_models.html/) have a very small max token length (down to 128!) and are probably unsuitable for most documents. That's why I also implemented GLOVE embeddings which are predictably bad but still allow private use (locally on your computer). It is important to note that the current GLOVE implementation removes the stop words in the documents just before computing the "embeddings", but not at query time, making the retrieval task kinda terrible. If someone is interested I might add a query augmentation strategy. Otherwise the best bet might be to use a rolling window of sentence transformer embeddings then averaging.
 * Before summarizing, if the beforehand estimate of cost is above $1, the app will abort to be safe just in case you drop a few bibles in there.
+* the multilingual embeddings from [sentence transformers](https://www.sbert.net/docs/pretrained_models.html/) have a very small max token length (down to 128!) and are probably unsuitable for most documents. That's why I also implemented GLOVE embeddings which are predictably bad but still allow private use (locally on your computer). It is important to note that the current GLOVE implementation removes the stop words in the documents just before computing the "embeddings", but not at query time, making the retrieval task kinda terrible. If someone is interested I might add a query augmentation strategy. Otherwise the best bet might be to use a rolling window of sentence transformer embeddings then averaging.
 
-## How to
+## Getting started
 * `git clone`
 * `python -m pip install -r requirements.txt`
 * some package used to load files will not be installed by this command. Pay attention to the error message then use pip install as needed. For example :
     * for youtube: `python -m pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git"` (this is the latest youtube_dl from the git repo, much more recent than their latest release).
     * for urls: `python -m pip install goose3`
-* if you want to use OpenAI's API: add a file "OPENAI_API_KEY.txt" to the root that contains your API key.
-* Read the documentation at `python DocToolsLLM.py --help`
+* Add the API key for the backend you want to use: add a file "{BACKEND}_API_KEY.txt" to the root that contains your backend's API key. For example "REPLICATE_API_KEY" or "OPENAI_API_KEY".
+* To ask questions about a document: `python ./DoctoolsLLM.py --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
+* If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the emebeddings are always cached)
+* For more: read the documentation at `python DocToolsLLM.py --help`
 
 ## Features
 * Several tasks implemented. See below.
