@@ -889,7 +889,7 @@ class DocToolsLLM:
                             return False
                         if not all(re.search(e, v) for e in incl):
                             return False
-                   return True
+                    return True
             else:
                 def filter_meta(meta):
                     return True
@@ -903,7 +903,7 @@ class DocToolsLLM:
                         return False
                     if not all(re.search(e, cont) for e in incl):
                         return False
-                   return True
+                    return True
             else:
                 def filter_cont(cont):
                     return True
