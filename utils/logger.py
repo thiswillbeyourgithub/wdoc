@@ -27,36 +27,42 @@ log.addHandler(handler)
 (local_dir / "logs.txt.3").unlink(missing_ok=True)
 
 
-def coloured_log(color_asked):
+colors = {
+        "red": "\033[91m",
+        "yellow": "\033[93m",
+        "reset": "\033[0m",
+        "white": "\033[0m",
+        "purple": "\033[95m",
+        }
+
+def get_coloured_logger(color_asked: str) -> Callable:
     """used to print color coded logs"""
-    col_red = "\033[91m"
-    col_yel = "\033[93m"
-    col_rst = "\033[0m"
+    col = colors[color_asked]
 
     # all logs are considered "errors" otherwise the datascience libs just
     # overwhelm the logs
-
-    if color_asked == "white":
-        def printer(string, **args):
-            if isinstance(string, list):
+    def printer(string: str, **args) -> str:
+        inp = string
+        if isinstance(string, dict):
+            try:
+                string = rtoml.dumps(string, pretty=True)
+            except Exception:
+                string = json.dumps(string, indent=2)
+        if isinstance(string, list):
+            try:
                 string = ",".join(string)
+            except:
+                pass
+        try:
             string = str(string)
-            log.error(string)
-            tqdm.write(col_rst + string + col_rst, **args)
-    elif color_asked == "yellow":
-        def printer(string, **args):
-            if isinstance(string, list):
-                string = ",".join(string)
-            string = str(string)
-            log.error(string)
-            tqdm.write(col_yel + string + col_rst, **args)
-    elif color_asked == "red":
-        def printer(string, **args):
-            if isinstance(string, list):
-                string = ",".join(string)
-            string = str(string)
-            log.error(string)
-            tqdm.write(col_red + string + col_rst, **args)
+        except:
+            try:
+                string = string.__str__()
+            except:
+                string = string.__repr__()
+        log.info(string)
+        tqdm.write(col + string + colors["reset"], **args)
+        return inp
     return printer
 
 
