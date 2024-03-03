@@ -4,6 +4,7 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
+from typing import Callable
 
 # adds logger, restrict it to X lines
 local_dir = Path.cwd()
@@ -66,9 +67,9 @@ def get_coloured_logger(color_asked: str) -> Callable:
     return printer
 
 
-whi = coloured_log("white")
-yel = coloured_log("yellow")
-red = coloured_log("red")
+whi = get_coloured_logger("white")
+yel = get_coloured_logger("yellow")
+red = get_coloured_logger("red")
 
 # phone notification
 def create_ntfy_func(url):
