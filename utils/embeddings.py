@@ -27,20 +27,38 @@ Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
     """loads embeddings for each document"""
+    backend = embed_model.split("/")[0]
+    embed_model = embed_model.replace(backend + "/", "")
 
-    if embed_model == "openai":
-        red("Using openai embedding model")
+    red(f"Selected embedding model '{embed_model}' of backend {backend}")
+    if backend == "openai":
         if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
             assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
-                model="text-embedding-3-small",
+                model=embed_model,
                 # model="text-embedding-ada-002",
                 openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
-    else:
+    elif backend == "huggingface":
+        model_kwargs = {}
+        if "google" in embed_model:
+            if not ("HUGGINGFACE_API_KEY" in os.environ or os.environ["HUGGINGFACE_API_KEY"]):
+                assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
+                hftkn = str(Path("HUGGINGFACE_API_KEY.txt").read_text()).strip()
+            else:
+                hftkn = os.environ["HUGGINGFACE_API_KEY"]
+            model_kwargs['use_auth_token'] = hftkn #your token to use the models
+        embedding = HuggingFaceEmbeddings(model_name=embed_model, model_kwargs=model_kwargs)
+
+        if "google" in embed_model:
+            #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
+            #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
+            embedding.client.tokenizer.pad_token =  embedding.client.tokenizer.eos_token
+
+    elif backend == "sentencectransfromers":
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
@@ -49,6 +67,8 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                     "pooling": "meanpool",
                     },
                 )
+    else:
+        raise ValueError(f"Invalid embedding backend: {backend}")
 
     lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
     cache_content = list(lfs.yield_keys())

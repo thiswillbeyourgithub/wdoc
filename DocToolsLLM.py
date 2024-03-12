@@ -64,11 +64,12 @@ class DocToolsLLM:
             task="query",
             query=None,
             filetype="infer",
-            embed_model="openai",
-            # embed_model="paraphrase-multilingual-mpnet-base-v2",
-            # embed_model = "distiluse-base-multilingual-cased-v1",
-            # embed_model = "msmarco-distilbert-cos-v5",
-            # embed_model = "all-mpnet-base-v2",
+            embed_model="openai/text-embedding-3-small"
+            # embed_model = "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
+            # embed_model = "sentencetransformers/distiluse-base-multilingual-cased-v1",
+            # embed_model = "sentencetransformers/msmarco-distilbert-cos-v5",
+            # embed_model = "sentencetransformers/all-mpnet-base-v2",
+            # embed_model = "huggingface/google/gemma-2b",
             saveas=".cache/latest_docs_and_embeddings",
             loadfrom=None,
 
@@ -131,8 +132,11 @@ class DocToolsLLM:
             If the backend is 'testing' then a fake LLM will be used
             for debugging purposes.
 
-        --embed_model str, default "openai"
-            Either 'openai' or sentence_transformer embedding model to use.
+        --embed_model str, default "openai/text-embedding-3-small"
+            Name of the model to use for embeddings. Must contain a '/'
+            Everything before the slash is the backend, for example
+            'openai', 'sentencetransformers', 'huggingface'.
+            Everything after the / is the model name.
             If you change this, the embedding cache will be usually
             need to be recomputed with new elements (the hash
             used to check for previous values includes the name of the model
@@ -297,7 +301,8 @@ class DocToolsLLM:
             assert "path" in kwargs, 'missing path arg for summarize_link_file'
             assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
             assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
-        assert "/" not in embed_model, "embed model can't contain slash"
+        assert "/" in embed_model, "embed model must contain slash"
+        assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
         for k in kwargs:
