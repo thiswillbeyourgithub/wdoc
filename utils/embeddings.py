@@ -21,7 +21,6 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from .logger import whi, red
 from .file_loader import get_tkn_length
 
-
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
 
@@ -44,7 +43,10 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 )
 
     elif backend == "huggingface":
-        model_kwargs = {}
+        model_kwargs = {
+            "device": "cpu",
+            # "device": "cuda",
+        }
         if "google" in embed_model:
             if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
                 assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
