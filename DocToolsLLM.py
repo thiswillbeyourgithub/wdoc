@@ -132,6 +132,8 @@ class DocToolsLLM:
             the part of modelname before the slash (/) is the server name.
             If the backend is 'testing' then a fake LLM will be used
             for debugging purposes.
+            If 'chatgpt' or "gpt3": will be set to "openai/gpt-3.5-turbo-0125"
+            If 'gpt4': will be set to "openai/gpt-4-0125-preview"
 
         --embed_model str, default "openai/text-embedding-3-small"
             Name of the model to use for embeddings. Must contain a '/'
@@ -323,6 +325,10 @@ class DocToolsLLM:
             red("Input is 'string' so setting 'top_k' to 1")
 
         # storing as attributes
+        if modelname in ["chatgpt", "gpt3"]:
+            modelname = "openai/gpt-3.5-turbo-0125"
+        elif modelname in ["gpt4"]:
+            modelname = "openai/gpt-4-0125-preview"
         assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
         if isinstance(query, str):
             query = query.strip() or None
