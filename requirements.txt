@@ -18,6 +18,6 @@ faiss-cpu>=1.7.4
 # buggy in windows so optionnal:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
 # fasttext-langdetect>=1.0.5
-# pdftotext>=2.2.2
+# pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
 
 LogseqMarkdownParser
