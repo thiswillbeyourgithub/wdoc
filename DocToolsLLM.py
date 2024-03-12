@@ -64,7 +64,7 @@ class DocToolsLLM:
             task="query",
             query=None,
             filetype="infer",
-            embed_model="openai/text-embedding-3-small"
+            embed_model="openai/text-embedding-3-small",
             # embed_model = "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
             # embed_model = "sentencetransformers/distiluse-base-multilingual-cased-v1",
             # embed_model = "sentencetransformers/msmarco-distilbert-cos-v5",
