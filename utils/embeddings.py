@@ -32,7 +32,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
     red(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
-        if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
+        if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
             assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
@@ -45,7 +45,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     elif backend == "huggingface":
         model_kwargs = {}
         if "google" in embed_model:
-            if not ("HUGGINGFACE_API_KEY" in os.environ or os.environ["HUGGINGFACE_API_KEY"]):
+            if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
                 assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
                 hftkn = str(Path("HUGGINGFACE_API_KEY.txt").read_text()).strip()
             else:
