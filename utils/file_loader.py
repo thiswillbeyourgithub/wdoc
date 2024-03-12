@@ -27,9 +27,12 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 try:
-    import pdftotext
+    import pdftotextext
 except Exception as err:
-    print(f"Failed to import pdftotext: '{err}'")
+    try:
+        import pdftotext3 as pdftotext
+    except Exception as err:
+        print(f"Failed to import pdftotext: '{err}'")
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
