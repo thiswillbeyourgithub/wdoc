@@ -144,6 +144,7 @@ class DocToolsLLM:
             need to be recomputed with new elements (the hash
             used to check for previous values includes the name of the model
             name)
+            The device used by default for hugginface is 'cpu' and not 'cuda'
 
         --saveas str, default .cache/latest_docs_and_embeddings
             only used if task is query
