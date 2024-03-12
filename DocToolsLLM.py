@@ -344,6 +344,14 @@ class DocToolsLLM:
         self.condense_question = condense_question
         self.import_mode = import_mode
 
+        if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
+            self.llm_price = [0.0005, 0.0015]
+        elif "gpt-4" in self.modelname and "preview" in self.modelname:
+            self.llm_price = [0.01, 0.03]
+        else:
+            red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
+            self.llm_price = [0.0005, 0.0015]
+
         global ntfy
         if ntfy_url:
             ntfy = create_ntfy_func(ntfy_url)
@@ -560,20 +568,16 @@ class DocToolsLLM:
                 else:
                     docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
-        prices = [0.0005, 0.0015]
-        if self.modelname == "gpt-4-0125-preview":
-            prices = [0.01, 0.03]
-
         full_tkn = sum(list(docs_tkn_cost.values()))
         red("Token price of each document:")
         for k, v in docs_tkn_cost.items():
-            pr = v * (prices[0] * 4 + prices[1]) / 5 / 1000
+            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5 / 1000
             red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
         red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
         # a conservative estimate is that it takes 4 times the number
         # of tokens of a document to summarize it
-        price = (prices[0] * 3 + prices[1] * 2) / 5
+        price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
         estimate_dol = full_tkn / 1000 * price * 1.1
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
@@ -1088,7 +1092,10 @@ class DocToolsLLM:
             if self.import_mode:
                 return ans["answer"]
 
-        yel(f"Tokens used: '{self.cb.total_tokens}' (${self.cb.total_cost:.5f})")
+        total_cost = self.cb.total_cost
+        if total_cost == 0 and self.cb.total_tokens != 0:
+            total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
+        yel(f"Tokens used: '{self.cb.total_tokens}' (${total_cost:.5f})")
 
 
 if __name__ == "__main__":
