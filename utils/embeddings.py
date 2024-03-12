@@ -16,6 +16,7 @@ from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 
 from .logger import whi, red
 from .file_loader import get_tkn_length
