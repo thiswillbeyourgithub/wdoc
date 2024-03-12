@@ -60,7 +60,8 @@ class DocToolsLLM:
 
     def __init__(
             self,
-            modelname="openai/gpt-3.5-turbo-0125",
+            # modelname="openai/gpt-3.5-turbo-0125",
+            modelname="openai/gpt-4-0125-preview",
             task="query",
             query=None,
             filetype="infer",
@@ -126,7 +127,7 @@ class DocToolsLLM:
                 * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is present, the formatting will be compatible with logseq.
 
 
-        --modelname str, default openai/gpt-3.5-turbo-0125
+        --modelname str, default openai/gpt-4-0125-preview
             Keep in mind that given that the default backend used is litellm
             the part of modelname before the slash (/) is the server name.
             If the backend is 'testing' then a fake LLM will be used
