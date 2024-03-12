@@ -54,12 +54,12 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             else:
                 hftkn = os.environ["HUGGINGFACE_API_KEY"]
             model_kwargs['use_auth_token'] = hftkn #your token to use the models
-        embedding = HuggingFaceEmbeddings(model_name=embed_model, model_kwargs=model_kwargs)
+        embeddings = HuggingFaceEmbeddings(model_name=embed_model, model_kwargs=model_kwargs)
 
         if "google" in embed_model:
             #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
             #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
-            embedding.client.tokenizer.pad_token =  embedding.client.tokenizer.eos_token
+            embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
 
     elif backend == "sentencectransfromers":
         embeddings = RollingWindowEmbeddings(
