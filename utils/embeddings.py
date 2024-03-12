@@ -74,7 +74,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
+    lfs = LocalFileStore(f".cache/embeddings/{embed_model.replace('/', '_')}")
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
@@ -82,7 +82,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
             lfs,
-            namespace=embed_model,
+            namespace=embed_model.replace("/", "_"),
             )
 
     # reload passed embeddings
@@ -101,7 +101,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
+    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model.replace('/', '_')}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
