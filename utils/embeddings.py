@@ -15,7 +15,7 @@ from pydantic import Extra
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
