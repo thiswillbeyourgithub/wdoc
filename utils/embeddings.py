@@ -14,9 +14,10 @@ from pydantic import Extra
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 
 from .logger import whi, red
 from .file_loader import get_tkn_length
@@ -61,7 +62,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
             embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
 
-    elif backend == "sentencectransfromers":
+    elif backend == "sentencetransfromers":
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
@@ -71,6 +72,38 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                     # "device": "cuda",
                     },
                 )
+
+    elif backend == "llamacppembeddings":
+        llamacppkwargs = {
+            "f16_kv": False,
+            "logits_all": False,
+            "n_batch": 8,
+            "n_ctx": 512,
+            "n_gpu_layers": 20,
+            "n_parts": -1,
+            "n_threads": 4,
+            "seed": 42,
+            "use_mlock": False,
+            "verbose": True,
+            "vocab_only": False,
+        }
+        assert Path(embed_model).exists(), f"File not found {embed_model}"
+
+        for k, v in kwargs.items():
+            if k.lower().startswith("llamacpp") and not k.startswith("llamacppembedding_"):
+                red(f"Possibly malformed argument name: {k}")
+            if k.startswith("llamacppembedding_"):
+                k = k.split("llamacppembedding_")[1]
+                if k not in llamacppkwargs:
+                    if k == "model_path":
+                        raise Exception("llamacppembeddings model_path must be supplied via --embed_model arg")
+                    raise Exception(f"Unexpected argument key {key} for llamacppembeddings")
+                llamacppkwargs[k] = v
+
+        embeddings = LlamaCppEmbeddings(
+            model_path=embed_model,
+            **llamacppkwargs,
+        )
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 

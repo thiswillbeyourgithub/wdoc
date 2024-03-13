@@ -137,14 +137,19 @@ class DocToolsLLM:
 
         --embed_model str, default "openai/text-embedding-3-small"
             Name of the model to use for embeddings. Must contain a '/'
-            Everything before the slash is the backend, for example
-            'openai', 'sentencetransformers', 'huggingface'.
-            Everything after the / is the model name.
-            If you change this, the embedding cache will be usually
-            need to be recomputed with new elements (the hash
-            used to check for previous values includes the name of the model
-            name)
-            The device used by default for hugginface is 'cpu' and not 'cuda'
+            Everything before the slash is the backend and everything
+            after the / is the model name.
+            Available backends: openai, sentencetransformers,
+            huggingface, llamacpp
+
+            Note:
+            * the device used by default for huggingface is 'cpu' and not 'cuda'
+            * If you change this, the embedding cache will be usually
+              need to be recomputed with new elements (the hash
+              used to check for previous values includes the name of the model
+              name)
+            * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
+
 
         --saveas str, default .cache/latest_docs_and_embeddings
             only used if task is query
@@ -306,7 +311,7 @@ class DocToolsLLM:
             assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
             assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
+        assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
         for k in kwargs:
@@ -318,7 +323,7 @@ class DocToolsLLM:
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
                     "out_check_file",
-                    ]:
+                    ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")
 
         if filetype == "string":
