@@ -31,6 +31,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     """loads embeddings for each document"""
     backend = embed_model.split("/")[0]
     embed_model = embed_model.replace(backend + "/", "")
+    embed_model_str = embed_model.replace("/", "_")
 
     red(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
@@ -109,7 +110,6 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
-    embed_model_str = embed_model.replace("/", "_")
     if "/" in embed_model:
         try:
             if Path(embed_model).exists():
