@@ -1,3 +1,4 @@
+import hashlib
 import os
 import queue
 import faiss
@@ -108,7 +109,18 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model.replace('/', '_')}")
+    embed_model_str = embed_model.replace("/", "_")
+    if "/" in embed_model:
+        try:
+            if Path(embed_model).exists():
+                with open(Path(embed_model).absolute().__str__(), "rb") as f:
+                    h = hashlib.sha256(f.read()).hexdigest()[:15]
+                embed_model_str = Path(embed_model).name + "_" + h
+        except Exception:
+            pass
+    assert "/" not in embed_model_str
+
+    lfs = LocalFileStore(f".cache/embeddings/{embed_model_str}")
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
@@ -116,7 +128,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
             lfs,
-            namespace=embed_model.replace("/", "_"),
+            namespace=embed_model_str,
             )
 
     # reload passed embeddings
@@ -135,7 +147,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model.replace('/', '_')}")
+    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model_str}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
