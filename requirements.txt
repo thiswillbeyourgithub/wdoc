@@ -14,7 +14,7 @@ tiktoken>=0.3.3
 tqdm>=4.57.0
 unstructured>=0.6.2
 faiss-cpu>=1.7.4
-llama-cpp-python>=0.2.56
+llama-cpp-python==0.2.55
 
 # buggy in windows so optionnal:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
