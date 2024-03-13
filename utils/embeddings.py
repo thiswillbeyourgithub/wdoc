@@ -86,7 +86,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             "n_threads": 4,
             "seed": 42,
             "use_mlock": False,
-            "verbose": True,
+            "verbose": False,
             "vocab_only": False,
         }
         assert Path(embed_model).exists(), f"File not found {embed_model}"
