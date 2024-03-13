@@ -100,6 +100,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                     raise Exception(f"Unexpected argument key {key} for llamacppembeddings")
                 llamacppkwargs[k] = v
 
+        red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
         embeddings = LlamaCppEmbeddings(
             model_path=embed_model,
             **llamacppkwargs,
