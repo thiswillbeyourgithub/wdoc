@@ -124,7 +124,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         red("Reloading documents and embeddings from file")
         path = Path(loadfrom)
         assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), cached_embeddings)
+        db = FAISS.load_local(str(path), cached_embeddings, allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
@@ -266,7 +266,7 @@ def faiss_loader(cached_embeddings, qin, qout):
             qout.put(db)
             qout.put("Stopped")
             return
-        temp = FAISS.load_local(fi, cached_embeddings)
+        temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
         if not db:
             db = temp
         else:
