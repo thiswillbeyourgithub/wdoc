@@ -29,10 +29,11 @@ except Exception as err:
 try:
     import pdftotextext
 except Exception as err:
+    print(f"Failed to import pdftotext: '{err}'")
     try:
         import pdftotext3 as pdftotext
     except Exception as err:
-        print(f"Failed to import pdftotext: '{err}'")
+        print(f"Failed to import pdftotext3: '{err}'")
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
