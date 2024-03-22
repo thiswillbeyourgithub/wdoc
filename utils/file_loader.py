@@ -27,7 +27,7 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 try:
-    import pdftotextext
+    import pdftotext
 except Exception as err:
     print(f"Failed to import pdftotext: '{err}'")
     try:
