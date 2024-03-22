@@ -119,6 +119,16 @@ min_lang_prob = 0.50
 # separators used for the text splitter
 recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
+if "pdftotext" in globals():
+    class pdftotext_loader_class:
+        "simple wrapper for pdftotext to make it load by cached_pdf_loader"
+        def __init__(self, path):
+            self.path = path
+
+        def load(self):
+            with open(self.path, "rb") as f:
+                return "\n\n".join(pdftotext.PDF(f))
+
 
 def get_tkn_length(tosplit):
     return len(tokenize(tosplit))
@@ -1314,7 +1324,7 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
 def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
-        "pdftotext": None,
+        "pdftotext": None,  # optional support
         "PDFMiner": PDFMinerLoader,
         "PyPDFLoader": PyPDFLoader,
         "Unstructured_elements_hires": partial(
@@ -1351,10 +1361,11 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
         "PyMuPDF": PyMuPDFLoader,
         "PdfPlumber": PDFPlumberLoader,
     }
-    # optionnal support for pdftotext as windows is terrible shit
-    try:
-        loaders["pdftotext"] = pdftotext.PDF
-    except:
+    # pdftotext is kinda weird to install on windows so support it
+    # only if it's correctly imported
+    if "pdftotext" in globals():
+        loaders["pdftotext"] = pdftotext_loader_class
+    else:
         del loaders["pdftotext"]
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
@@ -1365,13 +1376,8 @@ def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
-            if loader_name == "pdftotext":
-                with open(path, "rb") as f:
-                    loader = loader_func(f)
-                content = "\n\n".join(loader)
-            else:
-                loader = loader_func(path)
-                content = loader.load()
+            loader = loader_func(path)
+            content = loader.load()
 
             if "Unstructured" in loader_name:
                 content = "\n".join([d.page_content.strip() for d in content])
