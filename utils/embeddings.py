@@ -15,7 +15,7 @@ from pydantic import Extra
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
@@ -57,7 +57,14 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             else:
                 hftkn = os.environ["HUGGINGFACE_API_KEY"]
             model_kwargs['use_auth_token'] = hftkn #your token to use the models
-        embeddings = HuggingFaceEmbeddings(model_name=embed_model, model_kwargs=model_kwargs)
+        embeddings = HuggingFaceInstructEmbeddings(
+            model_name=embed_model,
+            model_kwargs=model_kwargs,
+            #embed_instruction="",
+            #query_instruction="",
+            #DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
+            #DEFAULT_QUERY_INSTRUCTION =  "Represent the question for retrieving supporting documents: "
+        )
 
         if "google" in embed_model:
             #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
