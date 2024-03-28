@@ -15,6 +15,7 @@ from pydantic import Extra
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
@@ -25,6 +26,10 @@ from .file_loader import get_tkn_length
 
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
+
+# Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
+DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
+DEFAULT_QUERY_INSTRUCTION =  "Represent the question for retrieving supporting documents: "
 
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
@@ -50,23 +55,27 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             "device": "cpu",
             # "device": "cuda",
         }
-        if "google" in embed_model:
+        if "google" in embed_model and "gemma" in embed_model.lower():
             if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
                 assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
                 hftkn = str(Path("HUGGINGFACE_API_KEY.txt").read_text()).strip()
             else:
                 hftkn = os.environ["HUGGINGFACE_API_KEY"]
             model_kwargs['use_auth_token'] = hftkn #your token to use the models
-        embeddings = HuggingFaceInstructEmbeddings(
-            model_name=embed_model,
-            model_kwargs=model_kwargs,
-            #embed_instruction="",
-            #query_instruction="",
-            #DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
-            #DEFAULT_QUERY_INSTRUCTION =  "Represent the question for retrieving supporting documents: "
-        )
+        if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+            embeddings = HuggingFaceInstructEmbeddings(
+                model_name=embed_model,
+                model_kwargs=model_kwargs,
+                embed_instruction=DEFAULT_EMBED_INSTRUCTION,
+                query_instruction=DEFAULT_QUERY_INSTRUCTION,
+            )
+        else:
+            embeddings = HuggingFaceEmbeddings(
+                model_name=embed_model,
+                model_kwargs=model_kwargs,
+            )
 
-        if "google" in embed_model:
+        if "google" in embed_model and "gemma" in embed_model.lower():
             #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
             #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
             embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
@@ -114,6 +123,19 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             model_path=embed_model,
             **llamacppkwargs,
         )
+
+        # method overloading to make it an instruct model
+        if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+            embeddings.__embed_query = embeddings.embed_query
+            embeddings.__embed_documents = embeddings.embed_documents
+            def embed_query(self, texts):
+                texts = [DEFAULT_QUERY_INSTRUCTION + t for t in texts]
+                return self.__embed_query(texts)
+            def embed_documents(self, texts):
+                texts = [DEFAULT_EMBED_INSTRUCTION + t for t in texts]
+                return self.__embed_documents(texts)
+            embeddings.embed_query = embed_query
+            embeddings.embed_documents = embed_documents
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 

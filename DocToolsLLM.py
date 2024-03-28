@@ -291,6 +291,10 @@ class DocToolsLLM:
             Like --filter_metadata but filters through the page_content of
             each document instead of the metadata
 
+        --embed_instruct: bool
+            when loading an embedding model using HuggingFace or LlamaCPP,
+            wether to wrap the input sentence using instruct framework or not.
+
         """
         if help or h:
             print(self.__init__.__doc__)
@@ -323,6 +327,7 @@ class DocToolsLLM:
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
                     "out_check_file",
+                    "embed_instruct"
                     ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")
 
