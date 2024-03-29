@@ -358,7 +358,7 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
-        self.condense_question = condense_question
+        self.condense_question = condense_question if "testing" not in modelname else False
         self.import_mode = import_mode
 
         if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
