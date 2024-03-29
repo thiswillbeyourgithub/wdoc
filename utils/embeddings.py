@@ -1,3 +1,4 @@
+from typing import List
 import hashlib
 import os
 import queue
@@ -29,7 +30,34 @@ Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
-DEFAULT_QUERY_INSTRUCTION =  "Represent the question for retrieving supporting documents: "
+DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
+
+class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
+    """wrapper around the class LlamaCppEmbeddings to add an instruction
+    before the text to embed."""
+    def __init__(self, *args, **kwargs):
+        embed_instruction=DEFAULT_EMBED_INSTRUCTION
+        query_instruction=DEFAULT_QUERY_INSTRUCTION
+        if "embed_instruction" in kwargs:
+            embed_instruction = kwargs["embed_instruction"]
+            del kwargs["embed_instruction"]
+        if "query_instruction" in kwargs:
+            query_instruction = kwargs["query_instruction"]
+            del kwargs["query_instruction"]
+
+        super().__init__(*args, **kwargs)
+        self.embed_instruction = embed_instruction
+        self.query_instruction = query_instruction
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        texts = [self.embed_instruction + t for t in texts]
+        embeddings = [self.client.embed(text) for text in texts]
+        return [list(map(float, e)) for e in embeddings]
+
+    def embed_query(self, text: str) -> List[float]:
+        text = self.query_instruction + text
+        embedding = self.client.embed(text)
+        return list(map(float, embedding))
 
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
@@ -119,23 +147,17 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
                 llamacppkwargs[k] = v
 
         red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
-        embeddings = LlamaCppEmbeddings(
-            model_path=embed_model,
-            **llamacppkwargs,
-        )
-
         # method overloading to make it an instruct model
         if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
-            embeddings.__embed_query = embeddings.embed_query
-            embeddings.__embed_documents = embeddings.embed_documents
-            def embed_query(self, texts):
-                texts = [DEFAULT_QUERY_INSTRUCTION + t for t in texts]
-                return self.__embed_query(texts)
-            def embed_documents(self, texts):
-                texts = [DEFAULT_EMBED_INSTRUCTION + t for t in texts]
-                return self.__embed_documents(texts)
-            embeddings.embed_query = embed_query
-            embeddings.embed_documents = embed_documents
+            embeddings = InstructLlamaCPPEmbeddings(
+                model_path=embed_model,
+                **llamacppkwargs,
+            )
+        else:
+            embeddings = LlamaCppEmbeddings(
+                model_path=embed_model,
+                **llamacppkwargs,
+            )
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
