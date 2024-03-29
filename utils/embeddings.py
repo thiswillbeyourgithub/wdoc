@@ -65,6 +65,10 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     backend = embed_model.split("/")[0]
     embed_model = embed_model.replace(backend + "/", "")
     embed_model_str = embed_model.replace("/", "_")
+    if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+        instruct = True
+    else:
+        instruct = False
 
     red(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
@@ -90,7 +94,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             else:
                 hftkn = os.environ["HUGGINGFACE_API_KEY"]
             model_kwargs['use_auth_token'] = hftkn #your token to use the models
-        if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+        if instruct:
             embeddings = HuggingFaceInstructEmbeddings(
                 model_name=embed_model,
                 model_kwargs=model_kwargs,
@@ -148,7 +152,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
 
         red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
         # method overloading to make it an instruct model
-        if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+        if instruct:
             embeddings = InstructLlamaCPPEmbeddings(
                 model_path=embed_model,
                 **llamacppkwargs,
@@ -165,7 +169,9 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         try:
             if Path(embed_model).exists():
                 with open(Path(embed_model).absolute().__str__(), "rb") as f:
-                    h = hashlib.sha256(f.read()).hexdigest()[:15]
+                    h = hashlib.sha256(
+                        f.read() + str(instruct)
+                    ).hexdigest()[:15]
                 embed_model_str = Path(embed_model).name + "_" + h
         except Exception:
             pass
