@@ -85,6 +85,7 @@ class DocToolsLLM:
             llm_verbosity=True,
             ntfy_url=None,
             condense_question=True,
+            chat_memory=True,
 
             help=False,
             h=False,
@@ -207,6 +208,11 @@ class DocToolsLLM:
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
             a row.
+            DIsabled if using a testing model.
+
+        --chat_memory, default True
+            if True, will remember the messages across a given chat exchange.
+            DIsabled if using a testing model.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -359,6 +365,7 @@ class DocToolsLLM:
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
         self.condense_question = condense_question if "testing" not in modelname else False
+        self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
 
         if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
@@ -1080,7 +1087,7 @@ class DocToolsLLM:
                     return_source_documents=True,
                     return_generated_question=True,
                     verbose=self.llm_verbosity,
-                    memory=self.memory,
+                    memory=self.memory if self.chat_memory else None,
                     )
 
             ans = chain(
