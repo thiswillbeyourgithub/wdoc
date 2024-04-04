@@ -9,8 +9,6 @@ import textwrap
 import fire
 import os
 from tqdm import tqdm
-import signal
-import pdb
 try:
     from ftlangdetect import detect as language_detect
 except Exception as err:
