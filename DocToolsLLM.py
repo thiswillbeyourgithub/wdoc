@@ -272,10 +272,12 @@ class DocToolsLLM:
             be written to this file. Note that the file is not erased and
             Doctools will simply append to it.
             Related: see --out_file_logseq_mode
+
         --out_file_logseq_mode
             If --out_file is specified, this argument tells Doctools to export
             in a logseq friendly format. This means adding metadata of the run
             as block properties as well as setting TODO states.
+
         --out_check_file
             If --out_file_logseq_mode is True and --out_check_file is set:
             it must point to a file where each present TODO string will be
@@ -290,6 +292,7 @@ class DocToolsLLM:
             This will only filter through the values of each document and
             not the keys. Also values that depend on the key are not
             currently supported.
+
         --filter_content
             Like --filter_metadata but filters through the page_content of
             each document instead of the metadata
