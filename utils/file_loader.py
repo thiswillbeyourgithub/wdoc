@@ -102,7 +102,6 @@ tokenize = tiktoken.encoding_for_model(
     "gpt-3.5-turbo"
 ).encode  # used to get token length estimation
 
-max_threads = 5
 threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
@@ -230,6 +229,11 @@ def get_url_title(url):
 def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
     text_splitter = get_splitter(task)
+
+    if "file_loader_max_threads" in kwargs:
+        max_threads = kwargs["file_loader_max_threads"]
+    else:
+        max_threads = 5
 
     if "path" in kwargs and isinstance(kwargs["path"], str):
         kwargs["path"] = kwargs["path"].strip()
@@ -477,8 +481,7 @@ def load_doc(filetype, debug, task, **kwargs):
             depth = 0
             kwargs["depth"] = 1
 
-        # if debugging, don't multithread
-        if (not debug) and (depth > 0):
+        if max_threads > 1 and depth > 0:
             message = f"Loading documents using {max_threads} threads (depth={depth})"
             pbar = tqdm(total=len(doclist), desc=message)
             recursion_id = str(uuid.uuid4())

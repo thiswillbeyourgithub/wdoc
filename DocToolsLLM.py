@@ -301,6 +301,11 @@ class DocToolsLLM:
             when loading an embedding model using HuggingFace or LlamaCPP,
             wether to wrap the input sentence using instruct framework or not.
 
+        --file_loader_max_threads: int, default 5
+            number of threads to use when loading files. Set to 1 to disable
+            multithreading (as it can result in out of memory error if
+            using threads and overly recursive calls)
+
         """
         if help or h:
             print(self.__init__.__doc__)
@@ -333,7 +338,8 @@ class DocToolsLLM:
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
                     "out_check_file",
-                    "embed_instruct"
+                    "embed_instruct",
+                    "file_loader_max_threads"
                     ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")
 
