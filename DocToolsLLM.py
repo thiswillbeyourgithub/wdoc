@@ -190,8 +190,9 @@ class DocToolsLLM:
             If the estimated price is above this limit, stop instead.
 
         --debug bool, default False
-            if True willuse sequential processing instead of multithreading
-            and enable langchain tracing, increase verbosity etc.
+            if True will enable langchain tracing, increase verbosity etc.
+            Will also disable multithreading for summaries and for loading
+            files.
 
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
@@ -395,6 +396,7 @@ class DocToolsLLM:
             os.environ["LANGCHAIN_TRACING"] = "true"
             set_verbose(True)
             set_debug(True)
+            kwargs["file_loader_max_threads"] = 1
 
         # compile include / exclude regex
         if "include" in self.kwargs:
