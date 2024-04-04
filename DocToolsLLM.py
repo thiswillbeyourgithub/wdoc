@@ -192,9 +192,8 @@ class DocToolsLLM:
             If the estimated price is above this limit, stop instead.
 
         --debug bool, default False
-            if True will open a debugger instead before crashing, also use
-            sequential processing instead of multithreading and enable
-            langchain tracing.
+            if True willuse sequential processing instead of multithreading
+            and enable langchain tracing, increase verbosity etc.
 
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
@@ -386,8 +385,6 @@ class DocToolsLLM:
                 return text
 
         if self.debug:
-            # make the script interruptible
-            signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
             os.environ["LANGCHAIN_TRACING"] = "true"
             set_verbose(True)
             set_debug(True)
