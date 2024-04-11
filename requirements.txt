@@ -7,6 +7,7 @@ ftfy>=6.1.1
 joblib>=1.2.0
 langchain==0.1.12
 langchain-community==0.0.22
+litellm>=1.35.1
 nltk>=3.8.1
 openai>=0.27.2
 prompt-toolkit>=3.0.28
