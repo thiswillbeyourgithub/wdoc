@@ -1034,7 +1034,7 @@ class DocToolsLLM:
             # remove redundant results from the merged retrievers:
             filtered = EmbeddingsRedundantFilter(
                     embeddings=self.embeddings,
-                    similarity_threshold=1.00,
+                    similarity_threshold=0.999,
                     )
             pipeline = DocumentCompressorPipeline(transformers=[filtered])
             retriever = ContextualCompressionRetriever(
