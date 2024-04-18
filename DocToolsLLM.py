@@ -354,6 +354,9 @@ class DocToolsLLM:
         elif modelname in ["gpt4"]:
             modelname = "openai/gpt-4-turbo-2024-04-09"
         assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
+        if query is True:
+            # otherwise specifying --query and forgetting to add text fails
+            query = None
         if isinstance(query, str):
             query = query.strip() or None
         self.modelbackend = modelname.split("/")[0].lower()
