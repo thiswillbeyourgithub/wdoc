@@ -23,4 +23,4 @@ llama-cpp-python==0.2.55
 # fasttext-langdetect>=1.0.5
 # pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
 
-LogseqMarkdownParser
+LogseqMarkdownParser >= 2.4  # I'm also the dev behind that one
