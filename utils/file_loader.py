@@ -1031,7 +1031,7 @@ def load_doc(filetype, debug, task, **kwargs):
                 pblocks[-1].append(b)
         whi(f"Found {len(pblocks)} parent blocks")
 
-        page_props = parsed.properties
+        page_props = parsed.page_properties
         if not page_props:
             page_props = {}
         else:
