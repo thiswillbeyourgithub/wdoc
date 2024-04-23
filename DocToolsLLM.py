@@ -287,16 +287,21 @@ class DocToolsLLM:
         --filter_metadata
             list of string to use as filter.
             Each filter must be a regex string beginning with
-            either '+' or '-' to respectively restrict to or exclude from
-            the search/query.
+            either '+', '-' or '~' to respectively restrict to (all metadata
+            must match this regex), exclude from (no metadata should match) or
+            at least one metadata should match.
             Filters are only relevant for task related to queries.
             This will only filter through the values of each document and
             not the keys. Also values that depend on the key are not
             currently supported.
+            All regex are matched case insensitively if they match their lowercase form.
 
         --filter_content
+            CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of
-            each document instead of the metadata
+            each document instead of the metadata.
+            Note that ~ filters are not relevant to filter content so use +
+            instead.
 
         --embed_instruct: bool
             when loading an embedding model using HuggingFace or LlamaCPP,
@@ -340,7 +345,9 @@ class DocToolsLLM:
                     "language", "translation",
                     "out_check_file",
                     "embed_instruct",
-                    "file_loader_max_threads"
+                    "file_loader_max_threads",
+                    "filter_metadata",
+                    # "filter_content",
                     ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")
 
@@ -922,25 +929,60 @@ class DocToolsLLM:
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.kwargs or "filter_content" in self.kwargs:
             if "filter_metadata" in self.kwargs:
-                assert isinstance(self.kwargs["filter_metadata"], list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
-                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_metadata"]), f"Each item of filter_metadata must start with either + or -"
-                incl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("+")]
-                excl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("-")]
+                if isinstance(self.kwargs["filter_metadata"], str):
+                    filter_metadata = self.kwargs["filter_metadata"].split(",")
+                else:
+                    filter_metadata = self.kwargs["filter_metadata"]
+                assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
+                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_metadata), f"Each item of filter_metadata must start with either +, - or ~"
+                assert not any(f.strip() in ["+", "-", "~"] for f in filter_metadata), f"filter cannot be only + or - or ~"
+                incl = []
+                excl = []
+                fuz = []
+                for f in filter_metadata:
+                    case = True if f != f.lower() else False
+                    if f.startswith("+"):
+                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("-"):
+                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("~"):
+                        fuz.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+
                 def filter_meta(meta):
+                    fizdic = {k:False for k in fuz}
                     for v in meta.values():
+                        v = str(v)
                         if any(re.search(e, v) for e in excl):
                             return False
                         if not all(re.search(e, v) for e in incl):
                             return False
+                        for f in fuz:
+                            if re.search(f, v):
+                                fizdic[f] = True
+                    if False in fizdic.values():
+                        return False
                     return True
             else:
                 def filter_meta(meta):
                     return True
             if "filter_content" in self.kwargs:
-                assert isinstance(self.kwargs["filter_content"], list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
-                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_content"]), f"Each item of filter_content must start with either + or -"
-                incl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("+")]
-                excl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("-")]
+                raise NotImplementedError("filter_content argument was disabled")
+                if isinstance(self.kwargs["filter_content"], str):
+                    filter_content = self.kwargs["filter_content"].split(",")
+                else:
+                    filter_content = self.kwargs["filter_content"]
+                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
+                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_content), f"Each item of filter_content must start with either +, - or ~"
+                assert not any(f.strip() in ["+", "-", "~"] for f in filter_content), f"filter cannot be only + or - or ~"
+                incl = []
+                excl = []
+                for f in filter_content:
+                    case = True if f != f.lower() else False
+                    if f.startswith("+"):
+                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("-"):
+                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                assert not [re.compile(f[1:]) for f in filter_content if f.startswith("~")], "No ~ filter can be used on content, use + instead"
                 def filter_cont(cont):
                     if any(re.search(e, cont) for e in excl):
                         return False
@@ -951,6 +993,8 @@ class DocToolsLLM:
                 def filter_cont(cont):
                     return True
             def query_filter(doc):
+                if isinstance(doc, dict):  # received metadata directly
+                    return filter_meta(doc)
                 if filter_meta(doc.metadata) and filter_content(doc.page_content):
                     return True
                 return False
