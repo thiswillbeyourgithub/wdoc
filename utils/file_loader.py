@@ -1,3 +1,4 @@
+from textwrap import dedent
 from functools import partial
 import tldextract
 import uuid
@@ -1050,10 +1051,11 @@ def load_doc(filetype, debug, task, **kwargs):
             meta = page_props.copy()
             content = ""  # and remove the metadata from the page content
             for b in grou:
-                cont = b.content
+                cont = dedent(b.content)
+                # note: should it be dedented? that saves a lot of token
                 for k, v in b.get_properties().items():
                     meta[k] = v
-                    cont = cont.replace(f"{k}:: {v}", "")
+                    cont = cont.replace(f"{k}:: {v}", "").strip()
                 cont = "\n".join(cont.splitlines()).strip()
                 content += "\n" + cont
 
