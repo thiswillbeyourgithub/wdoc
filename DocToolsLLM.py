@@ -436,7 +436,7 @@ class DocToolsLLM:
                 return text
 
         if self.debug:
-            os.environ["LANGCHAIN_TRACING"] = "true"
+            # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
             set_debug(True)
             kwargs["file_loader_max_threads"] = 1
