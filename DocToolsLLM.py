@@ -1252,7 +1252,7 @@ class DocToolsLLM:
                     "You are an assistant for question-answering tasks. "
                     "Use the following pieces of retrieved context to answer "
                     "the question. If the context is irrelevant, just answer "
-                    "'Irrelevant context'. Use three sentences maximum. Be "
+                    "'IRRELEVANT' and nothing else. Use three sentences maximum. Be "
                     "VERY concise and use markdown formatting for easier "
                     "reading."
                     "\nQuestion: '{question}'"
@@ -1269,7 +1269,8 @@ class DocToolsLLM:
                     "combine the answers into one. Ignore irrelevant answers. "
                     "Don't narrate, just do what I asked. Also use markdown "
                     "formatting, use bullet points for enumeration etc. "
-                    "Be VERY concise but don't omit anything."
+                    "Be VERY concise but don't omit anything. "
+                    "Answer in the same language as the question."
                     "\nAbove all: no answers are relevant to the question, "
                     "you MUST begin your answer by: 'OPINION:' followed by "
                     "your own knowledge to answer the question so that I "
@@ -1302,11 +1303,11 @@ class DocToolsLLM:
                     "final_answer": RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question"],
                         intermediate_answers=lambda inputs: "\n".join(
-                                # remove answers deemed irrrelevant except the first one to avoid confusion the chain that combines answers
+                                # remove answers deemed irrrelevant
                                 [
                                     inp
-                                    for i, inp in enumerate(inputs["intermediate_answers"])
-                                    if "Irrelevant context." not in inp and i > 0
+                                    for inp in inputs["intermediate_answers"]
+                                    if "IRRELEVANT" != inp
                                 ]
                             )
                         ).pick(["question", "intermediate_answers"])
