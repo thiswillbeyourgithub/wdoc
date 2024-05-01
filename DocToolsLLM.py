@@ -1,3 +1,4 @@
+from typing import List, Tuple
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -14,11 +15,7 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
-import langchain
 from langchain.globals import set_verbose, set_debug, set_llm_cache
-from langchain.chains import ConversationalRetrievalChain
-from langchain.chains import LLMChain
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
 from langchain_community.document_transformers import EmbeddingsRedundantFilter
@@ -45,6 +42,11 @@ from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect
 from utils.prompts import condense_question
+from operator import itemgetter
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers import StrOutputParser
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -1162,57 +1164,189 @@ class DocToolsLLM:
                             )
 
         else:
-            doc_chain = load_qa_with_sources_chain(
-                    self.llm,
-                    chain_type="map_reduce",
-                    verbose=self.llm_verbosity,
-                    )
 
+            # reformulate question if needed
             if self.condense_question:
-                question_generator = LLMChain(llm=self.llm, prompt=self.CONDENSE_QUESTION_PROMPT)
+                question_generator = self.CONDENSE_QUESTION_PROMPT | self.llm
             else:
-                question_generator = LLMChain(llm=FakeListLLM(responses=[query]), prompt=PromptTemplate.from_template(""))
+                question_generator = PromptTemplate.from_template("") | FakeListLLM(responses=[query])
 
-            chain = ConversationalRetrievalChain(
-                    retriever=retriever,
-                    question_generator=question_generator,
-                    combine_docs_chain=doc_chain,
-                    return_source_documents=True,
-                    return_generated_question=True,
-                    verbose=self.llm_verbosity,
-                    memory=self.memory if self.chat_memory else None,
+            def _format_chat_history(chat_history: List[Tuple]) -> str:
+                buffer = ""
+                for dialogue_turn in chat_history:
+                    human = "Human: " + dialogue_turn[0]
+                    ai = "Assistant: " + dialogue_turn[1]
+                    buffer += "\n" + "\n".join([human, ai])
+                return buffer
+            def refilter_docs(inputs: dict) -> List[Document]:
+                retrieved_docs = inputs["retrieved_docs"]
+                evaluations = inputs["evaluations"]
+                assert isinstance(retrieved_docs, list)
+                assert isinstance(evaluations, list)
+                assert retrieved_docs, f"No document corresponding to the query"
+                evaluations = [str(e) for e in evaluations]
+                for eval in evaluations:
+                    if eval not in ["0", "1"]:
+                        red(f"Eval not 0 nor 1: {eval}")
+                        breakpoint()
+                filtered_docs = [d for i,d in enumerate(retrieved_docs) if evaluations[i] == "1"]
+                assert filtered_docs, f"No document remained after filtering with the query"
+                return filtered_docs
+            def print_debug(inputs):
+                try:
+                    red(inputs.keys())
+                except Exception as err:
+                    red(f"Failed to print inputs: {err}")
+                breakpoint()
+                return inputs
+            rpd = RunnableLambda(print_debug)
+
+            loaded_memory = RunnablePassthrough.assign(
+                chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
+            )
+            standalone_question = {
+                            "standalone_question": {
+                                "question": lambda x: x["question"],
+                                "chat_history": lambda x: _format_chat_history(x["chat_history"]),
+                            }
+                            | self.CONDENSE_QUESTION_PROMPT
+                            | self.llm
+                            | StrOutputParser(),
+                        }
+            # answer 0 or 1 if the document is related
+            evaluate_doc_chain = (
+                ChatPromptTemplate.from_template(
+                    "Given the following question and document text, if the text is "
+                    "related to the question you answer '1', otherwise you "
+                    "answer '0'. Don't narrate, just answer the number."
+                    "\nQuestion: '{q}'"
+                    "\nDocument:\n```\n{doc}\n```")
+                | self.weakllm
+                | StrOutputParser()
+            )
+            retrieve_documents = {
+                "unfiltered_docs": itemgetter("standalone_question") | retriever,
+                "filtered_docs": (
+                    RunnablePassthrough.assign(
+                        standalone_question=itemgetter("standalone_question"),
+                        retrieved_docs=itemgetter("standalone_question") | retriever,
+                    ) | RunnablePassthrough.assign(
+                            evaluations=RunnablePassthrough.assign(
+                                doc=lambda inputs: inputs["retrieved_docs"],
+                                q=lambda inputs: [inputs["standalone_question"] for i in range(len(inputs["retrieved_docs"]))],
+                                ) | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
+                                | itemgetter("inputs")
+                                # | rpd
+                                | RunnableEach(bound=evaluate_doc_chain)
+                            ,
+                            retrieved_docs=itemgetter("retrieved_docs"),
                     )
+                    | RunnableLambda(refilter_docs)
+                    # | rpd
+                ),
+                "standalone_question": RunnablePassthrough()
+            }
+            answer_each_doc_chain = (
+                ChatPromptTemplate.from_template(
+                    "You are an assistant for question-answering tasks. "
+                    "Use the following pieces of retrieved context to answer "
+                    "the question. If the context is irrelevant, just answer "
+                    "'Irrelevant context'. Use three sentences maximum. Be "
+                    "VERY concise and use markdown formatting for easier "
+                    "reading."
+                    "\nQuestion: '{question}'"
+                    "\nContext:"
+                    "\n'''\n{context}\n'''"
+                    "\nAnswer:"
+                )
+                | self.llm
+                | StrOutputParser()
+            )
+            combine_answers = (
+                ChatPromptTemplate.from_template(
+                    "Given the following question and answers, you must "
+                    "combine the answers into one. Ignore irrelevant answers. "
+                    "Don't narrate, just do what I asked. Also use markdown "
+                    "formatting, use bullet points for enumeration etc. "
+                    "Be VERY concise but don't omit anything."
+                    "\nQuestion: '{question}'"
+                    "\nAnswers:\n```\n{intermediate_answers}\n```")
+                | self.llm
+                | StrOutputParser()
 
-            ans = chain(
-                    inputs={
-                        "question": query,
-                        },
-                    return_only_outputs=False,
-                    include_run_info=True,
+            )
+            answer = (
+                RunnablePassthrough.assign(
+                        inputs=lambda inputs: [
+                            {"context":d.page_content, "question":q}
+                            for d, q in zip(
+                                inputs["filtered_docs"],
+                                [inputs["standalone_question"]] * len(inputs["filtered_docs"])
+                            )
+                        ]
                     )
+                # | rpd
+                | {
+                    "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
+                    "question": itemgetter("standalone_question"),
+                    "filtered_docs": itemgetter("filtered_docs"),
+                    "unfiltered_docs": itemgetter("unfiltered_docs"),
+                    }
+                # | rpd
+                | {
+                    "final_answer": RunnablePassthrough.assign(
+                        question=lambda inputs: inputs["question"],
+                        intermediate_answers=lambda inputs: "\n".join(inputs["intermediate_answers"])
+                        ).pick(["question", "intermediate_answers"])
+                        | combine_answers,
+                    "intermediate_answers": itemgetter("intermediate_answers"),
+                    "question": itemgetter("question"),
+                    "filtered_docs": itemgetter("filtered_docs"),
+                    "unfiltered_docs": itemgetter("unfiltered_docs"),
+                }
+                # | rpd
+            )
+            # Now we construct the inputs for the final prompt
+            rag_chain = (
+                loaded_memory
+                | standalone_question
+                | retrieve_documents
+                | answer
+            )
 
-            docs = ans["source_documents"]
-            whi("\n\nSources:")
-            for doc in docs:
+            if self.debug:
+                yel(rag_chain.get_graph().print_ascii())
+
+            output = rag_chain.invoke({"question": query})
+
+            whi("\n\nIntermediate answers for each document:")
+            for ia, doc in zip(output["intermediate_answers"], output["filtered_docs"]):
                 whi("  * content:")
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
                 whi(f"{wrapped:>10}")
                 for k, v in doc.metadata.items():
                     yel(f"    * {k}: {v}")
+                red(f"> {ia}")
                 print("\n")
 
-            red(f"Answer:\n{ans['answer']}\n")
-            if len(docs) < self.cli_commands["top_k"]:
-                red(f"Only found {len(docs)} relevant documents")
+            red(f"Answer:\n{output['final_answer']}\n")
+            fdocs = output["filtered_docs"]
+            ufdocs = output["unfiltered_docs"]
+            if len(ufdocs) < self.cli_commands["top_k"]:
+                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM")
 
             if self.import_mode:
-                return ans["answer"]
+                return output["final_answer"]
 
-        total_cost = self.cb.total_cost
-        if total_cost == 0 and self.cb.total_tokens != 0:
-            total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
-        yel(f"Tokens used: '{self.cb.total_tokens}' (${total_cost:.5f})")
+            total_cost = self.cb.total_cost
+            if total_cost == 0 and self.cb.total_tokens != 0:
+                total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
+            yel(f"Tokens used: '{self.cb.total_tokens}' (${total_cost:.5f})")
+            wtotal_cost = self.wcb.total_cost
+            if wtotal_cost == 0 and self.wcb.total_tokens != 0:
+                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens / 1000 + self.weakllm_price[1] * self.wcb.completion_tokens / 1000
+            yel(f"WTokens used by weak model: '{self.wcb.total_tokens}' (${total_cost:.5f})")
 
 
 if __name__ == "__main__":
