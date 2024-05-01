@@ -15,7 +15,7 @@ except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
 import langchain
-from langchain.globals import set_verbose, set_debug
+from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import LLMChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
@@ -51,7 +51,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
-langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
+set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
+
 
 class DocToolsLLM:
     VERSION = "0.10"
