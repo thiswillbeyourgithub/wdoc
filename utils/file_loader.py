@@ -828,7 +828,7 @@ def load_doc(filetype, debug, task, **kwargs):
             axis=1,
         )
         cards["text"] = cards["fields_dict"].apply(
-            lambda x: "\n".join(f"{k}: {x[k]}" for k in fields if x[k])
+            lambda x: "\n".join(f"{k}: {x[k]}" for k in fields if x[k].strip())
         )
         cards = cards[~cards["text"].str.contains("[IMAGE]")]
         cards["text"] = cards["text"].apply(lambda x: x.strip())
