@@ -423,7 +423,7 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(modelname, self.modelbackend)
+        self.llm, self.callback = load_llm(modelname, self.modelbackend, temperature=0)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of

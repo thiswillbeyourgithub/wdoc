@@ -27,11 +27,17 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(modelname, backend):
+def load_llm(modelname, backend, **extra_model_args):
     """load language model"""
+    if extra_model_args is None:
+        extra_model_args = {}
     if backend == "testing":
         whi("Loading testing model")
-        llm = FakeListLLM(verbose=True, responses=[f"Fake answer n°{i}" for i in range(1, 100)])
+        llm = FakeListLLM(
+            verbose=True,
+            responses=[f"Fake answer n°{i}" for i in range(1, 100)],
+            **extra_model_args,
+        )
         callback = fakecallback
         return llm, callback
 
@@ -42,8 +48,8 @@ def load_llm(modelname, backend):
 
     llm = ChatLiteLLM(
             model_name=modelname,
-            temperature=0,
             verbose=True,
+            **extra_model_args,
             )
     callback = get_openai_callback
     return llm, callback
