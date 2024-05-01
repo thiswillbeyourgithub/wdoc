@@ -1301,7 +1301,14 @@ class DocToolsLLM:
                 | {
                     "final_answer": RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question"],
-                        intermediate_answers=lambda inputs: "\n".join(inputs["intermediate_answers"])
+                        intermediate_answers=lambda inputs: "\n".join(
+                                # remove answers deemed irrrelevant except the first one to avoid confusion the chain that combines answers
+                                [
+                                    inp
+                                    for i, inp in enumerate(inputs["intermediate_answers"])
+                                    if "Irrelevant context." not in inp and i > 0
+                                ]
+                            )
                         ).pick(["question", "intermediate_answers"])
                         | combine_answers,
                     "intermediate_answers": itemgetter("intermediate_answers"),
