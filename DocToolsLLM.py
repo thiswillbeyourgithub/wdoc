@@ -1214,7 +1214,7 @@ class DocToolsLLM:
                 temperature=0,
             )
             if not hasattr(self, "wcb"):
-                self.wcb = self.weakcallback().__enter__()  # for token counting
+                self.wcb = weakcallback().__enter__()  # for token counting
             evaluate_doc_chain = (
                 ChatPromptTemplate.from_template(
                     "Given the following question and document text, if the text is "
@@ -1347,7 +1347,7 @@ class DocToolsLLM:
             wtotal_cost = self.wcb.total_cost
             if wtotal_cost == 0 and self.wcb.total_tokens != 0:
                 wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens / 1000 + self.weakllm_price[1] * self.wcb.completion_tokens / 1000
-            yel(f"WTokens used by weak model: '{self.wcb.total_tokens}' (${total_cost:.5f})")
+            yel(f"Tokens used by weak model: '{self.wcb.total_tokens}' (${wtotal_cost:.5f})")
 
 
 if __name__ == "__main__":
