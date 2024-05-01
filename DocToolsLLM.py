@@ -936,13 +936,6 @@ class DocToolsLLM:
 
     def prepare_query_task(self):
         # load embeddings for querying
-        self.weakllm, self.weakcallback = load_llm(
-            self.weakmodelname,
-            self.weakmodelbackend,
-            max_tokens=1,
-            temperature=0,
-        )
-        self.wcb = self.weakcallback().__enter__()  # for token counting
         self.loaded_embeddings, self.embeddings = load_embeddings(
                 embed_model=self.embed_model,
                 loadfrom=self.loadfrom,
@@ -1214,6 +1207,14 @@ class DocToolsLLM:
                             | StrOutputParser(),
                         }
             # answer 0 or 1 if the document is related
+            eval_llm, weakcallback = load_llm(
+                self.weakmodelname,
+                self.weakmodelbackend,
+                max_tokens=1,
+                temperature=0,
+            )
+            if not hasattr(self, "wcb"):
+                self.wcb = self.weakcallback().__enter__()  # for token counting
             evaluate_doc_chain = (
                 ChatPromptTemplate.from_template(
                     "Given the following question and document text, if the text is "
@@ -1221,7 +1222,7 @@ class DocToolsLLM:
                     "answer '0'. Don't narrate, just answer the number."
                     "\nQuestion: '{q}'"
                     "\nDocument:\n```\n{doc}\n```")
-                | self.weakllm
+                | eval_llm
                 | StrOutputParser()
             )
             retrieve_documents = {
