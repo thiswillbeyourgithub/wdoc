@@ -136,6 +136,11 @@ class DocToolsLLM:
             If 'chatgpt' or "gpt3": will be set to "openai/gpt-3.5-turbo-0125"
             If 'gpt4': will be set to "openai/gpt-4-turbo-2024-04-09"
 
+        --weakmodelname str, default openai/gpt-3.5-turbo-0125
+            Cheaper and quicker model than modelname. Used for intermedaite
+            steps in the RAG.
+            Not used for other tasks so can be set to None to be disabled.
+
         --embed_model str, default "openai/text-embedding-3-small"
             Name of the model to use for embeddings. Must contain a '/'
             Everything before the slash is the backend and everything
@@ -326,6 +331,10 @@ class DocToolsLLM:
         assert isinstance(filetype, str), "filetype must be a string"
         if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
+        if task in ["query", "search", "summarize_then_query"]:
+            assert weakmodelname is not None, "weakmodelname can't be None if doing RAG"
+        else:
+            weakmodelname = None
         assert (task == "summarize_link_file" and filetype == "link_file"
                 ) or (task != "summarize_link_file" and filetype != "link_file"
                         ), "summarize_link_file must be used with filetype link_file"
@@ -357,19 +366,33 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        # storing as attributes
         if modelname in ["chatgpt", "gpt3"]:
             modelname = "openai/gpt-3.5-turbo-0125"
         elif modelname in ["gpt4"]:
             modelname = "openai/gpt-4-turbo-2024-04-09"
-        assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
+        assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+
+        if weakmodelname in ["chatgpt", "gpt3"]:
+            weakmodelname = "openai/gpt-3.5-turbo-0125"
+        elif weakmodelname in ["gpt4"]:
+            weakmodelname = "openai/gpt-4-turbo-2024-04-09"
+        assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+
+        if "testing" in modelname and "testing" not in weakmodelname:
+            weakmodelname = "testing"
+            red(f"modelname is 'testing' so setting weakmodelname to 'testing' too")
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+
+        # storing as attributes
         self.modelbackend = modelname.split("/")[0].lower()
         self.modelname = modelname
+        if weakmodelname is not None:
+            self.weakmodelbackend = weakmodelname.split("/")[0].lower()
+            self.weakmodelname = weakmodelname
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
@@ -394,6 +417,14 @@ class DocToolsLLM:
         else:
             red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
             self.llm_price = [0.0005, 0.0015]
+        if weakmodelname is not None:
+            if "gpt-3.5" in self.weakmodelname and "turbo" in self.weakmodelname:
+                self.weakllm_price = [0.0005, 0.0015]
+            elif "gpt-4" in self.weakmodelname and "preview" in self.weakmodelname:
+                self.weakllm_price = [0.01, 0.03]
+            else:
+                red(f"Don't know the price of the weakmodel so setting it to gpt-3.5-turbo value")
+                self.weakllm_price = [0.0005, 0.0015]
 
         global ntfy
         if ntfy_url:
@@ -903,6 +934,13 @@ class DocToolsLLM:
 
     def prepare_query_task(self):
         # load embeddings for querying
+        self.weakllm, self.weakcallback = load_llm(
+            self.weakmodelname,
+            self.weakmodelbackend,
+            max_tokens=1,
+            temperature=0,
+        )
+        self.wcb = self.weakcallback().__enter__()  # for token counting
         self.loaded_embeddings, self.embeddings = load_embeddings(
                 embed_model=self.embed_model,
                 loadfrom=self.loadfrom,
