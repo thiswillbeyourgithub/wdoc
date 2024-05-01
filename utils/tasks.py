@@ -1,7 +1,7 @@
 from textwrap import indent
 from tqdm import tqdm
 
-from langchain import LLMChain
+# from langchain import LLMChain
 from langchain.chains.summarize import load_summarize_chain
 from langchain import PromptTemplate
 from langchain.prompts.chat import (
