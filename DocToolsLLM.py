@@ -1270,6 +1270,10 @@ class DocToolsLLM:
                     "Don't narrate, just do what I asked. Also use markdown "
                     "formatting, use bullet points for enumeration etc. "
                     "Be VERY concise but don't omit anything."
+                    "\nAbove all: no answers are relevant to the question, "
+                    "you MUST begin your answer by: 'OPINION:' followed by "
+                    "your own knowledge to answer the question so that I "
+                    "know that the answer is coming from you!"
                     "\nQuestion: '{question}'"
                     "\nAnswers:\n```\n{intermediate_answers}\n```")
                 | self.llm
