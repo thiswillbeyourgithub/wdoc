@@ -1240,7 +1240,7 @@ class DocToolsLLM:
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
-                                    if "IRRELEVANT" not in inp
+                                    if not re.search(r"\bIRRELEVANT\b", inp)
                                 ]
                             )
                         ).pick(["question", "intermediate_answers"])
