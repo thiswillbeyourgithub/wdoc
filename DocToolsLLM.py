@@ -41,7 +41,7 @@ from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect
-from utils.prompts import condense_question
+from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
@@ -959,7 +959,6 @@ class DocToolsLLM:
                 "relevancy": 0.1,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
-        self.CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
 
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.kwargs or "filter_content" in self.kwargs:
@@ -1160,7 +1159,7 @@ class DocToolsLLM:
 
             # reformulate question if needed
             if self.condense_question:
-                question_generator = self.CONDENSE_QUESTION_PROMPT | self.llm
+                question_generator = PromptTemplate.from_template(CONDENSE_QUESTION) | self.llm
             else:
                 question_generator = PromptTemplate.from_template("") | FakeListLLM(responses=[query])
 
@@ -1202,7 +1201,7 @@ class DocToolsLLM:
                                 "question": lambda x: x["question"],
                                 "chat_history": lambda x: _format_chat_history(x["chat_history"]),
                             }
-                            | self.CONDENSE_QUESTION_PROMPT
+                            | PromptTemplate.from_template(CONDENSE_QUESTION)
                             | self.llm
                             | StrOutputParser(),
                         }
@@ -1216,12 +1215,7 @@ class DocToolsLLM:
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
             evaluate_doc_chain = (
-                ChatPromptTemplate.from_template(
-                    "Given the following question and document text, if the text is "
-                    "related to the question you answer '1', otherwise you "
-                    "answer '0'. Don't narrate, just answer the number."
-                    "\nQuestion: '{q}'"
-                    "\nDocument:\n```\n{doc}\n```")
+                ChatPromptTemplate.from_template(EVALUATE_DOC)
                 | eval_llm
                 | StrOutputParser()
             )
@@ -1248,35 +1242,12 @@ class DocToolsLLM:
                 "standalone_question": RunnablePassthrough()
             }
             answer_each_doc_chain = (
-                ChatPromptTemplate.from_template(
-                    "You are an assistant for question-answering tasks. "
-                    "Use the following pieces of retrieved context to answer "
-                    "the question. If the context is irrelevant, just answer "
-                    "'IRRELEVANT' and nothing else. Use three sentences maximum. Be "
-                    "VERY concise and use markdown formatting for easier "
-                    "reading."
-                    "\nQuestion: '{question}'"
-                    "\nContext:"
-                    "\n'''\n{context}\n'''"
-                    "\nAnswer:"
-                )
+                ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
                 | self.llm
                 | StrOutputParser()
             )
             combine_answers = (
-                ChatPromptTemplate.from_template(
-                    "Given the following question and answers, you must "
-                    "combine the answers into one. Ignore irrelevant answers. "
-                    "Don't narrate, just do what I asked. Also use markdown "
-                    "formatting, use bullet points for enumeration etc. "
-                    "Be VERY concise but don't omit anything. "
-                    "Answer in the same language as the question."
-                    "\nAbove all: no answers are relevant to the question, "
-                    "you MUST begin your answer by: 'OPINION:' followed by "
-                    "your own knowledge to answer the question so that I "
-                    "know that the answer is coming from you!"
-                    "\nQuestion: '{question}'"
-                    "\nAnswers:\n```\n{intermediate_answers}\n```")
+                ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
                 | self.llm
                 | StrOutputParser()
 

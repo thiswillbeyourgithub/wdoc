@@ -77,7 +77,7 @@ Text section:
 # Formatted summary:
 # """).strip()
 
-condense_question = dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+CONDENSE_QUESTION = dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
 Chat History:
 {chat_history}
@@ -85,3 +85,40 @@ Chat History:
 Follow Up Input: {question}
 
 Standalone question:""")
+
+# RAG
+EVALUATE_DOC = """Given the following question and document text, if the text is
+related to the question you answer '1', otherwise you
+answer '0'. Don't narrate, just answer the number.
+Question: '{q}'
+Document:
+```
+{doc}
+```
+Answer:"""
+
+ANSWER_ONE_DOC = """You are an assistant for question-answering tasks.
+Use the following pieces of retrieved context to answer the question.
+If the context is irrelevant, just answer 'IRRELEVANT' and nothing else.
+Use three sentences maximum.
+Be VERY concise and use markdown formatting for easier reading.
+Question: '{question}'
+Context:
+'''
+{context}
+'''
+Answer:"""
+
+COMBINE_INTERMEDIATE_ANSWERS = """Given the following statements, you must answer a given question.
+Ignore irrelevant statements. Don't narrate, just do what I asked.
+Use markdown formatting, especially bullet points for enumeration etc.
+Be VERY concise but don't omit anything from the answers.
+Use the same language as the question.
+Above all: if the statements are not useful to answer the question you MUST begin your answer by: 'OPINION:' followed by your answer based on your own knowledge so that I know that the answer is coming from you!
+
+Question: `{question}`
+Statements:
+```
+{intermediate_answers}
+```
+Answer:"""
