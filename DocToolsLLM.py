@@ -1158,7 +1158,6 @@ class DocToolsLLM:
                             )
 
         else:
-
             if self.condense_question:
                 loaded_memory = RunnablePassthrough.assign(
                     chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
