@@ -1059,8 +1059,8 @@ class DocToolsLLM:
                         relevancy=self.cli_commands["relevancy"],
                         filter=self.query_filter,
 
-                        embeddings=self.loaded_embeddings,
-                        embeddings_engine=self.embeddings,
+                        embeddings=self.embeddings,
+                        loaded_embeddings=self.loaded_embeddings,
                         )
                     )
 
