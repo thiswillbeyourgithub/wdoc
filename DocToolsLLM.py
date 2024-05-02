@@ -1288,7 +1288,7 @@ class DocToolsLLM:
                 red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM")
 
             if self.import_mode:
-                return output["final_answer"]
+                return output
 
             total_cost = self.cb.total_cost
             if total_cost == 0 and self.cb.total_tokens != 0:
