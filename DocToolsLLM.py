@@ -1239,7 +1239,11 @@ class DocToolsLLM:
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
-                                    if not re.search(r"\bIRRELEVANT\b", inp)
+                                    if (
+                                        ((not re.search(r"\bIRRELEVANT\b", inp)) and len(inp) < len("IRRELEVANT") * 2)
+                                        or
+                                        len(inp) >= len("IRRELEVANT") * 2
+                                    )
                                 ]
                             )
                         ).pick(["question", "intermediate_answers"])
