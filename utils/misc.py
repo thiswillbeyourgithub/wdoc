@@ -1,3 +1,4 @@
+from typing import Tuple, List
 import urllib
 import json
 from datetime import timedelta
@@ -6,6 +7,10 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 import hashlib
 from joblib import Memory
+
+from langchain.docstore.document import Document
+from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import chain
 
 from .logger import red
 
@@ -68,3 +73,45 @@ def ankiconnect(action, **params):
     if response['error'] is not None:
         raise Exception(response['error'])
     return response['result']
+
+
+def format_chat_history(chat_history: List[Tuple]) -> str:
+    "to load the chat history into the RAG chain"
+    buffer = ""
+    for dialogue_turn in chat_history:
+        human = "Human: " + dialogue_turn[0]
+        ai = "Assistant: " + dialogue_turn[1]
+        buffer += "\n" + "\n".join([human, ai])
+    return buffer
+
+
+def refilter_docs(inputs: dict) -> List[Document]:
+    "filter documents find via RAG based on if the weak model answered 0 or 1"
+    retrieved_docs = inputs["retrieved_docs"]
+    evaluations = inputs["evaluations"]
+    assert isinstance(retrieved_docs, list)
+    assert isinstance(evaluations, list)
+    assert retrieved_docs, "No document corresponding to the query"
+    evaluations = [str(e) for e in evaluations]
+    for eval in evaluations:
+        if eval not in ["0", "1"]:
+            red(f"Eval not 0 nor 1: {eval}")
+            breakpoint()
+    filtered_docs = [
+        d
+        for i, d in enumerate(retrieved_docs)
+        if evaluations[i] == "1"
+    ]
+    assert filtered_docs, "No document remained after filtering with the query"
+    return filtered_docs
+
+
+@chain
+def debug_chain(inputs):
+    "use it between | pipes | in a chain to open the debugger"
+    try:
+        red(inputs.keys())
+    except Exception as err:
+        red(f"Failed to print inputs: {err}")
+    breakpoint()
+    return inputs

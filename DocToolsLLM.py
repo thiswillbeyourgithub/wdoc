@@ -40,7 +40,7 @@ from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
-from utils.misc import ankiconnect
+from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain
 from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
@@ -1163,43 +1163,13 @@ class DocToolsLLM:
             else:
                 question_generator = PromptTemplate.from_template("") | FakeListLLM(responses=[query])
 
-            def _format_chat_history(chat_history: List[Tuple]) -> str:
-                buffer = ""
-                for dialogue_turn in chat_history:
-                    human = "Human: " + dialogue_turn[0]
-                    ai = "Assistant: " + dialogue_turn[1]
-                    buffer += "\n" + "\n".join([human, ai])
-                return buffer
-            def refilter_docs(inputs: dict) -> List[Document]:
-                retrieved_docs = inputs["retrieved_docs"]
-                evaluations = inputs["evaluations"]
-                assert isinstance(retrieved_docs, list)
-                assert isinstance(evaluations, list)
-                assert retrieved_docs, f"No document corresponding to the query"
-                evaluations = [str(e) for e in evaluations]
-                for eval in evaluations:
-                    if eval not in ["0", "1"]:
-                        red(f"Eval not 0 nor 1: {eval}")
-                        breakpoint()
-                filtered_docs = [d for i,d in enumerate(retrieved_docs) if evaluations[i] == "1"]
-                assert filtered_docs, f"No document remained after filtering with the query"
-                return filtered_docs
-            def print_debug(inputs):
-                try:
-                    red(inputs.keys())
-                except Exception as err:
-                    red(f"Failed to print inputs: {err}")
-                breakpoint()
-                return inputs
-            rpd = RunnableLambda(print_debug)
-
             loaded_memory = RunnablePassthrough.assign(
                 chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
             )
             standalone_question = {
                             "standalone_question": {
                                 "question": lambda x: x["question"],
-                                "chat_history": lambda x: _format_chat_history(x["chat_history"]),
+                                "chat_history": lambda x: format_chat_history(x["chat_history"]),
                             }
                             | PromptTemplate.from_template(CONDENSE_QUESTION)
                             | self.llm
@@ -1231,13 +1201,11 @@ class DocToolsLLM:
                                 q=lambda inputs: [inputs["standalone_question"] for i in range(len(inputs["retrieved_docs"]))],
                                 ) | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
                                 | itemgetter("inputs")
-                                # | rpd
                                 | RunnableEach(bound=evaluate_doc_chain)
                             ,
                             retrieved_docs=itemgetter("retrieved_docs"),
                     )
                     | RunnableLambda(refilter_docs)
-                    # | rpd
                 ),
                 "standalone_question": RunnablePassthrough()
             }
@@ -1250,7 +1218,6 @@ class DocToolsLLM:
                 ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
                 | self.llm
                 | StrOutputParser()
-
             )
             answer = (
                 RunnablePassthrough.assign(
@@ -1262,14 +1229,12 @@ class DocToolsLLM:
                             )
                         ]
                     )
-                # | rpd
                 | {
                     "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
                     "question": itemgetter("standalone_question"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     }
-                # | rpd
                 | {
                     "final_answer": RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question"],
@@ -1288,7 +1253,6 @@ class DocToolsLLM:
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                 }
-                # | rpd
             )
             # Now we construct the inputs for the final prompt
             rag_chain = (
