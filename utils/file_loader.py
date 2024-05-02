@@ -1119,27 +1119,28 @@ def load_doc(filetype, debug, task, **kwargs):
         else:
             title = kwargs["title"]
 
-        # try with playwright
-        try:
-            loader = PlaywrightURLLoader(
-                urls=[path], remove_selectors=["header", "footer"]
-            )
-            docs = text_splitter.transform_documents(loader.load())
-            assert docs, f"Empty docs when using playwright"
-            if not title and "title" in docs[0].metadata:
-                title = docs[0].metadata["title"]
-            check_docs_tkn_length(docs, path)
+        loaded_success = False
+        if not loaded_success:
+            try:
+                loader = PlaywrightURLLoader(
+                    urls=[path], remove_selectors=["header", "footer"]
+                )
+                docs = text_splitter.transform_documents(loader.load())
+                assert docs, "Empty docs when using playwright"
+                if not title and "title" in docs[0].metadata:
+                    title = docs[0].metadata["title"]
+                check_docs_tkn_length(docs, path)
+                loaded_success = True
+            except Exception as err:
+                red(
+                    f"Exception when using playwright to parse url: '{err}'"
+                )
 
-        # try with selenium firefox
-        except Exception as err:
-            red(
-                f"Exception when using playwright to parse text: '{err}'\nUsing selenium firefox as fallback"
-            )
-            time.sleep(1)
+        if not loaded_success:
             try:
                 loader = SeleniumURLLoader(urls=[path], browser="firefox")
                 docs = text_splitter.transform_documents(loader.load())
-                assert docs, f"Empty docs when using selenium firefox"
+                assert docs, "Empty docs when using selenium firefox"
                 if (
                     not title
                     and "title" in docs[0].metadata
@@ -1147,64 +1148,71 @@ def load_doc(filetype, debug, task, **kwargs):
                 ):
                     title = docs[0].metadata["title"]
                 check_docs_tkn_length(docs, path)
-
-            # try with selenium chrome
+                loaded_success = True
             except Exception as err:
                 red(
-                    f"Exception when using selenium firefox to parse text: '{err}'\nUsing selenium chrome as fallback"
+                    f"Exception when using selenium firefox to parse url: '{err}'"
                 )
-                time.sleep(1)
-                try:
-                    loader = SeleniumURLLoader(urls=[path], browser="chrome")
-                    docs = text_splitter.transform_documents(loader.load())
-                    assert docs, f"Empty docs when using selenium chrome"
+
+        if not loaded_success:
+            try:
+                loader = SeleniumURLLoader(urls=[path], browser="chrome")
+                docs = text_splitter.transform_documents(loader.load())
+                assert docs, "Empty docs when using selenium chrome"
+                if (
+                    not title
+                    and "title" in docs[0].metadata
+                    and docs[0].metadata["title"] != "No title found."
+                ):
+                    title = docs[0].metadata["title"]
+                check_docs_tkn_length(docs, path)
+                loaded_success = True
+            except Exception as err:
+                red(
+                    f"Exception when using selenium chrome to parse url: '{err}'\nUsing goose as fallback"
+                )
+
+        if not loaded_success:
+            try:
+                g = Goose()
+                article = g.extract(url=path)
+                text = article.cleaned_text
+                texts = text_splitter.split_text(text)
+                docs = [Document(page_content=t) for t in texts]
+                assert docs, "Empty docs when using goose"
+                if not title:
                     if (
-                        not title
-                        and "title" in docs[0].metadata
-                        and docs[0].metadata["title"] != "No title found."
+                        "title" in docs[0].metadata
+                        and docs[0].metadata["title"]
                     ):
                         title = docs[0].metadata["title"]
-                    check_docs_tkn_length(docs, path)
+                    elif article.title:
+                        title = article.title
+                check_docs_tkn_length(docs, path)
+                loaded_success = True
+            except Exception as err:
+                red(
+                    f"Exception when using goose to parse url: '{err}'"
+                )
 
-                # try with goose
-                except Exception as err:
-                    red(
-                        f"Exception when using selenium chrome to parse text: '{err}'\nUsing goose as fallback"
-                    )
-                    time.sleep(1)
-                    try:
-                        g = Goose()
-                        article = g.extract(url=path)
-                        text = article.cleaned_text
-                        texts = text_splitter.split_text(text)
-                        docs = [Document(page_content=t) for t in texts]
-                        assert docs, f"Empty docs when using goose"
-                        if not title:
-                            if (
-                                "title" in docs[0].metadata
-                                and docs[0].metadata["title"]
-                            ):
-                                title = docs[0].metadata["title"]
-                            elif article.title:
-                                title = article.title
-                        check_docs_tkn_length(docs, path)
+        if not loaded_success:
+            try:
+                loader = WebBaseLoader(path, raise_for_status=True)
+                docs = text_splitter.transform_documents(loader.load())
+                assert docs, "Empty docs when using html"
+                if (
+                    not title
+                    and "title" in docs[0].metadata
+                    and docs[0].metadata["title"]
+                ):
+                    title = docs[0].metadata["title"]
+                check_docs_tkn_length(docs, path)
+                loaded_success = True
+            except Exception as err:
+                red(
+                    f"Exception when using html as LAST RESORT to parse url: '{err}'"
+                )
 
-                    # try with html
-                    except Exception as err:
-                        red(
-                            f"Exception when using goose to parse text: '{err}'\nUsing html as fallback"
-                        )
-                        time.sleep(1)
-                        loader = WebBaseLoader(path, raise_for_status=True)
-                        docs = text_splitter.transform_documents(loader.load())
-                        assert docs, f"Empty docs when using html"
-                        if (
-                            not title
-                            and "title" in docs[0].metadata
-                            and docs[0].metadata["title"]
-                        ):
-                            title = docs[0].metadata["title"]
-                        check_docs_tkn_length(docs, path)
 
         # last resort, try to get the title from the most basic loader
         if not title:
