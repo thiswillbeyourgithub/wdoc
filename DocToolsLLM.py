@@ -1187,23 +1187,23 @@ class DocToolsLLM:
             )
             retrieve_documents = {
                 "unfiltered_docs": itemgetter("question") | retriever,
+                "question": itemgetter("question")
+            }
+            refilter_documents = {
                 "filtered_docs": (
-                    RunnablePassthrough.assign(
-                        question=itemgetter("question"),
-                        retrieved_docs=itemgetter("question") | retriever,
-                    ) | RunnablePassthrough.assign(
+                        RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
-                                doc=lambda inputs: inputs["retrieved_docs"],
-                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["retrieved_docs"]))],
-                                ) | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
+                            doc=lambda inputs: inputs["unfiltered_docs"],
+                            q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
+                            )
+                                | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
                                 | itemgetter("inputs")
-                                | RunnableEach(bound=evaluate_doc_chain)
-                            ,
-                            retrieved_docs=itemgetter("retrieved_docs"),
+                                | RunnableEach(bound=evaluate_doc_chain),
                     )
                     | RunnableLambda(refilter_docs)
                 ),
-                "question": RunnablePassthrough()
+                "unfiltered_docs": itemgetter("unfiltered_docs"),
+                "question": itemgetter("question")
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
@@ -1256,11 +1256,13 @@ class DocToolsLLM:
                     loaded_memory
                     | standalone_question
                     | retrieve_documents
+                    | refilter_documents
                     | answer
                 )
             else:
                 rag_chain = (
                     retrieve_documents
+                    | refilter_documents
                     | answer
                 )
 

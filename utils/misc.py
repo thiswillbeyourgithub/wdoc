@@ -87,11 +87,11 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
 
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the weak model answered 0 or 1"
-    retrieved_docs = inputs["retrieved_docs"]
+    unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
-    assert isinstance(retrieved_docs, list)
+    assert isinstance(unfiltered_docs, list)
     assert isinstance(evaluations, list)
-    assert retrieved_docs, "No document corresponding to the query"
+    assert unfiltered_docs, "No document corresponding to the query"
     evaluations = [str(e) for e in evaluations]
     for eval in evaluations:
         if eval not in ["0", "1"]:
@@ -99,7 +99,7 @@ def refilter_docs(inputs: dict) -> List[Document]:
             breakpoint()
     filtered_docs = [
         d
-        for i, d in enumerate(retrieved_docs)
+        for i, d in enumerate(unfiltered_docs)
         if evaluations[i] == "1"
     ]
     assert filtered_docs, "No document remained after filtering with the query"
