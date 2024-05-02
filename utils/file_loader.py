@@ -1051,12 +1051,19 @@ def load_doc(filetype, debug, task, **kwargs):
             meta = page_props.copy()
             content = ""  # and remove the metadata from the page content
             for b in grou:
-                cont = dedent(b.content)
-                # note: should it be dedented? that saves a lot of token
+                cont = b.content
                 for k, v in b.get_properties().items():
                     meta[k] = v
                     cont = cont.replace(f"{k}:: {v}", "").strip()
-                cont = "\n".join(cont.splitlines()).strip()
+                cont = dedent(cont)
+                # note: should it be dedented? that saves a lot of token
+                # use tabs instead of spaces to save tokens and avoid confusion the LLM
+                lines = cont.splitlines()
+                lines = [li.expandtabs(tabsize=2) for li in lines if li.strip()]
+                lines = [li.replace("  ", "\t") for li in lines]
+                cont = "\n".join(lines)
+                if cont.count("\t") * 2 ==  cont.count("\t\t"):
+                    cont = cont.replace("\t\t", "\t")
                 content += "\n" + cont
 
             doc = Document(
