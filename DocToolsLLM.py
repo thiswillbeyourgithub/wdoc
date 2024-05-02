@@ -1157,24 +1157,19 @@ class DocToolsLLM:
 
         else:
 
-            # reformulate question if needed
             if self.condense_question:
-                question_generator = PromptTemplate.from_template(CONDENSE_QUESTION) | self.llm
-            else:
-                question_generator = PromptTemplate.from_template("") | FakeListLLM(responses=[query])
-
-            loaded_memory = RunnablePassthrough.assign(
-                chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
-            )
-            standalone_question = {
-                            "standalone_question": {
-                                "question": lambda x: x["question"],
-                                "chat_history": lambda x: format_chat_history(x["chat_history"]),
+                loaded_memory = RunnablePassthrough.assign(
+                    chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
+                )
+                standalone_question = {
+                                "question": {
+                                    "question": lambda x: x["question"],
+                                    "chat_history": lambda x: format_chat_history(x["chat_history"]),
+                                }
+                                | PromptTemplate.from_template(CONDENSE_QUESTION)
+                                | self.llm
+                                | StrOutputParser(),
                             }
-                            | PromptTemplate.from_template(CONDENSE_QUESTION)
-                            | self.llm
-                            | StrOutputParser(),
-                        }
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
                 self.weakmodelname,
@@ -1190,15 +1185,15 @@ class DocToolsLLM:
                 | StrOutputParser()
             )
             retrieve_documents = {
-                "unfiltered_docs": itemgetter("standalone_question") | retriever,
+                "unfiltered_docs": itemgetter("question") | retriever,
                 "filtered_docs": (
                     RunnablePassthrough.assign(
-                        standalone_question=itemgetter("standalone_question"),
-                        retrieved_docs=itemgetter("standalone_question") | retriever,
+                        question=itemgetter("question"),
+                        retrieved_docs=itemgetter("question") | retriever,
                     ) | RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
                                 doc=lambda inputs: inputs["retrieved_docs"],
-                                q=lambda inputs: [inputs["standalone_question"] for i in range(len(inputs["retrieved_docs"]))],
+                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["retrieved_docs"]))],
                                 ) | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
                                 | itemgetter("inputs")
                                 | RunnableEach(bound=evaluate_doc_chain)
@@ -1207,7 +1202,7 @@ class DocToolsLLM:
                     )
                     | RunnableLambda(refilter_docs)
                 ),
-                "standalone_question": RunnablePassthrough()
+                "question": RunnablePassthrough()
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
@@ -1225,13 +1220,13 @@ class DocToolsLLM:
                             {"context":d.page_content, "question":q}
                             for d, q in zip(
                                 inputs["filtered_docs"],
-                                [inputs["standalone_question"]] * len(inputs["filtered_docs"])
+                                [inputs["question"]] * len(inputs["filtered_docs"])
                             )
                         ]
                     )
                 | {
                     "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
-                    "question": itemgetter("standalone_question"),
+                    "question": itemgetter("question"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     }
@@ -1255,12 +1250,18 @@ class DocToolsLLM:
                 }
             )
             # Now we construct the inputs for the final prompt
-            rag_chain = (
-                loaded_memory
-                | standalone_question
-                | retrieve_documents
-                | answer
-            )
+            if self.condense_question:
+                rag_chain = (
+                    loaded_memory
+                    | standalone_question
+                    | retrieve_documents
+                    | answer
+                )
+            else:
+                rag_chain = (
+                    retrieve_documents
+                    | answer
+                )
 
             if self.debug:
                 yel(rag_chain.get_graph().print_ascii())
