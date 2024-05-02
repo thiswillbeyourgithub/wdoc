@@ -76,7 +76,7 @@ class DocToolsLLM:
         saveas=".cache/latest_docs_and_embeddings",
         loadfrom=None,
 
-        top_k=10,
+        top_k=50,
         query_retrievers="hyde_default",
         n_recursive_summary=0,
 
@@ -169,8 +169,10 @@ class DocToolsLLM:
         --loadfrom str, default None
             path to the file saved using --saveas
 
-        --top_k int, default 10
-            number of chunks to look for when querying
+        --top_k int, default 50
+            number of chunks to look for when querying. It is high because the
+            weak model is used to refilter the document after the embeddings
+            first pass.
 
         --query_retrievers: str, default 'hyde_default'
             must be a string that specifies which retriever will be used for
