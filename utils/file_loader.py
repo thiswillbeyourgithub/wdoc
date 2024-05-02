@@ -1122,6 +1122,24 @@ def load_doc(filetype, debug, task, **kwargs):
         loaded_success = False
         if not loaded_success:
             try:
+                loader = WebBaseLoader("https://r.jina.ai/" + path, raise_for_status=True)
+                docs = text_splitter.transform_documents(loader.load())
+                assert docs, "Empty docs when using jina reader"
+                if (
+                    not title
+                    and "title" in docs[0].metadata
+                    and docs[0].metadata["title"]
+                ):
+                    title = docs[0].metadata["title"]
+                check_docs_tkn_length(docs, path)
+                loaded_success = True
+            except Exception as err:
+                red(
+                    f"Exception when using jina reader to parse url: '{err}'"
+                )
+
+        if not loaded_success:
+            try:
                 loader = PlaywrightURLLoader(
                     urls=[path], remove_selectors=["header", "footer"]
                 )
