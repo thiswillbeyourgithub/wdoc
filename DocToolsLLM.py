@@ -1192,12 +1192,15 @@ class DocToolsLLM:
                 "filtered_docs": (
                         RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
-                            doc=lambda inputs: inputs["unfiltered_docs"],
-                            q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
-                            )
-                                | RunnablePassthrough.assign(inputs=lambda inputs: [ {"doc":d.page_content, "q":q} for d, q in zip(inputs["doc"], inputs["q"])])
+                                doc=lambda inputs: inputs["unfiltered_docs"],
+                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
+                                )
+                            | RunnablePassthrough.assign(
+                                inputs=lambda inputs: [
+                                    {"doc":d.page_content, "q":q}
+                                    for d, q in zip(inputs["doc"], inputs["q"])])
                                 | itemgetter("inputs")
-                                | RunnableEach(bound=evaluate_doc_chain),
+                                | RunnableEach(bound=evaluate_doc_chain)
                     )
                     | RunnableLambda(refilter_docs)
                 ),
