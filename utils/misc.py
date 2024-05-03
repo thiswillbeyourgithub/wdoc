@@ -95,12 +95,12 @@ def refilter_docs(inputs: dict) -> List[Document]:
     evaluations = [str(e) for e in evaluations]
     for eval in evaluations:
         if eval not in ["0", "1"]:
-            red(f"Eval not 0 nor 1: {eval}")
+            red(f"Eval not 0 nor 1 so keeping the doc: '{eval}'")
             breakpoint()
     filtered_docs = [
         d
         for i, d in enumerate(unfiltered_docs)
-        if evaluations[i] == "1"
+        if evaluations[i] != "0"
     ]
     assert filtered_docs, "No document remained after filtering with the query"
     return filtered_docs
