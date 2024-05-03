@@ -63,8 +63,10 @@ class DocToolsLLM:
     def __init__(
         self,
         modelname="openai/gpt-3.5-turbo-0125",
+        # modelname="mistral/mistral-large-latest",
         # modelname="openai/gpt-4-turbo-2024-04-09",
         weakmodelname="openai/gpt-3.5-turbo-0125",
+        # weakmodelname="mistral/open-mixtral-8x7b",
         task="query",
         query=None,
         filetype="infer",
