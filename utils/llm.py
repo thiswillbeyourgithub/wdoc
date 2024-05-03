@@ -38,7 +38,7 @@ def load_llm(modelname, backend, **extra_model_args):
         return llm, callback
 
     whi("Loading model via litellm")
-    if not (f"{backend.upper()}_API_KEY" in os.environ or os.environ[f"{backend.upper()}_API_KEY"]):
+    if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
         os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
 
