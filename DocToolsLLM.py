@@ -1055,7 +1055,7 @@ class DocToolsLLM:
                         query=query,
                         filetype=self.filetype,
 
-                        llm=self.llm,
+                        llm=self.llm.with_config({"callbacks": [self.cb]}),
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
                         filter=self.query_filter,
@@ -1169,7 +1169,7 @@ class DocToolsLLM:
                                     "chat_history": lambda x: format_chat_history(x["chat_history"]),
                                 }
                                 | PromptTemplate.from_template(CONDENSE_QUESTION)
-                                | self.llm
+                                | self.llm.with_config({"callbacks": [self.cb]})
                                 | StrOutputParser(),
                             }
             # answer 0 or 1 if the document is related
@@ -1197,7 +1197,7 @@ class DocToolsLLM:
                 | {"prompt": RunnablePassthrough()}
                 | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
                 | itemgetter("prompts")
-                | (eval_llm | EvalParser()).map()
+                | (eval_llm.with_config({"callbacks": [self.wcb]}) | EvalParser()).map()
             )
 
             retrieve_documents = {
@@ -1225,12 +1225,12 @@ class DocToolsLLM:
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
-                | self.llm
+                | self.llm.with_config({"callbacks": [self.cb]})
                 | StrOutputParser()
             )
             combine_answers = (
                 ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
-                | self.llm
+                | self.llm.with_config({"callbacks": [self.cb]})
                 | StrOutputParser()
             )
             answer = (
