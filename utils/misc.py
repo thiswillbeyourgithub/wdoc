@@ -89,14 +89,14 @@ def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the weak model answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
-    assert isinstance(unfiltered_docs, list)
-    assert isinstance(evaluations, list)
+    assert isinstance(unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
+    assert isinstance(evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
+    assert len(unfiltered_docs) == len(evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
     assert unfiltered_docs, "No document corresponding to the query"
     evaluations = [str(e) for e in evaluations]
     for eval in evaluations:
         if eval not in ["0", "1"]:
             red(f"Eval not 0 nor 1 so keeping the doc: '{eval}'")
-            breakpoint()
     filtered_docs = [
         d
         for i, d in enumerate(unfiltered_docs)
