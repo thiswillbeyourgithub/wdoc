@@ -1,4 +1,3 @@
-from typing import List, Tuple
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -24,7 +23,6 @@ from langchain.retrievers.document_compressors import (
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
-from langchain_community.llms import FakeListLLM
 from langchain.cache import SQLiteCache
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
@@ -46,7 +44,7 @@ from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables.base import RunnableEach
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers.string import StrOutputParser
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -1177,6 +1175,7 @@ class DocToolsLLM:
                 self.weakmodelbackend,
                 max_tokens=1,
                 temperature=0,
+                n=1,
             )
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting

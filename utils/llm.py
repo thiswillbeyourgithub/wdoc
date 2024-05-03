@@ -3,13 +3,9 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
-
-import langchain
-from langchain_community.llms import GPT4All, FakeListLLM, LlamaCpp
+from langchain_community.llms import FakeListLLM
 from langchain_community.callbacks import get_openai_callback
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_community.chat_models import ChatOpenAI
+# from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_models import ChatLiteLLM
 from langchain.memory import ConversationBufferMemory
 
@@ -48,6 +44,8 @@ def load_llm(modelname, backend, **extra_model_args):
 
     llm = ChatLiteLLM(
             model_name=modelname,
+    # llm = ChatOpenAI(
+            # model_name=modelname.split("/")[-1],
             verbose=True,
             **extra_model_args,
             )
