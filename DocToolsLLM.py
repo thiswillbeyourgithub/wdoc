@@ -1192,12 +1192,13 @@ class DocToolsLLM:
                         text = int(text)
                     return text
 
+            multi = {"max_concurrency": 50}  # use in most places to increase concurrency limit
             evaluate_doc_chain = (
                 ChatPromptTemplate.from_template(EVALUATE_DOC)
                 | {"prompt": RunnablePassthrough()}
                 | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
                 | itemgetter("prompts")
-                | (eval_llm.with_config({"callbacks": [self.wcb]}) | EvalParser()).map()
+                | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
             )
 
             retrieve_documents = {
@@ -1216,7 +1217,7 @@ class DocToolsLLM:
                                     {"doc":d.page_content, "q":q}
                                     for d, q in zip(inputs["doc"], inputs["q"])])
                                 | itemgetter("inputs")
-                                | RunnableEach(bound=evaluate_doc_chain)
+                                | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
                     | RunnableLambda(refilter_docs)
                 ),
