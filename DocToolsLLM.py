@@ -1246,6 +1246,15 @@ class DocToolsLLM:
                 | self.llm.with_config({"callbacks": [self.cb]})
                 | StrOutputParser()
             )
+            def check_intermediate_answer(ans: str) -> bool:
+                if (
+                    ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
+                    or
+                    len(ans) >= len("IRRELEVANT") * 2
+                    ):
+                    return True
+                return False
+
             answer = (
                 RunnablePassthrough.assign(
                         inputs=lambda inputs: [
@@ -1270,11 +1279,7 @@ class DocToolsLLM:
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
-                                    if (
-                                        ((not re.search(r"\bIRRELEVANT\b", inp)) and len(inp) < len("IRRELEVANT") * 2)
-                                        or
-                                        len(inp) >= len("IRRELEVANT") * 2
-                                    )
+                                    if check_intermediate_answer(inp)
                                 ]
                             )
                         ).pick(["question", "intermediate_answers"])
@@ -1305,9 +1310,15 @@ class DocToolsLLM:
                 yel(rag_chain.get_graph().print_ascii())
 
             output = rag_chain.invoke({"question": query})
+            output["relevant_filtered_docs"] = []
+            output["relevant_intermediate_answers"] = []
+            for ia, a in enumerate(output["intermediate_answers"]):
+                if check_intermediate_answer(a):
+                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
+                    output["relevant_intermediate_answers"].append(a)
 
             whi("\n\nIntermediate answers for each document:")
-            for ia, doc in zip(output["intermediate_answers"], output["filtered_docs"]):
+            for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
                 whi("  * content:")
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
@@ -1318,10 +1329,11 @@ class DocToolsLLM:
                 print("\n")
 
             red(f"Answer:\n{output['final_answer']}\n")
+            reldocs = output["relevant_filtered_docs"]
             fdocs = output["filtered_docs"]
             ufdocs = output["unfiltered_docs"]
             if len(ufdocs) < self.cli_commands["top_k"]:
-                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM")
+                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM and {len(reldocs)} were finally relevant.")
 
             if self.import_mode:
                 return output
