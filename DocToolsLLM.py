@@ -447,6 +447,8 @@ class DocToolsLLM:
             set_verbose(True)
             set_debug(True)
             kwargs["file_loader_max_threads"] = 1
+            import litellm
+            litellm.set_verbose=True
 
         # compile include / exclude regex
         if "include" in self.kwargs:
