@@ -5,20 +5,20 @@ beautifulsoup4>=4.10.0
 fire>=0.5.0
 ftfy>=6.1.1
 joblib>=1.2.0
-langchain==0.1.12
-langchain-community==0.0.22
-litellm>=1.35.1
+langchain==0.1.17
+langchain-community==0.0.36
+litellm>=1.35.36
 nltk>=3.8.1
-openai>=0.27.2
+openai>=1.25.1
 prompt-toolkit>=3.0.28
 requests>=2.25.1
-tiktoken>=0.3.3
-tqdm>=4.57.0
+tiktoken>=0.6.0
+tqdm>=4.66.4
 unstructured>=0.6.2
-faiss-cpu>=1.7.4
-llama-cpp-python==0.2.55
+faiss-cpu>=1.8.0
+llama-cpp-python==0.2.69
 
-# buggy in windows so optionnal:
+# buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
 # fasttext-langdetect>=1.0.5
 # pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
