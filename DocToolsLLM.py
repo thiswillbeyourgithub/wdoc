@@ -1316,7 +1316,7 @@ class DocToolsLLM:
             total_cost = self.cb.total_cost
             if total_cost == 0 and self.cb.total_tokens != 0:
                 total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
-            yel(f"Tokens used: '{self.cb.total_tokens}' (${total_cost:.5f})")
+            yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
             wtotal_cost = self.wcb.total_cost
             if wtotal_cost == 0 and self.wcb.total_tokens != 0:
                 wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens / 1000 + self.weakllm_price[1] * self.wcb.completion_tokens / 1000
