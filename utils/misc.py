@@ -95,6 +95,8 @@ def refilter_docs(inputs: dict) -> List[Document]:
     assert unfiltered_docs, "No document corresponding to the query"
     filtered_docs = []
     for ie, evals in enumerate(evaluations):
+        if not isinstance(evals, list):
+            evals = [evals]
         if all(isinstance(ev, int) for ev in evals):
             if sum(evals) != 0:
                 filtered_docs.append(unfiltered_docs[ie])

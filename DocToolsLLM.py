@@ -1184,9 +1184,10 @@ class DocToolsLLM:
                 temperature=1,
                 n=1,
             )
-            eval_check_number = 3
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
+
+            eval_check_number = 1
             class EvalParser(BaseGenerationOutputParser[str]):
                 def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
                     red(result)
@@ -1197,13 +1198,20 @@ class DocToolsLLM:
                     return text
 
             multi = {"max_concurrency": 50}  # use in most places to increase concurrency limit
-            evaluate_doc_chain = (
-                ChatPromptTemplate.from_template(EVALUATE_DOC)
-                | {"prompt": RunnablePassthrough()}
-                | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
-                | itemgetter("prompts")
-                | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
-            )
+            if eval_check_number > 1:
+                evaluate_doc_chain = (
+                    ChatPromptTemplate.from_template(EVALUATE_DOC)
+                    | {"prompt": RunnablePassthrough()}
+                    | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
+                    | itemgetter("prompts")
+                    | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
+                )
+            else:
+                evaluate_doc_chain = (
+                    ChatPromptTemplate.from_template(EVALUATE_DOC)
+                    | eval_llm.with_config({"callbacks": [self.wcb]})
+                    | EvalParser()
+                )
 
             retrieve_documents = {
                 "unfiltered_docs": itemgetter("question") | retriever,
