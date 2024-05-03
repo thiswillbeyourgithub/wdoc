@@ -1,3 +1,4 @@
+from shutil import rmtree
 from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
@@ -17,8 +18,8 @@ def create_hyde_retriever(
         relevancy,
         filter,
 
-        embeddings_engine,
         embeddings,
+        loaded_embeddings,
         ):
     """
     create a retriever only for the subset of documents from the
@@ -48,16 +49,11 @@ def create_hyde_retriever(
 
     hyde_embeddings = HypotheticalDocumentEmbedder(
         llm_chain=hyde_chain,
-        base_embeddings=embeddings_engine,
+        base_embeddings=embeddings,
         )
-    db = FAISS.from_documents(
-            documents=[Document(page_content="")],
-            embedding=hyde_embeddings,
-            )
-    # get id of the dummy doc
-    dummy = list(db.docstore._dict.keys())
-    db.delete(dummy)
-    db.merge_from(embeddings)
+    loaded_embeddings.save_local("temp")
+    db = FAISS.load_local("temp", hyde_embeddings, allow_dangerous_deserialization=True)
+    rmtree("temp")
 
     retriever = db.as_retriever(
         search_type="similarity_score_threshold",

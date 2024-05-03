@@ -1,3 +1,4 @@
+from typing import List, Union
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -9,18 +10,12 @@ import textwrap
 import fire
 import os
 from tqdm import tqdm
-import signal
-import pdb
 try:
     from ftlangdetect import detect as language_detect
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
-import langchain
-from langchain.globals import set_verbose, set_debug
-from langchain.chains import ConversationalRetrievalChain
-from langchain.chains import LLMChain
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
 from langchain_community.document_transformers import EmbeddingsRedundantFilter
@@ -29,7 +24,6 @@ from langchain.retrievers.document_compressors import (
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.prompts.prompt import PromptTemplate
-from langchain_community.llms import FakeListLLM
 from langchain.cache import SQLiteCache
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
@@ -45,50 +39,64 @@ from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
-from utils.misc import ankiconnect
-from utils.prompts import condense_question
+from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain
+from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
+from operator import itemgetter
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation, ChatGeneration
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
-langchain.llm_cache = SQLiteCache(database_path=".cache/langchain.db")
+set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
+
 
 class DocToolsLLM:
-    VERSION = "0.10"
+    VERSION = "0.12"
 
     def __init__(
-            self,
-            modelname="openai/gpt-3.5-turbo-0125",
-            task="query",
-            query=None,
-            filetype="infer",
-            embed_model="openai",
-            # embed_model="paraphrase-multilingual-mpnet-base-v2",
-            # embed_model = "distiluse-base-multilingual-cased-v1",
-            # embed_model = "msmarco-distilbert-cos-v5",
-            # embed_model = "all-mpnet-base-v2",
-            saveas=".cache/latest_docs_and_embeddings",
-            loadfrom=None,
+        self,
+        modelname="openai/gpt-3.5-turbo-0125",
+        # modelname="mistral/mistral-large-latest",
+        # modelname="openai/gpt-4-turbo-2024-04-09",
+        weakmodelname="openai/gpt-3.5-turbo-0125",
+        # weakmodelname="mistral/open-mixtral-8x7b",
+        task="query",
+        query=None,
+        filetype="infer",
+        embed_model="openai/text-embedding-3-small",
+        # embed_model = "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
+        # embed_model = "sentencetransformers/distiluse-base-multilingual-cased-v1",
+        # embed_model = "sentencetransformers/msmarco-distilbert-cos-v5",
+        # embed_model = "sentencetransformers/all-mpnet-base-v2",
+        # embed_model = "huggingface/google/gemma-2b",
+        saveas=".cache/latest_docs_and_embeddings",
+        loadfrom=None,
 
-            top_k=10,
-            query_retrievers="hyde_default",
-            n_recursive_summary=0,
+        top_k=50,
+        query_retrievers="hyde_default",
+        n_recursive_summary=0,
 
-            n_summaries_target=-1,
+        n_summaries_target=-1,
 
-            dollar_limit=5,
-            debug=False,
-            llm_verbosity=True,
-            ntfy_url=None,
-            condense_question=True,
+        dollar_limit=5,
+        debug=False,
+        llm_verbosity=True,
+        ntfy_url=None,
+        condense_question=True,
+        chat_memory=True,
 
-            help=False,
-            h=False,
-            import_mode=False,
-            **kwargs,
-            ):
+        help=False,
+        h=False,
+        import_mode=False,
+        **kwargs,
+        ):
         """
         Parameters
         ----------
@@ -130,13 +138,29 @@ class DocToolsLLM:
             the part of modelname before the slash (/) is the server name.
             If the backend is 'testing' then a fake LLM will be used
             for debugging purposes.
+            If 'chatgpt' or "gpt3": will be set to "openai/gpt-3.5-turbo-0125"
+            If 'gpt4': will be set to "openai/gpt-4-turbo-2024-04-09"
 
-        --embed_model str, default "openai"
-            Either 'openai' or sentence_transformer embedding model to use.
-            If you change this, the embedding cache will be usually
-            need to be recomputed with new elements (the hash
-            used to check for previous values includes the name of the model
-            name)
+        --weakmodelname str, default openai/gpt-3.5-turbo-0125
+            Cheaper and quicker model than modelname. Used for intermedaite
+            steps in the RAG.
+            Not used for other tasks so can be set to None to be disabled.
+
+        --embed_model str, default "openai/text-embedding-3-small"
+            Name of the model to use for embeddings. Must contain a '/'
+            Everything before the slash is the backend and everything
+            after the / is the model name.
+            Available backends: openai, sentencetransformers,
+            huggingface, llamacpp
+
+            Note:
+            * the device used by default for huggingface is 'cpu' and not 'cuda'
+            * If you change this, the embedding cache will be usually
+              need to be recomputed with new elements (the hash
+              used to check for previous values includes the name of the model
+              name)
+            * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
+
 
         --saveas str, default .cache/latest_docs_and_embeddings
             only used if task is query
@@ -148,8 +172,10 @@ class DocToolsLLM:
         --loadfrom str, default None
             path to the file saved using --saveas
 
-        --top_k int, default 10
-            number of chunks to look for when querying
+        --top_k int, default 50
+            number of chunks to look for when querying. It is high because the
+            weak model is used to refilter the document after the embeddings
+            first pass.
 
         --query_retrievers: str, default 'hyde_default'
             must be a string that specifies which retriever will be used for
@@ -178,9 +204,9 @@ class DocToolsLLM:
             If the estimated price is above this limit, stop instead.
 
         --debug bool, default False
-            if True will open a debugger instead before crashing, also use
-            sequential processing instead of multithreading and enable
-            langchain tracing.
+            if True will enable langchain tracing, increase verbosity etc.
+            Will also disable multithreading for summaries and for loading
+            files.
 
         --llm_verbosity, default True
             if True, will print the intermediate reasonning steps of LLMs
@@ -194,6 +220,11 @@ class DocToolsLLM:
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
             a row.
+            DIsabled if using a testing model.
+
+        --chat_memory, default True
+            if True, will remember the messages across a given chat exchange.
+            DIsabled if using a testing model.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -256,10 +287,12 @@ class DocToolsLLM:
             be written to this file. Note that the file is not erased and
             Doctools will simply append to it.
             Related: see --out_file_logseq_mode
+
         --out_file_logseq_mode
             If --out_file is specified, this argument tells Doctools to export
             in a logseq friendly format. This means adding metadata of the run
             as block properties as well as setting TODO states.
+
         --out_check_file
             If --out_file_logseq_mode is True and --out_check_file is set:
             it must point to a file where each present TODO string will be
@@ -268,15 +301,30 @@ class DocToolsLLM:
         --filter_metadata
             list of string to use as filter.
             Each filter must be a regex string beginning with
-            either '+' or '-' to respectively restrict to or exclude from
-            the search/query.
+            either '+', '-' or '~' to respectively restrict to (all metadata
+            must match this regex), exclude from (no metadata should match) or
+            at least one metadata should match.
             Filters are only relevant for task related to queries.
             This will only filter through the values of each document and
             not the keys. Also values that depend on the key are not
             currently supported.
+            All regex are matched case insensitively if they match their lowercase form.
+
         --filter_content
+            CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of
-            each document instead of the metadata
+            each document instead of the metadata.
+            Note that ~ filters are not relevant to filter content so use +
+            instead.
+
+        --embed_instruct: bool
+            when loading an embedding model using HuggingFace or LlamaCPP,
+            wether to wrap the input sentence using instruct framework or not.
+
+        --file_loader_max_threads: int, default 5
+            number of threads to use when loading files. Set to 1 to disable
+            multithreading (as it can result in out of memory error if
+            using threads and overly recursive calls)
 
         """
         if help or h:
@@ -290,6 +338,10 @@ class DocToolsLLM:
         assert isinstance(filetype, str), "filetype must be a string"
         if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
+        if task in ["query", "search", "summarize_then_query"]:
+            assert weakmodelname is not None, "weakmodelname can't be None if doing RAG"
+        else:
+            weakmodelname = None
         assert (task == "summarize_link_file" and filetype == "link_file"
                 ) or (task != "summarize_link_file" and filetype != "link_file"
                         ), "summarize_link_file must be used with filetype link_file"
@@ -297,7 +349,8 @@ class DocToolsLLM:
             assert "path" in kwargs, 'missing path arg for summarize_link_file'
             assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
             assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
-        assert "/" not in embed_model, "embed model can't contain slash"
+        assert "/" in embed_model, "embed model must contain slash"
+        assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
 
         for k in kwargs:
@@ -309,19 +362,44 @@ class DocToolsLLM:
                     "out_file", "out_file_logseq_mode",
                     "language", "translation",
                     "out_check_file",
-                    ]:
+                    "embed_instruct",
+                    "file_loader_max_threads",
+                    "filter_metadata",
+                    # "filter_content",
+                    ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")
 
         if filetype == "string":
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        # storing as attributes
-        assert "/" in modelname, "model name must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-1106'"
+        if modelname in ["chatgpt", "gpt3"]:
+            modelname = "openai/gpt-3.5-turbo-0125"
+        elif modelname in ["gpt4"]:
+            modelname = "openai/gpt-4-turbo-2024-04-09"
+        assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+
+        if weakmodelname in ["chatgpt", "gpt3"]:
+            weakmodelname = "openai/gpt-3.5-turbo-0125"
+        elif weakmodelname in ["gpt4"]:
+            weakmodelname = "openai/gpt-4-turbo-2024-04-09"
+        assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+
+        if "testing" in modelname and "testing" not in weakmodelname:
+            weakmodelname = "testing"
+            red(f"modelname is 'testing' so setting weakmodelname to 'testing' too")
+        if query is True:
+            # otherwise specifying --query and forgetting to add text fails
+            query = None
         if isinstance(query, str):
             query = query.strip() or None
+
+        # storing as attributes
         self.modelbackend = modelname.split("/")[0].lower()
         self.modelname = modelname
+        if weakmodelname is not None:
+            self.weakmodelbackend = weakmodelname.split("/")[0].lower()
+            self.weakmodelname = weakmodelname
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
@@ -335,8 +413,25 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
-        self.condense_question = condense_question
+        self.condense_question = condense_question if "testing" not in modelname else False
+        self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
+
+        if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
+            self.llm_price = [0.0005, 0.0015]
+        elif "gpt-4" in self.modelname and "preview" in self.modelname:
+            self.llm_price = [0.01, 0.03]
+        else:
+            red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
+            self.llm_price = [0.0005, 0.0015]
+        if weakmodelname is not None:
+            if "gpt-3.5" in self.weakmodelname and "turbo" in self.weakmodelname:
+                self.weakllm_price = [0.0005, 0.0015]
+            elif "gpt-4" in self.weakmodelname and "preview" in self.weakmodelname:
+                self.weakllm_price = [0.01, 0.03]
+            else:
+                red(f"Don't know the price of the weakmodel so setting it to gpt-3.5-turbo value")
+                self.weakllm_price = [0.0005, 0.0015]
 
         global ntfy
         if ntfy_url:
@@ -348,11 +443,12 @@ class DocToolsLLM:
                 return text
 
         if self.debug:
-            # make the script interruptible
-            signal.signal(signal.SIGINT, (lambda signal, frame : pdb.set_trace()))
-            os.environ["LANGCHAIN_TRACING"] = "true"
+            # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
             set_debug(True)
+            kwargs["file_loader_max_threads"] = 1
+            import litellm
+            litellm.set_verbose=True
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -369,7 +465,7 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(modelname, self.modelbackend)
+        self.llm, self.callback = load_llm(modelname, self.modelbackend, temperature=0)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -554,20 +650,16 @@ class DocToolsLLM:
                 else:
                     docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
-        prices = [0.0005, 0.0015]
-        if self.modelname == "gpt-4-0125-preview":
-            prices = [0.01, 0.03]
-
         full_tkn = sum(list(docs_tkn_cost.values()))
         red("Token price of each document:")
         for k, v in docs_tkn_cost.items():
-            pr = v * (prices[0] * 4 + prices[1]) / 5 / 1000
+            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5 / 1000
             red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
         red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
         # a conservative estimate is that it takes 4 times the number
         # of tokens of a document to summarize it
-        price = (prices[0] * 3 + prices[1] * 2) / 5
+        price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
         estimate_dol = full_tkn / 1000 * price * 1.1
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
@@ -874,30 +966,64 @@ class DocToolsLLM:
                 "relevancy": 0.1,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
-        self.CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(condense_question)
 
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.kwargs or "filter_content" in self.kwargs:
             if "filter_metadata" in self.kwargs:
-                assert isinstance(self.kwargs["filter_metadata"], list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
-                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_metadata"]), f"Each item of filter_metadata must start with either + or -"
-                incl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("+")]
-                excl = [re.compile(f) for f in self.kwargs["filter_metadata"] if f.startswith("-")]
+                if isinstance(self.kwargs["filter_metadata"], str):
+                    filter_metadata = self.kwargs["filter_metadata"].split(",")
+                else:
+                    filter_metadata = self.kwargs["filter_metadata"]
+                assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
+                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_metadata), f"Each item of filter_metadata must start with either +, - or ~"
+                assert not any(f.strip() in ["+", "-", "~"] for f in filter_metadata), f"filter cannot be only + or - or ~"
+                incl = []
+                excl = []
+                fuz = []
+                for f in filter_metadata:
+                    case = True if f != f.lower() else False
+                    if f.startswith("+"):
+                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("-"):
+                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("~"):
+                        fuz.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+
                 def filter_meta(meta):
+                    fizdic = {k:False for k in fuz}
                     for v in meta.values():
+                        v = str(v)
                         if any(re.search(e, v) for e in excl):
                             return False
                         if not all(re.search(e, v) for e in incl):
                             return False
+                        for f in fuz:
+                            if re.search(f, v):
+                                fizdic[f] = True
+                    if False in fizdic.values():
+                        return False
                     return True
             else:
                 def filter_meta(meta):
                     return True
             if "filter_content" in self.kwargs:
-                assert isinstance(self.kwargs["filter_content"], list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
-                assert all(f.startswith("+") or f.startswith("-") for f in self.kwargs["filter_content"]), f"Each item of filter_content must start with either + or -"
-                incl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("+")]
-                excl = [re.compile(f) for f in self.kwargs["filter_content"] if f.startswith("-")]
+                raise NotImplementedError("filter_content argument was disabled")
+                if isinstance(self.kwargs["filter_content"], str):
+                    filter_content = self.kwargs["filter_content"].split(",")
+                else:
+                    filter_content = self.kwargs["filter_content"]
+                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
+                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_content), f"Each item of filter_content must start with either +, - or ~"
+                assert not any(f.strip() in ["+", "-", "~"] for f in filter_content), f"filter cannot be only + or - or ~"
+                incl = []
+                excl = []
+                for f in filter_content:
+                    case = True if f != f.lower() else False
+                    if f.startswith("+"):
+                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                    elif f.startswith("-"):
+                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
+                assert not [re.compile(f[1:]) for f in filter_content if f.startswith("~")], "No ~ filter can be used on content, use + instead"
                 def filter_cont(cont):
                     if any(re.search(e, cont) for e in excl):
                         return False
@@ -908,6 +1034,8 @@ class DocToolsLLM:
                 def filter_cont(cont):
                     return True
             def query_filter(doc):
+                if isinstance(doc, dict):  # received metadata directly
+                    return filter_meta(doc)
                 if filter_meta(doc.metadata) and filter_content(doc.page_content):
                     return True
                 return False
@@ -931,13 +1059,13 @@ class DocToolsLLM:
                         query=query,
                         filetype=self.filetype,
 
-                        llm=self.llm,
+                        llm=self.llm.with_config({"callbacks": [self.cb]}),
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
                         filter=self.query_filter,
 
-                        embeddings=self.loaded_embeddings,
-                        embeddings_engine=self.embeddings,
+                        embeddings=self.embeddings,
+                        loaded_embeddings=self.loaded_embeddings,
                         )
                     )
 
@@ -994,7 +1122,7 @@ class DocToolsLLM:
             # remove redundant results from the merged retrievers:
             filtered = EmbeddingsRedundantFilter(
                     embeddings=self.embeddings,
-                    similarity_threshold=1.00,
+                    similarity_threshold=0.999,
                     )
             pipeline = DocumentCompressorPipeline(transformers=[filtered])
             retriever = ContextualCompressionRetriever(
@@ -1035,54 +1163,189 @@ class DocToolsLLM:
                             )
 
         else:
-            doc_chain = load_qa_with_sources_chain(
-                    self.llm,
-                    chain_type="map_reduce",
-                    verbose=self.llm_verbosity,
-                    )
-
             if self.condense_question:
-                question_generator = LLMChain(llm=self.llm, prompt=self.CONDENSE_QUESTION_PROMPT)
+                loaded_memory = RunnablePassthrough.assign(
+                    chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
+                )
+                standalone_question = {
+                                "question": {
+                                    "question": lambda x: x["question"],
+                                    "chat_history": lambda x: format_chat_history(x["chat_history"]),
+                                }
+                                | PromptTemplate.from_template(CONDENSE_QUESTION)
+                                | self.llm.with_config({"callbacks": [self.cb]})
+                                | StrOutputParser(),
+                            }
+            # answer 0 or 1 if the document is related
+            eval_llm, weakcallback = load_llm(
+                self.weakmodelname,
+                self.weakmodelbackend,
+                max_tokens=1,
+                temperature=1,
+                n=1,
+            )
+            if not hasattr(self, "wcb"):
+                self.wcb = weakcallback().__enter__()  # for token counting
+
+            eval_check_number = 1
+            class EvalParser(BaseGenerationOutputParser[str]):
+                def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
+                    red(result)
+                    assert len(result) == 1, f"Expected only 1 answer, not {len(result)}"
+                    text = result[0].message.content
+                    if text.isdigit():
+                        text = int(text)
+                    return text
+
+            multi = {"max_concurrency": 50}  # use in most places to increase concurrency limit
+            if eval_check_number > 1:
+                evaluate_doc_chain = (
+                    ChatPromptTemplate.from_template(EVALUATE_DOC)
+                    | {"prompt": RunnablePassthrough()}
+                    | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
+                    | itemgetter("prompts")
+                    | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
+                )
             else:
-                question_generator = LLMChain(llm=FakeListLLM(responses=[query]), prompt=PromptTemplate.from_template(""))
+                evaluate_doc_chain = (
+                    ChatPromptTemplate.from_template(EVALUATE_DOC)
+                    | eval_llm.with_config({"callbacks": [self.wcb]})
+                    | EvalParser()
+                )
 
-            chain = ConversationalRetrievalChain(
-                    retriever=retriever,
-                    question_generator=question_generator,
-                    combine_docs_chain=doc_chain,
-                    return_source_documents=True,
-                    return_generated_question=True,
-                    verbose=self.llm_verbosity,
-                    memory=self.memory,
+            retrieve_documents = {
+                "unfiltered_docs": itemgetter("question") | retriever,
+                "question": itemgetter("question")
+            }
+            refilter_documents = {
+                "filtered_docs": (
+                        RunnablePassthrough.assign(
+                            evaluations=RunnablePassthrough.assign(
+                                doc=lambda inputs: inputs["unfiltered_docs"],
+                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
+                                )
+                            | RunnablePassthrough.assign(
+                                inputs=lambda inputs: [
+                                    {"doc":d.page_content, "q":q}
+                                    for d, q in zip(inputs["doc"], inputs["q"])])
+                                | itemgetter("inputs")
+                                | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
+                    | RunnableLambda(refilter_docs)
+                ),
+                "unfiltered_docs": itemgetter("unfiltered_docs"),
+                "question": itemgetter("question")
+            }
+            answer_each_doc_chain = (
+                ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
+                | self.llm.with_config({"callbacks": [self.cb]})
+                | StrOutputParser()
+            )
+            combine_answers = (
+                ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
+                | self.llm.with_config({"callbacks": [self.cb]})
+                | StrOutputParser()
+            )
+            def check_intermediate_answer(ans: str) -> bool:
+                if (
+                    ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
+                    or
+                    len(ans) >= len("IRRELEVANT") * 2
+                    ):
+                    return True
+                return False
 
-            ans = chain(
-                    inputs={
-                        "question": query,
-                        },
-                    return_only_outputs=False,
-                    include_run_info=True,
+            answer = (
+                RunnablePassthrough.assign(
+                        inputs=lambda inputs: [
+                            {"context":d.page_content, "question":q}
+                            for d, q in zip(
+                                inputs["filtered_docs"],
+                                [inputs["question"]] * len(inputs["filtered_docs"])
+                            )
+                        ]
                     )
+                | {
+                    "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
+                    "question": itemgetter("question"),
+                    "filtered_docs": itemgetter("filtered_docs"),
+                    "unfiltered_docs": itemgetter("unfiltered_docs"),
+                    }
+                | {
+                    "final_answer": RunnablePassthrough.assign(
+                        question=lambda inputs: inputs["question"],
+                        intermediate_answers=lambda inputs: "\n".join(
+                                # remove answers deemed irrelevant
+                                [
+                                    inp
+                                    for inp in inputs["intermediate_answers"]
+                                    if check_intermediate_answer(inp)
+                                ]
+                            )
+                        ).pick(["question", "intermediate_answers"])
+                        | combine_answers,
+                    "intermediate_answers": itemgetter("intermediate_answers"),
+                    "question": itemgetter("question"),
+                    "filtered_docs": itemgetter("filtered_docs"),
+                    "unfiltered_docs": itemgetter("unfiltered_docs"),
+                }
+            )
+            # Now we construct the inputs for the final prompt
+            if self.condense_question:
+                rag_chain = (
+                    loaded_memory
+                    | standalone_question
+                    | retrieve_documents
+                    | refilter_documents
+                    | answer
+                )
+            else:
+                rag_chain = (
+                    retrieve_documents
+                    | refilter_documents
+                    | answer
+                )
 
-            docs = ans["source_documents"]
-            whi("\n\nSources:")
-            for doc in docs:
+            if self.debug:
+                yel(rag_chain.get_graph().print_ascii())
+
+            output = rag_chain.invoke({"question": query})
+            output["relevant_filtered_docs"] = []
+            output["relevant_intermediate_answers"] = []
+            for ia, a in enumerate(output["intermediate_answers"]):
+                if check_intermediate_answer(a):
+                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
+                    output["relevant_intermediate_answers"].append(a)
+
+            whi("\n\nIntermediate answers for each document:")
+            for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
                 whi("  * content:")
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
                 whi(f"{wrapped:>10}")
                 for k, v in doc.metadata.items():
                     yel(f"    * {k}: {v}")
+                red(f"> {ia}")
                 print("\n")
 
-            red(f"Answer:\n{ans['answer']}\n")
-            if len(docs) < self.cli_commands["top_k"]:
-                red(f"Only found {len(docs)} relevant documents")
+            red(f"Answer:\n{output['final_answer']}\n")
+            reldocs = output["relevant_filtered_docs"]
+            fdocs = output["filtered_docs"]
+            ufdocs = output["unfiltered_docs"]
+            if len(ufdocs) < self.cli_commands["top_k"]:
+                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM and {len(reldocs)} were finally relevant.")
 
             if self.import_mode:
-                return ans["answer"]
+                return output
 
-        yel(f"Tokens used: '{self.cb.total_tokens}' (${self.cb.total_cost:.5f})")
+            total_cost = self.cb.total_cost
+            if total_cost == 0 and self.cb.total_tokens != 0:
+                total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
+            yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
+            wtotal_cost = self.wcb.total_cost
+            if wtotal_cost == 0 and self.wcb.total_tokens != 0:
+                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens / 1000 + self.weakllm_price[1] * self.wcb.completion_tokens / 1000
+            yel(f"Tokens used by weak model: '{self.wcb.total_tokens}' (${wtotal_cost:.5f})")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+from typing import List
+import hashlib
 import os
 import queue
 import faiss
@@ -14,43 +16,168 @@ from pydantic import Extra
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 
 from .logger import whi, red
 from .file_loader import get_tkn_length
 
-
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
+
+# Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
+DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
+DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
+
+class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
+    """wrapper around the class LlamaCppEmbeddings to add an instruction
+    before the text to embed."""
+    def __init__(self, *args, **kwargs):
+        embed_instruction=DEFAULT_EMBED_INSTRUCTION
+        query_instruction=DEFAULT_QUERY_INSTRUCTION
+        if "embed_instruction" in kwargs:
+            embed_instruction = kwargs["embed_instruction"]
+            del kwargs["embed_instruction"]
+        if "query_instruction" in kwargs:
+            query_instruction = kwargs["query_instruction"]
+            del kwargs["query_instruction"]
+
+        super().__init__(*args, **kwargs)
+        self.embed_instruction = embed_instruction
+        self.query_instruction = query_instruction
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        texts = [self.embed_instruction + t for t in texts]
+        embeddings = [self.client.embed(text) for text in texts]
+        return [list(map(float, e)) for e in embeddings]
+
+    def embed_query(self, text: str) -> List[float]:
+        text = self.query_instruction + text
+        embedding = self.client.embed(text)
+        return list(map(float, embedding))
 
 
 def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
     """loads embeddings for each document"""
+    backend = embed_model.split("/")[0]
+    embed_model = embed_model.replace(backend + "/", "")
+    embed_model_str = embed_model.replace("/", "_")
+    if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+        instruct = True
+    else:
+        instruct = False
 
-    if embed_model == "openai":
-        red("Using openai embedding model")
-        if not ("OPENAI_API_KEY" in os.environ or os.environ["OPENAI_API_KEY"]):
-            assert Path("OPENAI_API_KEY.txt").exists(), "No API_KEY.txt found"
+    red(f"Selected embedding model '{embed_model}' of backend {backend}")
+    if backend == "openai":
+        if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
+            assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
-                model="text-embedding-3-small",
+                model=embed_model,
                 # model="text-embedding-ada-002",
                 openai_api_key=os.environ["OPENAI_API_KEY"]
                 )
 
-    else:
+    elif backend == "huggingface":
+        model_kwargs = {
+            "device": "cpu",
+            # "device": "cuda",
+        }
+        if "google" in embed_model and "gemma" in embed_model.lower():
+            if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
+                assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
+                hftkn = str(Path("HUGGINGFACE_API_KEY.txt").read_text()).strip()
+            else:
+                hftkn = os.environ["HUGGINGFACE_API_KEY"]
+            model_kwargs['use_auth_token'] = hftkn #your token to use the models
+        if instruct:
+            embeddings = HuggingFaceInstructEmbeddings(
+                model_name=embed_model,
+                model_kwargs=model_kwargs,
+                embed_instruction=DEFAULT_EMBED_INSTRUCTION,
+                query_instruction=DEFAULT_QUERY_INSTRUCTION,
+            )
+        else:
+            embeddings = HuggingFaceEmbeddings(
+                model_name=embed_model,
+                model_kwargs=model_kwargs,
+            )
+
+        if "google" in embed_model and "gemma" in embed_model.lower():
+            #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
+            #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
+            embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
+
+    elif backend == "sentencetransfromers":
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
                     "batch_size": 1,
                     "show_progress_bar": True,
                     "pooling": "meanpool",
+                    # "device": "cuda",
                     },
                 )
 
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model}")
+    elif backend == "llamacppembeddings":
+        llamacppkwargs = {
+            "f16_kv": False,
+            "logits_all": False,
+            "n_batch": 8,
+            "n_ctx": 8192,
+            "n_gpu_layers": 0,
+            "n_parts": -1,
+            "n_threads": 4,
+            "seed": 42,
+            "use_mlock": False,
+            "verbose": False,
+            "vocab_only": False,
+        }
+        assert Path(embed_model).exists(), f"File not found {embed_model}"
+
+        for k, v in kwargs.items():
+            if k.lower().startswith("llamacpp") and not k.startswith("llamacppembedding_"):
+                red(f"Possibly malformed argument name: {k}")
+            if k.startswith("llamacppembedding_"):
+                k = k.split("llamacppembedding_")[1]
+                if k not in llamacppkwargs:
+                    if k == "model_path":
+                        raise Exception("llamacppembeddings model_path must be supplied via --embed_model arg")
+                    raise Exception(f"Unexpected argument key {key} for llamacppembeddings")
+                llamacppkwargs[k] = v
+
+        red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
+        # method overloading to make it an instruct model
+        if instruct:
+            embeddings = InstructLlamaCPPEmbeddings(
+                model_path=embed_model,
+                **llamacppkwargs,
+            )
+        else:
+            embeddings = LlamaCppEmbeddings(
+                model_path=embed_model,
+                **llamacppkwargs,
+            )
+    else:
+        raise ValueError(f"Invalid embedding backend: {backend}")
+
+    if "/" in embed_model:
+        try:
+            if Path(embed_model).exists():
+                with open(Path(embed_model).absolute().__str__(), "rb") as f:
+                    h = hashlib.sha256(
+                        f.read() + str(instruct)
+                    ).hexdigest()[:15]
+                embed_model_str = Path(embed_model).name + "_" + h
+        except Exception:
+            pass
+    assert "/" not in embed_model_str
+
+    lfs = LocalFileStore(f".cache/embeddings/{embed_model_str}")
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
@@ -58,7 +185,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
             lfs,
-            namespace=embed_model,
+            namespace=embed_model_str,
             )
 
     # reload passed embeddings
@@ -66,7 +193,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         red("Reloading documents and embeddings from file")
         path = Path(loadfrom)
         assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), cached_embeddings)
+        db = FAISS.load_local(str(path), cached_embeddings, allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
@@ -77,7 +204,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model}")
+    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model_str}")
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
@@ -208,7 +335,7 @@ def faiss_loader(cached_embeddings, qin, qout):
             qout.put(db)
             qout.put("Stopped")
             return
-        temp = FAISS.load_local(fi, cached_embeddings)
+        temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
         if not db:
             db = temp
         else:
