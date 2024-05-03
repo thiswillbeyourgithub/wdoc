@@ -93,15 +93,14 @@ def refilter_docs(inputs: dict) -> List[Document]:
     assert isinstance(evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
     assert len(unfiltered_docs) == len(evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
     assert unfiltered_docs, "No document corresponding to the query"
-    evaluations = [str(e) for e in evaluations]
-    for eval in evaluations:
-        if eval not in ["0", "1"]:
-            red(f"Eval not 0 nor 1 so keeping the doc: '{eval}'")
-    filtered_docs = [
-        d
-        for i, d in enumerate(unfiltered_docs)
-        if evaluations[i] != "0"
-    ]
+    filtered_docs = []
+    for ie, evals in enumerate(evaluations):
+        if all(isinstance(ev, int) for ev in evals):
+            if sum(evals) != 0:
+                filtered_docs.append(unfiltered_docs[ie])
+        else:
+            red(f"Evals contained strings so keeping the doc: '{evals}'")
+            filtered_docs.append(unfiltered_docs[ie])
     assert filtered_docs, "No document remained after filtering with the query"
     return filtered_docs
 

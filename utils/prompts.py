@@ -87,9 +87,8 @@ Follow Up Input: {question}
 Standalone question:""")
 
 # RAG
-EVALUATE_DOC = """Given the following question and document text, if the text is
-related to the question you answer '1', otherwise you
-answer '0'. Don't narrate, just answer the number.
+EVALUATE_DOC = """Given the following question and document text, if the text is related to the question you answer '1', otherwise you answer '0'.
+Don't narrate, just answer the number.
 Question: '{q}'
 Document:
 ```

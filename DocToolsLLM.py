@@ -1,3 +1,4 @@
+from typing import List, Union
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -45,6 +46,8 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation, ChatGeneration
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -1174,16 +1177,29 @@ class DocToolsLLM:
                 self.weakmodelname,
                 self.weakmodelbackend,
                 max_tokens=1,
-                temperature=0,
+                temperature=1,
                 n=1,
             )
+            eval_check_number = 3
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
+            class EvalParser(BaseGenerationOutputParser[str]):
+                def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
+                    red(result)
+                    assert len(result) == 1, f"Expected only 1 answer, not {len(result)}"
+                    text = result[0].message.content
+                    if text.isdigit():
+                        text = int(text)
+                    return text
+
             evaluate_doc_chain = (
                 ChatPromptTemplate.from_template(EVALUATE_DOC)
-                | eval_llm
-                | StrOutputParser()
+                | {"prompt": RunnablePassthrough()}
+                | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
+                | itemgetter("prompts")
+                | (eval_llm | EvalParser()).map()
             )
+
             retrieve_documents = {
                 "unfiltered_docs": itemgetter("question") | retriever,
                 "question": itemgetter("question")
