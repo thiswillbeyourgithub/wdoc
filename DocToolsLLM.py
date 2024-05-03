@@ -1235,7 +1235,7 @@ class DocToolsLLM:
                     "final_answer": RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question"],
                         intermediate_answers=lambda inputs: "\n".join(
-                                # remove answers deemed irrrelevant
+                                # remove answers deemed irrelevant
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
