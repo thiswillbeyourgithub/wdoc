@@ -1257,27 +1257,26 @@ class DocToolsLLM:
                 | StrOutputParser()
             )
 
-            answer = (
-                RunnablePassthrough.assign(
-                        inputs=lambda inputs: [
-                            {"context":d.page_content, "question_to_answer":q}
-                            for d, q in zip(
-                                inputs["filtered_docs"],
-                                [inputs["question_to_answer"]] * len(inputs["filtered_docs"])
-                            )
-                        ]
+            answer_all_docs = RunnablePassthrough.assign(
+                inputs=lambda inputs: [
+                    {"context":d.page_content, "question_to_answer":q}
+                    for d, q in zip(
+                        inputs["filtered_docs"],
+                        [inputs["question_to_answer"]] * len(inputs["filtered_docs"])
                     )
-                | {
+                ]
+            ) | {
                     "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
                     "question_to_answer": itemgetter("question_to_answer"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
-                    }
-                | {
-                    "final_answer": RunnablePassthrough.assign(
-                        question=lambda inputs: inputs["question_to_answer"],
-                        intermediate_answers=lambda inputs: "\n".join(
-                                # remove answers deemed irrelevant
+                }
+
+            final_answer_chain = RunnablePassthrough.assign(
+                        final_answer=RunnablePassthrough.assign(
+                            question=lambda inputs: inputs["question_to_answer"],
+                            # remove answers deemed irrelevant
+                            intermediate_answers=lambda inputs: "\n".join(
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
@@ -1286,26 +1285,20 @@ class DocToolsLLM:
                             )
                         )
                         | combine_answers,
-                    "intermediate_answers": itemgetter("intermediate_answers"),
-                    "question_to_answer": itemgetter("question_to_answer"),
-                    "filtered_docs": itemgetter("filtered_docs"),
-                    "unfiltered_docs": itemgetter("unfiltered_docs"),
-                }
-            )
-            # Now we construct the inputs for the final prompt
+                )
             if self.condense_question:
                 rag_chain = (
                     loaded_memory
                     | standalone_question
                     | retrieve_documents
                     | refilter_documents
-                    | answer
+                    | answer_all_docs
                 )
             else:
                 rag_chain = (
                     retrieve_documents
                     | refilter_documents
-                    | answer
+                    | answer_all_docs
                 )
 
             if self.debug:
@@ -1317,6 +1310,30 @@ class DocToolsLLM:
                     "question_to_answer": query_an,
                 }
             )
+
+            # group the intermediate answers by batch, then do a batch reduce mapping
+            batch_size = 5
+            intermediate_answers = output["intermediate_answers"]
+            all_intermediate_answers = [intermediate_answers]
+            while len(intermediate_answers) > batch_size:
+                batches = [[]]
+                for ia in intermediate_answers:
+                    if not check_intermediate_answer(ia):
+                        continue
+                    if len(batches[-1]) >= batch_size:
+                        batches.append([])
+                    if len(batches[-1]) < batch_size:
+                        batches[-1].append(ia)
+                batch_args = [
+                    {"question_to_answer": query_an, "intermediate_answers": b}
+                    for b in batches]
+                intermediate_answers = [a["final_answer"] for a in final_answer_chain.batch(batch_args)]
+            all_intermediate_answers.append(intermediate_answers)
+            final_answer = final_answer_chain.invoke({"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
+            output["final_answer"] = final_answer
+            output["all_intermediate_answeers"] = all_intermediate_answers
+            # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
+
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):

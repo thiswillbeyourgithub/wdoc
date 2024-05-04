@@ -103,6 +103,8 @@ Use the following pieces of retrieved context to answer the question.
 If the entirety of the context is irrelevant, answer simply 'IRRELEVANT' and nothing else (no special formatting).
 Use three sentences maximum.
 Be VERY concise and use markdown formatting for easier reading.
+But DON'T interpret the question too strictly, for example instead of a question it can be an instruction like "give me all information about such and such", use common sense and don't be too strict!
+
 Question: '{question_to_answer}'
 Context:
 '''
@@ -113,9 +115,11 @@ Answer:"""
 COMBINE_INTERMEDIATE_ANSWERS = """Given the following statements, you must answer a given question.
 Ignore irrelevant statements. Don't narrate, just do what I asked.
 Use markdown formatting, especially bullet points for enumeration etc.
-Be VERY concise but don't omit anything from the answers.
-Use the same language as the question.
-Above all: if the statements are not useful to answer the question you MUST begin your answer by: 'OPINION:' followed by your answer based on your own knowledge so that I know that the answer is coming from you!
+Be VERY concise but don't omit any relevant information from the statements.
+Answer in the same language as the question.
+Above all: if the statements are not enough to answer the question you MUST begin your answer by: 'OPINION:' followed by your answer based on your own knowledge so that I know that the answer is coming from you!
+But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example.
+Also the question can for example be an instruction like "give me all information about such and such", use common sense and don't be too strict!
 
 Question: `{question}`
 Statements:
