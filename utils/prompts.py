@@ -98,7 +98,7 @@ Answer:"""
 
 ANSWER_ONE_DOC = """You are an assistant for question-answering tasks.
 Use the following pieces of retrieved context to answer the question.
-If the context is irrelevant, just answer 'IRRELEVANT' and nothing else.
+If the entirety of the context is irrelevant, answer simply 'IRRELEVANT' and nothing else (no special formatting).
 Use three sentences maximum.
 Be VERY concise and use markdown formatting for easier reading.
 Question: '{question}'
