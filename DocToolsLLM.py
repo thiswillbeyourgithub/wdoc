@@ -1248,12 +1248,12 @@ class DocToolsLLM:
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
-                | self.llm.with_config({"callbacks": [self.cb]})
+                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
                 ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
-                | self.llm.with_config({"callbacks": [self.cb]})
+                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=5000)
                 | StrOutputParser()
             )
 
