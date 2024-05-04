@@ -49,6 +49,8 @@ from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
 
+from rich.markdown import Markdown
+
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 d = datetime.today()
@@ -1352,7 +1354,7 @@ class DocToolsLLM:
                 red(f"> {ia}")
                 print("\n")
 
-            red(f"Answer:\n{output['final_answer']}\n")
+            red(Markdown(f"Answer:\n{output['final_answer']}\n"))
             reldocs = output["relevant_filtered_docs"]
             fdocs = output["filtered_docs"]
             ufdocs = output["unfiltered_docs"]
