@@ -1274,7 +1274,7 @@ class DocToolsLLM:
                                     if check_intermediate_answer(inp)
                                 ]
                             )
-                        ).pick(["question", "intermediate_answers"])
+                        )
                         | combine_answers,
                     "intermediate_answers": itemgetter("intermediate_answers"),
                     "question": itemgetter("question"),
