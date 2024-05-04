@@ -1255,7 +1255,7 @@ class DocToolsLLM:
             )
             combine_answers = (
                 ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
-                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=5000)
+                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=2000)
                 | StrOutputParser()
             )
 
