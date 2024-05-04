@@ -1168,14 +1168,24 @@ class DocToolsLLM:
                     chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
                 )
                 standalone_question = {
-                                "question": {
-                                    "question": lambda x: x["question"],
-                                    "chat_history": lambda x: format_chat_history(x["chat_history"]),
-                                }
-                                | PromptTemplate.from_template(CONDENSE_QUESTION)
-                                | self.llm.with_config({"callbacks": [self.cb]})
-                                | StrOutputParser(),
-                            }
+                    "question_to_answer": RunnablePassthrough(),
+                    "question_for_embedding": {
+                        "question_for_embedding": lambda x: x["question_for_embedding"],
+                        "chat_history": lambda x: format_chat_history(x["chat_history"]),
+                    }
+                        | PromptTemplate.from_template(CONDENSE_QUESTION)
+                        | self.llm.with_config({"callbacks": [self.cb]})
+                        | StrOutputParser(),
+                }
+
+            if " // " in query:
+                sp = query.split(" // ")
+                assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
+                query_fe = sp[0].strip()
+                query_an = sp[1].strip()
+            else:
+                query_fe, query_an = query, query
+
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
                 self.weakmodelname,
@@ -1214,15 +1224,15 @@ class DocToolsLLM:
                 )
 
             retrieve_documents = {
-                "unfiltered_docs": itemgetter("question") | retriever,
-                "question": itemgetter("question")
+                "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
+                "question_to_answer": itemgetter("question_to_answer")
             }
-            refilter_documents = {
+            refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
                                 doc=lambda inputs: inputs["unfiltered_docs"],
-                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
+                                q=lambda inputs: [inputs["question_to_answer"] for i in range(len(inputs["unfiltered_docs"]))],
                                 )
                             | RunnablePassthrough.assign(
                                 inputs=lambda inputs: [
@@ -1234,7 +1244,7 @@ class DocToolsLLM:
                     | RunnableLambda(refilter_docs)
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
-                "question": itemgetter("question")
+                "question_to_answer": itemgetter("question_to_answer")
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
@@ -1250,22 +1260,22 @@ class DocToolsLLM:
             answer = (
                 RunnablePassthrough.assign(
                         inputs=lambda inputs: [
-                            {"context":d.page_content, "question":q}
+                            {"context":d.page_content, "question_to_answer":q}
                             for d, q in zip(
                                 inputs["filtered_docs"],
-                                [inputs["question"]] * len(inputs["filtered_docs"])
+                                [inputs["question_to_answer"]] * len(inputs["filtered_docs"])
                             )
                         ]
                     )
                 | {
                     "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
-                    "question": itemgetter("question"),
+                    "question_to_answer": itemgetter("question_to_answer"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     }
                 | {
                     "final_answer": RunnablePassthrough.assign(
-                        question=lambda inputs: inputs["question"],
+                        question=lambda inputs: inputs["question_to_answer"],
                         intermediate_answers=lambda inputs: "\n".join(
                                 # remove answers deemed irrelevant
                                 [
@@ -1277,7 +1287,7 @@ class DocToolsLLM:
                         )
                         | combine_answers,
                     "intermediate_answers": itemgetter("intermediate_answers"),
-                    "question": itemgetter("question"),
+                    "question_to_answer": itemgetter("question_to_answer"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                 }
@@ -1301,7 +1311,12 @@ class DocToolsLLM:
             if self.debug:
                 yel(rag_chain.get_graph().print_ascii())
 
-            output = rag_chain.invoke({"question": query})
+            output = rag_chain.invoke(
+                {
+                    "question_for_embedding": query_fe,
+                    "question_to_answer": query_an,
+                }
+            )
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):

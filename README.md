@@ -8,7 +8,7 @@
 * Summarize a documents then ask questions about it immediately
 
 ## Features
-* Advanced RAG system: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer.
+* Advanced RAG system: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * Multiple type of tasks implemented. See below.
 * Many supported filetype, including advanced ones like loading from list of files, list of links, using regex, youtube playlists etc. See below.
 * All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).

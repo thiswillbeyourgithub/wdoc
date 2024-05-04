@@ -80,9 +80,11 @@ Text section:
 CONDENSE_QUESTION = dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
 Chat History:
+'''
 {chat_history}
+'''
 
-Follow Up Input: {question}
+Follow Up Input: '{question_for_embedding}'
 
 Standalone question:""")
 
@@ -101,7 +103,7 @@ Use the following pieces of retrieved context to answer the question.
 If the entirety of the context is irrelevant, answer simply 'IRRELEVANT' and nothing else (no special formatting).
 Use three sentences maximum.
 Be VERY concise and use markdown formatting for easier reading.
-Question: '{question}'
+Question: '{question_to_answer}'
 Context:
 '''
 {context}
