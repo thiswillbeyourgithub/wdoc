@@ -36,10 +36,10 @@ from utils.file_loader import (load_doc,
                                )
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, create_ntfy_func
+from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
-from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain
+from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
 from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
@@ -62,9 +62,9 @@ class DocToolsLLM:
 
     def __init__(
         self,
-        modelname="openai/gpt-3.5-turbo-0125",
+        # modelname="openai/gpt-3.5-turbo-0125",
         # modelname="mistral/mistral-large-latest",
-        # modelname="openai/gpt-4-turbo-2024-04-09",
+        modelname="openai/gpt-4-turbo-2024-04-09",
         weakmodelname="openai/gpt-3.5-turbo-0125",
         # weakmodelname="mistral/open-mixtral-8x7b",
         task="query",
@@ -133,7 +133,7 @@ class DocToolsLLM:
                 * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is present, the formatting will be compatible with logseq.
 
 
-        --modelname str, default openai/gpt-3.5-turbo-0125
+        --modelname str, default openai/gpt-4-turbo-2024-04-09
             Keep in mind that given that the default backend used is litellm
             the part of modelname before the slash (/) is the server name.
             If the backend is 'testing' then a fake LLM will be used
@@ -1168,14 +1168,24 @@ class DocToolsLLM:
                     chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
                 )
                 standalone_question = {
-                                "question": {
-                                    "question": lambda x: x["question"],
-                                    "chat_history": lambda x: format_chat_history(x["chat_history"]),
-                                }
-                                | PromptTemplate.from_template(CONDENSE_QUESTION)
-                                | self.llm.with_config({"callbacks": [self.cb]})
-                                | StrOutputParser(),
-                            }
+                    "question_to_answer": RunnablePassthrough(),
+                    "question_for_embedding": {
+                        "question_for_embedding": lambda x: x["question_for_embedding"],
+                        "chat_history": lambda x: format_chat_history(x["chat_history"]),
+                    }
+                        | PromptTemplate.from_template(CONDENSE_QUESTION)
+                        | self.llm.with_config({"callbacks": [self.cb]})
+                        | StrOutputParser(),
+                }
+
+            if " // " in query:
+                sp = query.split(" // ")
+                assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
+                query_fe = sp[0].strip()
+                query_an = sp[1].strip()
+            else:
+                query_fe, query_an = query, query
+
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
                 self.weakmodelname,
@@ -1214,15 +1224,15 @@ class DocToolsLLM:
                 )
 
             retrieve_documents = {
-                "unfiltered_docs": itemgetter("question") | retriever,
-                "question": itemgetter("question")
+                "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
+                "question_to_answer": itemgetter("question_to_answer")
             }
-            refilter_documents = {
+            refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
                                 doc=lambda inputs: inputs["unfiltered_docs"],
-                                q=lambda inputs: [inputs["question"] for i in range(len(inputs["unfiltered_docs"]))],
+                                q=lambda inputs: [inputs["question_to_answer"] for i in range(len(inputs["unfiltered_docs"]))],
                                 )
                             | RunnablePassthrough.assign(
                                 inputs=lambda inputs: [
@@ -1234,82 +1244,96 @@ class DocToolsLLM:
                     | RunnableLambda(refilter_docs)
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
-                "question": itemgetter("question")
+                "question_to_answer": itemgetter("question_to_answer")
             }
             answer_each_doc_chain = (
                 ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
-                | self.llm.with_config({"callbacks": [self.cb]})
+                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
                 ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
-                | self.llm.with_config({"callbacks": [self.cb]})
+                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=2000)
                 | StrOutputParser()
             )
-            def check_intermediate_answer(ans: str) -> bool:
-                if (
-                    ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
-                    or
-                    len(ans) >= len("IRRELEVANT") * 2
-                    ):
-                    return True
-                return False
 
-            answer = (
-                RunnablePassthrough.assign(
-                        inputs=lambda inputs: [
-                            {"context":d.page_content, "question":q}
-                            for d, q in zip(
-                                inputs["filtered_docs"],
-                                [inputs["question"]] * len(inputs["filtered_docs"])
-                            )
-                        ]
+            answer_all_docs = RunnablePassthrough.assign(
+                inputs=lambda inputs: [
+                    {"context":d.page_content, "question_to_answer":q}
+                    for d, q in zip(
+                        inputs["filtered_docs"],
+                        [inputs["question_to_answer"]] * len(inputs["filtered_docs"])
                     )
-                | {
+                ]
+            ) | {
                     "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
-                    "question": itemgetter("question"),
+                    "question_to_answer": itemgetter("question_to_answer"),
                     "filtered_docs": itemgetter("filtered_docs"),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
-                    }
-                | {
-                    "final_answer": RunnablePassthrough.assign(
-                        question=lambda inputs: inputs["question"],
-                        intermediate_answers=lambda inputs: "\n".join(
-                                # remove answers deemed irrelevant
+                }
+
+            final_answer_chain = RunnablePassthrough.assign(
+                        final_answer=RunnablePassthrough.assign(
+                            question=lambda inputs: inputs["question_to_answer"],
+                            # remove answers deemed irrelevant
+                            intermediate_answers=lambda inputs: "\n".join(
                                 [
                                     inp
                                     for inp in inputs["intermediate_answers"]
                                     if check_intermediate_answer(inp)
                                 ]
                             )
-                        ).pick(["question", "intermediate_answers"])
+                        )
                         | combine_answers,
-                    "intermediate_answers": itemgetter("intermediate_answers"),
-                    "question": itemgetter("question"),
-                    "filtered_docs": itemgetter("filtered_docs"),
-                    "unfiltered_docs": itemgetter("unfiltered_docs"),
-                }
-            )
-            # Now we construct the inputs for the final prompt
+                )
             if self.condense_question:
                 rag_chain = (
                     loaded_memory
                     | standalone_question
                     | retrieve_documents
                     | refilter_documents
-                    | answer
+                    | answer_all_docs
                 )
             else:
                 rag_chain = (
                     retrieve_documents
                     | refilter_documents
-                    | answer
+                    | answer_all_docs
                 )
 
             if self.debug:
                 yel(rag_chain.get_graph().print_ascii())
 
-            output = rag_chain.invoke({"question": query})
+            output = rag_chain.invoke(
+                {
+                    "question_for_embedding": query_fe,
+                    "question_to_answer": query_an,
+                }
+            )
+
+            # group the intermediate answers by batch, then do a batch reduce mapping
+            batch_size = 5
+            intermediate_answers = output["intermediate_answers"]
+            all_intermediate_answers = [intermediate_answers]
+            while len(intermediate_answers) > batch_size:
+                batches = [[]]
+                for ia in intermediate_answers:
+                    if not check_intermediate_answer(ia):
+                        continue
+                    if len(batches[-1]) >= batch_size:
+                        batches.append([])
+                    if len(batches[-1]) < batch_size:
+                        batches[-1].append(ia)
+                batch_args = [
+                    {"question_to_answer": query_an, "intermediate_answers": b}
+                    for b in batches]
+                intermediate_answers = [a["final_answer"] for a in final_answer_chain.batch(batch_args)]
+            all_intermediate_answers.append(intermediate_answers)
+            final_answer = final_answer_chain.invoke({"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
+            output["final_answer"] = final_answer
+            output["all_intermediate_answeers"] = all_intermediate_answers
+            # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
+
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):
@@ -1325,10 +1349,10 @@ class DocToolsLLM:
                 whi(f"{wrapped:>10}")
                 for k, v in doc.metadata.items():
                     yel(f"    * {k}: {v}")
-                red(f"> {ia}")
+                md_printer(ia)
                 print("\n")
 
-            red(f"Answer:\n{output['final_answer']}\n")
+            md_printer(f"# Answer:\n{output['final_answer']}\n")
             reldocs = output["relevant_filtered_docs"]
             fdocs = output["filtered_docs"]
             ufdocs = output["unfiltered_docs"]

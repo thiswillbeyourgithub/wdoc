@@ -84,6 +84,16 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
         buffer += "\n" + "\n".join([human, ai])
     return buffer
 
+def check_intermediate_answer(ans: str) -> bool:
+    "filters out the intermediate answers that are deemed irrelevant."
+    if (
+        ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
+        or
+        len(ans) >= len("IRRELEVANT") * 2
+        ):
+        return True
+    return False
+
 
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the weak model answered 0 or 1"

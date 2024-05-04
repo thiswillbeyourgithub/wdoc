@@ -17,6 +17,7 @@ tqdm>=4.66.4
 unstructured>=0.6.2
 faiss-cpu>=1.8.0
 llama-cpp-python==0.2.69
+rich>=13.7.1
 
 # buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
