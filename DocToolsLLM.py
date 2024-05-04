@@ -39,7 +39,7 @@ from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func
 from utils.cli import ask_user
 from utils.tasks import do_summarize
-from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain
+from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
 from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
@@ -1246,14 +1246,6 @@ class DocToolsLLM:
                 | self.llm.with_config({"callbacks": [self.cb]})
                 | StrOutputParser()
             )
-            def check_intermediate_answer(ans: str) -> bool:
-                if (
-                    ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
-                    or
-                    len(ans) >= len("IRRELEVANT") * 2
-                    ):
-                    return True
-                return False
 
             answer = (
                 RunnablePassthrough.assign(
