@@ -1,3 +1,4 @@
+from textwrap import indent
 import rtoml
 import json
 import requests
@@ -7,6 +8,8 @@ import logging
 import logging.handlers
 from pathlib import Path
 from typing import Callable
+from rich.markdown import Markdown
+from rich.console import Console
 
 # adds logger, restrict it to X lines
 local_dir = Path.cwd()
@@ -72,6 +75,14 @@ def get_coloured_logger(color_asked: str) -> Callable:
 whi = get_coloured_logger("white")
 yel = get_coloured_logger("yellow")
 red = get_coloured_logger("red")
+
+console = Console()
+
+def md_printer(message: str) -> None:
+    log.info(message)
+    message = indent(message, "> ")
+    md = Markdown(message)
+    console.print(md)#, style="red")
 
 # phone notification
 def create_ntfy_func(url):

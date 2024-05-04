@@ -36,7 +36,7 @@ from utils.file_loader import (load_doc,
                                )
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, create_ntfy_func
+from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
@@ -48,8 +48,6 @@ from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
-
-from rich.markdown import Markdown
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -1351,10 +1349,10 @@ class DocToolsLLM:
                 whi(f"{wrapped:>10}")
                 for k, v in doc.metadata.items():
                     yel(f"    * {k}: {v}")
-                red(f"> {ia}")
+                md_printer(ia)
                 print("\n")
 
-            red(Markdown(f"Answer:\n{output['final_answer']}\n"))
+            md_printer(f"# Answer:\n{output['final_answer']}\n")
             reldocs = output["relevant_filtered_docs"]
             fdocs = output["filtered_docs"]
             ufdocs = output["unfiltered_docs"]
