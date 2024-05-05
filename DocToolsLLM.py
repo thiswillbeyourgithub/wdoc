@@ -466,7 +466,8 @@ class DocToolsLLM:
             import logging
             for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
                 logger = logging.getLogger(logger_name)
-                logger.setLevel(logging.CRITICAL + 1)
+                # logger.setLevel(logging.CRITICAL + 1)
+                logger.setLevel(logging.WARNING)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
