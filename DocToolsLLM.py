@@ -431,15 +431,15 @@ class DocToolsLLM:
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
 
-        if self.modelname in litellm.model_cost:
-            self.llm_price = [
-                litellm.model_cost[self.modelname]["input_cost_per_token"],
-                litellm.model_cost[self.modelname]["output_cost_per_token"]
-            ]
-        elif modelname in litellm.model_cost:
+        if modelname in litellm.model_cost:
             self.llm_price = [
                 litellm.model_cost[modelname]["input_cost_per_token"],
                 litellm.model_cost[modelname]["output_cost_per_token"]
+            ]
+        elif modelname.split("/")[1] in litellm.model_cost:
+            self.llm_price = [
+                litellm.model_cost[modelname.split("/")[1]]["input_cost_per_token"],
+                litellm.model_cost[modelname.split("/")[1]]["output_cost_per_token"]
             ]
         else:
             red(f"Can't find the price of {modelname} so setting it to gpt-3.5-turbo value")
@@ -447,15 +447,15 @@ class DocToolsLLM:
                 litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
                 litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
             ]
-        if self.weakmodelname in litellm.model_cost:
-            self.weakllm_price = [
-                litellm.model_cost[self.weakmodelname]["input_cost_per_token"],
-                litellm.model_cost[self.weakmodelname]["output_cost_per_token"]
-            ]
-        elif weakmodelname in litellm.model_cost:
+        if weakmodelname in litellm.model_cost:
             self.weakllm_price = [
                 litellm.model_cost[weakmodelname]["input_cost_per_token"],
                 litellm.model_cost[weakmodelname]["output_cost_per_token"]
+            ]
+        elif weakmodelname.split("/")[1] in litellm.model_cost:
+            self.weakllm_price = [
+                litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
+                litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
             ]
         else:
             red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
