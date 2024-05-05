@@ -1068,7 +1068,6 @@ class DocToolsLLM:
             retrievers.append(
                     create_hyde_retriever(
                         query=query,
-                        filetype=self.filetype,
 
                         llm=self.llm.with_config({"callbacks": [self.cb]}),
                         top_k=self.cli_commands["top_k"],
