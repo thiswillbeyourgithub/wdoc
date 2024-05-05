@@ -83,7 +83,7 @@ class DocToolsLLM:
         saveas: str = ".cache/latest_docs_and_embeddings",
         loadfrom: str = None,
 
-        top_k: int = 0,
+        top_k: int = 50,
         query_retrievers: str = "default",
         query_eval_check_number: int = 3,
         n_recursive_summary: int = 0,
