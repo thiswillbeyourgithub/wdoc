@@ -9,6 +9,7 @@ import copy
 from pathlib import Path
 from tqdm import tqdm
 import threading
+import litellm
 
 import numpy as np
 from pydantic import Extra
@@ -255,14 +256,24 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
     red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
-    if embed_model == "openai":
-        dol_price = full_tkn * 0.00002 / 1000
-        red(f"With OpenAI embeddings, the total cost for all tokens is ${dol_price:.4f}")
-        if dol_price > dollar_limit:
-            ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
-            if ans.lower() not in ["y", "yes"]:
-                red("Quitting.")
-                raise SystemExit()
+    if f"{backend}/{embed_model}" in litellm.model_cost:
+        price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
+        assert litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0
+    elif embed_model in litellm.model_cost:
+        price = litellm.model_cost[embed_model]["input_cost_per_token"]
+        assert litellm.model_cost[embed_model]["output_cost_per_token"] == 0
+    else:
+        red(f"Couldn't find the price of the embedding model, assuming the "
+            f"same as 'openai/text-embedding-3-small'")
+        price = 2e-08
+
+    dol_price = full_tkn * price
+    red(f"Total cost to embed all tokens is ${dol_price:.6f}")
+    if dol_price > dollar_limit:
+        ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
+        if ans.lower() not in ["y", "yes"]:
+            red("Quitting.")
+            raise SystemExit()
 
     # create a faiss index for batch of documents
     if to_embed:
