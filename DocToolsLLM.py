@@ -83,7 +83,7 @@ class DocToolsLLM:
         saveas: str = ".cache/latest_docs_and_embeddings",
         loadfrom: str = None,
 
-        top_k: int = 0,
+        top_k: int = 50,
         query_retrievers: str = "default",
         query_eval_check_number: int = 3,
         n_recursive_summary: int = 0,
@@ -1393,6 +1393,7 @@ class DocToolsLLM:
             if total_cost == 0 and self.cb.total_tokens != 0:
                 total_cost = self.llm_price[0] * self.cb.prompt_tokens + self.llm_price[1] * self.cb.completion_tokens
             yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
+
             wtotal_cost = self.wcb.total_cost
             if wtotal_cost == 0 and self.wcb.total_tokens != 0:
                 wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens + self.weakllm_price[1] * self.wcb.completion_tokens
