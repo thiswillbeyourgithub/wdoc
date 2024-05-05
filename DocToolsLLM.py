@@ -16,6 +16,8 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
+import litellm
+
 from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
@@ -429,21 +431,38 @@ class DocToolsLLM:
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
 
-        if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
-            self.llm_price = [0.0005, 0.0015]
-        elif "gpt-4-turbo" in self.modelname:
-            self.llm_price = [0.01, 0.03]
+        if modelname in litellm.model_cost:
+            self.llm_price = [
+                litellm.model_cost[modelname]["input_cost_per_token"],
+                litellm.model_cost[modelname]["output_cost_per_token"]
+            ]
+        elif modelname.split("/")[1] in litellm.model_cost:
+            self.llm_price = [
+                litellm.model_cost[modelname.split("/")[1]]["input_cost_per_token"],
+                litellm.model_cost[modelname.split("/")[1]]["output_cost_per_token"]
+            ]
         else:
-            red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
-            self.llm_price = [0.0005, 0.0015]
-        if weakmodelname is not None:
-            if "gpt-3.5" in self.weakmodelname and "turbo" in self.weakmodelname:
-                self.weakllm_price = [0.0005, 0.0015]
-            elif "gpt-4-turbo" in self.weakmodelname:
-                self.weakllm_price = [0.01, 0.03]
-            else:
-                red(f"Don't know the price of the weakmodel so setting it to gpt-3.5-turbo value")
-                self.weakllm_price = [0.0005, 0.0015]
+            red(f"Can't find the price of {modelname} so setting it to gpt-3.5-turbo value")
+            self.llm_price = [
+                litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
+                litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
+            ]
+        if weakmodelname in litellm.model_cost:
+            self.weakllm_price = [
+                litellm.model_cost[weakmodelname]["input_cost_per_token"],
+                litellm.model_cost[weakmodelname]["output_cost_per_token"]
+            ]
+        elif weakmodelname.split("/")[1] in litellm.model_cost:
+            self.weakllm_price = [
+                litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
+                litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
+            ]
+        else:
+            red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
+            self.weakllm_price = [
+                litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
+                litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
+            ]
 
         global ntfy
         if ntfy_url:
@@ -459,9 +478,9 @@ class DocToolsLLM:
             set_verbose(True)
             set_debug(True)
             kwargs["file_loader_max_threads"] = 1
-            import litellm
             litellm.set_verbose=True
         else:
+            litellm.set_verbose=False
             # fix from https://github.com/BerriAI/litellm/issues/2256
             import logging
             for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
@@ -1372,11 +1391,11 @@ class DocToolsLLM:
 
             total_cost = self.cb.total_cost
             if total_cost == 0 and self.cb.total_tokens != 0:
-                total_cost = self.llm_price[0] * self.cb.prompt_tokens / 1000 + self.llm_price[1] * self.cb.completion_tokens / 1000
+                total_cost = self.llm_price[0] * self.cb.prompt_tokens + self.llm_price[1] * self.cb.completion_tokens
             yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
             wtotal_cost = self.wcb.total_cost
             if wtotal_cost == 0 and self.wcb.total_tokens != 0:
-                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens / 1000 + self.weakllm_price[1] * self.wcb.completion_tokens / 1000
+                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens + self.weakllm_price[1] * self.wcb.completion_tokens
             yel(f"Tokens used by weak model: '{self.wcb.total_tokens}' (${wtotal_cost:.5f})")
 
 
