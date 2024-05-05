@@ -77,10 +77,10 @@ red = get_coloured_logger("red")
 
 console = Console()
 
-def md_printer(message: str) -> None:
+def md_printer(message: str, color: str = None) -> None:
     log.info(message)
     md = Markdown(message)
-    console.print(md)#, style="red")
+    console.print(md, style=color)
 
 # phone notification
 def create_ntfy_func(url):

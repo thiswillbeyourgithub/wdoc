@@ -1347,16 +1347,18 @@ class DocToolsLLM:
 
             md_printer("\n\n# Intermediate answers for each document:")
             counter = 0
+            to_print = ""
             for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
                 counter += 1
-                md_printer(f"## Document #{counter}")
+                to_print += f"## Document #{counter}\n"
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
-                md_printer("```\n" + wrapped + "\n ```")
+                to_print += "```\n" + wrapped + "\n ```\n"
                 for k, v in doc.metadata.items():
-                    md_printer(f"* **{k}**: `{v}`")
-                md_printer(indent("### Intermediate answer:\n" + ia, "> "))
-                print("\n")
+                    to_print += f"* **{k}**: `{v}`\n"
+                to_print += indent("### Intermediate answer:\n" + ia, "> ")
+                to_print += "\n"
+            md_printer(to_print)
 
             md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
 
