@@ -1350,11 +1350,9 @@ class DocToolsLLM:
                 print("\n")
 
             md_printer(f"# Answer:\n{output['final_answer']}\n")
-            reldocs = output["relevant_filtered_docs"]
-            fdocs = output["filtered_docs"]
-            ufdocs = output["unfiltered_docs"]
-            if len(ufdocs) < self.cli_commands["top_k"]:
-                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM and {len(reldocs)} were finally relevant.")
+            red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+            red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
+            red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
 
             if self.import_mode:
                 return output
