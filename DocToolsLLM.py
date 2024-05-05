@@ -44,6 +44,7 @@ from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBI
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
@@ -81,6 +82,7 @@ class DocToolsLLM:
 
         top_k=50,
         query_retrievers="hyde_default",
+        query_eval_check_number=3,
         n_recursive_summary=0,
 
         n_summaries_target=-1,
@@ -188,6 +190,12 @@ class DocToolsLLM:
 
             if contains 'hyde' but modelname contains "testing" then hyde will
             be removed.
+
+        --query_eval_check_number, int, default 3
+            number of pass to do with the weak llm to check if the document
+            is indeed relevant to the question. The document will not
+            be processed if all answers from the weak llm are 0, and will
+            be processed otherwise.
 
         --n_recursive_summary int, default 0
             will recursively summarize the summary this many times.
@@ -352,6 +360,8 @@ class DocToolsLLM:
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
+        query_eval_check_number = int(query_eval_check_number)
+        assert query_eval_check_number > 0, "query_eval_check_number value"
 
         for k in kwargs:
             if k not in [
@@ -407,6 +417,7 @@ class DocToolsLLM:
         self.loadfrom = loadfrom
         self.top_k = top_k
         self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
+        self.query_eval_check_number = query_eval_check_number
         self.debug = debug
         self.kwargs = kwargs
         self.llm_verbosity = llm_verbosity
@@ -1186,18 +1197,20 @@ class DocToolsLLM:
             else:
                 query_fe, query_an = query, query
 
+            # uses in most places to increase concurrency limit
+            multi = {"max_concurrency": 50}
+
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
                 self.weakmodelname,
                 self.weakmodelbackend,
                 max_tokens=1,
                 temperature=1,
-                n=1,
+                n=self.query_eval_check_number,
             )
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
 
-            eval_check_number = 1
             class EvalParser(BaseGenerationOutputParser[str]):
                 def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
                     red(result)
@@ -1207,21 +1220,15 @@ class DocToolsLLM:
                         text = int(text)
                     return text
 
-            multi = {"max_concurrency": 50}  # use in most places to increase concurrency limit
-            if eval_check_number > 1:
-                evaluate_doc_chain = (
-                    ChatPromptTemplate.from_template(EVALUATE_DOC)
-                    | {"prompt": RunnablePassthrough()}
-                    | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
-                    | itemgetter("prompts")
-                    | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
-                )
-            else:
-                evaluate_doc_chain = (
-                    ChatPromptTemplate.from_template(EVALUATE_DOC)
-                    | eval_llm.with_config({"callbacks": [self.wcb]})
-                    | EvalParser()
-                )
+            evaluate_doc_prompt = ChatPromptTemplate.from_template(EVALUATE_DOC)
+
+            @chain
+            def evaluate_doc_chain(inputs):
+                el = eval_llm.copy()
+                prompt = evaluate_doc_prompt.format_prompt(**inputs)
+                out = el._generate(prompt.messages)
+                outputs = [gen.text for gen in out.generations]
+                return outputs
 
             retrieve_documents = {
                 "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
