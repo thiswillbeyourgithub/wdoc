@@ -1069,8 +1069,6 @@ class DocToolsLLM:
                     "\n\nWhat is your question? (Q to quit)\n",
                     self.cli_commands,
                     )
-        whi(f"Query: {query}")
-
         retrievers = []
         if "hyde" in self.cli_commands["retriever"].lower():
             retrievers.append(
@@ -1203,6 +1201,8 @@ class DocToolsLLM:
                 query_an = sp[1].strip()
             else:
                 query_fe, query_an = query, query
+            whi(f"Query for the embeddings: {query_fe}")
+            whi(f"Question to answer: {query_an}")
 
             # uses in most places to increase concurrency limit
             multi = {"max_concurrency": 50}
