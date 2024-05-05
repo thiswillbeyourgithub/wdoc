@@ -1211,15 +1211,6 @@ class DocToolsLLM:
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
 
-            class EvalParser(BaseGenerationOutputParser[str]):
-                def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
-                    red(result)
-                    assert len(result) == 1, f"Expected only 1 answer, not {len(result)}"
-                    text = result[0].message.content
-                    if text.isdigit():
-                        text = int(text)
-                    return text
-
             evaluate_doc_prompt = ChatPromptTemplate.from_template(EVALUATE_DOC)
 
             @chain
@@ -1248,7 +1239,7 @@ class DocToolsLLM:
                                 | itemgetter("inputs")
                                 | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
-                    | RunnableLambda(refilter_docs)
+                    | refilter_docs
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
                 "question_to_answer": itemgetter("question_to_answer")
