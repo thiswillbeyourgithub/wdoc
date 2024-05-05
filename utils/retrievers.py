@@ -33,8 +33,8 @@ def create_hyde_retriever(
     """
 
     HyDE_template = """Please imagine the answer to the user's question about a document:
-    User question: {question}
-    Answer:"""
+User question: {question}
+Answer:"""
     hyde_prompt = PromptTemplate(
             input_variables=["question"],
             template=HyDE_template,
