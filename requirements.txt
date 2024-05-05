@@ -7,6 +7,7 @@ ftfy>=6.1.1
 joblib>=1.2.0
 langchain==0.1.17
 langchain-community==0.0.36
+langchain-openai>=0.1.4
 litellm>=1.35.36
 nltk>=3.8.1
 openai>=1.25.1
