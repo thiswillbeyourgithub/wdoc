@@ -95,6 +95,7 @@ def check_intermediate_answer(ans: str) -> bool:
     return False
 
 
+@chain
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the weak model answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
@@ -107,7 +108,8 @@ def refilter_docs(inputs: dict) -> List[Document]:
     for ie, evals in enumerate(evaluations):
         if not isinstance(evals, list):
             evals = [evals]
-        if all(isinstance(ev, int) for ev in evals):
+        if all(list(map(str.isdigit, evals))):
+            evals = list(map(int, evals))
             if sum(evals) != 0:
                 filtered_docs.append(unfiltered_docs[ie])
         else:

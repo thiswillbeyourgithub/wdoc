@@ -11,7 +11,6 @@ from .file_loader import get_splitter
 
 def create_hyde_retriever(
         query,
-        filetype,
 
         llm,
         top_k,
@@ -34,9 +33,8 @@ def create_hyde_retriever(
     """
 
     HyDE_template = """Please imagine the answer to the user's question about a document:
-    Document type: [[filetype]]
-    User question: {question}
-    Answer:""".replace("[[filetype]]", filetype)
+User question: {question}
+Answer:"""
     hyde_prompt = PromptTemplate(
             input_variables=["question"],
             template=HyDE_template,

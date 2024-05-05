@@ -5,9 +5,10 @@ beautifulsoup4>=4.10.0
 fire>=0.5.0
 ftfy>=6.1.1
 joblib>=1.2.0
-langchain==0.1.17
-langchain-community==0.0.36
+langchain>=0.1.17
+langchain-community>=0.0.36
 langchain-openai>=0.1.4
+langchain-mistralai>=0.1.6
 litellm>=1.35.36
 nltk>=3.8.1
 openai>=1.25.1
@@ -17,7 +18,7 @@ tiktoken>=0.6.0
 tqdm>=4.66.4
 unstructured>=0.6.2
 faiss-cpu>=1.8.0
-llama-cpp-python==0.2.69
+llama-cpp-python>=0.2.69  # >0.2.69 had a regression regarding embeddings
 rich>=13.7.1
 
 # buggy in windows so optional:

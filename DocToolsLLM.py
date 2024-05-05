@@ -1,3 +1,4 @@
+from textwrap import indent
 from typing import List, Union
 import tldextract
 from joblib import Parallel, delayed
@@ -44,6 +45,7 @@ from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBI
 from operator import itemgetter
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
@@ -58,43 +60,44 @@ set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
 
 
 class DocToolsLLM:
-    VERSION = "0.12"
+    VERSION: str = "0.12"
 
     def __init__(
         self,
-        # modelname="openai/gpt-3.5-turbo-0125",
-        # modelname="mistral/mistral-large-latest",
-        modelname="openai/gpt-4-turbo-2024-04-09",
-        weakmodelname="openai/gpt-3.5-turbo-0125",
-        # weakmodelname="mistral/open-mixtral-8x7b",
-        task="query",
-        query=None,
-        filetype="infer",
-        embed_model="openai/text-embedding-3-small",
-        # embed_model = "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
-        # embed_model = "sentencetransformers/distiluse-base-multilingual-cased-v1",
-        # embed_model = "sentencetransformers/msmarco-distilbert-cos-v5",
-        # embed_model = "sentencetransformers/all-mpnet-base-v2",
-        # embed_model = "huggingface/google/gemma-2b",
-        saveas=".cache/latest_docs_and_embeddings",
-        loadfrom=None,
+        # modelname: str = "openai/gpt-3.5-turbo-0125",
+        # modelname: str = "mistral/mistral-large-latest",
+        modelname: str = "openai/gpt-4-turbo-2024-04-09",
+        weakmodelname: str = "openai/gpt-3.5-turbo-0125",
+        # weakmodelname: str = "mistral/open-mixtral-8x7b",
+        task: str = "query",
+        query: str = None,
+        filetype: str = "infer",
+        embed_model: str = "openai/text-embedding-3-small",
+        # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
+        # embed_model: str =  "sentencetransformers/distiluse-base-multilingual-cased-v1",
+        # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
+        # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
+        # embed_model: str =  "huggingface/google/gemma-2b",
+        saveas: str = ".cache/latest_docs_and_embeddings",
+        loadfrom: str = None,
 
-        top_k=50,
-        query_retrievers="hyde_default",
-        n_recursive_summary=0,
+        top_k: int = 0,
+        query_retrievers: str = "default",
+        query_eval_check_number: int = 3,
+        n_recursive_summary: int = 0,
 
-        n_summaries_target=-1,
+        n_summaries_target: int = -1,
 
-        dollar_limit=5,
-        debug=False,
-        llm_verbosity=True,
-        ntfy_url=None,
-        condense_question=True,
-        chat_memory=True,
+        dollar_limit: int = 5,
+        debug: bool = False,
+        llm_verbosity: bool = True,
+        ntfy_url: str =  None,
+        condense_question: bool = True,
+        chat_memory: bool = True,
 
-        help=False,
-        h=False,
-        import_mode=False,
+        help: bool = False,
+        h: bool = False,
+        import_mode: bool = False,
         **kwargs,
         ):
         """
@@ -177,7 +180,7 @@ class DocToolsLLM:
             weak model is used to refilter the document after the embeddings
             first pass.
 
-        --query_retrievers: str, default 'hyde_default'
+        --query_retrievers: str, default 'default'
             must be a string that specifies which retriever will be used for
             queries depending on which keyword is inside this string:
                 "default": cosine similarity retriever
@@ -188,6 +191,12 @@ class DocToolsLLM:
 
             if contains 'hyde' but modelname contains "testing" then hyde will
             be removed.
+
+        --query_eval_check_number, int, default 3
+            number of pass to do with the weak llm to check if the document
+            is indeed relevant to the question. The document will not
+            be processed if all answers from the weak llm are 0, and will
+            be processed otherwise.
 
         --n_recursive_summary int, default 0
             will recursively summarize the summary this many times.
@@ -352,6 +361,8 @@ class DocToolsLLM:
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
+        query_eval_check_number = int(query_eval_check_number)
+        assert query_eval_check_number > 0, "query_eval_check_number value"
 
         for k in kwargs:
             if k not in [
@@ -407,6 +418,7 @@ class DocToolsLLM:
         self.loadfrom = loadfrom
         self.top_k = top_k
         self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
+        self.query_eval_check_number = query_eval_check_number
         self.debug = debug
         self.kwargs = kwargs
         self.llm_verbosity = llm_verbosity
@@ -419,7 +431,7 @@ class DocToolsLLM:
 
         if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
             self.llm_price = [0.0005, 0.0015]
-        elif "gpt-4" in self.modelname and "preview" in self.modelname:
+        elif "gpt-4-turbo" in self.modelname:
             self.llm_price = [0.01, 0.03]
         else:
             red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
@@ -427,7 +439,7 @@ class DocToolsLLM:
         if weakmodelname is not None:
             if "gpt-3.5" in self.weakmodelname and "turbo" in self.weakmodelname:
                 self.weakllm_price = [0.0005, 0.0015]
-            elif "gpt-4" in self.weakmodelname and "preview" in self.weakmodelname:
+            elif "gpt-4-turbo" in self.weakmodelname:
                 self.weakllm_price = [0.01, 0.03]
             else:
                 red(f"Don't know the price of the weakmodel so setting it to gpt-3.5-turbo value")
@@ -449,6 +461,13 @@ class DocToolsLLM:
             kwargs["file_loader_max_threads"] = 1
             import litellm
             litellm.set_verbose=True
+        else:
+            # fix from https://github.com/BerriAI/litellm/issues/2256
+            import logging
+            for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
+                logger = logging.getLogger(logger_name)
+                # logger.setLevel(logging.CRITICAL + 1)
+                logger.setLevel(logging.WARNING)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -1050,14 +1069,11 @@ class DocToolsLLM:
                     "\n\nWhat is your question? (Q to quit)\n",
                     self.cli_commands,
                     )
-        whi(f"Query: {query}")
-
         retrievers = []
         if "hyde" in self.cli_commands["retriever"].lower():
             retrievers.append(
                     create_hyde_retriever(
                         query=query,
-                        filetype=self.filetype,
 
                         llm=self.llm.with_config({"callbacks": [self.cb]}),
                         top_k=self.cli_commands["top_k"],
@@ -1185,6 +1201,11 @@ class DocToolsLLM:
                 query_an = sp[1].strip()
             else:
                 query_fe, query_an = query, query
+            whi(f"Query for the embeddings: {query_fe}")
+            whi(f"Question to answer: {query_an}")
+
+            # uses in most places to increase concurrency limit
+            multi = {"max_concurrency": 50}
 
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
@@ -1192,36 +1213,20 @@ class DocToolsLLM:
                 self.weakmodelbackend,
                 max_tokens=1,
                 temperature=1,
-                n=1,
+                n=self.query_eval_check_number,
             )
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
 
-            eval_check_number = 1
-            class EvalParser(BaseGenerationOutputParser[str]):
-                def parse_result(self, result: List[Generation], *, partial: bool=False) -> str:
-                    red(result)
-                    assert len(result) == 1, f"Expected only 1 answer, not {len(result)}"
-                    text = result[0].message.content
-                    if text.isdigit():
-                        text = int(text)
-                    return text
+            evaluate_doc_prompt = ChatPromptTemplate.from_template(EVALUATE_DOC)
 
-            multi = {"max_concurrency": 50}  # use in most places to increase concurrency limit
-            if eval_check_number > 1:
-                evaluate_doc_chain = (
-                    ChatPromptTemplate.from_template(EVALUATE_DOC)
-                    | {"prompt": RunnablePassthrough()}
-                    | RunnablePassthrough.assign(prompts=lambda inputs: [inputs["prompt"]] * eval_check_number)
-                    | itemgetter("prompts")
-                    | (eval_llm.with_config({"callbacks": [self.wcb], **multi}) | EvalParser()).with_config(multi).map().with_config(multi)
-                )
-            else:
-                evaluate_doc_chain = (
-                    ChatPromptTemplate.from_template(EVALUATE_DOC)
-                    | eval_llm.with_config({"callbacks": [self.wcb]})
-                    | EvalParser()
-                )
+            @chain
+            def evaluate_doc_chain(inputs):
+                el = eval_llm.copy()
+                prompt = evaluate_doc_prompt.format_prompt(**inputs)
+                out = el._generate(prompt.messages)
+                outputs = [gen.text for gen in out.generations]
+                return outputs
 
             retrieve_documents = {
                 "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
@@ -1241,7 +1246,7 @@ class DocToolsLLM:
                                 | itemgetter("inputs")
                                 | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
-                    | RunnableLambda(refilter_docs)
+                    | refilter_docs
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
                 "question_to_answer": itemgetter("question_to_answer")
@@ -1341,23 +1346,26 @@ class DocToolsLLM:
                     output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
-            whi("\n\nIntermediate answers for each document:")
+            md_printer("\n\n# Intermediate answers for each document:")
+            counter = 0
+            to_print = ""
             for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
-                whi("  * content:")
+                counter += 1
+                to_print += f"## Document #{counter}\n"
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
-                whi(f"{wrapped:>10}")
+                to_print += "```\n" + wrapped + "\n ```\n"
                 for k, v in doc.metadata.items():
-                    yel(f"    * {k}: {v}")
-                md_printer(ia)
-                print("\n")
+                    to_print += f"* **{k}**: `{v}`\n"
+                to_print += indent("### Intermediate answer:\n" + ia, "> ")
+                to_print += "\n"
+            md_printer(to_print)
 
-            md_printer(f"# Answer:\n{output['final_answer']}\n")
-            reldocs = output["relevant_filtered_docs"]
-            fdocs = output["filtered_docs"]
-            ufdocs = output["unfiltered_docs"]
-            if len(ufdocs) < self.cli_commands["top_k"]:
-                red(f"Only found {len(ufdocs)} relevant documents, and kept {len(fdocs)} using the weak LLM and {len(reldocs)} were finally relevant.")
+            md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
+
+            red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+            red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
+            red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
 
             if self.import_mode:
                 return output
