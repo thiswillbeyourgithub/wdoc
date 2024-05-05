@@ -462,7 +462,11 @@ class DocToolsLLM:
             import litellm
             litellm.set_verbose=True
         else:
-            litellm.set_verbose=False
+            # fix from https://github.com/BerriAI/litellm/issues/2256
+            import logging
+            for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
+                logger = logging.getLogger(logger_name)
+                logger.setLevel(logging.CRITICAL + 1)
 
         # compile include / exclude regex
         if "include" in self.kwargs:
