@@ -23,7 +23,7 @@ from langchain.retrievers.document_compressors import (
         DocumentCompressorPipeline)
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain.prompts.prompt import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain.cache import SQLiteCache
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
