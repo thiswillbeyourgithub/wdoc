@@ -419,7 +419,7 @@ class DocToolsLLM:
 
         if "gpt-3.5" in self.modelname and "turbo" in self.modelname:
             self.llm_price = [0.0005, 0.0015]
-        elif "gpt-4" in self.modelname and "preview" in self.modelname:
+        elif "gpt-4-turbo" in self.modelname:
             self.llm_price = [0.01, 0.03]
         else:
             red(f"Don't know the price of the model so setting it to gpt-3.5-turbo value")
@@ -427,7 +427,7 @@ class DocToolsLLM:
         if weakmodelname is not None:
             if "gpt-3.5" in self.weakmodelname and "turbo" in self.weakmodelname:
                 self.weakllm_price = [0.0005, 0.0015]
-            elif "gpt-4" in self.weakmodelname and "preview" in self.weakmodelname:
+            elif "gpt-4-turbo" in self.weakmodelname:
                 self.weakllm_price = [0.01, 0.03]
             else:
                 red(f"Don't know the price of the weakmodel so setting it to gpt-3.5-turbo value")
