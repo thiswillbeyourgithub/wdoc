@@ -59,7 +59,7 @@ set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
 
 
 class DocToolsLLM:
-    VERSION = "0.12"
+    VERSION: str = "0.12"
 
     def __init__(
         self,
