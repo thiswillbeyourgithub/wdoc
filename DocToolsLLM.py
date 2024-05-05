@@ -81,7 +81,7 @@ class DocToolsLLM:
         loadfrom=None,
 
         top_k=50,
-        query_retrievers="hyde_default",
+        query_retrievers="default",
         query_eval_check_number=3,
         n_recursive_summary=0,
 
@@ -179,7 +179,7 @@ class DocToolsLLM:
             weak model is used to refilter the document after the embeddings
             first pass.
 
-        --query_retrievers: str, default 'hyde_default'
+        --query_retrievers: str, default 'default'
             must be a string that specifies which retriever will be used for
             queries depending on which keyword is inside this string:
                 "default": cosine similarity retriever
