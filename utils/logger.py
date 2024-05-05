@@ -1,4 +1,3 @@
-from textwrap import indent
 import rtoml
 import json
 import requests
@@ -80,7 +79,6 @@ console = Console()
 
 def md_printer(message: str) -> None:
     log.info(message)
-    message = indent(message, "> ")
     md = Markdown(message)
     console.print(md)#, style="red")
 

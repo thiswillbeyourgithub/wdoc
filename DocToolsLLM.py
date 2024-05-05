@@ -1,3 +1,4 @@
+from textwrap import indent
 from typing import List, Union
 import tldextract
 from joblib import Parallel, delayed
@@ -460,6 +461,8 @@ class DocToolsLLM:
             kwargs["file_loader_max_threads"] = 1
             import litellm
             litellm.set_verbose=True
+        else:
+            litellm.set_verbose=False
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -1338,18 +1341,21 @@ class DocToolsLLM:
                     output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
-            whi("\n\nIntermediate answers for each document:")
+            md_printer("\n\n# Intermediate answers for each document:")
+            counter = 0
             for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
-                whi("  * content:")
+                counter += 1
+                md_printer(f"## Document #{counter}")
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
-                whi(f"{wrapped:>10}")
+                md_printer("```\n" + wrapped + "\n ```")
                 for k, v in doc.metadata.items():
-                    yel(f"    * {k}: {v}")
-                md_printer(ia)
+                    md_printer(f"* **{k}**: `{v}`")
+                md_printer(indent("### Intermediate answer:\n" + ia, "> "))
                 print("\n")
 
-            md_printer(f"# Answer:\n{output['final_answer']}\n")
+            md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
+
             red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
             red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
