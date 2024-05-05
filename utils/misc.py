@@ -108,7 +108,8 @@ def refilter_docs(inputs: dict) -> List[Document]:
     for ie, evals in enumerate(evaluations):
         if not isinstance(evals, list):
             evals = [evals]
-        if all(isinstance(ev, int) for ev in evals):
+        if all(list(map(str.isdigit, evals))):
+            evals = list(map(int, evals))
             if sum(evals) != 0:
                 filtered_docs.append(unfiltered_docs[ie])
         else:
