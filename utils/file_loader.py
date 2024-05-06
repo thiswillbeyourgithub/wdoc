@@ -1,3 +1,4 @@
+from typing import List
 from textwrap import dedent
 from functools import partial
 import tldextract
@@ -1035,32 +1036,15 @@ def load_doc(filetype, debug, task, **kwargs):
         path = kwargs["path"]
         whi(f"Loading local html: '{path}'")
         assert Path(path).exists(), f"file not found: '{path}'"
-        with open(path) as f:
-            content = f.read()
+        load_functions = None
         if "load_functions" in kwargs:
-            load_functions = kwargs["load_functions"].copy()
-            assert isinstance(load_functions, list), (
-                f"load_functions must be a list, not {type(load_functions)}")
-            try:
-                for ilf, lf in enumerate(load_functions):
-                    load_functions[ilf] = eval(lf)
-            except Exception as err:
-                raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
-            assert all(callable(lf) for lf in load_functions), (
-                    f"Some load_functions are not callable: {load_functions}")
-            try:
-                for ifunc, func in enumerate(load_functions):
-                    content = func(content)
-                assert isinstance(content, str), (
-                    f"output of function #{ifunc}: '{func}' is not a "
-                    f"string: {content}")
-            except Exception as err:
-                raise Exception(f"Error running load_functions: '{err}'")
-        try:
-            soup = BeautifulSoup(content, "html.parser")
-        except Exception as err:
-            raise Exception(f"Error when parsing html: {err}")
-        text = html_to_text(soup, issoup=True)
+            # the functions must be stringified because joblib can't
+            # cache string that would declare as lambda functions
+            load_functions = json.dumps(kwargs["load_functions"])
+        text = load_html_file(
+                path=path,
+                load_functions=load_functions,
+        )
         texts = text_splitter.split_text(text)
         docs = [Document(page_content=t) for t in texts]
         check_docs_tkn_length(docs, path)
@@ -1381,6 +1365,37 @@ def load_doc(filetype, debug, task, **kwargs):
     assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
+@loaddoc_cache.cache
+def load_html_file(path: str, load_functions: str = None) -> str:
+    with open(path) as f:
+        content = f.read()
+    if load_functions:
+        # had to stringify them because joblib can't pickle lambda functions
+        assert isinstance(load_functions, str)
+        load_functions = json.loads(load_functions)
+        assert isinstance(load_functions, list), (
+            f"load_functions must be a list, not {type(load_functions)}")
+        try:
+            for ilf, lf in enumerate(load_functions):
+                load_functions[ilf] = eval(lf)
+        except Exception as err:
+            raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+        assert all(callable(lf) for lf in load_functions), (
+                f"Some load_functions are not callable: {load_functions}")
+        try:
+            for ifunc, func in enumerate(load_functions):
+                content = func(content)
+            assert isinstance(content, str), (
+                f"output of function #{ifunc}: '{func}' is not a "
+                f"string: {content}")
+        except Exception as err:
+            raise Exception(f"Error running load_functions: '{err}'")
+    try:
+        soup = BeautifulSoup(content, "html.parser")
+    except Exception as err:
+        raise Exception(f"Error when parsing html: {err}")
+    text = html_to_text(soup, issoup=True)
+    return text
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):
