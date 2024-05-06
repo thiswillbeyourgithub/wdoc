@@ -271,9 +271,15 @@ def load_doc(filetype, debug, task, **kwargs):
             ), "'recursed_filetype' cannot be 'recursive', 'json_list', 'anki' or 'youtube'"
             pattern = kwargs["pattern"]
 
+            if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
+                path = path.replace(r"\ ", " ")
+            assert Path(path).exists, f"not found: {path}"
             doclist = [p for p in Path(path).rglob(pattern)]
+            assert doclist, f"No document found by pattern {pattern}"
             doclist = [str(p).strip() for p in doclist if p.is_file()]
+            assert doclist, f"No document after filtering by file"
             doclist = [p for p in doclist if p]
+            assert doclist, f"No document after removing nonemtpy"
             doclist = [
                 p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
             ]
