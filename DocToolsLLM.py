@@ -393,7 +393,7 @@ class DocToolsLLM:
                     "load_functions",
                     # "filter_content",
                     ] and not k.startswith("llamacppembedding_"):
-                red(f"Found unexpected keyword argument: '{k}'")
+                raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
         if filetype == "string":
             top_k = 1
