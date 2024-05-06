@@ -1346,7 +1346,7 @@ def load_doc(filetype, debug, task, **kwargs):
                     total_reading_length > 0.5
                 ), (
                     "Failing doc: total reading length is suspiciously low "
-                    f"for {docs[i].metadata}: '{total_reading_length} seconds'"
+                    f"for {docs[i].metadata}: '{total_reading_length} minutes'"
                 )
             docs[i].metadata["docs_reading_time"] = total_reading_length
         if "source" not in docs[i].metadata:
