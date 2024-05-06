@@ -108,7 +108,7 @@ threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
 
-min_token = 200
+min_token = 50
 max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
