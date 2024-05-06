@@ -274,6 +274,7 @@ def load_doc(filetype, debug, task, **kwargs):
             pattern = kwargs["pattern"]
 
             if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
+                whi(r"File was not found so replaced '\ ' by ' '")
                 path = path.replace(r"\ ", " ")
             assert Path(path).exists, f"not found: {path}"
             doclist = [p for p in Path(path).rglob(pattern)]
