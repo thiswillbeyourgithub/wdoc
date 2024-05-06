@@ -266,6 +266,8 @@ class DocToolsLLM:
                 * 'single_note': 1 document is 1 anki note.
                 * 'window': 1 documents is 5 anki note, overlapping
                 * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
+            Whatever you choose, you can later filter out documents by metadata
+            filtering over the 'anki_mode' key.
 
         --whisper_lang
             if using whisper to transcribe an audio file, this if the language

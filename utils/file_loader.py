@@ -848,6 +848,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         metadata={
                             "anki_tags": " ".join(c["ntags"]),
                             "anki_cid": str(cid),
+                            "anki_mode": "single_note",
                         },
                     )
                 )
@@ -875,6 +876,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         "anki_tags": " ".join(tags),
                         "anki_cid": str(cid),
                         "anki_deck": card_deck,
+                        "anki_mode": "concatenate",
                     }
                     continue
 
@@ -964,6 +966,7 @@ def load_doc(filetype, debug, task, **kwargs):
                                 list(set(c["tags_concat"].split(" ")))
                             ),
                             "anki_cid": c["cids"].strip(),
+                            "anki_mode": f"window_{window_size}",
                         },
                     )
                 )
