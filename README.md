@@ -32,6 +32,7 @@
 * **text files** (.txt, markdown, etc)
 * **anki** collection
 * **string** (just paste your text into the app)
+* **html files** (useful for website dumps)
 * **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
 * **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`

@@ -339,6 +339,16 @@ class DocToolsLLM:
             multithreading (as it can result in out of memory error if
             using threads and overly recursive calls)
 
+        --load_functions: List[str], default None
+            list of strings that when evaluated in python result in a list of
+            callable. The first must take one input of type string and the
+            last function must return one string.
+
+            For example in the filetypes 'local_html' this can be used to
+            specify lambda functions that modify the text before running
+            BeautifulSoup. Useful to decode html stored in .js files.
+            Do tell me if you want more of this.
+
         """
         if help or h:
             print(self.__init__.__doc__)
@@ -380,6 +390,7 @@ class DocToolsLLM:
                     "embed_instruct",
                     "file_loader_max_threads",
                     "filter_metadata",
+                    "load_functions",
                     # "filter_content",
                     ] and not k.startswith("llamacppembedding_"):
                 red(f"Found unexpected keyword argument: '{k}'")

@@ -75,6 +75,7 @@ inference_rules = {
     "online_pdf": ["^http.*pdf.*"],
     "pdf": [".*pdf$"],
     "url": ["^http"],
+    "local_html": [r"^(?!http).*\.html?$"],
     "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
     "json_list": [".*.json"],
 }
@@ -1021,6 +1022,46 @@ def load_doc(filetype, debug, task, **kwargs):
         with open(path) as f:
             content = f.read()
         texts = text_splitter.split_text(content)
+        docs = [
+            Document(
+                page_content=t,
+                metadata={}
+            ) for t in texts
+        ]
+        check_docs_tkn_length(docs, path)
+
+    elif filetype == "local_html":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading local html: '{path}'")
+        assert Path(path).exists(), f"file not found: '{path}'"
+        with open(path) as f:
+            content = f.read()
+        if "load_functions" in kwargs:
+            load_functions = kwargs["load_functions"].copy()
+            assert isinstance(load_functions, list), (
+                f"load_functions must be a list, not {type(load_functions)}")
+            try:
+                for ilf, lf in enumerate(load_functions):
+                    load_functions[ilf] = eval(lf)
+            except Exception as err:
+                raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+            assert all(callable(lf) for lf in load_functions), (
+                    f"Some load_functions are not callable: {load_functions}")
+            try:
+                for ifunc, func in enumerate(load_functions):
+                    content = func(content)
+                assert isinstance(content, str), (
+                    f"output of function #{ifunc}: '{func}' is not a "
+                    f"string: {content}")
+            except Exception as err:
+                raise Exception(f"Error running load_functions: '{err}'")
+        try:
+            soup = BeautifulSoup(content, "html.parser")
+        except Exception as err:
+            raise Exception(f"Error when parsing html: {err}")
+        text = html_to_text(soup, issoup=True)
+        texts = text_splitter.split_text(text)
         docs = [Document(page_content=t) for t in texts]
         check_docs_tkn_length(docs, path)
 
