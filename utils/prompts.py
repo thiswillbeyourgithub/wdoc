@@ -1,4 +1,5 @@
 from textwrap import dedent, indent
+from langchain.prompts import ChatPromptTemplate
 
 # rule for the summarization
 summary_rules = """
@@ -89,14 +90,12 @@ Follow Up Input: '{question_for_embedding}'
 Standalone question:""")
 
 # RAG
-EVALUATE_DOC = """Given the following question and document text, if the text is related to the question you answer '1', otherwise you answer '0'.
-Don't narrate, just answer the number.
-Question: '{q}'
-Document:
-```
-{doc}
-```
-Answer:"""
+PR_EVALUATE_DOC = ChatPromptTemplate.form_messages(
+    [
+        {"system": "You are given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."},
+        {"human": "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?"}
+        ]
+)
 
 ANSWER_ONE_DOC = """You are an assistant for question-answering tasks.
 Use the following pieces of retrieved context to answer the question.

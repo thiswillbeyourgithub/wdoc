@@ -43,9 +43,8 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
-from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
+from utils.prompts import CONDENSE_QUESTION, PR_EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
-from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableEach
@@ -1250,12 +1249,10 @@ class DocToolsLLM:
             if not hasattr(self, "wcb"):
                 self.wcb = weakcallback().__enter__()  # for token counting
 
-            evaluate_doc_prompt = ChatPromptTemplate.from_template(EVALUATE_DOC)
-
             @chain
             def evaluate_doc_chain(inputs):
                 el = eval_llm.copy()
-                prompt = evaluate_doc_prompt.format_prompt(**inputs)
+                prompt = PR_EVALUATE_DOC.format_prompt(**inputs)
                 out = el._generate(prompt.messages)
                 outputs = [gen.text for gen in out.generations]
                 return outputs
