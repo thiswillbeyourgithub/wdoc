@@ -90,7 +90,7 @@ class DocToolsLLM:
 
         dollar_limit: int = 5,
         debug: bool = False,
-        llm_verbosity: bool = True,
+        llm_verbosity: bool = False,
         ntfy_url: str =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
@@ -217,8 +217,9 @@ class DocToolsLLM:
             Will also disable multithreading for summaries and for loading
             files.
 
-        --llm_verbosity, default True
+        --llm_verbosity, default False
             if True, will print the intermediate reasonning steps of LLMs
+            if debug is set, llm_verbosity is also set to True
 
         --ntfy_url, default None
             must be a url to ntfy.sh to receive notifications for summaries.
@@ -418,6 +419,9 @@ class DocToolsLLM:
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+
+        if debug:
+            llm_verbosity = True
 
         # storing as attributes
         self.modelbackend = modelname.split("/")[0].lower()
