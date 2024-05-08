@@ -43,7 +43,7 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
-from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
+from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables import chain
@@ -1286,7 +1286,7 @@ class DocToolsLLM:
                 | StrOutputParser()
             )
             combine_answers = (
-                ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
+                PR_COMBINE_INTERMEDIATE_ANSWERS
                 | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=2000)
                 | StrOutputParser()
             )

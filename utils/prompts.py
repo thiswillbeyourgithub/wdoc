@@ -94,7 +94,7 @@ PR_EVALUATE_DOC = ChatPromptTemplate.form_messages(
 )
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
-        [
+    [
         {"system": """You are an assistant for question-answering tasks.
 You are given a piece of document and a question to answer.
 If the document is ENTIRELY irrelevant to the question, answer directly 'IRRELEVANT' without anything else and no other formatting.
@@ -106,18 +106,17 @@ But DON'T interpret the question too strictly, e.g. the question can be implicit
     ]
 )
 
-COMBINE_INTERMEDIATE_ANSWERS = """Given the following statements, you must answer a given question.
+PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
+    [
+        {"system": """Given some statements, your task it to answer a given question using only information from the statements.
 Ignore irrelevant statements. Don't narrate, just do what I asked.
-Use markdown formatting, especially bullet points for enumeration etc.
-Be VERY concise but don't omit any relevant information from the statements.
+Use markdown formatting, especially bullet points for enumeration, bold, indentation etc.
+Be VERY concise but don't omit ANY relevant information from the statements.
 Answer in the same language as the question.
-Above all: if the statements are not enough to answer the question you MUST begin your answer by: 'OPINION:' followed by your answer based on your own knowledge so that I know that the answer is coming from you!
+Above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
 But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example.
 Also the question can for example be an instruction like "give me all information about such and such", use common sense and don't be too strict!
-
-Question: `{question}`
-Statements:
-```
-{intermediate_answers}
-```
-Answer:"""
+But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""},
+        {"human": "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?"""}
+    ]
+)
