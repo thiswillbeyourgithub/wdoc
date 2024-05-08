@@ -1404,6 +1404,8 @@ class DocToolsLLM:
             wtotal_cost = self.weakllm_price[0] * evalllmcallback.prompt_tokens + self.weakllm_price[1] * evalllmcallback.completion_tokens
             yel(f"Tokens used by weak model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
+            red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
+
 
 if __name__ == "__main__":
     instance = fire.Fire(DocToolsLLM)
