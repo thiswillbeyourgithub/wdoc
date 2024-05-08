@@ -1,5 +1,5 @@
 from textwrap import dedent, indent
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 
 # rule for the summarization
 summary_rules = """
@@ -80,35 +80,35 @@ Text section:
 
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
     [
-        {"system": "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."},
-    {"human": "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?"}
+        ("system", "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
+    ("human", "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?")
         ]
 )
 
 # RAG
-PR_EVALUATE_DOC = ChatPromptTemplate.form_messages(
+PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        {"system": "You are given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."},
-        {"human": "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?"}
+        ("system", "You are given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."),
+        ("human", "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
         ]
 )
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        {"system": """You are an assistant for question-answering tasks.
+        ("system", """You are an assistant for question-answering tasks.
 You are given a piece of document and a question to answer.
 If the document is ENTIRELY irrelevant to the question, answer directly 'IRRELEVANT' without anything else and no other formatting.
 Otherwise, use a maximum of 3 md bulletpoints to answer the question using only information from the provided document.
 Use markdown formatting for easier reading, but don't wrap your answer in a code block or anything like that: reply instantly without acknowledging those rules.
 Doing all that you have to remain VERY concise while remaining truthful to the document content.
-But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""},
-        {"human": "Question: '{question_to_answer}'\nContext:\n```\n{context}\n```\nWhat's your reply?"}
+But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""),
+        ("human", "Question: '{question_to_answer}'\nContext:\n```\n{context}\n```\nWhat's your reply?")
     ]
 )
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        {"system": """Given some statements, your task it to answer a given question using only information from the statements.
+        ("system", """Given some statements, your task it to answer a given question using only information from the statements.
 Ignore irrelevant statements. Don't narrate, just do what I asked.
 Use markdown formatting, especially bullet points for enumeration, bold, indentation etc.
 Be VERY concise but don't omit ANY relevant information from the statements.
@@ -116,7 +116,7 @@ Answer in the same language as the question.
 Above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
 But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example.
 Also the question can for example be an instruction like "give me all information about such and such", use common sense and don't be too strict!
-But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""},
-        {"human": "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?"""}
+But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""),
+        ("human", "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
 )
