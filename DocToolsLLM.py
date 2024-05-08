@@ -1240,7 +1240,7 @@ class DocToolsLLM:
             whi(f"Question to answer: {query_an}")
 
             # uses in most places to increase concurrency limit
-            multi = {"max_concurrency": 50}
+            multi = {"max_concurrency": 50 if not self.debug else 1}
 
             # answer 0 or 1 if the document is related
             eval_llm, weakcallback = load_llm(
