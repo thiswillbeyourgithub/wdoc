@@ -521,7 +521,11 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(modelname, self.modelbackend, temperature=0)
+        self.llm = load_llm(
+                modelname=modelname,
+                backend=self.modelbackend,
+                temperature=0,
+                verbose=self.llm_verbosity)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -619,7 +623,6 @@ class DocToolsLLM:
         assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
         self.prepare_query_task()
 
-        self.cb = self.callback().__enter__()  # for token counting
         if not self.import_mode:
             while True:
                 self.query(query=query)
@@ -809,7 +812,6 @@ class DocToolsLLM:
                     language=lang,
                     modelbackend=self.modelbackend,
                     llm=self.llm,
-                    callback=self.callback,
                     verbose=self.llm_verbosity,
                     )
 
@@ -855,7 +857,6 @@ class DocToolsLLM:
                             language=lang,
                             modelbackend=self.modelbackend,
                             llm=self.llm,
-                            callback=self.callback,
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             logseq_mode="out_file_logseq_mode" in self.kwargs,
@@ -1110,7 +1111,7 @@ class DocToolsLLM:
                     create_hyde_retriever(
                         query=query,
 
-                        llm=self.llm.with_config({"callbacks": [self.cb]}),
+                        llm=self.llm,
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
                         filter=self.query_filter,
@@ -1225,7 +1226,7 @@ class DocToolsLLM:
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
                         | PR_CONDENSE_QUESTION
-                        | self.llm.with_config({"callbacks": [self.cb]})
+                        | self.llm
                         | StrOutputParser(),
                 }
 
@@ -1243,22 +1244,25 @@ class DocToolsLLM:
             multi = {"max_concurrency": 50 if not self.debug else 1}
 
             # answer 0 or 1 if the document is related
-            eval_llm, weakcallback = load_llm(
-                self.weakmodelname,
-                self.weakmodelbackend,
-                max_tokens=1,
-                temperature=1,
-                n=self.query_eval_check_number,
-            )
-            if not hasattr(self, "wcb"):
-                self.wcb = weakcallback().__enter__()  # for token counting
+            if not hasattr(self, "eval_llm"):
+                self.eval_llm = load_llm(
+                    modelname=self.weakmodelname,
+                    backend=self.weakmodelbackend,
+                    verbose=self.llm_verbosity,
+                    max_tokens=1,
+                    temperature=1,
+                    n=self.query_eval_check_number,
+                )
 
             @chain
             def evaluate_doc_chain(inputs):
-                el = eval_llm.copy()
-                prompt = PR_EVALUATE_DOC.format_prompt(**inputs)
-                out = el._generate(prompt.messages)
+                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
+                new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                new_c = out.llm_output["token_usage"]["completion_tokens"]
+                self.eval_llm.callbacks[0].prompt_tokens += new_p
+                self.eval_llm.callbacks[0].completion_tokens += new_c
+                self.eval_llm.callbacks[0].total_tokens += new_p + new_c
                 return outputs
 
             retrieve_documents = {
@@ -1286,12 +1290,12 @@ class DocToolsLLM:
             }
             answer_each_doc_chain = (
                 PR_ANSWER_ONE_DOC
-                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=1000)
+                | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
                 PR_COMBINE_INTERMEDIATE_ANSWERS
-                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=2000)
+                | self.llm.bind(max_tokens=2000)
                 | StrOutputParser()
             )
 
@@ -1403,15 +1407,16 @@ class DocToolsLLM:
             if self.import_mode:
                 return output
 
-            total_cost = self.cb.total_cost
-            if total_cost == 0 and self.cb.total_tokens != 0:
-                total_cost = self.llm_price[0] * self.cb.prompt_tokens + self.llm_price[1] * self.cb.completion_tokens
-            yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
 
-            wtotal_cost = self.wcb.total_cost
-            if wtotal_cost == 0 and self.wcb.total_tokens != 0:
-                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens + self.weakllm_price[1] * self.wcb.completion_tokens
-            yel(f"Tokens used by weak model: '{self.wcb.total_tokens}' (${wtotal_cost:.5f})")
+            assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+            llmcallback = self.llm.callbacks[0]
+            total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
+            yel(f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+
+            assert len(self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
+            evalllmcallback = self.eval_llm.callbacks[0]
+            wtotal_cost = self.weakllm_price[0] * evalllmcallback.prompt_tokens + self.weakllm_price[1] * evalllmcallback.completion_tokens
+            yel(f"Tokens used by weak model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
 
 if __name__ == "__main__":
