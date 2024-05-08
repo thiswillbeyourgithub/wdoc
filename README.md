@@ -48,7 +48,6 @@
 
 ### Known issues that are not yet fixed
 * callbacks are broken, so the pricing of the query chain is probably wrong
-* current prompts don't use system message so non gpt4 models are not shining
 * document loading, especially multithreaded and overly recursive, is wrongly looped so the caching sucks and I need to refactor that
 * filtering document by content is currently disabled
 * whisper implementation is a bit flaky and will be improved
