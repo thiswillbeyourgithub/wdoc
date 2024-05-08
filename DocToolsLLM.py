@@ -414,7 +414,7 @@ class DocToolsLLM:
 
         if "testing" in modelname and "testing" not in weakmodelname:
             weakmodelname = "testing"
-            red(f"modelname is 'testing' so setting weakmodelname to 'testing' too")
+            red("modelname is 'testing' so setting weakmodelname to 'testing' too")
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
