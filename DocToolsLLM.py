@@ -397,14 +397,14 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        if "testing" not in modelname:
-            assert modelname in litellm.model_list, f"{modelname} not part of the models of litellm"
         assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+        if "testing" not in modelname:
+            assert modelname in litellm.model_list or modelname.split("/")[1] in litellm.model_list, f"{modelname} not part of the models of litellm"
 
         if weakmodelname is not None:
-            if "testing" not in weakmodelname:
-                assert weakmodelname in litellm.model_list, f"{weakmodelname} not part of the models of litellm"
             assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+            if "testing" not in weakmodelname:
+                assert weakmodelname in litellm.model_list or weakmodelname.split("/")[1] in litellm.model_list, f"{weakmodelname} not part of the models of litellm"
 
         if "testing" in modelname and "testing" not in weakmodelname:
             weakmodelname = "testing"
@@ -1403,6 +1403,8 @@ class DocToolsLLM:
             evalllmcallback = self.eval_llm.callbacks[0]
             wtotal_cost = self.weakllm_price[0] * evalllmcallback.prompt_tokens + self.weakllm_price[1] * evalllmcallback.completion_tokens
             yel(f"Tokens used by weak model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+
+            red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
 
 
 if __name__ == "__main__":
