@@ -1,3 +1,4 @@
+import copy
 from textwrap import indent
 from typing import List, Union
 import tldextract
@@ -1234,7 +1235,7 @@ class DocToolsLLM:
                 query_fe = sp[0].strip()
                 query_an = sp[1].strip()
             else:
-                query_fe, query_an = query, query
+                query_fe, query_an = copy.copy(query), copy.copy(query)
             whi(f"Query for the embeddings: {query_fe}")
             whi(f"Question to answer: {query_an}")
 
