@@ -922,6 +922,7 @@ class DocToolsLLM:
 
             # save to output file
             if "out_file" in self.kwargs:
+                Path(self.kwargs["out_file"]).touch()  # create file if missing
                 with lock:
                     with open(self.kwargs["out_file"], "a") as f:
                         f.write(header)
@@ -944,9 +945,6 @@ class DocToolsLLM:
                     "doc_total_cost": doc_total_cost,
                     "summary": summary,
                     }
-
-        # create file if missing
-        Path(self.kwargs["out_file"]).touch()
 
         lock = Lock()
         results = Parallel(
