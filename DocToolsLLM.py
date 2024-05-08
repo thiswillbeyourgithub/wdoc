@@ -142,8 +142,6 @@ class DocToolsLLM:
             the part of modelname before the slash (/) is the server name.
             If the backend is 'testing' then a fake LLM will be used
             for debugging purposes.
-            If 'chatgpt' or "gpt3": will be set to "openai/gpt-3.5-turbo-0125"
-            If 'gpt4': will be set to "openai/gpt-4-turbo-2024-04-09"
 
         --weakmodelname str, default openai/gpt-3.5-turbo-0125
             Cheaper and quicker model than modelname. Used for intermedaite
@@ -399,17 +397,13 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        if modelname in ["chatgpt", "gpt3"]:
-            modelname = "openai/gpt-3.5-turbo-0125"
-        elif modelname in ["gpt4"]:
-            modelname = "openai/gpt-4-turbo-2024-04-09"
+        if "testing" not in modelname:
+            assert modelname in litellm.model_list, f"{modelname} not part of the models of litellm"
         assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
         if weakmodelname is not None:
-            if weakmodelname in ["chatgpt", "gpt3"]:
-                weakmodelname = "openai/gpt-3.5-turbo-0125"
-            elif weakmodelname in ["gpt4"]:
-                weakmodelname = "openai/gpt-4-turbo-2024-04-09"
+            if "testing" not in weakmodelname:
+                assert weakmodelname in litellm.model_list, f"{weakmodelname} not part of the models of litellm"
             assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
         if "testing" in modelname and "testing" not in weakmodelname:
