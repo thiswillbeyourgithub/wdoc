@@ -78,16 +78,12 @@ Text section:
 # Formatted summary:
 # """).strip()
 
-CONDENSE_QUESTION = dedent("""Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
-
-Chat History:
-'''
-{chat_history}
-'''
-
-Follow Up Input: '{question_for_embedding}'
-
-Standalone question:""")
+PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
+    [
+        {"system": "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."},
+    {"human": "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?"}
+        ]
+)
 
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.form_messages(

@@ -43,7 +43,7 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
-from utils.prompts import CONDENSE_QUESTION, PR_EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
+from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables import chain
@@ -1220,7 +1220,7 @@ class DocToolsLLM:
                         "question_for_embedding": lambda x: x["question_for_embedding"],
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
-                        | PromptTemplate.from_template(CONDENSE_QUESTION)
+                        | PR_CONDENSE_QUESTION
                         | self.llm.with_config({"callbacks": [self.cb]})
                         | StrOutputParser(),
                 }
