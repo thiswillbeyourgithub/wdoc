@@ -72,7 +72,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         instruct = False
 
     if debug:
-        red(f"Selected embedding model '{embed_model}' of backend {backend}")
+        whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
         if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
             assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"

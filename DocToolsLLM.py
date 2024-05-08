@@ -1,3 +1,4 @@
+import copy
 from textwrap import indent
 from typing import List, Union
 import tldextract
@@ -26,7 +27,6 @@ from langchain.retrievers.document_compressors import (
         DocumentCompressorPipeline)
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain_core.prompts import PromptTemplate
 from langchain.cache import SQLiteCache
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
@@ -43,9 +43,8 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
-from utils.prompts import CONDENSE_QUESTION, EVALUATE_DOC, ANSWER_ONE_DOC, COMBINE_INTERMEDIATE_ANSWERS
+from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from operator import itemgetter
-from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableEach
@@ -92,7 +91,7 @@ class DocToolsLLM:
 
         dollar_limit: int = 5,
         debug: bool = False,
-        llm_verbosity: bool = True,
+        llm_verbosity: bool = False,
         ntfy_url: str =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
@@ -219,8 +218,9 @@ class DocToolsLLM:
             Will also disable multithreading for summaries and for loading
             files.
 
-        --llm_verbosity, default True
+        --llm_verbosity, default False
             if True, will print the intermediate reasonning steps of LLMs
+            if debug is set, llm_verbosity is also set to True
 
         --ntfy_url, default None
             must be a url to ntfy.sh to receive notifications for summaries.
@@ -266,6 +266,8 @@ class DocToolsLLM:
                 * 'single_note': 1 document is 1 anki note.
                 * 'window': 1 documents is 5 anki note, overlapping
                 * 'concatenate': 1 document is all anki notes concatenated as a single wall of text then split like any long document.
+            Whatever you choose, you can later filter out documents by metadata
+            filtering over the 'anki_mode' key.
 
         --whisper_lang
             if using whisper to transcribe an audio file, this if the language
@@ -337,6 +339,16 @@ class DocToolsLLM:
             multithreading (as it can result in out of memory error if
             using threads and overly recursive calls)
 
+        --load_functions: List[str], default None
+            list of strings that when evaluated in python result in a list of
+            callable. The first must take one input of type string and the
+            last function must return one string.
+
+            For example in the filetypes 'local_html' this can be used to
+            specify lambda functions that modify the text before running
+            BeautifulSoup. Useful to decode html stored in .js files.
+            Do tell me if you want more of this.
+
         """
         if help or h:
             print(self.__init__.__doc__)
@@ -378,9 +390,10 @@ class DocToolsLLM:
                     "embed_instruct",
                     "file_loader_max_threads",
                     "filter_metadata",
+                    "load_functions",
                     # "filter_content",
                     ] and not k.startswith("llamacppembedding_"):
-                red(f"Found unexpected keyword argument: '{k}'")
+                raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
         if filetype == "string":
             top_k = 1
@@ -392,20 +405,24 @@ class DocToolsLLM:
             modelname = "openai/gpt-4-turbo-2024-04-09"
         assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
-        if weakmodelname in ["chatgpt", "gpt3"]:
-            weakmodelname = "openai/gpt-3.5-turbo-0125"
-        elif weakmodelname in ["gpt4"]:
-            weakmodelname = "openai/gpt-4-turbo-2024-04-09"
-        assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+        if weakmodelname is not None:
+            if weakmodelname in ["chatgpt", "gpt3"]:
+                weakmodelname = "openai/gpt-3.5-turbo-0125"
+            elif weakmodelname in ["gpt4"]:
+                weakmodelname = "openai/gpt-4-turbo-2024-04-09"
+            assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
         if "testing" in modelname and "testing" not in weakmodelname:
             weakmodelname = "testing"
-            red(f"modelname is 'testing' so setting weakmodelname to 'testing' too")
+            red("modelname is 'testing' so setting weakmodelname to 'testing' too")
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+
+        if debug:
+            llm_verbosity = True
 
         # storing as attributes
         self.modelbackend = modelname.split("/")[0].lower()
@@ -427,7 +444,7 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
-        self.condense_question = condense_question if "testing" not in modelname else False
+        self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
 
@@ -447,22 +464,23 @@ class DocToolsLLM:
                 litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
                 litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
             ]
-        if weakmodelname in litellm.model_cost:
-            self.weakllm_price = [
-                litellm.model_cost[weakmodelname]["input_cost_per_token"],
-                litellm.model_cost[weakmodelname]["output_cost_per_token"]
-            ]
-        elif weakmodelname.split("/")[1] in litellm.model_cost:
-            self.weakllm_price = [
-                litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
-                litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
-            ]
-        else:
-            red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
-            self.weakllm_price = [
-                litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
-                litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
-            ]
+        if weakmodelname is not None:
+            if weakmodelname in litellm.model_cost:
+                self.weakllm_price = [
+                    litellm.model_cost[weakmodelname]["input_cost_per_token"],
+                    litellm.model_cost[weakmodelname]["output_cost_per_token"]
+                ]
+            elif weakmodelname.split("/")[1] in litellm.model_cost:
+                self.weakllm_price = [
+                    litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
+                    litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
+                ]
+            else:
+                red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
+                self.weakllm_price = [
+                    litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
+                    litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
+                ]
 
         global ntfy
         if ntfy_url:
@@ -503,7 +521,11 @@ class DocToolsLLM:
                     self.kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
-        self.llm, self.callback = load_llm(modelname, self.modelbackend, temperature=0)
+        self.llm = load_llm(
+                modelname=modelname,
+                backend=self.modelbackend,
+                temperature=0,
+                verbose=self.llm_verbosity)
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -601,7 +623,6 @@ class DocToolsLLM:
         assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
         self.prepare_query_task()
 
-        self.cb = self.callback().__enter__()  # for token counting
         if not self.import_mode:
             while True:
                 self.query(query=query)
@@ -791,7 +812,6 @@ class DocToolsLLM:
                     language=lang,
                     modelbackend=self.modelbackend,
                     llm=self.llm,
-                    callback=self.callback,
                     verbose=self.llm_verbosity,
                     )
 
@@ -837,7 +857,6 @@ class DocToolsLLM:
                             language=lang,
                             modelbackend=self.modelbackend,
                             llm=self.llm,
-                            callback=self.callback,
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             logseq_mode="out_file_logseq_mode" in self.kwargs,
@@ -909,6 +928,7 @@ class DocToolsLLM:
 
             # save to output file
             if "out_file" in self.kwargs:
+                Path(self.kwargs["out_file"]).touch()  # create file if missing
                 with lock:
                     with open(self.kwargs["out_file"], "a") as f:
                         f.write(header)
@@ -931,9 +951,6 @@ class DocToolsLLM:
                     "doc_total_cost": doc_total_cost,
                     "summary": summary,
                     }
-
-        # create file if missing
-        Path(self.kwargs["out_file"]).touch()
 
         lock = Lock()
         results = Parallel(
@@ -1094,7 +1111,7 @@ class DocToolsLLM:
                     create_hyde_retriever(
                         query=query,
 
-                        llm=self.llm.with_config({"callbacks": [self.cb]}),
+                        llm=self.llm,
                         top_k=self.cli_commands["top_k"],
                         relevancy=self.cli_commands["relevancy"],
                         filter=self.query_filter,
@@ -1208,8 +1225,8 @@ class DocToolsLLM:
                         "question_for_embedding": lambda x: x["question_for_embedding"],
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
-                        | PromptTemplate.from_template(CONDENSE_QUESTION)
-                        | self.llm.with_config({"callbacks": [self.cb]})
+                        | PR_CONDENSE_QUESTION
+                        | self.llm
                         | StrOutputParser(),
                 }
 
@@ -1219,32 +1236,33 @@ class DocToolsLLM:
                 query_fe = sp[0].strip()
                 query_an = sp[1].strip()
             else:
-                query_fe, query_an = query, query
+                query_fe, query_an = copy.copy(query), copy.copy(query)
             whi(f"Query for the embeddings: {query_fe}")
             whi(f"Question to answer: {query_an}")
 
             # uses in most places to increase concurrency limit
-            multi = {"max_concurrency": 50}
+            multi = {"max_concurrency": 50 if not self.debug else 1}
 
             # answer 0 or 1 if the document is related
-            eval_llm, weakcallback = load_llm(
-                self.weakmodelname,
-                self.weakmodelbackend,
-                max_tokens=1,
-                temperature=1,
-                n=self.query_eval_check_number,
-            )
-            if not hasattr(self, "wcb"):
-                self.wcb = weakcallback().__enter__()  # for token counting
-
-            evaluate_doc_prompt = ChatPromptTemplate.from_template(EVALUATE_DOC)
+            if not hasattr(self, "eval_llm"):
+                self.eval_llm = load_llm(
+                    modelname=self.weakmodelname,
+                    backend=self.weakmodelbackend,
+                    verbose=self.llm_verbosity,
+                    max_tokens=1,
+                    temperature=1,
+                    n=self.query_eval_check_number,
+                )
 
             @chain
             def evaluate_doc_chain(inputs):
-                el = eval_llm.copy()
-                prompt = evaluate_doc_prompt.format_prompt(**inputs)
-                out = el._generate(prompt.messages)
+                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
+                new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                new_c = out.llm_output["token_usage"]["completion_tokens"]
+                self.eval_llm.callbacks[0].prompt_tokens += new_p
+                self.eval_llm.callbacks[0].completion_tokens += new_c
+                self.eval_llm.callbacks[0].total_tokens += new_p + new_c
                 return outputs
 
             retrieve_documents = {
@@ -1271,13 +1289,13 @@ class DocToolsLLM:
                 "question_to_answer": itemgetter("question_to_answer")
             }
             answer_each_doc_chain = (
-                ChatPromptTemplate.from_template(ANSWER_ONE_DOC)
-                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=1000)
+                PR_ANSWER_ONE_DOC
+                | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
-                ChatPromptTemplate.from_template(COMBINE_INTERMEDIATE_ANSWERS)
-                | self.llm.with_config({"callbacks": [self.cb]}).bind(max_tokens=2000)
+                PR_COMBINE_INTERMEDIATE_ANSWERS
+                | self.llm.bind(max_tokens=2000)
                 | StrOutputParser()
             )
 
@@ -1389,15 +1407,16 @@ class DocToolsLLM:
             if self.import_mode:
                 return output
 
-            total_cost = self.cb.total_cost
-            if total_cost == 0 and self.cb.total_tokens != 0:
-                total_cost = self.llm_price[0] * self.cb.prompt_tokens + self.llm_price[1] * self.cb.completion_tokens
-            yel(f"Tokens used by strong model: '{self.cb.total_tokens}' (${total_cost:.5f})")
 
-            wtotal_cost = self.wcb.total_cost
-            if wtotal_cost == 0 and self.wcb.total_tokens != 0:
-                wtotal_cost = self.weakllm_price[0] * self.wcb.prompt_tokens + self.weakllm_price[1] * self.wcb.completion_tokens
-            yel(f"Tokens used by weak model: '{self.wcb.total_tokens}' (${wtotal_cost:.5f})")
+            assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+            llmcallback = self.llm.callbacks[0]
+            total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
+            yel(f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+
+            assert len(self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
+            evalllmcallback = self.eval_llm.callbacks[0]
+            wtotal_cost = self.weakllm_price[0] * evalllmcallback.prompt_tokens + self.weakllm_price[1] * evalllmcallback.completion_tokens
+            yel(f"Tokens used by weak model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
 
 if __name__ == "__main__":

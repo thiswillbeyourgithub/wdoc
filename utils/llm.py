@@ -1,10 +1,14 @@
+from typing import Union, List, Any
+from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.messages.base import BaseMessage
+from langchain_core.outputs.llm_result import LLMResult
 import time
 import os
 from pathlib import Path
 from typing import Dict, Any
 
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_community.llms import FakeListLLM
-from langchain_community.callbacks import get_openai_callback
 # from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_models import ChatLiteLLM
 from langchain.memory import ConversationBufferMemory
@@ -23,52 +27,206 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-def load_llm(modelname, backend, **extra_model_args):
+def load_llm(
+    modelname: str,
+    backend: str,
+    verbose: bool,
+    **extra_model_args,
+    ) -> ChatLiteLLM:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
     if backend == "testing":
         whi("Loading testing model")
         llm = FakeListLLM(
-            verbose=True,
+            verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
+            callbacks=[CustomCallback(verbose=verbose)],
             **extra_model_args,
         )
-        callback = fakecallback
-        return llm, callback
+        return llm
 
     whi("Loading model via litellm")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
         os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
 
-    llm = ChatLiteLLM(
-            model_name=modelname,
     # llm = ChatOpenAI(
             # model_name=modelname.split("/")[-1],
-            verbose=True,
+    llm = ChatLiteLLM(
+            model_name=modelname,
+            verbose=verbose,
+            callbacks=[CustomCallback(verbose=verbose)],
             **extra_model_args,
             )
-    callback = get_openai_callback
-    return llm, callback
+    return llm
 
 
-class fakecallback:
-    """used by gpt4all to avoid bugs"""
-    total_tokens = 0
-    total_cost = 0
-    args = None
-    kwds = None
-    func = None
+class CustomCallback(BaseCallbackHandler):
+    "source: https://python.langchain.com/docs/modules/callbacks/"
+    def __init__(self, verbose, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.verbose = verbose
+        self.total_tokens = 0
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+        self.methods_called = []
+        self.authorized_methods = [
+                "on_llm_start",
+                "on_chat_model_start",
+                "on_llm_end",
+                "on_llm_error",
+                "on_chain_start",
+                "on_chain_end",
+                "on_chain_error",
+        ]
 
-    def __enter__(self):
-        return self
+    def _check_methods_called(self) -> None:
+        assert all(meth in dir(self) for meth in self.methods_called), (
+            "unexpected method names!")
+        wrong = [
+            meth for meth in self.methods_called
+            if meth not in self.authorized_methods]
+        if wrong:
+            raise Exception(f"Unauthorized_method were called: {','.join(wrong)}")
+        return True
 
-    def __exit__(self, *args):
-        return False
+    def on_llm_start(
+        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
+    ) -> Any:
+        """Run when LLM starts running."""
+        if self.verbose:
+            print("Callback method: on_llm_start")
+            print(serialized)
+            print(prompts)
+            print(kwargs)
+            print("Callback method end: on_llm_start")
+        self.methods_called.append("on_llm_start")
+        self._check_methods_called()
 
-    def __str__(self):
-        pass
+    def on_chat_model_start(
+        self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], **kwargs: Any
+    ) -> Any:
+        """Run when Chat Model starts running."""
+        if self.verbose:
+            print("Callback method: on_chat_model_start")
+            print(serialized)
+            print(messages)
+            print(kwargs)
+            print("Callback method end: on_chat_model_start")
+        self.methods_called.append("on_chat_model_start")
+        self._check_methods_called()
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
+        """Run when LLM ends running."""
+        if self.verbose:
+            print("Callback method: on_llm_end")
+            print(response)
+            print(kwargs)
+            print("Callback method end: on_llm_end")
+
+        new_p = response.llm_output["token_usage"]["prompt_tokens"]
+        new_c = response.llm_output["token_usage"]["completion_tokens"]
+        self.prompt_tokens += new_p
+        self.completion_tokens += new_c
+        self.total_tokens += new_p + new_c
+        assert self.total_tokens == self.prompt_tokens + self.completion_tokens
+        self.methods_called.append("on_llm_end")
+        self._check_methods_called()
+
+    def on_llm_error(
+        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
+    ) -> Any:
+        """Run when LLM errors."""
+        if self.verbose:
+            print("Callback method: on_llm_error")
+            print(error)
+            print(kwargs)
+            print("Callback method end: on_llm_error")
+        self.methods_called.append("on_llm_error")
+        self._check_methods_called()
+
+    def on_chain_start(
+        self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
+    ) -> Any:
+        """Run when chain starts running."""
+        if self.verbose:
+            print("Callback method: on_chain_start")
+            print(serialized)
+            print(inputs)
+            print(kwargs)
+            print("Callback method end: on_chain_start")
+        self.methods_called.append("on_chain_start")
+        self._check_methods_called()
+
+    def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
+        """Run when chain ends running."""
+        if self.verbose:
+            print("Callback method: on_chain_end")
+            print(outputs)
+            print(kwargs)
+            print("Callback method end: on_chain_end")
+        self.methods_called.append("on_chain_end")
+        self._check_methods_called()
+
+    def on_chain_error(
+        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
+    ) -> Any:
+        """Run when chain errors."""
+        if self.verbose:
+            print("Callback method: on_chain_error")
+            print(error)
+            print(kwargs)
+            print("Callback method end: on_chain_error")
+        self.methods_called.append("on_chain_error")
+        self._check_methods_called()
+
+    def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
+        """Run on new LLM token. Only available when streaming is enabled."""
+        self.methods_called.append("on_llm_new_token")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting streaming")
+
+    def on_tool_start(
+        self, serialized: Dict[str, Any], input_str: str, **kwargs: Any
+    ) -> Any:
+        """Run when tool starts running."""
+        self.methods_called.append("on_tool_start")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting tool call")
+
+    def on_tool_end(self, output: Any, **kwargs: Any) -> Any:
+        """Run when tool ends running."""
+        self.methods_called.append("on_tool_end")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting tool call")
+
+    def on_tool_error(
+        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
+    ) -> Any:
+        """Run when tool errors."""
+        self.methods_called.append("on_tool_error")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting tool call")
+
+    def on_text(self, text: str, **kwargs: Any) -> Any:
+        """Run on arbitrary text."""
+        self.methods_called.append("on_text")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting to call self.on_text")
+
+    def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
+        """Run on agent action."""
+        self.methods_called.append("on_agent_action")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting agent call")
+
+    def on_agent_finish(self, finish: AgentFinish, **kwargs: Any) -> Any:
+        """Run on agent end."""
+        self.methods_called.append("on_agent_finish")
+        self._check_methods_called()
+        raise NotImplementedError("Not expecting agent call")
+
 
 
 def transcribe(audio_path, audio_hash, language, prompt):

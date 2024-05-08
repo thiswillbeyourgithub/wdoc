@@ -1,3 +1,4 @@
+from typing import List
 from textwrap import dedent
 from functools import partial
 import tldextract
@@ -75,6 +76,7 @@ inference_rules = {
     "online_pdf": ["^http.*pdf.*"],
     "pdf": [".*pdf$"],
     "url": ["^http"],
+    "local_html": [r"^(?!http).*\.html?$"],
     "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
     "json_list": [".*.json"],
 }
@@ -107,7 +109,7 @@ threads = {}
 lock = threading.Lock()
 n_recursive = 0  # global var to keep track of the number of recursive loading threads. If there are many recursions they can actually get stuck
 
-min_token = 200
+min_token = 50
 max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
@@ -271,9 +273,16 @@ def load_doc(filetype, debug, task, **kwargs):
             ), "'recursed_filetype' cannot be 'recursive', 'json_list', 'anki' or 'youtube'"
             pattern = kwargs["pattern"]
 
+            if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
+                whi(r"File was not found so replaced '\ ' by ' '")
+                path = path.replace(r"\ ", " ")
+            assert Path(path).exists, f"not found: {path}"
             doclist = [p for p in Path(path).rglob(pattern)]
+            assert doclist, f"No document found by pattern {pattern}"
             doclist = [str(p).strip() for p in doclist if p.is_file()]
+            assert doclist, f"No document after filtering by file"
             doclist = [p for p in doclist if p]
+            assert doclist, f"No document after removing nonemtpy"
             doclist = [
                 p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
             ]
@@ -848,6 +857,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         metadata={
                             "anki_tags": " ".join(c["ntags"]),
                             "anki_cid": str(cid),
+                            "anki_mode": "single_note",
                         },
                     )
                 )
@@ -875,6 +885,7 @@ def load_doc(filetype, debug, task, **kwargs):
                         "anki_tags": " ".join(tags),
                         "anki_cid": str(cid),
                         "anki_deck": card_deck,
+                        "anki_mode": "concatenate",
                     }
                     continue
 
@@ -964,6 +975,7 @@ def load_doc(filetype, debug, task, **kwargs):
                                 list(set(c["tags_concat"].split(" ")))
                             ),
                             "anki_cid": c["cids"].strip(),
+                            "anki_mode": f"window_{window_size}",
                         },
                     )
                 )
@@ -1012,6 +1024,29 @@ def load_doc(filetype, debug, task, **kwargs):
         with open(path) as f:
             content = f.read()
         texts = text_splitter.split_text(content)
+        docs = [
+            Document(
+                page_content=t,
+                metadata={}
+            ) for t in texts
+        ]
+        check_docs_tkn_length(docs, path)
+
+    elif filetype == "local_html":
+        assert "path" in kwargs, "missing 'path' key in args"
+        path = kwargs["path"]
+        whi(f"Loading local html: '{path}'")
+        assert Path(path).exists(), f"file not found: '{path}'"
+        load_functions = None
+        if "load_functions" in kwargs:
+            # the functions must be stringified because joblib can't
+            # cache string that would declare as lambda functions
+            load_functions = json.dumps(kwargs["load_functions"])
+        text = load_html_file(
+                path=path,
+                load_functions=load_functions,
+        )
+        texts = text_splitter.split_text(text)
         docs = [Document(page_content=t) for t in texts]
         check_docs_tkn_length(docs, path)
 
@@ -1129,7 +1164,9 @@ def load_doc(filetype, debug, task, **kwargs):
         loaded_success = False
         if not loaded_success:
             try:
-                loader = WebBaseLoader("https://r.jina.ai/" + path, raise_for_status=True)
+                loader = WebBaseLoader(
+                    "https://r.jina.ai/" + path.split("://", 1)[1],
+                    raise_for_status=True)
                 docs = text_splitter.transform_documents(loader.load())
                 assert docs, "Empty docs when using jina reader"
                 if (
@@ -1309,7 +1346,10 @@ def load_doc(filetype, debug, task, **kwargs):
                 )
                 assert (
                     total_reading_length > 0.5
-                ), f"Failing doc: total reading length is suspiciously low for {docs[i].metadata}"
+                ), (
+                    "Failing doc: total reading length is suspiciously low "
+                    f"for {docs[i].metadata}: '{total_reading_length} minutes'"
+                )
             docs[i].metadata["docs_reading_time"] = total_reading_length
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
@@ -1328,6 +1368,37 @@ def load_doc(filetype, debug, task, **kwargs):
     assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
+@loaddoc_cache.cache
+def load_html_file(path: str, load_functions: str = None) -> str:
+    with open(path) as f:
+        content = f.read()
+    if load_functions:
+        # had to stringify them because joblib can't pickle lambda functions
+        assert isinstance(load_functions, str)
+        load_functions = json.loads(load_functions)
+        assert isinstance(load_functions, list), (
+            f"load_functions must be a list, not {type(load_functions)}")
+        try:
+            for ilf, lf in enumerate(load_functions):
+                load_functions[ilf] = eval(lf)
+        except Exception as err:
+            raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+        assert all(callable(lf) for lf in load_functions), (
+                f"Some load_functions are not callable: {load_functions}")
+        try:
+            for ifunc, func in enumerate(load_functions):
+                content = func(content)
+            assert isinstance(content, str), (
+                f"output of function #{ifunc}: '{func}' is not a "
+                f"string: {content}")
+        except Exception as err:
+            raise Exception(f"Error running load_functions: '{err}'")
+    try:
+        soup = BeautifulSoup(content, "html.parser")
+    except Exception as err:
+        raise Exception(f"Error when parsing html: {err}")
+    text = html_to_text(soup, issoup=True)
+    return text
 
 @loaddoc_cache.cache
 def load_youtube_playlist(playlist_url):

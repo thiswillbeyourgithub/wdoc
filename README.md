@@ -32,6 +32,7 @@
 * **text files** (.txt, markdown, etc)
 * **anki** collection
 * **string** (just paste your text into the app)
+* **html files** (useful for website dumps)
 * **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
 * **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`
@@ -44,6 +45,11 @@
 * **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
 * **summarize_then_query** summarize the document then allow you to query directly about it.
 * **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
+
+### Known issues that are not yet fixed
+* document loading, especially multithreaded and overly recursive, is wrongly looped so the caching sucks and I need to refactor that
+* filtering document by content is currently disabled
+* whisper implementation is a bit flaky and will be improved
 
 ## Getting started
 * `git clone`
