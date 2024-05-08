@@ -263,7 +263,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
         price = litellm.model_cost[embed_model]["input_cost_per_token"]
         assert litellm.model_cost[embed_model]["output_cost_per_token"] == 0
     else:
-        raise Exception(red(f"Couldn't find the price of embedding model {embed_model}")
+        raise Exception(red(f"Couldn't find the price of embedding model {embed_model}"))
 
     dol_price = full_tkn * price
     red(f"Total cost to embed all tokens is ${dol_price:.6f}")
