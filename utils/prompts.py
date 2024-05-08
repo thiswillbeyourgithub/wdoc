@@ -93,19 +93,18 @@ PR_EVALUATE_DOC = ChatPromptTemplate.form_messages(
         ]
 )
 
-ANSWER_ONE_DOC = """You are an assistant for question-answering tasks.
-Use the following pieces of retrieved context to answer the question.
-If the entirety of the context is irrelevant, answer simply 'IRRELEVANT' and nothing else (no special formatting).
-Use three sentences maximum.
-Be VERY concise and use markdown formatting for easier reading.
-But DON'T interpret the question too strictly, for example instead of a question it can be an instruction like "give me all information about such and such", use common sense and don't be too strict!
-
-Question: '{question_to_answer}'
-Context:
-'''
-{context}
-'''
-Answer:"""
+PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
+        [
+        {"system": """You are an assistant for question-answering tasks.
+You are given a piece of document and a question to answer.
+If the document is ENTIRELY irrelevant to the question, answer directly 'IRRELEVANT' without anything else and no other formatting.
+Otherwise, use a maximum of 3 md bulletpoints to answer the question using only information from the provided document.
+Use markdown formatting for easier reading, but don't wrap your answer in a code block or anything like that: reply instantly without acknowledging those rules.
+Doing all that you have to remain VERY concise while remaining truthful to the document content.
+But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""},
+        {"human": "Question: '{question_to_answer}'\nContext:\n```\n{context}\n```\nWhat's your reply?"}
+    ]
+)
 
 COMBINE_INTERMEDIATE_ANSWERS = """Given the following statements, you must answer a given question.
 Ignore irrelevant statements. Don't narrate, just do what I asked.
