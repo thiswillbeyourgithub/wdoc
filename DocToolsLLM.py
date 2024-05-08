@@ -453,11 +453,7 @@ class DocToolsLLM:
                 litellm.model_cost[modelname.split("/")[1]]["output_cost_per_token"]
             ]
         else:
-            red(f"Can't find the price of {modelname} so setting it to gpt-3.5-turbo value")
-            self.llm_price = [
-                litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
-                litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
-            ]
+            raise Exception(red(f"Can't find the price of {modelname}"))
         if weakmodelname is not None:
             if weakmodelname in litellm.model_cost:
                 self.weakllm_price = [
@@ -470,11 +466,7 @@ class DocToolsLLM:
                     litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
                 ]
             else:
-                red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
-                self.weakllm_price = [
-                    litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
-                    litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
-                ]
+                raise Exception(red(f"Can't find the price of {weakmodelname}"))
 
         global ntfy
         if ntfy_url:
