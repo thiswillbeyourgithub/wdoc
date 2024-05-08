@@ -403,11 +403,12 @@ class DocToolsLLM:
             modelname = "openai/gpt-4-turbo-2024-04-09"
         assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
-        if weakmodelname in ["chatgpt", "gpt3"]:
-            weakmodelname = "openai/gpt-3.5-turbo-0125"
-        elif weakmodelname in ["gpt4"]:
-            weakmodelname = "openai/gpt-4-turbo-2024-04-09"
-        assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+        if weakmodelname is not None:
+            if weakmodelname in ["chatgpt", "gpt3"]:
+                weakmodelname = "openai/gpt-3.5-turbo-0125"
+            elif weakmodelname in ["gpt4"]:
+                weakmodelname = "openai/gpt-4-turbo-2024-04-09"
+            assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
 
         if "testing" in modelname and "testing" not in weakmodelname:
             weakmodelname = "testing"
@@ -458,22 +459,23 @@ class DocToolsLLM:
                 litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
                 litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
             ]
-        if weakmodelname in litellm.model_cost:
-            self.weakllm_price = [
-                litellm.model_cost[weakmodelname]["input_cost_per_token"],
-                litellm.model_cost[weakmodelname]["output_cost_per_token"]
-            ]
-        elif weakmodelname.split("/")[1] in litellm.model_cost:
-            self.weakllm_price = [
-                litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
-                litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
-            ]
-        else:
-            red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
-            self.weakllm_price = [
-                litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
-                litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
-            ]
+        if weakmodelname is not None:
+            if weakmodelname in litellm.model_cost:
+                self.weakllm_price = [
+                    litellm.model_cost[weakmodelname]["input_cost_per_token"],
+                    litellm.model_cost[weakmodelname]["output_cost_per_token"]
+                ]
+            elif weakmodelname.split("/")[1] in litellm.model_cost:
+                self.weakllm_price = [
+                    litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
+                    litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
+                ]
+            else:
+                red(f"Can't find the price of {weakmodelname} so setting it to gpt-3.5-turbo value")
+                self.weakllm_price = [
+                    litellm.model_cost["gpt-3.5-turbo"]["input_cost_per_token"],
+                    litellm.model_cost["gpt-3.5-turbo"]["output_cost_per_token"]
+                ]
 
         global ntfy
         if ntfy_url:
