@@ -443,7 +443,7 @@ class DocToolsLLM:
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
         self.dollar_limit = dollar_limit
-        self.condense_question = condense_question if "testing" not in modelname else False
+        self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.import_mode = import_mode
 
