@@ -1,8 +1,13 @@
-from textwrap import dedent, indent
 from langchain_core.prompts import ChatPromptTemplate
 
-# rule for the summarization
-summary_rules = """
+# PROMPT FOR SUMMARY TASKS
+BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
+        [
+        ("system", """You are Alfred, my best journalist. Your job today is to summarize in a specific way a text section I just sent you, but I'm not interested simply in high level takeaways. What I'm interested in is the thought process of the author(s), the reasonning, the arguments used etc. Your summary has to be as quick and easy to read as possible while following the rules.
+This is very important to me so if you succeed, I'll tip you up to $2000!
+
+- Detailed instructions:
+ ```
 - Include:
 \t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
 - Exclude:
@@ -14,70 +19,41 @@ summary_rules = """
 \t- Don't use complete sentence, I'm in a hurry and need bullet points.
 \t- Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
 \t- Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
-\t- Write in [LANGUAGE].
+\t- Write in {LANGUAGE}.
 \t- Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
 \t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
-""".strip()
-
-# template to summarize
-system_summary_template = dedent("""
-You are Alfred, my best journalist. Your job today is to summarize in a specific way a text section I just sent you. But I'm not interested simply in high level takeaways, what I'm interested in is the thought process of the authors, their arguments etc. The summary has to be as quick and easy to read as possible while following the rules. This is very important so if you succeed, I'll tip you up to $2000![RECURSION_INSTRUCTION]
-
-- Detailed instructions:
- '''
-{rules}
- '''
-
-""")
-
-# if the summary is recursive, add those instructions
-system_summary_template_recursive = system_summary_template.replace(
-        "[RECURSION_INSTRUCTION]",
-        "\nFor this specific job, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
-        )
-
-system_summary_template = system_summary_template.replace("[RECURSION_INSTRUCTION]", "")
-
-# summary in a model that is not a chat model
-human_summary_template = dedent("""
-{metadata}{previous_summary}
+```"""),
+        ("human", """{RECURSION_INSTRUCTION}{metadata}{previous_summary}
 
 Text section:
-'''
+```
 {text}
-'''
-""")
+```"""),
+        ],
+)
+PR_SUMMARY = ChatPromptTemplate.from_messages(
+    BASE_SUMMARY_PROMPT.format_messages(
+        LANGUAGE="{LANGUAGE}",
+        RECURSION_INSTRUCTION="",
+        metadata="{metadata}",
+        previous_summary="{previous_summary}",
+        text="{text}"
+    )
+)
 
+# if the summary is recursive, add those instructions
+recursion_instruction = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
+PR_SUMMARY_RECURSIVE = ChatPromptTemplate.from_messages(
+    BASE_SUMMARY_PROMPT.format_messages(
+        LANGUAGE="{LANGUAGE}",
+        RECURSION_INSTRUCTION=recursion_instruction,
+        metadata="{metadata}",
+        previous_summary="{previous_summary}",
+        text="{text}"
+    )
+)
 
-# # templates to make sure the summary follows the rules
-# checksummary_rules = indent(dedent("""
-# - Remove redundancies like "he says that" "he mentions that" etc and use indentation instead because it's implied
-# - Remove repetitions, especially for pronouns and use implicit reference instead
-# - Reformulate every bullet point to make it concise but without losing meaning
-# - Don't use complete sentences
-# - Use indentation to hierarchically organize the summary
-# - Don't translate the summary. if the input summary is in french, answer in french
-# - If the summary is already good, simply answer the same unmodified summary
-# - Don't omit any information from the input summary in your answer
-# - A formatted summary that is too long is better than a formatted summary that is missing information from the original summary
-# """).strip(), "\t")
-# 
-# system_checksummary_template = dedent("""
-# You are my best assistant. Your job is to fix the format of a summary.
-# 
-# - Rules
-# {rules}
-# """).strip()
-# 
-# human_checksummary_template = dedent("""
-# Summary to format:
-# '''
-# {summary_to_check}
-# '''
-# 
-# Formatted summary:
-# """).strip()
-
+# PROMPT FOR QUERY TASKS
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
     [
         ("system", "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
