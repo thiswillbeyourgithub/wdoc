@@ -14,13 +14,13 @@ import numpy as np
 from pydantic import Extra
 from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.vectorstores import FAISS
 
 from .logger import whi, red
 from .file_loader import get_tkn_length
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
-from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
