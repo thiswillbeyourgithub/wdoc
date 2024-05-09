@@ -28,6 +28,13 @@ from langchain.retrievers.document_compressors import (
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain.cache import SQLiteCache
+from operator import itemgetter
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import chain
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation, ChatGeneration
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import (load_doc,
@@ -44,13 +51,6 @@ from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from operator import itemgetter
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_core.runnables import chain
-from langchain_core.runnables.base import RunnableEach
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.output_parsers import BaseGenerationOutputParser
-from langchain_core.outputs import Generation, ChatGeneration
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
