@@ -2,16 +2,9 @@ from textwrap import indent
 from tqdm import tqdm
 
 # from langchain import LLMChain
-from langchain.chains.summarize import load_summarize_chain
-from langchain_core.prompts import PromptTemplate
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
 
 from utils.prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
-from utils.logger import whi, yel, red
+from utils.logger import whi
 
 def do_summarize(
         docs,

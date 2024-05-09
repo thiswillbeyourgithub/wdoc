@@ -1,4 +1,3 @@
-from langchain_community.vectorstores import FAISS
 
 from .file_loader import get_splitter
 from .lazy_lib_importer import lazy_import_statements, lazy_import
@@ -7,6 +6,7 @@ exec(lazy_import_statements("""
 from shutil import rmtree
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
+from langchain_community.vectorstores import FAISS
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore

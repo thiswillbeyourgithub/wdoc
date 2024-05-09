@@ -18,23 +18,6 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
-from langchain.globals import set_verbose, set_debug, set_llm_cache
-from langchain.retrievers.merger_retriever import MergerRetriever
-from langchain.docstore.document import Document
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain.retrievers.document_compressors import (
-        DocumentCompressorPipeline)
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain.cache import SQLiteCache
-from operator import itemgetter
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_core.runnables import chain
-from langchain_core.runnables.base import RunnableEach
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.output_parsers import BaseGenerationOutputParser
-from langchain_core.outputs import Generation, ChatGeneration
-
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.file_loader import (
     load_doc,
@@ -55,6 +38,23 @@ from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_D
 from utils.lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
+from langchain.globals import set_verbose, set_debug, set_llm_cache
+from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.docstore.document import Document
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import (
+        DocumentCompressorPipeline)
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_community.retrievers import KNNRetriever, SVMRetriever
+from langchain.cache import SQLiteCache
+from operator import itemgetter
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import chain
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation, ChatGeneration
+
 import litellm
 """))
 
