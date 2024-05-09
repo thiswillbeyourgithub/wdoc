@@ -350,7 +350,7 @@ class DocToolsLLM:
         """
         if help or h:
             print(self.__init__.__doc__)
-            return
+            raise SystemExit()
 
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
