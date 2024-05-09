@@ -231,6 +231,13 @@ def get_url_title(url):
 
 def load_doc(filetype, debug, task, **kwargs):
     """load the input"""
+    # remove cache files older than 90 days
+    try:
+        loaddoc_cache.reduce_size(age_limit=timedelta(90))
+    except Exception as err:
+        # red(f"Error when reducing cache size: '{err}'")
+        pass
+
     text_splitter = get_splitter(task)
 
     if "file_loader_max_threads" in kwargs:

@@ -19,14 +19,6 @@ Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 
 loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
 
-# remove cache files older than 90 days
-try:
-    loaddoc_cache.reduce_size(age_limit=timedelta(90))
-except Exception as err:
-    # red(f"Error when reducing cache size: '{err}'")
-    pass
-
-
 
 def hasher(text):
     """used to hash the text contant of each doc to cache the splitting and

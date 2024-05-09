@@ -9,7 +9,6 @@ import copy
 from pathlib import Path
 from tqdm import tqdm
 import threading
-import litellm
 
 import numpy as np
 from pydantic import Extra
@@ -22,6 +21,7 @@ from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
+# import litellm  # disabled because the startup time is too slow
 
 from .logger import whi, red
 from .file_loader import get_tkn_length
@@ -256,6 +256,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
     red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+    import litellm  # last minute import because it's so slow
     if f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
         assert litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0

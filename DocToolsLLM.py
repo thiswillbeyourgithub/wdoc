@@ -17,8 +17,6 @@ try:
 except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
-import litellm
-
 from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
@@ -51,6 +49,7 @@ from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
+# import litellm  # disabled because the startup time is too slow
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -398,6 +397,7 @@ class DocToolsLLM:
             red("Input is 'string' so setting 'top_k' to 1")
 
         assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
+        import litellm  # import last minute because it's so slow
         if "testing" not in modelname:
             assert modelname in litellm.model_list or modelname.split("/")[1] in litellm.model_list, f"{modelname} not part of the models of litellm"
 
