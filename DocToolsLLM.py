@@ -1022,7 +1022,7 @@ class DocToolsLLM:
                 "multiline": False,
                 "retriever": self.query_retrievers,
                 "task": self.task,
-                "relevancy": 0.1,
+                "relevancy": 0.5,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
 
