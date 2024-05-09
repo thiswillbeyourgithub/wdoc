@@ -48,7 +48,7 @@ def load_llm(
         llm = FakeListLLM(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
-            callbacks=[CustomCallback(verbose=verbose)],
+            callbacks=[PriceCountingCallback(verbose=verbose)],
             cache=False,
             **extra_model_args,
         )
@@ -65,13 +65,13 @@ def load_llm(
             model_name=modelname,
             verbose=verbose,
             cache=not no_cache,
-            callbacks=[CustomCallback(verbose=verbose)],
+            callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
             )
     return llm
 
 
-class CustomCallback(BaseCallbackHandler):
+class PriceCountingCallback(BaseCallbackHandler):
     "source: https://python.langchain.com/docs/modules/callbacks/"
     def __init__(self, verbose, *args, **kwargs):
         super().__init__(*args, **kwargs)
