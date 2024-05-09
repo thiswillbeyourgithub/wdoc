@@ -199,7 +199,7 @@ class DocToolsLLM:
             if contains 'hyde' but modelname contains "testing" then hyde will
             be removed.
 
-        --query_eval_check_number, int, default 3
+        --query_eval_check_number: int, default 3
             number of pass to do with the weak llm to check if the document
             is indeed relevant to the question. The document will not
             be processed if all answers from the weak llm are 0, and will
@@ -209,41 +209,41 @@ class DocToolsLLM:
             threshold underwhich a document cannot be considered relevant by
             embeddings alone.
 
-        --n_recursive_summary int, default 0
+        --n_recursive_summary: int, default 0
             will recursively summarize the summary this many times.
             1 means that the original summary will be summarize. 0 means disabled.
 
-        --n_summaries_target int, default -1
+        --n_summaries_target: int, default -1
             Only active if query is 'summarize_link_file' and
             --out_file_logseq_mode is True. Set a limit to
             the number of links that will be summarized. If the number of
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
 
-        --dollar_limit int, default 5
+        --dollar_limit: int, default 5
             If the estimated price is above this limit, stop instead.
 
-        --debug bool, default False
+        --debug: bool, default False
             if True will enable langchain tracing, increase verbosity etc.
             Will also disable multithreading for summaries and for loading
             files.
 
-        --llm_verbosity bool, default False
+        --llm_verbosity: bool, default False
             if True, will print the intermediate reasonning steps of LLMs
             if debug is set, llm_verbosity is also set to True
 
-        --ntfy_url bool, default None
+        --ntfy_url: str, default None
             must be a url to ntfy.sh to receive notifications for summaries.
             Especially useful to keep track of costs when using cron.
 
-        --condense_question bool, default True
+        --condense_question: bool, default True
             if True, will not use a special LLM call to reformulate the question
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
             a row.
             Disabled if using a testing model.
 
-        --chat_memory bool, default True
+        --chat_memory: bool, default True
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
 
@@ -253,7 +253,7 @@ class DocToolsLLM:
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
 
-        --help or -h, default False
+        --help or -h: bool, default False
             if True, will return this documentation.
 
 
