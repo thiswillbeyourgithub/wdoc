@@ -19,6 +19,7 @@
 * Several embedding models implemented (by default OpenAI but sentence-transformers is implemented (including GLOVE with stop words), HuggingFace models can be used etc). Note that if using OpenAI the cost will be computed beforehand to make you confirm for embeddings larger that $1.
 * Multithreaded document parsing and embedding.
 * Very customizable.
+* lazy loading of heavy libraries. If this is causing any issue, you can disable it with an environment flag: `DOCTOOLS_NO_LAZYLOADING="false" python DocToolsLLM.py`
 * I'm a nice person so just open an issue if you have a feature request or anything else.
 * Phone notification via [ntfy.sh](ntfy.sh) to tell you about costs, useful when using GPT-4 and cron.
 

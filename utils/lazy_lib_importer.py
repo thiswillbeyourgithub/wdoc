@@ -1,14 +1,17 @@
-from pathlib import Path
+import os
 import re
+from pathlib import Path
 import lazy_import
 
 pattern = re.compile(r'^from (?P<fsource>[\w\.]+) import (?P<fwhat>[\w,. ()]+)( as (?P<fas>\w+))?|^import (?P<iwhat>[\w()]+)( as (?P<ias>\w+))?$')
 
+if "DOCTOOLS_NO_LAZYLOADING" not in os.environ:
+    os.environ["DOCTOOLS_NO_LAZYLOADING"] = "false"
+assert os.environ["DOCTOOLS_NO_LAZYLOADING"] in ["true", "false"]
 
 def lazy_import_statements(
     text: str,
     verbose: bool=False,
-    bypass: bool=False,
     allow_local: bool=False,
     ) -> str:
     """turn a bunch of import statements into lazy imports
@@ -20,8 +23,9 @@ def lazy_import_statements(
     Lazy loading does not seem to work with class import, for example when
     you plan to do an inheritance with it.
     """
-    if bypass:
+    if os.environ["DOCTOOLS_NO_LAZYLOADING"] == "true":
         return text
+    assert os.environ["DOCTOOLS_NO_LAZYLOADING"] in ["true", "false"]
     assert isinstance(text, str)
     lines = text.splitlines()
 
