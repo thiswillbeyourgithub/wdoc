@@ -49,7 +49,7 @@ def load_llm(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
             callbacks=[CustomCallback(verbose=verbose)],
-            cache=not no_cache,
+            cache=False,
             **extra_model_args,
         )
         return llm
