@@ -65,8 +65,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
-set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
-
 
 class DocToolsLLM:
     VERSION: str = "0.12"
@@ -103,6 +101,7 @@ class DocToolsLLM:
         ntfy_url: str =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
+        no_cache: bool = False,
 
         help: bool = False,
         h: bool = False,
@@ -242,6 +241,9 @@ class DocToolsLLM:
         --chat_memory bool, default True
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
+
+        --no_cache: bool, default False
+            disable caching for LLM
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -448,7 +450,11 @@ class DocToolsLLM:
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
+        self.no_cache = bool(no_cache)
         self.import_mode = import_mode
+
+        if not no_cache:
+            set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
 
         if modelname in litellm.model_cost:
             self.llm_price = [
@@ -516,10 +522,12 @@ class DocToolsLLM:
 
         # loading llm
         self.llm = load_llm(
-                modelname=modelname,
-                backend=self.modelbackend,
-                temperature=0,
-                verbose=self.llm_verbosity)
+            modelname=modelname,
+            backend=self.modelbackend,
+            no_cache=self.no_cache,
+            temperature=0,
+            verbose=self.llm_verbosity,
+        )
 
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
@@ -1244,6 +1252,7 @@ class DocToolsLLM:
                 self.eval_llm = load_llm(
                     modelname=self.weakmodelname,
                     backend=self.weakmodelbackend,
+                    no_cache=self.no_cache,
                     verbose=self.llm_verbosity,
                     max_tokens=1,
                     temperature=1,

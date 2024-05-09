@@ -36,17 +36,20 @@ def load_llm(
     modelname: str,
     backend: str,
     verbose: bool,
+    no_cache: bool,
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
+    assert "cache" not in extra_model_args
     if backend == "testing":
         whi("Loading testing model")
         llm = FakeListLLM(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
             callbacks=[CustomCallback(verbose=verbose)],
+            cache=not no_cache,
             **extra_model_args,
         )
         return llm
@@ -61,6 +64,7 @@ def load_llm(
     llm = ChatLiteLLM(
             model_name=modelname,
             verbose=verbose,
+            cache=not no_cache,
             callbacks=[CustomCallback(verbose=verbose)],
             **extra_model_args,
             )
