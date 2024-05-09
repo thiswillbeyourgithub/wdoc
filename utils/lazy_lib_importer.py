@@ -125,7 +125,7 @@ def lazy_import_statements(
 try:
     {stat}
 except Exception as err:
-    print(f"Failed to lazyload '{stat}': '{err}'")
+    print(f"Failed to lazyload '{stat}': '""" + "{err}" + f"""'")
     {line}
 """.strip()
                       )
