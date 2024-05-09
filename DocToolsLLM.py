@@ -12,6 +12,7 @@ import textwrap
 import fire
 import os
 from tqdm import tqdm
+
 try:
     from ftlangdetect import detect as language_detect
 except Exception as err:
@@ -35,13 +36,14 @@ from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import (load_doc,
-                               get_tkn_length,
-                               average_word_length,
-                               wpm,
-                               get_splitter,
-                               check_docs_tkn_length
-                               )
+from utils.file_loader import (
+    load_doc,
+    get_tkn_length,
+    average_word_length,
+    wpm,
+    get_splitter,
+    check_docs_tkn_length
+    )
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func, md_printer
