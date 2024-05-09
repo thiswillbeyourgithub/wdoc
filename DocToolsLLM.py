@@ -91,6 +91,7 @@ class DocToolsLLM:
         top_k: int = 50,
         query_retrievers: str = "default",
         query_eval_check_number: int = 3,
+        query_relevancy: float = 0.3,
         n_recursive_summary: int = 0,
 
         n_summaries_target: int = -1,
@@ -203,6 +204,10 @@ class DocToolsLLM:
             is indeed relevant to the question. The document will not
             be processed if all answers from the weak llm are 0, and will
             be processed otherwise.
+
+        --query_relevancy: float, default 0.3
+            threshold underwhich a document cannot be considered relevant by
+            embeddings alone.
 
         --n_recursive_summary int, default 0
             will recursively summarize the summary this many times.
@@ -442,6 +447,7 @@ class DocToolsLLM:
         self.top_k = top_k
         self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
         self.query_eval_check_number = query_eval_check_number
+        self.query_relevancy = query_relevancy
         self.debug = debug
         self.kwargs = kwargs
         self.llm_verbosity = llm_verbosity
@@ -1022,7 +1028,7 @@ class DocToolsLLM:
                 "multiline": False,
                 "retriever": self.query_retrievers,
                 "task": self.task,
-                "relevancy": 0.5,
+                "relevancy": self.query_relevancy,
                 }
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
 
