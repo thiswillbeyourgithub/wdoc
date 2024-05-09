@@ -224,24 +224,24 @@ class DocToolsLLM:
             Will also disable multithreading for summaries and for loading
             files.
 
-        --llm_verbosity, default False
+        --llm_verbosity bool, default False
             if True, will print the intermediate reasonning steps of LLMs
             if debug is set, llm_verbosity is also set to True
 
-        --ntfy_url, default None
+        --ntfy_url bool, default None
             must be a url to ntfy.sh to receive notifications for summaries.
             Especially useful to keep track of costs when using cron.
 
-        --condense_question, default True
+        --condense_question bool, default True
             if True, will not use a special LLM call to reformulate the question
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
             a row.
-            DIsabled if using a testing model.
+            Disabled if using a testing model.
 
-        --chat_memory, default True
+        --chat_memory bool, default True
             if True, will remember the messages across a given chat exchange.
-            DIsabled if using a testing model.
+            Disabled if using a testing model.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
