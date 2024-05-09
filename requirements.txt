@@ -20,6 +20,7 @@ unstructured>=0.6.2
 faiss-cpu>=1.8.0
 llama-cpp-python>=0.2.69  # >0.2.69 had a regression regarding embeddings
 rich>=13.7.1
+lazy_import >= 1.16.0
 
 # buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14

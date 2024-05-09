@@ -1,4 +1,8 @@
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from langchain_core.prompts import ChatPromptTemplate
+"""))
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(

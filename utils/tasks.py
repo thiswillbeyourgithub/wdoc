@@ -14,7 +14,6 @@ from langchain_core.output_parsers.string import StrOutputParser
 from utils.prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
 from utils.logger import whi, yel, red
 
-
 def do_summarize(
         docs,
         metadata,

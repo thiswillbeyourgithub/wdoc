@@ -1,3 +1,6 @@
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from typing import Tuple, List
 import urllib
 import json
@@ -11,6 +14,7 @@ from joblib import Memory
 from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
+"""))
 
 from .logger import red
 

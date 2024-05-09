@@ -1,11 +1,14 @@
+from .logger import whi
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 import time
 import re
 from pathlib import Path
 import json
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
-
-from .logger import whi
+"""))
 
 
 def ask_user(q, commands):

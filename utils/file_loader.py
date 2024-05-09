@@ -1,3 +1,21 @@
+import os
+
+from langchain.docstore.document import Document
+try:
+    from ftlangdetect import detect as language_detect
+except Exception as err:
+    print(f"Couldn't import ftlangdetect: '{err}'")
+try:
+    import pdftotext
+except Exception as err:
+    print(f"Failed to import pdftotext: '{err}'")
+
+from .misc import loaddoc_cache, html_to_text, hasher
+from .logger import whi, yel, red, log
+from .llm import transcribe
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from typing import List
 from textwrap import dedent
 from functools import partial
@@ -24,17 +42,7 @@ import json
 from prompt_toolkit import prompt
 import tiktoken
 
-try:
-    from ftlangdetect import detect as language_detect
-except Exception as err:
-    print(f"Couldn't import ftlangdetect: '{err}'")
-try:
-    import pdftotext
-except Exception as err:
-    print(f"Failed to import pdftotext: '{err}'")
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import PyPDFium2Loader
@@ -52,12 +60,8 @@ from langchain_community.document_loaders import WebBaseLoader
 from unstructured.cleaners.core import clean_extra_whitespace
 
 import LogseqMarkdownParser
+"""))
 
-from .misc import loaddoc_cache, html_to_text, hasher
-from .logger import whi, yel, red, log
-from .llm import transcribe
-
-import os
 
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
