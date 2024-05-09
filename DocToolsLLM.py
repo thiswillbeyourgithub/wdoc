@@ -806,6 +806,7 @@ class DocToolsLLM:
                     language=lang,
                     modelbackend=self.modelbackend,
                     llm=self.llm,
+                    llm_price=self.llm_price,
                     verbose=self.llm_verbosity,
                     )
 
@@ -851,6 +852,7 @@ class DocToolsLLM:
                             language=lang,
                             modelbackend=self.modelbackend,
                             llm=self.llm,
+                            llm_price=self.llm_price,
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             logseq_mode="out_file_logseq_mode" in self.kwargs,
