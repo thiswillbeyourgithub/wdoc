@@ -19,6 +19,7 @@
 * Several embedding models implemented (by default OpenAI but sentence-transformers is implemented (including GLOVE with stop words), HuggingFace models can be used etc). Note that if using OpenAI the cost will be computed beforehand to make you confirm for embeddings larger that $1.
 * Multithreaded document parsing and embedding.
 * Very customizable.
+* Shell completion using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
 * lazy loading of heavy libraries. If this is causing any issue, you can disable it with an environment flag: `DOCTOOLS_NO_LAZYLOADING="false" python DocToolsLLM.py`
 * I'm a nice person so just open an issue if you have a feature request or anything else.
 * Phone notification via [ntfy.sh](ntfy.sh) to tell you about costs, useful when using GPT-4 and cron.
@@ -62,6 +63,7 @@
 * To ask questions about a document: `python ./DoctoolsLLM.py --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the emebeddings are always cached)
 * For more: read the documentation at `python DocToolsLLM.py --help`
+* For shell autocompletion: `eval "$(python DocToolsLLM.py -- --completion)"`
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $1, the app will abort to be safe just in case you drop a few bibles in there.
