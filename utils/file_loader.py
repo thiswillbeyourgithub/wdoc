@@ -253,7 +253,7 @@ def load_doc(filetype, debug, task, **kwargs):
         kwargs["path"] = kwargs["path"].strip()
 
     if filetype == "infer":
-        assert "path" in kwargs, "if filetype is infer, path should be supplied"
+        assert "path" in kwargs and kwargs["path"], "if filetype is infer, path should be supplied"
         for k, v in inference_rules.items():
             for vv in inference_rules[k]:
                 if re.search(vv, kwargs["path"]):
