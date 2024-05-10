@@ -47,7 +47,7 @@ def load_llm(
     assert "cache" not in extra_model_args
     if backend == "testing":
         if verbose:
-            whi("Loading testing model")
+            whi("Loading a fake LLM using the testing/ backend")
         llm = FakeListLLM(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
@@ -60,8 +60,10 @@ def load_llm(
     if verbose:
         whi("Loading model via litellm")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
-        assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
-        os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+        if not Path(f"{backend.upper()}_API_KEY.txt").exists():
+            raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+        else:
+            os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
 
     # llm = ChatOpenAI(
             # model_name=modelname.split("/")[-1],
