@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from .logger import whi
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 from .typechecker import optional_typecheck
@@ -14,7 +14,7 @@ from prompt_toolkit.completion import WordCompleter
 
 
 @optional_typecheck
-def ask_user(q: Optional[str], commands: dict):
+def ask_user(q: Optional[str], commands: dict) -> Tuple[str, dict]:
     """
     Ask the question to the user.
 

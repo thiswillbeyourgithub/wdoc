@@ -413,9 +413,9 @@ class DocToolsLLM:
                 val = kwargs[k]
                 expected_type = extra_args[k]
                 curr_type = type(kwargs[k])
-                # print(k, val, expected_type, curr_type)
-                assert check_type(kwargs[k], expected_type), (
-                f"Invalid type: '{k}' is '{type(k)}' instead of '{v}'")
+                if not check_type(kwargs[k], expected_type):
+                    red(
+                        f"Invalid type: '{k}' is '{type(k)}' instead of '{v}'")
 
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
@@ -1478,14 +1478,4 @@ class DocToolsLLM:
 
 if __name__ == "__main__":
     import fire
-    try:
-        instance = fire.Fire(DocToolsLLM)
-    except TypeCheckError as err:
-        mess = red(
-            "TypeCheckError: To disable "
-            "typechecking, set the environment flag like so:\n"
-            'DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py ...\n'
-            f"Original error:\n{err}")
-        raise type(err)(mess)
-    except Exception as err:
-        raise
+    instance = fire.Fire(DocToolsLLM)
