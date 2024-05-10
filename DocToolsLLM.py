@@ -251,6 +251,8 @@ class DocToolsLLM:
 
         --dollar_limit: int, default 5
             If the estimated price is above this limit, stop instead.
+            Note that the cost estimate for the embeddings is using the
+            openai tokenizer, which is not universal.
 
         --debug: bool, default False
             if True will enable langchain tracing, increase verbosity etc.
