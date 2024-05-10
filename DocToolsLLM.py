@@ -389,6 +389,9 @@ class DocToolsLLM:
         Runtime flags
         -------------
 
+        DOCTOOLS_NO_LAZYLOADING="false"
+            to disable lazy loading of imports
+
         DOCTOOLS_NO_TYPECHECKING="true"
             to disable type checking
 
