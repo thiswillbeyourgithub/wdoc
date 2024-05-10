@@ -9,7 +9,6 @@ import time
 from datetime import datetime
 import re
 import textwrap
-import fire
 import os
 from tqdm import tqdm
 
@@ -1435,4 +1434,5 @@ class DocToolsLLM:
 
 
 if __name__ == "__main__":
+    import fire
     instance = fire.Fire(DocToolsLLM)
