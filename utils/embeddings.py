@@ -76,7 +76,7 @@ def load_embeddings(
     dollar_limit: Union[int, float],
     kwargs: dict):
     """loads embeddings for each document"""
-    backend = embed_model.split("/")[0]
+    backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
     embed_model_str = embed_model.replace("/", "_")
     if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
