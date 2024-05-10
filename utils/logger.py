@@ -10,7 +10,7 @@ from typing import Callable, Optional
 from rich.markdown import Markdown
 from rich.console import Console
 
-from .typechecker import optional_typecheck
+from utils.typechecker import optional_typecheck
 
 # adds logger, restrict it to X lines
 local_dir = Path.cwd()

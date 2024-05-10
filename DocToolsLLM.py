@@ -31,7 +31,7 @@ from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
-from utils.misc import ankiconnect, debug_chain
+from utils.misc import ankiconnect, debug_chain, model_name_matcher
 from utils.tasks.summary import do_summarize
 from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer
 from utils.typechecker import optional_typecheck
@@ -450,18 +450,17 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        assert "/" in modelname, "modelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
-        if "testing" not in modelname:
-            assert modelname in litellm.model_list or modelname.split("/")[1] in litellm.model_list, f"{modelname} not part of the models of litellm"
-
+        if not modelname.startswith("testing/"):
+            modelname = model_name_matcher(modelname)
         if weakmodelname is not None:
-            assert "/" in weakmodelname, "weakmodelname must be given in the format suitable for litellm. Such as 'openai/gpt-3.5-turbo-0125'"
-            if "testing" not in weakmodelname:
-                assert weakmodelname in litellm.model_list or weakmodelname.split("/")[1] in litellm.model_list, f"{weakmodelname} not part of the models of litellm"
+            if modelname.startswith("testing/"):
+                if not weakmodelname.startswith("testing/"):
+                    weakmodelname = "testing/testing"
+                    red(f"modelname uses 'testing' backend so setting weakmodelname to '{weakmodelname}'")
+            else:
+                assert not weakmodelname.startswith("testing/"), "weakmodelname can't use 'testing' backend if modelname isn't set to testing too"
+                weakmodelname = model_name_matcher(weakmodelname)
 
-        if "testing" in modelname and "testing" not in weakmodelname:
-            weakmodelname = "testing"
-            red("modelname is 'testing' so setting weakmodelname to 'testing' too")
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
@@ -472,10 +471,10 @@ class DocToolsLLM:
             llm_verbosity = True
 
         # storing as attributes
-        self.modelbackend = modelname.split("/")[0].lower()
+        self.modelbackend = modelname.split("/")[0].lower() if "/" in modelname else "openai"
         self.modelname = modelname
         if weakmodelname is not None:
-            self.weakmodelbackend = weakmodelname.split("/")[0].lower()
+            self.weakmodelbackend = weakmodelname.split("/")[0].lower() if "/" in modelname else "openai"
             self.weakmodelname = weakmodelname
         self.task = task
         self.filetype = filetype
