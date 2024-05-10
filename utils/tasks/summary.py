@@ -4,9 +4,9 @@ from typing import List, Tuple, Any
 
 from langchain.docstore.document import Document
 
-from .prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
-from .logger import whi
-from .typechecker import optional_typecheck
+from utils.prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
+from utils.logger import whi
+from utils.typechecker import optional_typecheck
 
 @optional_typecheck
 def do_summarize(

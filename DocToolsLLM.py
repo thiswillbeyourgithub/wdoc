@@ -31,8 +31,9 @@ from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
-from utils.tasks import do_summarize
-from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
+from utils.misc import ankiconnect, debug_chain
+from utils.tasks.summary import do_summarize
+from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer
 from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
