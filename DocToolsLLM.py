@@ -1480,11 +1480,11 @@ if __name__ == "__main__":
     try:
         instance = fire.Fire(DocToolsLLM)
     except TypeCheckError as err:
-        raise type(err)(
-                red(
-                "Found a typechecking error. To disable "
-                "typechecking, set the environment flag like so:\n"
-                'DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py ...\n'
-                f"Original error:\n{err}")) from err
+        mess = red(
+            "TypeCheckError: To disable "
+            "typechecking, set the environment flag like so:\n"
+            'DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py ...\n'
+            f"Original error:\n{err}")
+        # raise type(err)(mess)
     except Exception as err:
         raise
