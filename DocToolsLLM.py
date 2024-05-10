@@ -90,10 +90,10 @@ extra_args = {
     # "filter_content": Union[List[str, str]],
 }
 
-@optional_typecheck
 class DocToolsLLM:
     VERSION: str = "0.12"
 
+    @optional_typecheck
     def __init__(
         self,
         # modelname: str = "openai/gpt-3.5-turbo-0125",
