@@ -173,13 +173,17 @@ class DocToolsLLM:
         --modelname str, default openai/gpt-4-turbo-2024-04-09
             Keep in mind that given that the default backend used is litellm
             the part of modelname before the slash (/) is the server name.
-            If the backend is 'testing' then a fake LLM will be used
+            If the backend is 'testing/' then a fake LLM will be used
             for debugging purposes.
+            If the value is not part of the model list of litellm, will use
+            fuzzy matching to find the best match.
 
         --weakmodelname str, default openai/gpt-3.5-turbo-0125
-            Cheaper and quicker model than modelname. Used for intermedaite
-            steps in the RAG.
-            Not used for other tasks so can be set to None to be disabled.
+            Cheaper and quicker model than modelname. Used for intermediate
+            steps in the RAG, not used in other tasks.
+            If the value is not part of the model list of litellm, will use
+            fuzzy matching to find the best match.
+            None to disable.
 
         --embed_model str, default "openai/text-embedding-3-small"
             Name of the model to use for embeddings. Must contain a '/'
