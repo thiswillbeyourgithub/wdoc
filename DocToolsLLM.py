@@ -33,6 +33,7 @@ from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
+from utils.errors import NoDocumentsRetrieved
 
 from utils.lazy_lib_importer import lazy_import_statements, lazy_import
 
@@ -1358,12 +1359,15 @@ class DocToolsLLM:
             if self.debug:
                 yel(rag_chain.get_graph().print_ascii())
 
-            output = rag_chain.invoke(
-                {
-                    "question_for_embedding": query_fe,
-                    "question_to_answer": query_an,
-                }
-            )
+            try:
+                output = rag_chain.invoke(
+                    {
+                        "question_for_embedding": query_fe,
+                        "question_to_answer": query_an,
+                    }
+                )
+            except NoDocumentsRetrieved as err:
+                return md_printer(f"## No documents were retrieved with query '{query_fe}'")
 
             # group the intermediate answers by batch, then do a batch reduce mapping
             batch_size = 5

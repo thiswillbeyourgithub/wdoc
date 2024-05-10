@@ -17,6 +17,7 @@ from langchain_core.runnables import chain
 """))
 
 from .logger import red
+from .errors import NoDocumentsRetrieved
 
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
@@ -99,7 +100,8 @@ def refilter_docs(inputs: dict) -> List[Document]:
     assert isinstance(unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
     assert isinstance(evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
     assert len(unfiltered_docs) == len(evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
-    assert unfiltered_docs, "No document corresponding to the query"
+    if not unfiltered_docs:
+        raise NoDocumentsRetrieved("No document corresponding to the query")
     filtered_docs = []
     for ie, evals in enumerate(evaluations):
         if not isinstance(evals, list):
