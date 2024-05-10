@@ -413,13 +413,15 @@ class DocToolsLLM:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
-            if os.environ["DOCTOOLS_NO_TYPECHECKING"] == "false":
+            if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = kwargs[k]
+                curr_type = type(val)
                 expected_type = extra_args[k]
-                curr_type = type(kwargs[k])
-                if not check_type(kwargs[k], expected_type):
-                    red(
-                        f"Invalid type: '{k}' is '{type(k)}' instead of '{v}'")
+                if not check_type(val, expected_type):
+                    if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
+                        red(f"Invalid type in kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                    elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
+                        raise TypeCheckError(f"Invalid type in kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
 
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"

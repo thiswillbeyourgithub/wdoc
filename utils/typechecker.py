@@ -22,13 +22,13 @@ def optional_typecheck(func: Callable) -> Callable:
                     func,
                 )(*args, **kwargs)
             except TypeCheckError as err:
-                redprint(
+                mess = (
                     f"TypeCheckError in function '{func}'\n"
                     "To disable global "
                     "typechecking, set the runtime flag like so:\n"
                     'DOCTOOLS_TYPECHECKING="true" python DocToolsLLM.py \n'
                     f"Original error:\n'''\n{err}\n'''\n")
-                raise
+                raise TypeCheckError(redprint(mess)) from err
         return wrapper
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
         @typechecked
