@@ -17,9 +17,18 @@ def optional_typecheck(func: Callable) -> Callable:
     if os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
         @typechecked
         def wrapper(*args, **kwargs) -> Any:
-            return typechecked(
-                func,
-            )(*args, **kwargs)
+            try:
+                return typechecked(
+                    func,
+                )(*args, **kwargs)
+            except TypeCheckError as err:
+                redprint(
+                    f"TypeCheckError in function '{func}'\n"
+                    "To disable global "
+                    "typechecking, set the runtime flag like so:\n"
+                    'DOCTOOLS_TYPECHECKING="true" python DocToolsLLM.py \n'
+                    f"Original error:\n'''\n{err}\n'''\n")
+                raise
         return wrapper
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
         @typechecked
