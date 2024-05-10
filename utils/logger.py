@@ -6,7 +6,7 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 from rich.markdown import Markdown
 from rich.console import Console
 
@@ -83,7 +83,7 @@ red = get_coloured_logger("red")
 console = Console()
 
 @optional_typecheck
-def md_printer(message: str, color: str = None) -> None:
+def md_printer(message: str, color: Optional[str] = None) -> None:
     log.info(message)
     md = Markdown(message)
     console.print(md, style=color)
