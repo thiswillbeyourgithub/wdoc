@@ -393,8 +393,12 @@ class DocToolsLLM:
         DOCTOOLS_NO_LAZYLOADING="false"
             to disable lazy loading of imports
 
-        DOCTOOLS_NO_TYPECHECKING="true"
-            to disable type checking
+        DOCTOOLS_TYPECHECKING="crash"
+            default: "warn"
+            Possible values:
+                crash: crash if a typechecking fails
+                warn: print a red warning if a typechecking fails
+                disabled: disable typechecking
 
         """
         if help or h:

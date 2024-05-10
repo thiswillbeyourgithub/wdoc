@@ -21,7 +21,7 @@
 * Very customizable.
 * Shell completion using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
 * lazy loading of heavy libraries. If this is causing any issue, you can disable it with an environment flag: `DOCTOOLS_NO_LAZYLOADING="false" python DocToolsLLM.py`
-* Runtime type checking. If this is causing any issue, you can disable it with an environment flag: `DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py`
+* Optional runtime type checking. If this is causing any issue, you can disable it with an environment flag: `DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py`. Or set to 'warn' to just warn of typechecking errors.
 * I'm a nice person so just open an issue if you have a feature request or anything else.
 * Phone notification via [ntfy.sh](ntfy.sh) to tell you about costs, useful when using GPT-4 and cron.
 
