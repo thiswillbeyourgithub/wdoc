@@ -1147,7 +1147,7 @@ class DocToolsLLM:
 
 
     @optional_typecheck
-    def query(self, query: str) -> Optional[str]:
+    def query(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.cli_commands = ask_user(
                     "\n\nWhat is your question? (Q to quit)\n",
