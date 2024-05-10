@@ -340,8 +340,7 @@ def load_embeddings(
     whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
-    if saveas:
-        db.save_local(saveas)
+    db.save_local(saveas)
 
     return db, cached_embeddings
 
