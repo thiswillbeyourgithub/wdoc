@@ -17,7 +17,7 @@ from langchain_core.runnables import chain
 """))
 
 from .logger import red
-from .errors import NoDocumentsRetrieved
+from .errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
 
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
@@ -113,7 +113,9 @@ def refilter_docs(inputs: dict) -> List[Document]:
         else:
             red(f"Evals contained strings so keeping the doc: '{evals}'")
             filtered_docs.append(unfiltered_docs[ie])
-    assert filtered_docs, "No document remained after filtering with the query"
+    if not filtered_docs:
+        raise NoDocumentsAfterWeakLLMFiltering(
+            "No document remained after filtering with the query")
     return filtered_docs
 
 
