@@ -46,7 +46,8 @@ def load_llm(
         extra_model_args = {}
     assert "cache" not in extra_model_args
     if backend == "testing":
-        whi("Loading testing model")
+        if verbose:
+            whi("Loading testing model")
         llm = FakeListLLM(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
@@ -56,7 +57,8 @@ def load_llm(
         )
         return llm
 
-    whi("Loading model via litellm")
+    if verbose:
+        whi("Loading model via litellm")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
         os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
