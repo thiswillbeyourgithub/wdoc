@@ -1486,6 +1486,6 @@ if __name__ == "__main__":
             "typechecking, set the environment flag like so:\n"
             'DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py ...\n'
             f"Original error:\n{err}")
-        # raise type(err)(mess)
+        raise type(err)(mess)
     except Exception as err:
         raise
