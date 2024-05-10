@@ -1,22 +1,25 @@
 from textwrap import indent
 from tqdm import tqdm
+from typing import List, Tuple, Any
 
-# from langchain import LLMChain
+from langchain.docstore.document import Document
 
-from utils.prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
-from utils.logger import whi
+from .prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
+from .logger import whi
+from .typechecker import optional_typecheck
 
+@optional_typecheck
 def do_summarize(
-        docs,
-        metadata,
-        language,
-        modelbackend,
-        llm,
-        llm_price,
-        verbose,
-        n_recursion=0,
-        logseq_mode=False,
-        ):
+    docs: List[Document],
+    metadata: str,
+    language: str,
+    modelbackend: str,
+    llm: Any,
+    llm_price: List[float],
+    verbose: bool,
+    n_recursion: int=0,
+    logseq_mode: bool=False,
+    ) -> Tuple[str, int, int, int]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""

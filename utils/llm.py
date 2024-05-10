@@ -10,7 +10,8 @@ from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 
-from .logger import whi, yel, red
+from .logger import whi, red
+from .typechecker import optional_typecheck
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
@@ -32,6 +33,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
+@optional_typecheck
 def load_llm(
     modelname: str,
     backend: str,
@@ -238,7 +240,12 @@ class PriceCountingCallback(BaseCallbackHandler):
 
 
 
-def transcribe(audio_path, audio_hash, language, prompt):
+@optional_typecheck
+def transcribe(
+    audio_path: str,
+    audio_hash: str,
+    language: str,
+    prompt: str) -> str:
     "Use whisper to transcribe an audio file"
     red(f"Calling whisper to transcribe file {audio_path}")
 

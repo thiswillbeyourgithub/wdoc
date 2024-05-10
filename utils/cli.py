@@ -1,5 +1,6 @@
 from .logger import whi
 from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
 import time
@@ -11,7 +12,8 @@ from prompt_toolkit.completion import WordCompleter
 """))
 
 
-def ask_user(q, commands):
+@optional_typecheck
+def ask_user(q: str, commands: dict):
     """
     Ask the question to the user.
 

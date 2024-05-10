@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union, Optional, Any
 import hashlib
 import os
 import queue
@@ -19,6 +19,7 @@ from langchain_community.vectorstores import FAISS
 from .logger import whi, red
 from .file_loader import get_tkn_length
 from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
 from langchain.storage import LocalFileStore
@@ -65,7 +66,15 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
         return list(map(float, embedding))
 
 
-def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
+@optional_typecheck
+def load_embeddings(
+    embed_model: str,
+    loadfrom: Optional[str],
+    saveas: str,
+    debug: bool,
+    loaded_docs: Any,
+    dollar_limit: Union[int, float],
+    kwargs: dict):
     """loads embeddings for each document"""
     backend = embed_model.split("/")[0]
     embed_model = embed_model.replace(backend + "/", "")
@@ -337,7 +346,11 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     return db, cached_embeddings
 
 
-def faiss_loader(cached_embeddings, qin, qout):
+@optional_typecheck
+def faiss_loader(
+    cached_embeddings: CacheBackedEmbeddings,
+    qin: queue.Queue,
+    qout: queue.Queue) -> None:
     """load a faiss index. Merge many other index to it. Then return the
     merged index. This makes it way fast to load a very large number of index
     """
@@ -361,7 +374,12 @@ def faiss_loader(cached_embeddings, qin, qout):
                 fi.rmdir()
 
 
-def faiss_saver(path, cached_embeddings, qin, qout):
+@optional_typecheck
+def faiss_saver(
+    path: str,
+    cached_embeddings: CacheBackedEmbeddings,
+    qin: queue.Queue,
+    qout: queue.Queue) -> None:
     """create a faiss index containing only a single document then save it"""
     while True:
         message, docid, document, embedding = qin.get()

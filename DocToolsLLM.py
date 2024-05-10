@@ -1,6 +1,7 @@
 import copy
 from textwrap import indent
-from typing import List, Union
+from typing import List, Union, Any, Optional
+from typeguard import check_type, TypeCheckError
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -32,6 +33,7 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.tasks import do_summarize
 from utils.misc import ankiconnect, format_chat_history, refilter_docs, debug_chain, check_intermediate_answer
+from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
 
@@ -59,13 +61,35 @@ import litellm
 """))
 
 
-
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
+extra_args = {
+    "anki_profile": str,
+    "anki_notetype": str,
+    "anki_fields": str,
+    "anki_deck": str,
+    "anki_mode": str,
+    "whisper_lang": str,
+    "whisper_prompt": str,
+    "path": str,
+    "include": str,
+    "exclude": str,
+    "out_file": str,
+    "out_file_logseq_mode": str,
+    "language": str,
+    "translation": str,
+    "out_check_file": str,
+    "embed_instruct": str,
+    "file_loader_max_threads": int,
+    "load_functions": List[str],
+    "filter_metadata": Union[List[str], str],
+    # "filter_content": Union[List[str, str]],
+}
 
+@optional_typecheck
 class DocToolsLLM:
     VERSION: str = "0.12"
 
@@ -77,7 +101,7 @@ class DocToolsLLM:
         weakmodelname: str = "openai/gpt-3.5-turbo-0125",
         # weakmodelname: str = "mistral/open-mixtral-8x7b",
         task: str = "query",
-        query: str = None,
+        query: Optional[str] = None,
         filetype: str = "infer",
         embed_model: str = "openai/text-embedding-3-small",
         # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
@@ -86,7 +110,7 @@ class DocToolsLLM:
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
         saveas: str = ".cache/latest_docs_and_embeddings",
-        loadfrom: str = None,
+        loadfrom: Optional[str] = None,
 
         top_k: int = 50,
         query_retrievers: str = "default",
@@ -99,7 +123,7 @@ class DocToolsLLM:
         dollar_limit: int = 5,
         debug: bool = False,
         llm_verbosity: bool = False,
-        ntfy_url: str =  None,
+        ntfy_url: Optional[str] =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
         no_cache: bool = False,
@@ -107,8 +131,8 @@ class DocToolsLLM:
         help: bool = False,
         h: bool = False,
         import_mode: bool = False,
-        **kwargs,
-        ):
+        **kwargs: Any,
+        ) -> None:
         """
         Parameters
         ----------
@@ -362,16 +386,37 @@ class DocToolsLLM:
             BeautifulSoup. Useful to decode html stored in .js files.
             Do tell me if you want more of this.
 
+        Runtime flags
+        -------------
+
+        DOCTOOLS_NO_TYPECHECKING="true"
+            to disable type checking
+
         """
         if help or h:
             print(self.__init__.__doc__)
             raise SystemExit()
 
+        # make sure the extra args are valid
+        for k in kwargs:
+            if k.startswith("llamacppembedding_"):
+                continue
+            if k not in extra_args:
+                raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
+
+            # type checking of extra args
+            if os.environ["DOCTOOLS_NO_TYPECHECKING"] == "false":
+                val = kwargs[k]
+                expected_type = extra_args[k]
+                curr_type = type(kwargs[k])
+                # print(k, val, expected_type, curr_type)
+                assert check_type(kwargs[k], expected_type), (
+                f"Invalid type: '{k}' is '{type(k)}' instead of '{v}'")
+
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
-        assert isinstance(filetype, str), "filetype must be a string"
         if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
@@ -389,26 +434,7 @@ class DocToolsLLM:
             assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/")[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
-        assert isinstance(n_summaries_target, int), "invalid type of n_summaries_target"
-        query_eval_check_number = int(query_eval_check_number)
         assert query_eval_check_number > 0, "query_eval_check_number value"
-
-        for k in kwargs:
-            if k not in [
-                    "anki_profile", "anki_notetype", "anki_fields",
-                    "anki_deck", "anki_mode",
-                    "whisper_lang", "whisper_prompt",
-                    "path", "include", "exclude",
-                    "out_file", "out_file_logseq_mode",
-                    "language", "translation",
-                    "out_check_file",
-                    "embed_instruct",
-                    "file_loader_max_threads",
-                    "filter_metadata",
-                    "load_functions",
-                    # "filter_content",
-                    ] and not k.startswith("llamacppembedding_"):
-                raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
         if filetype == "string":
             top_k = 1
@@ -495,9 +521,9 @@ class DocToolsLLM:
             ntfy = create_ntfy_func(ntfy_url)
             ntfy("Starting DocTools")
         else:
-            def ntfy(text):
-                red(text)
-                return text
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                return red(text)
 
         if self.debug:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -685,7 +711,6 @@ class DocToolsLLM:
                 # Avoiding both having too many summaries and not enough
                 # as it allows to run this frequently
                 n_todos_desired = self.n_summaries_target
-                assert isinstance(n_todos_desired, int)
                 if self.n_todos_present >= n_todos_desired:
                     return ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
                 else:
@@ -756,7 +781,8 @@ class DocToolsLLM:
             self.llm.model_kwargs["frequency_penalty"] = 0.5
             self.llm.model_kwargs["temperature"] = 0.0
 
-        def threaded_summary(link, lock):
+        @optional_typecheck
+        def threaded_summary(link: str, lock: Lock) -> dict:
             if self.task == "summarize_link_file":
                 # get only the docs that match the link
                 relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
@@ -1056,7 +1082,8 @@ class DocToolsLLM:
                     elif f.startswith("~"):
                         fuz.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
 
-                def filter_meta(meta):
+                @optional_typecheck
+                def filter_meta(meta: dict) -> bool:
                     fizdic = {k:False for k in fuz}
                     for v in meta.values():
                         v = str(v)
@@ -1071,7 +1098,8 @@ class DocToolsLLM:
                         return False
                     return True
             else:
-                def filter_meta(meta):
+                @optional_typecheck
+                def filter_meta(meta: dict) -> bool:
                     return True
             if "filter_content" in self.kwargs:
                 raise NotImplementedError("filter_content argument was disabled")
@@ -1091,16 +1119,19 @@ class DocToolsLLM:
                     elif f.startswith("-"):
                         excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
                 assert not [re.compile(f[1:]) for f in filter_content if f.startswith("~")], "No ~ filter can be used on content, use + instead"
-                def filter_cont(cont):
+                @optional_typecheck
+                def filter_cont(cont) -> bool:
                     if any(re.search(e, cont) for e in excl):
                         return False
                     if not all(re.search(e, cont) for e in incl):
                         return False
                     return True
             else:
-                def filter_cont(cont):
+                @optional_typecheck
+                def filter_cont(cont: str) -> bool:
                     return True
-            def query_filter(doc):
+            @optional_typecheck
+            def query_filter(doc: Any) -> bool:
                 if isinstance(doc, dict):  # received metadata directly
                     return filter_meta(doc)
                 if filter_meta(doc.metadata) and filter_content(doc.page_content):
@@ -1111,7 +1142,8 @@ class DocToolsLLM:
             self.query_filter = None
 
 
-    def query(self, query):
+    @optional_typecheck
+    def query(self, query: str) -> Optional[str]:
         if not query:
             query, self.cli_commands = ask_user(
                     "\n\nWhat is your question? (Q to quit)\n",
@@ -1268,7 +1300,8 @@ class DocToolsLLM:
                 )
 
             @chain
-            def evaluate_doc_chain(inputs):
+            @optional_typecheck
+            def evaluate_doc_chain(inputs: dict) -> List[str]:
                 out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
                 new_p = out.llm_output["token_usage"]["prompt_tokens"]
@@ -1441,4 +1474,14 @@ class DocToolsLLM:
 
 if __name__ == "__main__":
     import fire
-    instance = fire.Fire(DocToolsLLM)
+    try:
+        instance = fire.Fire(DocToolsLLM)
+    except TypeCheckError as err:
+        raise type(err)(
+                red(
+                "Found a typechecking error. To disable "
+                "typechecking, set the environment flag like so:\n"
+                'DOCTOOLS_NO_TYPECHECKING="true" python DocToolsLLM.py ...\n'
+                f"Original error:\n{err}")) from err
+    except Exception as err:
+        raise

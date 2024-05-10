@@ -1,5 +1,7 @@
 
 from .file_loader import get_splitter
+from typing import Optional, Any, Callable, List
+from .typechecker import optional_typecheck
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
@@ -13,17 +15,18 @@ from langchain.storage import LocalFileStore
 """))
 
 
+@optional_typecheck
 def create_hyde_retriever(
-        query,
+    query: str,
 
-        llm,
-        top_k,
-        relevancy,
-        filter,
+    llm: Any,
+    top_k: int,
+    relevancy: float,
+    filter: Optional[Callable],
 
-        embeddings,
-        loaded_embeddings,
-        ):
+    embeddings: Any,
+    loaded_embeddings: Any,
+    ) -> Any:
     """
     create a retriever only for the subset of documents from the
     loaded_embeddings that were found using HyDE technique (i.e. asking
@@ -69,14 +72,15 @@ Answer:"""
     return retriever
 
 
+@optional_typecheck
 def create_parent_retriever(
-        task,
-        loaded_embeddings,
-        loaded_docs,
-        top_k,
-        relevancy,
-        filter,
-        ):
+    task: str,
+    loaded_embeddings: Any,
+    loaded_docs: List[Document],
+    top_k: int,
+    relevancy: float,
+    filter: Optional[Callable],
+    ) -> Any:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
     psp = get_splitter(task)

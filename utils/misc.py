@@ -1,7 +1,12 @@
+import os
+from typing import Tuple, List, Union
+
+from .logger import red
+from .errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
 from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
-from typing import Tuple, List
 import urllib
 import json
 from datetime import timedelta
@@ -16,8 +21,7 @@ from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
 """))
 
-from .logger import red
-from .errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
+
 
 Path(".cache").mkdir(exist_ok=True)
 Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
@@ -25,13 +29,15 @@ Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
 loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
 
 
-def hasher(text):
+@optional_typecheck
+def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
 
-def html_to_text(html, issoup):
+@optional_typecheck
+def html_to_text(html: str, issoup: bool) -> str:
     """used to strip any html present in the text files"""
     if not issoup:
         soup = BeautifulSoup(html, 'html.parser')
@@ -44,12 +50,15 @@ def html_to_text(html, issoup):
     else:
         return html.get_text()
 
-def ankiconnect(action, **params):
-    "talk to anki via ankiconnect addon"
-    def request_wrapper(action, **params):
-        return {'action': action, 'params': params, 'version': 6}
+@optional_typecheck
+def _request_wrapper(action: str, **params) -> dict:
+    return {'action': action, 'params': params, 'version': 6}
 
-    requestJson = json.dumps(request_wrapper(action, **params)
+@optional_typecheck
+def ankiconnect(action: str, **params) -> Union[List, str]:
+    "talk to anki via ankiconnect addon"
+
+    requestJson = json.dumps(_request_wrapper(action, **params)
                              ).encode('utf-8')
 
     try:
@@ -72,6 +81,7 @@ def ankiconnect(action, **params):
     return response['result']
 
 
+@optional_typecheck
 def format_chat_history(chat_history: List[Tuple]) -> str:
     "to load the chat history into the RAG chain"
     buffer = ""
@@ -81,6 +91,7 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
         buffer += "\n" + "\n".join([human, ai])
     return buffer
 
+@optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if (
@@ -93,6 +104,7 @@ def check_intermediate_answer(ans: str) -> bool:
 
 
 @chain
+@optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the weak model answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
@@ -120,7 +132,8 @@ def refilter_docs(inputs: dict) -> List[Document]:
 
 
 @chain
-def debug_chain(inputs):
+@optional_typecheck
+def debug_chain(inputs: dict) -> dict:
     "use it between | pipes | in a chain to open the debugger"
     try:
         red(inputs.keys())

@@ -3,12 +3,15 @@ import re
 from pathlib import Path
 import lazy_import
 
+from .typechecker import optional_typecheck
+
 pattern = re.compile(r'^from (?P<fsource>[\w\.]+) import (?P<fwhat>[\w,. ()]+)( as (?P<fas>\w+))?|^import (?P<iwhat>[\w()]+)( as (?P<ias>\w+))?$')
 
 if "DOCTOOLS_NO_LAZYLOADING" not in os.environ:
     os.environ["DOCTOOLS_NO_LAZYLOADING"] = "false"
 assert os.environ["DOCTOOLS_NO_LAZYLOADING"] in ["true", "false"]
 
+@optional_typecheck
 def lazy_import_statements(
     text: str,
     verbose: bool=False,

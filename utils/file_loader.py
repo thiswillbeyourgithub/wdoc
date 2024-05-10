@@ -1,4 +1,5 @@
 import os
+from typing import List, Any, Union
 
 from langchain.docstore.document import Document
 try:
@@ -11,12 +12,12 @@ except Exception as err:
     print(f"Failed to import pdftotext: '{err}'")
 
 from .misc import loaddoc_cache, html_to_text, hasher
+from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
-from typing import List
 from textwrap import dedent
 from functools import partial
 import tldextract
@@ -42,6 +43,7 @@ import json
 from prompt_toolkit import prompt
 import tiktoken
 
+from langchain.text_splitter.character import TextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
@@ -132,11 +134,13 @@ if "pdftotext" in globals():
                 return "\n\n".join(pdftotext.PDF(f))
 
 
-def get_tkn_length(tosplit):
+@optional_typecheck
+def get_tkn_length(tosplit: str) -> int:
     return len(tokenize(tosplit))
 
 
-def get_splitter(task):
+@optional_typecheck
+def get_splitter(task: str) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
@@ -164,12 +168,13 @@ def get_splitter(task):
     return text_splitter
 
 
-def cloze_stripper(clozed):
+@optional_typecheck
+def cloze_stripper(clozed: str) -> str:
     clozed = re.sub(clozeregex, " ", clozed)
     return clozed
 
-
-def check_docs_tkn_length(docs, name):
+@optional_typecheck
+def check_docs_tkn_length(docs: List[Document], name: str) -> float:
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
@@ -222,7 +227,8 @@ def check_docs_tkn_length(docs, name):
     return prob
 
 
-def get_url_title(url):
+@optional_typecheck
+def get_url_title(url: str) -> Union[str, type(None)]:
     """if the title of the url is not loaded from the loader, trying as last
     resort with this one"""
     loader = WebBaseLoader(url, raise_for_status=True)
@@ -233,7 +239,8 @@ def get_url_title(url):
         return None
 
 
-def load_doc(filetype, debug, task, **kwargs):
+@optional_typecheck
+def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     """load the input"""
     # remove cache files older than 90 days
     try:
@@ -1379,6 +1386,7 @@ def load_doc(filetype, debug, task, **kwargs):
     assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
+@optional_typecheck
 @loaddoc_cache.cache
 def load_html_file(path: str, load_functions: str = None) -> str:
     with open(path) as f:
@@ -1411,8 +1419,9 @@ def load_html_file(path: str, load_functions: str = None) -> str:
     text = html_to_text(soup, issoup=True)
     return text
 
+@optional_typecheck
 @loaddoc_cache.cache
-def load_youtube_playlist(playlist_url):
+def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
         try:
             loaded = ydl.extract_info(playlist_url, download=False)
@@ -1424,8 +1433,14 @@ def load_youtube_playlist(playlist_url):
     return loaded
 
 
+@optional_typecheck
 @loaddoc_cache.cache(ignore=["loader"])
-def cached_yt_loader(loader, path, add_video_info, language, translation):
+def cached_yt_loader(
+        loader: Any,
+        path: str,
+        add_video_info: bool,
+        language: List[str],
+        translation: List[str]) -> List[Document]:
     yel(f"Not using cache for youtube {path}")
     docs = loader(
         path,
@@ -1436,8 +1451,13 @@ def cached_yt_loader(loader, path, add_video_info, language, translation):
     return docs
 
 
+@optional_typecheck
 @loaddoc_cache.cache(ignore=["text_splitter"])
-def cached_pdf_loader(path, text_splitter, splitter_chunk_size, debug):
+def cached_pdf_loader(
+        path: str,
+        text_splitter: TextSplitter,
+        splitter_chunk_size: int,
+        debug: bool) -> List[Document]:
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaders = {
         "pdftotext": None,  # optional support
