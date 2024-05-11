@@ -47,9 +47,7 @@ def optional_typecheck(func: Callable) -> Callable:
                 return func(*args, **kwargs)
         return wrapper
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "disabled":
-        @typechecked
-        def wrapper(*args, **kwargs) -> Any:
-            return func(*args, **kwargs)
+        return func
     else:
         raise ValueError(
             f"Unexpected value for os.environ['DOCTOOLS_TYPECHECKING']: '{os.environ['DOCTOOLS_TYPECHECKING']}'")
