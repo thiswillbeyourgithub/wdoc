@@ -1067,7 +1067,7 @@ class DocToolsLLM:
                 return_messages=True)
 
         # set default ask_user argument
-        self.cli_commands = {
+        self.cli_settings = {
                 "top_k": self.top_k,
                 "multiline": False,
                 "retriever": self.query_retrievers,
@@ -1158,22 +1158,23 @@ class DocToolsLLM:
             self.query_filter = None
 
 
-    @optional_typecheck
+    #@optional_typecheck
     def query(self, query: Optional[str]) -> Optional[str]:
         if not query:
-            query, self.cli_commands = ask_user(
-                    "\n\nWhat is your question? (Q to quit)\n",
-                    self.cli_commands,
-                    )
+            query, self.cli_settings = ask_user(self.cli_settings)
+        assert all(
+            retriev in ["default", "hyde", "knn", "svm", "parent"]
+            for retriev in self.cli_settings["retriever"].split("_")
+        ), f"Invalid retriever value: {self.cli_settings['retriever']}"
         retrievers = []
-        if "hyde" in self.cli_commands["retriever"].lower():
+        if "hyde" in self.cli_settings["retriever"].lower():
             retrievers.append(
                     create_hyde_retriever(
                         query=query,
 
                         llm=self.llm,
-                        top_k=self.cli_commands["top_k"],
-                        relevancy=self.cli_commands["relevancy"],
+                        top_k=self.cli_settings["top_k"],
+                        relevancy=self.cli_settings["relevancy"],
                         filter=self.query_filter,
 
                         embeddings=self.embeddings,
@@ -1181,46 +1182,46 @@ class DocToolsLLM:
                         )
                     )
 
-        if "knn" in self.cli_commands["retriever"].lower():
+        if "knn" in self.cli_settings["retriever"].lower():
             retrievers.append(
                     KNNRetriever.from_texts(
                         self.all_texts,
                         self.embeddings,
-                        relevancy_threshold=self.cli_commands["relevancy"],
-                        k=self.cli_commands["top_k"],
+                        relevancy_threshold=self.cli_settings["relevancy"],
+                        k=self.cli_settings["top_k"],
                         filter=self.query_filter,
                         )
                     )
-        if "svm" in self.cli_commands["retriever"].lower():
+        if "svm" in self.cli_settings["retriever"].lower():
             retrievers.append(
                     SVMRetriever.from_texts(
                         self.all_texts,
                         self.embeddings,
-                        relevancy_threshold=self.cli_commands["relevancy"],
-                        k=self.cli_commands["top_k"],
+                        relevancy_threshold=self.cli_settings["relevancy"],
+                        k=self.cli_settings["top_k"],
                         filter=self.query_filter,
                         )
                     )
-        if "parent" in self.cli_commands["retriever"].lower():
+        if "parent" in self.cli_settings["retriever"].lower():
             retrievers.append(
                     create_parent_retriever(
                         task=self.task,
                         loaded_embeddings=self.loaded_embeddings,
                         loaded_docs=self.loaded_docs,
-                        top_k=self.cli_commands["top_k"],
-                        relevancy=self.cli_commands["relevancy"],
+                        top_k=self.cli_settings["top_k"],
+                        relevancy=self.cli_settings["relevancy"],
                         filter=self.query_filter,
                         )
                     )
 
-        if "default" in self.cli_commands["retriever"].lower():
+        if "default" in self.cli_settings["retriever"].lower():
             retrievers.append(
                     self.loaded_embeddings.as_retriever(
                         search_type="similarity_score_threshold",
                         search_kwargs={
-                            "k": self.cli_commands["top_k"],
+                            "k": self.cli_settings["top_k"],
                             "distance_metric": "cos",
-                            "score_threshold": self.cli_commands["relevancy"],
+                            "score_threshold": self.cli_settings["relevancy"],
                             "filter": self.query_filter,
                             })
                         )
@@ -1243,7 +1244,7 @@ class DocToolsLLM:
 
         if self.task == "search":
             docs = retriever.get_relevant_documents(query)
-            if len(docs) < self.cli_commands["top_k"]:
+            if len(docs) < self.cli_settings["top_k"]:
                 red(f"Only found {len(docs)} relevant documents")
 
             whi("\n\nSources:")
@@ -1416,9 +1417,11 @@ class DocToolsLLM:
                     }
                 )
             except NoDocumentsRetrieved as err:
-                return md_printer(f"## No documents were retrieved with query '{query_fe}'")
+                md_printer(f"## No documents were retrieved with query '{query_fe}'")
+                return
             except NoDocumentsAfterWeakLLMFiltering as err:
-                return md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'")
+                md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'")
+                return
 
             # group the intermediate answers by batch, then do a batch reduce mapping
             batch_size = 5
@@ -1473,7 +1476,6 @@ class DocToolsLLM:
 
             if self.import_mode:
                 return output
-
 
             assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
             llmcallback = self.llm.callbacks[0]
