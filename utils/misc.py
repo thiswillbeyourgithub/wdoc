@@ -98,12 +98,12 @@ def model_name_matcher(model: str) -> str:
     "find the best match for a modelname"
     assert "testing" not in model
 
-    if model in litellm.model_list:
+    if model in list(litellm.model_cost.keys()):
         return model
 
     # some openai models are identified by their name directly without
     # the usual 'openai/modelname' syntax
-    if "/" in model and model.split("/", 1)[1] in litellm.model_list:
+    if "/" in model and model.split("/", 1)[1] in list(litellm.model_cost.keys()):
         return model
 
     # find the currently set api keys to avoid matching models from
@@ -122,7 +122,7 @@ def model_name_matcher(model: str) -> str:
     assert backends, "No API keys found in environnment nor local files"
 
     models = []
-    for m in litellm.model_list:
+    for m in list(litellm.model_cost.keys()):
         if "/" in m and get_close_matches(m.split("/", 1)[0].lower(), backends, n=1):
             models.append(m)
         elif "." in m and get_close_matches(m.split(".", 1)[0].lower(), backends, n=1):
