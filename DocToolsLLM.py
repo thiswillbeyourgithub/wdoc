@@ -560,6 +560,7 @@ class DocToolsLLM:
                 logger = logging.getLogger(logger_name)
                 # logger.setLevel(logging.CRITICAL + 1)
                 logger.setLevel(logging.WARNING)
+        litellm.drop_params = True  # drops parameters that are not used by some models
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -1316,7 +1317,7 @@ class DocToolsLLM:
                     backend=self.weakmodelbackend,
                     no_cache=self.no_cache,
                     verbose=self.llm_verbosity,
-                    max_tokens=1,
+                    max_tokens=1 if self.weakmodelbackend != "mistral" else 2,
                     temperature=1,
                     n=self.query_eval_check_number,
                 )
@@ -1326,8 +1327,22 @@ class DocToolsLLM:
             def evaluate_doc_chain(inputs: dict) -> List[str]:
                 out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
+                assert not all(o=="" for o in outputs), f"Weak model only produced empty output. Try a less weak model"
+
                 new_p = out.llm_output["token_usage"]["prompt_tokens"]
                 new_c = out.llm_output["token_usage"]["completion_tokens"]
+
+                # deal with models that don't handle n>1
+                while len(outputs) < self.query_eval_check_number:
+                    out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    new_outputs = [gen.text for gen in out.generations]
+                    assert not all(o=="" for o in new_outputs), f"Weak model only produced empty output. Try a less weak model"
+                    outputs.extend(new_outputs)
+                    new_p += out.llm_output["token_usage"]["prompt_tokens"]
+                    new_c += out.llm_output["token_usage"]["completion_tokens"]
+
+                assert len(outputs) == self.query_eval_check_number, f"Weak model failed to produce {self.query_eval_check_number} outputs"
+
                 self.eval_llm.callbacks[0].prompt_tokens += new_p
                 self.eval_llm.callbacks[0].completion_tokens += new_c
                 self.eval_llm.callbacks[0].total_tokens += new_p + new_c
