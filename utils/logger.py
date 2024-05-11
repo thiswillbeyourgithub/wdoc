@@ -83,10 +83,11 @@ red = get_coloured_logger("red")
 console = Console()
 
 @optional_typecheck
-def md_printer(message: str, color: Optional[str] = None) -> None:
+def md_printer(message: str, color: Optional[str] = None) -> str:
     log.info(message)
     md = Markdown(message)
     console.print(md, style=color)
+    return message
 
 # phone notification
 @optional_typecheck

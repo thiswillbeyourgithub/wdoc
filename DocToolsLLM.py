@@ -1412,7 +1412,10 @@ class DocToolsLLM:
                 )
 
             if self.debug:
-                yel(rag_chain.get_graph().print_ascii())
+                try:
+                    yel(rag_chain.get_graph().print_ascii())
+                except Exception as err:
+                    red(f"Error when printing chain graph: {err}")
 
             try:
                 output = rag_chain.invoke(
@@ -1422,11 +1425,9 @@ class DocToolsLLM:
                     }
                 )
             except NoDocumentsRetrieved as err:
-                md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
-                return
+                return md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
             except NoDocumentsAfterWeakLLMFiltering as err:
-                md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'", color="red")
-                return
+                return md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'", color="red")
 
             # group the intermediate answers by batch, then do a batch reduce mapping
             batch_size = 5
