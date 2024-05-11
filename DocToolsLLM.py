@@ -368,6 +368,11 @@ class DocToolsLLM:
             currently supported.
             All regex are matched case insensitively if they match their lowercase form.
 
+            Example:
+            * to include only documents that contain "anki" in any value
+            of any of its metadata dict:
+                --filter_metadata="~anki"
+
         --filter_content
             CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of

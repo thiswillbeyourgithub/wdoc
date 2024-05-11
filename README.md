@@ -14,7 +14,7 @@
 * All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).
 * Caching is used to speed things up, as well as index storing and loading (handy for large collections).
 * Markdown formatted answers
-* Filtering via document metadata
+* Filtering via document metadata (e.g. to include only documents that contain "anki" in any value of any of its metadata dict: `--filter_metadata="~anki"`)
 * Several LLM implemented (by default OpenAI, but Llamacpp and GPT4ALL are implemented). Adding more is very easy.
 * Several embedding models implemented (by default OpenAI but sentence-transformers is implemented (including GLOVE with stop words), HuggingFace models can be used etc). Note that if using OpenAI the cost will be computed beforehand to make you confirm for embeddings larger that $1.
 * Multithreaded document parsing and embedding.
