@@ -101,6 +101,7 @@ class DocToolsLLM:
         modelname: str = "openai/gpt-4-turbo-2024-04-09",
         weakmodelname: str = "openai/gpt-3.5-turbo-0125",
         # weakmodelname: str = "mistral/open-mixtral-8x7b",
+        # weakmodelname: str = "mistral/open-small",
         task: str = "query",
         query: Optional[str] = None,
         filetype: str = "infer",
