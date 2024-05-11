@@ -1,9 +1,9 @@
 from prompt_toolkit.completion import Completer, Completion
 from typing import Optional, Tuple, Any
 
-from utils.logger import whi, red, md_printer
-from utils.lazy_lib_importer import lazy_import_statements, lazy_import
-from utils.typechecker import optional_typecheck
+from .logger import whi, red, md_printer
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
 import time
