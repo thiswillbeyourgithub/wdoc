@@ -1,4 +1,6 @@
 import os
+from functools import wraps
+from textwrap import indent
 from typeguard import typechecked, TypeCheckError
 from typing import Callable, Any
 
@@ -15,39 +17,38 @@ def redprint(message: str) -> str:
 @typechecked
 def optional_typecheck(func: Callable) -> Callable:
     if os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
-        @typechecked
-        def wrapper(*args, **kwargs) -> Any:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             try:
-                return typechecked(
-                    func,
-                )(*args, **kwargs)
+                return typechecked(func)(*args, **kwargs)
             except TypeCheckError as err:
                 mess = (
                     f"TypeCheckError in function '{func}'\n"
                     "To disable global "
                     "typechecking, set the runtime flag like so:\n"
-                    'DOCTOOLS_TYPECHECKING="true" python DocToolsLLM.py \n'
-                    f"Original error:\n'''\n{err}\n'''\n")
+                    'DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py \n'
+                    f"Original error:\n{indent(err, '    ')}\n")
                 raise TypeCheckError(redprint(mess)) from err
         return wrapper
+
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
-        @typechecked
-        def wrapper(*args, **kwargs) -> Any:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             try:
-                return typechecked(
-                    func,
-                )(*args, **kwargs)
+                return typechecked(func)(*args, **kwargs)
             except TypeCheckError as err:
                 redprint(
                     f"TypeCheckError in function '{func}'\n"
                     "To disable global "
                     "typechecking, set the runtime flag like so:\n"
-                    'DOCTOOLS_TYPECHECKING="true" python DocToolsLLM.py \n'
-                    f"Original error:\n'''\n{err}\n'''\n")
+                    'DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py \n'
+                    f"Original error:\n{indent(err, '    ')}\n")
                 return func(*args, **kwargs)
         return wrapper
+
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "disabled":
         return func
+
     else:
         raise ValueError(
             f"Unexpected value for os.environ['DOCTOOLS_TYPECHECKING']: '{os.environ['DOCTOOLS_TYPECHECKING']}'")
