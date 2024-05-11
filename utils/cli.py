@@ -170,8 +170,8 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             if settings["multiline"]:
                 pass
             else:
-                red(f"EOFError while not in multiline mode: crashing")
-                raise
+                red(f"EOFError: quitting.")
+                raise SystemExit()
         user_input = user_input.strip()
 
         # quit
