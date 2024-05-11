@@ -1422,10 +1422,10 @@ class DocToolsLLM:
                     }
                 )
             except NoDocumentsRetrieved as err:
-                md_printer(f"## No documents were retrieved with query '{query_fe}'")
+                md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
                 return
             except NoDocumentsAfterWeakLLMFiltering as err:
-                md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'")
+                md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'", color="red")
                 return
 
             # group the intermediate answers by batch, then do a batch reduce mapping
