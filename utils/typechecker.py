@@ -27,7 +27,7 @@ def optional_typecheck(func: Callable) -> Callable:
                     "To disable global "
                     "typechecking, set the runtime flag like so:\n"
                     'DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py \n'
-                    f"Original error:\n{indent(err, '    ')}\n")
+                    f"Original error:\n{indent(str(err), '    ')}\n")
                 raise TypeCheckError(redprint(mess)) from err
         return wrapper
 
@@ -42,7 +42,7 @@ def optional_typecheck(func: Callable) -> Callable:
                     "To disable global "
                     "typechecking, set the runtime flag like so:\n"
                     'DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py \n'
-                    f"Original error:\n{indent(err, '    ')}\n")
+                    f"Original error:\n{indent(str(err), '    ')}\n")
                 return func(*args, **kwargs)
         return wrapper
 
