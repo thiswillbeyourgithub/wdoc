@@ -1,8 +1,8 @@
 from typing import List, Union
 
-from utils.logger import red
-from utils.lazy_lib_importer import lazy_import_statements, lazy_import
-from utils.typechecker import optional_typecheck
+from .logger import red
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
 import os

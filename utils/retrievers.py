@@ -1,6 +1,6 @@
+from typing import Optional, Any, Callable, List
 
 from .file_loader import get_splitter
-from typing import Optional, Any, Callable, List
 from .typechecker import optional_typecheck
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 
