@@ -1183,7 +1183,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         if not loaded_success:
             try:
                 loader = WebBaseLoader(
-                    "https://r.jina.ai/" + path.split("://", 1)[1],
+                    "https://r.jina.ai/" + path,
                     raise_for_status=True)
                 docs = text_splitter.transform_documents(loader.load())
                 assert docs, "Empty docs when using jina reader"
