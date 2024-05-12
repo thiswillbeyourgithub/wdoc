@@ -1190,8 +1190,6 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                 if not title:
                     if text.splitlines()[0].startswith("Title: "):
                         title = text.splitlines()[0].replace("Title: ", "", 1)
-                        for doc in docs:
-                            doc.metadata["title"] = title
                 text = text.split("Markdown Content:", 1)[1]
 
                 texts = text_splitter.split_text(text)
@@ -1203,6 +1201,9 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                         }
                     ) for t in texts
                 ]
+                if title:
+                    for doc in docs:
+                        doc.metadata["title"] = title
                 check_docs_tkn_length(docs, path)
                 loaded_success = True
             except Exception as err:
