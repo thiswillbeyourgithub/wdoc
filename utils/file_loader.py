@@ -1187,12 +1187,12 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                     raise_for_status=True)
                 docs = text_splitter.transform_documents(loader.load())
                 assert docs, "Empty docs when using jina reader"
-                if (
-                    not title
-                    and "title" in docs[0].metadata
-                    and docs[0].metadata["title"]
-                ):
-                    title = docs[0].metadata["title"]
+                if not title:
+                    test_title = docs[0].page_content.splitlines()[0]
+                    if test_title.startswith("Title: "):
+                        title = test_title.replace("Title: ", "", 1)
+                    for doc in docs:
+                        doc.metadata["title"] = title
                 check_docs_tkn_length(docs, path)
                 loaded_success = True
             except Exception as err:
