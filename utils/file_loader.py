@@ -1185,14 +1185,24 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                 loader = WebBaseLoader(
                     "https://r.jina.ai/" + path,
                     raise_for_status=True)
-                docs = text_splitter.transform_documents(loader.load())
-                assert docs, "Empty docs when using jina reader"
+                text = "\n".join([doc.page_content for doc in loader.load()]).strip()
+                assert text, "Empty text"
                 if not title:
-                    test_title = docs[0].page_content.splitlines()[0]
-                    if test_title.startswith("Title: "):
-                        title = test_title.replace("Title: ", "", 1)
-                    for doc in docs:
-                        doc.metadata["title"] = title
+                    if text.splitlines()[0].startswith("Title: "):
+                        title = text.splitlines()[0].replace("Title: ", "", 1)
+                        for doc in docs:
+                            doc.metadata["title"] = title
+                text = text.split("Markdown Content:", 1)[1]
+
+                texts = text_splitter.split_text(text)
+                docs = [
+                    Document(
+                        page_content=t,
+                        metadata={
+                        "parser": "jinareader",
+                        }
+                    ) for t in texts
+                ]
                 check_docs_tkn_length(docs, path)
                 loaded_success = True
             except Exception as err:
