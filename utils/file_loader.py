@@ -97,8 +97,8 @@ wpm = 250
 average_word_length = 6
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
-markdownlink_regex = re.compile(
-    r"\[.*?\]\((.*?)\)")  # to parse markdown links"
+markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
+markdownlinkparser_regex = pattern = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
 # to check that a youtube link is valid
 yt_link_regex = re.compile("youtube.*watch")
 emptyline_regex = re.compile(r"^\s*$", re.MULTILINE)
@@ -1191,7 +1191,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                     if text.splitlines()[0].startswith("Title: "):
                         title = text.splitlines()[0].replace("Title: ", "", 1)
                 text = text.split("Markdown Content:", 1)[1]
-
+                text = markdownlinkparser_regex.sub(r'\1', text)  # remove links
                 texts = text_splitter.split_text(text)
                 docs = [
                     Document(
