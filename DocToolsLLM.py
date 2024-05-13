@@ -1460,10 +1460,7 @@ class DocToolsLLM:
                 )
 
             if self.debug:
-                try:
-                    yel(rag_chain.get_graph().print_ascii())
-                except Exception as err:
-                    red(f"Error when printing chain graph: {err}")
+                rag_chain.get_graph().print_ascii()
 
             try:
                 output = rag_chain.invoke(
