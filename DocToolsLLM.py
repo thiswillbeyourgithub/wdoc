@@ -561,7 +561,9 @@ class DocToolsLLM:
                 logger = logging.getLogger(logger_name)
                 # logger.setLevel(logging.CRITICAL + 1)
                 logger.setLevel(logging.WARNING)
-        litellm.drop_params = True  # drops parameters that are not used by some models
+
+        # don't crash if extra arguments are used for a model
+        # litellm.drop_params = True  # drops parameters that are not used by some models
 
         # compile include / exclude regex
         if "include" in self.kwargs:
@@ -1313,14 +1315,26 @@ class DocToolsLLM:
 
             # answer 0 or 1 if the document is related
             if not hasattr(self, "eval_llm"):
+                self.eval_llm_params = litellm.get_supported_openai_params(
+                    model=self.weakmodelname,
+                    provider=self.weakmodelbackend,
+                )
+                eval_args = {}
+                if "n" in self.eval_llm_params:
+                    eval_args["n"] = self.query_eval_check_number
+                else:
+                    red(f"Model {self.weakmodelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
+                if "max_tokens" in self.eval_llm_params:
+                    eval_args["max_tokens"] = 2
+                else:
+                    red(f"Model {self.weakmodelname} does not support parameter 'max_token' so the result might be of less quality.")
                 self.eval_llm = load_llm(
                     modelname=self.weakmodelname,
                     backend=self.weakmodelbackend,
                     no_cache=self.no_cache,
                     verbose=self.llm_verbosity,
-                    max_tokens=1 if self.weakmodelbackend != "mistral" else 2,
                     temperature=1,
-                    n=self.query_eval_check_number,
+                    **eval_args,
                 )
 
             @chain
