@@ -85,10 +85,8 @@ def ankiconnect(action: str, **params) -> Union[List, str]:
 @optional_typecheck
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
-    try:
+    if hasattr(inputs, "keys"):
         red(inputs.keys())
-    except Exception as err:
-        red(f"Failed to print inputs: {err}")
     breakpoint()
     return inputs
 
