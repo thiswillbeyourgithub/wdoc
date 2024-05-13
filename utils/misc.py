@@ -83,7 +83,7 @@ def ankiconnect(action: str, **params) -> Union[List, str]:
 
 @chain
 @optional_typecheck
-def debug_chain(inputs: dict) -> dict:
+def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     try:
         red(inputs.keys())
