@@ -33,7 +33,7 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.misc import ankiconnect, debug_chain, model_name_matcher
 from utils.tasks.summary import do_summarize
-from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer
+from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output
 from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
@@ -235,6 +235,8 @@ class DocToolsLLM:
             is indeed relevant to the question. The document will not
             be processed if all answers from the weak llm are 0, and will
             be processed otherwise.
+            For weakmodels that don't support setting 'n', multiple
+            completions will be called, which costs more.
 
         --query_relevancy: float, default 0.3
             threshold underwhich a document cannot be considered relevant by
@@ -1340,21 +1342,24 @@ class DocToolsLLM:
             @chain
             @optional_typecheck
             def evaluate_doc_chain(inputs: dict) -> List[str]:
-                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
-                outputs = [gen.text for gen in out.generations]
-                assert not all(o=="" for o in outputs), f"Weak model only produced empty output. Try a less weak model"
-
-                new_p = out.llm_output["token_usage"]["prompt_tokens"]
-                new_c = out.llm_output["token_usage"]["completion_tokens"]
-
-                # deal with models that don't handle n>1
-                while len(outputs) < self.query_eval_check_number:
+                if "n" in self.eval_llm_params:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
-                    new_outputs = [gen.text for gen in out.generations]
-                    assert not all(o=="" for o in new_outputs), f"Weak model only produced empty output. Try a less weak model"
-                    outputs.extend(new_outputs)
-                    new_p += out.llm_output["token_usage"]["prompt_tokens"]
-                    new_c += out.llm_output["token_usage"]["completion_tokens"]
+                    outputs = [gen.text for gen in out.generations]
+                    outputs = [parse_eval_output(o) for o in outputs]
+                    new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                    new_c = out.llm_output["token_usage"]["completion_tokens"]
+
+                else:
+                    outputs = []
+                    new_p = 0
+                    new_c = 0
+                    while len(outputs) < self.query_eval_check_number:
+                        out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                        new_outputs = [gen.text for gen in out.generations]
+                        new_outputs = [parse_eval_output(o) for o in new_outputs]
+                        outputs.extend(new_outputs)
+                        new_p += out.llm_output["token_usage"]["prompt_tokens"]
+                        new_c += out.llm_output["token_usage"]["completion_tokens"]
 
                 assert len(outputs) == self.query_eval_check_number, f"Weak model failed to produce {self.query_eval_check_number} outputs"
 

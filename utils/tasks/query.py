@@ -4,7 +4,7 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 
 from utils.typechecker import optional_typecheck
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
+from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering, InvalidDocEvaluationByWeakLLM
 from utils.logger import red
 
 
@@ -56,4 +56,37 @@ def refilter_docs(inputs: dict) -> List[Document]:
         raise NoDocumentsAfterWeakLLMFiltering(
             "No document remained after filtering with the query")
     return filtered_docs
+
+@optional_typecheck
+def parse_eval_output(output: str) -> str:
+    mess = f"The weak LLM returned an output that can't be parsed as 0 or 1: '{output}'"
+    # empty
+    if not output.strip():
+        raise InvalidDocEvaluationByWeakLLM(mess)
+
+    if "-" in output:
+        raise InvalidDocEvaluationByWeakLLM(mess)
+
+    digits = [d for d in list(output) if d.isdigit()]
+
+    # contain no digits
+    if not digits:
+        raise InvalidDocEvaluationByWeakLLM(mess)
+
+    # good
+    elif len(digits) == 1:
+        if digits[0] == "0":
+            return "0"
+        elif digits[0] == "1":
+            return "1"
+        else:
+            raise InvalidDocEvaluationByWeakLLM(mess)
+
+    # ambiguous
+    elif "0" in digits and "1" in digits:
+        raise InvalidDocEvaluationByWeakLLM(mess)
+    elif "0" not in digits and "1" not in digits:
+        raise InvalidDocEvaluationByWeakLLM(mess)
+
+    raise Exception(f"Unexpected output when parsing weak llm evaluation of a doc: '{mess}'")
 

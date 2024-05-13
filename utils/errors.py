@@ -1,8 +1,12 @@
 class NoDocumentsRetrieved(Exception):
-    def __init__(self, message: str="no documents were retrieved.") -> None:
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 class NoDocumentsAfterWeakLLMFiltering(Exception):
-    def __init__(self, message: str="No document remained after filtering with the query") -> None:
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+class InvalidDocEvaluationByWeakLLM(Exception):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
