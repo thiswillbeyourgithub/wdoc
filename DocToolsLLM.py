@@ -11,6 +11,7 @@ from datetime import datetime
 import re
 import textwrap
 import os
+import asyncio
 from tqdm import tqdm
 
 try:
@@ -1345,21 +1346,33 @@ class DocToolsLLM:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                     outputs = [gen.text for gen in out.generations]
+                    assert outputs, "No generations found by weak llm"
                     outputs = [parse_eval_output(o) for o in outputs]
                     new_p = out.llm_output["token_usage"]["prompt_tokens"]
                     new_c = out.llm_output["token_usage"]["completion_tokens"]
-
                 else:
                     outputs = []
                     new_p = 0
                     new_c = 0
-                    while len(outputs) < self.query_eval_check_number:
-                        out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
-                        new_outputs = [gen.text for gen in out.generations]
-                        new_outputs = [parse_eval_output(o) for o in new_outputs]
-                        outputs.extend(new_outputs)
+                    async def eval(inputs):
+                        return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    outs = [
+                        eval(inputs)
+                        for i in range(self.query_eval_check_number)
+                    ]
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    outs = loop.run_until_complete(asyncio.gather(*outs))
+                    for out in outs:
+                        assert len(out.generations) == 1, f"Weak llm produced more than 1 evaluations: '{out.generations}'"
+                        outputs.append(out.generations[0].text)
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
+                    assert outputs, "No generations found by weak llm"
+                    outputs = [parse_eval_output(o) for o in outputs]
 
                 assert len(outputs) == self.query_eval_check_number, f"Weak model failed to produce {self.query_eval_check_number} outputs"
 
