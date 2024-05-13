@@ -498,7 +498,7 @@ class DocToolsLLM:
         self.loadfrom = loadfrom
         self.top_k = top_k
         self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
-        self.query_eval_check_number = query_eval_check_number
+        self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
         self.kwargs = kwargs
@@ -1342,7 +1342,7 @@ class DocToolsLLM:
             @chain
             @optional_typecheck
             def evaluate_doc_chain(inputs: dict) -> List[str]:
-                if "n" in self.eval_llm_params:
+                if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                     outputs = [gen.text for gen in out.generations]
                     outputs = [parse_eval_output(o) for o in outputs]
