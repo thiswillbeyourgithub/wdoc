@@ -1319,7 +1319,7 @@ class DocToolsLLM:
             if not hasattr(self, "eval_llm"):
                 self.eval_llm_params = litellm.get_supported_openai_params(
                     model=self.weakmodelname,
-                    provider=self.weakmodelbackend,
+                    custom_llm_provider=self.weakmodelbackend,
                 )
                 eval_args = {}
                 if "n" in self.eval_llm_params:
