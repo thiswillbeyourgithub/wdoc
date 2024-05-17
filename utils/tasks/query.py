@@ -4,7 +4,7 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 
 from utils.typechecker import optional_typecheck
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering, InvalidDocEvaluationByWeakLLM
+from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from utils.logger import red
 
 
@@ -33,7 +33,7 @@ def check_intermediate_answer(ans: str) -> bool:
 @chain
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
-    "filter documents find via RAG based on if the weak model answered 0 or 1"
+    "filter documents find via RAG based on if the eval llm answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
     assert isinstance(unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
@@ -53,25 +53,25 @@ def refilter_docs(inputs: dict) -> List[Document]:
             red(f"Evals contained strings so keeping the doc: '{evals}'")
             filtered_docs.append(unfiltered_docs[ie])
     if not filtered_docs:
-        raise NoDocumentsAfterWeakLLMFiltering(
+        raise NoDocumentsAfterLLMEvalFiltering(
             "No document remained after filtering with the query")
     return filtered_docs
 
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
-    mess = f"The weak LLM returned an output that can't be parsed as 0 or 1: '{output}'"
+    mess = f"The eval LLM returned an output that can't be parsed as 0 or 1: '{output}'"
     # empty
     if not output.strip():
-        raise InvalidDocEvaluationByWeakLLM(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)
 
     if "-" in output:
-        raise InvalidDocEvaluationByWeakLLM(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)
 
     digits = [d for d in list(output) if d.isdigit()]
 
     # contain no digits
     if not digits:
-        raise InvalidDocEvaluationByWeakLLM(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)
 
     # good
     elif len(digits) == 1:
@@ -80,13 +80,13 @@ def parse_eval_output(output: str) -> str:
         elif digits[0] == "1":
             return "1"
         else:
-            raise InvalidDocEvaluationByWeakLLM(mess)
+            raise InvalidDocEvaluationByLLMEval(mess)
 
     # ambiguous
     elif "0" in digits and "1" in digits:
-        raise InvalidDocEvaluationByWeakLLM(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)
     elif "0" not in digits and "1" not in digits:
-        raise InvalidDocEvaluationByWeakLLM(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)
 
-    raise Exception(f"Unexpected output when parsing weak llm evaluation of a doc: '{mess}'")
+    raise Exception(f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")
 

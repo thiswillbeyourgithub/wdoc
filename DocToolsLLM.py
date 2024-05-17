@@ -37,7 +37,7 @@ from utils.tasks.summary import do_summarize
 from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output
 from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterWeakLLMFiltering
+from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 
 from utils.lazy_lib_importer import lazy_import_statements, lazy_import
 
@@ -100,9 +100,6 @@ class DocToolsLLM:
         modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
-        weakmodelname: str = "openai/gpt-3.5-turbo-0125",
-        # weakmodelname: str = "mistral/open-mixtral-8x7b",
-        # weakmodelname: str = "mistral/open-small",
         task: str = "query",
         query: Optional[str] = None,
         filetype: str = "infer",
@@ -118,6 +115,9 @@ class DocToolsLLM:
 
         top_k: int = 20,
         query_retrievers: str = "default",
+        query_eval_modelname: str = "openai/gpt-3.5-turbo-0125",
+        # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
+        # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.3,
         n_recursive_summary: int = 0,
@@ -181,13 +181,6 @@ class DocToolsLLM:
             If the value is not part of the model list of litellm, will use
             fuzzy matching to find the best match.
 
-        --weakmodelname str, default openai/gpt-3.5-turbo-0125
-            Cheaper and quicker model than modelname. Used for intermediate
-            steps in the RAG, not used in other tasks.
-            If the value is not part of the model list of litellm, will use
-            fuzzy matching to find the best match.
-            None to disable.
-
         --embed_model str, default "openai/text-embedding-3-small"
             Name of the model to use for embeddings. Must contain a '/'
             Everything before the slash is the backend and everything
@@ -218,7 +211,7 @@ class DocToolsLLM:
 
         --top_k int, default 20
             number of chunks to look for when querying. It is high because the
-            weak model is used to refilter the document after the embeddings
+            eval model is used to refilter the document after the embeddings
             first pass.
 
         --query_retrievers: str, default 'default'
@@ -233,12 +226,19 @@ class DocToolsLLM:
             if contains 'hyde' but modelname contains "testing" then hyde will
             be removed.
 
+        --query_eval_modelname str, default openai/gpt-3.5-turbo-0125
+            Cheaper and quicker model than modelname. Used for intermediate
+            steps in the RAG, not used in other tasks.
+            If the value is not part of the model list of litellm, will use
+            fuzzy matching to find the best match.
+            None to disable.
+
         --query_eval_check_number: int, default 3
-            number of pass to do with the weak llm to check if the document
+            number of pass to do with the eval llm to check if the document
             is indeed relevant to the question. The document will not
-            be processed if all answers from the weak llm are 0, and will
+            be processed if all answers from the eval llm are 0, and will
             be processed otherwise.
-            For weakmodels that don't support setting 'n', multiple
+            For eval llm that don't support setting 'n', multiple
             completions will be called, which costs more.
 
         --query_relevancy: float, default 0.3
@@ -448,9 +448,9 @@ class DocToolsLLM:
         if task in ["summarize", "summarize_then_query"]:
             assert not loadfrom, "can't use loadfrom if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
-            assert weakmodelname is not None, "weakmodelname can't be None if doing RAG"
+            assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
-            weakmodelname = None
+            query_eval_modelname = None
         assert (task == "summarize_link_file" and filetype == "link_file"
                 ) or (task != "summarize_link_file" and filetype != "link_file"
                         ), "summarize_link_file must be used with filetype link_file"
@@ -470,14 +470,14 @@ class DocToolsLLM:
 
         if not modelname.startswith("testing/"):
             modelname = model_name_matcher(modelname)
-        if weakmodelname is not None:
+        if query_eval_modelname is not None:
             if modelname.startswith("testing/"):
-                if not weakmodelname.startswith("testing/"):
-                    weakmodelname = "testing/testing"
-                    red(f"modelname uses 'testing' backend so setting weakmodelname to '{weakmodelname}'")
+                if not query_eval_modelname.startswith("testing/"):
+                    query_eval_modelname = "testing/testing"
+                    red(f"modelname uses 'testing' backend so setting query_eval_modelname to '{query_eval_modelname}'")
             else:
-                assert not weakmodelname.startswith("testing/"), "weakmodelname can't use 'testing' backend if modelname isn't set to testing too"
-                weakmodelname = model_name_matcher(weakmodelname)
+                assert not query_eval_modelname.startswith("testing/"), "query_eval_modelname can't use 'testing' backend if modelname isn't set to testing too"
+                query_eval_modelname = model_name_matcher(query_eval_modelname)
 
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
@@ -493,9 +493,9 @@ class DocToolsLLM:
         # storing as attributes
         self.modelbackend = modelname.split("/")[0].lower() if "/" in modelname else "openai"
         self.modelname = modelname
-        if weakmodelname is not None:
-            self.weakmodelbackend = weakmodelname.split("/")[0].lower() if "/" in modelname else "openai"
-            self.weakmodelname = weakmodelname
+        if query_eval_modelname is not None:
+            self.query_eval_modelbackend = query_eval_modelname.split("/")[0].lower() if "/" in modelname else "openai"
+            self.query_eval_modelname = query_eval_modelname
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
@@ -531,19 +531,19 @@ class DocToolsLLM:
             ]
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
-        if weakmodelname is not None:
-            if weakmodelname in litellm.model_cost:
-                self.weakllm_price = [
-                    litellm.model_cost[weakmodelname]["input_cost_per_token"],
-                    litellm.model_cost[weakmodelname]["output_cost_per_token"]
+        if query_eval_modelname is not None:
+            if query_eval_modelname in litellm.model_cost:
+                self.query_evalllm_price = [
+                    litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
+                    litellm.model_cost[query_eval_modelname]["output_cost_per_token"]
                 ]
-            elif weakmodelname.split("/")[1] in litellm.model_cost:
-                self.weakllm_price = [
-                    litellm.model_cost[weakmodelname.split("/")[1]]["input_cost_per_token"],
-                    litellm.model_cost[weakmodelname.split("/")[1]]["output_cost_per_token"]
+            elif query_eval_modelname.split("/")[1] in litellm.model_cost:
+                self.query_evalllm_price = [
+                    litellm.model_cost[query_eval_modelname.split("/")[1]]["input_cost_per_token"],
+                    litellm.model_cost[query_eval_modelname.split("/")[1]]["output_cost_per_token"]
                 ]
             else:
-                raise Exception(red(f"Can't find the price of {weakmodelname}"))
+                raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
         global ntfy
         if ntfy_url:
@@ -1323,21 +1323,21 @@ class DocToolsLLM:
             # answer 0 or 1 if the document is related
             if not hasattr(self, "eval_llm"):
                 self.eval_llm_params = litellm.get_supported_openai_params(
-                    model=self.weakmodelname,
-                    custom_llm_provider=self.weakmodelbackend,
+                    model=self.query_eval_modelname,
+                    custom_llm_provider=self.query_eval_modelbackend,
                 )
                 eval_args = {}
                 if "n" in self.eval_llm_params:
                     eval_args["n"] = self.query_eval_check_number
                 else:
-                    red(f"Model {self.weakmodelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
+                    red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
                 if "max_tokens" in self.eval_llm_params:
                     eval_args["max_tokens"] = 2
                 else:
-                    red(f"Model {self.weakmodelname} does not support parameter 'max_token' so the result might be of less quality.")
+                    red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
                 self.eval_llm = load_llm(
-                    modelname=self.weakmodelname,
-                    backend=self.weakmodelbackend,
+                    modelname=self.query_eval_modelname,
+                    backend=self.query_eval_modelbackend,
                     no_cache=self.no_cache,
                     verbose=self.llm_verbosity,
                     temperature=1,
@@ -1350,7 +1350,7 @@ class DocToolsLLM:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                     outputs = [gen.text for gen in out.generations]
-                    assert outputs, "No generations found by weak llm"
+                    assert outputs, "No generations found by query eval llm"
                     outputs = [parse_eval_output(o) for o in outputs]
                     new_p = out.llm_output["token_usage"]["prompt_tokens"]
                     new_c = out.llm_output["token_usage"]["completion_tokens"]
@@ -1371,14 +1371,14 @@ class DocToolsLLM:
                         asyncio.set_event_loop(loop)
                     outs = loop.run_until_complete(asyncio.gather(*outs))
                     for out in outs:
-                        assert len(out.generations) == 1, f"Weak llm produced more than 1 evaluations: '{out.generations}'"
+                        assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                         outputs.append(out.generations[0].text)
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
-                    assert outputs, "No generations found by weak llm"
+                    assert outputs, "No generations found by query eval llm"
                     outputs = [parse_eval_output(o) for o in outputs]
 
-                assert len(outputs) == self.query_eval_check_number, f"Weak model failed to produce {self.query_eval_check_number} outputs"
+                assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs"
 
                 self.eval_llm.callbacks[0].prompt_tokens += new_p
                 self.eval_llm.callbacks[0].completion_tokens += new_c
@@ -1478,8 +1478,8 @@ class DocToolsLLM:
                 chain_time = time.time() - start_time
             except NoDocumentsRetrieved as err:
                 return md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
-            except NoDocumentsAfterWeakLLMFiltering as err:
-                return md_printer(f"## No documents remained after weak LLM filtering using question '{query_an}'", color="red")
+            except NoDocumentsAfterLLMEvalFiltering as err:
+                return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
 
             # group the intermediate answers by batch, then do a batch reduce mapping
             batch_size = 5
@@ -1529,7 +1529,7 @@ class DocToolsLLM:
             md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
 
             red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
-            red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
+            red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
             if chain_time:
                 red(f"Time took by the chain: {chain_time:.2f}s")
@@ -1544,8 +1544,8 @@ class DocToolsLLM:
 
             assert len(self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
             evalllmcallback = self.eval_llm.callbacks[0]
-            wtotal_cost = self.weakllm_price[0] * evalllmcallback.prompt_tokens + self.weakllm_price[1] * evalllmcallback.completion_tokens
-            yel(f"Tokens used by weak model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+            yel(f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
 
