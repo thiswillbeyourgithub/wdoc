@@ -23,8 +23,6 @@ import openai
 """))
 
 
-Path(".cache").mkdir(exist_ok=True)
-
 class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
     quick fix from https://github.com/hwchase17/langchain/issues/5630
