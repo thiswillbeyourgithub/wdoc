@@ -116,7 +116,7 @@ class DocToolsLLM:
         saveas: str = ".cache/latest_docs_and_embeddings",
         loadfrom: Optional[str] = None,
 
-        top_k: int = 50,
+        top_k: int = 20,
         query_retrievers: str = "default",
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.3,
@@ -214,7 +214,7 @@ class DocToolsLLM:
         --loadfrom str, default None
             path to the file saved using --saveas
 
-        --top_k int, default 50
+        --top_k int, default 20
             number of chunks to look for when querying. It is high because the
             weak model is used to refilter the document after the embeddings
             first pass.
