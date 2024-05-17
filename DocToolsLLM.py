@@ -1475,7 +1475,7 @@ class DocToolsLLM:
                         "question_to_answer": query_an,
                     }
                 )
-                chain_time = start_time - time.time()
+                chain_time = time.time() - start_time
             except NoDocumentsRetrieved as err:
                 return md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
             except NoDocumentsAfterWeakLLMFiltering as err:
@@ -1532,7 +1532,7 @@ class DocToolsLLM:
             red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
             red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
             if chain_time:
-                red(f"Time took by the chain: {chain_time:.2f}f")
+                red(f"Time took by the chain: {chain_time:.2f}s")
 
             if self.import_mode:
                 return output
