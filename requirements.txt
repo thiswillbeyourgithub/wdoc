@@ -30,3 +30,5 @@ platformdirs >= 4.2.2
 # pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
 
 LogseqMarkdownParser >= 2.4  # I'm also the dev behind that one
+
+pyfiglet >= 1.0.2   # banner

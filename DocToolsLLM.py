@@ -1,3 +1,4 @@
+import pyfiglet
 import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional
@@ -1551,5 +1552,6 @@ class DocToolsLLM:
 
 
 if __name__ == "__main__":
+    red(pyfiglet.figlet_format("DocToolsLLM"))
     import fire
     instance = fire.Fire(DocToolsLLM)
