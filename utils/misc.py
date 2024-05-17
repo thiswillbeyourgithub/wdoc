@@ -1,19 +1,18 @@
 from typing import List, Union
+from joblib import Memory
+import os
+import urllib
+import json
+import re
+from pathlib import Path
 
 from .logger import red
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 from .typechecker import optional_typecheck
 
 exec(lazy_import_statements("""
-import os
-import urllib
-import json
-from datetime import timedelta
-import re
-from pathlib import Path
 from bs4 import BeautifulSoup
 import hashlib
-from joblib import Memory
 from difflib import get_close_matches
 
 import litellm
