@@ -69,8 +69,8 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
 @optional_typecheck
 def load_embeddings(
     embed_model: str,
-    loadfrom: Optional[str],
-    saveas: str,
+    load_embeds_from: Optional[str],
+    save_embeds_as: str,
     debug: bool,
     loaded_docs: Any,
     dollar_limit: Union[int, float],
@@ -204,9 +204,9 @@ def load_embeddings(
             )
 
     # reload passed embeddings
-    if loadfrom:
+    if load_embeds_from:
         red("Reloading documents and embeddings from file")
-        path = Path(loadfrom)
+        path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
         db = FAISS.load_local(str(path), cached_embeddings, allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
@@ -340,7 +340,7 @@ def load_embeddings(
     whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
-    db.save_local(saveas)
+    db.save_local(save_embeds_as)
 
     return db, cached_embeddings
 

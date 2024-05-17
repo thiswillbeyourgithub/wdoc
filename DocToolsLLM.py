@@ -112,8 +112,8 @@ class DocToolsLLM:
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
-        saveas: str = "{user_cache}/latest_docs_and_embeddings",
-        loadfrom: Optional[str] = None,
+        save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
+        load_embeds_from: Optional[str] = None,
 
         top_k: int = 20,
         query_retrievers: str = "default",
@@ -199,17 +199,17 @@ class DocToolsLLM:
             * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
 
 
-        --saveas str, default {user_dir}/latest_docs_and_embeddings
+        --save_embeds_as str, default {user_dir}/latest_docs_and_embeddings
             only used if task is query
             save the latest 'inputs' to a file. Can be loaded again with
-            --loadfrom to speed up loading time. This loads both the
+            --load_embeds_from to speed up loading time. This loads both the
             split documents and embeddings but will not update itself if the
             original files have changed.
             {user_dir} is automatically replaced by the path to the usual
             cache folder for the current user
 
-        --loadfrom str, default None
-            path to the file saved using --saveas
+        --load_embeds_from str, default None
+            path to the file saved using --save_embeds_as
 
         --top_k int, default 20
             number of chunks to look for when querying. It is high because the
@@ -450,7 +450,7 @@ class DocToolsLLM:
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
-            assert not loadfrom, "can't use loadfrom if task is summary"
+            assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
             assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
@@ -488,8 +488,8 @@ class DocToolsLLM:
             query = None
         if isinstance(query, str):
             query = query.strip() or None
-        if "{user_cache}" in saveas:
-            saveas = saveas.replace("{user_cache}", str(cache_dir))
+        if "{user_cache}" in save_embeds_as:
+            save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
 
         if debug:
             llm_verbosity = True
@@ -503,8 +503,8 @@ class DocToolsLLM:
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
-        self.saveas = saveas
-        self.loadfrom = loadfrom
+        self.save_embeds_as = save_embeds_as
+        self.load_embeds_from = load_embeds_from
         self.top_k = top_k
         self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
         self.query_eval_check_number = int(query_eval_check_number)
@@ -633,7 +633,7 @@ class DocToolsLLM:
             self.kwargs["n_summaries_target"] = self.n_summaries_target
 
         # loading documents
-        if not loadfrom:
+        if not load_embeds_from:
             self.loaded_docs = load_doc(
                     filetype=self.filetype,
                     debug=self.debug,
@@ -1074,8 +1074,8 @@ class DocToolsLLM:
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
                 embed_model=self.embed_model,
-                loadfrom=self.loadfrom,
-                saveas=self.saveas,
+                load_embeds_from=self.load_embeds_from,
+                save_embeds_as=self.save_embeds_as,
                 debug=self.debug,
                 loaded_docs=self.loaded_docs,
                 dollar_limit=self.dollar_limit,
