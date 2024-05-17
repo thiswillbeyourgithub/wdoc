@@ -839,7 +839,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
             lambda x: x.replace("\x1f", "::"))
         cards = cards[cards["codeck"].str.startswith(deck)]
         cards["nmodel"] = cards["nmodel"].apply(lambda x: x.lower())
-        cards = cards[cards["nmodel"].str.startswith(notetype)]
+        cards = cards[cards["nmodel"].str.lower().__contains__(notetype)]
 
         cards["mid"] = col.cards.mid.loc[cards.index]
         mid2fields = akp.raw.get_mid2fields(col.db)

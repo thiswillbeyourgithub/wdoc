@@ -309,8 +309,10 @@ class DocToolsLLM:
         --anki_deck
             The beginning of the deckname
             e.g. "science::physics::freshman_year::lesson1"
-        --anki_notetype
-            The beginning of the notetype to keep
+        --anki_notetype: str
+            If it's part of the card's notetype, that notetype will be kept.
+            Case insensitive.
+
         --anki_fields
             List of fields to keep
         --anki_mode:
