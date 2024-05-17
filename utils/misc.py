@@ -5,6 +5,7 @@ import urllib
 import json
 import re
 from pathlib import Path
+from platformdirs import user_cache_dir
 
 from .logger import red
 from .lazy_lib_importer import lazy_import_statements, lazy_import
@@ -22,10 +23,12 @@ from langchain_core.runnables import chain
 """))
 
 
-Path(".cache").mkdir(exist_ok=True)
-Path(".cache/loaddoc_cache").mkdir(exist_ok=True)
-
-loaddoc_cache = Memory(".cache/loaddoc_cache/", verbose=1)
+assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
+cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
+cache_dir.mkdir(exist_ok=True)
+loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
+loaddoc_cache_dir.mkdir(exist_ok=True)
+loaddoc_cache = Memory(loaddoc_cache_dir, verbose=1)
 
 
 @optional_typecheck

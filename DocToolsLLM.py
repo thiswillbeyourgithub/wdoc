@@ -32,7 +32,7 @@ from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
-from utils.misc import ankiconnect, debug_chain, model_name_matcher
+from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from utils.tasks.summary import do_summarize
 from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output
 from utils.typechecker import optional_typecheck
@@ -113,7 +113,7 @@ class DocToolsLLM:
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
-        saveas: str = ".cache/latest_docs_and_embeddings",
+        saveas: str = "{user_cache}/latest_docs_and_embeddings",
         loadfrom: Optional[str] = None,
 
         top_k: int = 20,
@@ -204,12 +204,14 @@ class DocToolsLLM:
             * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
 
 
-        --saveas str, default .cache/latest_docs_and_embeddings
+        --saveas str, default {user_dir}/latest_docs_and_embeddings
             only used if task is query
             save the latest 'inputs' to a file. Can be loaded again with
             --loadfrom to speed up loading time. This loads both the
             split documents and embeddings but will not update itself if the
             original files have changed.
+            {user_dir} is automatically replaced by the path to the usual
+            cache folder for the current user
 
         --loadfrom str, default None
             path to the file saved using --saveas
@@ -482,6 +484,8 @@ class DocToolsLLM:
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+        if "{user_cache}" in saveas:
+            saveas = saveas.replace("{user_cache}", str(cache_dir))
 
         if debug:
             llm_verbosity = True
@@ -513,7 +517,7 @@ class DocToolsLLM:
         self.import_mode = import_mode
 
         if not no_cache:
-            set_llm_cache(SQLiteCache(database_path=".cache/langchain.db"))
+            set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
 
         if modelname in litellm.model_cost:
             self.llm_price = [

@@ -1,6 +1,7 @@
 from prompt_toolkit.completion import Completer, Completion
 from typing import Optional, Tuple, Any
 
+from .misc import cache_dir
 from .logger import whi, red, md_printer
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 from .typechecker import optional_typecheck
@@ -122,7 +123,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
 
     # loading history from files
     prev_questions = []
-    pp_file = Path(".cache/previous_questions.json")
+    pp_file = cache_dir / "previous_questions.json"
     if pp_file.exists():
         pp_list = json.load(pp_file.open("r"))
         assert isinstance(pp_list, list), "Invalid cache type"

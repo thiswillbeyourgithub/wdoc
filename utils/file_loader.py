@@ -11,7 +11,7 @@ try:
 except Exception as err:
     print(f"Failed to import pdftotext: '{err}'")
 
-from .misc import loaddoc_cache, html_to_text, hasher
+from .misc import loaddoc_cache, html_to_text, hasher, cache_dir
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
@@ -825,7 +825,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         original_db = akp.find_db(user=profile)
         name = f"{profile}".replace(" ", "_")
         random_val = str(uuid.uuid4()).split("-")[-1]
-        new_db_path = f"./.cache/anki_collection_{name.replace('/', '_')}_{random_val}"
+        new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
         assert not Path(new_db_path).exists(
         ), f"{new_db_path} already existing!"
         shutil.copy(original_db, new_db_path)

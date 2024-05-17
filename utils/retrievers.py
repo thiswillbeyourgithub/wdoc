@@ -1,5 +1,6 @@
 from typing import Optional, Any, Callable, List
 
+from .misc import cache_dir
 from .file_loader import get_splitter
 from .typechecker import optional_typecheck
 from .lazy_lib_importer import lazy_import_statements, lazy_import
@@ -87,7 +88,7 @@ def create_parent_retriever(
     psp._chunk_size *= 4
     parent = ParentDocumentRetriever(
             vectorstore=loaded_embeddings,
-            docstore=LocalFileStore(".cache/parent_retriever"),
+            docstore=LocalFileStore(cache_dir / "parent_retriever"),
             child_splitter=csp,
             parent_splitter=psp,
             search_type="similarity",

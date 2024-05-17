@@ -16,6 +16,7 @@ from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
 
+from .misc import cache_dir
 from .logger import whi, red
 from .file_loader import get_tkn_length
 from .lazy_lib_importer import lazy_import_statements, lazy_import
@@ -31,8 +32,7 @@ import litellm
 """))
 
 
-Path(".cache").mkdir(exist_ok=True)
-Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
+(cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
@@ -192,7 +192,7 @@ def load_embeddings(
             pass
     assert "/" not in embed_model_str
 
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model_str}")
+    lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
@@ -219,7 +219,7 @@ def load_embeddings(
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model_str}")
+    embeddings_cache = cache_dir / "faiss_embeddings" / embed_model_str
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
