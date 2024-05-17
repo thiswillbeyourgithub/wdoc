@@ -2,10 +2,15 @@ import re
 from typing import Tuple, List, Union
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
+from joblib import Memory
 
 from utils.typechecker import optional_typecheck
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from utils.logger import red
+from utils.misc import cache_dir
+
+(cache_dir / "quer_eval_llm").mkdir(exist_ok=True)
+doc_eval_cache = Memory(cache_dir / "quer_eval_llm", verbose=1)
 
 
 @optional_typecheck

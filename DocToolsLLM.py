@@ -1,6 +1,7 @@
 import pyfiglet
 import copy
 from textwrap import indent
+from functools import wraps
 from typing import List, Union, Any, Optional
 from typeguard import check_type, TypeCheckError
 import tldextract
@@ -35,7 +36,7 @@ from utils.logger import whi, yel, red, create_ntfy_func, md_printer
 from utils.cli import ask_user
 from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from utils.tasks.summary import do_summarize
-from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output
+from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
@@ -1347,9 +1348,20 @@ class DocToolsLLM:
                     **eval_args,
                 )
 
+            # the eval doc chain needs its own caching
+            if not self.no_cache:
+                eval_cache_wrapper = doc_eval_cache.cache
+            else:
+                eval_cache_wrapper = wraps
+
             @chain
             @optional_typecheck
-            def evaluate_doc_chain(inputs: dict) -> List[str]:
+            @eval_cache_wrapper
+            def evaluate_doc_chain(
+                    inputs: dict,
+                    query_nb: int = self.query_eval_check_number,
+                    eval_model_name: str = self.query_eval_modelname,
+                ) -> List[str]:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
                     outputs = [gen.text for gen in out.generations]
