@@ -1392,6 +1392,10 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
             )
         assert docs[i].metadata["hash"], f"Invalid hash for document: {docs[i]}"
 
+        # make sure the filepath are absolute
+        if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
+           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).absolute())
+
     assert docs, "empty list of loaded documents!"
     docs = [d for d in docs if d.page_content]
     assert docs, "empty list of loaded documents after removing empty docs!"
