@@ -1466,13 +1466,16 @@ class DocToolsLLM:
             if self.debug:
                 rag_chain.get_graph().print_ascii()
 
+            chain_time = 0
             try:
+                start_time = time.time()
                 output = rag_chain.invoke(
                     {
                         "question_for_embedding": query_fe,
                         "question_to_answer": query_an,
                     }
                 )
+                chain_time = start_time - time.time()
             except NoDocumentsRetrieved as err:
                 return md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
             except NoDocumentsAfterWeakLLMFiltering as err:
@@ -1528,6 +1531,8 @@ class DocToolsLLM:
             red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(f"Number of documents after weakllm filter: {len(output['filtered_docs'])}")
             red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
+            if chain_time:
+                red(f"Time took by the chain: {chain_time:.2f}f")
 
             if self.import_mode:
                 return output
