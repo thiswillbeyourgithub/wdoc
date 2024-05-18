@@ -149,7 +149,6 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
             f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
         )
 
-    breakpoint()
     return docs
 
 @optional_typecheck
