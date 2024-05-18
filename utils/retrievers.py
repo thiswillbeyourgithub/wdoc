@@ -1,7 +1,7 @@
 from typing import Optional, Any, Callable, List
 
 from .misc import cache_dir
-from .file_loader import get_splitter
+from .loaders import get_splitter
 from .typechecker import optional_typecheck
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 

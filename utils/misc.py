@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Any
 from joblib import Memory
 import os
 import urllib
@@ -39,7 +39,7 @@ def hasher(text: str) -> str:
 
 
 @optional_typecheck
-def html_to_text(html: str, issoup: bool) -> str:
+def html_to_text(html: Any, issoup: bool) -> str:
     """used to strip any html present in the text files"""
     if not issoup:
         soup = BeautifulSoup(html, 'html.parser')

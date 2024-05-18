@@ -22,8 +22,8 @@ except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import (
-    load_doc,
+from utils.file_loader import load_doc
+from utils.loaders import (
     get_tkn_length,
     average_word_length,
     wpm,
@@ -87,7 +87,7 @@ extra_args = {
     "translation": str,
     "out_check_file": str,
     "embed_instruct": str,
-    "file_loader_max_threads": int,
+    "file_loader_n_jobs": int,
     "load_functions": List[str],
     "filter_metadata": Union[List[str], str],
     # "filter_content": Union[List[str, str]],
@@ -396,7 +396,7 @@ class DocToolsLLM:
             when loading an embedding model using HuggingFace or LlamaCPP,
             wether to wrap the input sentence using instruct framework or not.
 
-        --file_loader_max_threads: int, default 5
+        --file_loader_n_jobs: int, default 5
             number of threads to use when loading files. Set to 1 to disable
             multithreading (as it can result in out of memory error if
             using threads and overly recursive calls)
@@ -564,7 +564,7 @@ class DocToolsLLM:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
             set_debug(True)
-            kwargs["file_loader_max_threads"] = 1
+            kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose=True
         else:
             litellm.set_verbose=False

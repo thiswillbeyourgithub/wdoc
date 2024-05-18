@@ -18,7 +18,7 @@ from langchain_community.vectorstores import FAISS
 
 from .misc import cache_dir
 from .logger import whi, red
-from .file_loader import get_tkn_length
+from .loaders import get_tkn_length
 from .lazy_lib_importer import lazy_import_statements, lazy_import
 from .typechecker import optional_typecheck
 
