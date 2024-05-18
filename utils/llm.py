@@ -36,7 +36,7 @@ def load_llm(
     modelname: str,
     backend: str,
     verbose: bool,
-    no_cache: bool,
+    no_llm_cache: bool,
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
@@ -68,7 +68,7 @@ def load_llm(
     llm = ChatLiteLLM(
             model_name=modelname,
             verbose=verbose,
-            cache=not no_cache,
+            cache=not no_llm_cache,
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
             )

@@ -132,7 +132,7 @@ class DocToolsLLM:
         ntfy_url: Optional[str] =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
-        no_cache: bool = False,
+        no_llm_cache: bool = False,
 
         help: bool = False,
         h: bool = False,
@@ -287,7 +287,7 @@ class DocToolsLLM:
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
 
-        --no_cache: bool, default False
+        --no_llm_cache: bool, default False
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system.
 
@@ -518,10 +518,10 @@ class DocToolsLLM:
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
-        self.no_cache = bool(no_cache)
+        self.no_llm_cache = bool(no_llm_cache)
         self.import_mode = import_mode
 
-        if not no_cache:
+        if not no_llm_cache:
             set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
 
         if modelname in litellm.model_cost:
@@ -595,7 +595,7 @@ class DocToolsLLM:
         self.llm = load_llm(
             modelname=modelname,
             backend=self.modelbackend,
-            no_cache=self.no_cache,
+            no_llm_cache=self.no_llm_cache,
             temperature=0,
             verbose=self.llm_verbosity,
         )
@@ -1349,14 +1349,14 @@ class DocToolsLLM:
                 self.eval_llm = load_llm(
                     modelname=self.query_eval_modelname,
                     backend=self.query_eval_modelbackend,
-                    no_cache=self.no_cache,
+                    no_llm_cache=self.no_llm_cache,
                     verbose=self.llm_verbosity,
                     temperature=1,
                     **eval_args,
                 )
 
             # the eval doc chain needs its own caching
-            if not self.no_cache:
+            if not self.no_llm_cache:
                 eval_cache_wrapper = doc_eval_cache.cache
             else:
                 eval_cache_wrapper = wraps
