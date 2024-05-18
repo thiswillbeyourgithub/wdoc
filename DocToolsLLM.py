@@ -289,7 +289,8 @@ class DocToolsLLM:
 
         --no_llm_cache: bool, default False
             disable caching for LLM. All caches are stored in the usual
-            cache folder for your system.
+            cache folder for your system. This does not disable caching
+            for documents.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
