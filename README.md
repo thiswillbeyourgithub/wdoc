@@ -50,7 +50,6 @@
 * **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
 
 ### Known issues that are not yet fixed
-* document loading, especially multithreaded and overly recursive, is wrongly looped so the caching sucks and I need to refactor that
 * filtering document by content is currently disabled
 * whisper implementation is a bit flaky and will be improved
 
