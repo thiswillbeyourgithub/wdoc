@@ -288,7 +288,8 @@ class DocToolsLLM:
             Disabled if using a testing model.
 
         --no_cache: bool, default False
-            disable caching for LLM
+            disable caching for LLM. All caches are stored in the usual
+            cache folder for your system.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
