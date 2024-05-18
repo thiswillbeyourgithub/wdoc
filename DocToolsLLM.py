@@ -1182,6 +1182,12 @@ class DocToolsLLM:
     def query(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.cli_settings = ask_user(self.cli_settings)
+            if "do_reset_memory" in self.cli_settings:
+                assert self.cli_settings["do_reset_memory"]
+                del self.cli_settings["do_reset_memory"]
+                self.memory = AnswerConversationBufferMemory(
+                        memory_key="chat_history",
+                        return_messages=True)
         assert all(
             retriev in ["default", "hyde", "knn", "svm", "parent"]
             for retriev in self.cli_settings["retriever"].split("_")

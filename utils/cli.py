@@ -50,10 +50,13 @@ class SettingsCompleter(Completer):
         if not text.strip():
             yield Completion("/debug", start_position=-len(text))
             yield Completion("/settings", start_position=-len(text))
+            yield Completion("/reset_memory", start_position=-len(text))
             yield Completion("/help", start_position=-len(text))
         elif text.startswith("/"):
             if "/debug".startswith(text):
                 yield Completion("/debug", start_position=-len(text))
+            if "/reset_memory".startswith(text):
+                yield Completion("/reset_memory", start_position=-len(text))
             if "/help".startswith(text):
                 yield Completion("/help", start_position=-len(text))
             if "/settings ".startswith(text) or "/settings " in text:
@@ -94,6 +97,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         * /help or ?
         * /debug
         * /settings (syntax: '/settings top_k=5')
+        * /reset_memory  (to reset the conversation)
     * **Settings keys and values:**
         * top_k: int > 0
         * multiline: boolean
@@ -183,6 +187,11 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             whi("Entering debug mode.")
             breakpoint()
             whi("Going back to the prompt.")
+            continue
+        elif user_input == "/reset_memory":
+            whi("Reseting memory.")
+            # actually the memory will be reset once we return to the DocToolsLLM instance
+            settings["do_reset_memory"] = True
             continue
         elif user_input in ["/help", "?"]:
             show_help()
