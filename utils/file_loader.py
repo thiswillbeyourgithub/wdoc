@@ -1,4 +1,5 @@
 from typing import List
+from functools import wraps
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
@@ -126,11 +127,20 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     if len(to_load) == 1 or debug:
         n_jobs = 1
 
+    # wrap doc_loader to cach errors cleanly
+    @wraps(load_one_doc)
+    def load_one_doc_wrapped(*args, **kwargs):
+        try:
+            return load_one_doc(*args, **kwargs)
+        except Exception as err:
+            red(f"Error when loading doc: '{err}'\nArguments: {args}\n{kwargs}")
+            return None
+
     docs = []
     doc_lists = Parallel(
         n_jobs=n_jobs,
         backend="threading",
-    )(delayed(load_one_doc)(
+    )(delayed(load_one_doc_wrapped)(
         debug=debug,
         task=task,
         **d,
@@ -141,7 +151,10 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
             colour="magenta",
         )
     )
-    [docs.extend(d) for d in doc_lists]
+    n_failed = len([d for d in doc_lists if d is None])
+    if n_failed:
+        red(f"Number of failed documents: {n_failed}")
+    [docs.extend(d) for d in doc_lists if d is not None]
 
     size = sum([get_tkn_length(d.page_content) for d in docs])
     if size <= min_token:
