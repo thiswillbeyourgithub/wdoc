@@ -86,16 +86,57 @@ tokenize = tiktoken.encoding_for_model(
     "gpt-3.5-turbo"
 ).encode  # used to get token length estimation
 
+pdf_loaders = {
+    "pdftotext": None,  # optional support
+    "PDFMiner": PDFMinerLoader,
+    "PyPDFLoader": PyPDFLoader,
+    "Unstructured_elements_hires": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "Unstructured_elements_fast": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="fast",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "Unstructured_hires": partial(
+        UnstructuredPDFLoader,
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "Unstructured_fast": partial(
+        UnstructuredPDFLoader,
+        strategy="fast",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "PyPDFium2": PyPDFium2Loader,
+    "PyMuPDF": PyMuPDFLoader,
+    "PdfPlumber": PDFPlumberLoader,
+}
+
+# pdftotext is kinda weird to install on windows so support it
+# only if it's correctly imported
 if "pdftotext" in globals():
     class pdftotext_loader_class:
-        "simple wrapper for pdftotext to make it load by cached_pdf_loader"
+        "simple wrapper for pdftotext to make it load by pdf_loader"
         def __init__(self, path):
             self.path = path
 
         def load(self):
             with open(self.path, "rb") as f:
                 return "\n\n".join(pdftotext.PDF(f))
-
+    pdf_loaders["pdftotext"] = pdftotext_loader_class
 
 @optional_typecheck
 def load_one_doc(
@@ -339,7 +380,7 @@ def load_pdf(filetype: str, debug: bool, task: str, kwargs: dict, text_splitter:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    docs = cached_pdf_loader(
+    docs = pdf_loader(
         path=path,
         text_splitter=text_splitter,
         splitter_chunk_size=text_splitter._chunk_size,
@@ -926,75 +967,49 @@ def cached_yt_loader(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["text_splitter"])
-def cached_pdf_loader(
+@loaddoc_cache.cache
+def _pdf_loader(loader_name: str, path: str) -> str:
+    loader = pdf_loaders[loader_name](path)
+    content = loader.load()
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        if isinstance(content[0], str):
+            return "\n".join(content)
+        elif hasattr(content[0], "page_content"):
+            return "\n".join([d.page_content for d in content])
+        else:
+            raise ValueError(f"Unexpected type of content[0]: '{content}'")
+    elif hasattr(content, "page_content"):
+        return content.page_content
+    raise ValueError(f"Unexpected type of content: '{content}'")
+
+
+@optional_typecheck
+def pdf_loader(
         path: str,
         text_splitter: TextSplitter,
         splitter_chunk_size: int,
         debug: bool) -> List[Document]:
     assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
-    loaders = {
-        "pdftotext": None,  # optional support
-        "PDFMiner": PDFMinerLoader,
-        "PyPDFLoader": PyPDFLoader,
-        "Unstructured_elements_hires": partial(
-            UnstructuredPDFLoader,
-            mode="elements",
-            strategy="hi_res",
-            post_processors=[clean_extra_whitespace],
-            infer_table_structure=True,
-            # languages=["fr"],
-        ),
-        "Unstructured_elements_fast": partial(
-            UnstructuredPDFLoader,
-            mode="elements",
-            strategy="fast",
-            post_processors=[clean_extra_whitespace],
-            infer_table_structure=True,
-            # languages=["fr"],
-        ),
-        "Unstructured_hires": partial(
-            UnstructuredPDFLoader,
-            strategy="hi_res",
-            post_processors=[clean_extra_whitespace],
-            infer_table_structure=True,
-            # languages=["fr"],
-        ),
-        "Unstructured_fast": partial(
-            UnstructuredPDFLoader,
-            strategy="fast",
-            post_processors=[clean_extra_whitespace],
-            infer_table_structure=True,
-            # languages=["fr"],
-        ),
-        "PyPDFium2": PyPDFium2Loader,
-        "PyMuPDF": PyMuPDFLoader,
-        "PdfPlumber": PDFPlumberLoader,
-    }
-    # pdftotext is kinda weird to install on windows so support it
-    # only if it's correctly imported
-    if "pdftotext" in globals():
-        loaders["pdftotext"] = pdftotext_loader_class
-    else:
-        del loaders["pdftotext"]
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
-    for loader_name, loader_func in loaders.items():
+    for loader_name in pdf_loaders:
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
-            loader = loader_func(path)
-            content = loader.load()
+            content = _pdf_loader(loader_name, path)
 
             if "Unstructured" in loader_name:
-                content = "\n".join([d.page_content.strip() for d in content])
                 # remove empty lines. frequent in pdfs
                 content = re.sub(emptyline_regex, "", content)
                 content = re.sub(emptyline2_regex, "\n", content)
                 content = re.sub(linebreak_before_letter, r"\1", content)
+
+            content = ftfy.fix_text(content)
 
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
@@ -1018,7 +1033,7 @@ def cached_pdf_loader(
                 continue
 
             if len(probs.keys()) >= 3:
-                # if more than 3 worked, take the best amon them to save
+                # if more than 3 worked, take the best among them to save
                 # time on running all the others
                 break
         except Exception as err:
