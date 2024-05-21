@@ -123,7 +123,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = 5
+        n_jobs = 20
     if len(to_load) == 1 or debug:
         n_jobs = 1
 
