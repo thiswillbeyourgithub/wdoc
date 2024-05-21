@@ -88,15 +88,15 @@ But DON'T interpret the question too strictly, e.g. the question can be implicit
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given some statements, your task it to answer a given question using only information from the statements.
-Ignore irrelevant statements. Don't narrate, just do what I asked.
-Use markdown formatting, especially bullet points for enumeration, bold, indentation etc.
-Be VERY concise but don't omit ANY relevant information from the statements.
+        ("system", """Given some statements and an answer, your task it to first answer directly the question in a md bullet point, then combine all additional information as additional bullet points. You must only use information from the statements.
+BUT, and above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
+
+Ignore statements that are completely irrelevant to the question.
+Don't narrate, just do what I asked without acknowledging those rules.
+Use markdown format, with bullet points and indentation etc.
+Be concise but don't omit ANY information from the statements.
 Answer in the same language as the question.
-Above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
-But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example.
-Also the question can for example be an instruction like "give me all information about such and such", use common sense and don't be too strict!
-But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""),
+But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example. For example, if the question is rather an instruction like "give me all information about such and such", use common sense and don't be too strict!"""),
         ("human", "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
 )
