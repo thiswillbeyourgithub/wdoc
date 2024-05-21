@@ -634,16 +634,6 @@ def load_logseq_markdown(filetype: str, debug: bool, task: str, kwargs: dict) ->
     whi(f"Found {len(pblocks)} parent blocks")
 
     page_props = parsed.page_properties
-    if not page_props:
-        page_props = {}
-    else:
-        lines = page_props.splitlines()
-        page_props = {}
-        for li in lines:
-            li = li.strip()
-            li = li.replace("- ", "", 1)
-            li = li.split(":: ")
-            page_props[li[0]] = li[1]
 
     docs = []
     for grou in pblocks:
