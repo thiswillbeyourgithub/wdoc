@@ -144,6 +144,9 @@ def load_one_doc(
     debug: bool,
     **kwargs,
     ) -> List[Document]:
+    """choose the appropriate loader for a file, then load it,
+    split into documents, add some metadata then return.
+    The loader is cached"""
 
     filetype = kwargs["filetype"]
     text_splitter = get_splitter(task)
@@ -304,6 +307,113 @@ def load_one_doc(
     assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
+# Convenience functions #########################
+
+@optional_typecheck
+def get_url_title(url: str) -> Union[str, type(None)]:
+    """if the title of the url is not loaded from the loader, trying as last
+    resort with this one"""
+    loader = WebBaseLoader(url, raise_for_status=True)
+    docs = loader.load()
+    if "title" in docs[0].metadata and docs[0].metadata["title"]:
+        return docs[0].metadata["title"]
+    else:
+        return None
+
+
+@optional_typecheck
+def check_docs_tkn_length(docs: List[Document], name: str) -> float:
+    """checks that the number of tokens in the document is high enough,
+    not too low, and has a high enough language probability,
+    otherwise something probably went wrong."""
+    size = sum([get_tkn_length(d.page_content) for d in docs])
+    nline = len("\n".join([d.page_content for d in docs]).splitlines())
+    if nline > max_lines:
+        red(
+            f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}"
+        )
+        raise Exception(
+            f"The number of lines from '{name}' is {nline} > {max_lines}, probably something went wrong?"
+        )
+    if size <= min_token:
+        red(
+            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+        )
+        raise Exception(
+            f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?"
+        )
+    if size >= max_token:
+        red(
+            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+        )
+        raise Exception(
+            f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?"
+        )
+
+    # check if language check is above a threshold
+    if "language_detect" not in globals():
+        # bypass if language_detect not imported
+        return 1
+    prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
+    if len(docs) > 1:
+        prob += language_detect(docs[1].page_content.replace("\n",
+                                "<br>"))["score"]
+        if len(docs) > 2:
+            prob += language_detect(
+                docs[len(docs) // 2].page_content.replace("\n", "<br>")
+            )["score"]
+            prob /= 3
+        else:
+            prob /= 2
+    if prob <= min_lang_prob:
+        red(
+            f"Low language probability for {name}: prob={prob}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+        )
+        raise Exception(
+            f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}"
+        )
+    return prob
+
+@optional_typecheck
+def get_tkn_length(tosplit: str) -> int:
+    return len(tokenize(tosplit))
+
+
+@optional_typecheck
+def get_splitter(task: str) -> TextSplitter:
+    "we don't use the same text splitter depending on the task"
+    if task in ["query", "search"]:
+        text_splitter = RecursiveCharacterTextSplitter(
+            separators=recur_separator,
+            chunk_size=3000,  # default 4000
+            chunk_overlap=386,  # default 200
+            length_function=get_tkn_length,
+        )
+    elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
+        text_splitter = RecursiveCharacterTextSplitter(
+            separators=recur_separator,
+            chunk_size=2000,
+            chunk_overlap=300,
+            length_function=get_tkn_length,
+        )
+    elif task == "recursive_summary":
+        text_splitter = RecursiveCharacterTextSplitter(
+            separators=recur_separator,
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=get_tkn_length,
+        )
+    else:
+        raise Exception(task)
+    return text_splitter
+
+
+@optional_typecheck
+def cloze_stripper(clozed: str) -> str:
+    clozed = re.sub(clozeregex, " ", clozed)
+    return clozed
+
+# loaders #######################################
 
 @optional_typecheck
 @loaddoc_cache.cache
@@ -1003,7 +1113,7 @@ def pdf_loader(
 
             content = _pdf_loader(loader_name, path)
 
-            if "Unstructured" in loader_name:
+            if "unstructured" in loader_name.lower():
                 # remove empty lines. frequent in pdfs
                 content = re.sub(emptyline_regex, "", content)
                 content = re.sub(emptyline2_regex, "\n", content)
@@ -1051,108 +1161,3 @@ def pdf_loader(
         red(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
-
-
-@optional_typecheck
-def get_url_title(url: str) -> Union[str, type(None)]:
-    """if the title of the url is not loaded from the loader, trying as last
-    resort with this one"""
-    loader = WebBaseLoader(url, raise_for_status=True)
-    docs = loader.load()
-    if "title" in docs[0].metadata and docs[0].metadata["title"]:
-        return docs[0].metadata["title"]
-    else:
-        return None
-
-
-@optional_typecheck
-def check_docs_tkn_length(docs: List[Document], name: str) -> float:
-    """checks that the number of tokens in the document is high enough,
-    not too low, and has a high enough language probability,
-    otherwise something probably went wrong."""
-    size = sum([get_tkn_length(d.page_content) for d in docs])
-    nline = len("\n".join([d.page_content for d in docs]).splitlines())
-    if nline > max_lines:
-        red(
-            f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of lines from '{name}' is {nline} > {max_lines}, probably something went wrong?"
-        )
-    if size <= min_token:
-        red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?"
-        )
-    if size >= max_token:
-        red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?"
-        )
-
-    # check if language check is above a threshold
-    if "language_detect" not in globals():
-        # bypass if language_detect not imported
-        return 1
-    prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
-    if len(docs) > 1:
-        prob += language_detect(docs[1].page_content.replace("\n",
-                                "<br>"))["score"]
-        if len(docs) > 2:
-            prob += language_detect(
-                docs[len(docs) // 2].page_content.replace("\n", "<br>")
-            )["score"]
-            prob /= 3
-        else:
-            prob /= 2
-    if prob <= min_lang_prob:
-        red(
-            f"Low language probability for {name}: prob={prob}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
-        )
-        raise Exception(
-            f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}"
-        )
-    return prob
-
-@optional_typecheck
-def get_tkn_length(tosplit: str) -> int:
-    return len(tokenize(tosplit))
-
-
-@optional_typecheck
-def get_splitter(task: str) -> TextSplitter:
-    "we don't use the same text splitter depending on the task"
-    if task in ["query", "search"]:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=3000,  # default 4000
-            chunk_overlap=386,  # default 200
-            length_function=get_tkn_length,
-        )
-    elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=2000,
-            chunk_overlap=300,
-            length_function=get_tkn_length,
-        )
-    elif task == "recursive_summary":
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=get_tkn_length,
-        )
-    else:
-        raise Exception(task)
-    return text_splitter
-
-
-@optional_typecheck
-def cloze_stripper(clozed: str) -> str:
-    clozed = re.sub(clozeregex, " ", clozed)
-    return clozed
