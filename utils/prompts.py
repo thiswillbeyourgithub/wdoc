@@ -93,6 +93,7 @@ BUT, and above all: if the statements are not enough to answer the question you 
 
 Ignore statements that are completely irrelevant to the question.
 Don't narrate, just do what I asked without acknowledging those rules.
+If the question contains acronyms, reuse them without specifying what they mean.
 Use markdown format, with bullet points and indentation etc.
 Be concise but don't omit ANY information from the statements.
 Answer in the same language as the question.
