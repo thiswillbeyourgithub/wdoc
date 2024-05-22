@@ -461,11 +461,11 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
+    random_val: str,
     anki_mode: str = "window_single_note",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
-    random_val: str,
     ) -> List[Document]:
     assert (
         anki_mode.replace("window", "")
