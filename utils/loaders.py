@@ -258,7 +258,7 @@ def load_one_doc(
                     total_reading_length > 0.5
                 ), (
                     "Failing doc: total reading length is suspiciously low "
-                    f"for {docs[i].metadata}: '{total_reading_length} minutes'"
+                    f"for {docs[i].metadata}: '{total_reading_length:.3f} minutes'"
                 )
             docs[i].metadata["docs_reading_time"] = total_reading_length
         if "source" not in docs[i].metadata:
@@ -342,10 +342,10 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
             prob /= 2
     if prob <= min_lang_prob:
         red(
-            f"Low language probability for {name}: prob={prob}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+            f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
         )
         raise Exception(
-            f"Low language probability for {name}: prob={prob}.\nExample page: {docs[len(docs)//2]}"
+            f"Low language probability for {name}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
         )
     return prob
 
