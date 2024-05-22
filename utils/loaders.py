@@ -669,10 +669,6 @@ def load_anki(
             sorted(docs[i].metadata["anki_cid"].split(" "))
         )
 
-    # try:
-    #     check_docs_tkn_length(docs, f"{filetype}: {anki_profile}")
-    # except Exception as err:
-    #     red(f"Number of token in anki document is surprising. Not quitting because anki can cause this: '{err}'")
 
     # delete temporary db file
     Path(new_db_path).unlink()
