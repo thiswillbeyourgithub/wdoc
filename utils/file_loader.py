@@ -141,7 +141,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = 20
+        n_jobs = -1
     if len(to_load) == 1 or debug:
         n_jobs = 1
 
@@ -201,8 +201,8 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
 
     docs = []
     doc_lists = Parallel(
-        n_jobs=n_jobs,
-        backend="threading",
+        n_jobs=-1,
+        backend="loky",
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=debug,
