@@ -220,7 +220,7 @@ def load_one_doc(
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
         if bool(soup.find()):
-            docs[i].page_content = html_to_text(soup, issoup=True)
+            docs[i].page_content = soup.get_text()
 
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
@@ -504,7 +504,7 @@ def load_anki(
     if anki_fields:
         cards["fields_dict"] = cards.apply(
             lambda x: {
-                k: html_to_text(cloze_stripper(v), issoup=False).strip()
+                k: html_to_text(cloze_stripper(v)).strip()
                 for k, v in zip(x["fields_name"], x["nflds"])
                 if k.lower() in anki_fields
             },
@@ -517,7 +517,7 @@ def load_anki(
         cards["text"] = cards.apply(
                 lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
                     {
-                        k: html_to_text(cloze_stripper(v), issoup=False).strip()
+                        k: html_to_text(cloze_stripper(v)).strip()
                         for k, v in zip(x["fields_name"], x["nflds"])
                     }
                 ),
@@ -995,7 +995,7 @@ def load_html_file(path: str, file_hash: str, load_functions: Optional[str] = No
         soup = BeautifulSoup(content, "html.parser")
     except Exception as err:
         raise Exception(f"Error when parsing html: {err}")
-    text = html_to_text(soup, issoup=True)
+    text = soup.get_text()
     return text
 
 @optional_typecheck

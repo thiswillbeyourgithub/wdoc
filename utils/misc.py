@@ -46,18 +46,15 @@ def file_hasher(doc: dict) -> str:
     return None
 
 @optional_typecheck
-def html_to_text(html: Any, issoup: bool) -> str:
+def html_to_text(html: str) -> str:
     """used to strip any html present in the text files"""
-    if not issoup:
-        soup = BeautifulSoup(html, 'html.parser')
-        text = soup.get_text()
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text()
+    if "<img" in text:
+        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
         if "<img" in text:
-            text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
-            if "<img" in text:
-                red("Failed to remove <img from anki card")
-        return text
-    else:
-        return html.get_text()
+            red("Failed to remove <img from anki card")
+    return text
 
 @optional_typecheck
 def _request_wrapper(action: str, **params) -> dict:
