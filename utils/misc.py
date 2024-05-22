@@ -37,6 +37,13 @@ def hasher(text: str) -> str:
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
+@optional_typecheck
+def file_hasher(doc: dict) -> str:
+    """used to hash a file's content, as describe by a dict"""
+    if "path" in doc and Path(doc["path"]).exists():
+        with open(doc["path"], "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()[:20]
+    return None
 
 @optional_typecheck
 def html_to_text(html: Any, issoup: bool) -> str:

@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 from pathlib import Path
 import json
 
-from .misc import loaddoc_cache
+from .misc import loaddoc_cache, file_hasher
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, min_token, get_tkn_length
@@ -160,6 +160,29 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     # the progress bar more representative
     to_load = sorted(to_load, key=lambda x: random.random())
 
+    # store the file hash in the doc kwarg
+    doc_hashes = Parallel(
+        #n_jobs=10,
+        backend="threading",
+    )(delayed(file_hasher)(doc=doc) for doc in tqdm(
+      to_load,
+      desc="Hashing files",
+      unit="doc",
+      colour="magenta",
+      )
+    )
+
+    # deduplicate files based on hash
+    doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
+    assert len(doc_hashes) == len(to_load)
+    for i, h in enumerate(doc_hashes):
+        if doc_hash_counts[h] > 1:
+            doc_hash_counts[h] -= 1
+            to_load[i] = None
+        else:
+            assert doc_hash_counts[h] in [0, 1]
+            to_load[i]["file_hash"] = doc_hashes[i]
+    to_load = [tl for tl in to_load if tl is not None]
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
