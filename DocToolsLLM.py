@@ -83,8 +83,8 @@ extra_args = {
     "exclude": str,
     "out_file": str,
     "out_file_logseq_mode": str,
-    "language": str,
-    "translation": str,
+    "youtube_language": str,
+    "youtube_translation": str,
     "out_check_file": str,
     "embed_instruct": str,
     "file_loader_n_jobs": int,
@@ -333,10 +333,10 @@ class DocToolsLLM:
             if using whisper to transcribe an audio file, this if the prompt
             given to whisper
 
-        --language
+        --youtube_language
             For youtube. e.g. ["fr","en"] to use french transcripts if
             possible and english otherwise
-        --translation
+        --youtube_translation
             For youtube. e.g. "en" to use the transcripts after translation to english
 
         --include

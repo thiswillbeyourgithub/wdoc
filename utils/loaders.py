@@ -416,7 +416,6 @@ def cloze_stripper(clozed: str) -> str:
 # loaders #######################################
 
 @optional_typecheck
-@loaddoc_cache.cache
 def load_youtube_video(filetype: str, debug: bool, task: str, kwargs: dict) -> List[Document]:
     assert "path" in kwargs, "missing 'path' key in args"
     path = kwargs["path"]
@@ -425,12 +424,12 @@ def load_youtube_video(filetype: str, debug: bool, task: str, kwargs: dict) -> L
         path = path.replace("\\", "")
     assert re.search(
         yt_link_regex, path), f"youtube link is not valid: '{path}'"
-    if "language" not in kwargs:
+    if "youtube_language" not in kwargs:
         lang = ["fr-FR", "fr", "en", "en-US", "en-UK"]
     else:
-        lang = kwargs["language"]
-    if "translation" in kwargs:
-        transl = kwargs["translation"]
+        lang = kwargs["youtube_language"]
+    if "youtube_translation" in kwargs:
+        transl = kwargs["youtube_translation"]
     else:
         transl = None
 
