@@ -725,8 +725,8 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
     blocks = parsed.blocks
 
     # group blocks by parent block
-    pblocks = []
-    for b in blocks:
+    pblocks = [[blocks[0]]]
+    for b in blocks[1:]:
         if b.indentation_level == 0:
             pblocks.append([b])
         else:
