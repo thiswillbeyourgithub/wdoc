@@ -138,17 +138,18 @@ if "pdftotext" in globals():
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
 
+
+
 @optional_typecheck
 def load_one_doc(
     task: str,
     debug: bool,
+    filetype: str,
     **kwargs,
     ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
-
-    filetype = kwargs["filetype"]
     text_splitter = get_splitter(task)
     if filetype == "youtube":
         docs = load_youtube_video(

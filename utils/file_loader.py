@@ -202,8 +202,8 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         n_jobs=n_jobs,
         backend="threading",
     )(delayed(load_one_doc_wrapped)(
-        debug=debug,
         task=task,
+        debug=debug,
         **d,
         ) for d in tqdm(
             to_load,  # TODO
