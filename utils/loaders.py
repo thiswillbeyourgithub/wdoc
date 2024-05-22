@@ -1053,14 +1053,12 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
 def load_pdf(
     path: str,
     text_splitter: TextSplitter,
-    splitter_chunk_size: int,
     debug: bool,
     file_hash: str,
     ) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    assert splitter_chunk_size == text_splitter._chunk_size, "unexpected error"
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
