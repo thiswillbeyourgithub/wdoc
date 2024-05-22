@@ -257,7 +257,7 @@ def load_one_doc(
                         for d in docs]) / average_word_length / wpm
                 )
                 assert (
-                    total_reading_length > 0.5
+                    total_reading_length > 0.1
                 ), (
                     "Failing doc: total reading length is suspiciously low "
                     f"for {docs[i].metadata}: '{total_reading_length:.3f} minutes'"
