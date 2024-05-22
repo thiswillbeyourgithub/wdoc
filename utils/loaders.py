@@ -751,7 +751,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         content = ""  # and remove the metadata from the page content
         for b in grou:
             cont = b.content
-            for k, v in b.get_properties().items():
+            for k, v in b.properties.items():
                 meta[k] = v
                 cont = cont.replace(f"{k}:: {v}", "").strip()
             cont = dedent(cont)
