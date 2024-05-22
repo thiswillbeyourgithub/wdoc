@@ -175,7 +175,7 @@ def load_one_doc(
         try:
             docs = load_anki(random_val=random_val, **kwargs)
         except:
-            # delete the failed db files
+            # delete the failed db files from cache
             name = f"{anki_profile}".replace(" ", "_")
             new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
             Path(new_db_path).unlink(missing_ok=True)
