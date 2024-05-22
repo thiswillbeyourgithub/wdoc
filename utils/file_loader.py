@@ -172,6 +172,19 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
       )
     )
 
+    # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
+    to_load = sorted(
+        to_load,
+        key=lambda x: int(
+            ''.join(
+                filter(
+                    str.isdigit,
+                    doc_hashes[to_load.index(x)],
+                )
+            )
+        )
+    )
+
     # deduplicate files based on hash
     doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
     assert len(doc_hashes) == len(to_load)
