@@ -200,7 +200,9 @@ def load_one_doc(
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
     docs = text_splitter.transform_documents(docs)
-    check_docs_tkn_length(docs, filetype)
+
+    if filetype not in ["logseq_markdown", "anki"]:
+        check_docs_tkn_length(docs, filetype)
 
     # add and format metadata
     total_reading_length = None
