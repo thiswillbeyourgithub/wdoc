@@ -725,6 +725,14 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
     except Exception as err:
         raise Exception(f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
+
+    if not parsed.blocks:
+        content = Path(path).read_text().replace("-", "").strip()
+        if not content:
+            raise Exception(f"No logseq blocks loaded for {path} (file is empty anyway)")
+        else:
+            raise Exception(f"No logseq blocks loaded for {path} (file is NOT empty)")
+
     blocks = parsed.blocks
 
     # group blocks by parent block
