@@ -162,7 +162,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
 
     # store the file hash in the doc kwarg
     doc_hashes = Parallel(
-        #n_jobs=10,
+        n_jobs=-1,
         backend="threading",
     )(delayed(file_hasher)(doc=doc) for doc in tqdm(
       to_load,
