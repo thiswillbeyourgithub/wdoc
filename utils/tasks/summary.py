@@ -1,6 +1,6 @@
 from textwrap import indent
 from tqdm import tqdm
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Union
 
 from langchain.docstore.document import Document
 
@@ -19,7 +19,7 @@ def do_summarize(
     verbose: bool,
     n_recursion: int=0,
     logseq_mode: bool=False,
-    ) -> Tuple[str, int, int, int]:
+    ) -> Tuple[str, int, int, Union[float, int]]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
