@@ -191,10 +191,12 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
     def load_one_doc_wrapped(*args, **kwargs):
+        assert not args
         try:
-            return load_one_doc(*args, **kwargs)
+            return load_one_doc(**kwargs)
         except Exception as err:
-            red(f"Error when loading doc: '{err}'\nArguments: {args}\n{kwargs}")
+            filetype = kwargs["filetype"]
+            red(f"Error when loading doc with filetype {filetype}: '{err}'\nArguments: {args}\n{kwargs}")
             return None
 
     docs = []
