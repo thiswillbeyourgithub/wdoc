@@ -47,7 +47,7 @@ def do_summarize(
         new_p = output.llm_output["token_usage"]["prompt_tokens"]
         new_c = output.llm_output["token_usage"]["completion_tokens"]
         total_tokens += new_p + new_c
-        total_cost += new_p * llm_price[0] + new_c + llm_price[1]
+        total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
 
         output_lines = out.rstrip().splitlines()
 
