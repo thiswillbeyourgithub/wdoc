@@ -166,7 +166,7 @@ class DocToolsLLM:
                 * pdf => --path is path to pdf
                 * txt => --path is path to txt
                 * url => --path must be a valid http(s) link
-                * anki => must be set: --anki_profile, --anki_deck, --anki_notetype, --anki_mode. See in loader specific arguments below for details.
+                * anki => must be set: --anki_profile. Optional: --anki_deck, --anki_notetype, --anki_mode. See in loader specific arguments below for details.
                 * string => no other parameters needed, will provide a field where you must type or paste the string
                 * local_audio => must be set: --whisper_prompt, --whisper_lang
 
