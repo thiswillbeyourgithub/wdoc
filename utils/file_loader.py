@@ -175,14 +175,18 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     # deduplicate files based on hash
     doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
     assert len(doc_hashes) == len(to_load)
+    n_dupl = 0
     for i, h in enumerate(doc_hashes):
         if doc_hash_counts[h] > 1:
             doc_hash_counts[h] -= 1
             to_load[i] = None
+            n_dupl += 1
         else:
             assert doc_hash_counts[h] in [0, 1]
             to_load[i]["file_hash"] = doc_hashes[i]
     to_load = [tl for tl in to_load if tl is not None]
+    if n_dupl:
+        red(f"Ignored '{n_dupl}' duplicate files")
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
