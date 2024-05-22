@@ -231,6 +231,8 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     if n_failed:
         red(f"Number of failed documents: {n_failed}")
     [docs.extend(d) for d in doc_lists if d is not None]
+    assert not None in docs
+    assert docs, "No documents were succesfully loaded!"
 
     size = sum([get_tkn_length(d.page_content) for d in docs])
     if size <= min_token:
