@@ -59,12 +59,12 @@ doc_kwargs_keys = [
 @optional_typecheck
 def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     """load the input"""
-    # remove cache files older than 90 days
-    try:
-        loaddoc_cache.reduce_size(age_limit=timedelta(90))
-    except Exception as err:
-        # red(f"Error when reducing cache size: '{err}'")
-        pass
+    # # remove cache files older than 90 days
+    # try:
+    #     loaddoc_cache.reduce_size(age_limit=timedelta(90))
+    # except Exception as err:
+    #     # red(f"Error when reducing cache size: '{err}'")
+    #     pass
 
     if "path" in kwargs and isinstance(kwargs["path"], str):
         kwargs["path"] = kwargs["path"].strip()
