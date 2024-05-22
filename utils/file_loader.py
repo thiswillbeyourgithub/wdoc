@@ -158,7 +158,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
 
     # shuffle the list of files to load to make
     # the progress bar more representative
-    to_load = sorted(to_load, key=random.random)
+    to_load = sorted(to_load, key=lambda x: random.random())
 
 
     # wrap doc_loader to cach errors cleanly
