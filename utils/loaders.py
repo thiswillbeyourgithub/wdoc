@@ -721,7 +721,10 @@ def load_local_html(path: str, file_hash: str, load_functions: Optional[Union[st
 def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
-    parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+    try:
+        parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+    except Exception as err:
+        raise Exception(f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
     blocks = parsed.blocks
 
     # group blocks by parent block
