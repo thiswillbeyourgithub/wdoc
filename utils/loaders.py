@@ -732,6 +732,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         else:
             pblocks[-1].append(b)
     whi(f"Found {len(pblocks)} parent blocks")
+    assert sum([len(pb) for pb in pblocks]) == len(blocks), f"Unexpected number of blocks after grouping by parent"
 
     page_props = parsed.page_properties
 
