@@ -1,5 +1,6 @@
 from typing import List
 from functools import wraps
+from random import random
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
@@ -126,6 +127,10 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         n_jobs = 20
     if len(to_load) == 1 or debug:
         n_jobs = 1
+
+    # shuffle the list of files to load to make
+    # the progress bar more representative
+    to_load = sorted(to_load, key=random())
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
