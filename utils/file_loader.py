@@ -39,6 +39,23 @@ for k, v in inference_rules.items():
     for i, vv in enumerate(v):
         inference_rules[k][i] = re.compile(vv)
 
+doc_kwargs_keys = [
+    "path",
+    "filetype",
+    "file_hash",
+    "anki_profile",
+    "anki_notetype",
+    "anki_fields",
+    "anki_deck",
+    "anki_mode",
+    "whisper_lang",
+    "whisper_prompt",
+    "youtube_language",
+    "youtube_translation",
+    "load_functions",
+]
+
+
 @optional_typecheck
 def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
     """load the input"""
@@ -127,6 +144,17 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         n_jobs = 20
     if len(to_load) == 1 or debug:
         n_jobs = 1
+
+    # look for unexpected keys that are not relevant to doc loading, because that would
+    # skip the cache
+    all_unexp_keys = set()
+    for doc in to_load:
+        to_del = [k for k in doc if k not in doc_kwargs_keys]
+        for k in to_del:
+            all_unexp_keys.add(k)
+            del doc[k]
+    if all_unexp_keys:
+        red(f"Found unexpected keys in doc kwargs: '{all_unexp_keys}'")
 
     # shuffle the list of files to load to make
     # the progress bar more representative
@@ -222,6 +250,10 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = doc_kwargs["recursed_filetype"]
         del doc_kwargs["recursed_filetype"]
+        if "file_loader_n_jobs" in doc_kwargs:
+            del doc_kwargs["file_loader_n_jobs"]
+        if "pattern" in doc_kwargs:
+            del doc_kwargs["pattern"]
         doclist[i] = doc_kwargs
     return doclist
 
@@ -264,6 +296,8 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         for k, v in load_kwargs.items():
             if k not in meta:
                 meta[k] = v
+        if "file_loader_n_jobs" in meta:
+            del meta["file_loader_n_jobs"]
         doclist[i] = meta
     return doclist
 
@@ -319,6 +353,8 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "infer"
+        if "file_loader_n_jobs" in doc_kwargs:
+            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 
@@ -358,6 +394,8 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
+        if "file_loader_n_jobs" in doc_kwargs:
+            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 
