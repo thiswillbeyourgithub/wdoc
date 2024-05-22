@@ -1,6 +1,6 @@
 from typing import List
 from functools import wraps
-from random import random
+import random
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
@@ -130,7 +130,8 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
 
     # shuffle the list of files to load to make
     # the progress bar more representative
-    to_load = sorted(to_load, key=random())
+    to_load = sorted(to_load, key=random.random)
+
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
@@ -199,9 +200,6 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
     ]
-
-    # randomize order to even out the progress bar
-    # doclist = sorted(doclist, key=lambda x: random.random())
 
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
