@@ -171,7 +171,17 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        docs = load_anki(**kwargs)
+        random_val = str(uuid.uuid4()).split("-")[-1]
+        try:
+            docs = load_anki(random_val=random_val, **kwargs)
+        except:
+            # delete the failed db files
+            name = f"{anki_profile}".replace(" ", "_")
+            new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+            Path(new_db_path).unlink(missing_ok=True)
+            Path(new_db_path + "-shm").unlink(missing_ok=True)
+            Path(new_db_path + "-wal").unlink(missing_ok=True)
+            raise
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
@@ -455,6 +465,7 @@ def load_anki(
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
+    random_val: str,
     ) -> List[Document]:
     assert (
         anki_mode.replace("window", "")
@@ -467,7 +478,6 @@ def load_anki(
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
-    random_val = str(uuid.uuid4()).split("-")[-1]
     new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
