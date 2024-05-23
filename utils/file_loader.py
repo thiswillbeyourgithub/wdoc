@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from functools import wraps
 import random
 
@@ -6,6 +6,7 @@ from langchain.docstore.document import Document
 from joblib import Parallel, delayed
 from pathlib import Path
 import json
+import dill
 
 from .misc import loaddoc_cache, file_hasher
 from .typechecker import optional_typecheck
@@ -14,6 +15,7 @@ from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdow
 
 import re
 from tqdm import tqdm
+from functools import cache as memoizer
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -205,6 +207,16 @@ def load_doc(
     to_load = [tl for tl in to_load if tl is not None]
     if n_dupl:
         red(f"Ignored '{n_dupl}' duplicate files")
+
+    # load_functions are slow to load so loading them here in advance for every file
+    if any(
+        ("load_functions" in doc and doc["load_functions"])
+        for doc in to_load):
+        whi("Preloading load_functions")
+        for idoc, doc in enumerate(to_load):
+            if "load_functions" in doc:
+                if doc["load_functions"]:
+                    to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
@@ -448,3 +460,19 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
+
+@optional_typecheck
+@memoizer
+def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
+    load_functions = list(load_functions)
+    assert isinstance(load_functions, list), "load_functions must be a list"
+    assert all(isinstance(lf, str) for lf in load_functions), "load_functions elements must be strings"
+
+    try:
+        for ilf, lf in enumerate(load_functions):
+            load_functions[ilf] = eval(lf)
+    except Exception as err:
+        raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+    load_functions = tuple(load_functions)
+    pickled = dill.dumps(load_functions)
+    return pickled

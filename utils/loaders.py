@@ -33,6 +33,7 @@ from pathlib import Path
 import re
 from tqdm import tqdm
 import json
+import dill
 from prompt_toolkit import prompt
 
 from langchain.text_splitter import TextSplitter
@@ -709,20 +710,71 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     return docs
 
 @optional_typecheck
-def load_local_html(path: str, file_hash: str, load_functions: Optional[Union[str, List[str], List[Callable]]] = None) -> List[Document]:
+@loaddoc_cache.cache(ignore=["path"])
+def load_local_html(
+    path: str,
+    file_hash: str,
+    load_functions: Optional[bytes] = None,
+    ) -> List[Document]:
     whi(f"Loading local html: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
-    if load_functions and not isinstance(load_functions, str):
-        # the functions must be stringified because joblib can't
+
+    with open(path) as f:
+        content = f.read()
+
+    if load_functions:
+        # the functions must be pickled because joblib can't
         # cache string that would declare as lambda functions
-        load_functions = json.dumps(load_functions)
-    text = load_html_file(
-        path=path,
-        load_functions=load_functions,
-        file_hash=file_hash,
-    )
-    docs = [Document(page_content=text)]
+
+        try:
+            load_functions = dill.loads(load_functions)
+        except Exception as err:
+            raise Exception(f"Error when unpickling load_functions: '{err}'")
+        assert isinstance(load_functions, tuple), (
+            f"load_functions must be a tuple, not {type(load_functions)}")
+        assert all(callable(lf) for lf in load_functions), (
+            f"load_functions element must be a callable, not {[type(lf) for lf in load_functions]}")
+
+        for ifunc, func in enumerate(load_functions):
+            try:
+                content = func(content)
+            except Exception as err:
+                raise Exception(
+                    f"load_functions #{ifunc}: '{func}' failed with "
+                    f"error : '{err}'")
+        assert isinstance(content, str), (
+            f"output of function #{ifunc}: '{func}' is not a "
+            f"string: {content}")
+    try:
+        soup = BeautifulSoup(content, "html.parser")
+    except Exception as err:
+        raise Exception(f"Error when parsing html: {err}")
+
+    text = soup.get_text().strip()
+    assert text, "Empty text after loading from html"
+
+    docs = [
+        Document(
+            page_content=text,
+        )
+    ]
     return docs
+
+@loaddoc_cache.cache
+def eval_load_functions(
+    load_functions: str,
+    ) -> List[Callable]:
+    assert isinstance(load_functions, list), "load_functions must be of type list"
+    assert all(isinstance(lf, str) for lf in load_functions), "elements of load_functions must be of type str"
+
+    try:
+        for ilf, lf in enumerate(load_functions):
+            load_functions[ilf] = eval(lf)
+    except Exception as err:
+        raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+    assert all(callable(lf) for lf in load_functions), (
+            f"Some load_functions are not callable: {load_functions}")
+
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["path"])
@@ -960,43 +1012,6 @@ def load_url(path: str, title=None) -> List[Document]:
 
     return docs
 
-
-
-@optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
-def load_html_file(path: str, file_hash: str, load_functions: Optional[str] = None) -> str:
-    with open(path) as f:
-        content = f.read()
-    if load_functions:
-        # had to stringify them because joblib can't pickle lambda functions
-        assert isinstance(load_functions, str)
-        try:
-            load_functions = json.loads(load_functions)
-        except Exception as err:
-            raise Exception(f"Error when loading loader_function: '{err}'")
-        assert isinstance(load_functions, list), (
-            f"load_functions must be a list, not {type(load_functions)}")
-        try:
-            for ilf, lf in enumerate(load_functions):
-                load_functions[ilf] = eval(lf)
-        except Exception as err:
-            raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
-        assert all(callable(lf) for lf in load_functions), (
-                f"Some load_functions are not callable: {load_functions}")
-        try:
-            for ifunc, func in enumerate(load_functions):
-                content = func(content)
-            assert isinstance(content, str), (
-                f"output of function #{ifunc}: '{func}' is not a "
-                f"string: {content}")
-        except Exception as err:
-            raise Exception(f"Error running load_functions: '{err}'")
-    try:
-        soup = BeautifulSoup(content, "html.parser")
-    except Exception as err:
-        raise Exception(f"Error when parsing html: {err}")
-    text = soup.get_text()
-    return text
 
 @optional_typecheck
 @loaddoc_cache.cache
