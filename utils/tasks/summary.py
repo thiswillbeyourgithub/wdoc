@@ -4,7 +4,7 @@ from typing import List, Tuple, Any, Union
 
 from langchain.docstore.document import Document
 
-from utils.prompts import PR_SUMMARY, PR_SUMMARY_RECURSIVE
+from utils.prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
 from utils.logger import whi
 from utils.typechecker import optional_typecheck
 
@@ -24,7 +24,6 @@ def do_summarize(
     summaries = []
     previous_summary = ""
 
-    prompt=PR_SUMMARY_RECURSIVE if n_recursion else PR_SUMMARY
     llm.bind(verbose=verbose)
 
     total_tokens = 0
@@ -34,14 +33,14 @@ def do_summarize(
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
         fixed_index = f"{ird + 1}/{len(docs)}"
 
-        output = llm._generate(
-            prompt.format_messages(**{
-                    "input_documents": rd.page_content,
-                    "metadata": metadata.replace("[PROGRESS]", fixed_index),
-                    "language": language,
-                    "previous_summary": previous_summary,
-                    })
+        messages = BASE_SUMMARY_PROMPT.format_messages(
+            text=rd.page_content,
+            metadata=metadata.replace("[PROGRESS]", fixed_index),
+            language=language,
+            previous_summary=previous_summary,
+            recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION
         )
+        output = llm._generate(messages)
         assert len(output.generations) == 1
         out = output.generations[0].text
         new_p = output.llm_output["token_usage"]["prompt_tokens"]
