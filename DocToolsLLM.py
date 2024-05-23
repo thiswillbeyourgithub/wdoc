@@ -637,10 +637,10 @@ class DocToolsLLM:
         # loading documents
         if not load_embeds_from:
             self.loaded_docs = load_doc(
-                    filetype=self.filetype,
-                    debug=self.debug,
-                    task=self.task,
-                    **self.kwargs)
+                filetype=self.filetype,
+                debug=self.debug,
+                task=self.task,
+                **self.kwargs)
 
             # check that the hash are unique
             if len(self.loaded_docs) > 1:

@@ -59,7 +59,11 @@ doc_kwargs_keys = [
 
 
 @optional_typecheck
-def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
+def load_doc(
+    filetype: str,
+    debug: bool,
+    task: str,
+    **kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
     # try:
