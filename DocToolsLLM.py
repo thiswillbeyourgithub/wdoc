@@ -52,7 +52,7 @@ from langchain.retrievers.document_compressors import (
         DocumentCompressorPipeline)
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain.cache import SQLiteCache
+from langchain_community.cache import SQLiteCache
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables import chain
