@@ -193,6 +193,7 @@ def load_doc(
     )
 
     # deduplicate files based on hash
+    whi("Deduplicating files")
     doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
     assert len(doc_hashes) == len(to_load)
     n_dupl = 0
@@ -226,7 +227,7 @@ def load_doc(
             return load_one_doc(**kwargs)
         except Exception as err:
             filetype = kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'\nArguments: {args}\n{kwargs}")
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {kwargs}")
             return None
 
     docs = []
