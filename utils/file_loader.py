@@ -34,6 +34,8 @@ inference_rules = {
     "json_list": [".*.json"],
 }
 
+recursive_types = ["recursive", "json_list", "link_file", "youtube_playlist", "infer"]
+
 # compile the inference rules as regex
 for k, v in inference_rules.items():
     for i, vv in enumerate(v):
@@ -70,11 +72,10 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
         kwargs["path"] = kwargs["path"].strip()
 
     # expand the list of document to load as long as there are recursive types
-    recurs_type = ["recursive", "json_list", "link_file", "youtube_playlist", "infer"]
     to_load = [kwargs.copy()]
     to_load[-1]["filetype"] = filetype
     new_doc_to_load = []
-    while any(d["filetype"] in recurs_type for d in to_load):
+    while any(d["filetype"] in recursive_types for d in to_load):
         for ild, load_kwargs in enumerate(to_load):
             if not ("path" in load_kwargs or load_kwargs["path"]):
                 continue
@@ -120,7 +121,7 @@ def load_doc(filetype: str, debug: bool, task: str, **kwargs) -> List[Document]:
                 break
 
         if new_doc_to_load:
-            assert to_load[ild]["filetype"] in recurs_type
+            assert to_load[ild]["filetype"] in recursive_types
             to_load.remove(to_load[ild])
             ild_done = None
             to_load.extend(new_doc_to_load)
