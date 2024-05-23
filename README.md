@@ -25,7 +25,7 @@
 * I'm a nice person so just open an issue if you have a feature request or anything else.
 * Phone notification via [ntfy.sh](ntfy.sh) to tell you about costs, useful when using GPT-4 and cron.
 
-### Currently supported filetype (they can all be combined in the same index):
+### Supported filetype (see below to combine them):
 * **infer** (will try to guess for you)
 * **youtube videos**
 * **Logseq md files** (this makes uses of my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser)
@@ -43,6 +43,13 @@
 * **recursive** (you give a path and a regex pattern and a filetype, it finds all the files)
 * **link_file** (you give a text file where each line is a url, proper filetype for each url will be inferred)
 * **youtube playlists** turns a youtube_playlist into a list of youtube videos
+
+#### Workflow and combining filetypes
+1. Say you want to ask a question about one pdf, that's simple: `python DocToolsLLM.py --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `python DocToolsLLM.py --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"!
+3. You want more? You can write a `.json` file where each line (# comments and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources.
+4. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
+Extra: There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (# comments and empty lines are ignored) one url, that will be parsed by DoctoolsLLM. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and DoctoolsLLM automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 
 ### Supported tasks:
 * **query** give documents and asks questions about it.
