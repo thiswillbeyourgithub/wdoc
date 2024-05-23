@@ -28,7 +28,6 @@
 ### Currently supported filetype (they can all be combined in the same index):
 * **infer** (will try to guess for you)
 * **youtube videos**
-* **youtube playlists**
 * **Logseq md files** (this makes uses of my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser)
 * **local PDF**
 * **remote PDF** via URL
@@ -38,9 +37,12 @@
 * **html files** (useful for website dumps)
 * **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
+
+#### Recursive types
 * **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`
 * **recursive** (you give a path and a regex pattern and a filetype, it finds all the files)
 * **link_file** (you give a text file where each line is a url, proper filetype for each url will be inferred)
+* **youtube playlists** turns a youtube_playlist into a list of youtube videos
 
 ### Supported tasks:
 * **query** give documents and asks questions about it.
