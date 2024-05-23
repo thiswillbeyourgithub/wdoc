@@ -6,9 +6,11 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 from rich.markdown import Markdown
 from rich.console import Console
+
+from .typechecker import optional_typecheck
 
 # adds logger, restrict it to X lines
 local_dir = Path.cwd()
@@ -40,12 +42,15 @@ colors = {
         "purple": "\033[95m",
         }
 
+
+@optional_typecheck
 def get_coloured_logger(color_asked: str) -> Callable:
     """used to print color coded logs"""
     col = colors[color_asked]
 
     # all logs are considered "errors" otherwise the datascience libs just
     # overwhelm the logs
+    @optional_typecheck
     def printer(string: str, **args) -> str:
         inp = string
         if isinstance(string, dict):
@@ -77,19 +82,22 @@ red = get_coloured_logger("red")
 
 console = Console()
 
-def md_printer(message: str, color: str = None) -> None:
+@optional_typecheck
+def md_printer(message: str, color: Optional[str] = None) -> str:
     log.info(message)
     md = Markdown(message)
     console.print(md, style=color)
+    return message
 
 # phone notification
-def create_ntfy_func(url):
-    def ntfy_func(text):
-        red(text)
+@optional_typecheck
+def create_ntfy_func(url: str) -> Callable:
+    @optional_typecheck
+    def ntfy_func(text: str) -> str:
         requests.post(
                 url=url,
                 headers={"Title": "DocTools Summary"},
                 data=text.encode("utf-8"),
                 )
-        return text
+        return red(text)
     return ntfy_func

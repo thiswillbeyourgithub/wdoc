@@ -1,25 +1,33 @@
+from typing import Optional, Any, Callable, List
+
+from .misc import cache_dir
+from .loaders import get_splitter
+from .typechecker import optional_typecheck
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from shutil import rmtree
-from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
+from langchain_community.vectorstores import FAISS
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
+"""))
 
-from .file_loader import get_splitter
 
-
+@optional_typecheck
 def create_hyde_retriever(
-        query,
+    query: str,
 
-        llm,
-        top_k,
-        relevancy,
-        filter,
+    llm: Any,
+    top_k: int,
+    relevancy: float,
+    filter: Optional[Callable],
 
-        embeddings,
-        loaded_embeddings,
-        ):
+    embeddings: Any,
+    loaded_embeddings: Any,
+    ) -> Any:
     """
     create a retriever only for the subset of documents from the
     loaded_embeddings that were found using HyDE technique (i.e. asking
@@ -65,21 +73,22 @@ Answer:"""
     return retriever
 
 
+@optional_typecheck
 def create_parent_retriever(
-        task,
-        loaded_embeddings,
-        loaded_docs,
-        top_k,
-        relevancy,
-        filter,
-        ):
+    task: str,
+    loaded_embeddings: Any,
+    loaded_docs: List[Document],
+    top_k: int,
+    relevancy: float,
+    filter: Optional[Callable],
+    ) -> Any:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
     psp = get_splitter(task)
     psp._chunk_size *= 4
     parent = ParentDocumentRetriever(
             vectorstore=loaded_embeddings,
-            docstore=LocalFileStore(".cache/parent_retriever"),
+            docstore=LocalFileStore(cache_dir / "parent_retriever"),
             child_splitter=csp,
             parent_splitter=psp,
             search_type="similarity",

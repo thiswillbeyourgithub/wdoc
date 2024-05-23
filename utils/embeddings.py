@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union, Optional, Any
 import hashlib
 import os
 import queue
@@ -9,25 +9,30 @@ import copy
 from pathlib import Path
 from tqdm import tqdm
 import threading
-import litellm
 
 import numpy as np
 from pydantic import Extra
-
-from langchain_community.vectorstores import FAISS
-from langchain.storage import LocalFileStore
+from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.vectorstores import FAISS
+
+from .misc import cache_dir
+from .logger import whi, red
+from .loaders import get_tkn_length
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
+
+exec(lazy_import_statements("""
+from langchain.storage import LocalFileStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
+import litellm
+"""))
 
-from .logger import whi, red
-from .file_loader import get_tkn_length
 
-Path(".cache").mkdir(exist_ok=True)
-Path(".cache/faiss_embeddings").mkdir(exist_ok=True)
+(cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
@@ -61,9 +66,17 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
         return list(map(float, embedding))
 
 
-def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_limit, kwargs):
+@optional_typecheck
+def load_embeddings(
+    embed_model: str,
+    load_embeds_from: Optional[str],
+    save_embeds_as: str,
+    debug: bool,
+    loaded_docs: Any,
+    dollar_limit: Union[int, float],
+    kwargs: dict):
     """loads embeddings for each document"""
-    backend = embed_model.split("/")[0]
+    backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
     embed_model_str = embed_model.replace("/", "_")
     if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
@@ -179,7 +192,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             pass
     assert "/" not in embed_model_str
 
-    lfs = LocalFileStore(f".cache/embeddings/{embed_model_str}")
+    lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
     cache_content = list(lfs.yield_keys())
     red(f"Found {len(cache_content)} embeddings in local cache")
 
@@ -191,9 +204,9 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
             )
 
     # reload passed embeddings
-    if loadfrom:
+    if load_embeds_from:
         red("Reloading documents and embeddings from file")
-        path = Path(loadfrom)
+        path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
         db = FAISS.load_local(str(path), cached_embeddings, allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
@@ -206,7 +219,7 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = Path(f".cache/faiss_embeddings/{embed_model_str}")
+    embeddings_cache = cache_dir / "faiss_embeddings" / embed_model_str
     embeddings_cache.mkdir(exist_ok=True)
     t = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
@@ -327,13 +340,16 @@ def load_embeddings(embed_model, loadfrom, saveas, debug, loaded_docs, dollar_li
     whi(f"Done creating index in {time.time()-t:.2f}s")
 
     # saving embeddings
-    if saveas:
-        db.save_local(saveas)
+    db.save_local(save_embeds_as)
 
     return db, cached_embeddings
 
 
-def faiss_loader(cached_embeddings, qin, qout):
+@optional_typecheck
+def faiss_loader(
+    cached_embeddings: CacheBackedEmbeddings,
+    qin: queue.Queue,
+    qout: queue.Queue) -> None:
     """load a faiss index. Merge many other index to it. Then return the
     merged index. This makes it way fast to load a very large number of index
     """
@@ -357,7 +373,12 @@ def faiss_loader(cached_embeddings, qin, qout):
                 fi.rmdir()
 
 
-def faiss_saver(path, cached_embeddings, qin, qout):
+@optional_typecheck
+def faiss_saver(
+    path: str,
+    cached_embeddings: CacheBackedEmbeddings,
+    qin: queue.Queue,
+    qout: queue.Queue) -> None:
     """create a faiss index containing only a single document then save it"""
     while True:
         message, docid, document, embedding = qin.get()

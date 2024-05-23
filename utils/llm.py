@@ -1,23 +1,27 @@
 from typing import Union, List, Any
-from langchain_core.agents import AgentAction, AgentFinish
-from langchain_core.messages.base import BaseMessage
-from langchain_core.outputs.llm_result import LLMResult
 import time
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict
 
 from langchain_core.callbacks import BaseCallbackHandler
+from langchain.memory import ConversationBufferMemory
+from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.messages.base import BaseMessage
+from langchain_core.outputs.llm_result import LLMResult
+
+from .logger import whi, red
+from .typechecker import optional_typecheck
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from langchain_community.llms import FakeListLLM
 # from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_models import ChatLiteLLM
-from langchain.memory import ConversationBufferMemory
 
 import openai
+"""))
 
-from .logger import whi, yel, red
-
-Path(".cache").mkdir(exist_ok=True)
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
@@ -27,42 +31,51 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
+@optional_typecheck
 def load_llm(
     modelname: str,
     backend: str,
     verbose: bool,
+    no_llm_cache: bool,
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
+    assert "cache" not in extra_model_args
     if backend == "testing":
-        whi("Loading testing model")
+        if verbose:
+            whi("Loading a fake LLM using the testing/ backend")
         llm = FakeListLLM(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
-            callbacks=[CustomCallback(verbose=verbose)],
+            callbacks=[PriceCountingCallback(verbose=verbose)],
+            cache=False,
             **extra_model_args,
         )
         return llm
 
-    whi("Loading model via litellm")
+    if verbose:
+        whi("Loading model via litellm")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
-        assert Path(f"{backend.upper()}_API_KEY.txt").exists(), f"No api key found for {backend} via litellm"
-        os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+        if not Path(f"{backend.upper()}_API_KEY.txt").exists():
+            raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+        else:
+            os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
 
     # llm = ChatOpenAI(
             # model_name=modelname.split("/")[-1],
     llm = ChatLiteLLM(
             model_name=modelname,
             verbose=verbose,
-            callbacks=[CustomCallback(verbose=verbose)],
+            cache=not no_llm_cache,
+            callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
             )
     return llm
 
 
-class CustomCallback(BaseCallbackHandler):
+class PriceCountingCallback(BaseCallbackHandler):
     "source: https://python.langchain.com/docs/modules/callbacks/"
     def __init__(self, verbose, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -229,7 +242,12 @@ class CustomCallback(BaseCallbackHandler):
 
 
 
-def transcribe(audio_path, audio_hash, language, prompt):
+@optional_typecheck
+def transcribe(
+    audio_path: str,
+    audio_hash: str,
+    language: str,
+    prompt: str) -> str:
     "Use whisper to transcribe an audio file"
     red(f"Calling whisper to transcribe file {audio_path}")
 

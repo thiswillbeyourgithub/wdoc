@@ -4,3 +4,6 @@ ggml*bin
 medical_indexes.txt
 logs.txt*
 author_dir
+pages
+.env
+**/__pycache__

@@ -1,4 +1,8 @@
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+
+exec(lazy_import_statements("""
 from langchain_core.prompts import ChatPromptTemplate
+"""))
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
@@ -19,11 +23,11 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 \t- Don't use complete sentence, I'm in a hurry and need bullet points.
 \t- Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
 \t- Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
-\t- Write in {LANGUAGE}.
+\t- Write in {language}.
 \t- Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
 \t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
 ```"""),
-        ("human", """{RECURSION_INSTRUCTION}{metadata}{previous_summary}
+        ("human", """{recursion_instruction}{metadata}{previous_summary}
 
 Text section:
 ```
@@ -31,27 +35,8 @@ Text section:
 ```"""),
         ],
 )
-PR_SUMMARY = ChatPromptTemplate.from_messages(
-    BASE_SUMMARY_PROMPT.format_messages(
-        LANGUAGE="{LANGUAGE}",
-        RECURSION_INSTRUCTION="",
-        metadata="{metadata}",
-        previous_summary="{previous_summary}",
-        text="{text}"
-    )
-)
-
 # if the summary is recursive, add those instructions
-recursion_instruction = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
-PR_SUMMARY_RECURSIVE = ChatPromptTemplate.from_messages(
-    BASE_SUMMARY_PROMPT.format_messages(
-        LANGUAGE="{LANGUAGE}",
-        RECURSION_INSTRUCTION=recursion_instruction,
-        metadata="{metadata}",
-        previous_summary="{previous_summary}",
-        text="{text}"
-    )
-)
+RECURSION_INSTRUCTION = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
 
 # PROMPT FOR QUERY TASKS
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
@@ -84,15 +69,16 @@ But DON'T interpret the question too strictly, e.g. the question can be implicit
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given some statements, your task it to answer a given question using only information from the statements.
-Ignore irrelevant statements. Don't narrate, just do what I asked.
-Use markdown formatting, especially bullet points for enumeration, bold, indentation etc.
-Be VERY concise but don't omit ANY relevant information from the statements.
+        ("system", """Given some statements and an answer, your task it to first answer directly the question in a md bullet point, then combine all additional information as additional bullet points. You must only use information from the statements.
+BUT, and above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
+
+Ignore statements that are completely irrelevant to the question.
+Don't narrate, just do what I asked without acknowledging those rules.
+If the question contains acronyms, reuse them without specifying what they mean.
+Use markdown format, with bullet points and indentation etc.
+Be concise but don't omit ANY information from the statements.
 Answer in the same language as the question.
-Above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
-But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example.
-Also the question can for example be an instruction like "give me all information about such and such", use common sense and don't be too strict!
-But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""),
+But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example. For example, if the question is rather an instruction like "give me all information about such and such", use common sense and don't be too strict!"""),
         ("human", "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
 )

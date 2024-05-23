@@ -1,34 +1,133 @@
+from prompt_toolkit.completion import Completer, Completion
+from typing import Optional, Tuple, Any
+
+from .misc import cache_dir
+from .logger import whi, red, md_printer
+from .lazy_lib_importer import lazy_import_statements, lazy_import
+from .typechecker import optional_typecheck
+
+exec(lazy_import_statements("""
 import time
 import re
 from pathlib import Path
 import json
-from prompt_toolkit import prompt
+from textwrap import dedent
+from prompt_toolkit import PromptSession
+from prompt_toolkit.formatted_text import FormattedText
+
 from prompt_toolkit.completion import WordCompleter
+"""))
 
-from .logger import whi
+@optional_typecheck
+def get_toolbar_text(settings: dict) -> Any:
+    "parsed settings to be well displayed in the prompt toolbar"
+    out = []
+    keys = sorted(list(settings.keys()))
+    for k in keys:
+        if k == "task":
+            continue
+        v = settings[k]
+        out.append(f"{k.replace('_', ' - ').title()}: {v}")
+    out = ['class:toolbar'] + [" - ".join(out)]
+    return FormattedText([tuple(out)])
 
 
-def ask_user(q, commands):
+class SettingsCompleter(Completer):
+    def __init__(
+        self,
+        doctoolsCliSettings,
+        doctoolsHistoryPrompts,
+        doctoolsHistoryWords,
+        *args,
+        **kwargs):
+        super().__init__(*args, **kwargs)
+        self.doctoolsCliSettings = doctoolsCliSettings
+        self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
+        self.doctoolsHistoryWords = doctoolsHistoryWords
+
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        if not text.strip():
+            yield Completion("/debug", start_position=-len(text))
+            yield Completion("/settings", start_position=-len(text))
+            yield Completion("/reset_memory", start_position=-len(text))
+            yield Completion("/help", start_position=-len(text))
+        elif text.startswith("/"):
+            if "/debug".startswith(text):
+                yield Completion("/debug", start_position=-len(text))
+            if "/reset_memory".startswith(text):
+                yield Completion("/reset_memory", start_position=-len(text))
+            if "/help".startswith(text):
+                yield Completion("/help", start_position=-len(text))
+            if "/settings ".startswith(text) or "/settings " in text:
+                settings = sorted(list(self.doctoolsCliSettings.keys()))
+                for setting in settings:
+                    if setting == "task":
+                        continue
+                    compl = f"/settings {setting}={self.doctoolsCliSettings[setting]}"
+                    if compl.startswith(text):
+                        yield Completion(compl, start_position=-len(text))
+        else:
+            # words autocompletion
+            if " " in text and not text.endswith(" "):
+                last_word = text.split(" ")[-1]
+                word_cnt = 0
+                for word in self.doctoolsHistoryWords:
+                    if word_cnt >= 3:
+                        break
+                    if word.lower().startswith(last_word.lower()):
+                        yield Completion(word, start_position=-len(last_word))
+                        word_cnt += 1
+
+            # entire prompt autocompletion
+            for hist in self.doctoolsHistoryPrompts:
+                if hist.lower().startswith(text.lower()):
+                    yield Completion(hist, start_position=-len(text))
+
+@optional_typecheck
+def show_help() -> None:
+    "display CLI help"
+    md_printer(dedent(ask_user.__doc__).strip())
+
+@optional_typecheck
+def ask_user(settings: dict) -> Tuple[str, dict]:
     """
-    Ask the question to the user.
-
-    Accepts multiple prompt commands:
-        /top_k=3 to change the top_k value.
-        /debug to open a console.
-        /multiline to write your question over multiple lines.
-        /retriever=X with X:
-            'default' to use regular embedding search
-            'knn' to use KNN
-            'svm' to use SVM
-            'hyde' to use Hypothetical Document Embedding search
-            'parent' to use parent retriever
-            Can use several (i.e 'knn_svm_default')
-        /retriever=simple to use regular embedding search
-        /relevancy=0.5 to set the relevancy threshold for retrievers that support it
+    ## Command line manual
+    * **Available Commands:**
+        * /help or ?
+        * /debug
+        * /settings (syntax: '/settings top_k=5')
+        * /reset_memory  (to reset the conversation)
+    * **Settings keys and values:**
+        * top_k: int > 0
+        * multiline: boolean
+        *retriever: a string containing '_' separated retriever from the
+        following list:
+            * 'default' to use regular embedding search
+            * 'knn' to use KNN
+            * 'svm' to use SVM
+            * 'hyde' to use Hypothetical Document Embedding search
+            * 'parent' to use parent retriever
+        To use several '/settings retriever=knn_svm_default'
+        * relevancy: float, from set ]0:1]
+    * **Tips:**
+        * In multiline mode, use ctrl+D to send the text (sometimes
+        multiple times).
+        * For more information: 'python DocToolsLLM.py --help'
+        * History is saved and shared across all runs
+        * If you use '//' once in the middle of your text, the left part will be
+        used as a query find the documents and the right part will be the
+        question to answer. For example: 'tuberculosis among medical students
+        in the 20th century // what are the statistics about epidemiology
+        of tuberculosis among medical students in the 20th century?'. This is
+        not always useful but in some cases depending on documents and
+        retriever it can be needed to avoid having to set top_k too high.
     """
+    md_printer("# DocToolsLLM Prompt")
+
     # loading history from files
     prev_questions = []
-    pp_file = Path(".cache/previous_questions.json")
+    pp_file = cache_dir / "previous_questions.json"
     if pp_file.exists():
         pp_list = json.load(pp_file.open("r"))
         assert isinstance(pp_list, list), "Invalid cache type"
@@ -47,114 +146,141 @@ def ask_user(q, commands):
                 key=lambda x: x["timestamp"],
                 )
 
-    prompt_commands = [
-            "/multiline",
-            "/debug",
-            "/top_k=",
-            "/retriever",
-            "/relevancy=",
-            ]
-    if commands["task"] == "query":
-        autocomplete = WordCompleter(
-                prompt_commands + [
-                    x["prompt"]
-                    for x in prev_questions
-                    if x["task"] == commands["task"]
-                    ],
-                match_middle=True,
-                ignore_case=True)
-    else:
-        autocomplete = WordCompleter(
-                prompt_commands,
-                match_middle=True,
-                ignore_case=True)
+    prompts = [x["prompt"] for x in prev_questions if x["task"] == settings["task"]]
+    words = [w for w in " ".join(prompts).split(" ") if len(w) > 2 and w.isalpha()]
+    completer=SettingsCompleter(
+        doctoolsCliSettings=settings,
+        doctoolsHistoryPrompts=prompts,
+        doctoolsHistoryWords=words
+    )
 
-    try:
+    while True:
+        if settings["multiline"]:
+            whi("Multiline mode enabled. Use ctrl+D to send.")
+        session = PromptSession(
+            bottom_toolbar=lambda: get_toolbar_text(settings),
+            completer=completer,
+            )
         try:
-            if commands["multiline"]:
-                whi("Multiline mode activated. Use ctrl+D to send.")
-            user_question = prompt(q,
-                         completer=autocomplete,
-                         vi_mode=True,
-                         multiline=commands["multiline"])
-        except (KeyboardInterrupt, EOFError):
-            if commands["multiline"]:
+            user_input = session.prompt(
+                "> ",
+                #completer=autocomplete,
+                vi_mode=True,
+                multiline=settings["multiline"],
+            )
+        except KeyboardInterrupt:
+            red(f"KeyboardInterrupt: quitting.")
+            raise SystemExit()
+        except EOFError:
+            if settings["multiline"]:
                 pass
             else:
-                raise
+                red(f"EOFError: quitting.")
+                raise SystemExit()
+        user_input = user_input.strip()
 
-        # quit if needed
-        if user_question.strip() in ["quit", "Q", "q"]:
+        # quit
+        if user_input.strip() in ["quit", "Q", "q"]:
             whi("Quitting.")
             raise SystemExit()
-
-        # auto remove duplicate "slash" (i.e. //) before prompts commands
-        for pc in prompt_commands:
-            while f"/{pc}" in user_question:
-                user_question = user_question.replace(f"/{pc}", f"{pc}")
-
-        # parse prompt commands
-        if "/top_k=" in user_question:
-            try:
-                prev = commands["top_k"]
-                commands["top_k"] = int(re.search(r"/top_k=(\d+)", user_question).group(1))
-                user_question = re.sub(r"/top_k=(\d+)", "", user_question)
-                whi(f"Changed top_k from '{prev}' to '{commands['top_k']}'")
-            except Exception as err:
-                whi(f"Error when changing top_k: '{err}'")
-                return ask_user(q, commands)
-
-        if "/relevancy=" in user_question:
-            try:
-                prev = commands["relevancy"]
-                commands["relevancy"] = float(re.search(r"/relevancy=([0-9.]+)", user_question).group(1))
-                user_question = re.sub(r"/relevancy=([0-9.]+)", "", user_question)
-                whi(f"Changed relevancy from '{prev}' to '{commands['relevancy']}'")
-            except Exception as err:
-                whi(f"Error when changing relevancy: '{err}'")
-                return ask_user(q, commands)
-
-        if "/retriever=" in user_question:
-            assert user_question.count("/retriever=") == 1, (
-                f"multiple retriever commands found: '{user_question}'")
-            retr = user_question.split("/retriever=")[1].split(" ")[0]
-            commands["retriever"] = retr
-            user_question = user_question.replace(f"/retriever={retr}", "").strip()
-            whi("Using as retriever: '{retr}'")
-
-        if "/debug" in user_question:
+        elif user_input == "/debug":
             whi("Entering debug mode.")
             breakpoint()
-            whi("Restarting prompt.")
-            return ask_user(q, commands)
+            whi("Going back to the prompt.")
+            continue
+        elif user_input == "/reset_memory":
+            whi("Reseting memory.")
+            # actually the memory will be reset once we return to the DocToolsLLM instance
+            settings["do_reset_memory"] = True
+            continue
+        elif user_input in ["/help", "?"]:
+            show_help()
+            continue
 
-        if "/multiline" in user_question:
-            if not commands["multiline"]:
-                commands["multiline"] = True
-                whi("Multiline turned on.")
-            else:
-                commands["multiline"] = False
-                whi("Multiline turned off.")
-            return ask_user(q, commands)
-    except (KeyboardInterrupt, EOFError):
-        raise SystemExit()
+        # handle settings
+        if user_input.startswith("/settings "):
+            if "=" not in user_input:
+                red("Invalid settings syntax: missing '='")
+                show_help()
+                continue
+            input_sett = user_input.split(" ")
+            if not input_sett[0] == "/settings":
+                red("Invalid settings syntax: does not start with '/settings '")
+                show_help()
+                continue
+            if not len(input_sett) == 2:
+                red("Invalid settings syntax: too many spaces")
+                show_help()
+                continue
+            input_sett = input_sett[1]
+            input_sett = input_sett.split("=")
+            if not len(input_sett) == 2:
+                red("Invalid settings syntax: expected one '=' symbol")
+                show_help()
+                continue
+            sett_k, sett_v = input_sett
+            if sett_k not in settings.keys():
+                red("Invalid settings: '{sett_k}' is not a valid setting key")
+                show_help()
+                continue
+            if settings[sett_k] == sett_v:
+                red("Invalid settings: '{sett_k}' is already has value '{sett_v}'")
+                show_help()
+                continue
+            try:
+                if sett_k == "top_k":
+                    assert int(sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
+                elif sett_k == "relevancy":
+                    assert float(sett_v) > 0 and float(sett_v) <= 1, f"Can't set relevancy to <= 0 or >1 ({sett_v})"
+                elif sett_k == "retriever":
+                    assert all(
+                        retriev in ["default", "hyde", "knn", "svm", "parent"]
+                        for retriev in sett_v.split("_")
+                    ), f"Invalid retriever value: {sett_v}"
+                elif sett_k == "multiline":
+                    if sett_v.lower() == "true":
+                        sett_v = True
+                    elif sett_v.lower() == "false":
+                        sett_v = False
+                    sett_v = bool(sett_v)
+                settings[sett_k] = type(settings[sett_k])(sett_v)
+            except Exception as err:
+                red(f"Error: can't set '{sett_k}' to '{sett_v}' because it "
+                    f"can't keep the type '{type(settings[sett_k])}'\n"
+                    f"Error: '{err}'")
+                show_help()
+                continue
+            whi(f"Set {sett_k}={sett_v}")
+            continue
+        elif "/settings" in user_input:
+            red(f"Detected '/settings' but not at the start, retrying.")
+            show_help()
+            continue
+
+        break
+    md_printer("### Done prompting")
 
     # saving new history to file
     if len(
-        [x
-         for x in prev_questions
-         if x["prompt"].strip() == user_question
-         ]) == 0:
+        [
+            x
+            for x in prev_questions
+            if x["prompt"].strip() == user_input
+        ]) == 0:
         prev_questions.append(
                 {
-                    "prompt": user_question,
+                    "prompt": user_input,
                     "timestamp": int(time.time()),
-                    "task": commands["task"],
+                    "task": settings["task"],
                     })
     prev_questions = sorted(
             prev_questions,
             key=lambda x: x["timestamp"],
             )
-    json.dump(prev_questions, pp_file.open("w"), indent=4)
+    temp_file = Path(str(pp_file.absolute()) + ".temp")
+    json.dump(prev_questions, temp_file.open("w"), indent=4)
+    assert temp_file.exists() and pp_file.exists()
+    pp_file.unlink()
+    temp_file.rename(pp_file)
 
-    return user_question, commands
+    return user_input, settings

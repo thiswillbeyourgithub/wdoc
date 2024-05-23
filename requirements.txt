@@ -20,10 +20,15 @@ unstructured>=0.6.2
 faiss-cpu>=1.8.0
 llama-cpp-python>=0.2.69  # >0.2.69 had a regression regarding embeddings
 rich>=13.7.1
+lazy_import >= 0.2.2
+typeguard >= 4.2.1
+platformdirs >= 4.2.2
 
 # buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
 # fasttext-langdetect>=1.0.5
 # pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
 
-LogseqMarkdownParser >= 2.4  # I'm also the dev behind that one
+LogseqMarkdownParser >= 2.5  # I'm also the dev behind that one
+
+pyfiglet >= 1.0.2   # banner
