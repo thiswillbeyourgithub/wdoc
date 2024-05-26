@@ -28,22 +28,35 @@ cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
 cache_dir.mkdir(exist_ok=True)
 loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
 loaddoc_cache_dir.mkdir(exist_ok=True)
-loaddoc_cache = Memory(loaddoc_cache_dir, verbose=1)
+loaddoc_cache = Memory(loaddoc_cache_dir, verbose=0)
+hashdoc_cache_dir = (cache_dir / "hashdoc_cache")
+hashdoc_cache_dir.mkdir(exist_ok=True)
+hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 
 
-@optional_typecheck
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
-@optional_typecheck
 def file_hasher(doc: dict) -> str:
-    """used to hash a file's content, as describe by a dict"""
+    """used to hash a file's content, as describe by a dict
+    A caching mechanism is used to avoid recomputing hash of file that
+    have the same path and metadata.
+    """
     if "path" in doc and Path(doc["path"]).exists():
-        with open(doc["path"], "rb") as f:
-            return hashlib.md5(f.read()).hexdigest()[:20]
+        file = Path(doc["path"])
+        stats = file.stat()
+        return _file_hasher(
+            abs_path=str(file.absolute()),
+            stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
+        )
     return None
+
+@hashdoc_cache.cache
+def _file_hasher(abs_path: str, stats: List[int]) -> str:
+    with open(abs_path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()[:20]
 
 @optional_typecheck
 def html_to_text(html: str) -> str:

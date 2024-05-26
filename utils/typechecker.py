@@ -5,16 +5,14 @@ from typeguard import typechecked, TypeCheckError
 from typing import Callable, Any
 
 if "DOCTOOLS_TYPECHECKING" not in os.environ:
-    os.environ["DOCTOOLS_TYPECHECKING"] = "warn"
+    os.environ["DOCTOOLS_TYPECHECKING"] = "disabled"
 
-@typechecked
 def redprint(message: str) -> str:
     "print in red"
     message = "\033[91m" + message + "\033[0m"
     print(message)
     return message
 
-@typechecked
 def optional_typecheck(func: Callable) -> Callable:
     if os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
         @wraps(func)
