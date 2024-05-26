@@ -534,6 +534,9 @@ class DocToolsLLM:
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
+            os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
+        else:
+            os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
 
         if debug:
             llm_verbosity = True

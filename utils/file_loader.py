@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple
 from functools import wraps
 import random
@@ -220,6 +221,12 @@ def load_doc(
             if "load_functions" in doc:
                 if doc["load_functions"]:
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
+
+    # if in private mode, check that we won't try to use whisper
+    if os.environ["DOCTOOLS_PRIVATEMODE"] == "true":
+        assert not any(d["filetype"] == "local_audio" for d in to_load), (
+            "Private mode is set but trying to use whisper"
+        )
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
