@@ -134,7 +134,7 @@ def load_embeddings(
 
     elif backend == "sentencetransformers":
         if private:
-            red(f"Private it set and will use sentencetransformers backend")
+            red(f"Private is set and will use sentencetransformers backend")
         if use_rolling:
             embeddings = RollingWindowEmbeddings(
                     model_name=embed_model,
@@ -155,7 +155,7 @@ def load_embeddings(
 
     elif backend == "llamacppembeddings":
         if private:
-            red(f"Private it set and will use llamacppembeddings backend")
+            red(f"Private is set and will use llamacppembeddings backend")
         llamacppkwargs = {
             "f16_kv": False,
             "logits_all": False,
