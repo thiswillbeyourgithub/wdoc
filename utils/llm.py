@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import Union, List, Any, Optional
 import time
 import os
 from pathlib import Path
@@ -37,6 +37,7 @@ def load_llm(
     backend: str,
     verbose: bool,
     no_llm_cache: bool,
+    api_base: Optional[str],
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
@@ -57,9 +58,14 @@ def load_llm(
 
     if verbose:
         whi("Loading model via litellm")
+    if api_base:
+        red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         if not Path(f"{backend.upper()}_API_KEY.txt").exists():
-            raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+            if not api_base:
+                raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+            else:
+                red(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
         else:
             os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
 
@@ -70,6 +76,7 @@ def load_llm(
             verbose=verbose,
             cache=not no_llm_cache,
             callbacks=[PriceCountingCallback(verbose=verbose)],
+            api_base=api_base,
             **extra_model_args,
             )
     return llm

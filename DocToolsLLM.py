@@ -133,6 +133,7 @@ class DocToolsLLM:
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
+        llms_api_bases: Optional[dict] = None,
 
         help: bool = False,
         h: bool = False,
@@ -262,6 +263,7 @@ class DocToolsLLM:
             If the estimated price is above this limit, stop instead.
             Note that the cost estimate for the embeddings is using the
             openai tokenizer, which is not universal.
+            This check is skipped if the api_base url are changed.
 
         --debug: bool, default False
             if True will enable langchain tracing, increase verbosity etc.
@@ -291,6 +293,12 @@ class DocToolsLLM:
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
             for documents.
+
+        --llms_api_bases: dict, default None
+            a dict with keys in ["model", "eval_llm"]
+            The corresponding value will be used to change the url of the
+            endpoint. This is needed to use local LLMs for example using
+            ollama, lmstudio etc.
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -493,6 +501,15 @@ class DocToolsLLM:
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
 
+        if llms_api_bases is None:
+            llms_api_bases = {}
+        for k in llms_api_bases:
+            assert k in ["model", "eval_llm"], (
+                f"Invalid k of llms_api_bases: {k}")
+        for k in ["model", "eval_llm"]:
+            if k not in llms_api_bases:
+                llms_api_bases[k] = None
+
         if debug:
             llm_verbosity = True
 
@@ -520,6 +537,7 @@ class DocToolsLLM:
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.no_llm_cache = bool(no_llm_cache)
+        self.llms_api_bases = llms_api_bases
         self.import_mode = import_mode
 
         if not no_llm_cache:
@@ -599,6 +617,7 @@ class DocToolsLLM:
             no_llm_cache=self.no_llm_cache,
             temperature=0,
             verbose=self.llm_verbosity,
+            api_base=self.llms_api_bases["model"],
         )
 
         # if task is to summarize lots of links, check first if there are
@@ -798,7 +817,10 @@ class DocToolsLLM:
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
         ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
         if estimate_dol > self.dollar_limit:
-            raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+            if self.llms_api_bases["model"]:
+                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+            else:
+                red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
         if self.modelbackend == "openai":
             # increase likelyhood that chatgpt will use indentation by
@@ -1354,6 +1376,7 @@ class DocToolsLLM:
                     no_llm_cache=self.no_llm_cache,
                     verbose=self.llm_verbosity,
                     temperature=1,
+                    api_base=self.llms_api_bases["eval_llm"],
                     **eval_args,
                 )
 

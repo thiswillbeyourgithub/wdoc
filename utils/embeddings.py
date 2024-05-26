@@ -74,7 +74,8 @@ def load_embeddings(
     debug: bool,
     loaded_docs: Any,
     dollar_limit: Union[int, float],
-    kwargs: dict):
+    kwargs: dict,
+    ):
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
