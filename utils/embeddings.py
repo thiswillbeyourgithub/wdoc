@@ -6,7 +6,7 @@ import faiss
 import random
 import time
 import copy
-from pathlib import Path
+from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
 
@@ -401,7 +401,7 @@ def faiss_loader(
 
 @optional_typecheck
 def faiss_saver(
-    path: str,
+    path: Union[str, PosixPath],
     cached_embeddings: CacheBackedEmbeddings,
     qin: queue.Queue,
     qout: queue.Queue) -> None:
