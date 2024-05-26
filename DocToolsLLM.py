@@ -1075,13 +1075,14 @@ class DocToolsLLM:
     def prepare_query_task(self):
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
-                embed_model=self.embed_model,
-                load_embeds_from=self.load_embeds_from,
-                save_embeds_as=self.save_embeds_as,
-                debug=self.debug,
-                loaded_docs=self.loaded_docs,
-                dollar_limit=self.dollar_limit,
-                kwargs=self.kwargs)
+            embed_model=self.embed_model,
+            load_embeds_from=self.load_embeds_from,
+            save_embeds_as=self.save_embeds_as,
+            debug=self.debug,
+            loaded_docs=self.loaded_docs,
+            dollar_limit=self.dollar_limit,
+            kwargs=self.kwargs,
+        )
 
         # conversational memory
         self.memory = AnswerConversationBufferMemory(
