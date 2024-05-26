@@ -188,7 +188,7 @@ def load_one_doc(
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
-    elif filetype == "txt":
+    elif filetype == "txt" or filetype == "text":
         assert kwargs['file_hash']
         docs = load_txt(**kwargs)
 
