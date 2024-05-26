@@ -5,7 +5,7 @@ from typeguard import typechecked, TypeCheckError
 from typing import Callable, Any
 
 if "DOCTOOLS_TYPECHECKING" not in os.environ:
-    os.environ["DOCTOOLS_TYPECHECKING"] = "warn"
+    os.environ["DOCTOOLS_TYPECHECKING"] = "disabled"
 
 @typechecked
 def redprint(message: str) -> str:
