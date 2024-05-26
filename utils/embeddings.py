@@ -138,9 +138,8 @@ def load_embeddings(
                 model_name=embed_model,
                 encode_kwargs={
                     "batch_size": 1,
-                    "show_progress_bar": True,
                     "pooling": "meanpool",
-                    # "device": "cuda",
+                    "device": None,
                     },
                 )
 
