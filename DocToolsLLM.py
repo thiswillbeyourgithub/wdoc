@@ -489,9 +489,9 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        if not modelname.startswith("testing/"):
+        if not modelname.startswith("testing/") and not llms_api_bases["model"]:
             modelname = model_name_matcher(modelname)
-        if query_eval_modelname is not None:
+        if query_eval_modelname is not None and not llms_api_bases["query_eval_model"]:
             if modelname.startswith("testing/"):
                 if not query_eval_modelname.startswith("testing/"):
                     query_eval_modelname = "testing/testing"
