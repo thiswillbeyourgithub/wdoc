@@ -75,6 +75,7 @@ def load_embeddings(
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
+    use_rolling: bool,
     kwargs: dict,
     ):
     """loads embeddings for each document"""
@@ -134,14 +135,24 @@ def load_embeddings(
     elif backend == "sentencetransformers":
         if private:
             red(f"Private it set and will use sentencetransformers backend")
-        embeddings = RollingWindowEmbeddings(
-                model_name=embed_model,
-                encode_kwargs={
-                    "batch_size": 1,
-                    "pooling": "meanpool",
-                    "device": None,
-                    },
-                )
+        if use_rolling:
+            embeddings = RollingWindowEmbeddings(
+                    model_name=embed_model,
+                    encode_kwargs={
+                        "batch_size": 1,
+                        "pooling": "meanpool",
+                        "device": None,
+                        },
+                    )
+        else:
+            embeddings = SentenceTransformerEmbeddings(
+                    model_name=embed_model,
+                    encode_kwargs={
+                        "batch_size": 1,
+                        "pooling": "meanpool",
+                        "device": None,
+                        },
+                    )
 
     elif backend == "llamacppembeddings":
         if private:

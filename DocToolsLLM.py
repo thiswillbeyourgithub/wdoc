@@ -135,6 +135,7 @@ class DocToolsLLM:
         no_llm_cache: bool = False,
         private: bool = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
+        DIY_rolling_window_embedding: bool = False,
 
         help: bool = False,
         h: bool = False,
@@ -306,6 +307,10 @@ class DocToolsLLM:
             The corresponding value will be used to change the url of the
             endpoint. This is needed to use local LLMs for example using
             ollama, lmstudio etc.
+
+        --DIY_rolling_window_embedding: bool, default False
+            enables using a DIY rolling window embedding instead of using
+            the default langchain SentenceTransformerEmbedding implementation
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -559,6 +564,7 @@ class DocToolsLLM:
         self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
         self.llms_api_bases = llms_api_bases
+        self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
 
         if not no_llm_cache:
@@ -1135,6 +1141,7 @@ class DocToolsLLM:
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
             private=self.private,
+            use_rolling=self.DIY_rolling_window_embedding,
             kwargs=self.kwargs,
         )
 
