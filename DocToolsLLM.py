@@ -509,6 +509,9 @@ class DocToolsLLM:
         for k in ["model", "eval_llm"]:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
+        if llms_api_bases["model"] == llms_api_bases["eval_llm"] and llms_api_bases["model"]:
+            red(f"Setting litellm wide api_base because it's the same for model and eval_llm")
+            litellm.api_base = llms_api_bases["model"]
 
         if debug:
             llm_verbosity = True
