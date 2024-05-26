@@ -76,8 +76,8 @@ def load_llm(
                 red(f"Skipped loading of api key in file "
                     f"'{backend.upper()}_API_KEY.txt' because private is on.")
     elif private:
-        red(f"private is on so removing {backend.upper()}_API_KEY from environment variables")
-        del os.environ[f"{backend.upper()}_API_KEY"]
+        red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
+        os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
     llm = ChatLiteLLM(
             model_name=modelname,
