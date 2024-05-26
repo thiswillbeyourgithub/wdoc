@@ -28,7 +28,7 @@ cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
 cache_dir.mkdir(exist_ok=True)
 loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
 loaddoc_cache_dir.mkdir(exist_ok=True)
-loaddoc_cache = Memory(loaddoc_cache_dir, verbose=1)
+loaddoc_cache = Memory(loaddoc_cache_dir, verbose=0)
 
 
 @optional_typecheck
