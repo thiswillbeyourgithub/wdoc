@@ -328,6 +328,7 @@ def load_embeddings(
                     daemon=False,
                     ) for qin, qout in saver_queues]
         [t.start() for t in saver_workers]
+        assert all([t.is_alive() for t in saver_workers]), "Saver workers failed to load"
 
         save_counter = -1
         for batch in tqdm(batches, desc="Embedding by batch"):
@@ -346,6 +347,7 @@ def load_embeddings(
             for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
                 docu = temp.docstore._dict[docuid]
                 save_counter += 1
+                assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
                 saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
             results = [q[1].get() for q in saver_queues]
