@@ -9,8 +9,8 @@ from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering,
 from utils.logger import red
 from utils.misc import cache_dir
 
-(cache_dir / "quer_eval_llm").mkdir(exist_ok=True)
-doc_eval_cache = Memory(cache_dir / "quer_eval_llm", verbose=0)
+(cache_dir / "query_eval_llm").mkdir(exist_ok=True)
+doc_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 
 
 @optional_typecheck
