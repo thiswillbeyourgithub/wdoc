@@ -494,25 +494,6 @@ class DocToolsLLM:
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        if not modelname.startswith("testing/") and not llms_api_bases["model"]:
-            modelname = model_name_matcher(modelname)
-        if query_eval_modelname is not None and not llms_api_bases["query_eval_model"]:
-            if modelname.startswith("testing/"):
-                if not query_eval_modelname.startswith("testing/"):
-                    query_eval_modelname = "testing/testing"
-                    red(f"modelname uses 'testing' backend so setting query_eval_modelname to '{query_eval_modelname}'")
-            else:
-                assert not query_eval_modelname.startswith("testing/"), "query_eval_modelname can't use 'testing' backend if modelname isn't set to testing too"
-                query_eval_modelname = model_name_matcher(query_eval_modelname)
-
-        if query is True:
-            # otherwise specifying --query and forgetting to add text fails
-            query = None
-        if isinstance(query, str):
-            query = query.strip() or None
-        if "{user_cache}" in save_embeds_as:
-            save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
-
         if llms_api_bases is None:
             llms_api_bases = {}
         elif isinstance(llms_api_bases, str):
@@ -537,6 +518,25 @@ class DocToolsLLM:
             os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
         else:
             os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
+
+        if (not modelname.startswith("testing/")) and (not llms_api_bases["model"]):
+            modelname = model_name_matcher(modelname)
+        if (query_eval_modelname is not None) and (not llms_api_bases["query_eval_model"]):
+            if modelname.startswith("testing/"):
+                if not query_eval_modelname.startswith("testing/"):
+                    query_eval_modelname = "testing/testing"
+                    red(f"modelname uses 'testing' backend so setting query_eval_modelname to '{query_eval_modelname}'")
+            else:
+                assert not query_eval_modelname.startswith("testing/"), "query_eval_modelname can't use 'testing' backend if modelname isn't set to testing too"
+                query_eval_modelname = model_name_matcher(query_eval_modelname)
+
+        if query is True:
+            # otherwise specifying --query and forgetting to add text fails
+            query = None
+        if isinstance(query, str):
+            query = query.strip() or None
+        if "{user_cache}" in save_embeds_as:
+            save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
 
         if debug:
             llm_verbosity = True
