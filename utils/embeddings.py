@@ -352,7 +352,7 @@ def load_embeddings(
                 assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
                 saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
-            results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter + 1]]
+            results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter]]
             assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
 
             if not db:
