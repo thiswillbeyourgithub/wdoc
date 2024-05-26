@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple
 from functools import wraps
 import random
@@ -148,7 +149,7 @@ def load_doc(
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = -1
+        n_jobs = 10
     if len(to_load) == 1 or debug:
         n_jobs = 1
 
@@ -163,9 +164,10 @@ def load_doc(
     if all_unexp_keys:
         red(f"Found unexpected keys in doc kwargs: '{all_unexp_keys}'")
 
-    # shuffle the list of files to load to make
-    # the progress bar more representative
-    to_load = sorted(to_load, key=lambda x: random.random())
+    if "summar" not in task:
+        # shuffle the list of files to load to make
+        # the progress bar more representative
+        to_load = sorted(to_load, key=lambda x: random.random())
 
     # store the file hash in the doc kwarg
     doc_hashes = Parallel(
@@ -179,18 +181,19 @@ def load_doc(
       )
     )
 
-    # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
-    to_load = sorted(
-        to_load,
-        key=lambda x: int(
-            ''.join(
-                filter(
-                    str.isdigit,
-                    doc_hashes[to_load.index(x)],
+    if "summar" not in task:
+        # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
+        to_load = sorted(
+            to_load,
+            key=lambda x: int(
+                ''.join(
+                    filter(
+                        str.isdigit,
+                        doc_hashes[to_load.index(x)],
+                    )
                 )
             )
         )
-    )
 
     # deduplicate files based on hash
     whi("Deduplicating files")
@@ -218,6 +221,12 @@ def load_doc(
             if "load_functions" in doc:
                 if doc["load_functions"]:
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
+
+    # if in private mode, check that we won't try to use whisper
+    if os.environ["DOCTOOLS_PRIVATEMODE"] == "true":
+        assert not any(d["filetype"] == "local_audio" for d in to_load), (
+            "Private mode is set but trying to use whisper"
+        )
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)

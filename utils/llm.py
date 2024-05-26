@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import Union, List, Any, Optional
 import time
 import os
 from pathlib import Path
@@ -16,7 +16,6 @@ from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
 from langchain_community.llms import FakeListLLM
-# from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_models import ChatLiteLLM
 
 import openai
@@ -37,6 +36,8 @@ def load_llm(
     backend: str,
     verbose: bool,
     no_llm_cache: bool,
+    api_base: Optional[str],
+    private: bool,
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
@@ -57,21 +58,38 @@ def load_llm(
 
     if verbose:
         whi("Loading model via litellm")
+
+    if private:
+        assert api_base, "If private is set, api_base must be set too"
+    if api_base:
+        red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         if not Path(f"{backend.upper()}_API_KEY.txt").exists():
-            raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+            if not api_base:
+                raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+            else:
+                red(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
         else:
-            os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+            if not private:
+                os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+            else:
+                red(f"Skipped loading of api key in file "
+                    f"'{backend.upper()}_API_KEY.txt' because private is on.")
+    if private:
+        red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
+        os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
-    # llm = ChatOpenAI(
-            # model_name=modelname.split("/")[-1],
     llm = ChatLiteLLM(
             model_name=modelname,
             verbose=verbose,
             cache=not no_llm_cache,
             callbacks=[PriceCountingCallback(verbose=verbose)],
+            api_base=api_base,
             **extra_model_args,
             )
+    if private:
+        assert llm.api_base, "private is set but no api_base for llm were found"
+        assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
     return llm
 
 

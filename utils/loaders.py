@@ -342,17 +342,17 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
     if "language_detect" not in globals():
         # bypass if language_detect not imported
         return 1
-    prob = language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]
+    prob = [language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]]
     if len(docs) > 1:
-        prob += language_detect(docs[1].page_content.replace("\n",
-                                "<br>"))["score"]
+        prob.append(language_detect(docs[1].page_content.replace("\n",
+                                "<br>"))["score"])
         if len(docs) > 2:
-            prob += language_detect(
-                docs[len(docs) // 2].page_content.replace("\n", "<br>")
-            )["score"]
-            prob /= 3
-        else:
-            prob /= 2
+            prob.append(
+                    language_detect(
+                        docs[len(docs) // 2].page_content.replace("\n", "<br>")
+                    )["score"]
+            )
+    prob = max(prob)
     if prob <= min_lang_prob:
         red(
             f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"

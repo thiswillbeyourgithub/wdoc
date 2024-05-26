@@ -106,7 +106,7 @@ class DocToolsLLM:
         query: Optional[str] = None,
         filetype: str = "infer",
         embed_model: str = "openai/text-embedding-3-small",
-        # embed_model: str =  "BAAI/bge-m3",
+        # embed_model: str =  "sentencetransformers/BAAI/bge-m3",
         # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
         # embed_model: str =  "sentencetransformers/distiluse-base-multilingual-cased-v1",
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
@@ -133,6 +133,9 @@ class DocToolsLLM:
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
+        private: bool = False,
+        llms_api_bases: Optional[Union[dict, str]] = None,
+        DIY_rolling_window_embedding: bool = False,
 
         help: bool = False,
         h: bool = False,
@@ -262,6 +265,7 @@ class DocToolsLLM:
             If the estimated price is above this limit, stop instead.
             Note that the cost estimate for the embeddings is using the
             openai tokenizer, which is not universal.
+            This check is skipped if the api_base url are changed.
 
         --debug: bool, default False
             if True will enable langchain tracing, increase verbosity etc.
@@ -287,10 +291,26 @@ class DocToolsLLM:
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
 
+        --private: bool, default False
+            add extra check that your data will never be sent to another
+            server: for example check that the api_base was modified and used,
+            check that no api keys are used, check that embedding models are
+            local only. It will also use a separate cache from non private.
+
         --no_llm_cache: bool, default False
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
             for documents.
+
+        --llms_api_bases: dict, default None
+            a dict with keys in ["model", "query_eval_model"]
+            The corresponding value will be used to change the url of the
+            endpoint. This is needed to use local LLMs for example using
+            ollama, lmstudio etc.
+
+        --DIY_rolling_window_embedding: bool, default False
+            enables using a DIY rolling window embedding instead of using
+            the default langchain SentenceTransformerEmbedding implementation
 
         --import_mode: bool, default False
             if True, will return the answer from query instead of printing it
@@ -467,16 +487,16 @@ class DocToolsLLM:
         if filetype == "infer":
             assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
+        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if filetype == "string":
             top_k = 1
             red("Input is 'string' so setting 'top_k' to 1")
 
-        if not modelname.startswith("testing/"):
+        if not modelname.startswith("testing/") and not llms_api_bases["model"]:
             modelname = model_name_matcher(modelname)
-        if query_eval_modelname is not None:
+        if query_eval_modelname is not None and not llms_api_bases["query_eval_model"]:
             if modelname.startswith("testing/"):
                 if not query_eval_modelname.startswith("testing/"):
                     query_eval_modelname = "testing/testing"
@@ -492,6 +512,31 @@ class DocToolsLLM:
             query = query.strip() or None
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
+
+        if llms_api_bases is None:
+            llms_api_bases = {}
+        elif isinstance(llms_api_bases, str):
+            try:
+                llms_api_bases = json.loads(llms_api_bases)
+            except Exception as err:
+                raise Exception(f"Error when parsing llms_api_bases as a dict: {err}")
+        assert isinstance(llms_api_bases, dict), "llms_api_bases must be a dict"
+        for k in llms_api_bases:
+            assert k in ["model", "query_eval_model"], (
+                f"Invalid k of llms_api_bases: {k}")
+        for k in ["model", "query_eval_model"]:
+            if k not in llms_api_bases:
+                llms_api_bases[k] = None
+        if llms_api_bases["model"] == llms_api_bases["query_eval_model"] and llms_api_bases["model"]:
+            red(f"Setting litellm wide api_base because it's the same for model and query_eval_model")
+            litellm.api_base = llms_api_bases["model"]
+        assert isinstance(private, bool), "private arg should be a boolean, not {private}"
+        if private:
+            assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
+            assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
+            os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
+        else:
+            os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
 
         if debug:
             llm_verbosity = True
@@ -519,13 +564,22 @@ class DocToolsLLM:
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
+        self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
+        self.llms_api_bases = llms_api_bases
+        self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
 
         if not no_llm_cache:
-            set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+            if not private:
+                set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+            else:
+                set_llm_cache(SQLiteCache(database_path=cache_dir / "private_langchain.db"))
 
-        if modelname in litellm.model_cost:
+        if llms_api_bases["model"]:
+            red(f"Disabling price computation for model because api_base was modified")
+            self.llm_price = [0, 0]
+        elif modelname in litellm.model_cost:
             self.llm_price = [
                 litellm.model_cost[modelname]["input_cost_per_token"],
                 litellm.model_cost[modelname]["output_cost_per_token"]
@@ -538,7 +592,10 @@ class DocToolsLLM:
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
         if query_eval_modelname is not None:
-            if query_eval_modelname in litellm.model_cost:
+            if llms_api_bases["query_eval_model"]:
+                red(f"Disabling price computation for query_eval_model because api_base was modified")
+                self.query_evalllm_price = [0, 0]
+            elif query_eval_modelname in litellm.model_cost:
                 self.query_evalllm_price = [
                     litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
                     litellm.model_cost[query_eval_modelname]["output_cost_per_token"]
@@ -599,6 +656,8 @@ class DocToolsLLM:
             no_llm_cache=self.no_llm_cache,
             temperature=0,
             verbose=self.llm_verbosity,
+            api_base=self.llms_api_bases["model"],
+            private=self.private,
         )
 
         # if task is to summarize lots of links, check first if there are
@@ -796,9 +855,12 @@ class DocToolsLLM:
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
-        ntfy(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+        ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
         if estimate_dol > self.dollar_limit:
-            raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+            if self.llms_api_bases["model"]:
+                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+            else:
+                red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
         if self.modelbackend == "openai":
             # increase likelyhood that chatgpt will use indentation by
@@ -1075,13 +1137,16 @@ class DocToolsLLM:
     def prepare_query_task(self):
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
-                embed_model=self.embed_model,
-                load_embeds_from=self.load_embeds_from,
-                save_embeds_as=self.save_embeds_as,
-                debug=self.debug,
-                loaded_docs=self.loaded_docs,
-                dollar_limit=self.dollar_limit,
-                kwargs=self.kwargs)
+            embed_model=self.embed_model,
+            load_embeds_from=self.load_embeds_from,
+            save_embeds_as=self.save_embeds_as,
+            debug=self.debug,
+            loaded_docs=self.loaded_docs,
+            dollar_limit=self.dollar_limit,
+            private=self.private,
+            use_rolling=self.DIY_rolling_window_embedding,
+            kwargs=self.kwargs,
+        )
 
         # conversational memory
         self.memory = AnswerConversationBufferMemory(
@@ -1353,6 +1418,8 @@ class DocToolsLLM:
                     no_llm_cache=self.no_llm_cache,
                     verbose=self.llm_verbosity,
                     temperature=1,
+                    api_base=self.llms_api_bases["query_eval_model"],
+                    private=self.private,
                     **eval_args,
                 )
 
@@ -1360,7 +1427,7 @@ class DocToolsLLM:
             if not self.no_llm_cache:
                 eval_cache_wrapper = doc_eval_cache.cache
             else:
-                eval_cache_wrapper = wraps
+                def eval_cache_wrapper(func): return func
 
             @chain
             @optional_typecheck
