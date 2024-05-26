@@ -567,7 +567,10 @@ class DocToolsLLM:
             else:
                 set_llm_cache(SQLiteCache(database_path=cache_dir / "private_langchain.db"))
 
-        if modelname in litellm.model_cost:
+        if llms_api_bases["model"]:
+            red(f"Disabling price computation for model because api_base was modified")
+            self.llm_price = [0, 0]
+        elif modelname in litellm.model_cost:
             self.llm_price = [
                 litellm.model_cost[modelname]["input_cost_per_token"],
                 litellm.model_cost[modelname]["output_cost_per_token"]
@@ -580,7 +583,10 @@ class DocToolsLLM:
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
         if query_eval_modelname is not None:
-            if query_eval_modelname in litellm.model_cost:
+            if llms_api_bases["query_eval_model"]:
+                red(f"Disabling price computation for query_eval_model because api_base was modified")
+                self.query_evalllm_price = [0, 0]
+            elif query_eval_modelname in litellm.model_cost:
                 self.query_evalllm_price = [
                     litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
                     litellm.model_cost[query_eval_modelname]["output_cost_per_token"]
