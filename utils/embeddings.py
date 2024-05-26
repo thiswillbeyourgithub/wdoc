@@ -279,7 +279,11 @@ def load_embeddings(
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
     red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
-    if f"{backend}/{embed_model}" in litellm.model_cost:
+    if private:
+        red(f"Not checking token price because private is set")
+    elif backend != "openai":
+        red(f"Not checking token price because using a private backend: {backend}")
+    elif f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
         assert litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0
     elif embed_model in litellm.model_cost:
