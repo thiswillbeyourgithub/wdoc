@@ -75,7 +75,7 @@ def load_llm(
             else:
                 red(f"Skipped loading of api key in file "
                     f"'{backend.upper()}_API_KEY.txt' because private is on.")
-    elif private:
+    if private:
         red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
