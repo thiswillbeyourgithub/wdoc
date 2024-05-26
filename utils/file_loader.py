@@ -148,7 +148,7 @@ def load_doc(
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = -1
+        n_jobs = 10
     if len(to_load) == 1 or debug:
         n_jobs = 1
 
