@@ -259,7 +259,7 @@ def load_embeddings(
                 ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
     load_counter = -1
-    timeout = 60
+    timeout = 10
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
         if fi.exists():
@@ -361,9 +361,13 @@ def load_embeddings(
                 db.merge_from(temp)
 
         whi("Waiting for saver workers to finish.")
-        [q[0].put((False, None, None, None)) for q in saver_queues]
-        exit_code = [q[1].get(timeout=timeout) for q in saver_queues]
-        assert all(e.startswith("Stopped") for e in exit_code), f"Faiss worker failed to stop: {exit_code}"
+        stop_counter = 0
+        while any(t.is_alive() for t in saver_workers):
+            stop_counter += 1
+            [q[0].put((False, None, None, None)) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
+            exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
+            if not all(e.startswith("Stopped") for e in exit_code):
+                red(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
         assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
     whi("Done saving.")
