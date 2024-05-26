@@ -9,6 +9,7 @@
 
 ## Features
 * Advanced RAG system: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+* private model: take some measures to make sure no data leaves your computer and goes to an LLM provider:no API keys are used, all api_base are user set, cache are separated etc.
 * Multiple type of tasks implemented. See below.
 * Many supported filetype, including advanced ones like loading from list of files, list of links, using regex, youtube playlists etc. See below.
 * All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).
@@ -51,6 +52,7 @@
 4. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
 5. To know more about each argument supported by each filetype, `python DoctoolsLLM --help`
 6. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (# comments and empty lines are ignored) one url, that will be parsed by DoctoolsLLM. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and DoctoolsLLM automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
+7. If you want to make sure your data remains private here's an example: `python DoctoolsLLM.py --private --api_base={model:"localhost:8000",eval_model:"localhost:8000"} --model="openai/my_modelname" --eval_model="openai/my_evalmodel" --embed_model="BAAI/bge-m3" --task=my_task`
 
 ### Supported tasks:
 * **query** give documents and asks questions about it.
