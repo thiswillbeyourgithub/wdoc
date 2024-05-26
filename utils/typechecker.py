@@ -35,7 +35,7 @@ def optional_typecheck(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                return typechecked(func)(*args, **kwargs)
+                out_vals = typechecked(func)(*args, **kwargs)
             except TypeCheckError as err:
                 redprint(
                     f"TypeCheckError in function '{func}'\n"
@@ -43,7 +43,8 @@ def optional_typecheck(func: Callable) -> Callable:
                     "typechecking, set the runtime flag like so:\n"
                     'DOCTOOLS_TYPECHECKING="disabled" python DocToolsLLM.py \n'
                     f"Original error:\n{indent(str(err), '    ')}\n")
-                return func(*args, **kwargs)
+                out_vals = func(*args, **kwargs)
+            return out_vals
         return wrapper
 
     elif os.environ["DOCTOOLS_TYPECHECKING"] == "disabled":
