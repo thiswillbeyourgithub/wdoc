@@ -302,7 +302,7 @@ class DocToolsLLM:
             for documents.
 
         --llms_api_bases: dict, default None
-            a dict with keys in ["model", "eval_llm"]
+            a dict with keys in ["model", "query_eval_model"]
             The corresponding value will be used to change the url of the
             endpoint. This is needed to use local LLMs for example using
             ollama, lmstudio etc.
@@ -510,19 +510,25 @@ class DocToolsLLM:
 
         if llms_api_bases is None:
             llms_api_bases = {}
+        elif isinstance(llms_api_bases, str):
+            try:
+                llms_api_bases = json.loads(llms_api_bases)
+            except Exception as err:
+                raise Exception(f"Error when parsing llms_api_bases as a dict: {err}")
+        assert isinstance(llms_api_bases, dict), "llms_api_bases must be a dict"
         for k in llms_api_bases:
-            assert k in ["model", "eval_llm"], (
+            assert k in ["model", "query_eval_model"], (
                 f"Invalid k of llms_api_bases: {k}")
-        for k in ["model", "eval_llm"]:
+        for k in ["model", "query_eval_model"]:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
-        if llms_api_bases["model"] == llms_api_bases["eval_llm"] and llms_api_bases["model"]:
-            red(f"Setting litellm wide api_base because it's the same for model and eval_llm")
+        if llms_api_bases["model"] == llms_api_bases["query_eval_model"] and llms_api_bases["model"]:
+            red(f"Setting litellm wide api_base because it's the same for model and query_eval_model")
             litellm.api_base = llms_api_bases["model"]
         assert isinstance(private, bool), "private arg should be a boolean, not {private}"
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
-            assert llms_api_bases["eval_llm"], "private is set but llms_api_bases['eval_llm'] is not set"
+            assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
 
         if debug:
             llm_verbosity = True
@@ -1396,7 +1402,7 @@ class DocToolsLLM:
                     no_llm_cache=self.no_llm_cache,
                     verbose=self.llm_verbosity,
                     temperature=1,
-                    api_base=self.llms_api_bases["eval_llm"],
+                    api_base=self.llms_api_bases["query_eval_model"],
                     private=self.private,
                     **eval_args,
                 )
