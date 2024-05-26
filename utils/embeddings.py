@@ -259,24 +259,26 @@ def load_embeddings(
                 ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
     load_counter = -1
+    timeout = 60
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
         if fi.exists():
             # wait for the worker to be ready otherwise tqdm is irrelevant
             load_counter += 1
-            assert loader_queues[load_counter % n_loader][1].get() == "Waiting"
+            assert loader_queues[load_counter % n_loader][1].get(timeout=timeout) == "Waiting"
             loader_queues[load_counter % n_loader][0].put(fi)
         else:
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
-    assert all(q[1].get() == "Waiting" for q in loader_queues)
+    assert all(q[1].get(timeout=timeout) == "Waiting" for q in loader_queues)
     [q[0].put(False) for q in loader_queues]
-    merged_dbs = [q[1].get() for q in loader_queues]
+    merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
-    assert all(q[1].get() == "Stopped" for q in loader_queues)
+    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
     whi(f"Asking loader workers to shutdown")
-    [t.join() for t in loader_workers]
+    [t.join(timeout=timeout) for t in loader_workers]
+    assert all([not t.is_alive() for t in loader_workers]), "Faiss loader workers failed to stop"
 
     # merge dbs as one
     if merged_dbs and db is None:
@@ -350,7 +352,7 @@ def load_embeddings(
                 assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
                 saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
-            results = [q[1].get() for q in saver_queues]
+            results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter + 1]]
             assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
 
             if not db:
@@ -360,9 +362,10 @@ def load_embeddings(
 
         whi("Waiting for saver workers to finish.")
         [q[0].put((False, None, None, None)) for q in saver_queues]
-        _ = [q[1].get().startswith("Saved ") for q in saver_queues]
-        assert all(_), f"No saved answer from worker: {_}"
-        [t.join() for t in saver_workers]
+        exit_code = [q[1].get(timeout=timeout) for q in saver_queues]
+        assert all(e.startswith("Stopped") for e in exit_code), f"Faiss worker failed to stop: {exit_code}"
+        [t.join(timeout=timeout) for t in saver_workers]
+        assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
     whi("Done saving.")
 
     whi(f"Done creating index in {time.time()-t:.2f}s")
