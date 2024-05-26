@@ -275,6 +275,7 @@ def load_embeddings(
     merged_dbs = [q[1].get() for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get() == "Stopped" for q in loader_queues)
+    whi(f"Asking loader workers to shutdown")
     [t.join() for t in loader_workers]
 
     # merge dbs as one
