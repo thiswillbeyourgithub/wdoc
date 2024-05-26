@@ -16,7 +16,6 @@ from .lazy_lib_importer import lazy_import_statements, lazy_import
 
 exec(lazy_import_statements("""
 from langchain_community.llms import FakeListLLM
-# from langchain_community.chat_models import ChatOpenAI
 from langchain_community.chat_models import ChatLiteLLM
 
 import openai
@@ -80,8 +79,6 @@ def load_llm(
         red(f"private is on so removing {backend.upper()}_API_KEY from environment variables")
         del os.environ[f"{backend.upper()}_API_KEY"]
 
-    # llm = ChatOpenAI(
-            # model_name=modelname.split("/")[-1],
     llm = ChatLiteLLM(
             model_name=modelname,
             verbose=verbose,
