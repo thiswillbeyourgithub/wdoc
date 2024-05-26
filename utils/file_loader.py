@@ -163,9 +163,10 @@ def load_doc(
     if all_unexp_keys:
         red(f"Found unexpected keys in doc kwargs: '{all_unexp_keys}'")
 
-    # shuffle the list of files to load to make
-    # the progress bar more representative
-    to_load = sorted(to_load, key=lambda x: random.random())
+    if "summar" not in task:
+        # shuffle the list of files to load to make
+        # the progress bar more representative
+        to_load = sorted(to_load, key=lambda x: random.random())
 
     # store the file hash in the doc kwarg
     doc_hashes = Parallel(
@@ -179,18 +180,19 @@ def load_doc(
       )
     )
 
-    # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
-    to_load = sorted(
-        to_load,
-        key=lambda x: int(
-            ''.join(
-                filter(
-                    str.isdigit,
-                    doc_hashes[to_load.index(x)],
+    if "summar" not in task:
+        # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
+        to_load = sorted(
+            to_load,
+            key=lambda x: int(
+                ''.join(
+                    filter(
+                        str.isdigit,
+                        doc_hashes[to_load.index(x)],
+                    )
                 )
             )
         )
-    )
 
     # deduplicate files based on hash
     whi("Deduplicating files")
