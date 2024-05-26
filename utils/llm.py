@@ -38,6 +38,7 @@ def load_llm(
     verbose: bool,
     no_llm_cache: bool,
     api_base: Optional[str],
+    private: bool,
     **extra_model_args,
     ) -> ChatLiteLLM:
     """load language model"""
@@ -58,6 +59,9 @@ def load_llm(
 
     if verbose:
         whi("Loading model via litellm")
+
+    if private:
+        assert api_base, "If private is set, api_base must be set too"
     if api_base:
         red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
@@ -67,7 +71,14 @@ def load_llm(
             else:
                 red(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
         else:
-            os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+            if not private:
+                os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
+            else:
+                red(f"Skipped loading of api key in file "
+                    f"'{backend.upper()}_API_KEY.txt' because private is on.")
+    elif private:
+        red(f"private is on so removing {backend.upper()}_API_KEY from environment variables")
+        del os.environ[f"{backend.upper()}_API_KEY"]
 
     # llm = ChatOpenAI(
             # model_name=modelname.split("/")[-1],
@@ -79,6 +90,9 @@ def load_llm(
             api_base=api_base,
             **extra_model_args,
             )
+    if private:
+        assert llm.api_base, "private is set but no api_base for llm were found"
+        assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
     return llm
 
 

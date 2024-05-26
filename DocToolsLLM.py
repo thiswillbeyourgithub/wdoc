@@ -133,6 +133,7 @@ class DocToolsLLM:
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
+        private: bool = False,
         llms_api_bases: Optional[dict] = None,
 
         help: bool = False,
@@ -288,6 +289,12 @@ class DocToolsLLM:
         --chat_memory: bool, default True
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
+
+        --private: bool, default False
+            add extra check that your data will never be sent to another
+            server: for example check that the api_base was modified and used,
+            check that no api keys are used, check that embedding models are
+            local only. It will also use a separate cache from non private.
 
         --no_llm_cache: bool, default False
             disable caching for LLM. All caches are stored in the usual
@@ -512,6 +519,10 @@ class DocToolsLLM:
         if llms_api_bases["model"] == llms_api_bases["eval_llm"] and llms_api_bases["model"]:
             red(f"Setting litellm wide api_base because it's the same for model and eval_llm")
             litellm.api_base = llms_api_bases["model"]
+        assert isinstance(private, bool), "private arg should be a boolean, not {private}"
+        if private:
+            assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
+            assert llms_api_bases["eval_llm"], "private is set but llms_api_bases['eval_llm'] is not set"
 
         if debug:
             llm_verbosity = True
@@ -539,12 +550,16 @@ class DocToolsLLM:
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
+        self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
         self.llms_api_bases = llms_api_bases
         self.import_mode = import_mode
 
         if not no_llm_cache:
-            set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+            if not private:
+                set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+            else:
+                set_llm_cache(SQLiteCache(database_path=cache_dir / "private_langchain.db"))
 
         if modelname in litellm.model_cost:
             self.llm_price = [
@@ -621,6 +636,7 @@ class DocToolsLLM:
             temperature=0,
             verbose=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
+            private=self.private,
         )
 
         # if task is to summarize lots of links, check first if there are
@@ -1106,6 +1122,7 @@ class DocToolsLLM:
             debug=self.debug,
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
+            private=self.private,
             kwargs=self.kwargs,
         )
 
@@ -1380,6 +1397,7 @@ class DocToolsLLM:
                     verbose=self.llm_verbosity,
                     temperature=1,
                     api_base=self.llms_api_bases["eval_llm"],
+                    private=self.private,
                     **eval_args,
                 )
 

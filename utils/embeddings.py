@@ -74,6 +74,7 @@ def load_embeddings(
     debug: bool,
     loaded_docs: Any,
     dollar_limit: Union[int, float],
+    private: bool,
     kwargs: dict,
     ):
     """loads embeddings for each document"""
@@ -88,6 +89,7 @@ def load_embeddings(
     if debug:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
+        assert not private, f"Set private but tried to use openai embeddings"
         if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
             assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
@@ -99,6 +101,7 @@ def load_embeddings(
                 )
 
     elif backend == "huggingface":
+        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransfromers or llamacppembeddings"
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
@@ -129,6 +132,8 @@ def load_embeddings(
             embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
 
     elif backend == "sentencetransfromers":
+        if private:
+            red(f"Private it set and will use sentencetransfromers backend")
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
@@ -140,6 +145,8 @@ def load_embeddings(
                 )
 
     elif backend == "llamacppembeddings":
+        if private:
+            red(f"Private it set and will use llamacppembeddings backend")
         llamacppkwargs = {
             "f16_kv": False,
             "logits_all": False,
@@ -192,6 +199,8 @@ def load_embeddings(
         except Exception:
             pass
     assert "/" not in embed_model_str
+    if private:
+        embed_model_str = "private_" + embed_model_str
 
     lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
     cache_content = list(lfs.yield_keys())
