@@ -134,7 +134,7 @@ class DocToolsLLM:
         chat_memory: bool = True,
         no_llm_cache: bool = False,
         private: bool = False,
-        llms_api_bases: Optional[dict] = None,
+        llms_api_bases: Optional[Union[dict, str]] = None,
 
         help: bool = False,
         h: bool = False,
