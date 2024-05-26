@@ -103,7 +103,7 @@ class DocToolsLLM:
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
         task: str = "query",
-        query: Optional[str] = None,
+        query: Optional[Union[str, bool]] = None,
         filetype: str = "infer",
         embed_model: str = "openai/text-embedding-3-small",
         # embed_model: str =  "sentencetransformers/BAAI/bge-m3",
