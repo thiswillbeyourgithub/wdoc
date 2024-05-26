@@ -280,7 +280,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     temp_file = Path(str(pp_file.absolute()) + ".temp")
     json.dump(prev_questions, temp_file.open("w"), indent=4)
     assert temp_file.exists()
-    pp_file.unlink()
+    pp_file.unlink(missing_ok=True)
     temp_file.rename(pp_file)
 
     return user_input, settings
