@@ -101,7 +101,7 @@ def load_embeddings(
                 )
 
     elif backend == "huggingface":
-        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransfromers or llamacppembeddings"
+        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers or llamacppembeddings"
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
@@ -131,9 +131,9 @@ def load_embeddings(
             #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
             embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
 
-    elif backend == "sentencetransfromers":
+    elif backend == "sentencetransformers":
         if private:
-            red(f"Private it set and will use sentencetransfromers backend")
+            red(f"Private it set and will use sentencetransformers backend")
         embeddings = RollingWindowEmbeddings(
                 model_name=embed_model,
                 encode_kwargs={
