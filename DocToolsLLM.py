@@ -796,7 +796,7 @@ class DocToolsLLM:
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
-        ntfy(f"Conservative estimate of the OpenAI cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+        ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
         if estimate_dol > self.dollar_limit:
             raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
 
