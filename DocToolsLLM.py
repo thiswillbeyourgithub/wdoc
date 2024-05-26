@@ -106,7 +106,7 @@ class DocToolsLLM:
         query: Optional[str] = None,
         filetype: str = "infer",
         embed_model: str = "openai/text-embedding-3-small",
-        # embed_model: str =  "BAAI/bge-m3",
+        # embed_model: str =  "sentencetransformers/BAAI/bge-m3",
         # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
         # embed_model: str =  "sentencetransformers/distiluse-base-multilingual-cased-v1",
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
@@ -482,7 +482,7 @@ class DocToolsLLM:
         if filetype == "infer":
             assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
+        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if filetype == "string":
