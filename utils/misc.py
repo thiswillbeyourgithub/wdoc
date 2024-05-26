@@ -34,13 +34,11 @@ hashdoc_cache_dir.mkdir(exist_ok=True)
 hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 
 
-@optional_typecheck
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
-@optional_typecheck
 def file_hasher(doc: dict) -> str:
     """used to hash a file's content, as describe by a dict
     A caching mechanism is used to avoid recomputing hash of file that
@@ -48,9 +46,10 @@ def file_hasher(doc: dict) -> str:
     """
     if "path" in doc and Path(doc["path"]).exists():
         file = Path(doc["path"])
+        stats = file.stat()
         return _file_hasher(
             abs_path=str(file.absolute()),
-            stats=list(file.stat()),
+            stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
         )
     return None
 
