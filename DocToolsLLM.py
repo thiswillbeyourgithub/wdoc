@@ -1427,7 +1427,7 @@ class DocToolsLLM:
             if not self.no_llm_cache:
                 eval_cache_wrapper = doc_eval_cache.cache
             else:
-                eval_cache_wrapper = wraps
+                def eval_cache_wrapper(func): return func
 
             @chain
             @optional_typecheck
