@@ -386,7 +386,7 @@ def faiss_loader(
         if fi is False:
             qout.put(db)
             qout.put("Stopped")
-            return
+            break
         temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
         if not db:
             db = temp
@@ -397,6 +397,7 @@ def faiss_loader(
                 red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
                 [p.unlink() for p in fi.iterdir()]
                 fi.rmdir()
+    return
 
 
 @optional_typecheck
@@ -410,7 +411,7 @@ def faiss_saver(
         message, docid, document, embedding = qin.get()
         if message is False:
             qout.put("Stopped")
-            return
+            break
 
         file = (path / str(document.metadata["hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
@@ -421,6 +422,7 @@ def faiss_saver(
                 normalize_L2=True)
         db.save_local(file)
         qout.put(f"Saved {docid}")
+    return
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
