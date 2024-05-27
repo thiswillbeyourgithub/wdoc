@@ -36,10 +36,16 @@ inference_rules = {
     "url": ["^http"],
     "local_html": [r"^(?!http).*\.html?$"],
     "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
+
     "json_list": [".*.json"],
 }
 
-recursive_types = ["recursive", "json_list", "link_file", "youtube_playlist", "infer"]
+recursive_types = [
+    "recursive",
+    "json_list",
+    "link_file",
+    "youtube_playlist",
+    "infer"]
 
 # compile the inference rules as regex
 for k, v in inference_rules.items():
