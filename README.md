@@ -38,8 +38,8 @@
 * **html files** (useful for website dumps)
 * **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
 * **epub files**
-* **Microsoft Powerpoint files**
-* **Microsoft Word documents**
+* **Microsoft Powerpoint files** (.ppt, .pptx, .odp, ...)
+* **Microsoft Word documents** (.doc, .docx, .odt, ...)
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
 
 #### Recursive types
