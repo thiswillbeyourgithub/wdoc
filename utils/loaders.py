@@ -41,6 +41,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
+from langchain_community.document_loaders import UnstructuredPowerPointLoader
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 
@@ -208,6 +211,14 @@ def load_one_doc(
     elif filetype == "epub":
         assert kwargs['file_hash']
         docs = load_epub(**kwargs)
+
+    elif filetype == "powerpoint":
+        assert kwargs['file_hash']
+        docs = load_powerpoint(**kwargs)
+
+    elif filetype == "word":
+        assert kwargs['file_hash']
+        docs = load_word_document(**kwargs)
 
     elif filetype == "url":
         docs = load_url(**kwargs)
@@ -884,6 +895,43 @@ def load_epub(
             metadata={},
         )
     ]
+    return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_powerpoint(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    loader = UnstructuredPowerPointLoader(path)
+    content = loader.load()
+
+    docs = [
+        Document(
+            page_content=content,
+            metadata={},
+        )
+    ]
+    return docs
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_word_document(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    try:
+        loader = Docx2txtLoader(path)
+        content = loader.load()
+        docs = [Document(page_content=content)]
+        check_docs_tkn_length(docs, path)
+    except Exception as err:
+        red(f"Error when loading word document with docx2txt, trying with unstructured: '{err}'")
+        loader = UnstructuredWordDocumentLoader(path)
+        content = loader.load()
+        docs = [Document(page_content=content)]
+
     return docs
 
 @optional_typecheck
