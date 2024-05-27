@@ -245,7 +245,7 @@ def load_doc(
     t_load = time.time()
     doc_lists = Parallel(
         n_jobs=n_jobs,
-        backend="threading",
+        backend="loky",
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=debug,
