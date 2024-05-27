@@ -45,7 +45,8 @@ recursive_types = [
     "json_list",
     "link_file",
     "youtube_playlist",
-    "infer"]
+    "infer"
+]
 
 # compile the inference rules as regex
 for k, v in inference_rules.items():
