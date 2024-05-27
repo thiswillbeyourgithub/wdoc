@@ -1,3 +1,4 @@
+import time
 import os
 from typing import List, Tuple
 from functools import wraps
@@ -241,6 +242,7 @@ def load_doc(
             return None
 
     docs = []
+    t_load = time.time()
     doc_lists = Parallel(
         n_jobs=n_jobs,
         backend="threading",
@@ -255,6 +257,7 @@ def load_doc(
             colour="magenta",
         )
     )
+    red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     n_failed = len([d for d in doc_lists if d is None])
     if n_failed:
         red(f"Number of failed documents: {n_failed}")
