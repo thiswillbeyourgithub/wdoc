@@ -251,7 +251,7 @@ def load_doc(
         debug=debug,
         **d,
         ) for d in tqdm(
-            to_load,  # TODO
+            to_load,
             desc="Loading",
             unit="doc",
             colour="magenta",
