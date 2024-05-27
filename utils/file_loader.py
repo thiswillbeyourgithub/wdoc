@@ -70,6 +70,7 @@ doc_kwargs_keys = [
     "youtube_language",
     "youtube_translation",
     "load_functions",
+    "source_tag",
 ]
 
 

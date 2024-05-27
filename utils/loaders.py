@@ -150,6 +150,7 @@ def load_one_doc(
     task: str,
     debug: bool,
     filetype: str,
+    source_tag: str = None,
     **kwargs,
     ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -242,6 +243,14 @@ def load_one_doc(
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
+        if source_tag:
+            if "source_tag" not in docs[i].metadata:
+                docs[i].metadata["source_tag"] = source_tag
+            else:
+                docs[i].metadata["source_tag"] = docs[i].metadata["source_tag"].replace("unset", "").strip()
+                docs[i].metadata["source_tag"] += f" {source_tag}"
+        else:
+            docs[i].metadata["source_tag"] = "unset"
         if "Author" in docs[i].metadata:
             docs[i].metadata["author"] = docs[i].metadata["Author"]
             del docs[i].metadata["Author"]

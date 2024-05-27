@@ -91,6 +91,7 @@ extra_args = {
     "load_functions": List[str],
     "filter_metadata": Union[List[str], str],
     # "filter_content": Union[List[str, str]],
+    "source_tag": str,
 }
 
 class DocToolsLLM:
@@ -430,6 +431,10 @@ class DocToolsLLM:
             specify lambda functions that modify the text before running
             BeautifulSoup. Useful to decode html stored in .js files.
             Do tell me if you want more of this.
+
+        --source_tag: str, default None
+            a string that will be added to the document metadata at the
+            key "source_tag". Useful when using filetype combination.
 
         Runtime flags
         -------------
