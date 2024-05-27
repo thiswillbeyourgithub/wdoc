@@ -37,6 +37,7 @@
 * **string** (just paste your text into the app)
 * **html files** (useful for website dumps)
 * **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
+* **epub files**
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
 
 #### Recursive types

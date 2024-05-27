@@ -40,6 +40,7 @@ from langchain.text_splitter import TextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 
@@ -203,6 +204,10 @@ def load_one_doc(
     elif filetype == "local_audio":
         assert kwargs['file_hash']
         docs = load_local_audio(**kwargs)
+
+    elif filetype == "epub":
+        assert kwargs['file_hash']
+        docs = load_epub(**kwargs)
 
     elif filetype == "url":
         docs = load_url(**kwargs)
@@ -859,6 +864,24 @@ def load_local_audio(
                 "language": content["language"],
                 "source": path,
             },
+        )
+    ]
+    return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_epub(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    loader = UnstructuredEPubLoader(path)
+    content = loader.load()
+
+    docs = [
+        Document(
+            page_content=content,
+            metadata={},
         )
     ]
     return docs

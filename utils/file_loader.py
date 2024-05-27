@@ -36,6 +36,7 @@ inference_rules = {
     "url": ["^http"],
     "local_html": [r"^(?!http).*\.html?$"],
     "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
+    "epub": [".epub$"],
 
     "json_list": [".*.json"],
 }
