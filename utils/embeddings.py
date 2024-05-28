@@ -371,9 +371,9 @@ def load_embeddings(
                 red(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
         assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
-    whi("Saving indexes took {time.time()-ts:.2f}s")
+    whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
-    whi(f"Done creating index (total time: {time.time()-ti:.2f}s")
+    whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
     # saving embeddings
     db.save_local(save_embeds_as)
