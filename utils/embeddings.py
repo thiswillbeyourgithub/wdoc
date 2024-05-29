@@ -368,7 +368,7 @@ def load_embeddings(
             [q[0].put((False, None, None, None)) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
             exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
             if not all(e.startswith("Stopped") for e in exit_code):
-                red(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
+                whi(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
         assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
     whi(f"Saving indexes took {time.time()-ts:.2f}s")
