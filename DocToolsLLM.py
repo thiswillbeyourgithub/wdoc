@@ -122,7 +122,7 @@ class DocToolsLLM:
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
-        query_relevancy: float = 0.3,
+        query_relevancy: float = 0.1,
         n_recursive_summary: int = 0,
 
         n_summaries_target: int = -1,
@@ -247,7 +247,7 @@ class DocToolsLLM:
             For eval llm that don't support setting 'n', multiple
             completions will be called, which costs more.
 
-        --query_relevancy: float, default 0.3
+        --query_relevancy: float, default 0.1
             threshold underwhich a document cannot be considered relevant by
             embeddings alone.
 
