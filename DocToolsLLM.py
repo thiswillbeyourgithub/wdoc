@@ -1340,6 +1340,12 @@ class DocToolsLLM:
                 base_compressor=pipeline, base_retriever=retriever
             )
 
+        if self.query_filter:
+            assert any(
+                self.query_filter(d)
+                for d in retriever.vectorstore.docstore._dict.values()
+            ), "No documents in the vectorstore match the given filter"
+
         if self.task == "search":
             docs = retriever.get_relevant_documents(query)
             if len(docs) < self.cli_settings["top_k"]:
