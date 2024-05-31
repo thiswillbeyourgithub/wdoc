@@ -55,7 +55,6 @@ def file_hasher(doc: dict) -> str:
         )
     else:
         return hasher(json.dumps(doc))
-    return None
 
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[int]) -> str:
