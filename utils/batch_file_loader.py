@@ -387,6 +387,8 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
                 meta[k] = v
         if "file_loader_n_jobs" in meta:
             del meta["file_loader_n_jobs"]
+        if meta["path"] == load_path:
+            del meta["path"]
         doclist[i] = meta
     return doclist
 
