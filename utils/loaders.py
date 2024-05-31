@@ -268,7 +268,7 @@ def load_one_doc(
                     docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
                     docs[i].metadata["title"] = "Untitled"
-                    red(f"Could not get title from {path}")
+                    red(f"Could not get title from doc '{kwargs}'")
         if (
             "title" in kwargs
             and kwargs["title"] != docs[i].metadata["title"]
@@ -310,8 +310,6 @@ def load_one_doc(
            docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).absolute())
 
     assert docs, "empty list of loaded documents!"
-    docs = [d for d in docs if d.page_content]
-    assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
 # Convenience functions #########################
