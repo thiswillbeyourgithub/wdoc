@@ -700,7 +700,7 @@ class DocToolsLLM:
 
         # loading documents
         if not load_embeds_from:
-            self.loaded_docs = load_doc(
+            self.loaded_docs = batch_load_doc(
                 filetype=self.filetype,
                 debug=self.debug,
                 task=self.task,
