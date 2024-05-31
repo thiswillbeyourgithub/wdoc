@@ -250,7 +250,10 @@ def batch_load_doc(
         except Exception as err:
             filetype = kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {kwargs}")
-            return None
+            if debug:
+                raise
+            else:
+                return None
 
     docs = []
     t_load = time.time()
