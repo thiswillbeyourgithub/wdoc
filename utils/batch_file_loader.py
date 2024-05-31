@@ -161,6 +161,7 @@ def batch_load_doc(
 
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
+        del kwargs["file_loader_n_jobs"]
     else:
         n_jobs = 10
     if len(to_load) == 1 or debug:
@@ -339,8 +340,6 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = doc_kwargs["recursed_filetype"]
         del doc_kwargs["recursed_filetype"]
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         if "pattern" in doc_kwargs:
             del doc_kwargs["pattern"]
         doclist[i] = doc_kwargs
@@ -385,8 +384,6 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         for k, v in load_kwargs.items():
             if k not in meta:
                 meta[k] = v
-        if "file_loader_n_jobs" in meta:
-            del meta["file_loader_n_jobs"]
         if meta["path"] == load_path:
             del meta["path"]
         doclist[i] = meta
@@ -444,8 +441,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "infer"
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 
@@ -485,8 +480,6 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 
