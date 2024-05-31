@@ -1346,10 +1346,146 @@ class DocToolsLLM:
                 for d in retriever.vectorstore.docstore._dict.values()
             ), "No documents in the vectorstore match the given filter"
 
+        if " // " in query:
+            sp = query.split(" // ")
+            assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
+            query_fe = sp[0].strip()
+            query_an = sp[1].strip()
+        else:
+            query_fe, query_an = copy.copy(query), copy.copy(query)
+        whi(f"Query for the embeddings: {query_fe}")
+        whi(f"Question to answer: {query_an}")
+
+        # the eval doc chain needs its own caching
+        if not self.no_llm_cache:
+            eval_cache_wrapper = doc_eval_cache.cache
+        else:
+            def eval_cache_wrapper(func): return func
+
+        @chain
+        @optional_typecheck
+        @eval_cache_wrapper
+        def evaluate_doc_chain(
+                inputs: dict,
+                query_nb: int = self.query_eval_check_number,
+                eval_model_name: str = self.query_eval_modelname,
+            ) -> List[str]:
+            if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
+                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                outputs = [gen.text for gen in out.generations]
+                assert outputs, "No generations found by query eval llm"
+                outputs = [parse_eval_output(o) for o in outputs]
+                new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                new_c = out.llm_output["token_usage"]["completion_tokens"]
+            else:
+                outputs = []
+                new_p = 0
+                new_c = 0
+                async def eval(inputs):
+                    return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                outs = [
+                    eval(inputs)
+                    for i in range(self.query_eval_check_number)
+                ]
+                try:
+                    loop = asyncio.get_event_loop()
+                except:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                outs = loop.run_until_complete(asyncio.gather(*outs))
+                for out in outs:
+                    assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
+                    outputs.append(out.generations[0].text)
+                    new_p += out.llm_output["token_usage"]["prompt_tokens"]
+                    new_c += out.llm_output["token_usage"]["completion_tokens"]
+                assert outputs, "No generations found by query eval llm"
+                outputs = [parse_eval_output(o) for o in outputs]
+
+            assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs"
+
+            self.eval_llm.callbacks[0].prompt_tokens += new_p
+            self.eval_llm.callbacks[0].completion_tokens += new_c
+            self.eval_llm.callbacks[0].total_tokens += new_p + new_c
+            return outputs
+
         if self.task == "search":
-            docs = retriever.get_relevant_documents(query)
-            if len(docs) < self.cli_settings["top_k"]:
-                red(f"Only found {len(docs)} relevant documents")
+            if self.query_eval_modelname:
+                # uses in most places to increase concurrency limit
+                multi = {"max_concurrency": 50 if not self.debug else 1}
+
+                # answer 0 or 1 if the document is related
+                if not hasattr(self, "eval_llm"):
+                    self.eval_llm_params = litellm.get_supported_openai_params(
+                        model=self.query_eval_modelname,
+                        custom_llm_provider=self.query_eval_modelbackend,
+                    )
+                    eval_args = {}
+                    if "n" in self.eval_llm_params:
+                        eval_args["n"] = self.query_eval_check_number
+                    else:
+                        red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
+                    if "max_tokens" in self.eval_llm_params:
+                        eval_args["max_tokens"] = 2
+                    else:
+                        red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
+                    self.eval_llm = load_llm(
+                        modelname=self.query_eval_modelname,
+                        backend=self.query_eval_modelbackend,
+                        no_llm_cache=self.no_llm_cache,
+                        verbose=self.llm_verbosity,
+                        temperature=1,
+                        api_base=self.llms_api_bases["query_eval_model"],
+                        private=self.private,
+                        **eval_args,
+                    )
+
+                # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+                @chain
+                def retrieve_documents(inputs):
+                    return {
+                            "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                            "question_to_answer": inputs["question_to_answer"],
+                    }
+                    return inputs
+
+                refilter_documents =  {
+                    "filtered_docs": (
+                            RunnablePassthrough.assign(
+                                evaluations=RunnablePassthrough.assign(
+                                    doc=lambda inputs: inputs["unfiltered_docs"],
+                                    q=lambda inputs: [inputs["question_to_answer"] for i in range(len(inputs["unfiltered_docs"]))],
+                                    )
+                                | RunnablePassthrough.assign(
+                                    inputs=lambda inputs: [
+                                        {"doc":d.page_content, "q":q}
+                                        for d, q in zip(inputs["doc"], inputs["q"])])
+                                    | itemgetter("inputs")
+                                    | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
+                        )
+                        | refilter_docs
+                    ),
+                    "unfiltered_docs": itemgetter("unfiltered_docs"),
+                    "question_to_answer": itemgetter("question_to_answer")
+                }
+                rag_chain = (
+                    retrieve_documents
+                    | refilter_documents
+                )
+                output = rag_chain.invoke(
+                    {
+                        "question_for_embedding": query_fe,
+                        "question_to_answer": query_an,
+                    }
+                )
+                docs = output["filtered_docs"]
+
+                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
+            else:
+
+                docs = retriever.get_relevant_documents(query)
+                if len(docs) < self.cli_settings["top_k"]:
+                    red(f"Only found {len(docs)} relevant documents")
 
             whi("\n\nSources:")
             anki_cid = []
@@ -1394,16 +1530,6 @@ class DocToolsLLM:
                         | self.llm
                         | StrOutputParser(),
                 }
-
-            if " // " in query:
-                sp = query.split(" // ")
-                assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
-                query_fe = sp[0].strip()
-                query_an = sp[1].strip()
-            else:
-                query_fe, query_an = copy.copy(query), copy.copy(query)
-            whi(f"Query for the embeddings: {query_fe}")
-            whi(f"Question to answer: {query_an}")
 
             # uses in most places to increase concurrency limit
             multi = {"max_concurrency": 50 if not self.debug else 1}
@@ -1631,7 +1757,7 @@ class DocToolsLLM:
 
             red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
-            red(f"Number of documents found relevant by llm: {len(output['relevant_filtered_docs'])}")
+            red(f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
             if chain_time:
                 red(f"Time took by the chain: {chain_time:.2f}s")
 
