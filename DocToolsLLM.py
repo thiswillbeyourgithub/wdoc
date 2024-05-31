@@ -1508,7 +1508,7 @@ class DocToolsLLM:
                 if open_answ == "debug":
                     breakpoint()
                 elif open_answ in ["y", "yes"]:
-                    whi("Openning anki.")
+                    whi("Opening anki.")
                     query = f"cid:{','.join(anki_cid)}"
                     ankiconnect(
                             action="guiBrowse",
