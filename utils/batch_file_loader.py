@@ -75,7 +75,7 @@ doc_kwargs_keys = [
 
 
 @optional_typecheck
-def load_doc(
+def batch_load_doc(
     filetype: str,
     debug: bool,
     task: str,

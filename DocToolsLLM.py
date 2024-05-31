@@ -22,7 +22,7 @@ except Exception as err:
     print(f"Couldn't import ftlangdetect: '{err}'")
 
 from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.file_loader import load_doc
+from utils.batch_file_loader import batch_load_doc
 from utils.loaders import (
     get_tkn_length,
     average_word_length,
