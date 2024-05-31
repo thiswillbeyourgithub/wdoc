@@ -157,6 +157,7 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     text_splitter = get_splitter(task)
+    file_hash = kwargs["file_hash"]
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
@@ -169,10 +170,10 @@ def load_one_doc(
         )
 
     elif filetype == "pdf":
-        assert kwargs['file_hash']
         docs = load_pdf(
             debug=debug,
             text_splitter=text_splitter,
+            file_hash=file_hash,
             **kwargs,
         )
 
@@ -194,32 +195,25 @@ def load_one_doc(
         docs = load_string()
 
     elif filetype == "txt" or filetype == "text":
-        assert kwargs['file_hash']
-        docs = load_txt(**kwargs)
+        docs = load_txt(file_hash=file_hash, **kwargs)
 
     elif filetype == "local_html":
-        assert kwargs['file_hash']
-        docs = load_local_html(**kwargs)
+        docs = load_local_html(file_hash=file_hash, **kwargs)
 
     elif filetype == "logseq_markdown":
-        assert kwargs['file_hash']
-        docs = load_logseq_markdown(debug=debug, **kwargs,)
+        docs = load_logseq_markdown(debug=debug, file_hash=file_hash, **kwargs,)
 
     elif filetype == "local_audio":
-        assert kwargs['file_hash']
-        docs = load_local_audio(**kwargs)
+        docs = load_local_audio(file_hash=file_hash, **kwargs)
 
     elif filetype == "epub":
-        assert kwargs['file_hash']
-        docs = load_epub(**kwargs)
+        docs = load_epub(file_hash=file_hash, **kwargs)
 
     elif filetype == "powerpoint":
-        assert kwargs['file_hash']
-        docs = load_powerpoint(**kwargs)
+        docs = load_powerpoint(file_hash=file_hash, **kwargs)
 
     elif filetype == "word":
-        assert kwargs['file_hash']
-        docs = load_word_document(**kwargs)
+        docs = load_word_document(file_hash=file_hash, **kwargs)
 
     elif filetype == "url":
         docs = load_url(**kwargs)
