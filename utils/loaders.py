@@ -701,9 +701,9 @@ def load_anki(
 
 
     # delete temporary db file
-    Path(new_db_path).unlink()
-    Path(new_db_path + "-shm").unlink(missing_ok=True)
-    Path(new_db_path + "-wal").unlink(missing_ok=True)
+    new_db_path.unlink()
+    Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
+    Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
     return docs
 
 @optional_typecheck
