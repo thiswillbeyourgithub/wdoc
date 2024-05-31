@@ -240,7 +240,7 @@ def load_embeddings(
 
     embeddings_cache = cache_dir / "faiss_embeddings" / embed_model_str
     embeddings_cache.mkdir(exist_ok=True)
-    t = time.time()
+    ti = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
 
     in_cache = [p for p in embeddings_cache.iterdir()]
@@ -315,6 +315,7 @@ def load_embeddings(
             raise SystemExit()
 
     # create a faiss index for batch of documents
+    ts = time.time()
     if to_embed:
         batch_size = 1000
         batches = [
@@ -367,12 +368,12 @@ def load_embeddings(
             [q[0].put((False, None, None, None)) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
             exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
             if not all(e.startswith("Stopped") for e in exit_code):
-                red(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
+                whi(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
         assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
-    whi("Done saving.")
+    whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
-    whi(f"Done creating index in {time.time()-t:.2f}s")
+    whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
     # saving embeddings
     db.save_local(save_embeds_as)

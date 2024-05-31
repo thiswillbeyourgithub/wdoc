@@ -43,6 +43,8 @@ def file_hasher(doc: dict) -> str:
     """used to hash a file's content, as describe by a dict
     A caching mechanism is used to avoid recomputing hash of file that
     have the same path and metadata.
+    If the doc dict does not contain a path, the hash of the dict will be
+    returned.
     """
     if "path" in doc and Path(doc["path"]).exists():
         file = Path(doc["path"])
@@ -51,7 +53,8 @@ def file_hasher(doc: dict) -> str:
             abs_path=str(file.absolute()),
             stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
         )
-    return None
+    else:
+        return hasher(json.dumps(doc))
 
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[int]) -> str:

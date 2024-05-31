@@ -5,7 +5,10 @@ from langchain.docstore.document import Document
 try:
     from ftlangdetect import detect as language_detect
 except Exception as err:
-    print(f"Couldn't import ftlangdetect: '{err}'")
+    try:
+        from langdetect import detect as language_detect
+    except Exception as err:
+        print(f"Couldn't import ftlangdetect not langdetect: '{err}'")
 try:
     import pdftotext
 except Exception as err:
@@ -40,6 +43,10 @@ from langchain.text_splitter import TextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredEPubLoader
+from langchain_community.document_loaders import UnstructuredPowerPointLoader
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 
@@ -146,6 +153,8 @@ def load_one_doc(
     task: str,
     debug: bool,
     filetype: str,
+    file_hash: str,
+    source_tag: str = None,
     **kwargs,
     ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -164,10 +173,10 @@ def load_one_doc(
         )
 
     elif filetype == "pdf":
-        assert kwargs['file_hash']
         docs = load_pdf(
             debug=debug,
             text_splitter=text_splitter,
+            file_hash=file_hash,
             **kwargs,
         )
 
@@ -177,32 +186,37 @@ def load_one_doc(
             docs = load_anki(random_val=random_val, **kwargs)
         except:
             # delete the failed db files from cache
-            name = f"{anki_profile}".replace(" ", "_")
+            name = kwargs['anki_profile'].replace(" ", "_")
             new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
-            Path(new_db_path).unlink(missing_ok=True)
-            Path(new_db_path + "-shm").unlink(missing_ok=True)
-            Path(new_db_path + "-wal").unlink(missing_ok=True)
+            new_db_path.unlink(missing_ok=True)
+            Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
+            Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
             raise
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
-    elif filetype == "txt":
-        assert kwargs['file_hash']
-        docs = load_txt(**kwargs)
+    elif filetype == "txt" or filetype == "text":
+        docs = load_txt(file_hash=file_hash, **kwargs)
 
     elif filetype == "local_html":
-        assert kwargs['file_hash']
-        docs = load_local_html(**kwargs)
+        docs = load_local_html(file_hash=file_hash, **kwargs)
 
     elif filetype == "logseq_markdown":
-        assert kwargs['file_hash']
-        docs = load_logseq_markdown(debug=debug, **kwargs,)
+        docs = load_logseq_markdown(debug=debug, file_hash=file_hash, **kwargs,)
 
     elif filetype == "local_audio":
-        assert kwargs['file_hash']
-        docs = load_local_audio(**kwargs)
+        docs = load_local_audio(file_hash=file_hash, **kwargs)
+
+    elif filetype == "epub":
+        docs = load_epub(file_hash=file_hash, **kwargs)
+
+    elif filetype == "powerpoint":
+        docs = load_powerpoint(file_hash=file_hash, **kwargs)
+
+    elif filetype == "word":
+        docs = load_word_document(file_hash=file_hash, **kwargs)
 
     elif filetype == "url":
         docs = load_url(**kwargs)
@@ -212,7 +226,7 @@ def load_one_doc(
 
     docs = text_splitter.transform_documents(docs)
 
-    if filetype not in ["logseq_markdown", "anki"]:
+    if filetype not in ["logseq_markdown", "anki", "pdf"]:
         check_docs_tkn_length(docs, filetype)
 
     # add and format metadata
@@ -226,6 +240,14 @@ def load_one_doc(
         # fix text just in case
         docs[i].page_content = ftfy.fix_text(docs[i].page_content)
 
+        if source_tag:
+            if "source_tag" not in docs[i].metadata:
+                docs[i].metadata["source_tag"] = source_tag
+            else:
+                docs[i].metadata["source_tag"] = docs[i].metadata["source_tag"].replace("unset", "").strip()
+                docs[i].metadata["source_tag"] += f" {source_tag}"
+        else:
+            docs[i].metadata["source_tag"] = "unset"
         if "Author" in docs[i].metadata:
             docs[i].metadata["author"] = docs[i].metadata["Author"]
             del docs[i].metadata["Author"]
@@ -249,7 +271,7 @@ def load_one_doc(
                     docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
                     docs[i].metadata["title"] = "Untitled"
-                    red(f"Could not get title from {path}")
+                    red(f"Could not get title from doc '{kwargs}'")
         if (
             "title" in kwargs
             and kwargs["title"] != docs[i].metadata["title"]
@@ -291,8 +313,6 @@ def load_one_doc(
            docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).absolute())
 
     assert docs, "empty list of loaded documents!"
-    docs = [d for d in docs if d.page_content]
-    assert docs, "empty list of loaded documents after removing empty docs!"
     return docs
 
 # Convenience functions #########################
@@ -682,9 +702,9 @@ def load_anki(
 
 
     # delete temporary db file
-    Path(new_db_path).unlink()
-    Path(new_db_path + "-shm").unlink(missing_ok=True)
-    Path(new_db_path + "-wal").unlink(missing_ok=True)
+    new_db_path.unlink()
+    Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
+    Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
     return docs
 
 @optional_typecheck
@@ -861,6 +881,61 @@ def load_local_audio(
             },
         )
     ]
+    return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_epub(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    loader = UnstructuredEPubLoader(path)
+    content = loader.load()
+
+    docs = [
+        Document(
+            page_content=content,
+            metadata={},
+        )
+    ]
+    return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_powerpoint(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    loader = UnstructuredPowerPointLoader(path)
+    content = loader.load()
+
+    docs = [
+        Document(
+            page_content=content,
+            metadata={},
+        )
+    ]
+    return docs
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_word_document(
+    path: str,
+    file_hash: str,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    try:
+        loader = Docx2txtLoader(path)
+        content = loader.load()
+        docs = [Document(page_content=content)]
+        check_docs_tkn_length(docs, path)
+    except Exception as err:
+        red(f"Error when loading word document with docx2txt, trying with unstructured: '{err}'")
+        loader = UnstructuredWordDocumentLoader(path)
+        content = loader.load()
+        docs = [Document(page_content=content)]
+
     return docs
 
 @optional_typecheck

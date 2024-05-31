@@ -1,3 +1,4 @@
+import time
 import os
 from typing import List, Tuple
 from functools import wraps
@@ -29,15 +30,26 @@ inference_rules = {
     "youtube": ["youtube", "invidi"],
     "logseq_markdown": [".*logseq.*.md"],
     "txt": [".txt$", ".md$"],
+    "text": [".txt$", ".md$"],
     "online_pdf": ["^http.*pdf.*"],
     "pdf": [".*pdf$"],
     "url": ["^http"],
     "local_html": [r"^(?!http).*\.html?$"],
     "local_audio": [r".*(mp3|m4a|ogg|flac)$"],
+    "epub": [".epub$"],
+    "powerpoint": [".ppt$", ".pptx$", ".odp$"],
+    "word": [".doc$", ".docx$", ".odt$"],
+
     "json_list": [".*.json"],
 }
 
-recursive_types = ["recursive", "json_list", "link_file", "youtube_playlist", "infer"]
+recursive_types = [
+    "recursive",
+    "json_list",
+    "link_file",
+    "youtube_playlist",
+    "infer"
+]
 
 # compile the inference rules as regex
 for k, v in inference_rules.items():
@@ -58,11 +70,12 @@ doc_kwargs_keys = [
     "youtube_language",
     "youtube_translation",
     "load_functions",
+    "source_tag",
 ]
 
 
 @optional_typecheck
-def load_doc(
+def batch_load_doc(
     filetype: str,
     debug: bool,
     task: str,
@@ -84,7 +97,7 @@ def load_doc(
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
         for ild, load_kwargs in enumerate(to_load):
-            if not ("path" in load_kwargs or load_kwargs["path"]):
+            if not ("path" in load_kwargs and load_kwargs["path"]):
                 continue
             load_filetype = load_kwargs["filetype"]
 
@@ -237,23 +250,28 @@ def load_doc(
         except Exception as err:
             filetype = kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {kwargs}")
-            return None
+            if debug:
+                raise
+            else:
+                return None
 
     docs = []
+    t_load = time.time()
     doc_lists = Parallel(
         n_jobs=n_jobs,
-        backend="threading",
+        backend="loky",
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=debug,
         **d,
         ) for d in tqdm(
-            to_load,  # TODO
+            to_load,
             desc="Loading",
             unit="doc",
             colour="magenta",
         )
     )
+    red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     n_failed = len([d for d in doc_lists if d is None])
     if n_failed:
         red(f"Number of failed documents: {n_failed}")
@@ -369,6 +387,8 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
                 meta[k] = v
         if "file_loader_n_jobs" in meta:
             del meta["file_loader_n_jobs"]
+        if meta["path"] == load_path:
+            del meta["path"]
         doclist[i] = meta
     return doclist
 
