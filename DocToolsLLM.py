@@ -1487,21 +1487,24 @@ class DocToolsLLM:
                 if len(docs) < self.cli_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
-            whi("\n\nSources:")
+
+            md_printer("\n\n# Documents")
             anki_cid = []
-            for doc in docs:
-                whi("  * content:")
+            to_print = ""
+            for id, doc in enumerate(docs):
+                to_print += f"## Document #{id + 1}\n"
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
-                whi(f"{wrapped:>10}")
+                to_print += "```\n" + wrapped + "\n ```\n"
                 for k, v in doc.metadata.items():
-                    yel(f"    * {k}: {v}")
-                print("\n")
+                    to_print += f"* **{k}**: `{v}`\n"
+                to_print += "\n"
                 if "anki_cid" in doc.metadata:
                     cid_str = str(doc.metadata["anki_cid"]).split(" ")
                     for cid in cid_str:
                         if cid not in anki_cid:
                             anki_cid.append(cid)
+            md_printer(to_print)
 
             if anki_cid:
                 open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cid})\n> ")
