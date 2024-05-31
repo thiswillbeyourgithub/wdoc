@@ -184,9 +184,9 @@ def load_one_doc(
             # delete the failed db files from cache
             name = kwargs['anki_profile'].replace(" ", "_")
             new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
-            Path(new_db_path).unlink(missing_ok=True)
-            Path(new_db_path + "-shm").unlink(missing_ok=True)
-            Path(new_db_path + "-wal").unlink(missing_ok=True)
+            new_db_path.unlink(missing_ok=True)
+            Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
+            Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
             raise
 
     elif filetype == "string":
