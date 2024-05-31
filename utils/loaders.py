@@ -150,6 +150,7 @@ def load_one_doc(
     task: str,
     debug: bool,
     filetype: str,
+    file_hash: str,
     source_tag: str = None,
     **kwargs,
     ) -> List[Document]:
@@ -157,7 +158,6 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     text_splitter = get_splitter(task)
-    file_hash = kwargs["file_hash"]
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
