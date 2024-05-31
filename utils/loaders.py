@@ -5,7 +5,10 @@ from langchain.docstore.document import Document
 try:
     from ftlangdetect import detect as language_detect
 except Exception as err:
-    print(f"Couldn't import ftlangdetect: '{err}'")
+    try:
+        from langdetect import detect as language_detect
+    except Exception as err:
+        print(f"Couldn't import ftlangdetect not langdetect: '{err}'")
 try:
     import pdftotext
 except Exception as err:

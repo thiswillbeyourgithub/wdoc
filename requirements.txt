@@ -21,17 +21,21 @@ lazy_import >= 0.2.2
 typeguard >= 4.2.1
 platformdirs >= 4.2.2
 pyfiglet >= 1.0.2   # banner
+dill >= 0.3.7
 
 # Loaders:
 docx2txt >= 0.8  # word documents
 pandoc >= 2.3 # epub
 unstructured>=0.6.2  # many file formats
+ankipandas>=0.3.13  # anki
+tldextract>=3.4.1  # url
+youtube_dl
+goose3 >= 3.1.16
 # buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
 # fasttext-langdetect>=1.0.5
 # pdftotext>=2.2.2  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
-ankipandas>=0.3.13  # anki
-tldextract>=3.4.1  # url
+
 
 LogseqMarkdownParser >= 2.5  # logseq files (I'm the dev behind it)
 
