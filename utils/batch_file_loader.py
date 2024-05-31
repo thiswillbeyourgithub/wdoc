@@ -97,7 +97,7 @@ def batch_load_doc(
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
         for ild, load_kwargs in enumerate(to_load):
-            if not ("path" in load_kwargs or load_kwargs["path"]):
+            if not ("path" in load_kwargs and load_kwargs["path"]):
                 continue
             load_filetype = load_kwargs["filetype"]
 
