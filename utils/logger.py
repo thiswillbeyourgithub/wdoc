@@ -16,7 +16,7 @@ from .typechecker import optional_typecheck
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
 cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
 cache_dir.mkdir(exist_ok=True)
-log_dir = cache_dir / "cache"
+log_dir = cache_dir / "logs"
 log_dir.mkdir(exist_ok=True)
 (log_dir / "logs.txt").touch(exist_ok=True)
 
