@@ -70,6 +70,7 @@
 * whisper implementation is a bit flaky and will be improved
 
 ## Getting started
+*Tested on python 3.9 and 3.11.7*
 * `git clone`
 * `python -m pip install -r requirements.txt`
 * some package used to load files will not be installed by this command. Pay attention to the error message then use pip install as needed. For example :
