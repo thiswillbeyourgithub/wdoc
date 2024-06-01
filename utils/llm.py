@@ -12,7 +12,7 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
-import openai
+from litellm import transcription
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
@@ -267,16 +267,23 @@ def transcribe(
     language: str,
     prompt: str) -> str:
     "Use whisper to transcribe an audio file"
-    red(f"Calling whisper to transcribe file {audio_path}")
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] != "true", (
+        "Private mode detected, aborting before trying to use openai's whisper"
+    )
+    whi(f"Calling openai's whisper to transcribe file {audio_path}")
 
     assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
     os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
+        if not Path("OPENAI_API_KEY.txt").exists():
+            red("No environment variable nor OPENAI_API_KEY.txt file found")
+        else:
+            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:
-        transcript = openai.Audio.transcribe(
-            model="whisper-1",
+        transcript = transcription(
+            model="whisper",
             file=audio_file,
             prompt=prompt,
             language=language,
