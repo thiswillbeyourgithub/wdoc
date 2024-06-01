@@ -77,7 +77,7 @@ def load_llm(
         os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
     if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
-        red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at             More at https://github.com/langchain-ai/langchain/issues/22389")
+        red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
         llm = ChatOpenAI(
                 model_name=modelname.split("/")[1],
                 cache=not no_llm_cache,
@@ -86,7 +86,7 @@ def load_llm(
                 **extra_model_args,
                 )
     else:
-        red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at             More at https://github.com/langchain-ai/langchain/issues/22389")
+        red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
