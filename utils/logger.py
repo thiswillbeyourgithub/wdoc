@@ -27,7 +27,7 @@ handler = logging.handlers.RotatingFileHandler(
         mode="a",
         encoding=None,
         delay=0,
-        maxBytes=1024*1024*100,  # max 50mb
+        maxBytes=1024*1024*100,  # max 100mb
         backupCount=3,
         )
 handler.setLevel(logging.INFO)
