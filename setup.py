@@ -28,7 +28,6 @@ setup(
         'langchain-mistralai>=0.1.7',
         'litellm>=1.38.10',
         'nltk>=3.8.1',
-        'openai>=1.30.3',
         'prompt-toolkit>=3.0.43',
         'requests>=2.25.1',
         'tiktoken>=0.6.0',
