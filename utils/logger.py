@@ -37,7 +37,7 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 log.addHandler(handler)
 # delete any additional log file
-(local_dir / "logs.txt.3").unlink(missing_ok=True)
+(log_dir / "logs.txt.4").unlink(missing_ok=True)
 
 
 colors = {
