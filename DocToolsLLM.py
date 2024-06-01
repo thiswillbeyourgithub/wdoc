@@ -42,7 +42,6 @@ from utils.loaders import (
     wpm,
     get_splitter,
     check_docs_tkn_length,
-    language_detector
     )
 
 from utils.embeddings import load_embeddings
@@ -118,6 +117,7 @@ class DocToolsLLM:
         n_recursive_summary: int = 0,
 
         n_summaries_target: int = -1,
+        summary_language: str = "[same as input]",
 
         dollar_limit: int = 5,
         debug: bool = False,
@@ -253,6 +253,11 @@ class DocToolsLLM:
             the number of links that will be summarized. If the number of
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
+
+        --summary_language: str, default "[same as input]"
+            When writing a summary, the LLM will write using the language
+            specified in this argument. If it's '[same as input]', the LLM
+            will not translate.
 
         --dollar_limit: int, default 5
             If the estimated price is above this limit, stop instead.
@@ -558,6 +563,7 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
+        self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
@@ -916,21 +922,6 @@ class DocToolsLLM:
             else:
                 author = None
 
-            # detect language
-            lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
-            if lang_info is None:
-                lang = "[SAME AS INPUT TEXT]"
-            else:
-                if lang_info["score"] >= 0.8:
-                    lang = lang_info['lang']
-                    if lang == "fr":
-                        lang = "FRENCH"
-                    else:  # prefer english to anything other than french
-                        lang = "ENGLISH"
-                else:
-                    lang = "ENGLISH"
-                    red(f"Language detection failed: '{lang_info}'")
-
             if metadata:
                 metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
                 metadata += "\t- Section number: [PROGRESS]\n"
@@ -941,7 +932,7 @@ class DocToolsLLM:
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                     docs=relevant_docs,
                     metadata=metadata,
-                    language=lang,
+                    language=self.summary_language,
                     modelbackend=self.modelbackend,
                     llm=self.llm,
                     llm_price=self.llm_price,
