@@ -41,6 +41,7 @@ setup(
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.10.0',
+        'gandalf >= 0.1.4',
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
