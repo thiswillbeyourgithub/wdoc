@@ -1,24 +1,5 @@
 import os
 from typing import List, Union, Any, Optional, Callable
-
-from langchain.docstore.document import Document
-try:
-    import ftlangdetect
-except Exception as err:
-    print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
-    try:
-        import langdetect
-    except Exception as err:
-        print(f"Couldn't import optional package 'langdetect': '{err}'")
-try:
-    import pdftotext
-except Exception as err:
-    print(f"Failed to import optional package 'pdftotext': '{err}'")
-from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
-from .typechecker import optional_typecheck
-from .logger import whi, yel, red, log
-from .llm import transcribe
-
 import tiktoken
 from textwrap import dedent
 from functools import partial
@@ -38,7 +19,9 @@ from tqdm import tqdm
 import json
 import dill
 from prompt_toolkit import prompt
+import LogseqMarkdownParser
 
+from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
@@ -50,7 +33,6 @@ from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 
-# from langchain_community.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.document_loaders import OnlinePDFLoader
@@ -61,7 +43,35 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-import LogseqMarkdownParser
+from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+from .typechecker import optional_typecheck
+from .logger import whi, yel, red, log
+from .llm import transcribe
+
+# parse args again to know what to print for failed imports
+import fire
+args, kwargs = fire.Fire(lambda *args, **kwargs: [args, kwargs])
+if "debug" in kwargs and kwargs["debug"]:
+    verbose=True
+else:
+    verbose=False
+
+try:
+    import ftlangdetect
+except Exception as err:
+    if verbose:
+        print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+    try:
+        import langdetect
+    except Exception as err:
+        if verbose:
+            print(f"Couldn't import optional package 'langdetect': '{err}'")
+try:
+    import pdftotext
+except Exception as err:
+    if verbose:
+        print(f"Failed to import optional package 'pdftotext': '{err}'")
+
 
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
