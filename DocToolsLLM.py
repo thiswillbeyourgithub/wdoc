@@ -1555,10 +1555,10 @@ class DocToolsLLM:
                 )
 
             # the eval doc chain needs its own caching
-            if not self.no_llm_cache:
-                eval_cache_wrapper = doc_eval_cache.cache
-            else:
+            if self.no_llm_cache:
                 def eval_cache_wrapper(func): return func
+            else:
+                eval_cache_wrapper = doc_eval_cache.cache
 
             @chain
             @optional_typecheck
