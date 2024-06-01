@@ -19,7 +19,6 @@ from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
 
-#exec(lazy_import_statements("""
 import tiktoken
 from textwrap import dedent
 from functools import partial

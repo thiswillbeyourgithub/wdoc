@@ -15,21 +15,18 @@ from pydantic import Extra
 from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
-
-from .misc import cache_dir
-from .logger import whi, red
-from .loaders import get_tkn_length
-from .lazy_lib_importer import lazy_import_statements, lazy_import
-from .typechecker import optional_typecheck
-
-exec(lazy_import_statements("""
 from langchain.storage import LocalFileStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
 import litellm
-"""))
+
+from .misc import cache_dir
+from .logger import whi, red
+from .loaders import get_tkn_length
+from .typechecker import optional_typecheck
+
 
 
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)

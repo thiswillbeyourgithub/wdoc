@@ -16,6 +16,24 @@ import os
 import asyncio
 from tqdm import tqdm
 
+from langchain.globals import set_verbose, set_debug, set_llm_cache
+from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.docstore.document import Document
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import (
+        DocumentCompressorPipeline)
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain_community.retrievers import KNNRetriever, SVMRetriever
+from langchain_community.cache import SQLiteCache
+from operator import itemgetter
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import chain
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation, ChatGeneration
+import litellm
+
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.batch_file_loader import batch_load_doc
 from utils.loaders import (
@@ -40,26 +58,6 @@ from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 
 from utils.lazy_lib_importer import lazy_import_statements, lazy_import
 
-exec(lazy_import_statements("""
-from langchain.globals import set_verbose, set_debug, set_llm_cache
-from langchain.retrievers.merger_retriever import MergerRetriever
-from langchain.docstore.document import Document
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain.retrievers.document_compressors import (
-        DocumentCompressorPipeline)
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain_community.cache import SQLiteCache
-from operator import itemgetter
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_core.runnables import chain
-from langchain_core.runnables.base import RunnableEach
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.output_parsers import BaseGenerationOutputParser
-from langchain_core.outputs import Generation, ChatGeneration
-
-import litellm
-"""))
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"

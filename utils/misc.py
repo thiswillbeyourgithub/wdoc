@@ -6,21 +6,17 @@ import json
 import re
 from pathlib import Path
 from platformdirs import user_cache_dir
-
-from .logger import red
-from .lazy_lib_importer import lazy_import_statements, lazy_import
-from .typechecker import optional_typecheck
-
-exec(lazy_import_statements("""
+from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
-from difflib import get_close_matches
 
-import litellm
 from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
-"""))
+import litellm
+
+from .logger import red
+from .typechecker import optional_typecheck
 
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"

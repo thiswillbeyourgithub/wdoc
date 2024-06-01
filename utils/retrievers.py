@@ -1,19 +1,17 @@
+from shutil import rmtree
 from typing import Optional, Any, Callable, List
 
-from .misc import cache_dir
-from .loaders import get_splitter
-from .typechecker import optional_typecheck
-from .lazy_lib_importer import lazy_import_statements, lazy_import
-
-exec(lazy_import_statements("""
-from shutil import rmtree
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
-"""))
+
+from .misc import cache_dir
+from .loaders import get_splitter
+from .typechecker import optional_typecheck
+
 
 
 @optional_typecheck

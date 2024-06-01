@@ -36,7 +36,6 @@ setup(
         'faiss-cpu>=1.8.0',
         'llama-cpp-python>=0.2.76',
         'rich>=13.7.1',
-        'lazy_import >= 0.2.2',
         'typeguard >= 4.2.1',
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',

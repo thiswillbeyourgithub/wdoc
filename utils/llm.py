@@ -9,17 +9,13 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
+from langchain_community.llms import FakeListLLM
+from langchain_community.chat_models import ChatLiteLLM
+import openai
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
-from .lazy_lib_importer import lazy_import_statements, lazy_import
 
-exec(lazy_import_statements("""
-from langchain_community.llms import FakeListLLM
-from langchain_community.chat_models import ChatLiteLLM
-
-import openai
-"""))
 
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):

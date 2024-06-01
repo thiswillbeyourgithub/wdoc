@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, List, Union
+from typing import Tuple, List
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from joblib import Memory
