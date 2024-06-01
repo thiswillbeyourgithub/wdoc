@@ -56,9 +56,6 @@ from utils.typechecker import optional_typecheck
 from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 
-from utils.lazy_lib_importer import lazy_import_statements, lazy_import
-
-
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
