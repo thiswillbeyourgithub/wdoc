@@ -11,6 +11,7 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
+#from langchain_community.chat_models import ChatOpenAI
 import openai
 
 from .logger import whi, red
@@ -77,10 +78,12 @@ def load_llm(
 
     llm = ChatLiteLLM(
             model_name=modelname,
+            api_base=api_base,
+    # llm = ChatOpenAI(
+    #        model_name=modelname.split("/")[1],
             verbose=verbose,
             cache=not no_llm_cache,
             callbacks=[PriceCountingCallback(verbose=verbose)],
-            api_base=api_base,
             **extra_model_args,
             )
     if private:
