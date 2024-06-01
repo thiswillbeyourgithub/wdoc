@@ -49,7 +49,7 @@ setup(
         'ankipandas>=0.3.13',  # anki
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
-        'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git@fa7f0effbe4e14fcf70e1dc4496371c9862b64b9',  # youtube
+        'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
 
 
