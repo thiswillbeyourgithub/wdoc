@@ -53,6 +53,8 @@ import fire
 args, kwargs = fire.Fire(lambda *args, **kwargs: [args, kwargs])
 if "debug" in kwargs and kwargs["debug"]:
     verbose=True
+    import platform
+    is_linux = platform.system() == "Linux"
 else:
     verbose=False
 
@@ -71,6 +73,12 @@ try:
 except Exception as err:
     if verbose:
         print(f"Failed to import optional package 'pdftotext': '{err}'")
+        if is_linux:
+            print(
+                "On linux, you can try to install pdftotext with :\nsudo "
+                "apt install build-essential libpoppler-cpp-dev pkg-config "
+                "python3-dev\nThen:\npython -m pip install pdftotext"
+            )
 
 
 # needed in case of buggy unstructured install
