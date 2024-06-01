@@ -1,0 +1,15 @@
+[bumpver]
+current_version = "0.14"
+version_pattern = "MAJOR.MINOR"
+commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+commit = false
+tag = false
+push = false
+
+[bumpver.file_patterns]
+"bumpver.toml" = ['current_version = "{version}"']
+"setup.py" = ['version="{version}"']
+"DocToolsLLM.py" = ['VERSION: str = "{version}"']
+
