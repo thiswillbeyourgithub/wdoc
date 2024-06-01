@@ -302,6 +302,7 @@ class DocToolsLLM:
             Basically if you don't use --private and use llm form openai,
             DocToolsLLM will use ChatOpenAI with regular caching, otherwise
             we use ChatLiteLLM with LLM caching disabled.
+            More at https://github.com/langchain-ai/langchain/issues/22389
 
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
@@ -1529,7 +1530,7 @@ class DocToolsLLM:
                     }
                         | PR_CONDENSE_QUESTION
                         | self.llm
-                        | StrOutputParser(),
+                        | StrOutputParser()
                 }
 
             # uses in most places to increase concurrency limit
