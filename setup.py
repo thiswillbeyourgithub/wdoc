@@ -41,6 +41,7 @@ setup(
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
+        'rtoml >= 0.10.0',
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
