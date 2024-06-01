@@ -7,3 +7,4 @@ author_dir
 pages
 .env
 **/__pycache__
+DocToolsLLM.egg-info
