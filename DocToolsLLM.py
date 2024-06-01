@@ -1779,8 +1779,11 @@ class DocToolsLLM:
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
 
-
-if __name__ == "__main__":
+def cli_call() -> None:
+    "called by 'DocToolsLLM' in your terminal"
     red(pyfiglet.figlet_format("DocToolsLLM"))
     import fire
     instance = fire.Fire(DocToolsLLM)
+
+if __name__ == "__main__":
+    cli_call()
