@@ -79,6 +79,7 @@ def batch_load_doc(
     filetype: str,
     debug: bool,
     task: str,
+    backend: str,
     **kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
@@ -260,7 +261,7 @@ def batch_load_doc(
     t_load = time.time()
     doc_lists = Parallel(
         n_jobs=n_jobs,
-        backend="loky",
+        backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=debug,

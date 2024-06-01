@@ -126,6 +126,7 @@ class DocToolsLLM:
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
+        file_loader_parallel_backend: str = "loky",
         private: bool = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: bool = False,
@@ -299,6 +300,12 @@ class DocToolsLLM:
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
             for documents.
+
+        --file_loader_parallel_backend: str, default "loky"
+            joblib.Parallel backend to use when loading files. loky means
+            multiprocessing while "threading" means multithreading.
+            The number of jobs can be specified with 'file_loader_n_jobs'
+            but it's a loader specific kwargs.
 
         --llms_api_bases: dict, default None
             a dict with keys in ["model", "query_eval_model"]
@@ -537,6 +544,7 @@ class DocToolsLLM:
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+        assert file_loader_parallel_backend in ["loky", "threading"], "Invalid value for file_loader_parallel_backend"
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
 
@@ -569,6 +577,7 @@ class DocToolsLLM:
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
+        self.file_loader_parallel_backend = file_loader_parallel_backend
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
@@ -702,6 +711,7 @@ class DocToolsLLM:
                 filetype=self.filetype,
                 debug=self.debug,
                 task=self.task,
+                backend=self.file_loader_parallel_backend,
                 **self.kwargs)
 
             # check that the hash are unique
