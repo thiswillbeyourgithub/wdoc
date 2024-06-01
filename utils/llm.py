@@ -76,13 +76,20 @@ def load_llm(
         red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
-    llm = ChatLiteLLM(
+    if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
+        red(f"Using OpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :(")
+        llm = ChatOpenAI(
+                model_name=modelname.split("/")[1],
+                cache=not no_llm_cache,
+                verbose=verbose,
+                callbacks=[PriceCountingCallback(verbose=verbose)],
+                **extra_model_args,
+                )
+    else:
+        llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
-            cache=False,
-    #llm = ChatOpenAI(
-    #        model_name=modelname.split("/")[1],
-    #        cache=not no_llm_cache,
+            cache=False, # not no_llm_cache
             verbose=verbose,
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,

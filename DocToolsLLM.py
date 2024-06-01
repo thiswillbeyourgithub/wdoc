@@ -297,8 +297,12 @@ class DocToolsLLM:
             local only. It will also use a separate cache from non private.
 
         --no_llm_cache: bool, default False
-            WARNING: The cache is temporarily ignored in llms generations
-            because of an error with langchain's ChatLiteLLM
+            WARNING: The cache is temporarily ignored in non openaillms
+            generations because of an error with langchain's ChatLiteLLM.
+            Basically if you don't use --private and use llm form openai,
+            DocToolsLLM will use ChatOpenAI with regular caching, otherwise
+            we use ChatLiteLLM with LLM caching disabled.
+
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
             for documents.
