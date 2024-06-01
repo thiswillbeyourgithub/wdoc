@@ -1,6 +1,6 @@
 # DocToolsLLM
 * **Goal** use [LangChain](https://python.langchain.com/) to summarize, search (aka RAG), ask questions from lots of documents, and different types of documents.
-* **Current status** **Under development** but the main branch is fine. Used daily by the author. Accepting pull requests, issues are extremely appreciated for any reason, including typos etc.
+* **Current status** **Under development** but the main branch is fine. Used almost daily by the author. I accept feature requests, issues are extremely appreciated for any reason including typos etc, I accept pull request but prefer asking me first. I have many improvements planned but do this on my spare time.
 
 ## Example use case
 * Quickly summarize lots of diverse content (including youtube) and add it to [Logseq](https://github.com/logseq/logseq/): I use it to automatically summarize it the thought process of many articles I'd like to read.
