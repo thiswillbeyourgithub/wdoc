@@ -95,7 +95,7 @@ extra_args = {
 }
 
 class DocToolsLLM:
-    VERSION: str = "0.13"
+    VERSION: str = "0.14"
 
     @optional_typecheck
     def __init__(
