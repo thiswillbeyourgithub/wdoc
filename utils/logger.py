@@ -9,15 +9,21 @@ from pathlib import Path
 from typing import Callable, Optional
 from rich.markdown import Markdown
 from rich.console import Console
+from platformdirs import user_cache_dir
 
 from .typechecker import optional_typecheck
 
-# adds logger, restrict it to X lines
-local_dir = Path.cwd()
-(local_dir / "logs.txt").touch(exist_ok=True)
+assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
+cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
+cache_dir.mkdir(exist_ok=True)
+log_dir = cache_dir / "cache"
+log_dir.mkdir(exist_ok=True)
+(log_dir / "logs.txt").touch(exist_ok=True)
+
+# logger
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 handler = logging.handlers.RotatingFileHandler(
-        filename=local_dir / "logs.txt",
+        filename=log_dir / "logs.txt",
         mode="a",
         encoding=None,
         delay=0,
