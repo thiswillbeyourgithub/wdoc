@@ -29,8 +29,10 @@ pandoc >= 2.3 # epub
 unstructured>=0.6.2  # many file formats
 ankipandas>=0.3.13  # anki
 tldextract>=3.4.1  # url
-youtube_dl
 goose3 >= 3.1.16
+# youtube_dl
+-i git+https://github.com/ytdl-org/youtube-dl.git@fa7f0effbe4e14fcf70e1dc4496371c9862b64b9
+
 # buggy in windows so optional:
 # https://github.com/zafercavdar/fasttext-langdetect/issues/14
 # fasttext-langdetect>=1.0.5
