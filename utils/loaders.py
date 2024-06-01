@@ -50,7 +50,7 @@ from .llm import transcribe
 
 # parse args again to know what to print for failed imports
 import fire
-args, kwargs = fire.Fire(lambda *args, **kwargs: [args, kwargs])
+kwargs = filter(lambda x: isinstance(x, dict), fire.Fire(lambda *args, **kwargs: [args, kwargs]))
 if "debug" in kwargs and kwargs["debug"]:
     verbose=True
     import platform
