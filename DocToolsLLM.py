@@ -16,11 +16,6 @@ import os
 import asyncio
 from tqdm import tqdm
 
-try:
-    from ftlangdetect import detect as language_detect
-except Exception as err:
-    print(f"Couldn't import ftlangdetect: '{err}'")
-
 from utils.llm import load_llm, AnswerConversationBufferMemory
 from utils.batch_file_loader import batch_load_doc
 from utils.loaders import (
@@ -28,8 +23,10 @@ from utils.loaders import (
     average_word_length,
     wpm,
     get_splitter,
-    check_docs_tkn_length
+    check_docs_tkn_length,
+    language_detector
     )
+
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
 from utils.logger import whi, yel, red, create_ntfy_func, md_printer
@@ -925,8 +922,10 @@ class DocToolsLLM:
                 author = None
 
             # detect language
-            try:
-                lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
+            lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
+            if lang_info is None:
+                lang = "[SAME AS INPUT TEXT]"
+            else:
                 if lang_info["score"] >= 0.8:
                     lang = lang_info['lang']
                     if lang == "fr":
@@ -936,9 +935,6 @@ class DocToolsLLM:
                 else:
                     lang = "ENGLISH"
                     red(f"Language detection failed: '{lang_info}'")
-            except Exception as err:
-                red(f"Couldn't import ftlangdetect: '{err}'")
-                lang = "[SAME AS INPUT TEXT]"
 
             if metadata:
                 metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
