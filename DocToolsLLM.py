@@ -1613,10 +1613,14 @@ class DocToolsLLM:
                 self.eval_llm.callbacks[0].total_tokens += new_p + new_c
                 return outputs
 
-            retrieve_documents = {
-                "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
-                "question_to_answer": itemgetter("question_to_answer")
-            }
+            # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+            @chain
+            def retrieve_documents(inputs):
+                return {
+                        "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                        "question_to_answer": inputs["question_to_answer"],
+                }
+                return inputs
             refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(
