@@ -16,25 +16,25 @@
 
 ## DocToolsLLM in a few questions
 * **What's RAG?**
-* A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
+    * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
-* I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
+    * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
 * **Why is DocToolsLLM better than most RAG system to ask questions on documents?**
-* It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also DocToolsLLM is very customizable.
+    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also DocToolsLLM is very customizable.
 * **Why can DocToolsLLM also produce summaries?**
-* I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good!
+    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good!
 * **What other tasks are supported by DocToolsLLM?**
-* Summarize text from any [Supported filetypes](#Supported-filetypes).
-* Ask questions about a large heterogeneous corpus.
-* Search the relevant documents using embeddings.
-* Search the relevant documents using embeddings then filtering using a cheap LLM.
+    * Summarize text from any [Supported filetypes](#Supported-filetypes).
+    * Ask questions about a large heterogeneous corpus.
+    * Search the relevant documents using embeddings.
+    * Search the relevant documents using embeddings then filtering using a cheap LLM.
 * **Which LLM providers are supported by DocToolsLLM?**
-* DocToolsLLM supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
+    * DocToolsLLM supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
 * **What do you use DocToolsLLM for?**
-* I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a buch of `TODO` blocks.
-* I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
-* I use it to query my personal documents using the `--private` argument.
-* I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
+    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a buch of `TODO` blocks.
+    * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
+    * I use it to query my personal documents using the `--private` argument.
+    * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
 
 ## Features
 * **Advanced RAG**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
