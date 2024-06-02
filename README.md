@@ -1,18 +1,16 @@
 # DocToolsLLM
-* **Goal** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
+* **Goal and project specifications** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
 * **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is better. I use it almost daily and have been for months now. I accept feature requests, pull requests, issues are extremely appreciated for any reason including typos etc. Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
 
 ### Table of contents
-- [DocToolsLLM](#doctoolsllm)
-- [DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
-  - [Features](#features)
-    - [Supported filetypes](#supported-filetypes)
-      - [Recursive types](#recursive-types)
-      - [Walkthrough and examples](#walkthrough-and-examples)
-    - [Supported tasks](#supported-tasks)
-    - [Known issues that are not yet fixed](#known-issues-that-are-not-yet-fixed)
-  - [Getting started](#getting-started)
-  - [Notes](#notes)
+- [What is DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
+- [Features](#features)
+  - [Supported filetypes](#supported-filetypes)
+  - [Supported tasks](#supported-tasks)
+  - [Walkthrough and examples](#walkthrough-and-examples)
+- [Getting started](#getting-started)
+- [Notes](#notes)
+  - [Known issues](#known-issues)
 
 ## DocToolsLLM in a few questions
 * **What's RAG?**
@@ -55,7 +53,6 @@
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Supported filetypes
-*(see [how to combine filetypes](#Recursive-types))*
 * **infer** (will try to guess for you)
 * **youtube videos**
 * **Logseq md files** (this makes uses of my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser)
@@ -70,14 +67,20 @@
 * **Microsoft Powerpoint files** (.ppt, .pptx, .odp, ...)
 * **Microsoft Word documents** (.doc, .docx, .odt, ...)
 * **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
+* **Recursive types**
+    * **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`
+    * **recursive** (you give a path and a regex pattern and a filetype, it finds all the files)
+    * **link_file** (you give a text file where each line is a url, proper filetype for each url will be inferred)
+    * **youtube playlists** turns a youtube_playlist into a list of youtube videos
 
-#### Recursive types
-* **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`
-* **recursive** (you give a path and a regex pattern and a filetype, it finds all the files)
-* **link_file** (you give a text file where each line is a url, proper filetype for each url will be inferred)
-* **youtube playlists** turns a youtube_playlist into a list of youtube videos
+### Supported tasks
+* **query** give documents and asks questions about it.
+* **search** only returns the documents and their metadata. For anki it can be used to directly open cards in the browser.
+* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
+* **summarize_then_query** summarize the document then allow you to query directly about it.
+* **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
 
-#### Walkthrough and examples
+## Walkthrough and examples
 1. Say you want to ask a question about one pdf, that's simple: `python -m DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
 2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `python -m DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"!
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources.
@@ -89,17 +92,6 @@
 9. Now say you just want to summarize a webpage: `python -m DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
 
 ![](./images/summary.png)
-
-
-### Supported tasks
-* **query** give documents and asks questions about it.
-* **search** only returns the documents and their metadata. For anki it can be used to directly open cards in the browser.
-* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
-* **summarize_then_query** summarize the document then allow you to query directly about it.
-* **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
-
-### Known issues that are not yet fixed
-* whisper implementation is a bit flaky and will be improved
 
 ## Getting started
 *Tested on python 3.9 and 3.11.7*
@@ -114,3 +106,6 @@
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer usedto count tokens to embed is the OpenAI tokenizer, which is not universal)
+
+### Known issues
+* whisper implementation is a bit flaky and will be improved
