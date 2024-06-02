@@ -47,7 +47,7 @@ from utils.loaders import (
 
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, create_ntfy_func, md_printer, log
+from utils.logger import whi, yel, red, md_printer, log
 from utils.cli import ask_user
 from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from utils.tasks.summary import do_summarize
@@ -123,7 +123,7 @@ class DocToolsLLM:
         dollar_limit: int = 5,
         debug: bool = False,
         llm_verbosity: bool = False,
-        ntfy_url: Optional[str] =  None,
+        notification_callback: Optional[Callable] =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
@@ -276,9 +276,11 @@ class DocToolsLLM:
             if True, will print the intermediate reasonning steps of LLMs
             if debug is set, llm_verbosity is also set to True
 
-        --ntfy_url: str, default None
-            must be a url to ntfy.sh to receive notifications for summaries.
-            Especially useful to keep track of costs when using cron.
+        --notification_callback: Callable, default None
+            a function that must take as input a string and return the same
+            string. Inside it you can do whatever you want with it. This
+            can be used for example to send notification on your phone
+            using ntfy.sh to get summaries.
 
         --condense_question: bool, default True
             if True, will not use a special LLM call to reformulate the question
@@ -649,14 +651,17 @@ class DocToolsLLM:
             else:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
-        global ntfy
-        if ntfy_url:
-            ntfy = create_ntfy_func(ntfy_url)
-            ntfy("Starting DocTools")
+        if notification_callback is not None:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                out = notification_callback(text)
+                assert out == text, "The notification callback must return the same string"
+                return out
+            ntfy("Starting DocToolsLLM")
         else:
             @optional_typecheck
             def ntfy(text: str) -> str:
-                return red(text)
+                return text
 
         if self.debug:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -831,7 +836,7 @@ class DocToolsLLM:
                     if len(links_todo) < self.n_summaries_target:
                         links_todo[link] = None
                     else:
-                        ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                        whi(ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run."))
                         break
 
             # comment out the links that are marked as already done
@@ -855,10 +860,10 @@ class DocToolsLLM:
                 # as it allows to run this frequently
                 n_todos_desired = self.n_summaries_target
                 if self.n_todos_present >= n_todos_desired:
-                    return ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                    return red(ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."))
                 else:
                     self.n_summaries_target = n_todos_desired - self.n_todos_present
-                    ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                    red(ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}"))
                     assert self.n_summaries_target > 0
 
                 while len(links_todo) > self.n_summaries_target:
@@ -901,10 +906,10 @@ class DocToolsLLM:
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
-        ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+        whi(ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
-                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+                raise Exception(red(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
@@ -1140,8 +1145,8 @@ class DocToolsLLM:
         total_docs_length = sum([x["doc_reading_length"] for x in results])
         # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-        ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
-        ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes")
+        red(ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
+        red(ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
 
         # if "out_file" in self.kwargs:
         #     # after summarizing all links, append to output file the total cost

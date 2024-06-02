@@ -94,16 +94,3 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
     md = Markdown(message)
     console.print(md, style=color)
     return message
-
-# phone notification
-@optional_typecheck
-def create_ntfy_func(url: str) -> Callable:
-    @optional_typecheck
-    def ntfy_func(text: str) -> str:
-        requests.post(
-                url=url,
-                headers={"Title": "DocTools Summary"},
-                data=text.encode("utf-8"),
-                )
-        return red(text)
-    return ntfy_func

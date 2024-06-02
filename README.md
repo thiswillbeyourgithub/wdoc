@@ -57,6 +57,8 @@
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
 * **Statically typed**: Optional runtime type checking. Opt in with an environment flag: `DOCTOOLS_TYPECHECKING="disabled / warn / crash" python -m DocToolsLLM`.
 * **Scriptable**: You can use DocToolsLLM in other python project using `--import_mode`
+* **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
+* **Fully documented**: I work hard to maintain an exhaustive documentation at `python -m DocToolsLLM --help`
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Supported filetypes
