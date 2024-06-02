@@ -2,6 +2,25 @@
 * **Goal** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
 * **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is usually better. I use it almost daily. I accept feature requests, issues are extremely appreciated for any reason including typos etc, I accept pull request but prefer asking me first. I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs.
 
+# Table of contents
+- [DocToolsLLM](#doctoolsllm)
+- [DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
+  - [What's RAG?](#what's-rag?)
+  - [Why make another RAG system? Can't you use any of the others?](#why-make-another-rag-system?-can't-you-use-any-of-the-others?)
+  - [Why is DocToolsLLM better than most RAG system to ask questions on documents?](#why-is-doctoolsllm-better-than-most-rag-system-to-ask-questions-on-documents?)
+  - [Why can DocToolsLLM also produce summaries?](#why-can-doctoolsllm-also-produce-summaries?)
+  - [What other tasks are supported by DocToolsLLM?](#what-other-tasks-are-supported-by-doctoolsllm?)
+  - [Which LLM providers are supported by DocToolsLLM?](#which-llm-providers-are-supported-by-doctoolsllm?)
+  - [What do you use DocToolsLLM for?](#what-do-you-use-doctoolsllm-for?)
+  - [Features](#features)
+    - [Supported filetypes](#supported-filetypes)
+      - [Recursive types](#recursive-types)
+      - [Walkthrough and examples](#walkthrough-and-examples)
+    - [Supported tasks](#supported-tasks)
+    - [Known issues that are not yet fixed](#known-issues-that-are-not-yet-fixed)
+  - [Getting started](#getting-started)
+  - [Notes](#notes)
+
 # DocToolsLLM in a few questions
 ## What's RAG?
 * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
