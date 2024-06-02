@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name="DocToolsLLM",
-    version="0.14",
+    version="0.15",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
     long_description="A perfect RAG and AI summary setup for my needs. All LLM supported. Virtually any input filetypes including epub, youtube_playlist, pdf, etc",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
