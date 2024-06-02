@@ -1141,8 +1141,8 @@ class DocToolsLLM:
         total_docs_length = sum([x["doc_reading_length"] for x in results])
         # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-        ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
-        ntfy(f"Total time saved by this run: {total_docs_length:.1f} minutes")
+        ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
+        ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes")
 
         # if "out_file" in self.kwargs:
         #     # after summarizing all links, append to output file the total cost
