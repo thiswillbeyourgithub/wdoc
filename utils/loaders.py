@@ -447,7 +447,7 @@ def get_splitter(task: str) -> TextSplitter:
 
 @optional_typecheck
 def cloze_stripper(clozed: str) -> str:
-    clozed = re.sub(clozeregex, " ", clozed)
+    clozed = clozeregex.sub(" ", clozed)
     return clozed
 
 # loaders #######################################
@@ -457,8 +457,7 @@ def load_youtube_video(path: str, youtube_language: Optional[str] = None, youtub
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
-    assert re.search(
-        yt_link_regex, path), f"youtube link is not valid: '{path}'"
+    assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
     whi(f"Loading youtube: '{path}'")
     fyu = YoutubeLoader.from_youtube_url
@@ -1191,9 +1190,9 @@ def load_pdf(
 
             if "unstructured" in loader_name.lower():
                 # remove empty lines. frequent in pdfs
-                content = re.sub(emptyline_regex, "", content)
-                content = re.sub(emptyline2_regex, "\n", content)
-                content = re.sub(linebreak_before_letter, r"\1", content)
+                content = emptyline_regex.sub("", content)
+                content = emptyline2_regex.sub("\n", content)
+                content = linebreak_before_letter.sub(r"\1", content)
 
             content = ftfy.fix_text(content)
 

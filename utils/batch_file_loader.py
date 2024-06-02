@@ -106,7 +106,7 @@ def batch_load_doc(
             if load_filetype == "infer":
                 for k, v in inference_rules.items():
                     for vv in inference_rules[k]:
-                        if re.search(vv, load_kwargs["path"]):
+                        if vv.search(load_kwargs["path"]):
                             load_filetype = k
                             break
                     if load_filetype != "infer":
@@ -324,7 +324,7 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -333,7 +333,7 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -364,7 +364,7 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -373,7 +373,7 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -404,8 +404,8 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         if p.strip() and not p.strip().startswith("#") and "http" in p
     ]
     doclist = [
-        re.findall(markdownlink_regex, d)[0]
-        if re.search(markdownlink_regex, d)
+        markdownlink_regex.findall(d)[0]
+        if markdownlink_regex.search(d)
         else d
         for d in doclist
     ]
@@ -424,7 +424,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -433,7 +433,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -457,13 +457,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         "duration" not in video
     ), f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
     doclist = [ent["webpage_url"] for ent in video["entries"]]
-    doclist = [li for li in doclist if re.search(yt_link_regex, li)]
+    doclist = [li for li in doclist if yt_link_regex.search(li)]
 
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -472,7 +472,7 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
