@@ -1057,7 +1057,10 @@ class DocToolsLLM:
                 summary = summary_text
 
             with lock:
-                red(f"\n\nSummary of '{link}':\n{summary}")
+                print("\n\n")
+                md_printer("# Summary")
+                md_printer(f'## {link}')
+                md_printer(summary)
 
                 red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
