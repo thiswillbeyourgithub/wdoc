@@ -53,9 +53,9 @@
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Supported filetypes
-* **infer** (will try to guess for you)
+* **infer** (default, guess the filetype for you)
 * **youtube videos**
-* **Logseq md files** (this makes uses of my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser)
+* **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
 * **local PDF**
 * **remote PDF** via URL
 * **text files** (.txt, markdown, etc)
@@ -66,12 +66,12 @@
 * **epub files**
 * **Microsoft Powerpoint files** (.ppt, .pptx, .odp, ...)
 * **Microsoft Word documents** (.doc, .docx, .odt, ...)
-* **string** (the cli prompts you for a text so you can easily paste something, including paywalled articles)
+* **string** (the cli prompts you for a text so you can easily paste something, handy for paywalled articles!)
 * **Recursive types**
-    * **json_list** (you give as argument a path to a file where each line is a json_list that contains the loader arguments. This can be used for example to load several files in a row). An example can be found in `utils/json_list_example.txt`
-    * **recursive** (you give a path and a regex pattern and a filetype, it finds all the files)
-    * **link_file** (you give a text file where each line is a url, proper filetype for each url will be inferred)
-    * **youtube playlists** turns a youtube_playlist into a list of youtube videos
+    * **youtube playlists**: turns a youtube_playlist into a list of youtube videos.
+    * **recursive**: turns a path, a regex pattern and a filetype into all the files found recurisvely.
+    * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
+    * **json_list**: turns a path to a file where each line is a json **dict** that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `utils/json_list_example.txt`.
 
 ### Supported tasks
 * **query** give documents and asks questions about it.
