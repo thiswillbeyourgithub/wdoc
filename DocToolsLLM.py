@@ -3,7 +3,7 @@ import pyfiglet
 import copy
 from textwrap import indent
 from functools import wraps
-from typing import List, Union, Any, Optional
+from typing import List, Union, Any, Optional, Callable
 from typeguard import check_type, TypeCheckError
 import tldextract
 from joblib import Parallel, delayed
