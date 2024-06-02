@@ -1,19 +1,17 @@
+from shutil import rmtree
 from typing import Optional, Any, Callable, List
 
-from .misc import cache_dir
-from .loaders import get_splitter
-from .typechecker import optional_typecheck
-from .lazy_lib_importer import lazy_import_statements, lazy_import
-
-exec(lazy_import_statements("""
-from shutil import rmtree
 from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
 from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
-"""))
+
+from .misc import cache_dir
+from .loaders import get_splitter
+from .typechecker import optional_typecheck
+
 
 
 @optional_typecheck
@@ -23,7 +21,6 @@ def create_hyde_retriever(
     llm: Any,
     top_k: int,
     relevancy: float,
-    filter: Optional[Callable],
 
     embeddings: Any,
     loaded_embeddings: Any,
@@ -67,7 +64,6 @@ Answer:"""
             "k": top_k,
             "distance_metric": "cos",
             "score_threshold": relevancy,
-            "filter": filter,
             }
         )
     return retriever
@@ -80,7 +76,6 @@ def create_parent_retriever(
     loaded_docs: List[Document],
     top_k: int,
     relevancy: float,
-    filter: Optional[Callable],
     ) -> Any:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
@@ -96,7 +91,6 @@ def create_parent_retriever(
                 "k": top_k,
                 "distance_metric": "cos",
                 "score_threshold": relevancy,
-                "filter": filter,
                 }
             )
     parent.add_documents(loaded_docs)

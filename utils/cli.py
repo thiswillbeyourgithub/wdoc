@@ -1,12 +1,5 @@
 from prompt_toolkit.completion import Completer, Completion
 from typing import Optional, Tuple, Any
-
-from .misc import cache_dir
-from .logger import whi, red, md_printer
-from .lazy_lib_importer import lazy_import_statements, lazy_import
-from .typechecker import optional_typecheck
-
-exec(lazy_import_statements("""
 import time
 import re
 from pathlib import Path
@@ -14,9 +7,11 @@ import json
 from textwrap import dedent
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import FormattedText
-
 from prompt_toolkit.completion import WordCompleter
-"""))
+
+from .misc import cache_dir
+from .logger import whi, red, md_printer
+from .typechecker import optional_typecheck
 
 @optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
@@ -277,7 +272,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             prev_questions,
             key=lambda x: x["timestamp"],
             )
-    temp_file = Path(str(pp_file.absolute()) + ".temp")
+    temp_file = Path(str(pp_file.resolve().absolute()) + ".temp")
     json.dump(prev_questions, temp_file.open("w"), indent=4)
     assert temp_file.exists()
     pp_file.unlink(missing_ok=True)

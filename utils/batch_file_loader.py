@@ -79,6 +79,7 @@ def batch_load_doc(
     filetype: str,
     debug: bool,
     task: str,
+    backend: str,
     **kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
@@ -105,7 +106,7 @@ def batch_load_doc(
             if load_filetype == "infer":
                 for k, v in inference_rules.items():
                     for vv in inference_rules[k]:
-                        if re.search(vv, load_kwargs["path"]):
+                        if vv.search(load_kwargs["path"]):
                             load_filetype = k
                             break
                     if load_filetype != "infer":
@@ -161,6 +162,7 @@ def batch_load_doc(
 
     if "file_loader_n_jobs" in kwargs:
         n_jobs = kwargs["file_loader_n_jobs"]
+        del kwargs["file_loader_n_jobs"]
     else:
         n_jobs = 10
     if len(to_load) == 1 or debug:
@@ -259,7 +261,7 @@ def batch_load_doc(
     t_load = time.time()
     doc_lists = Parallel(
         n_jobs=n_jobs,
-        backend="loky",
+        backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=debug,
@@ -322,7 +324,7 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -331,7 +333,7 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -339,8 +341,6 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = doc_kwargs["recursed_filetype"]
         del doc_kwargs["recursed_filetype"]
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         if "pattern" in doc_kwargs:
             del doc_kwargs["pattern"]
         doclist[i] = doc_kwargs
@@ -364,7 +364,7 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -373,7 +373,7 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -385,8 +385,6 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         for k, v in load_kwargs.items():
             if k not in meta:
                 meta[k] = v
-        if "file_loader_n_jobs" in meta:
-            del meta["file_loader_n_jobs"]
         if meta["path"] == load_path:
             del meta["path"]
         doclist[i] = meta
@@ -406,10 +404,9 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         if p.strip() and not p.strip().startswith("#") and "http" in p
     ]
     doclist = [
-        re.findall(markdownlink_regex, d)[0]
-        if re.search(markdownlink_regex, d)
-        else d
+        matched.group(0)
         for d in doclist
+        if (matched := markdownlink_regex.search(d).strip())
     ]
     if task == "summarize_link_file":
         # if summarize, start from bottom
@@ -426,7 +423,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -435,7 +432,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -444,8 +441,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "infer"
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 
@@ -461,13 +456,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         "duration" not in video
     ), f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
     doclist = [ent["webpage_url"] for ent in video["entries"]]
-    doclist = [li for li in doclist if re.search(yt_link_regex, li)]
+    doclist = [li for li in doclist if yt_link_regex.search(li)]
 
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
             for inc in load_kwargs["include"]:
-                if not re.search(inc, d):
+                if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
@@ -476,7 +471,7 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
 
     if "exclude" in load_kwargs:
         for exc in load_kwargs["exclude"]:
-            doclist = [d for d in doclist if not re.search(exc, d)]
+            doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
@@ -485,8 +480,6 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
-        if "file_loader_n_jobs" in doc_kwargs:
-            del doc_kwargs["file_loader_n_jobs"]
         doclist[i] = doc_kwargs
     return doclist
 

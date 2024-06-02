@@ -1,24 +1,5 @@
 import os
 from typing import List, Union, Any, Optional, Callable
-
-from langchain.docstore.document import Document
-try:
-    from ftlangdetect import detect as language_detect
-except Exception as err:
-    try:
-        from langdetect import detect as language_detect
-    except Exception as err:
-        print(f"Couldn't import ftlangdetect not langdetect: '{err}'")
-try:
-    import pdftotext
-except Exception as err:
-    print(f"Failed to import pdftotext: '{err}'")
-from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
-from .typechecker import optional_typecheck
-from .logger import whi, yel, red, log
-from .llm import transcribe
-
-#exec(lazy_import_statements("""
 import tiktoken
 from textwrap import dedent
 from functools import partial
@@ -38,7 +19,9 @@ from tqdm import tqdm
 import json
 import dill
 from prompt_toolkit import prompt
+import LogseqMarkdownParser
 
+from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
@@ -50,7 +33,6 @@ from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 
-# from langchain_community.document_loaders import PDFMinerPDFasHTMLLoader
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.document_loaders import OnlinePDFLoader
@@ -61,7 +43,43 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-import LogseqMarkdownParser
+from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+from .typechecker import optional_typecheck
+from .logger import whi, yel, red, log
+from .llm import transcribe
+
+# parse args again to know what to print for failed imports
+import fire
+kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
+if "debug" in kwargs and kwargs["debug"]:
+    verbose=True
+    import platform
+    is_linux = platform.system() == "Linux"
+else:
+    verbose=False
+
+try:
+    import ftlangdetect
+except Exception as err:
+    if verbose:
+        print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+    try:
+        import langdetect
+    except Exception as err:
+        if verbose:
+            print(f"Couldn't import optional package 'langdetect': '{err}'")
+try:
+    import pdftotext
+except Exception as err:
+    if verbose:
+        print(f"Failed to import optional package 'pdftotext': '{err}'")
+        if is_linux:
+            print(
+                "On linux, you can try to install pdftotext with :\nsudo "
+                "apt install build-essential libpoppler-cpp-dev pkg-config "
+                "python3-dev\nThen:\npython -m pip install pdftotext"
+            )
+
 
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -310,7 +328,7 @@ def load_one_doc(
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).absolute())
+           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
 
     assert docs, "empty list of loaded documents!"
     return docs
@@ -328,6 +346,17 @@ def get_url_title(url: str) -> Union[str, type(None)]:
     else:
         return None
 
+if "ftlangdetect" in globals():
+    @optional_typecheck
+    def language_detector(text: str) -> float:
+        return ftlangdetect.detect(text)["score"]
+elif "language_detect" in globals():
+    @optional_typecheck
+    def language_detector(text: str) -> float:
+        return langdetect.detect_langs(text)[0].prob
+else:
+    def language_detector(text: str) -> None:
+        return None
 
 @optional_typecheck
 def check_docs_tkn_length(docs: List[Document], name: str) -> float:
@@ -359,18 +388,18 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
         )
 
     # check if language check is above a threshold
-    if "language_detect" not in globals():
-        # bypass if language_detect not imported
+    prob = [language_detector(docs[0].page_content.replace("\n", "<br>"))]
+    if prob[0] is None:
+        # bypass if language_detector not defined
         return 1
-    prob = [language_detect(docs[0].page_content.replace("\n", "<br>"))["score"]]
     if len(docs) > 1:
-        prob.append(language_detect(docs[1].page_content.replace("\n",
-                                "<br>"))["score"])
+        prob.append(language_detector(docs[1].page_content.replace("\n",
+                                "<br>")))
         if len(docs) > 2:
             prob.append(
-                    language_detect(
+                    language_detector(
                         docs[len(docs) // 2].page_content.replace("\n", "<br>")
-                    )["score"]
+                    )
             )
     prob = max(prob)
     if prob <= min_lang_prob:
@@ -418,7 +447,7 @@ def get_splitter(task: str) -> TextSplitter:
 
 @optional_typecheck
 def cloze_stripper(clozed: str) -> str:
-    clozed = re.sub(clozeregex, " ", clozed)
+    clozed = clozeregex.sub(" ", clozed)
     return clozed
 
 # loaders #######################################
@@ -428,8 +457,7 @@ def load_youtube_video(path: str, youtube_language: Optional[str] = None, youtub
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
-    assert re.search(
-        yt_link_regex, path), f"youtube link is not valid: '{path}'"
+    assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
     whi(f"Loading youtube: '{path}'")
     fyu = YoutubeLoader.from_youtube_url
@@ -1162,9 +1190,9 @@ def load_pdf(
 
             if "unstructured" in loader_name.lower():
                 # remove empty lines. frequent in pdfs
-                content = re.sub(emptyline_regex, "", content)
-                content = re.sub(emptyline2_regex, "\n", content)
-                content = re.sub(linebreak_before_letter, r"\1", content)
+                content = emptyline_regex.sub("", content)
+                content = emptyline2_regex.sub("\n", content)
+                content = linebreak_before_letter.sub(r"\1", content)
 
             content = ftfy.fix_text(content)
 

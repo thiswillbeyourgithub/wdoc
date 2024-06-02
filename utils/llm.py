@@ -9,17 +9,14 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
+from langchain_community.llms import FakeListLLM
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_community.chat_models import ChatOpenAI
+from litellm import transcription
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
-from .lazy_lib_importer import lazy_import_statements, lazy_import
 
-exec(lazy_import_statements("""
-from langchain_community.llms import FakeListLLM
-from langchain_community.chat_models import ChatLiteLLM
-
-import openai
-"""))
 
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
@@ -79,12 +76,23 @@ def load_llm(
         red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
 
-    llm = ChatLiteLLM(
+    if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
+        red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
+        llm = ChatOpenAI(
+                model_name=modelname.split("/")[1],
+                cache=not no_llm_cache,
+                verbose=verbose,
+                callbacks=[PriceCountingCallback(verbose=verbose)],
+                **extra_model_args,
+                )
+    else:
+        red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
+        llm = ChatLiteLLM(
             model_name=modelname,
-            verbose=verbose,
-            cache=not no_llm_cache,
-            callbacks=[PriceCountingCallback(verbose=verbose)],
             api_base=api_base,
+            cache=False, # not no_llm_cache
+            verbose=verbose,
+            callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
             )
     if private:
@@ -267,16 +275,23 @@ def transcribe(
     language: str,
     prompt: str) -> str:
     "Use whisper to transcribe an audio file"
-    red(f"Calling whisper to transcribe file {audio_path}")
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] != "true", (
+        "Private mode detected, aborting before trying to use openai's whisper"
+    )
+    whi(f"Calling openai's whisper to transcribe file {audio_path}")
 
     assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
     os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
+        if not Path("OPENAI_API_KEY.txt").exists():
+            red("No environment variable nor OPENAI_API_KEY.txt file found")
+        else:
+            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:
-        transcript = openai.Audio.transcribe(
-            model="whisper-1",
+        transcript = transcription(
+            model="whisper",
             file=audio_file,
             prompt=prompt,
             language=language,

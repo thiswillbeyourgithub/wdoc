@@ -1,8 +1,9 @@
+import json
 import pyfiglet
 import copy
 from textwrap import indent
 from functools import wraps
-from typing import List, Union, Any, Optional
+from typing import List, Union, Any, Optional, Callable
 from typeguard import check_type, TypeCheckError
 import tldextract
 from joblib import Parallel, delayed
@@ -16,34 +17,6 @@ import os
 import asyncio
 from tqdm import tqdm
 
-try:
-    from ftlangdetect import detect as language_detect
-except Exception as err:
-    print(f"Couldn't import ftlangdetect: '{err}'")
-
-from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.batch_file_loader import batch_load_doc
-from utils.loaders import (
-    get_tkn_length,
-    average_word_length,
-    wpm,
-    get_splitter,
-    check_docs_tkn_length
-    )
-from utils.embeddings import load_embeddings
-from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, create_ntfy_func, md_printer
-from utils.cli import ask_user
-from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
-from utils.tasks.summary import do_summarize
-from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
-from utils.typechecker import optional_typecheck
-from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
-
-from utils.lazy_lib_importer import lazy_import_statements, lazy_import
-
-exec(lazy_import_statements("""
 from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain.docstore.document import Document
@@ -60,9 +33,28 @@ from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
-
 import litellm
-"""))
+
+from utils.llm import load_llm, AnswerConversationBufferMemory
+from utils.batch_file_loader import batch_load_doc
+from utils.loaders import (
+    get_tkn_length,
+    average_word_length,
+    wpm,
+    get_splitter,
+    check_docs_tkn_length,
+    )
+
+from utils.embeddings import load_embeddings
+from utils.retrievers import create_hyde_retriever, create_parent_retriever
+from utils.logger import whi, yel, red, md_printer, log
+from utils.cli import ask_user
+from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
+from utils.tasks.summary import do_summarize
+from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
+from utils.typechecker import optional_typecheck
+from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
+from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -95,7 +87,7 @@ extra_args = {
 }
 
 class DocToolsLLM:
-    VERSION: str = "0.13"
+    VERSION: str = "0.16"
 
     @optional_typecheck
     def __init__(
@@ -113,6 +105,7 @@ class DocToolsLLM:
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
+        embed_kwargs: Optional[dict] = None,
         save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[str] = None,
 
@@ -126,14 +119,16 @@ class DocToolsLLM:
         n_recursive_summary: int = 0,
 
         n_summaries_target: int = -1,
+        summary_language: str = "[same as input]",
 
         dollar_limit: int = 5,
         debug: bool = False,
         llm_verbosity: bool = False,
-        ntfy_url: Optional[str] =  None,
+        notification_callback: Optional[Callable] =  None,
         condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
+        file_loader_parallel_backend: str = "loky",
         private: bool = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: bool = False,
@@ -192,7 +187,7 @@ class DocToolsLLM:
             Everything before the slash is the backend and everything
             after the / is the model name.
             Available backends: openai, sentencetransformers,
-            huggingface, llamacpp
+            huggingface, llamacppembeddings
 
             Note:
             * the device used by default for huggingface is 'cpu' and not 'cuda'
@@ -200,8 +195,11 @@ class DocToolsLLM:
               need to be recomputed with new elements (the hash
               used to check for previous values includes the name of the model
               name)
-            * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
+            * If the backend if llamacppembeddings, the modelname must be the path to
+              the model. For example: 'llamacppembeddings/my_model_file'
 
+        --embed_kwargs: dict, default None
+            dictionnary of keyword arguments to pass to the embedding.
 
         --save_embeds_as str, default {user_dir}/latest_docs_and_embeddings
             only used if task is query
@@ -262,6 +260,11 @@ class DocToolsLLM:
             TODO in the output is higher, exit. If it's lower, only do the
             difference. -1 to disable.
 
+        --summary_language: str, default "[same as input]"
+            When writing a summary, the LLM will write using the language
+            specified in this argument. If it's '[same as input]', the LLM
+            will not translate.
+
         --dollar_limit: int, default 5
             If the estimated price is above this limit, stop instead.
             Note that the cost estimate for the embeddings is using the
@@ -277,9 +280,11 @@ class DocToolsLLM:
             if True, will print the intermediate reasonning steps of LLMs
             if debug is set, llm_verbosity is also set to True
 
-        --ntfy_url: str, default None
-            must be a url to ntfy.sh to receive notifications for summaries.
-            Especially useful to keep track of costs when using cron.
+        --notification_callback: Callable, default None
+            a function that must take as input a string and return the same
+            string. Inside it you can do whatever you want with it. This
+            can be used for example to send notification on your phone
+            using ntfy.sh to get summaries.
 
         --condense_question: bool, default True
             if True, will not use a special LLM call to reformulate the question
@@ -299,9 +304,22 @@ class DocToolsLLM:
             local only. It will also use a separate cache from non private.
 
         --no_llm_cache: bool, default False
+            WARNING: The cache is temporarily ignored in non openaillms
+            generations because of an error with langchain's ChatLiteLLM.
+            Basically if you don't use --private and use llm form openai,
+            DocToolsLLM will use ChatOpenAI with regular caching, otherwise
+            we use ChatLiteLLM with LLM caching disabled.
+            More at https://github.com/langchain-ai/langchain/issues/22389
+
             disable caching for LLM. All caches are stored in the usual
             cache folder for your system. This does not disable caching
             for documents.
+
+        --file_loader_parallel_backend: str, default "loky"
+            joblib.Parallel backend to use when loading files. loky means
+            multiprocessing while "threading" means multithreading.
+            The number of jobs can be specified with 'file_loader_n_jobs'
+            but it's a loader specific kwargs.
 
         --llms_api_bases: dict, default None
             a dict with keys in ["model", "query_eval_model"]
@@ -390,32 +408,56 @@ class DocToolsLLM:
             counted and taken into account when calculating --n_summaries_target
 
         --filter_metadata
-            list of string to use as filter.
-            Each filter must be a regex string beginning with
-            either '+', '-' or '~' to respectively restrict to (all metadata
-            must match this regex), exclude from (no metadata should match) or
-            at least one metadata should match.
-            Filters are only relevant for task related to queries.
-            This will only filter through the values of each document and
-            not the keys. Also values that depend on the key are not
-            currently supported.
-            All regex are matched case insensitively if they match their lowercase form.
+            list of regex string to use as metadata filter when querying.
+            Format: "[kvb][+-]your_regex"
 
-            Example:
-            * to include only documents that contain "anki" in any value
+            For example:
+            * Keep only documents that contain "anki" in any value
             of any of its metadata dict:
-                --filter_metadata="~anki"
+                --filter_metadata="v+anki"  <- at least the 'filetype' key
+                will have as value 'anki'
+            * Keep only documents that contain "anki_profile" as a key in
+            its metadata dict:
+                --filter_metadata="k+anki_profile"  <- because will contain the
+                key anki_profile
+            * Keep only data that have a certain 'source_tag' value:
+                --filter_metadata="b+source_tag:my_source_tag_regex"
+
+            Notes:
+            * Each filter must be a regex string beginning with k, v or b
+            (for 'key', 'value' or 'both'). Followed by either '+' or '-' to:
+                '+' at least one metadata should match
+                '-' exclude from (no metadata should match)
+            * If the string starts with k, it will filter based on the keys
+            of the metadata, if it starts with a v it will filter based
+            on the values, if it starts with b it will require a ':' present
+            and everything left of : will be a regex to match a key key and
+            right of the : will be a regex matching the matched key.
+            * Filters are only relevant for task related to queries and are
+            ignored for summaries.
+            * Smartcasing is used: if the filter is its own lowercase version
+            then insensitive casing will be used, otherwise not.
+            * The function used to check the matching is `pattern.match`
+            * The filtering is not done at the search time but before it. We
+            first scan all the corresponding documents, then delete the useless
+            embeddings from the docstore. This makes the whole search faster.
+            But the embeddings are not saved afterwards so they are not lost,
+            just not present in memory for this prompt.
 
         --filter_content
-            CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of
             each document instead of the metadata.
-            Note that ~ filters are not relevant to filter content so use +
-            instead.
+            Syntax: "[+-]your_regex""
+            Example:
+            * Keep only the document that contain "doctools"
+                --filter_content="+.*doctools.*"
+            * Discard the document that contain "DOCTOOLS"
+                --filter_content="-.*DOCTOOLS.*"
 
         --embed_instruct: bool
-            when loading an embedding model using HuggingFace or LlamaCPP,
-            wether to wrap the input sentence using instruct framework or not.
+            when loading an embedding model using HuggingFace or
+            llamacppembeddings backends, wether to wrap the input
+            sentence using instruct framework or not.
 
         --file_loader_n_jobs: int, default 5
             number of threads to use when loading files. Set to 1 to disable
@@ -439,9 +481,6 @@ class DocToolsLLM:
         Runtime flags
         -------------
 
-        DOCTOOLS_NO_LAZYLOADING="false"
-            to disable lazy loading of imports
-
         DOCTOOLS_TYPECHECKING="crash"
             default: "warn"
             Possible values:
@@ -456,8 +495,6 @@ class DocToolsLLM:
 
         # make sure the extra args are valid
         for k in kwargs:
-            if k.startswith("llamacppembedding_"):
-                continue
             if k not in extra_args:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
@@ -475,6 +512,7 @@ class DocToolsLLM:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
+        task = task.replace("summary", "summarize")
         assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
@@ -493,6 +531,14 @@ class DocToolsLLM:
             assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
+        if embed_kwargs is None:
+            embed_kwargs = {}
+        if isinstance(embed_kwargs, str):
+            try:
+                embed_kwargs = json.loads(embed_kwargs)
+            except Exception as err:
+                raise Exception(f"Failed to parse embed_kwargs: '{embed_kwargs}'")
+        assert isinstance(embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if filetype == "string":
@@ -540,6 +586,7 @@ class DocToolsLLM:
             query = None
         if isinstance(query, str):
             query = query.strip() or None
+        assert file_loader_parallel_backend in ["loky", "threading"], "Invalid value for file_loader_parallel_backend"
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
 
@@ -555,6 +602,7 @@ class DocToolsLLM:
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
+        self.embed_kwargs = embed_kwargs
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
@@ -566,11 +614,13 @@ class DocToolsLLM:
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
+        self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
+        self.file_loader_parallel_backend = file_loader_parallel_backend
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
@@ -613,14 +663,17 @@ class DocToolsLLM:
             else:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
-        global ntfy
-        if ntfy_url:
-            ntfy = create_ntfy_func(ntfy_url)
-            ntfy("Starting DocTools")
+        if notification_callback is not None:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                out = notification_callback(text)
+                assert out == text, "The notification callback must return the same string"
+                return out
+            ntfy("Starting DocToolsLLM")
         else:
             @optional_typecheck
             def ntfy(text: str) -> str:
-                return red(text)
+                return text
 
         if self.debug:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -692,7 +745,11 @@ class DocToolsLLM:
             doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
             links_regex = re.compile(r'(https?://\S+)')
-            doclist = [re.findall(links_regex, d)[0].strip() if re.search(links_regex, d) else d for d in doclist]
+            doclist = [
+                    matched.group(0)
+                    for d in doclist
+                    if (matched := links_regex.search(d).strip())
+            ]
 
             self.done_links = " ".join(doclist)
             self.kwargs["done_links"] = doclist
@@ -704,6 +761,7 @@ class DocToolsLLM:
                 filetype=self.filetype,
                 debug=self.debug,
                 task=self.task,
+                backend=self.file_loader_parallel_backend,
                 **self.kwargs)
 
             # check that the hash are unique
@@ -790,7 +848,7 @@ class DocToolsLLM:
                     if len(links_todo) < self.n_summaries_target:
                         links_todo[link] = None
                     else:
-                        ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run.")
+                        whi(ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run."))
                         break
 
             # comment out the links that are marked as already done
@@ -814,10 +872,10 @@ class DocToolsLLM:
                 # as it allows to run this frequently
                 n_todos_desired = self.n_summaries_target
                 if self.n_todos_present >= n_todos_desired:
-                    return ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising.")
+                    return red(ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."))
                 else:
                     self.n_summaries_target = n_todos_desired - self.n_todos_present
-                    ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}")
+                    red(ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}"))
                     assert self.n_summaries_target > 0
 
                 while len(links_todo) > self.n_summaries_target:
@@ -860,10 +918,10 @@ class DocToolsLLM:
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
-        ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens.")
+        whi(ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
-                raise Exception(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting."))
+                raise Exception(red(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
@@ -924,22 +982,6 @@ class DocToolsLLM:
             else:
                 author = None
 
-            # detect language
-            try:
-                lang_info = language_detect(relevant_docs[0].page_content.replace("\n", "<br>"))
-                if lang_info["score"] >= 0.8:
-                    lang = lang_info['lang']
-                    if lang == "fr":
-                        lang = "FRENCH"
-                    else:  # prefer english to anything other than french
-                        lang = "ENGLISH"
-                else:
-                    lang = "ENGLISH"
-                    red(f"Language detection failed: '{lang_info}'")
-            except Exception as err:
-                red(f"Couldn't import ftlangdetect: '{err}'")
-                lang = "[SAME AS INPUT TEXT]"
-
             if metadata:
                 metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
                 metadata += "\t- Section number: [PROGRESS]\n"
@@ -950,7 +992,7 @@ class DocToolsLLM:
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                     docs=relevant_docs,
                     metadata=metadata,
-                    language=lang,
+                    language=self.summary_language,
                     modelbackend=self.modelbackend,
                     llm=self.llm,
                     llm_price=self.llm_price,
@@ -996,7 +1038,7 @@ class DocToolsLLM:
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
-                            language=lang,
+                            language=self.summary_language,
                             modelbackend=self.modelbackend,
                             llm=self.llm,
                             llm_price=self.llm_price,
@@ -1029,7 +1071,10 @@ class DocToolsLLM:
                 summary = summary_text
 
             with lock:
-                red(f"\n\nSummary of '{link}':\n{summary}")
+                print("\n\n")
+                md_printer("# Summary")
+                md_printer(f'## {link}')
+                md_printer(summary)
 
                 red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
@@ -1056,8 +1101,7 @@ class DocToolsLLM:
                     header += f"\n  chunks:: {n_chunk}"
                 if author:
                     header += f"\n  author:: {author}"
-                if lang:
-                    header += f"\n  language:: {lang}"
+                header += f"\n  language:: {self.summary_language}"
 
             else:
                 header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
@@ -1113,8 +1157,8 @@ class DocToolsLLM:
         total_docs_length = sum([x["doc_reading_length"] for x in results])
         # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-        ntfy(f"Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})")
-        ntfy(f"Total time saved by this run: {total_docs_length:.1f} minutes")
+        red(ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
+        red(ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
 
         # if "out_file" in self.kwargs:
         #     # after summarizing all links, append to output file the total cost
@@ -1143,6 +1187,7 @@ class DocToolsLLM:
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
             embed_model=self.embed_model,
+            embed_kwargs=self.embed_kwargs,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
             debug=self.debug,
@@ -1176,78 +1221,177 @@ class DocToolsLLM:
                 else:
                     filter_metadata = self.kwargs["filter_metadata"]
                 assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
-                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_metadata), f"Each item of filter_metadata must start with either +, - or ~"
-                assert not any(f.strip() in ["+", "-", "~"] for f in filter_metadata), f"filter cannot be only + or - or ~"
-                incl = []
-                excl = []
-                fuz = []
-                for f in filter_metadata:
-                    case = True if f != f.lower() else False
-                    if f.startswith("+"):
-                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("-"):
-                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("~"):
-                        fuz.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
 
-                @optional_typecheck
+                # storing fast as list then in tupples for faster iteration
+                filters_k_plus = []
+                filters_k_minus = []
+                filters_v_plus = []
+                filters_v_minus = []
+                filters_b_plus_keys = []
+                filters_b_plus_values = []
+                filters_b_minus_keys = []
+                filters_b_minus_values = []
+                for f in filter_metadata:
+                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    kvb = f[0]
+                    assert kvb in ["k", "v", "b"], f"filter 1st character must be k, v or b: '{f}'"
+                    incexc = f[1]
+                    assert incexc in ["+", "-"], f"filter 2nd character must be + or -: '{f}'"
+                    incexc_str = "plus" if incexc == "+" else "minus"
+                    assert f[2:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    pattern = f[2:].strip()
+                    if kvb == "b":
+                        assert ":" in f, (
+                            "Filter starting with b must contain "
+                            "a ':' to distinguish the key regex and the value "
+                            f"regex: '{f}'")
+                        key_pat, value_pat = pattern.split(":", 1)
+                        if key_pat == key_pat.lower():
+                            key_pat = re.compile(key_pat, flags=re.IGNORECASE)
+                        else:
+                            key_pat = re.compile(key_pat)
+                        if value_pat == value_pat.lower():
+                            value_pat = re.compile(value_pat, flags=re.IGNORECASE)
+                        else:
+                            value_pat = re.compile(value_pat)
+                        assert key_pat not in locals()[f"filters_b_{incexc_str}_keys"], (
+                            f"Can't use several filters for the same key "
+                            "regex. Use a single but more complex regex"
+                            f": '{f}'"
+                        )
+                        locals()[f"filters_b_{incexc_str}_keys"].append(key_pat)
+                        locals()[f"filters_b_{incexc_str}_values"].append(value_pat)
+                    else:
+                        if pattern == pattern.lower():
+                            pattern = re.compile(pattern, flags=re.IGNORECASE)
+                        else:
+                            pattern = re.compile(pattern)
+                        locals()[f"filters_{kvb}_{incexc_str}"].append(pattern)
+                assert len(filters_b_plus_keys) == len(filters_b_plus_values)
+                assert len(filters_b_minus_keys) == len(filters_b_minus_values)
+
+                # store as tuple for faster iteration
+                filters_k_plus = tuple(filters_k_plus)
+                filters_k_minus = tuple(filters_k_minus)
+                filters_v_plus = tuple(filters_v_plus)
+                filters_v_minus = tuple(filters_v_minus)
+                filters_b_plus_keys = tuple(filters_b_plus_keys)
+                filters_b_plus_values = tuple(filters_b_plus_values)
+                filters_b_minus_keys = tuple(filters_b_minus_keys)
+                filters_b_minus_values = tuple(filters_b_minus_values)
+
                 def filter_meta(meta: dict) -> bool:
-                    fizdic = {k:False for k in fuz}
-                    for v in meta.values():
-                        v = str(v)
-                        if any(re.search(e, v) for e in excl):
+                    # match keys
+                    for inc in filters_k_plus:
+                        if not any(inc.match(k) for k in meta.keys()):
                             return False
-                        if not all(re.search(e, v) for e in incl):
+                    for exc in filters_k_minus:
+                        if any(exc.match(k) for k in meta.keys()):
                             return False
-                        for f in fuz:
-                            if re.search(f, v):
-                                fizdic[f] = True
-                    if False in fizdic.values():
-                        return False
+
+                    # match values
+                    for inc in filters_v_plus:
+                        if not any(inc.match(v) for v in meta.values()):
+                            return False
+                    for exc in filters_v_minus:
+                        if any(exc.match(v) for v in meta.values()):
+                            return False
+
+                    # match both
+                    for kp, vp in zip(filters_b_plus_keys, filters_b_plus_values):
+                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        gk_checked = 0
+                        for gk in good_keys:
+                            if vp.match(meta[gk]):
+                                gk_checked += 1
+                                break
+                        if not gk_checked:
+                            return False
+                    for kp, vp in zip(filters_b_minus_keys, filters_b_minus_values):
+                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        gk_checked = 0
+                        for gk in good_keys:
+                            if vp.match(meta[gk]):
+                                return False
+                            gk_checked += 1
+                        if not gk_checked:
+                            return False
+
                     return True
             else:
-                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     return True
+
             if "filter_content" in self.kwargs:
-                raise NotImplementedError("filter_content argument was disabled")
                 if isinstance(self.kwargs["filter_content"], str):
                     filter_content = self.kwargs["filter_content"].split(",")
                 else:
                     filter_content = self.kwargs["filter_content"]
                 assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
-                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_content), f"Each item of filter_content must start with either +, - or ~"
-                assert not any(f.strip() in ["+", "-", "~"] for f in filter_content), f"filter cannot be only + or - or ~"
-                incl = []
-                excl = []
+
+                # storing fast as list then in tupples for faster iteration
+                filters_cont_plus = []
+                filters_cont_minus = []
+
                 for f in filter_content:
-                    case = True if f != f.lower() else False
-                    if f.startswith("+"):
-                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("-"):
-                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                assert not [re.compile(f[1:]) for f in filter_content if f.startswith("~")], "No ~ filter can be used on content, use + instead"
-                @optional_typecheck
-                def filter_cont(cont) -> bool:
-                    if any(re.search(e, cont) for e in excl):
+                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    incexc = f[0]
+                    assert incexc in ["+", "-"], f"filter 1st character must be + or -: '{f}'"
+                    incexc_str = "plus" if incexc == "+" else "minus"
+                    assert f[1:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    pattern = f[1:].strip()
+                    if pattern == pattern.lower():
+                        pattern = re.compile(pattern, flags=re.IGNORECASE)
+                    else:
+                        pattern = re.compile(pattern)
+                    locals()[f"filters_cont_{incexc_str}"].append(pattern)
+                filters_cont_plus = tuple(filters_cont_plus)
+                filters_cont_minus = tuple(filters_cont_minus)
+
+                def filter_cont(cont: str) -> bool:
+                    if not all(inc.match(cont) for inc in filters_cont_plus):
                         return False
-                    if not all(re.search(e, cont) for e in incl):
+                    if any(exc.match(cont) for exc in filters_cont_minus):
                         return False
                     return True
+
             else:
-                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     return True
-            @optional_typecheck
-            def query_filter(doc: Any) -> bool:
-                if isinstance(doc, dict):  # received metadata directly
-                    return filter_meta(doc)
-                if filter_meta(doc.metadata) and filter_content(doc.page_content):
-                    return True
-                return False
-            self.query_filter = query_filter
-        else:
-            self.query_filter = None
+
+            # check filtering is valid
+            checked = 0
+            good = 0
+            ids_to_del = []
+            for doc_id, doc in tqdm(
+                self.loaded_embeddings.docstore._dict.items(),
+                desc="filtering",
+                unit="docs",
+                ):
+                checked += 1
+                if filter_meta(doc.metadata) and filter_cont(doc.page_content):
+                    good += 1
+                else:
+                    ids_to_del.append(doc_id)
+            red(f"Keeping {good}/{checked} documents from vectorstore after filtering")
+            if good == checked:
+                red("Your filter matched all stored documents!")
+            assert good, "No documents in the vectorstore match the given filter"
+
+            # directly remove the filtered documents from the docstore
+            # but first store the docstore before altering it to allow
+            # unfiltering in the prompt
+            self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
+            status = self.loaded_embeddings.delete(ids_to_del)
+
+            # checking deletiong want well
+            if status is False:
+                raise Exception("Vectorstore filtering failed")
+            elif status is None:
+                raise Exception("Vectorstore filtering not implemented")
+            assert len(self.loaded_embeddings.docstore._dict) == checked - len(ids_to_del), "Something went wrong when deleting filtered out documents"
+            assert len(self.loaded_embeddings.docstore._dict), "Something went wrong when deleting filtered out documents: no document left"
+            assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
     #@optional_typecheck
@@ -1273,7 +1417,6 @@ class DocToolsLLM:
                         llm=self.llm,
                         top_k=self.cli_settings["top_k"],
                         relevancy=self.cli_settings["relevancy"],
-                        filter=self.query_filter,
 
                         embeddings=self.embeddings,
                         loaded_embeddings=self.loaded_embeddings,
@@ -1287,7 +1430,6 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_settings["relevancy"],
                         k=self.cli_settings["top_k"],
-                        filter=self.query_filter,
                         )
                     )
         if "svm" in self.cli_settings["retriever"].lower():
@@ -1297,7 +1439,6 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_settings["relevancy"],
                         k=self.cli_settings["top_k"],
-                        filter=self.query_filter,
                         )
                     )
         if "parent" in self.cli_settings["retriever"].lower():
@@ -1308,7 +1449,6 @@ class DocToolsLLM:
                         loaded_docs=self.loaded_docs,
                         top_k=self.cli_settings["top_k"],
                         relevancy=self.cli_settings["relevancy"],
-                        filter=self.query_filter,
                         )
                     )
 
@@ -1320,7 +1460,6 @@ class DocToolsLLM:
                             "k": self.cli_settings["top_k"],
                             "distance_metric": "cos",
                             "score_threshold": self.cli_settings["relevancy"],
-                            "filter": self.query_filter,
                             })
                         )
 
@@ -1339,12 +1478,6 @@ class DocToolsLLM:
             retriever = ContextualCompressionRetriever(
                 base_compressor=pipeline, base_retriever=retriever
             )
-
-        if self.query_filter:
-            assert any(
-                self.query_filter(d)
-                for d in retriever.vectorstore.docstore._dict.values()
-            ), "No documents in the vectorstore match the given filter"
 
         if " // " in query:
             sp = query.split(" // ")
@@ -1478,9 +1611,6 @@ class DocToolsLLM:
                     }
                 )
                 docs = output["filtered_docs"]
-
-                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
-                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             else:
 
                 docs = retriever.get_relevant_documents(query)
@@ -1505,9 +1635,12 @@ class DocToolsLLM:
                         if cid not in anki_cid:
                             anki_cid.append(cid)
             md_printer(to_print)
+            if self.query_eval_modelname:
+                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
             if anki_cid:
-                open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cid})\n> ")
+                open_answ = input(f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
                 if open_answ == "debug":
                     breakpoint()
                 elif open_answ in ["y", "yes"]:
@@ -1517,6 +1650,18 @@ class DocToolsLLM:
                             action="guiBrowse",
                             query=query,
                             )
+            all_filepaths = []
+            for doc in docs:
+                if "path" in doc.metadata:
+                    path = doc.metadata["path"]
+                    try:
+                        path = str(Path(path).resolve().absolute())
+                    except Exception as err:
+                        pass
+                    all_filepaths.append(path)
+            if all_filepaths:
+                md_printer("### All file paths")
+                md_printer("* " + "\n* ".join(all_filepaths))
 
         else:
             if self.condense_question:
@@ -1531,7 +1676,7 @@ class DocToolsLLM:
                     }
                         | PR_CONDENSE_QUESTION
                         | self.llm
-                        | StrOutputParser(),
+                        | StrOutputParser()
                 }
 
             # uses in most places to increase concurrency limit
@@ -1564,10 +1709,10 @@ class DocToolsLLM:
                 )
 
             # the eval doc chain needs its own caching
-            if not self.no_llm_cache:
-                eval_cache_wrapper = doc_eval_cache.cache
-            else:
+            if self.no_llm_cache:
                 def eval_cache_wrapper(func): return func
+            else:
+                eval_cache_wrapper = doc_eval_cache.cache
 
             @chain
             @optional_typecheck
@@ -1596,7 +1741,7 @@ class DocToolsLLM:
                     ]
                     try:
                         loop = asyncio.get_event_loop()
-                    except:
+                    except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                     outs = loop.run_until_complete(asyncio.gather(*outs))
@@ -1615,10 +1760,14 @@ class DocToolsLLM:
                 self.eval_llm.callbacks[0].total_tokens += new_p + new_c
                 return outputs
 
-            retrieve_documents = {
-                "unfiltered_docs": itemgetter("question_for_embedding") | retriever,
-                "question_to_answer": itemgetter("question_to_answer")
-            }
+            # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+            @chain
+            def retrieve_documents(inputs):
+                return {
+                        "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                        "question_to_answer": inputs["question_to_answer"],
+                }
+                return inputs
             refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(
@@ -1779,8 +1928,12 @@ class DocToolsLLM:
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
 
-
-if __name__ == "__main__":
+def cli_call() -> None:
+    "called by 'DocToolsLLM' in your terminal"
     red(pyfiglet.figlet_format("DocToolsLLM"))
+    log.info("Starting DocToolsLLM")
     import fire
     instance = fire.Fire(DocToolsLLM)
+
+if __name__ == "__main__":
+    cli_call()

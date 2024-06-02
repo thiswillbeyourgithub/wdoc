@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, List, Union
+from typing import Tuple, List
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from joblib import Memory
@@ -11,6 +11,7 @@ from utils.misc import cache_dir
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 doc_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
+irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
 @optional_typecheck
@@ -27,7 +28,7 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if (
-        ((not re.search(r"\bIRRELEVANT\b", ans)) and len(ans) < len("IRRELEVANT") * 2)
+        ((not irrelevant_regex.search(ans)) and len(ans) < len("IRRELEVANT") * 2)
         or
         len(ans) >= len("IRRELEVANT") * 2
         ):
