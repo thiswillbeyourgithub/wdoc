@@ -403,7 +403,7 @@ class DocToolsLLM:
 
         --filter_metadata
             list of regex string to use as metadata filter when querying.
-            Format: [kvb][+-][regex]  <- without brackets
+            Format: "[kvb][+-]your_regex"
 
             For example:
             * Keep only documents that contain "anki" in any value
@@ -431,12 +431,22 @@ class DocToolsLLM:
             ignored for summaries.
             * Smartcasing is used: if the filter is its own lowercase version
             then insensitive casing will be used, otherwise not.
-            * The function used to check the matching is `pattern.match(keyorvalorboth)`
+            * The function used to check the matching is `pattern.match`
+            * The filtering is not done at the search time but before it. We
+            first scan all the corresponding documents, then delete the useless
+            embeddings from the docstore. This makes the whole search faster.
+            But the embeddings are not saved afterwards so they are not lost,
+            just not present in memory for this prompt.
 
         --filter_content
-            CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of
             each document instead of the metadata.
+            Syntax: "[+-]your_regex""
+            Example:
+            * Keep only the document that contain "doctools"
+                --filter_content="+.*doctools.*"
+            * Discard the document that contain "DOCTOOLS"
+                --filter_content="-.*DOCTOOLS.*"
 
         --embed_instruct: bool
             when loading an embedding model using HuggingFace or LlamaCPP,
@@ -1289,20 +1299,77 @@ class DocToolsLLM:
             else:
                 def filter_meta(meta: dict) -> bool:
                     return True
+
             if "filter_content" in self.kwargs:
-                raise NotImplementedError("filter_content argument was disabled")
+                if isinstance(self.kwargs["filter_content"], str):
+                    filter_content = self.kwargs["filter_content"].split(",")
+                else:
+                    filter_content = self.kwargs["filter_content"]
+                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
+
+                # storing fast as list then in tupples for faster iteration
+                filters_cont_plus = []
+                filters_cont_minus = []
+
+                for f in filter_content:
+                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    incexc = f[0]
+                    assert incexc in ["+", "-"], f"filter 1st character must be + or -: '{f}'"
+                    incexc_str = "plus" if incexc == "+" else "minus"
+                    assert f[1:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    pattern = f[1:].strip()
+                    if pattern == pattern.lower():
+                        pattern = re.compile(pattern, flags=re.IGNORECASE)
+                    else:
+                        pattern = re.compile(pattern)
+                    locals()[f"filters_cont_{incexc_str}"].append(pattern)
+                filters_cont_plus = tuple(filters_cont_plus)
+                filters_cont_minus = tuple(filters_cont_minus)
+
+                def filter_cont(cont: str) -> bool:
+                    if not all(inc.match(cont) for inc in filters_cont_plus):
+                        return False
+                    if any(exc.match(cont) for exc in filters_cont_minus):
+                        return False
+                    return True
+
             else:
                 def filter_cont(cont: str) -> bool:
                     return True
-            def query_filter(doc: Union[Document, dict]) -> bool:
-                if isinstance(doc, dict):  # received metadata directly
-                    return filter_meta(doc)
+
+            # check filtering is valid
+            checked = 0
+            good = 0
+            ids_to_del = []
+            for doc_id, doc in tqdm(
+                self.loaded_embeddings.docstore._dict.items(),
+                desc="filtering",
+                unit="docs",
+                ):
+                checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
-                    return True
-                return False
-            self.query_filter = query_filter
-        else:
-            self.query_filter = None
+                    good += 1
+                else:
+                    ids_to_del.append(doc_id)
+            red(f"Keeping {good}/{checked} documents from vectorstore after filtering")
+            if good == checked:
+                red("Your filter matched all stored documents!")
+            assert good, "No documents in the vectorstore match the given filter"
+
+            # directly remove the filtered documents from the docstore
+            # but first store the docstore before altering it to allow
+            # unfiltering in the prompt
+            self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
+            status = self.loaded_embeddings.delete(ids_to_del)
+
+            # checking deletiong want well
+            if status is False:
+                raise Exception("Vectorstore filtering failed")
+            elif status is None:
+                raise Exception("Vectorstore filtering not implemented")
+            assert len(self.loaded_embeddings.docstore._dict) == checked - len(ids_to_del), "Something went wrong when deleting filtered out documents"
+            assert len(self.loaded_embeddings.docstore._dict), "Something went wrong when deleting filtered out documents: no document left"
+            assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
     #@optional_typecheck
@@ -1328,7 +1395,6 @@ class DocToolsLLM:
                         llm=self.llm,
                         top_k=self.cli_settings["top_k"],
                         relevancy=self.cli_settings["relevancy"],
-                        filter=self.query_filter,
 
                         embeddings=self.embeddings,
                         loaded_embeddings=self.loaded_embeddings,
@@ -1342,7 +1408,6 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_settings["relevancy"],
                         k=self.cli_settings["top_k"],
-                        filter=self.query_filter,
                         )
                     )
         if "svm" in self.cli_settings["retriever"].lower():
@@ -1352,7 +1417,6 @@ class DocToolsLLM:
                         self.embeddings,
                         relevancy_threshold=self.cli_settings["relevancy"],
                         k=self.cli_settings["top_k"],
-                        filter=self.query_filter,
                         )
                     )
         if "parent" in self.cli_settings["retriever"].lower():
@@ -1363,7 +1427,6 @@ class DocToolsLLM:
                         loaded_docs=self.loaded_docs,
                         top_k=self.cli_settings["top_k"],
                         relevancy=self.cli_settings["relevancy"],
-                        filter=self.query_filter,
                         )
                     )
 
@@ -1375,7 +1438,6 @@ class DocToolsLLM:
                             "k": self.cli_settings["top_k"],
                             "distance_metric": "cos",
                             "score_threshold": self.cli_settings["relevancy"],
-                            "filter": self.query_filter,
                             })
                         )
 
@@ -1394,16 +1456,6 @@ class DocToolsLLM:
             retriever = ContextualCompressionRetriever(
                 base_compressor=pipeline, base_retriever=retriever
             )
-
-        if self.query_filter:
-            checked = 0
-            good = 0
-            for d in retriever.vectorstore.docstore._dict.values():
-                checked += 1
-                if self.query_filter(d):
-                    good += 1
-            print(f"After filtering, found {good}/{checked} documents")
-            assert good, "No documents in the vectorstore match the given filter"
 
         if " // " in query:
             sp = query.split(" // ")

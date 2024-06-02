@@ -21,7 +21,6 @@ def create_hyde_retriever(
     llm: Any,
     top_k: int,
     relevancy: float,
-    filter: Optional[Callable],
 
     embeddings: Any,
     loaded_embeddings: Any,
@@ -65,7 +64,6 @@ Answer:"""
             "k": top_k,
             "distance_metric": "cos",
             "score_threshold": relevancy,
-            "filter": filter,
             }
         )
     return retriever
@@ -78,7 +76,6 @@ def create_parent_retriever(
     loaded_docs: List[Document],
     top_k: int,
     relevancy: float,
-    filter: Optional[Callable],
     ) -> Any:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
@@ -94,7 +91,6 @@ def create_parent_retriever(
                 "k": top_k,
                 "distance_metric": "cos",
                 "score_threshold": relevancy,
-                "filter": filter,
                 }
             )
     parent.add_documents(loaded_docs)
