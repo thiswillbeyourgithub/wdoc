@@ -1640,7 +1640,7 @@ class DocToolsLLM:
             md_printer(to_print)
 
             if anki_cid:
-                open_answ = input(f"\nAnki cards found, open in anki? (cids: {anki_cid})\n> ")
+                open_answ = input(f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
                 if open_answ == "debug":
                     breakpoint()
                 elif open_answ in ["y", "yes"]:
