@@ -46,7 +46,7 @@ from utils.loaders import (
 
 from utils.embeddings import load_embeddings
 from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, create_ntfy_func, md_printer
+from utils.logger import whi, yel, red, create_ntfy_func, md_printer, log
 from utils.cli import ask_user
 from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from utils.tasks.summary import do_summarize
@@ -1785,6 +1785,7 @@ class DocToolsLLM:
 def cli_call() -> None:
     "called by 'DocToolsLLM' in your terminal"
     red(pyfiglet.figlet_format("DocToolsLLM"))
+    log.info("Starting DocToolsLLM")
     import fire
     instance = fire.Fire(DocToolsLLM)
 
