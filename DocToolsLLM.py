@@ -1,3 +1,4 @@
+import json
 import pyfiglet
 import copy
 from textwrap import indent
