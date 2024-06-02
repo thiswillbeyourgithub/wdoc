@@ -1712,7 +1712,7 @@ class DocToolsLLM:
                     ]
                     try:
                         loop = asyncio.get_event_loop()
-                    except:
+                    except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                     outs = loop.run_until_complete(asyncio.gather(*outs))
