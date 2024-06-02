@@ -66,6 +66,7 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
 @optional_typecheck
 def load_embeddings(
     embed_model: str,
+    embed_kwargs: dict,
     load_embeds_from: Optional[str],
     save_embeds_as: str,
     debug: bool,
@@ -93,10 +94,11 @@ def load_embeddings(
             os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
 
         embeddings = OpenAIEmbeddings(
-                model=embed_model,
-                # model="text-embedding-ada-002",
-                openai_api_key=os.environ["OPENAI_API_KEY"]
-                )
+            model=embed_model,
+            # model="text-embedding-ada-002",
+            openai_api_key=os.environ["OPENAI_API_KEY"],
+            **embed_kwargs,
+            )
 
     elif backend == "huggingface":
         assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers or llamacppembeddings"
@@ -104,6 +106,7 @@ def load_embeddings(
             "device": "cpu",
             # "device": "cuda",
         }
+        model_kwargs.update(embed_kwargs)
         if "google" in embed_model and "gemma" in embed_model.lower():
             if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
                 assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
@@ -133,21 +136,27 @@ def load_embeddings(
         if private:
             red(f"Private is set and will use sentencetransformers backend")
         if use_rolling:
-            embeddings = RollingWindowEmbeddings(
-                    model_name=embed_model,
-                    encode_kwargs={
+            embed_kwargs.update(
+                    {
                         "batch_size": 1,
                         "pooling": "meanpool",
                         "device": None,
-                        },
+                        }
+            )
+            embeddings = RollingWindowEmbeddings(
+                    model_name=embed_model,
+                    encode_kwargs=embed_kwargs,
                     )
         else:
-            embeddings = SentenceTransformerEmbeddings(
-                    model_name=embed_model,
-                    encode_kwargs={
+            embed_kwargs.update(
+                    {
                         "batch_size": 1,
                         "device": None,
-                        },
+                        }
+            )
+            embeddings = SentenceTransformerEmbeddings(
+                    model_name=embed_model,
+                    encode_kwargs=embed_kwargs,
                     )
 
     elif backend == "llamacppembeddings":
@@ -166,18 +175,10 @@ def load_embeddings(
             "verbose": False,
             "vocab_only": False,
         }
+        llamacppkwargs.update(embed_kwargs)
         assert Path(embed_model).exists(), f"File not found {embed_model}"
 
-        for k, v in kwargs.items():
-            if k.lower().startswith("llamacpp") and not k.startswith("llamacppembedding_"):
-                red(f"Possibly malformed argument name: {k}")
-            if k.startswith("llamacppembedding_"):
-                k = k.split("llamacppembedding_")[1]
-                if k not in llamacppkwargs:
-                    if k == "model_path":
-                        raise Exception("llamacppembeddings model_path must be supplied via --embed_model arg")
-                    raise Exception(f"Unexpected argument key {key} for llamacppembeddings")
-                llamacppkwargs[k] = v
+        assert "model_path" not in llamacppkwargs, "llamacppembeddings model_path must be supplied via --embed_model arg"
 
         red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
         # method overloading to make it an instruct model

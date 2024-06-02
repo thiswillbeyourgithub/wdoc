@@ -105,6 +105,7 @@ class DocToolsLLM:
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
+        embed_kwargs: Optional[dict] = None,
         save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[str] = None,
 
@@ -194,8 +195,11 @@ class DocToolsLLM:
               need to be recomputed with new elements (the hash
               used to check for previous values includes the name of the model
               name)
-            * If the backend if llamacpp, the modelname must be the path to   the model. Other arguments to pass to LlamaCppEmbeddings must start with 'llamacppembedding_', for example "llamacppembedding_n_gpu_layers=10"
+            * If the backend if llamacpp, the modelname must be the path to
+              the model.
 
+        --embed_kwargs: dict, default None
+            dictionnary of keyword arguments to pass to the embedding.
 
         --save_embeds_as str, default {user_dir}/latest_docs_and_embeddings
             only used if task is query
@@ -490,8 +494,6 @@ class DocToolsLLM:
 
         # make sure the extra args are valid
         for k in kwargs:
-            if k.startswith("llamacppembedding_"):
-                continue
             if k not in extra_args:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
@@ -528,6 +530,14 @@ class DocToolsLLM:
             assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
+        if embed_kwargs is None:
+            embed_kwargs = {}
+        if isinstance(embed_kwargs, str):
+            try:
+                embed_kwargs = json.loads(embed_kwargs)
+            except Exception as err:
+                raise Exception(f"Failed to parse embed_kwargs: '{embed_kwargs}'")
+        assert isinstance(embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if filetype == "string":
@@ -591,6 +601,7 @@ class DocToolsLLM:
         self.task = task
         self.filetype = filetype
         self.embed_model = embed_model
+        self.embed_kwargs = embed_kwargs
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
@@ -1175,6 +1186,7 @@ class DocToolsLLM:
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
             embed_model=self.embed_model,
+            embed_kwargs=self.embed_kwargs,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
             debug=self.debug,
