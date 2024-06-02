@@ -328,7 +328,7 @@ def load_one_doc(
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).absolute())
+           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
 
     assert docs, "empty list of loaded documents!"
     return docs

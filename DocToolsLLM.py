@@ -1655,7 +1655,7 @@ class DocToolsLLM:
                 if "path" in doc.metadata:
                     path = doc.metadata["path"]
                     try:
-                        path = str(Path(path).absolute())
+                        path = str(Path(path).resolve().absolute())
                     except Exception as err:
                         pass
                     all_filepaths.append(path)

@@ -198,7 +198,7 @@ def load_embeddings(
     if "/" in embed_model:
         try:
             if Path(embed_model).exists():
-                with open(Path(embed_model).absolute().__str__(), "rb") as f:
+                with open(Path(embed_model).resolve().absolute().__str__(), "rb") as f:
                     h = hashlib.sha256(
                         f.read() + str(instruct)
                     ).hexdigest()[:15]

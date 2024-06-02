@@ -46,7 +46,7 @@ def file_hasher(doc: dict) -> str:
         file = Path(doc["path"])
         stats = file.stat()
         return _file_hasher(
-            abs_path=str(file.absolute()),
+            abs_path=str(file.resolve().absolute()),
             stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
         )
     else:

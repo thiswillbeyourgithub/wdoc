@@ -272,7 +272,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             prev_questions,
             key=lambda x: x["timestamp"],
             )
-    temp_file = Path(str(pp_file.absolute()) + ".temp")
+    temp_file = Path(str(pp_file.resolve().absolute()) + ".temp")
     json.dump(prev_questions, temp_file.open("w"), indent=4)
     assert temp_file.exists()
     pp_file.unlink(missing_ok=True)
