@@ -402,28 +402,41 @@ class DocToolsLLM:
             counted and taken into account when calculating --n_summaries_target
 
         --filter_metadata
-            list of string to use as filter.
-            Each filter must be a regex string beginning with
-            either '+', '-' or '~' to respectively restrict to (all metadata
-            must match this regex), exclude from (no metadata should match) or
-            at least one metadata should match.
-            Filters are only relevant for task related to queries.
-            This will only filter through the values of each document and
-            not the keys. Also values that depend on the key are not
-            currently supported.
-            All regex are matched case insensitively if they match their lowercase form.
+            list of regex string to use as metadata filter when querying.
+            Format: [kvb][+-][regex]  <- without brackets
 
-            Example:
-            * to include only documents that contain "anki" in any value
+            For example:
+            * Keep only documents that contain "anki" in any value
             of any of its metadata dict:
-                --filter_metadata="~anki"
+                --filter_metadata="v+anki"  <- at least the 'filetype' key
+                will have as value 'anki'
+            * Keep only documents that contain "anki_profile" as a key in
+            its metadata dict:
+                --filter_metadata="k+anki_profile"  <- because will contain the
+                key anki_profile
+            * Keep only data that have a certain 'source_tag' value:
+                --filter_metadata="b+source_tag:my_source_tag_regex"
+
+            Notes:
+            * Each filter must be a regex string beginning with k, v or b
+            (for 'key', 'value' or 'both'). Followed by either '+' or '-' to:
+                '+' at least one metadata should match
+                '-' exclude from (no metadata should match)
+            * If the string starts with k, it will filter based on the keys
+            of the metadata, if it starts with a v it will filter based
+            on the values, if it starts with b it will require a ':' present
+            and everything left of : will be a regex to match a key key and
+            right of the : will be a regex matching the matched key.
+            * Filters are only relevant for task related to queries and are
+            ignored for summaries.
+            * Smartcasing is used: if the filter is its own lowercase version
+            then insensitive casing will be used, otherwise not.
+            * The function used to check the matching is `pattern.match(keyorvalorboth)`
 
         --filter_content
             CURRENTLY DISABLED
             Like --filter_metadata but filters through the page_content of
             each document instead of the metadata.
-            Note that ~ filters are not relevant to filter content so use +
-            instead.
 
         --embed_instruct: bool
             when loading an embedding model using HuggingFace or LlamaCPP,
@@ -1176,73 +1189,115 @@ class DocToolsLLM:
                 else:
                     filter_metadata = self.kwargs["filter_metadata"]
                 assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
-                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_metadata), f"Each item of filter_metadata must start with either +, - or ~"
-                assert not any(f.strip() in ["+", "-", "~"] for f in filter_metadata), f"filter cannot be only + or - or ~"
-                incl = []
-                excl = []
-                fuz = []
-                for f in filter_metadata:
-                    case = True if f != f.lower() else False
-                    if f.startswith("+"):
-                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("-"):
-                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("~"):
-                        fuz.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
 
-                @optional_typecheck
+                # storing fast as list then in tupples for faster iteration
+                filters_k_plus = []
+                filters_k_minus = []
+                filters_v_plus = []
+                filters_v_minus = []
+                filters_b_plus_keys = []
+                filters_b_plus_values = []
+                filters_b_minus_keys = []
+                filters_b_minus_values = []
+                for f in filter_metadata:
+                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    kvb = f[0]
+                    assert kvb in ["k", "v", "b"], f"filter 1st character must be k, v or b: '{f}'"
+                    incexc = f[1]
+                    assert incexc in ["+", "-"], f"filter 2nd character must be + or -: '{f}'"
+                    incexc_str = "plus" if incexc == "+" else "minus"
+                    assert f[2:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    pattern = f[2:].strip()
+                    if kvb == "b":
+                        assert ":" in f, (
+                            "Filter starting with b must contain "
+                            "a ':' to distinguish the key regex and the value "
+                            f"regex: '{f}'")
+                        key_pat, value_pat = pattern.split(":", 1)
+                        if key_pat == key_pat.lower():
+                            key_pat = re.compile(key_pat, flags=re.IGNORECASE)
+                        else:
+                            key_pat = re.compile(key_pat)
+                        if value_pat == value_pat.lower():
+                            value_pat = re.compile(value_pat, flags=re.IGNORECASE)
+                        else:
+                            value_pat = re.compile(value_pat)
+                        assert key_pat not in locals()[f"filters_b_{incexc_str}_keys"], (
+                            f"Can't use several filters for the same key "
+                            "regex. Use a single but more complex regex"
+                            f": '{f}'"
+                        )
+                        locals()[f"filters_b_{incexc_str}_keys"].append(key_pat)
+                        locals()[f"filters_b_{incexc_str}_values"].append(value_pat)
+                    else:
+                        if pattern == pattern.lower():
+                            pattern = re.compile(pattern, flags=re.IGNORECASE)
+                        else:
+                            pattern = re.compile(pattern)
+                        locals()[f"filters_{kvb}_{incexc_str}"].append(pattern)
+                assert len(filters_b_plus_keys) == len(filters_b_plus_values)
+                assert len(filters_b_minus_keys) == len(filters_b_minus_values)
+
+                # store as tuple for faster iteration
+                filters_k_plus = tuple(filters_k_plus)
+                filters_k_minus = tuple(filters_k_minus)
+                filters_v_plus = tuple(filters_v_plus)
+                filters_v_minus = tuple(filters_v_minus)
+                filters_b_plus_keys = tuple(filters_b_plus_keys)
+                filters_b_plus_values = tuple(filters_b_plus_values)
+                filters_b_minus_keys = tuple(filters_b_minus_keys)
+                filters_b_minus_values = tuple(filters_b_minus_values)
+
                 def filter_meta(meta: dict) -> bool:
-                    fizdic = {k:False for k in fuz}
-                    for v in meta.values():
-                        v = str(v)
-                        if any(re.search(e, v) for e in excl):
+                    # match keys
+                    for inc in filters_k_plus:
+                        if not any(inc.match(k) for k in meta.keys()):
                             return False
-                        if not all(re.search(e, v) for e in incl):
+                    for exc in filters_k_minus:
+                        if any(exc.match(k) for k in meta.keys()):
                             return False
-                        for f in fuz:
-                            if re.search(f, v):
-                                fizdic[f] = True
-                    if False in fizdic.values():
-                        return False
+
+                    # match values
+                    for inc in filters_v_plus:
+                        if not any(inc.match(v) for v in meta.values()):
+                            return False
+                    for exc in filters_v_minus:
+                        if any(exc.match(v) for v in meta.values()):
+                            return False
+
+                    # match both
+                    for kp, vp in zip(filters_b_plus_keys, filters_b_plus_values):
+                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        gk_checked = 0
+                        for gk in good_keys:
+                            if vp.match(meta[gk]):
+                                gk_checked += 1
+                                break
+                        if not gk_checked:
+                            return False
+                    for kp, vp in zip(filters_b_minus_keys, filters_b_minus_values):
+                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        gk_checked = 0
+                        for gk in good_keys:
+                            if vp.match(meta[gk]):
+                                return False
+                            gk_checked += 1
+                        if not gk_checked:
+                            return False
+
                     return True
             else:
-                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     return True
             if "filter_content" in self.kwargs:
                 raise NotImplementedError("filter_content argument was disabled")
-                if isinstance(self.kwargs["filter_content"], str):
-                    filter_content = self.kwargs["filter_content"].split(",")
-                else:
-                    filter_content = self.kwargs["filter_content"]
-                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
-                assert all(f.startswith("+") or f.startswith("-") or f.startswith("~") for f in filter_content), f"Each item of filter_content must start with either +, - or ~"
-                assert not any(f.strip() in ["+", "-", "~"] for f in filter_content), f"filter cannot be only + or - or ~"
-                incl = []
-                excl = []
-                for f in filter_content:
-                    case = True if f != f.lower() else False
-                    if f.startswith("+"):
-                        incl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                    elif f.startswith("-"):
-                        excl.append(re.compile(f[1:], flags=re.IGNORECASE if case else 0))
-                assert not [re.compile(f[1:]) for f in filter_content if f.startswith("~")], "No ~ filter can be used on content, use + instead"
-                @optional_typecheck
-                def filter_cont(cont) -> bool:
-                    if any(re.search(e, cont) for e in excl):
-                        return False
-                    if not all(re.search(e, cont) for e in incl):
-                        return False
-                    return True
             else:
-                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     return True
-            @optional_typecheck
-            def query_filter(doc: Any) -> bool:
+            def query_filter(doc: Union[Document, dict]) -> bool:
                 if isinstance(doc, dict):  # received metadata directly
                     return filter_meta(doc)
-                if filter_meta(doc.metadata) and filter_content(doc.page_content):
+                if filter_meta(doc.metadata) and filter_cont(doc.page_content):
                     return True
                 return False
             self.query_filter = query_filter
@@ -1341,10 +1396,14 @@ class DocToolsLLM:
             )
 
         if self.query_filter:
-            assert any(
-                self.query_filter(d)
-                for d in retriever.vectorstore.docstore._dict.values()
-            ), "No documents in the vectorstore match the given filter"
+            checked = 0
+            good = 0
+            for d in retriever.vectorstore.docstore._dict.values():
+                checked += 1
+                if self.query_filter(d):
+                    good += 1
+            print(f"After filtering, found {good}/{checked} documents")
+            assert good, "No documents in the vectorstore match the given filter"
 
         if " // " in query:
             sp = query.split(" // ")
