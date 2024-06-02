@@ -1024,7 +1024,7 @@ class DocToolsLLM:
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
-                            language=lang,
+                            language=self.summary_language,
                             modelbackend=self.modelbackend,
                             llm=self.llm,
                             llm_price=self.llm_price,
@@ -1084,8 +1084,7 @@ class DocToolsLLM:
                     header += f"\n  chunks:: {n_chunk}"
                 if author:
                     header += f"\n  author:: {author}"
-                if lang:
-                    header += f"\n  language:: {lang}"
+                header += f"\n  language:: {self.summary_language}"
 
             else:
                 header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
