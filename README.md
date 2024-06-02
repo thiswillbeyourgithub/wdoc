@@ -3,7 +3,7 @@
 * **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is usually better. I use it almost daily. I accept feature requests, issues are extremely appreciated for any reason including typos etc, I accept pull request but prefer asking me first. I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs.
 
 # DocToolsLLM in a few questions
-## What's a RAG system?
+## What's RAG?
 * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 ## Why make another RAG system? Can't you use any of the others?
 * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
@@ -17,7 +17,7 @@
 * Search the relevant documents using embeddings.
 * Search the relevant documents using embeddings then filtering using a cheap LLM.
 ## Which LLM providers are supported by DocToolsLLM?
-* DocToolsLLM supports virtually any LLM provider thanks to using [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough and examples) section).
+* DocToolsLLM supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough and examples) section).
 ## What do you use DocToolsLLM for?
 * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a buch of `TODO` blocks.
 * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
@@ -25,7 +25,8 @@
 * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
 
 ## Features
-* **Advanced RAG system**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+* **Advanced RAG**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+* **Advanced summary**: Instead of unusable high level points, compress the reasonning, arguments, though process etc of the author into an easy to skim markdown file.
 * **Multiple LLM providers**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
 * **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest etc.
 * **Many tasks**: See [Supported tasks](#Supported tasks).
