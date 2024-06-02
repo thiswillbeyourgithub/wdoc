@@ -1611,9 +1611,6 @@ class DocToolsLLM:
                     }
                 )
                 docs = output["filtered_docs"]
-
-                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
-                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             else:
 
                 docs = retriever.get_relevant_documents(query)
@@ -1638,6 +1635,9 @@ class DocToolsLLM:
                         if cid not in anki_cid:
                             anki_cid.append(cid)
             md_printer(to_print)
+            if self.query_eval_modelname:
+                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
             if anki_cid:
                 open_answ = input(f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
