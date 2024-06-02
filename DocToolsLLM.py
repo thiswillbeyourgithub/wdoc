@@ -196,7 +196,7 @@ class DocToolsLLM:
               used to check for previous values includes the name of the model
               name)
             * If the backend if llamacpp, the modelname must be the path to
-              the model.
+              the model. For example: 'llamacpp/my_model_file'
 
         --embed_kwargs: dict, default None
             dictionnary of keyword arguments to pass to the embedding.
