@@ -474,9 +474,6 @@ class DocToolsLLM:
         Runtime flags
         -------------
 
-        DOCTOOLS_NO_LAZYLOADING="false"
-            to disable lazy loading of imports
-
         DOCTOOLS_TYPECHECKING="crash"
             default: "warn"
             Possible values:
