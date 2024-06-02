@@ -5,13 +5,6 @@
 ### Table of contents
 - [DocToolsLLM](#doctoolsllm)
 - [DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
-  - [What's RAG?](#what's-rag?)
-  - [Why make another RAG system? Can't you use any of the others?](#why-make-another-rag-system?-can't-you-use-any-of-the-others?)
-  - [Why is DocToolsLLM better than most RAG system to ask questions on documents?](#why-is-doctoolsllm-better-than-most-rag-system-to-ask-questions-on-documents?)
-  - [Why can DocToolsLLM also produce summaries?](#why-can-doctoolsllm-also-produce-summaries?)
-  - [What other tasks are supported by DocToolsLLM?](#what-other-tasks-are-supported-by-doctoolsllm?)
-  - [Which LLM providers are supported by DocToolsLLM?](#which-llm-providers-are-supported-by-doctoolsllm?)
-  - [What do you use DocToolsLLM for?](#what-do-you-use-doctoolsllm-for?)
   - [Features](#features)
     - [Supported filetypes](#supported-filetypes)
       - [Recursive types](#recursive-types)
@@ -21,23 +14,23 @@
   - [Getting started](#getting-started)
   - [Notes](#notes)
 
-# DocToolsLLM in a few questions
-## What's RAG?
+## DocToolsLLM in a few questions
+* **What's RAG?**
 * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
-## Why make another RAG system? Can't you use any of the others?
+* **Why make another RAG system? Can't you use any of the others?**
 * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
-## Why is DocToolsLLM better than most RAG system to ask questions on documents?
+* **Why is DocToolsLLM better than most RAG system to ask questions on documents?**
 * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also DocToolsLLM is very customizable.
-## Why can DocToolsLLM also produce summaries?
+* **Why can DocToolsLLM also produce summaries?**
 * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good!
-## What other tasks are supported by DocToolsLLM?
+* **What other tasks are supported by DocToolsLLM?**
 * Summarize text from any [Supported filetypes](#Supported-filetypes).
 * Ask questions about a large heterogeneous corpus.
 * Search the relevant documents using embeddings.
 * Search the relevant documents using embeddings then filtering using a cheap LLM.
-## Which LLM providers are supported by DocToolsLLM?
+* **Which LLM providers are supported by DocToolsLLM?**
 * DocToolsLLM supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
-## What do you use DocToolsLLM for?
+* **What do you use DocToolsLLM for?**
 * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a buch of `TODO` blocks.
 * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
 * I use it to query my personal documents using the `--private` argument.
@@ -95,7 +88,7 @@
 8. If you want to make sure your data remains private here's an example with ollama: `python -m DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" --task=my_task`
 9. Now say you just want to summarize a webpage: `python -m DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
 
-> ![](./images/summary.png)
+![](./images/summary.png)
 
 
 ### Supported tasks
