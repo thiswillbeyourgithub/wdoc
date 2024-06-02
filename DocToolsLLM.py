@@ -187,7 +187,7 @@ class DocToolsLLM:
             Everything before the slash is the backend and everything
             after the / is the model name.
             Available backends: openai, sentencetransformers,
-            huggingface, llamacpp
+            huggingface, llamacppembeddings
 
             Note:
             * the device used by default for huggingface is 'cpu' and not 'cuda'
@@ -195,8 +195,8 @@ class DocToolsLLM:
               need to be recomputed with new elements (the hash
               used to check for previous values includes the name of the model
               name)
-            * If the backend if llamacpp, the modelname must be the path to
-              the model. For example: 'llamacpp/my_model_file'
+            * If the backend if llamacppembeddings, the modelname must be the path to
+              the model. For example: 'llamacppembeddings/my_model_file'
 
         --embed_kwargs: dict, default None
             dictionnary of keyword arguments to pass to the embedding.
@@ -455,8 +455,9 @@ class DocToolsLLM:
                 --filter_content="-.*DOCTOOLS.*"
 
         --embed_instruct: bool
-            when loading an embedding model using HuggingFace or LlamaCPP,
-            wether to wrap the input sentence using instruct framework or not.
+            when loading an embedding model using HuggingFace or
+            llamacppembeddings backends, wether to wrap the input
+            sentence using instruct framework or not.
 
         --file_loader_n_jobs: int, default 5
             number of threads to use when loading files. Set to 1 to disable
