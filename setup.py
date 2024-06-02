@@ -1,4 +1,19 @@
 from setuptools import setup, find_packages
+from setuptools.command.install import install
+import subprocess
+import sys
+
+class PostInstallCommand(install):
+    def run(self):
+        install.run(self)
+        try:
+            subprocess.check_call(
+                    [sys.executable, '-m', 'playwright', 'install']
+                )
+        except Exception as err:
+            print(f"Error when installing playwright: '{err}'")
+
+
 setup(
     name="DocToolsLLM",
     version="0.15",
@@ -62,5 +77,9 @@ setup(
         'langdetect >= 1.0.9',
         'pdftotext >= 2.2.2',  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
         ]
-    }
+    },
+    cmdclass={
+        'install': PostInstallCommand,
+    },
+
 )
