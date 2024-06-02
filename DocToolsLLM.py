@@ -1650,6 +1650,18 @@ class DocToolsLLM:
                             action="guiBrowse",
                             query=query,
                             )
+            all_filepaths = []
+            for doc in docs:
+                if "path" in doc.metadata:
+                    path = doc.metadata["path"]
+                    try:
+                        path = str(Path(path).absolute())
+                    except Exception as err:
+                        pass
+                    all_filepaths.append(path)
+            if all_filepaths:
+                md_printer("### All file paths")
+                md_printer("* " + "\n* ".join(all_filepaths))
 
         else:
             if self.condense_question:
