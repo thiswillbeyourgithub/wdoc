@@ -1,8 +1,8 @@
 # DocToolsLLM
 * **Goal** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
-* **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is usually better. I use it almost daily. I accept feature requests, issues are extremely appreciated for any reason including typos etc, I accept pull request but prefer asking me first. I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs.
+* **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is better. I use it almost daily and have been for months now. I accept feature requests, pull requests, issues are extremely appreciated for any reason including typos etc. Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
 
-# Table of contents
+### Table of contents
 - [DocToolsLLM](#doctoolsllm)
 - [DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
   - [What's RAG?](#what's-rag?)
@@ -94,9 +94,8 @@
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by DoctoolsLLM. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and DoctoolsLLM automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 8. If you want to make sure your data remains private here's an example with ollama: `python -m DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" --task=my_task`
 9. Now say you just want to summarize a webpage: `python -m DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
-<details><summary>Summary result:</summary>
-![](./images/summary.png)
-</details>
+
+> ![](./images/summary.png)
 
 
 ### Supported tasks
