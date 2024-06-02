@@ -510,6 +510,7 @@ class DocToolsLLM:
         # checking argument validity
         assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
+        task = task.replace("summary", "summarize")
         assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
