@@ -731,7 +731,11 @@ class DocToolsLLM:
             doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
             doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
             links_regex = re.compile(r'(https?://\S+)')
-            doclist = [re.findall(links_regex, d)[0].strip() if re.search(links_regex, d) else d for d in doclist]
+            doclist = [
+                    matched.group(0)
+                    for d in doclist
+                    if (matched := links_regex.search(d).strip())
+            ]
 
             self.done_links = " ".join(doclist)
             self.kwargs["done_links"] = doclist

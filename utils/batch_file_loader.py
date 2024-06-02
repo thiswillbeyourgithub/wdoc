@@ -404,10 +404,9 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         if p.strip() and not p.strip().startswith("#") and "http" in p
     ]
     doclist = [
-        markdownlink_regex.findall(d)[0]
-        if markdownlink_regex.search(d)
-        else d
+        matched.group(0)
         for d in doclist
+        if (matched := markdownlink_regex.search(d).strip())
     ]
     if task == "summarize_link_file":
         # if summarize, start from bottom
