@@ -1890,7 +1890,11 @@ class DocToolsLLM_class:
                     output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
-            md_printer("\n\n# Intermediate answers for each document:")
+            if not output["relevant_intermediate_answers"]:
+                md_printer("\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
+                md_printer("\n\n# No document filtered so no intermediate answers to combine")
+            else:
+                md_printer("\n\n# Intermediate answers for each document:")
             counter = 0
             to_print = ""
             for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
