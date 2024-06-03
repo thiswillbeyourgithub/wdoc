@@ -41,22 +41,24 @@ from langchain_community.document_loaders import SeleniumURLLoader
 from langchain_community.document_loaders import PlaywrightURLLoader
 from langchain_community.document_loaders import WebBaseLoader
 
-from unstructured.cleaners.core import clean_extra_whitespace
+#from unstructured.cleaners.core import clean_extra_whitespace
+from .slow_imports import unstructured
 
-from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+# from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
 from .typechecker import optional_typecheck
-from .logger import whi, yel, red, log
-from .llm import transcribe
+# from .logger import whi, yel, red, log
+# from .llm import transcribe
 
 # parse args again to know what to print for failed imports
 import fire
 kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
 if "debug" in kwargs and kwargs["debug"]:
-    verbose=True
+    verbose = True
     import platform
     is_linux = platform.system() == "Linux"
 else:
-    verbose=False
+    verbose = False
+    is_linux = False
 
 try:
     import ftlangdetect
