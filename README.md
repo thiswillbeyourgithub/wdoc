@@ -41,7 +41,11 @@
 * **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest etc.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
 * **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).
-* **Caching**: speed things up, as well as index storing and loading (handy for large collections).
+* **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
+* **Conversation friendly**: If asking several questions in a row, the questions are automatically reformulated as standalone questions to make querying more natural.
+* **Lazy imports**: Faster statup time thanks to lazy_import
+* **LLM ()and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
+* **Sophisticated faiss saver**: faiss is used to quickly find the documents that match an embedding. But instead of storing as a single file, DocToolsLLM splits the index into 1 document long index identified by deterministic hashes. When creating a new index, any overlapping document will be automatically reloaded instead of recomputed.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document parsing and embedding.
