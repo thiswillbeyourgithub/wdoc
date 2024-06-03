@@ -147,7 +147,7 @@ class DocToolsLLM_class:
         help: bool = False,
         h: bool = False,
         import_mode: bool = False,
-        **kwargs: Any,
+        **cli_kwargs: Any,
         ) -> None:
         """
         Parameters
@@ -505,24 +505,24 @@ class DocToolsLLM_class:
             raise SystemExit()
 
         # make sure the extra args are valid
-        for k in kwargs:
+        for k in cli_kwargs:
             if k not in extra_args:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
-                val = kwargs[k]
+                val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = extra_args[k]
                 if not check_type(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
-                        red(f"Invalid type in kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                        red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                     elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
-                        raise TypeCheckError(f"Invalid type in kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                        raise TypeCheckError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
 
         # checking argument validity
-        assert "loaded_docs" not in kwargs, "'loaded_docs' cannot be an argument as it is used internally"
-        assert "loaded_embeddings" not in kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
+        assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
+        assert "loaded_embeddings" not in cli_kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         task = task.replace("summary", "summarize")
         assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
@@ -535,11 +535,11 @@ class DocToolsLLM_class:
                 ) or (task != "summarize_link_file" and filetype != "link_file"
                         ), "summarize_link_file must be used with filetype link_file"
         if task == "summarize_link_file":
-            assert "path" in kwargs, 'missing path arg for summarize_link_file'
-            assert "out_file" in kwargs, 'missing "out_file" arg for summarize_link_file'
-            assert kwargs["out_file"] != kwargs["path"], "can't use same 'path' and 'out_file' arg"
+            assert "path" in cli_kwargs, 'missing path arg for summarize_link_file'
+            assert "out_file" in cli_kwargs, 'missing "out_file" arg for summarize_link_file'
+            assert cli_kwargs["out_file"] != cli_kwargs["path"], "can't use same 'path' and 'out_file' arg"
         if filetype == "infer":
-            assert "path" in kwargs and kwargs["path"], "If filetype is 'infer', a --path must be given"
+            assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         if embed_kwargs is None:
@@ -625,7 +625,7 @@ class DocToolsLLM_class:
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
-        self.kwargs = kwargs
+        self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
         self.n_summaries_target = n_summaries_target
@@ -694,7 +694,7 @@ class DocToolsLLM_class:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
             set_debug(True)
-            kwargs["file_loader_n_jobs"] = 1
+            cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose=True
         else:
             litellm.set_verbose=False
@@ -709,18 +709,18 @@ class DocToolsLLM_class:
         # litellm.drop_params = True  # drops parameters that are not used by some models
 
         # compile include / exclude regex
-        if "include" in self.kwargs:
-            for i, inc in enumerate(self.kwargs["include"]):
+        if "include" in self.cli_kwargs:
+            for i, inc in enumerate(self.cli_kwargs["include"]):
                 if inc == inc.lower():
-                    self.kwargs["include"][i] = re.compile(inc, flags=re.IGNORECASE)
+                    self.cli_kwargs["include"][i] = re.compile(inc, flags=re.IGNORECASE)
                 else:
-                    self.kwargs["include"][i] = re.compile(inc)
-        if "exclude" in self.kwargs:
-            for i, exc in enumerate(self.kwargs["exclude"]):
+                    self.cli_kwargs["include"][i] = re.compile(inc)
+        if "exclude" in self.cli_kwargs:
+            for i, exc in enumerate(self.cli_kwargs["exclude"]):
                 if exc == exc.lower():
-                    self.kwargs["exclude"][i] = re.compile(exc, flags=re.IGNORECASE)
+                    self.cli_kwargs["exclude"][i] = re.compile(exc, flags=re.IGNORECASE)
                 else:
-                    self.kwargs["exclude"][i] = re.compile(exc)
+                    self.cli_kwargs["exclude"][i] = re.compile(exc)
 
         # loading llm
         self.llm = load_llm(
@@ -736,23 +736,23 @@ class DocToolsLLM_class:
         # if task is to summarize lots of links, check first if there are
         # links already summarized as it would greatly reduce the number of
         # documents to load
-        if self.task == "summarize_link_file" and "out_file_logseq_mode" in kwargs:
-            if not Path(self.kwargs["out_file"]).exists():
-                Path(self.kwargs["out_file"]).touch()
-            with open(self.kwargs["out_file"], "r") as f:
+        if self.task == "summarize_link_file" and "out_file_logseq_mode" in cli_kwargs:
+            if not Path(self.cli_kwargs["out_file"]).exists():
+                Path(self.cli_kwargs["out_file"]).touch()
+            with open(self.cli_kwargs["out_file"], "r") as f:
                 output_content = f.read()
 
             if self.n_summaries_target > 0:
                 self.n_todos_present = output_content.count("- TODO ")
 
-            if "out_check_file" in self.kwargs:
+            if "out_check_file" in self.cli_kwargs:
                 # this is an undocumented function for the author. It
                 # allows to specify a second path for which to check if
                 # a document has already been summaried. I use this because
                 # I made a script to automatically move my DONE tasks
                 # from logseq to another near by file.
-                assert Path(self.kwargs["out_check_file"]).exists()
-                with open(self.kwargs["out_check_file"], "r") as f:
+                assert Path(self.cli_kwargs["out_check_file"]).exists()
+                with open(self.cli_kwargs["out_check_file"], "r") as f:
                     output_content += f.read()
 
             # parse just the links already present in the output
@@ -767,8 +767,8 @@ class DocToolsLLM_class:
             ]
 
             self.done_links = " ".join(doclist)
-            self.kwargs["done_links"] = doclist
-            self.kwargs["n_summaries_target"] = self.n_summaries_target
+            self.cli_kwargs["done_links"] = doclist
+            self.cli_kwargs["n_summaries_target"] = self.n_summaries_target
 
         # loading documents
         if not load_embeds_from:
@@ -777,7 +777,7 @@ class DocToolsLLM_class:
                 debug=self.debug,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
-                **self.kwargs)
+                **self.cli_kwargs)
 
             # check that the hash are unique
             if len(self.loaded_docs) > 1:
@@ -868,9 +868,9 @@ class DocToolsLLM_class:
 
             # comment out the links that are marked as already done
             # if self.done_links:
-            #     with open(self.kwargs["path"], "r") as f:
+            #     with open(self.cli_kwargs["path"], "r") as f:
             #         temp = f.read().split("\n")
-            #     with open(self.kwargs["path"], "w") as f:
+            #     with open(self.cli_kwargs["path"], "w") as f:
             #         for t in temp:
             #             for done_link in self.done_links:
             #                 if done_link in t:
@@ -1059,7 +1059,7 @@ class DocToolsLLM_class:
                             llm_price=self.llm_price,
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
-                            logseq_mode="out_file_logseq_mode" in self.kwargs,
+                            logseq_mode="out_file_logseq_mode" in self.cli_kwargs,
                             )
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
@@ -1095,7 +1095,7 @@ class DocToolsLLM_class:
 
             summary_tkn_length = get_tkn_length(summary)
 
-            if "out_file_logseq_mode" in self.kwargs:
+            if "out_file_logseq_mode" in self.cli_kwargs:
                 header = f"\n- TODO {item_name}"
                 header += "\n  collapsed:: true"
                 header += "\n  block_type:: DocToolsLLM_summary"
@@ -1129,10 +1129,10 @@ class DocToolsLLM_class:
                 header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
             # save to output file
-            if "out_file" in self.kwargs:
-                Path(self.kwargs["out_file"]).touch()  # create file if missing
+            if "out_file" in self.cli_kwargs:
+                Path(self.cli_kwargs["out_file"]).touch()  # create file if missing
                 with lock:
-                    with open(self.kwargs["out_file"], "a") as f:
+                    with open(self.cli_kwargs["out_file"], "a") as f:
                         f.write(header)
                         for bulletpoint in summary.split("\n"):
                             f.write("\n")
@@ -1175,17 +1175,17 @@ class DocToolsLLM_class:
         red(ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
         red(ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
 
-        # if "out_file" in self.kwargs:
+        # if "out_file" in self.cli_kwargs:
         #     # after summarizing all links, append to output file the total cost
         #     if total_tkn_cost != 0 and total_dol_cost != 0:
-        #         with open(self.kwargs["out_file"], "a") as f:
+        #         with open(self.cli_kwargs["out_file"], "a") as f:
         #             f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
         #             f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
 
         # and write to input file a summary too
-        # if "out_file" in self.kwargs:
+        # if "out_file" in self.cli_kwargs:
         #     try:
-        #         with open(self.kwargs["path"], "a") as f:
+        #         with open(self.cli_kwargs["path"], "a") as f:
         #             f.write(f"\n\n")
         #             f.write(f"- Done with summaries of {today}\n")
         #             f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(self.done_links)}\n")
@@ -1210,7 +1210,7 @@ class DocToolsLLM_class:
             dollar_limit=self.dollar_limit,
             private=self.private,
             use_rolling=self.DIY_rolling_window_embedding,
-            kwargs=self.kwargs,
+            cli_kwargs=self.cli_kwargs,
         )
 
         # conversational memory
@@ -1229,13 +1229,13 @@ class DocToolsLLM_class:
         self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
 
         # parse filters as callable for faiss filtering
-        if "filter_metadata" in self.kwargs or "filter_content" in self.kwargs:
-            if "filter_metadata" in self.kwargs:
-                if isinstance(self.kwargs["filter_metadata"], str):
-                    filter_metadata = self.kwargs["filter_metadata"].split(",")
+        if "filter_metadata" in self.cli_kwargs or "filter_content" in self.cli_kwargs:
+            if "filter_metadata" in self.cli_kwargs:
+                if isinstance(self.cli_kwargs["filter_metadata"], str):
+                    filter_metadata = self.cli_kwargs["filter_metadata"].split(",")
                 else:
-                    filter_metadata = self.kwargs["filter_metadata"]
-                assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.kwargs['filter_metadata']}"
+                    filter_metadata = self.cli_kwargs["filter_metadata"]
+                assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.cli_kwargs['filter_metadata']}"
 
                 # storing fast as list then in tupples for faster iteration
                 filters_k_plus = []
@@ -1337,12 +1337,12 @@ class DocToolsLLM_class:
                 def filter_meta(meta: dict) -> bool:
                     return True
 
-            if "filter_content" in self.kwargs:
-                if isinstance(self.kwargs["filter_content"], str):
-                    filter_content = self.kwargs["filter_content"].split(",")
+            if "filter_content" in self.cli_kwargs:
+                if isinstance(self.cli_kwargs["filter_content"], str):
+                    filter_content = self.cli_kwargs["filter_content"].split(",")
                 else:
-                    filter_content = self.kwargs["filter_content"]
-                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.kwargs['filter_content']}"
+                    filter_content = self.cli_kwargs["filter_content"]
+                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.cli_kwargs['filter_content']}"
 
                 # storing fast as list then in tupples for faster iteration
                 filters_cont_plus = []

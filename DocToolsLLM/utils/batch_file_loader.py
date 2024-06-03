@@ -80,7 +80,7 @@ def batch_load_doc(
     debug: bool,
     task: str,
     backend: str,
-    **kwargs) -> List[Document]:
+    **cli_kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
     # try:
@@ -89,11 +89,11 @@ def batch_load_doc(
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
 
-    if "path" in kwargs and isinstance(kwargs["path"], str):
-        kwargs["path"] = kwargs["path"].strip()
+    if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
+        cli_kwargs["path"] = cli_kwargs["path"].strip()
 
     # expand the list of document to load as long as there are recursive types
-    to_load = [kwargs.copy()]
+    to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
@@ -160,9 +160,9 @@ def batch_load_doc(
 
     assert to_load, f"empty list of documents to load from filetype '{filetype}'"
 
-    if "file_loader_n_jobs" in kwargs:
-        n_jobs = kwargs["file_loader_n_jobs"]
-        del kwargs["file_loader_n_jobs"]
+    if "file_loader_n_jobs" in cli_kwargs:
+        n_jobs = cli_kwargs["file_loader_n_jobs"]
+        del cli_kwargs["file_loader_n_jobs"]
     else:
         n_jobs = 10
     if len(to_load) == 1 or debug:
@@ -177,7 +177,7 @@ def batch_load_doc(
             all_unexp_keys.add(k)
             del doc[k]
     if all_unexp_keys:
-        red(f"Found unexpected keys in doc kwargs: '{all_unexp_keys}'")
+        red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
 
     if "summar" not in task:
         # shuffle the list of files to load to make
@@ -245,13 +245,13 @@ def batch_load_doc(
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
-    def load_one_doc_wrapped(*args, **kwargs):
+    def load_one_doc_wrapped(*args, **doc_kwargs):
         assert not args
         try:
-            return load_one_doc(**kwargs)
+            return load_one_doc(**doc_kwargs)
         except Exception as err:
-            filetype = kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {kwargs}")
+            filetype = doc_kwargs["filetype"]
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {doc_kwargs}")
             if debug:
                 raise
             else:
