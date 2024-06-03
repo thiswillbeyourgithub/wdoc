@@ -1219,7 +1219,7 @@ class DocToolsLLM_class:
                 return_messages=True)
 
         # set default ask_user argument
-        self.cli_settings = {
+        self.interaction_settings = {
                 "top_k": self.top_k,
                 "multiline": False,
                 "retriever": self.query_retrievers,
@@ -1412,69 +1412,69 @@ class DocToolsLLM_class:
     #@optional_typecheck
     def query(self, query: Optional[str]) -> Optional[str]:
         if not query:
-            query, self.cli_settings = ask_user(self.cli_settings)
-            if "do_reset_memory" in self.cli_settings:
-                assert self.cli_settings["do_reset_memory"]
-                del self.cli_settings["do_reset_memory"]
+            query, self.interaction_settings = ask_user(self.interaction_settings)
+            if "do_reset_memory" in self.interaction_settings:
+                assert self.interaction_settings["do_reset_memory"]
+                del self.interaction_settings["do_reset_memory"]
                 self.memory = AnswerConversationBufferMemory(
                         memory_key="chat_history",
                         return_messages=True)
         assert all(
             retriev in ["default", "hyde", "knn", "svm", "parent"]
-            for retriev in self.cli_settings["retriever"].split("_")
-        ), f"Invalid retriever value: {self.cli_settings['retriever']}"
+            for retriev in self.interaction_settings["retriever"].split("_")
+        ), f"Invalid retriever value: {self.interaction_settings['retriever']}"
         retrievers = []
-        if "hyde" in self.cli_settings["retriever"].lower():
+        if "hyde" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                     create_hyde_retriever(
                         query=query,
 
                         llm=self.llm,
-                        top_k=self.cli_settings["top_k"],
-                        relevancy=self.cli_settings["relevancy"],
+                        top_k=self.interaction_settings["top_k"],
+                        relevancy=self.interaction_settings["relevancy"],
 
                         embeddings=self.embeddings,
                         loaded_embeddings=self.loaded_embeddings,
                         )
                     )
 
-        if "knn" in self.cli_settings["retriever"].lower():
+        if "knn" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                     KNNRetriever.from_texts(
                         self.all_texts,
                         self.embeddings,
-                        relevancy_threshold=self.cli_settings["relevancy"],
-                        k=self.cli_settings["top_k"],
+                        relevancy_threshold=self.interaction_settings["relevancy"],
+                        k=self.interaction_settings["top_k"],
                         )
                     )
-        if "svm" in self.cli_settings["retriever"].lower():
+        if "svm" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                     SVMRetriever.from_texts(
                         self.all_texts,
                         self.embeddings,
-                        relevancy_threshold=self.cli_settings["relevancy"],
-                        k=self.cli_settings["top_k"],
+                        relevancy_threshold=self.interaction_settings["relevancy"],
+                        k=self.interaction_settings["top_k"],
                         )
                     )
-        if "parent" in self.cli_settings["retriever"].lower():
+        if "parent" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                     create_parent_retriever(
                         task=self.task,
                         loaded_embeddings=self.loaded_embeddings,
                         loaded_docs=self.loaded_docs,
-                        top_k=self.cli_settings["top_k"],
-                        relevancy=self.cli_settings["relevancy"],
+                        top_k=self.interaction_settings["top_k"],
+                        relevancy=self.interaction_settings["relevancy"],
                         )
                     )
 
-        if "default" in self.cli_settings["retriever"].lower():
+        if "default" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                     self.loaded_embeddings.as_retriever(
                         search_type="similarity_score_threshold",
                         search_kwargs={
-                            "k": self.cli_settings["top_k"],
+                            "k": self.interaction_settings["top_k"],
                             "distance_metric": "cos",
-                            "score_threshold": self.cli_settings["relevancy"],
+                            "score_threshold": self.interaction_settings["relevancy"],
                             })
                         )
 
@@ -1629,7 +1629,7 @@ class DocToolsLLM_class:
             else:
 
                 docs = retriever.get_relevant_documents(query)
-                if len(docs) < self.cli_settings["top_k"]:
+                if len(docs) < self.interaction_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
 
