@@ -114,58 +114,61 @@ tokenize = tiktoken.encoding_for_model(
     "gpt-3.5-turbo"
 ).encode  # used to get token length estimation
 
-pdf_loaders = {
-    "pdftotext": None,  # optional support
-    "PDFMiner": PDFMinerLoader,
-    "PyPDFLoader": PyPDFLoader,
-    "Unstructured_elements_hires": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "Unstructured_elements_fast": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "Unstructured_hires": partial(
-        UnstructuredPDFLoader,
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "Unstructured_fast": partial(
-        UnstructuredPDFLoader,
-        strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "PyPDFium2": PyPDFium2Loader,
-    "PyMuPDF": PyMuPDFLoader,
-    "PdfPlumber": PDFPlumberLoader,
-}
+def create_pdf_loaders():
+    "declare the pdf_loaders as late as possible because unstructured can make it quite slow"
+    pdf_loaders = {
+        "pdftotext": None,  # optional support
+        "PDFMiner": PDFMinerLoader,
+        "PyPDFLoader": PyPDFLoader,
+        "Unstructured_elements_hires": partial(
+            UnstructuredPDFLoader,
+            mode="elements",
+            strategy="hi_res",
+            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            infer_table_structure=True,
+            # languages=["fr"],
+        ),
+        "Unstructured_elements_fast": partial(
+            UnstructuredPDFLoader,
+            mode="elements",
+            strategy="fast",
+            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            infer_table_structure=True,
+            # languages=["fr"],
+        ),
+        "Unstructured_hires": partial(
+            UnstructuredPDFLoader,
+            strategy="hi_res",
+            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            infer_table_structure=True,
+            # languages=["fr"],
+        ),
+        "Unstructured_fast": partial(
+            UnstructuredPDFLoader,
+            strategy="fast",
+            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            infer_table_structure=True,
+            # languages=["fr"],
+        ),
+        "PyPDFium2": PyPDFium2Loader,
+        "PyMuPDF": PyMuPDFLoader,
+        "PdfPlumber": PDFPlumberLoader,
+    }
 
-# pdftotext is kinda weird to install on windows so support it
-# only if it's correctly imported
-if "pdftotext" in globals():
-    class pdftotext_loader_class:
-        "simple wrapper for pdftotext to make it load by pdf_loader"
-        def __init__(self, path):
-            self.path = path
+    # pdftotext is kinda weird to install on windows so support it
+    # only if it's correctly imported
+    if "pdftotext" in globals():
+        class pdftotext_loader_class:
+            "simple wrapper for pdftotext to make it load by pdf_loader"
+            def __init__(self, path):
+                self.path = path
 
-        def load(self):
-            with open(self.path, "rb") as f:
-                return "\n\n".join(pdftotext.PDF(f))
-    pdf_loaders["pdftotext"] = pdftotext_loader_class
-
+            def load(self):
+                with open(self.path, "rb") as f:
+                    return "\n\n".join(pdftotext.PDF(f))
+        pdf_loaders["pdftotext"] = pdftotext_loader_class
+    return pdf_loaders
+pdf_loaders = None
 
 
 @optional_typecheck
@@ -1179,10 +1182,16 @@ def load_pdf(
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
 
+    # load the pdf loaders when they are needed, as they can be quite slow
+    global pdf_loaders
+    if pdf_loaders is None:
+        pdf_loaders = create_pdf_loaders()
+
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
+
     for loader_name in pdf_loaders:
         try:
             if debug:
