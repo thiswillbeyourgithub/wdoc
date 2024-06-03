@@ -567,6 +567,10 @@ class DocToolsLLM_class:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
             os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
+            for k in dict(os.environ):
+                if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
+                    red(f"private mode enabled: overwriting '{k}' from environment variables just in case")
+                    os.environ[k] = "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
         else:
             os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
 

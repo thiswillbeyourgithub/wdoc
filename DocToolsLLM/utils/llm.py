@@ -61,20 +61,18 @@ def load_llm(
     if api_base:
         red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
-        if not Path(f"{backend.upper()}_API_KEY.txt").exists():
-            if not api_base:
-                raise Exception(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
-            else:
-                red(f"No environment variable nor {backend.upper()}_API_KEY.txt file found")
+        if not api_base:
+            raise Exception(f"No environment variable named {backend.upper()}_API_KEY found")
         else:
-            if not private:
-                os.environ[f"{backend.upper()}_API_KEY"] = str(Path(f"{backend.upper()}_API_KEY.txt").read_text()).strip()
-            else:
-                red(f"Skipped loading of api key in file "
-                    f"'{backend.upper()}_API_KEY.txt' because private is on.")
+            yel(f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this.")
+
+    # extra check for private mode
     if private:
+        assert os.environ["DOCTOOLS_PRIVATEMODE"] == "true"
         red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
-        os.environ[f"{backend.upper()}_API_KEY"] = "REDACTED"
+        assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
+    else:
+        assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
 
     if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
@@ -280,13 +278,7 @@ def transcribe(
     )
     whi(f"Calling openai's whisper to transcribe file {audio_path}")
 
-    assert Path("OPENAI_API_KEY.txt").exists(), "No api key found"
-    os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
-    if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
-        if not Path("OPENAI_API_KEY.txt").exists():
-            red("No environment variable nor OPENAI_API_KEY.txt file found")
-        else:
-            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
+    assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:
