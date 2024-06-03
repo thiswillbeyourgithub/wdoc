@@ -45,14 +45,13 @@ YoutubeLoader = lazy_import.lazy_class('langchain_community.document_loaders.You
 SeleniumURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.SeleniumURLLoader')
 PlaywrightURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.PlaywrightURLLoader')
 WebBaseLoader = lazy_import.lazy_class('langchain_community.document_loaders.WebBaseLoader')
+unstructured = lazy_import.lazy_module("unstructured")
+clean_extra_whitespace = lazy_import.lazy_class("unstructured.cleaners.core.clean_extra_whitespace")
 
-from .slow_imports import unstructured
 from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
-
-clean_extra_whitespace = lazy_import.lazy_module("unstructured.cleaners.core.clean_extra_whitespace")
 
 # parse args again to know what to print for failed imports
 import fire

@@ -1,3 +1,9 @@
+"""
+litellm is very slow to import and is always nedded. So here,
+we do a lazy loading and start importing it in a separate thread.
+
+Unstructured can be very slow too but is not always needed
+"""
 import sys
 import lazy_import
 from threading import Thread
@@ -9,7 +15,10 @@ if IMPORT_DEBUG:
 else:
     def p(message): pass
 
-to_imports = ["litellm", "unstructured"]
+to_imports = [
+    "litellm",
+    # "unstructured",
+]
 
 def importer(q, name) -> None:
     p(f"Importing {name}")
