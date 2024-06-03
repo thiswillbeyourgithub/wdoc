@@ -1,10 +1,10 @@
-from prompt_toolkit.completion import Completer, Completion
 from typing import Optional, Tuple, Any
 import time
 import re
 from pathlib import Path
 import json
 from textwrap import dedent
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.completion import WordCompleter

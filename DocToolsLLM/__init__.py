@@ -48,7 +48,7 @@ from .utils.loaders import (
 from .utils.embeddings import load_embeddings
 from .utils.retrievers import create_hyde_retriever, create_parent_retriever
 from .utils.logger import whi, yel, red, md_printer, log
-from .utils.cli import ask_user
+from .utils.interact import ask_user
 from .utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from .utils.tasks.summary import do_summarize
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
