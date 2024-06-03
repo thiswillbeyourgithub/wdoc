@@ -76,13 +76,13 @@ def load_embeddings(
     dollar_limit: Union[int, float],
     private: bool,
     use_rolling: bool,
-    kwargs: dict,
+    cli_kwargs: dict,
     ):
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
     embed_model_str = embed_model.replace("/", "_")
-    if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+    if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
     else:
         instruct = False
