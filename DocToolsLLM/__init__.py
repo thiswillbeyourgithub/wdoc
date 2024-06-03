@@ -689,6 +689,7 @@ class DocToolsLLM_class:
             @optional_typecheck
             def ntfy(text: str) -> str:
                 return text
+            self.ntfy = ntfy
 
         if self.debug:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -863,7 +864,7 @@ class DocToolsLLM_class:
                     if len(links_todo) < self.n_summaries_target:
                         links_todo[link] = None
                     else:
-                        whi(ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run."))
+                        whi(self.ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run."))
                         break
 
             # comment out the links that are marked as already done
@@ -887,10 +888,10 @@ class DocToolsLLM_class:
                 # as it allows to run this frequently
                 n_todos_desired = self.n_summaries_target
                 if self.n_todos_present >= n_todos_desired:
-                    return red(ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."))
+                    return red(self.ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."))
                 else:
                     self.n_summaries_target = n_todos_desired - self.n_todos_present
-                    red(ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}"))
+                    red(self.ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}"))
                     assert self.n_summaries_target > 0
 
                 while len(links_todo) > self.n_summaries_target:
@@ -933,10 +934,10 @@ class DocToolsLLM_class:
         if self.n_recursive_summary:
             for i in range(1, self.n_recursive_summary + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
-        whi(ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
+        whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
-                raise Exception(red(ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
+                raise Exception(red(self.ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
@@ -1172,8 +1173,8 @@ class DocToolsLLM_class:
         total_docs_length = sum([x["doc_reading_length"] for x in results])
         # total_summary_length = sum([x["sum_reading_length"] for x in results])
 
-        red(ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
-        red(ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
+        red(self.ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
+        red(self.ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
 
         # if "out_file" in self.cli_kwargs:
         #     # after summarizing all links, append to output file the total cost
