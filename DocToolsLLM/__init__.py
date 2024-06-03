@@ -1,3 +1,5 @@
+from .utils.slow_imports import litellm
+
 import json
 import pyfiglet
 import copy
@@ -33,7 +35,6 @@ from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
-import litellm
 
 from .utils.llm import load_llm, AnswerConversationBufferMemory
 from .utils.batch_file_loader import batch_load_doc

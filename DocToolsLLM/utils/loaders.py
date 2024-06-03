@@ -6,48 +6,53 @@ from functools import partial
 import uuid
 import tempfile
 import requests
-import youtube_dl
-from youtube_dl.utils import DownloadError, ExtractorError
 import shutil
-import ankipandas as akp
-import ftfy
-from bs4 import BeautifulSoup
-from goose3 import Goose
 from pathlib import Path
 import re
 from tqdm import tqdm
 import json
 import dill
-from prompt_toolkit import prompt
-import LogseqMarkdownParser
 
-from langchain.docstore.document import Document
-from langchain.text_splitter import TextSplitter
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.document_loaders import UnstructuredPDFLoader
-from langchain_community.document_loaders import UnstructuredEPubLoader
-from langchain_community.document_loaders import UnstructuredPowerPointLoader
-from langchain_community.document_loaders import Docx2txtLoader
-from langchain_community.document_loaders import UnstructuredWordDocumentLoader
-from langchain_community.document_loaders import PyPDFium2Loader
-from langchain_community.document_loaders import PyMuPDFLoader
+import lazy_import
 
-from langchain_community.document_loaders import PDFMinerLoader
-from langchain_community.document_loaders import PDFPlumberLoader
-from langchain_community.document_loaders import OnlinePDFLoader
-from langchain_community.document_loaders import YoutubeLoader
-from langchain_community.document_loaders import SeleniumURLLoader
-from langchain_community.document_loaders import PlaywrightURLLoader
-from langchain_community.document_loaders import WebBaseLoader
+# lazy loading of modules
+youtube_dl = lazy_import.lazy_module('youtube_dl')
+DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
+ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
+akp = lazy_import.lazy_module('ankipandas')
+ftfy = lazy_import.lazy_module('ftfy')
+BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
+Goose = lazy_import.lazy_class('goose3.Goose')
+prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
+LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 
-#from unstructured.cleaners.core import clean_extra_whitespace
+langchain = lazy_import.lazy_module('langchain')
+Document = lazy_import.lazy_class('langchain.docstore.document.Document')
+TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
+RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+PyPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.PyPDFLoader')
+UnstructuredPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredPDFLoader')
+UnstructuredEPubLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredEPubLoader')
+UnstructuredPowerPointLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredPowerPointLoader')
+Docx2txtLoader = lazy_import.lazy_class('langchain_community.document_loaders.Docx2txtLoader')
+UnstructuredWordDocumentLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredWordDocumentLoader')
+PyPDFium2Loader = lazy_import.lazy_class('langchain_community.document_loaders.PyPDFium2Loader')
+PyMuPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.PyMuPDFLoader')
+PDFMinerLoader = lazy_import.lazy_class('langchain_community.document_loaders.PDFMinerLoader')
+PDFPlumberLoader = lazy_import.lazy_class('langchain_community.document_loaders.PDFPlumberLoader')
+OnlinePDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.OnlinePDFLoader')
+YoutubeLoader = lazy_import.lazy_class('langchain_community.document_loaders.YoutubeLoader')
+SeleniumURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.SeleniumURLLoader')
+PlaywrightURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.PlaywrightURLLoader')
+WebBaseLoader = lazy_import.lazy_class('langchain_community.document_loaders.WebBaseLoader')
+
 from .slow_imports import unstructured
-
-# from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
 from .typechecker import optional_typecheck
-# from .logger import whi, yel, red, log
-# from .llm import transcribe
+from .logger import whi, yel, red, log
+from .llm import transcribe
+
+clean_extra_whitespace = lazy_import.lazy_module("unstructured.cleaners.core.clean_extra_whitespace")
 
 # parse args again to know what to print for failed imports
 import fire
@@ -124,7 +129,7 @@ def create_pdf_loaders():
             UnstructuredPDFLoader,
             mode="elements",
             strategy="hi_res",
-            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            post_processors=[clean_extra_whitespace],
             infer_table_structure=True,
             # languages=["fr"],
         ),
@@ -132,21 +137,21 @@ def create_pdf_loaders():
             UnstructuredPDFLoader,
             mode="elements",
             strategy="fast",
-            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            post_processors=[clean_extra_whitespace],
             infer_table_structure=True,
             # languages=["fr"],
         ),
         "Unstructured_hires": partial(
             UnstructuredPDFLoader,
             strategy="hi_res",
-            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            post_processors=[clean_extra_whitespace],
             infer_table_structure=True,
             # languages=["fr"],
         ),
         "Unstructured_fast": partial(
             UnstructuredPDFLoader,
             strategy="fast",
-            post_processors=[unstructured.cleaners.clore.clean_extra_whitespace],
+            post_processors=[clean_extra_whitespace],
             infer_table_structure=True,
             # languages=["fr"],
         ),

@@ -13,10 +13,10 @@ import hashlib
 from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
-import litellm
 
 from .logger import red
 from .typechecker import optional_typecheck
+from .slow_imports import litellm
 
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"

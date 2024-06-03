@@ -12,10 +12,10 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
-from litellm import transcription
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
+from .slow_imports import litellm
 
 
 
@@ -282,7 +282,7 @@ def transcribe(
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:
-        transcript = transcription(
+        transcript = litellm.transcription(
             model="whisper",
             file=audio_file,
             prompt=prompt,

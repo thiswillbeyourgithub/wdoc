@@ -20,12 +20,12 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
-import litellm
 
 from .misc import cache_dir
 from .logger import whi, red
 from .loaders import get_tkn_length
 from .typechecker import optional_typecheck
+from .slow_imports import litellm
 
 
 
