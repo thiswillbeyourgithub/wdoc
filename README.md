@@ -46,10 +46,10 @@
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document parsing and embedding.
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
-* **Statically typed**: Optional runtime type checking. Opt in with an environment flag: `DOCTOOLS_TYPECHECKING="disabled / warn / crash" python -m DocToolsLLM`.
+* **Statically typed**: Optional runtime type checking. Opt in with an environment flag: `DOCTOOLS_TYPECHECKING="disabled / warn / crash" DocToolsLLM`.
 * **Scriptable**: You can use DocToolsLLM in other python project using `--import_mode`
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
-* **Fully documented**: I work hard to maintain an exhaustive documentation at `python -m DocToolsLLM --help`
+* **Fully documented**: I work hard to maintain an exhaustive documentation at `DocToolsLLM --help`
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Supported filetypes
@@ -81,28 +81,28 @@
 * **summarize_link_file** this summarizes all the links and adds it to an output file. (logseq format is supported)
 
 ## Walkthrough and examples
-1. Say you want to ask a question about one pdf, that's simple: `python -m DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
-2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `python -m DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"!
+1. Say you want to ask a question about one pdf, that's simple: `DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"!
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources.
 4. You can specify a "source_tag" metadata to help distinguish between documents you imported.
 5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
-6. To know more about each argument supported by each filetype, `python -m DoctoolsLLM --help`
+6. To know more about each argument supported by each filetype, `DoctoolsLLM --help`
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by DoctoolsLLM. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and DoctoolsLLM automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
-8. If you want to make sure your data remains private here's an example with ollama: `python -m DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" --task=my_task`
-9. Now say you just want to summarize a webpage: `python -m DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
+8. If you want to make sure your data remains private here's an example with ollama: `DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" --task=my_task`
+9. Now say you just want to summarize a webpage: `DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
 
 ![](./images/summary.png)
 
 ## Getting started
 *Tested on python 3.9 and 3.11.7*
-* `python -m pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
-* Or for the supposedly more stable branch: `python -m pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
+* `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
+* Or for the supposedly more stable branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
 * Add the API key for the backend you want to use: add a file "{BACKEND}_API_KEY.txt" to the root that contains your backend's API key. For example "OPENAI_API_KEY.txt".
-* Launch using `python -m DocToolsLLM --task=query [ARGS]`
-* To ask questions about a document: `python -m DoctoolsLLM --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
+* Launch using `DocToolsLLM --task=query [ARGS]`
+* To ask questions about a document: `DoctoolsLLM --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
-* For more: read the documentation at `python -m DocToolsLLM --help`
-* For shell autocompletion: `eval "$(python -m DocToolsLLM -- --completion)"`
+* For more: read the documentation at `DocToolsLLM --help`
+* For shell autocompletion: `eval "$(DocToolsLLM -- --completion)"`
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer usedto count tokens to embed is the OpenAI tokenizer, which is not universal)
