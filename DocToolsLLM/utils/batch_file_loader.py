@@ -1,3 +1,6 @@
+import re
+from tqdm import tqdm
+from functools import cache as memoizer
 import time
 import os
 from typing import List, Tuple
@@ -15,9 +18,6 @@ from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, min_token, get_tkn_length
 
-import re
-from tqdm import tqdm
-from functools import cache as memoizer
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
