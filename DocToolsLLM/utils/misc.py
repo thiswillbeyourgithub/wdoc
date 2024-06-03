@@ -16,7 +16,8 @@ from langchain_core.runnables import chain
 
 from .logger import red
 from .typechecker import optional_typecheck
-from .slow_imports import litellm
+from .slow_imports import imported
+litellm = imported[0]
 
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"

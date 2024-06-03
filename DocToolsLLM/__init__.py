@@ -1,4 +1,5 @@
-from .utils.slow_imports import litellm
+from .utils.slow_imports import imported
+litellm = imported[0]
 
 import json
 import pyfiglet

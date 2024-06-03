@@ -6,10 +6,12 @@ Unstructured can be very slow too but is not always needed
 """
 import sys
 import lazy_import
-from threading import Thread
-from queue import Queue
 
-IMPORT_DEBUG = False
+# from multiprocessing import Process as Parallel
+from threading import Thread as Parallel
+
+
+IMPORT_DEBUG = 1
 if IMPORT_DEBUG:
     def p(message): print(message)
 else:
@@ -20,57 +22,68 @@ to_imports = [
     # "unstructured",
 ]
 
-def importer(q, name) -> None:
+def importer(name) -> None:
     p(f"Importing {name}")
     exec(f"import {name}")
 
     p(f"Triggering non lazy loading of {name}")
-    # eval(f"dir({name})")
+    eval(f"dir({name})")
 
     p(f"Sending {name}")
-    q.put(locals()[name])
+    imported[to_imports.index(name)] = locals()[name]
     return
 
-
-class threaded_importer:
+class parallel_importer:
     def __init__(self, name):
-        self.name = name
-        self.q = Queue()
-        self.thread = Thread(
+        name = name
+        process = Parallel(
             target=importer,
-            args=(self.q, self.name),
+            args=(name,),
             daemon=False,
         )
-        self.thread.start()
-        self.setattr_queue = {}
+        process.start()
+        process.join()
+        setattr_queue = {}
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "process", process)
+        object.__setattr__(self, "setattr_queue", setattr_queue)
 
     def __getattr__(self, name):
-        if name == "thread":
-            return super().__getattr__(name)
+        instance_name = object.__getattribute__(self, "name")
+        process = object.__getattribute__(self, "process")
+        setattr_queue = object.__getattribute__(self, "setattr_queue")
 
-        assert self.thread.is_alive(), f"Failed: {self.name}"
-        p(f"Requesting {self.name} that is still loading, stalling while I finish importing...")
-        self.thread.join()
-
-        new = self.q.get()
-        for qn, qv in self.setattr_queue.items():
+        if not isinstance(imported[to_imports.index(instance_name)], parallel_importer):
+            p(f"{instance_name}: get {name}")
+            new = imported[to_imports.index(instance_name)]
+        elif process.is_alive():
+            p(f"{instance_name}: joining")
+            process.join()
+            assert isinstance(imported[to_imports.index(instance_name)], parallel_importer)
+        else:
+            new = imported[to_imports.index(instance_name)]
+        for qn, qv in object.__getattribute__(self, "setattr_queue").items():
             setattr(new, qn, qv)
+        setattr_queue.clear()
 
-        sys.modules[self.name] = new
-        globals()[self.name] = new
-        p(f"Done threaded importing {self.name}")
+        sys.modules[instance_name] = new
         return getattr(new, name)
 
     def __setattr__(self, name, value):
-        if name in ["q", "thread", "setattr_queue", "name"]:
-            return super().__setattr__(name, value)
+        instance_name = object.__getattribute__(self, "name")
+        setattr_queue = object.__getattribute__(self, "setattr_queue")
+        p(f"{instance_name.upper()}:SETATTR: {name}")
+
+        if isinstance(imported[to_imports.index(instance_name)], parallel_importer):
+            setattr_queue[name] = value
         else:
-            assert self.thread.is_alive(), f"race condition: {self.name}"
-            self.setattr_queue[name] = value
+            new = imported[to_imports.index(instance_name)]
+            for qn, qv in setattr_queue.items():
+                setattr(new, qn, qv)
+            setattr_queue.clear()
 
 
-for to_do in to_imports:
-    locals()[to_do] = lazy_import.lazy_module(to_do)
+imported = [None for i in to_imports]
 
-for to_do in to_imports:
-    locals()[to_do] = threaded_importer(name=to_do)
+for it, to_do in enumerate(to_imports):
+    imported[it] = parallel_importer(name=to_do)
