@@ -164,13 +164,13 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 multiline=settings["multiline"],
             )
         except KeyboardInterrupt:
-            red(f"KeyboardInterrupt: quitting.")
+            red(f"Quitting.")
             raise SystemExit()
         except EOFError:
             if settings["multiline"]:
                 pass
             else:
-                red(f"EOFError: quitting.")
+                red(f"Quitting.")
                 raise SystemExit()
         user_input = user_input.strip()
 
