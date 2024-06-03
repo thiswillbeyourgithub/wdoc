@@ -4,10 +4,10 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from joblib import Memory
 
-from utils.typechecker import optional_typecheck
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
-from utils.logger import red
-from utils.misc import cache_dir
+from ..typechecker import optional_typecheck
+from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
+from ..logger import red
+from ..misc import cache_dir
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 doc_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)

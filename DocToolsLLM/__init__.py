@@ -35,9 +35,9 @@ from langchain_core.output_parsers import BaseGenerationOutputParser
 from langchain_core.outputs import Generation, ChatGeneration
 import litellm
 
-from utils.llm import load_llm, AnswerConversationBufferMemory
-from utils.batch_file_loader import batch_load_doc
-from utils.loaders import (
+from .utils.llm import load_llm, AnswerConversationBufferMemory
+from .utils.batch_file_loader import batch_load_doc
+from .utils.loaders import (
     get_tkn_length,
     average_word_length,
     wpm,
@@ -45,16 +45,16 @@ from utils.loaders import (
     check_docs_tkn_length,
     )
 
-from utils.embeddings import load_embeddings
-from utils.retrievers import create_hyde_retriever, create_parent_retriever
-from utils.logger import whi, yel, red, md_printer, log
-from utils.cli import ask_user
-from utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
-from utils.tasks.summary import do_summarize
-from utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
-from utils.typechecker import optional_typecheck
-from utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
+from .utils.embeddings import load_embeddings
+from .utils.retrievers import create_hyde_retriever, create_parent_retriever
+from .utils.logger import whi, yel, red, md_printer, log
+from .utils.cli import ask_user
+from .utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
+from .utils.tasks.summary import do_summarize
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
+from .utils.typechecker import optional_typecheck
+from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
+from .utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -86,7 +86,7 @@ extra_args = {
     "source_tag": str,
 }
 
-class DocToolsLLM:
+class DocToolsLLM_class:
     VERSION: str = "0.16"
 
     @optional_typecheck
@@ -1928,12 +1928,11 @@ class DocToolsLLM:
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
 
-def cli_call() -> None:
-    "called by 'DocToolsLLM' in your terminal"
+def cli_launcher():
+    import fire
     red(pyfiglet.figlet_format("DocToolsLLM"))
     log.info("Starting DocToolsLLM")
-    import fire
-    instance = fire.Fire(DocToolsLLM)
+    instance = fire.Fire(DocToolsLLM_class)
 
 if __name__ == "__main__":
-    cli_call()
+    cli_launcher()
