@@ -16,7 +16,6 @@ import dill
 import lazy_import
 
 # lazy loading of modules
-youtube_dl = lazy_import.lazy_module('youtube_dl')
 DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
 ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
 akp = lazy_import.lazy_module('ankipandas')
@@ -26,7 +25,6 @@ Goose = lazy_import.lazy_class('goose3.Goose')
 prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 
-langchain = lazy_import.lazy_module('langchain')
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
@@ -45,7 +43,6 @@ YoutubeLoader = lazy_import.lazy_class('langchain_community.document_loaders.You
 SeleniumURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.SeleniumURLLoader')
 PlaywrightURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.PlaywrightURLLoader')
 WebBaseLoader = lazy_import.lazy_class('langchain_community.document_loaders.WebBaseLoader')
-unstructured = lazy_import.lazy_module("unstructured")
 clean_extra_whitespace = lazy_import.lazy_class("unstructured.cleaners.core.clean_extra_whitespace")
 
 from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher

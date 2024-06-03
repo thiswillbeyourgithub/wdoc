@@ -18,45 +18,55 @@ import textwrap
 import os
 import asyncio
 from tqdm import tqdm
+import lazy_import
 
-from langchain.globals import set_verbose, set_debug, set_llm_cache
-from langchain.retrievers.merger_retriever import MergerRetriever
-from langchain.docstore.document import Document
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain.retrievers.document_compressors import (
-        DocumentCompressorPipeline)
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain_community.cache import SQLiteCache
-from operator import itemgetter
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_core.runnables import chain
-from langchain_core.runnables.base import RunnableEach
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.output_parsers import BaseGenerationOutputParser
-from langchain_core.outputs import Generation, ChatGeneration
-
-from .utils.llm import load_llm, AnswerConversationBufferMemory
-from .utils.batch_file_loader import batch_load_doc
-from .utils.loaders import (
-    get_tkn_length,
-    average_word_length,
-    wpm,
-    get_splitter,
-    check_docs_tkn_length,
-    )
-
-from .utils.embeddings import load_embeddings
-from .utils.retrievers import create_hyde_retriever, create_parent_retriever
-from .utils.logger import whi, yel, red, md_printer, log
-from .utils.interact import ask_user
+from .utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
 from .utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from .utils.tasks.summary import do_summarize
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 from .utils.typechecker import optional_typecheck
-from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering
+from .utils.logger import whi, yel, red, md_printer, log
 
+set_verbose = lazy_import.lazy_class("langchain.globals.set_verbose")
+set_debug = lazy_import.lazy_class("langchain.globals.set_debug")
+set_llm_cache = lazy_import.lazy_class("langchain.globals.set_llm_cache")
+MergerRetriever = lazy_import.lazy_class("langchain.retrievers.merger_retriever.MergerRetriever")
+Document = lazy_import.lazy_class("langchain.docstore.document.Document")
+EmbeddingsRedundantFilter = lazy_import.lazy_class("langchain_community.document_transformers.EmbeddingsRedundantFilter")
+DocumentCompressorPipeline = lazy_import.lazy_class("langchain.retrievers.document_compressors.DocumentCompressorPipeline")
+ContextualCompressionRetriever = lazy_import.lazy_class("langchain.retrievers.ContextualCompressionRetriever")
+from langchain_community.retrievers import KNNRetriever, SVMRetriever
+SQLiteCache = lazy_import.lazy_class("langchain_community.cache.SQLiteCache")
+itemgetter = lazy_import.lazy_class("operator.itemgetter")
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+chain = lazy_import.lazy_class("langchain_core.runnables.chain")
+RunnableEach = lazy_import.lazy_class("langchain_core.runnables.base.RunnableEach")
+StrOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.string.StrOutputParser")
+BaseGenerationOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.BaseGenerationOutputParser")
+Generation = lazy_import.lazy_class("langchain_core.outputs.Generation")
+ChatGeneration = lazy_import.lazy_class("langchain_core.outputs.ChatGeneration")
+
+load_llm = lazy_import.lazy_class(".utils.llm.load_llm")
+AnswerConversationBufferMemory = lazy_import.lazy_class(".utils.llm.AnswerConversationBufferMemory")
+batch_load_doc = lazy_import.lazy_class(".utils.batch_file_loader.batch_load_doc")
+get_tkn_length = lazy_import.lazy_class(".utils.loaders.get_tkn_length")
+average_word_length = lazy_import.lazy_class(".utils.loaders.average_word_length")
+wpm = lazy_import.lazy_class(".utils.loaders.wpm")
+get_splitter = lazy_import.lazy_class(".utils.loaders.get_splitter")
+check_docs_tkn_length = lazy_import.lazy_class(".utils.loaders.check_docs_tkn_length")
+
+PR_CONDENSE_QUESTION = lazy_import.lazy_class(".utils.prompts.PR_CONDENSE_QUESTION")
+PR_EVALUATE_DOC = lazy_import.lazy_class(".utils.prompts.PR_EVALUATE_DOC")
+PR_ANSWER_ONE_DOC = lazy_import.lazy_class(".utils.prompts.PR_ANSWER_ONE_DOC")
+PR_COMBINE_INTERMEDIATE_ANSWERS = lazy_import.lazy_class(".utils.prompts.PR_COMBINE_INTERMEDIATE_ANSWERS")
+format_chat_history = lazy_import.lazy_class(".utils.tasks.query.format_chat_history")
+refilter_docs = lazy_import.lazy_class(".utils.tasks.query.refilter_docs")
+check_intermediate_answer = lazy_import.lazy_class(".utils.tasks.query.check_intermediate_answer")
+parse_eval_output = lazy_import.lazy_class(".utils.tasks.query.parse_eval_output")
+doc_eval_cache = lazy_import.lazy_class(".utils.tasks.query.doc_eval_cache")
+ask_user = lazy_import.lazy_class(".utils.interact.ask_user")
+create_hyde_retriever = lazy_import.lazy_class(".utils.retrievers.create_hyde_retriever")
+create_parent_retriever = lazy_import.lazy_class(".utils.retrievers.create_parent_retriever")
+load_embeddings = lazy_import.lazy_class(".utils.embeddings.load_embeddings")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
