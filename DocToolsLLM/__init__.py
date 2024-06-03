@@ -1,6 +1,3 @@
-from .utils.slow_imports import imported
-litellm = imported[0]
-
 import json
 import pyfiglet
 import copy
@@ -45,29 +42,31 @@ StrOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.string.S
 BaseGenerationOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.BaseGenerationOutputParser")
 Generation = lazy_import.lazy_class("langchain_core.outputs.Generation")
 ChatGeneration = lazy_import.lazy_class("langchain_core.outputs.ChatGeneration")
+litellm = lazy_import.lazy_module("litellm")
 
-load_llm = lazy_import.lazy_class(".utils.llm.load_llm")
-AnswerConversationBufferMemory = lazy_import.lazy_class(".utils.llm.AnswerConversationBufferMemory")
-batch_load_doc = lazy_import.lazy_class(".utils.batch_file_loader.batch_load_doc")
-get_tkn_length = lazy_import.lazy_class(".utils.loaders.get_tkn_length")
-average_word_length = lazy_import.lazy_class(".utils.loaders.average_word_length")
-wpm = lazy_import.lazy_class(".utils.loaders.wpm")
-get_splitter = lazy_import.lazy_class(".utils.loaders.get_splitter")
-check_docs_tkn_length = lazy_import.lazy_class(".utils.loaders.check_docs_tkn_length")
+from .utils.llm import load_llm
+from .utils.llm import AnswerConversationBufferMemory
 
-PR_CONDENSE_QUESTION = lazy_import.lazy_class(".utils.prompts.PR_CONDENSE_QUESTION")
-PR_EVALUATE_DOC = lazy_import.lazy_class(".utils.prompts.PR_EVALUATE_DOC")
-PR_ANSWER_ONE_DOC = lazy_import.lazy_class(".utils.prompts.PR_ANSWER_ONE_DOC")
-PR_COMBINE_INTERMEDIATE_ANSWERS = lazy_import.lazy_class(".utils.prompts.PR_COMBINE_INTERMEDIATE_ANSWERS")
-format_chat_history = lazy_import.lazy_class(".utils.tasks.query.format_chat_history")
-refilter_docs = lazy_import.lazy_class(".utils.tasks.query.refilter_docs")
-check_intermediate_answer = lazy_import.lazy_class(".utils.tasks.query.check_intermediate_answer")
-parse_eval_output = lazy_import.lazy_class(".utils.tasks.query.parse_eval_output")
-doc_eval_cache = lazy_import.lazy_class(".utils.tasks.query.doc_eval_cache")
-ask_user = lazy_import.lazy_class(".utils.interact.ask_user")
-create_hyde_retriever = lazy_import.lazy_class(".utils.retrievers.create_hyde_retriever")
-create_parent_retriever = lazy_import.lazy_class(".utils.retrievers.create_parent_retriever")
-load_embeddings = lazy_import.lazy_class(".utils.embeddings.load_embeddings")
+from .utils.batch_file_loader import batch_load_doc
+from .utils.loaders import get_tkn_length
+from .utils.loaders import average_word_length
+from .utils.loaders import wpm
+from .utils.loaders import get_splitter
+from .utils.loaders import check_docs_tkn_length
+
+from .utils.prompts import PR_CONDENSE_QUESTION
+from .utils.prompts import PR_EVALUATE_DOC
+from .utils.prompts import PR_ANSWER_ONE_DOC
+from .utils.prompts import PR_COMBINE_INTERMEDIATE_ANSWERS
+from .utils.tasks.query import format_chat_history
+from .utils.tasks.query import refilter_docs
+from .utils.tasks.query import check_intermediate_answer
+from .utils.tasks.query import parse_eval_output
+from .utils.tasks.query import doc_eval_cache
+from .utils.interact import ask_user
+from .utils.retrievers import create_hyde_retriever
+from .utils.retrievers import create_parent_retriever
+from .utils.embeddings import load_embeddings
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 

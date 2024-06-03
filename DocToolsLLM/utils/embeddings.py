@@ -9,6 +9,7 @@ import copy
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
+import lazy_import
 
 import numpy as np
 from pydantic import Extra
@@ -25,7 +26,8 @@ from .misc import cache_dir
 from .logger import whi, red
 from .loaders import get_tkn_length
 from .typechecker import optional_typecheck
-from .slow_imports import litellm
+
+litellm = lazy_import.lazy_module("litellm")
 
 
 

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
+import lazy_import
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain.memory import ConversationBufferMemory
 from langchain_core.agents import AgentAction, AgentFinish
@@ -12,11 +13,11 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
+import litellm
+litellm = lazy_import.lazy_module("litellm")
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
-from .slow_imports import litellm
-
 
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
