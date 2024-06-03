@@ -99,6 +99,7 @@
 * Or for the supposedly more stable branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
 * Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
 * Launch using `DocToolsLLM --task=query [ARGS]`
+* **Note: if for some reason this fails, maybe try with `python -m DocToolsLLM`. And if everything fails, clone this repo and try again after `cd` inside it.
 * To ask questions about a document: `DoctoolsLLM --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `DocToolsLLM --help`
