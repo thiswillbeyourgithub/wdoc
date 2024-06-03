@@ -33,6 +33,7 @@
     * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
     * I use it to query my personal documents using the `--private` argument.
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
+    * I use it to ask questions about entire youtube playlists.
 
 ## Features
 * **Advanced RAG**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
