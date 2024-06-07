@@ -909,7 +909,8 @@ class DocToolsLLM_class:
 
         else:
             for d in self.loaded_docs:
-                links_todo[d.metadata["path"]] = None
+                if "path" in d.metadata:
+                    links_todo[d.metadata["path"]] = None
             assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
 
             docs_tkn_cost = {}

@@ -751,7 +751,7 @@ def load_string() -> List[Document]:
     docs = [
         Document(
             page_content=content,
-            metadata={"source": "user_string"},
+            metadata={"path": "user_string"},
         )
     ]
     return docs
