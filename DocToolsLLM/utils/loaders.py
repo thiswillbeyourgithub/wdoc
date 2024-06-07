@@ -746,7 +746,12 @@ def load_string() -> List[Document]:
         multiline=True,
     )
     log.info(f"Pasted string input:\n{content}")
-    docs = [Document(page_content=content)]
+    docs = [
+        Document(
+            page_content=content,
+            metadata={"source": "user_string"},
+        )
+    ]
     return docs
 
 @optional_typecheck
