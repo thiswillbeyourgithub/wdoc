@@ -286,7 +286,7 @@ def load_one_doc(
         if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
             if "title" in kwargs and kwargs["title"] and kwargs["title"] != "Untitled":
                 docs[i].metadata["title"] = kwargs["title"]
-            elif "http" in docs[i].metadata["path"].lower():
+            elif "path" in docs[i].metadata and isinstance(docs[i].metadata["path"], str) and "http" in docs[i].metadata["path"].lower():
                 docs[i].metadata["title"] = get_url_title(
                     docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
