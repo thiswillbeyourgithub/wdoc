@@ -24,7 +24,7 @@ from langchain_openai import OpenAIEmbeddings
 
 from .misc import cache_dir
 from .logger import whi, red
-from .loaders import get_tkn_length
+from .loaders_misc import get_tkn_length
 from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
