@@ -65,7 +65,7 @@ litellm = lazy_import.lazy_module("litellm")
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 class DocToolsLLM_class:
-    VERSION: str = "0.18"
+    VERSION: str = "0.19"
     extra_args_keys = {
         "anki_profile": str,
         "anki_notetype": str,
