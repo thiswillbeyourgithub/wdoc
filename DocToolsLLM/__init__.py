@@ -64,33 +64,29 @@ litellm = lazy_import.lazy_module("litellm")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-d = datetime.today()
-today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
-
-extra_args = {
-    "anki_profile": str,
-    "anki_notetype": str,
-    "anki_fields": str,
-    "anki_deck": str,
-    "anki_mode": str,
-    "whisper_lang": str,
-    "whisper_prompt": str,
-    "path": str,
-    "include": str,
-    "exclude": str,
-    "out_file": str,
-    "youtube_language": str,
-    "youtube_translation": str,
-    "embed_instruct": str,
-    "file_loader_n_jobs": int,
-    "load_functions": List[str],
-    "filter_metadata": Union[List[str], str],
-    # "filter_content": Union[List[str, str]],
-    "source_tag": str,
-}
-
 class DocToolsLLM_class:
     VERSION: str = "0.18"
+    extra_args_keys = {
+        "anki_profile": str,
+        "anki_notetype": str,
+        "anki_fields": str,
+        "anki_deck": str,
+        "anki_mode": str,
+        "whisper_lang": str,
+        "whisper_prompt": str,
+        "path": str,
+        "include": str,
+        "exclude": str,
+        "out_file": str,
+        "youtube_language": str,
+        "youtube_translation": str,
+        "embed_instruct": str,
+        "file_loader_n_jobs": int,
+        "load_functions": List[str],
+        "filter_metadata": Union[List[str], str],
+        # "filter_content": Union[List[str, str]],
+        "source_tag": str,
+    }
 
     @optional_typecheck
     def __init__(
@@ -479,14 +475,14 @@ class DocToolsLLM_class:
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in extra_args:
+            if k not in self.extra_args_keys:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = extra_args[k]
+                expected_type = self.extra_args_keys[k]
                 if not check_type(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
