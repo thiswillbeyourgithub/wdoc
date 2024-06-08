@@ -866,6 +866,8 @@ class DocToolsLLM_class:
             else:
                 metadata = ""
 
+            splitter = get_splitter("recursive_summary", modelname=self.modelname)
+
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                     docs=relevant_docs,
@@ -884,7 +886,6 @@ class DocToolsLLM_class:
 
             n_recursion_done = 0
             if self.n_recursive_summary > 0:
-                splitter = get_splitter("recursive_summary")
                 summary_text = summary
 
                 for n_recur in range(1, self.n_recursive_summary + 1):

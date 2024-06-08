@@ -1,3 +1,4 @@
+from functools import partial
 from .typechecker import optional_typecheck
 from .logger import red
 
@@ -10,6 +11,7 @@ import lazy_import
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+litellm = lazy_import.lazy_module("litellm")
 
 # parse args again to know what to print for failed imports
 kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
@@ -48,9 +50,10 @@ average_word_length = 6
 # separators used for the text splitter
 recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
-tokenize = tiktoken.encoding_for_model(
-    "gpt-3.5-turbo"
-).encode  # used to get token length estimation
+# used to get token length estimation
+tokenizers = {
+    "gpt-3.5-turbo": tiktoken.encoding_for_model("gpt-3.5-turbo").encode,
+}
 
 min_token = 50
 max_token = 1_000_000
@@ -59,32 +62,51 @@ min_lang_prob = 0.50
 
 
 @optional_typecheck
-def get_tkn_length(tosplit: str) -> int:
-    return len(tokenize(tosplit))
+def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
+    if modelname in tokenizers:
+        return len(tokenizers[modelname](tosplit))
+    else:
+        try:
+            tokenizers[modelname] = tiktoken.encoding_for_model(modelname.split("/")[-1]).encode
+        except:
+            modelname="gpt-3.5-turbo"
+        return get_tkn_length(tosplit=tosplit, modelname=modelname)
 
 @optional_typecheck
-def get_splitter(task: str) -> TextSplitter:
+def get_splitter(
+    task: str,
+    modelname="gpt-3.5-turbo",
+    ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
+
+    max_input_tokens = 4096
+    try:
+        max_input_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
+    except Exception as err:
+        red(f"Failed to get max_token limit for model {modelname}: '{err}'")
+
+    model_tkn_length = partial(get_tkn_length, modelname=modelname)
+
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=3000,  # default 4000
-            chunk_overlap=386,  # default 200
-            length_function=get_tkn_length,
+            chunk_size=int(3 / 4 * max_input_tokens),  # default 4000
+            chunk_overlap=500,  # default 200
+            length_function=model_tkn_length,
         )
     elif task in ["summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=2000,
-            chunk_overlap=300,
-            length_function=get_tkn_length,
+            chunk_size=int(1 / 2 * max_input_tokens),
+            chunk_overlap=500,
+            length_function=model_tkn_length,
         )
     elif task == "recursive_summary":
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=get_tkn_length,
+            chunk_size=int(1 / 4 * max_input_tokens),
+            chunk_overlap=300,
+            length_function=model_tkn_length,
         )
     else:
         raise Exception(task)
