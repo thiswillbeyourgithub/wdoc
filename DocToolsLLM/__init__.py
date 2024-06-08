@@ -84,7 +84,7 @@ class DocToolsLLM_class:
         "file_loader_n_jobs": int,
         "load_functions": List[str],
         "filter_metadata": Union[List[str], str],
-        "filter_content": Union[List[str, str]],
+        "filter_content": Union[List[str], str],
         "source_tag": str,
     }
 
