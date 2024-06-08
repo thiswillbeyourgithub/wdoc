@@ -72,7 +72,7 @@ def get_splitter(task: str) -> TextSplitter:
             chunk_overlap=386,  # default 200
             length_function=get_tkn_length,
         )
-    elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
+    elif task in ["summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=2000,

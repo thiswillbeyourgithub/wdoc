@@ -414,9 +414,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         for d in doclist
         if (matched := markdownlink_regex.search(d).strip())
     ]
-    if task == "summarize_link_file":
-        # if summarize, start from bottom
-        doclist.reverse()
 
     if "done_links" in load_kwargs:
         # discard any links that are already present in the output
