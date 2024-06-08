@@ -5,6 +5,7 @@
 ### Table of contents
 - [What is DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
 - [Features](#features)
+  - [Planned Features](#planned-features)
   - [Supported filetypes](#supported-filetypes)
   - [Supported tasks](#supported-tasks)
   - [Walkthrough and examples](#walkthrough-and-examples)
@@ -56,6 +57,19 @@
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
 * **Fully documented**: I work hard to maintain an exhaustive documentation at `DocToolsLLM --help`
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
+
+### Planned features
+*(These don't include improvements, bugfixes, refactoring etc.)*
+* Much improved retriever:
+    * more configurable HyDE.
+    * web search retriever, online information lookup via jina.ai reader and search.
+    * LLM powered synonym expansion for embeddings search.
+* investigate switching to Milvius Lite instead of handling split faiss indexes.
+* Whisper and Deepgram support for audio files (including youtube links).
+* Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
+    * include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
+* upload DocToolsLLM on PyPI
+* Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
 * **infer** (default, guess the filetype for you)
