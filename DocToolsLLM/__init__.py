@@ -85,10 +85,8 @@ extra_args = {
     "include": str,
     "exclude": str,
     "out_file": str,
-    "out_file_logseq_mode": str,
     "youtube_language": str,
     "youtube_translation": str,
-    "out_check_file": str,
     "embed_instruct": str,
     "file_loader_n_jobs": int,
     "load_functions": List[str],
@@ -158,7 +156,6 @@ class DocToolsLLM_class:
                 * search means only return the document corresponding to the search
                 * summarize means the input will be passed through a summarization prompt.
                 * summarize_then_query
-                * summarize_link_file takes in --filetype must be link_file
 
         --query str, default None
             if str, will be directly used for the first query if task in ["query", "search"]
@@ -182,7 +179,7 @@ class DocToolsLLM_class:
 
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
-                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored. If argument --out_file_logseq_mode is present, the formatting will be compatible with logseq.
+                * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored.
 
 
         --modelname str, default openai/gpt-4o
@@ -263,13 +260,6 @@ class DocToolsLLM_class:
         --n_recursive_summary: int, default 0
             will recursively summarize the summary this many times.
             1 means that the original summary will be summarize. 0 means disabled.
-
-        --n_summaries_target: int, default -1
-            Only active if query is 'summarize_link_file' and
-            --out_file_logseq_mode is True. Set a limit to
-            the number of links that will be summarized. If the number of
-            TODO in the output is higher, exit. If it's lower, only do the
-            difference. -1 to disable.
 
         --summary_language: str, default "[same as input]"
             When writing a summary, the LLM will write using the language
@@ -406,17 +396,6 @@ class DocToolsLLM_class:
             If doctools must create a summary, if out_file given the summary will
             be written to this file. Note that the file is not erased and
             Doctools will simply append to it.
-            Related: see --out_file_logseq_mode
-
-        --out_file_logseq_mode
-            If --out_file is specified, this argument tells Doctools to export
-            in a logseq friendly format. This means adding metadata of the run
-            as block properties as well as setting TODO states.
-
-        --out_check_file
-            If --out_file_logseq_mode is True and --out_check_file is set:
-            it must point to a file where each present TODO string will be
-            counted and taken into account when calculating --n_summaries_target
 
         --filter_metadata
             list of regex string to use as metadata filter when querying.
@@ -524,20 +503,13 @@ class DocToolsLLM_class:
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in cli_kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         task = task.replace("summary", "summarize")
-        assert task in ["query", "search", "summarize", "summarize_then_query", "summarize_link_file"], "invalid task value"
+        assert task in ["query", "search", "summarize", "summarize_then_query"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
             assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
             query_eval_modelname = None
-        assert (task == "summarize_link_file" and filetype == "link_file"
-                ) or (task != "summarize_link_file" and filetype != "link_file"
-                        ), "summarize_link_file must be used with filetype link_file"
-        if task == "summarize_link_file":
-            assert "path" in cli_kwargs, 'missing path arg for summarize_link_file'
-            assert "out_file" in cli_kwargs, 'missing "out_file" arg for summarize_link_file'
-            assert cli_kwargs["out_file"] != cli_kwargs["path"], "can't use same 'path' and 'out_file' arg"
         if filetype == "infer":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in embed_model, "embed model must contain slash"
@@ -734,43 +706,6 @@ class DocToolsLLM_class:
             private=self.private,
         )
 
-        # if task is to summarize lots of links, check first if there are
-        # links already summarized as it would greatly reduce the number of
-        # documents to load
-        if self.task == "summarize_link_file" and "out_file_logseq_mode" in cli_kwargs:
-            if not Path(self.cli_kwargs["out_file"]).exists():
-                Path(self.cli_kwargs["out_file"]).touch()
-            with open(self.cli_kwargs["out_file"], "r") as f:
-                output_content = f.read()
-
-            if self.n_summaries_target > 0:
-                self.n_todos_present = output_content.count("- TODO ")
-
-            if "out_check_file" in self.cli_kwargs:
-                # this is an undocumented function for the author. It
-                # allows to specify a second path for which to check if
-                # a document has already been summaried. I use this because
-                # I made a script to automatically move my DONE tasks
-                # from logseq to another near by file.
-                assert Path(self.cli_kwargs["out_check_file"]).exists()
-                with open(self.cli_kwargs["out_check_file"], "r") as f:
-                    output_content += f.read()
-
-            # parse just the links already present in the output
-            doclist = output_content.splitlines()
-            doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
-            doclist = [p.strip() for p in doclist if p.strip() and not p.strip().startswith("#") and "http" in p]
-            links_regex = re.compile(r'(https?://\S+)')
-            doclist = [
-                    matched.group(0)
-                    for d in doclist
-                    if (matched := links_regex.search(d).strip())
-            ]
-
-            self.done_links = " ".join(doclist)
-            self.cli_kwargs["done_links"] = doclist
-            self.cli_kwargs["n_summaries_target"] = self.n_summaries_target
-
         # loading documents
         if not load_embeds_from:
             self.loaded_docs = batch_load_doc(
@@ -821,7 +756,7 @@ class DocToolsLLM_class:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
-        if self.task in ["summarize_link_file", "summarize", "summarize_then_query"]:
+        if self.task in ["summarize", "summarize_then_query"]:
             self.summary_task()
 
             if self.task == "summary_then_query":
@@ -843,83 +778,13 @@ class DocToolsLLM_class:
             whi("Ready to query, call self.query(your_question)")
 
     def summary_task(self):
-        # storing links in dict instead of set to keep the original ordering
-        links_todo = {}
-        # failed = []
-
-        # get the list of documents from the same source. Also checks if
-        # it's not part of the output file if task is "summarize_link_file"
-        if self.task == "summarize_link_file":
-
-            for d in self.loaded_docs:
-                assert "subitem_link" in d.metadata, "missing 'subitem_link' in a doc metadata"
-
-                link = d.metadata["subitem_link"]
-                if link in self.done_links or link in links_todo:
-                    continue
-
-                if self.n_summaries_target == -1:
-                    links_todo[link] = None
-                else:
-                    if len(links_todo) < self.n_summaries_target:
-                        links_todo[link] = None
-                    else:
-                        whi(self.ntfy("'n_summaries_target' limit reached, will not add more links to summarize for this run."))
-                        break
-
-            # comment out the links that are marked as already done
-            # if self.done_links:
-            #     with open(self.cli_kwargs["path"], "r") as f:
-            #         temp = f.read().split("\n")
-            #     with open(self.cli_kwargs["path"], "w") as f:
-            #         for t in temp:
-            #             for done_link in self.done_links:
-            #                 if done_link in t:
-            #                     t = f"#already done as of {today}# {t}"
-            #                     break
-            #             f.write(t.strip() + "\n")
-
-            if self.n_summaries_target > 0:
-                # allows to run DocTools to summarise from a link file
-                # only if there are less than 'n_summaries_target' TODOS
-                # blocks in the target file. This way we can have a
-                # list of TODOS that will never be larger than this.
-                # Avoiding both having too many summaries and not enough
-                # as it allows to run this frequently
-                n_todos_desired = self.n_summaries_target
-                if self.n_todos_present >= n_todos_desired:
-                    return red(self.ntfy(f"Found {self.n_todos_present} in the output file(s) which is >= {n_todos_desired}. Exiting without summarising."))
-                else:
-                    self.n_summaries_target = n_todos_desired - self.n_todos_present
-                    red(self.ntfy(f"Found {self.n_todos_present} in output file(s) which is under {n_todos_desired}. Will summarize only {self.n_summaries_target}"))
-                    assert self.n_summaries_target > 0
-
-                while len(links_todo) > self.n_summaries_target:
-                    del links_todo[list(links_todo.keys())[-1]]
-
-            # estimate price before summarizing, in case you put the bible in there
-            docs_tkn_cost = {}
-            for doc in self.loaded_docs:
-                meta = doc.metadata["subitem_link"]
-                if meta in links_todo:
-                    if meta not in docs_tkn_cost:
-                        docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
-                    else:
-                        docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
-
-        else:
-            for d in self.loaded_docs:
-                if "path" in d.metadata:
-                    links_todo[d.metadata["path"]] = None
-            assert len(links_todo) == 1, f"Invalid length of links_todo for this task: '{len(links_todo)}'"
-
-            docs_tkn_cost = {}
-            for doc in self.loaded_docs:
-                meta = doc.metadata["path"]
-                if meta not in docs_tkn_cost:
-                    docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
-                else:
-                    docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
+        docs_tkn_cost = {}
+        for doc in self.loaded_docs:
+            meta = doc.metadata["path"]
+            if meta not in docs_tkn_cost:
+                docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
+            else:
+                docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
 
         full_tkn = sum(list(docs_tkn_cost.values()))
         red("Token price of each document:")
@@ -962,22 +827,20 @@ class DocToolsLLM_class:
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
-        def threaded_summary(link: str, lock: Lock) -> dict:
-            if self.task == "summarize_link_file":
-                # get only the docs that match the link
-                relevant_docs = [d for d in self.loaded_docs if d.metadata["subitem_link"] == link]
-            else:
-                relevant_docs = self.loaded_docs
+        def summarize_documents(
+            path: Any,
+            relevant_docs: List,
+            ) -> dict:
             assert relevant_docs, 'Empty relevant_docs!'
 
             # parse metadata from the doc
             metadata = []
-            if "http" in link:
-                item_name = tldextract.extract(link).registered_domain
-            elif "/" in link and Path(link).exists():
-                item_name = Path(link).name
+            if "http" in path:
+                item_name = tldextract.extract(path).registered_domain
+            elif "/" in path and Path(path).exists():
+                item_name = Path(path).name
             else:
-                item_name = link
+                item_name = path
 
             if "title" in relevant_docs[0].metadata:
                 item_name = f"{relevant_docs[0].metadata['title'].strip()} - {item_name}"
@@ -1061,7 +924,6 @@ class DocToolsLLM_class:
                             llm_price=self.llm_price,
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
-                            logseq_mode="out_file_logseq_mode" in self.cli_kwargs,
                             )
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
@@ -1087,68 +949,42 @@ class DocToolsLLM_class:
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                 summary = summary_text
 
-            with lock:
-                print("\n\n")
-                md_printer("# Summary")
-                md_printer(f'## {link}')
-                md_printer(summary)
+            print("\n\n")
+            md_printer("# Summary")
+            md_printer(f'## {path}')
+            md_printer(summary)
 
-                red(f"Tokens used for {link}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
+            red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
             summary_tkn_length = get_tkn_length(summary)
 
-            if "out_file_logseq_mode" in self.cli_kwargs:
-                header = f"\n- TODO {item_name}"
-                header += "\n  collapsed:: true"
-                header += "\n  block_type:: DocToolsLLM_summary"
-                header += f"\n  DocToolsLLM_version:: {self.VERSION}"
-                header += f"\n  DocToolsLLM_model:: {self.modelname} of {self.modelbackend}"
-                header += f"\n  DocToolsLLM_parameters:: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
-                header += f"\n  summary_date:: {today}"
-                header += f"\n  summary_timestamp:: {int(time.time())}"
-                header += f"\n  token_cost:: {doc_total_tokens}"
-                header += f"\n  dollar_cost:: {doc_total_cost:.5f}"
-                header += f"\n  summary_token_length:: {summary_tkn_length}"
-                header += f"\n  summary_reading_time:: {sum_reading_length:.1f}"
-                header += f"\n  link:: {link}"
-                if doc_reading_length:
-                    header += f"\n  doc_reading_time:: {doc_reading_length:.1f}"
-                    header += f"\n  reading_time_prct_speedup:: {int(sum_reading_length/doc_reading_length * 100)}%"
-                if n_chunk > 1:
-                    header += f"\n  chunks:: {n_chunk}"
-                if author:
-                    header += f"\n  author:: {author}"
-                header += f"\n  language:: {self.summary_language}"
-
-            else:
-                header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
-                if doc_reading_length:
-                    header += f"    {doc_reading_length:.1f} minutes"
-                if author:
-                    header += f"    by '{author}'"
-                header += f"    original link: '{link}'"
-                header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
-                header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+            header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
+            if doc_reading_length:
+                header += f"    {doc_reading_length:.1f} minutes"
+            if author:
+                header += f"    by '{author}'"
+            header += f"    original path: '{path}'"
+            header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
+            header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
                 Path(self.cli_kwargs["out_file"]).touch()  # create file if missing
-                with lock:
-                    with open(self.cli_kwargs["out_file"], "a") as f:
-                        f.write(header)
-                        for bulletpoint in summary.split("\n"):
-                            f.write("\n")
-                            bulletpoint = bulletpoint.rstrip()
-                            # # make sure the line begins with a bullet point
-                            # if not bulletpoint.lstrip().startswith("- "):
-                            #     begin_space = re.search(r"^(\s+)", bulletpoint)
-                            #     if not begin_space:
-                            #         begin_space = [""]
-                            #     bulletpoint = begin_space[0] + "- " + bulletpoint
-                            f.write(f"\t{bulletpoint}")
-                        f.write("\n\n\n")
+                with open(self.cli_kwargs["out_file"], "a") as f:
+                    f.write(header)
+                    for bulletpoint in summary.split("\n"):
+                        f.write("\n")
+                        bulletpoint = bulletpoint.rstrip()
+                        # # make sure the line begins with a bullet point
+                        # if not bulletpoint.lstrip().startswith("- "):
+                        #     begin_space = re.search(r"^(\s+)", bulletpoint)
+                        #     if not begin_space:
+                        #         begin_space = [""]
+                        #     bulletpoint = begin_space[0] + "- " + bulletpoint
+                        f.write(f"\t{bulletpoint}")
+                    f.write("\n\n\n")
             return {
-                    "link": link,
+                    "path": path,
                     "sum_reading_length": sum_reading_length,
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
@@ -1156,49 +992,13 @@ class DocToolsLLM_class:
                     "summary": summary,
                     }
 
-        lock = Lock()
-        results = Parallel(
-                n_jobs=3 if not self.debug else 1,
-                backend="threading",
-                )(delayed(threaded_summary)(
-                    link=link,
-                    lock=lock,
-                    ) for link in tqdm(
-                        links_todo,
-                        desc="Summarizing documents",
-                        # disable=(not len(links_todo) - 1) or self.debug,
-                        colour="magenta",
-                        ))
-        total_tkn_cost = sum([x["doc_total_tokens"] for x in results])
-        total_dol_cost = sum([x["doc_total_cost"] for x in results])
-        total_docs_length = sum([x["doc_reading_length"] for x in results])
-        # total_summary_length = sum([x["sum_reading_length"] for x in results])
+        results = summarize_documents(
+            path=self.cli_kwargs["path"],
+            relevant_docs=self.loaded_docs,
+        )
 
-        red(self.ntfy(f"Total cost of those summaries: '{total_tkn_cost}' (${total_dol_cost:.5f}, estimate was ${estimate_dol:.5f})"))
-        red(self.ntfy(f"Total time saved by those summaries: {total_docs_length:.1f} minutes"))
-
-        # if "out_file" in self.cli_kwargs:
-        #     # after summarizing all links, append to output file the total cost
-        #     if total_tkn_cost != 0 and total_dol_cost != 0:
-        #         with open(self.cli_kwargs["out_file"], "a") as f:
-        #             f.write(f"- Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-        #             f.write(f"- Total time saved by this run: {total_docs_length - total_summary_length:.1f} minutes\n\n\n")
-
-        # and write to input file a summary too
-        # if "out_file" in self.cli_kwargs:
-        #     try:
-        #         with open(self.cli_kwargs["path"], "a") as f:
-        #             f.write(f"\n\n")
-        #             f.write(f"- Done with summaries of {today}\n")
-        #             f.write(f"    - Number of links summarized: {len(links_todo) - len(failed)}/{len(links_todo) + len(self.done_links)}\n")
-        #             if failed:
-        #                 f.write(f"    - Number of links failed: {len(failed)}:\n")
-        #                 for f in failed:
-        #                     f.write(f"        - {f}\n")
-        #             # f.write(f"    - Total cost of this run: '{total_tkn_cost}' (${total_dol_cost:.5f})\n")
-        #             # f.write(f"    - Total time saved by this run: plausibly {total_docs_length:.1f} minutes\n")
-        #     except Exception as err:
-        #         red(f"Exception when writing end of run details to input file: '{err}'")
+        red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
+        red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
 
     def prepare_query_task(self):
         # load embeddings for querying
