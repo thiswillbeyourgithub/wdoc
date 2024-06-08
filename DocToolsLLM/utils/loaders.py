@@ -28,22 +28,24 @@ LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
-PyPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.PyPDFLoader')
-UnstructuredPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredPDFLoader')
-UnstructuredEPubLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredEPubLoader')
-UnstructuredPowerPointLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredPowerPointLoader')
-Docx2txtLoader = lazy_import.lazy_class('langchain_community.document_loaders.Docx2txtLoader')
-UnstructuredWordDocumentLoader = lazy_import.lazy_class('langchain_community.document_loaders.UnstructuredWordDocumentLoader')
-PyPDFium2Loader = lazy_import.lazy_class('langchain_community.document_loaders.PyPDFium2Loader')
-PyMuPDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.PyMuPDFLoader')
-PDFMinerLoader = lazy_import.lazy_class('langchain_community.document_loaders.PDFMinerLoader')
-PDFPlumberLoader = lazy_import.lazy_class('langchain_community.document_loaders.PDFPlumberLoader')
-OnlinePDFLoader = lazy_import.lazy_class('langchain_community.document_loaders.OnlinePDFLoader')
-YoutubeLoader = lazy_import.lazy_class('langchain_community.document_loaders.YoutubeLoader')
-SeleniumURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.SeleniumURLLoader')
-PlaywrightURLLoader = lazy_import.lazy_class('langchain_community.document_loaders.PlaywrightURLLoader')
-WebBaseLoader = lazy_import.lazy_class('langchain_community.document_loaders.WebBaseLoader')
-clean_extra_whitespace = lazy_import.lazy_class("unstructured.cleaners.core.clean_extra_whitespace")
+
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredEPubLoader
+from langchain_community.document_loaders import UnstructuredPowerPointLoader
+from langchain_community.document_loaders import Docx2txtLoader
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
+from langchain_community.document_loaders import PyPDFium2Loader
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PDFMinerLoader
+from langchain_community.document_loaders import PDFPlumberLoader
+from langchain_community.document_loaders import OnlinePDFLoader
+from langchain_community.document_loaders import YoutubeLoader
+from langchain_community.document_loaders import SeleniumURLLoader
+from langchain_community.document_loaders import PlaywrightURLLoader
+from langchain_community.document_loaders import WebBaseLoader
+
+from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
 from .typechecker import optional_typecheck
