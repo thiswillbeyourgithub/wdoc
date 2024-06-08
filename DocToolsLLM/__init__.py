@@ -25,6 +25,7 @@ import lazy_import
 from .utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.loaders_misc import average_word_length, wpm, get_splitter, check_docs_tkn_length, get_tkn_length
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 
 # lazy loading from local files
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
@@ -33,11 +34,6 @@ do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_sum
 optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
 load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
 AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
-format_chat_history = lazy_import.lazy_function("DocToolsLLM.utils.tasks.query.format_chat_history")
-refilter_docs = lazy_import.lazy_function("DocToolsLLM.utils.tasks.query.refilter_docs")
-check_intermediate_answer = lazy_import.lazy_function("DocToolsLLM.utils.tasks.query.check_intermediate_answer")
-parse_eval_output = lazy_import.lazy_function("DocToolsLLM.utils.tasks.query.parse_eval_output")
-doc_eval_cache = lazy_import.lazy_function("DocToolsLLM.utils.tasks.query.doc_eval_cache")
 ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
 create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
 create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
