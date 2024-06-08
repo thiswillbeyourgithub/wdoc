@@ -59,17 +59,17 @@
 * Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Planned features
-*These don't include improvements, bugfixes, refactoring etc*
-* implement a better retriever, DIY:
-    * especially with a more configurable HyDE
-    * web search retriever, looking for information online using jina reader and jina search
-    * synonym expansion
-* maybe switch to Milvius Lite instead of splitting Faiss
-* add whisper and deepgram support for mp3 and youtube
-* much improve the scriptability of DocToolsLLM. Add examples for how you use it with logseq.
-    * include a server example, that mimics the openai api to make your RAG directly accessible to other apps
-* upload on PyPI
-* automatically replace image in the documents by a caption made by an LLM, especially nice for anki
+*(These don't include improvements, bugfixes, refactoring etc.)*
+* Much improved retriever:
+    * more configurable HyDE.
+    * web search retriever, online information lookup via jina.ai reader and search.
+    * LLM powered synonym expansion for embeddings search.
+* investigate switching to Milvius Lite instead of handling split faiss indexes.
+* Whisper and Deepgram support for audio files (including youtube links).
+* Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
+    * include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
+* upload DocToolsLLM on PyPI
+* Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
 * **infer** (default, guess the filetype for you)
