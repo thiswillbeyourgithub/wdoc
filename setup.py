@@ -56,7 +56,7 @@ setup(
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.10.0',
         'grandalf >= 0.8',  # to print ascii graph
-        'lazy-import >= 0.2.2'
+        'lazy-import >= 0.2.2',
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
