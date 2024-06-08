@@ -9,14 +9,15 @@ from platformdirs import user_cache_dir
 from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
+import lazy_import
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
-import litellm
 
 from .logger import red
 from .typechecker import optional_typecheck
+litellm = lazy_import.lazy_module("litellm")
 
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"

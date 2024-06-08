@@ -4,9 +4,9 @@ from typing import List, Tuple, Any, Union
 
 from langchain.docstore.document import Document
 
-from utils.prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
-from utils.logger import whi
-from utils.typechecker import optional_typecheck
+from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
+from ..logger import whi
+from ..typechecker import optional_typecheck
 
 @optional_typecheck
 def do_summarize(
@@ -18,7 +18,6 @@ def do_summarize(
     llm_price: List[float],
     verbose: bool,
     n_recursion: int=0,
-    logseq_mode: bool=False,
     ) -> Tuple[str, int, int, Union[float, int]]:
     "summarize each chunk of a long document"
     summaries = []
@@ -101,7 +100,7 @@ def do_summarize(
 
         # if recursive, keep the previous summary and store it as a collapsed
         # block
-        if n_recursion and logseq_mode:
+        if n_recursion:
             old = [f"- BEFORE RECURSION \#{n_recursion}\n  collapsed:: true"]
             old += [indent(o.rstrip(), "\t") for o in rd.page_content.splitlines()]
             old = "\n".join(old)

@@ -9,7 +9,7 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 
 from .misc import cache_dir
-from .loaders import get_splitter
+from .loaders_misc import get_splitter
 from .typechecker import optional_typecheck
 
 

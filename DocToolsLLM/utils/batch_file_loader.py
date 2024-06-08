@@ -1,3 +1,6 @@
+import re
+from tqdm import tqdm
+from functools import cache as memoizer
 import time
 import os
 from typing import List, Tuple
@@ -13,11 +16,9 @@ import dill
 from .misc import loaddoc_cache, file_hasher
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
-from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, min_token, get_tkn_length
+from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
+from .loaders_misc import min_token, get_tkn_length
 
-import re
-from tqdm import tqdm
-from functools import cache as memoizer
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -80,7 +81,7 @@ def batch_load_doc(
     debug: bool,
     task: str,
     backend: str,
-    **kwargs) -> List[Document]:
+    **cli_kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
     # try:
@@ -89,11 +90,11 @@ def batch_load_doc(
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
 
-    if "path" in kwargs and isinstance(kwargs["path"], str):
-        kwargs["path"] = kwargs["path"].strip()
+    if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
+        cli_kwargs["path"] = cli_kwargs["path"].strip()
 
     # expand the list of document to load as long as there are recursive types
-    to_load = [kwargs.copy()]
+    to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
@@ -160,13 +161,11 @@ def batch_load_doc(
 
     assert to_load, f"empty list of documents to load from filetype '{filetype}'"
 
-    if "file_loader_n_jobs" in kwargs:
-        n_jobs = kwargs["file_loader_n_jobs"]
-        del kwargs["file_loader_n_jobs"]
+    if "file_loader_n_jobs" in cli_kwargs:
+        n_jobs = cli_kwargs["file_loader_n_jobs"]
+        del cli_kwargs["file_loader_n_jobs"]
     else:
         n_jobs = 10
-    if len(to_load) == 1 or debug:
-        n_jobs = 1
 
     # look for unexpected keys that are not relevant to doc loading, because that would
     # skip the cache
@@ -177,7 +176,7 @@ def batch_load_doc(
             all_unexp_keys.add(k)
             del doc[k]
     if all_unexp_keys:
-        red(f"Found unexpected keys in doc kwargs: '{all_unexp_keys}'")
+        red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
 
     if "summar" not in task:
         # shuffle the list of files to load to make
@@ -245,17 +244,24 @@ def batch_load_doc(
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
-    def load_one_doc_wrapped(*args, **kwargs):
+    def load_one_doc_wrapped(*args, **doc_kwargs):
         assert not args
         try:
-            return load_one_doc(**kwargs)
+            return load_one_doc(**doc_kwargs)
         except Exception as err:
-            filetype = kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {kwargs}")
+            filetype = doc_kwargs["filetype"]
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {doc_kwargs}")
             if debug:
                 raise
             else:
                 return None
+
+    if len(to_load) == 1 or debug:
+        n_jobs = 1
+
+    if len(to_load) > 1:
+        for tl in to_load:
+            assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
     docs = []
     t_load = time.time()
@@ -408,9 +414,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         for d in doclist
         if (matched := markdownlink_regex.search(d).strip())
     ]
-    if task == "summarize_link_file":
-        # if summarize, start from bottom
-        doclist.reverse()
 
     if "done_links" in load_kwargs:
         # discard any links that are already present in the output

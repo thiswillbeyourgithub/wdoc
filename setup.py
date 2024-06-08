@@ -16,7 +16,7 @@ class PostInstallCommand(install):
 
 setup(
     name="DocToolsLLM",
-    version="0.16",
+    version="0.19",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
     long_description="A perfect RAG and AI summary setup for my needs. All LLM supported. Virtually any input filetypes including epub, youtube_playlist, pdf, etc",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
@@ -29,7 +29,7 @@ setup(
     license="GPLv3",
     keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq"],
     entry_points={
-        'console_scripts': ['doctoolsllm=DocToolsLLM:cli_call'],
+        'console_scripts': ['DocToolsLLM=DocToolsLLM.__init__:cli_launcher'],
     },
     install_requires=[
         'sqlalchemy>=2.0.29',
@@ -56,6 +56,7 @@ setup(
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.10.0',
         'grandalf >= 0.8',  # to print ascii graph
+        'lazy-import >= 0.2.2',
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents

@@ -1,29 +1,20 @@
+import fire
 import os
 from typing import List, Union, Any, Optional, Callable
-import tiktoken
 from textwrap import dedent
 from functools import partial
 import uuid
 import tempfile
 import requests
-import youtube_dl
-from youtube_dl.utils import DownloadError, ExtractorError
 import shutil
-import ankipandas as akp
-import ftfy
-from bs4 import BeautifulSoup
-from goose3 import Goose
 from pathlib import Path
 import re
 from tqdm import tqdm
 import json
 import dill
-from prompt_toolkit import prompt
-import LogseqMarkdownParser
 
-from langchain.docstore.document import Document
-from langchain.text_splitter import TextSplitter
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+import lazy_import
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
@@ -32,7 +23,6 @@ from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
-
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.document_loaders import OnlinePDFLoader
@@ -47,27 +37,31 @@ from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
+from .loaders_misc import  get_splitter, check_docs_tkn_length, average_word_length, wpm
+
+# lazy loading of modules
+Document = lazy_import.lazy_class('langchain.docstore.document.Document')
+TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
+RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
+ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
+akp = lazy_import.lazy_module('ankipandas')
+ftfy = lazy_import.lazy_module('ftfy')
+BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
+Goose = lazy_import.lazy_class('goose3.Goose')
+prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
+LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 
 # parse args again to know what to print for failed imports
-import fire
 kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
 if "debug" in kwargs and kwargs["debug"]:
-    verbose=True
+    verbose = True
     import platform
     is_linux = platform.system() == "Linux"
 else:
-    verbose=False
+    verbose = False
+    is_linux = False
 
-try:
-    import ftlangdetect
-except Exception as err:
-    if verbose:
-        print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
-    try:
-        import langdetect
-    except Exception as err:
-        if verbose:
-            print(f"Couldn't import optional package 'langdetect': '{err}'")
 try:
     import pdftotext
 except Exception as err:
@@ -84,18 +78,6 @@ except Exception as err:
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-min_token = 50
-max_token = 1_000_000
-max_lines = 100_000
-min_lang_prob = 0.50
-
-# separators used for the text splitter
-recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
-
-
-# for reading length estimation
-wpm = 250
-average_word_length = 6
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
@@ -107,10 +89,6 @@ emptyline2_regex = re.compile(r"\n\n+", re.MULTILINE)
 linebreak_before_letter = re.compile(
     r"\n([a-záéíóúü])", re.MULTILINE
 )  # match any linebreak that is followed by a lowercase letter
-
-tokenize = tiktoken.encoding_for_model(
-    "gpt-3.5-turbo"
-).encode  # used to get token length estimation
 
 pdf_loaders = {
     "pdftotext": None,  # optional support
@@ -163,7 +141,6 @@ if "pdftotext" in globals():
             with open(self.path, "rb") as f:
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
-
 
 
 @optional_typecheck
@@ -284,7 +261,7 @@ def load_one_doc(
         if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
             if "title" in kwargs and kwargs["title"] and kwargs["title"] != "Untitled":
                 docs[i].metadata["title"] = kwargs["title"]
-            elif "http" in docs[i].metadata["path"].lower():
+            elif "path" in docs[i].metadata and isinstance(docs[i].metadata["path"], str) and "http" in docs[i].metadata["path"].lower():
                 docs[i].metadata["title"] = get_url_title(
                     docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
@@ -317,8 +294,10 @@ def load_one_doc(
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["path"]
-            else:
+            elif "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["title"]
+            else:
+                docs[i].metadata["source"] = "undocumented"
 
         if "hash" not in docs[i].metadata:
             docs[i].metadata["hash"] = hasher(
@@ -345,104 +324,6 @@ def get_url_title(url: str) -> Union[str, type(None)]:
         return docs[0].metadata["title"]
     else:
         return None
-
-if "ftlangdetect" in globals():
-    @optional_typecheck
-    def language_detector(text: str) -> float:
-        return ftlangdetect.detect(text)["score"]
-elif "language_detect" in globals():
-    @optional_typecheck
-    def language_detector(text: str) -> float:
-        return langdetect.detect_langs(text)[0].prob
-else:
-    def language_detector(text: str) -> None:
-        return None
-
-@optional_typecheck
-def check_docs_tkn_length(docs: List[Document], name: str) -> float:
-    """checks that the number of tokens in the document is high enough,
-    not too low, and has a high enough language probability,
-    otherwise something probably went wrong."""
-    size = sum([get_tkn_length(d.page_content) for d in docs])
-    nline = len("\n".join([d.page_content for d in docs]).splitlines())
-    if nline > max_lines:
-        red(
-            f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of lines from '{name}' is {nline} > {max_lines}, probably something went wrong?"
-        )
-    if size <= min_token:
-        red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?"
-        )
-    if size >= max_token:
-        red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?"
-        )
-
-    # check if language check is above a threshold
-    prob = [language_detector(docs[0].page_content.replace("\n", "<br>"))]
-    if prob[0] is None:
-        # bypass if language_detector not defined
-        return 1
-    if len(docs) > 1:
-        prob.append(language_detector(docs[1].page_content.replace("\n",
-                                "<br>")))
-        if len(docs) > 2:
-            prob.append(
-                    language_detector(
-                        docs[len(docs) // 2].page_content.replace("\n", "<br>")
-                    )
-            )
-    prob = max(prob)
-    if prob <= min_lang_prob:
-        red(
-            f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
-        )
-        raise Exception(
-            f"Low language probability for {name}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
-        )
-    return prob
-
-@optional_typecheck
-def get_tkn_length(tosplit: str) -> int:
-    return len(tokenize(tosplit))
-
-
-@optional_typecheck
-def get_splitter(task: str) -> TextSplitter:
-    "we don't use the same text splitter depending on the task"
-    if task in ["query", "search"]:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=3000,  # default 4000
-            chunk_overlap=386,  # default 200
-            length_function=get_tkn_length,
-        )
-    elif task in ["summarize_link_file", "summarize_then_query", "summarize"]:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=2000,
-            chunk_overlap=300,
-            length_function=get_tkn_length,
-        )
-    elif task == "recursive_summary":
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=get_tkn_length,
-        )
-    else:
-        raise Exception(task)
-    return text_splitter
 
 
 @optional_typecheck
@@ -547,7 +428,7 @@ def load_anki(
 
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
-    mod2mid = akp.raw.get_model2mid(col.db)
+    # mod2mid = akp.raw.get_model2mid(col.db)
     cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
     assert cards.index.tolist(), "empty dataframe!"
     if anki_fields:
@@ -744,7 +625,12 @@ def load_string() -> List[Document]:
         multiline=True,
     )
     log.info(f"Pasted string input:\n{content}")
-    docs = [Document(page_content=content)]
+    docs = [
+        Document(
+            page_content=content,
+            metadata={"path": "user_string"},
+        )
+    ]
     return docs
 
 @optional_typecheck
@@ -1181,6 +1067,7 @@ def load_pdf(
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
+
     for loader_name in pdf_loaders:
         try:
             if debug:

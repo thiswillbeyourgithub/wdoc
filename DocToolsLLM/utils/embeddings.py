@@ -9,6 +9,7 @@ import copy
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
+import lazy_import
 
 import numpy as np
 from pydantic import Extra
@@ -20,12 +21,13 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
-import litellm
 
 from .misc import cache_dir
 from .logger import whi, red
-from .loaders import get_tkn_length
+from .loaders_misc import get_tkn_length
 from .typechecker import optional_typecheck
+
+litellm = lazy_import.lazy_module("litellm")
 
 
 
@@ -74,13 +76,13 @@ def load_embeddings(
     dollar_limit: Union[int, float],
     private: bool,
     use_rolling: bool,
-    kwargs: dict,
+    cli_kwargs: dict,
     ):
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
     embed_model_str = embed_model.replace("/", "_")
-    if "embed_instruct" in kwargs and kwargs["embed_instruct"]:
+    if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
     else:
         instruct = False
