@@ -11,7 +11,7 @@
     * the type of input. Depending on the value, different other parameters
     are needed. If json_list is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_list file in utils/json_list_example.txt
+    an example of json_list file in `DocToolsLLM/docs/json_list_example.txt`
 
     * Supported values:
         * `infer`: will guess the appropriate filetype based on `--path`.

@@ -71,7 +71,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 @set_docstring
 class DocToolsLLM_class:
-    "This docstring is dynamically replaced by the content of utils/USAGE.md"
+    "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
     VERSION: str = "0.19"
     extra_args_keys = {
@@ -145,7 +145,7 @@ class DocToolsLLM_class:
 
         **cli_kwargs,
         ) -> None:
-        "This docstring is dynamically replaced by the content of utils/USAGE.md"
+        "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
 
