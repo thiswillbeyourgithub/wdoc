@@ -24,6 +24,9 @@ def fire_wrapper(
     if (h in ["h", "help", True] or help in ["h", "help", True]):  # --help or similar intentions
         return [], {"help": True}
 
+    if not (h or help or args or kwargs):
+        return [], {"help": True}
+
     # parse args as if nothing happened
     args = list(args)
     if h:
