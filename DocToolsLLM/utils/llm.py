@@ -18,7 +18,6 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
-import litellm
 litellm = lazy_import.lazy_module("litellm")
 
 from .logger import whi, red
