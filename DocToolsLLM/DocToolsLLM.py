@@ -94,7 +94,7 @@ class DocToolsLLM_class:
         modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
-        task: str = "query",
+        task: str,
         query: Optional[Union[str, bool]] = None,
         filetype: str = "infer",
         embed_model: str = "openai/text-embedding-3-small",
@@ -139,7 +139,7 @@ class DocToolsLLM_class:
         """
         Parameters
         ----------
-        --task str, default query
+        --task str
             possibilities:
                 * query means to load the input files then wait for user question.
                 * search means only return the document corresponding to the search
