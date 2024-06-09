@@ -1,3 +1,7 @@
+"""
+Main class.
+"""
+
 # import this first because it sets the logging level
 from .utils.logger import whi, yel, red, md_printer, log
 

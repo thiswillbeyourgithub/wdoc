@@ -1,3 +1,7 @@
+"""
+Default file, used as entry point.
+"""
+
 import fire
 
 from .DocToolsLLM import DocToolsLLM_class
