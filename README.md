@@ -48,6 +48,7 @@
 * **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM ()and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Sophisticated faiss saver**: [faiss](https://github.com/facebookresearch/faiss/wiki) is used to quickly find the documents that match an embedding. But instead of storing as a single file, DocToolsLLM splits the index into 1 document long index identified by deterministic hashes. When creating a new index, any overlapping document will be automatically reloaded instead of recomputed.
+* **Good PDF parsing** PDF parsers are notoriously unreliable, so 10 (!) different loaders are used, and the best according to a parsing scorer is kept.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document parsing and embedding.
@@ -75,7 +76,7 @@
 * **infer** (default, guess the filetype for you)
 * **youtube videos**
 * **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
-* **local PDF**
+* **local PDF** (10 loaders are used, heuristics are used to keep the best one)
 * **remote PDF** via URL
 * **text files** (.txt, markdown, etc)
 * **anki** collection
