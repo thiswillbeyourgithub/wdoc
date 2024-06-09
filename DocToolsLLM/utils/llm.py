@@ -18,7 +18,6 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
-litellm = lazy_import.lazy_module("litellm")
 
 from .logger import whi, red
 from .typechecker import optional_typecheck
@@ -268,32 +267,3 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_agent_finish")
         self._check_methods_called()
         raise NotImplementedError("Not expecting agent call")
-
-
-
-@optional_typecheck
-def transcribe(
-    audio_path: str,
-    audio_hash: str,
-    language: str,
-    prompt: str) -> str:
-    "Use whisper to transcribe an audio file"
-    assert os.environ["DOCTOOLS_PRIVATEMODE"] != "true", (
-        "Private mode detected, aborting before trying to use openai's whisper"
-    )
-    whi(f"Calling openai's whisper to transcribe file {audio_path}")
-
-    assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
-
-    t = time.time()
-    with open(audio_path, "rb") as audio_file:
-        transcript = litellm.transcription(
-            model="whisper",
-            file=audio_file,
-            prompt=prompt,
-            language=language,
-            temperature=0,
-            response_format="verbose_json",
-            )
-    whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
-    return transcript

@@ -6,6 +6,7 @@ lazily loaded.
 """
 
 import os
+import time
 from typing import List, Union, Any, Optional, Callable
 from textwrap import dedent
 from functools import partial
@@ -59,6 +60,7 @@ BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
 Goose = lazy_import.lazy_class('goose3.Goose')
 prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
+litellm = lazy_import.lazy_module("litellm")
 
 
 try:
@@ -775,10 +777,8 @@ def load_local_audio(
     whisper_prompt: Optional[str] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
-    cache_transcribe = loaddoc_cache.cache(
-        transcribe, ignore=["audio_path"])
 
-    content = cache_transcribe(
+    content = transcribe_audio(
         audio_path=path,
         audio_hash=file_hash,
         language=whisper_lang,
@@ -795,6 +795,34 @@ def load_local_audio(
         )
     ]
     return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["audio_path"])
+def transcribe_audio(
+    audio_path: str,
+    audio_hash: str,
+    language: str,
+    prompt: str) -> str:
+    "Use whisper to transcribe an audio file"
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+        "Private mode detected, aborting before trying to use openai's whisper"
+    )
+    whi(f"Calling openai's whisper to transcribe file {audio_path}")
+
+    assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
+
+    t = time.time()
+    with open(audio_path, "rb") as audio_file:
+        transcript = litellm.transcription(
+            model="whisper",
+            file=audio_file,
+            prompt=prompt,
+            language=language,
+            temperature=0,
+            response_format="verbose_json",
+            )
+    whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
+    return transcript
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["path"])
