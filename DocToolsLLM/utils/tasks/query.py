@@ -1,3 +1,7 @@
+"""
+Chain (logic) used to query a document.
+"""
+
 import re
 from typing import Tuple, List
 from langchain.docstore.document import Document

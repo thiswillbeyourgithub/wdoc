@@ -1,3 +1,7 @@
+"""
+Retrievers used to retrieve the appropriate embeddings for a given query.
+"""
+
 from shutil import rmtree
 from typing import Optional, Any, Callable, List
 

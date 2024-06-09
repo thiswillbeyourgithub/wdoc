@@ -1,3 +1,8 @@
+"""
+* Class used to create the embeddings.
+* Loads and store embeddings for each document.
+"""
+
 from typing import List, Union, Optional, Any
 import hashlib
 import os

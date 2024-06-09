@@ -1,3 +1,7 @@
+"""
+Miscellanous functions etc.
+"""
+
 from typing import List, Union, Any
 from joblib import Memory
 import os

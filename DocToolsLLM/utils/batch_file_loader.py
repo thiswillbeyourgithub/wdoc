@@ -1,3 +1,11 @@
+"""
+called at DocToolsLLM instance creation. It parsed the combined filetype
+into an individual list of dict describing each a document (or in some cases
+a list of documents for example a whole anki database).
+This list is then processed in loaders.py, multithreading or multiprocessing
+is used.
+"""
+
 import re
 from tqdm import tqdm
 from functools import cache as memoizer

@@ -1,3 +1,10 @@
+"""
+Called by batch_file_loader.py's threads. Contains many cached function to
+load each document.
+The imports are taking a substantial amount of time so loaders.py is
+lazily loaded.
+"""
+
 import os
 from typing import List, Union, Any, Optional, Callable
 from textwrap import dedent

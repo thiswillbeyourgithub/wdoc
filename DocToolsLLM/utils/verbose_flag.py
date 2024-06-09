@@ -1,3 +1,7 @@
+"""
+easy access for all other files wether we are in verbose mode or not
+"""
+
 import fire
 import platform
 

@@ -1,3 +1,9 @@
+"""
+Decorator used in many places. It does runtime typechecking. By default
+it's disabled but the flag DOCTOOLS_TYPECHECKING can be set to "crash" or
+to "warn" to just print the error.
+"""
+
 import os
 from functools import wraps
 from textwrap import indent
@@ -8,7 +14,8 @@ if "DOCTOOLS_TYPECHECKING" not in os.environ:
     os.environ["DOCTOOLS_TYPECHECKING"] = "disabled"
 
 def redprint(message: str) -> str:
-    "print in red"
+    """print in red. Used here because the commonly used red() function is
+    declared in a file using this decorator."""
     message = "\033[91m" + message + "\033[0m"
     print(message)
     return message

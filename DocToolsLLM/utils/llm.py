@@ -1,3 +1,8 @@
+"""
+Code related to loading the LLM instance, with an appropriate price
+counting callback.
+"""
+
 from typing import Union, List, Any, Optional
 import time
 import os
