@@ -2,6 +2,7 @@
 Default file, used as entry point.
 """
 
+import sys
 import fire
 from typing import List, Tuple
 from rich.markdown import Markdown
@@ -41,15 +42,11 @@ def fire_wrapper(
 
 
 def cli_launcher() -> None:
-    argskwargs = fire.Fire(fire_wrapper)
+    sys_args = sys.argv
+    if "--completion" in sys_args:
+        return fire.Fire(DocToolsLLM_class)
 
-    # if we are calling 'python -m DocToolsLLM -- --completion' then
-    # the unpacking fails and we must return anyway to please the fire
-    try:
-        args, kwargs = argskwargs
-    except Exception:
-        import sys
-        sys.exit(0)
+    args, kwargs = fire.Fire(fire_wrapper)
 
     if "help" in kwargs:
         md = Markdown(DocToolsLLM_class.__doc__)
