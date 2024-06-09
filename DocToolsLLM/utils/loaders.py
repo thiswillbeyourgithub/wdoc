@@ -1,4 +1,3 @@
-import fire
 import os
 from typing import List, Union, Any, Optional, Callable
 from textwrap import dedent
@@ -38,6 +37,7 @@ from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
 from .loaders_misc import  get_splitter, check_docs_tkn_length, average_word_length, wpm
+from .verbose_flag import is_verbose, is_linux
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -52,20 +52,11 @@ Goose = lazy_import.lazy_class('goose3.Goose')
 prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 
-# parse args again to know what to print for failed imports
-kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
-if "debug" in kwargs and kwargs["debug"]:
-    verbose = True
-    import platform
-    is_linux = platform.system() == "Linux"
-else:
-    verbose = False
-    is_linux = False
 
 try:
     import pdftotext
 except Exception as err:
-    if verbose:
+    if is_verbose:
         print(f"Failed to import optional package 'pdftotext': '{err}'")
         if is_linux:
             print(

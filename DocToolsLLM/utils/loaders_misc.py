@@ -1,11 +1,11 @@
 from functools import partial
 from .typechecker import optional_typecheck
 from .logger import red
+from .verbose_flag import is_verbose
 
 from typing import List
 
 import tiktoken
-import fire
 
 import lazy_import
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -13,21 +13,15 @@ TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 litellm = lazy_import.lazy_module("litellm")
 
-# parse args again to know what to print for failed imports
-kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
-if "debug" in kwargs and kwargs["debug"]:
-    verbose = True
-else:
-    verbose = False
 try:
     ftlangdetect = lazy_import.lazy_module("ftlangdetect")
 except Exception as err:
-    if verbose:
+    if is_verbose:
         print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
     try:
         import langdetect
     except Exception as err:
-        if verbose:
+        if is_verbose:
             print(f"Couldn't import optional package 'langdetect': '{err}'")
 
 if "ftlangdetect" in globals():
