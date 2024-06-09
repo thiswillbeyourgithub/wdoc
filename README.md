@@ -62,15 +62,18 @@
 ### Planned features
 *(These don't include improvements, bugfixes, refactoring etc.)*
 * Much improved retriever:
-    * more configurable HyDE.
-    * web search retriever, online information lookup via jina.ai reader and search.
+    * More configurable HyDE.
+    * Web search retriever, online information lookup via jina.ai reader and search.
     * LLM powered synonym expansion for embeddings search.
 * investigate switching to Milvius Lite instead of handling split faiss indexes.
 * Whisper and Deepgram support for audio files (including youtube links).
-* Add a way to specify at indexing time how trusting you are of a given set of document.
+* A way to specify at indexing time how trusting you are of a given set of document.
+* A way to open the documents automatically, based on the platform used. For ex if okular is installed, open pdfs directly at the appropriate page.
 * Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
-    * include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
-* upload DocToolsLLM on PyPI
+    * Include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
+    * Add a gradio GUI.
+* upload DocToolsLLM on PyPI.
+* Add support for user defined loaders.
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
