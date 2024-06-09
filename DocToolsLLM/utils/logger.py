@@ -103,7 +103,7 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 @optional_typecheck
 def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of DocToolsLLM class to DocToolsLLM/docs/USAGE.md's content"
-    usage_file = Path("DocToolsLLM/docs/USAGE.md")
+    usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
     assert usage_file.exists()
     usage = usage_file.read_text().strip()
     assert usage
