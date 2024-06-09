@@ -118,7 +118,7 @@ class DocToolsLLM_class:
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.1,
-        condense_question: bool = True,
+        query_condense_question: bool = True,
 
         summary_n_recursion: int = 0,
         summary_language: str = "[same as input]",
@@ -279,7 +279,7 @@ class DocToolsLLM_class:
             can be used for example to send notification on your phone
             using ntfy.sh to get summaries.
 
-        --condense_question: bool, default True
+        --query_condense_question: bool, default True
             if True, will not use a special LLM call to reformulate the question
             when task is "query". Otherwise, the query will be reformulated as
             a standalone question. Useful when you have multiple questions in
@@ -597,7 +597,7 @@ class DocToolsLLM_class:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.condense_question = bool(condense_question) if "testing" not in modelname else False
+        self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.private = bool(private)
         self.no_llm_cache = bool(no_llm_cache)
@@ -1476,7 +1476,7 @@ class DocToolsLLM_class:
                 md_printer("* " + "\n* ".join(all_filepaths))
 
         else:
-            if self.condense_question:
+            if self.query_condense_question:
                 loaded_memory = RunnablePassthrough.assign(
                     chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
                 )
@@ -1639,7 +1639,7 @@ class DocToolsLLM_class:
                         )
                         | combine_answers,
                 )
-            if self.condense_question:
+            if self.query_condense_question:
                 rag_chain = (
                     loaded_memory
                     | standalone_question
