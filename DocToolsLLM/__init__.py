@@ -41,7 +41,16 @@ def fire_wrapper(
 
 
 def cli_launcher() -> None:
-    args, kwargs = fire.Fire(fire_wrapper)
+    argskwargs = fire.Fire(fire_wrapper)
+
+    # if we are calling 'python -m DocToolsLLM -- --completion' then
+    # the unpacking fails and we must return anyway to please the fire
+    try:
+        args, kwargs = argskwargs
+    except Exception:
+        import sys
+        sys.exit(0)
+
     if "help" in kwargs:
         md = Markdown(DocToolsLLM_class.__doc__)
         console = Console()
