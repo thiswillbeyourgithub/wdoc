@@ -67,6 +67,7 @@
     * LLM powered synonym expansion for embeddings search.
 * investigate switching to Milvius Lite instead of handling split faiss indexes.
 * Whisper and Deepgram support for audio files (including youtube links).
+* Add a way to specify at indexing time how trusting you are of a given set of document.
 * Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
     * include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
 * upload DocToolsLLM on PyPI
