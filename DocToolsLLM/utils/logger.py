@@ -71,14 +71,14 @@ def get_coloured_logger(color_asked: str) -> Callable:
         if isinstance(string, list):
             try:
                 string = ",".join(string)
-            except:
+            except Exception:
                 pass
         try:
             string = str(string)
-        except:
+        except Exception:
             try:
                 string = string.__str__()
-            except:
+            except Exception:
                 string = string.__repr__()
         log.info(string)
         tqdm.write(col + string + colors["reset"], **args)
