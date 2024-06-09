@@ -117,7 +117,6 @@ class DocToolsLLM_class:
         query_relevancy: float = 0.1,
         n_recursive_summary: int = 0,
 
-        n_summaries_target: int = -1,
         summary_language: str = "[same as input]",
 
         dollar_limit: int = 5,
@@ -593,7 +592,6 @@ class DocToolsLLM_class:
         self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
         self.n_recursive_summary = n_recursive_summary
-        self.n_summaries_target = n_summaries_target
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
