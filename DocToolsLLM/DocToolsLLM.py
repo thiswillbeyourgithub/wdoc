@@ -91,12 +91,13 @@ class DocToolsLLM_class:
     @optional_typecheck
     def __init__(
         self,
+        task: str,
+        filetype: str = "infer",
+
         modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
-        task: str,
-        query: Optional[Union[str, bool]] = None,
-        filetype: str = "infer",
+
         embed_model: str = "openai/text-embedding-3-small",
         # embed_model: str =  "sentencetransformers/BAAI/bge-m3",
         # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
@@ -109,6 +110,8 @@ class DocToolsLLM_class:
         load_embeds_from: Optional[str] = None,
 
         top_k: int = 20,
+
+        query: Optional[Union[str, bool]] = None,
         query_retrievers: str = "default",
         query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo-0125",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
@@ -116,24 +119,24 @@ class DocToolsLLM_class:
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.1,
         n_recursive_summary: int = 0,
+        condense_question: bool = True,
 
         summary_language: str = "[same as input]",
 
-        dollar_limit: int = 5,
         debug: bool = False,
         llm_verbosity: bool = False,
+        dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
-        condense_question: bool = True,
         chat_memory: bool = True,
         no_llm_cache: bool = False,
         file_loader_parallel_backend: str = "loky",
         private: bool = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: bool = False,
+        import_mode: bool = False,
 
         help: bool = False,
         h: bool = False,
-        import_mode: bool = False,
         **cli_kwargs: Any,
         ) -> None:
         """
