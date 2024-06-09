@@ -22,18 +22,32 @@ def fire_wrapper(
     assert "h" not in args and "h" not in kwargs
     assert "help" not in args and "help" not in kwargs
 
-    kwargs["help"] = (h in ["h", "help", True] or help in ["h", "help", True])
-    if not kwargs["help"]:
-        args = [h, help] + list(args)
+    if (h in ["h", "help", True] or help in ["h", "help", True]):  # --help or similar intentions
+        return [], {"help": True}
+
+    # parse args as if nothing happened
+    args = list(args)
+    if h:
+        args.insert(0, h)
+    if help:
+        args.insert(1, help)
+
+    # while we're at it, make it so that
+    # "DocToolsLLM summary" is parsed like "DocToolsLLM --task=summary"
+    if args and isinstance(args[0], str):
+        args[0] = args[0].replace("summary", "summarize")
+        if args[0] in ["query", "search", "summarize", "summarize_then_query"]:
+            assert "task" not in kwargs, f"Tried to give task as arg and kwarg?\nargs: {args}\bnkwargs: {kwargs}"
+            kwargs["task"] = args.pop(0)
     return args, kwargs
 
 
 def cli_launcher() -> None:
     args, kwargs = fire.Fire(fire_wrapper)
-    if kwargs["help"]:
+    if "help" in kwargs:
         md = Markdown(DocToolsLLM_class.__doc__)
         console = Console()
         console.print(md, style=None)
         raise SystemExit()
     else:
-        instance = fire.Fire(DocToolsLLM_class)
+        instance = DocToolsLLM_class(*args, **kwargs)
