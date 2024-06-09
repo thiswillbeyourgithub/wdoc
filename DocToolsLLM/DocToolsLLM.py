@@ -422,7 +422,7 @@ class DocToolsLLM_class:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
         if self.task in ["summarize", "summarize_then_query"]:
-            self.summary_task()
+            self._summary_task()
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
@@ -437,12 +437,12 @@ class DocToolsLLM_class:
 
         if not self.import_mode:
             while True:
-                self.query(query=query)
+                self._query(query=query)
                 query = None
         else:
-            whi("Ready to query, call self.query(your_question)")
+            whi("Ready to query, call your_instance._query(your_question)")
 
-    def summary_task(self):
+    def _summary_task(self):
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
@@ -878,7 +878,7 @@ class DocToolsLLM_class:
 
 
     #@optional_typecheck
-    def query(self, query: Optional[str]) -> Optional[str]:
+    def _query(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
             if "do_reset_memory" in self.interaction_settings:
