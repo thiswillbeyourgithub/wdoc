@@ -9,8 +9,6 @@ from rich.console import Console
 
 from .DocToolsLLM import DocToolsLLM_class
 
-import logging
-logging.getLogger().setLevel(logging.ERROR)
 
 def fire_wrapper(
     h: bool = False,
