@@ -10,7 +10,7 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Type, Callable, Optional, Union
 from rich.markdown import Markdown
 from rich.console import Console
 from platformdirs import user_cache_dir
@@ -94,7 +94,20 @@ console = Console()
 
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
+    "markdown printing"
     log.info(message)
     md = Markdown(message)
     console.print(md, style=color)
     return message
+
+@optional_typecheck
+def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
+    "set the docstring of DocToolsLLM class to USAGE.md's content"
+    usage_file = Path("DocToolsLLM/utils/USAGE.md")
+    assert usage_file.exists()
+    usage = usage_file.read_text().strip()
+    assert usage
+    obj.__doc__ = usage
+    if isinstance(obj, type):
+        obj.__init__.__doc__ = usage
+    return obj
