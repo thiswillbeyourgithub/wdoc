@@ -39,11 +39,12 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+from .misc import (loaddoc_cache, html_to_text, hasher, cache_dir,
+                   file_hasher, get_splitter, check_docs_tkn_length,
+                   average_word_length, wpm)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .llm import transcribe
-from .loaders_misc import  get_splitter, check_docs_tkn_length, average_word_length, wpm
 from .verbose_flag import is_verbose, is_linux
 
 # lazy loading of modules

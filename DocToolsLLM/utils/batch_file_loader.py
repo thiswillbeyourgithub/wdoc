@@ -21,11 +21,10 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
-from .loaders_misc import min_token, get_tkn_length
 
 
 # rules used to attribute input to proper filetype. For example

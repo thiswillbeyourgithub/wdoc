@@ -27,9 +27,8 @@ from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
-from .misc import cache_dir
+from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
-from .loaders_misc import get_tkn_length
 from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")

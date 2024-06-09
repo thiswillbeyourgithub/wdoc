@@ -26,9 +26,10 @@ from tqdm import tqdm
 import lazy_import
 
 # cannot be lazy loaded because some are not callable but objects directly
-from .utils.misc import ankiconnect, debug_chain, model_name_matcher, cache_dir
+from .utils.misc import (ankiconnect, debug_chain, model_name_matcher,
+                         cache_dir, average_word_length, wpm, get_splitter,
+                         check_docs_tkn_length, get_tkn_length)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.loaders_misc import average_word_length, wpm, get_splitter, check_docs_tkn_length, get_tkn_length
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 
 # lazy loading from local files

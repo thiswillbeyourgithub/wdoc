@@ -12,8 +12,7 @@ from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 
-from .misc import cache_dir
-from .loaders_misc import get_splitter
+from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
 
 
