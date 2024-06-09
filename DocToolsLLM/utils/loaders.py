@@ -149,7 +149,7 @@ def load_one_doc(
     debug: bool,
     filetype: str,
     file_hash: str,
-    source_tag: str = None,
+    source_tag: Optional[str] = None,
     **kwargs,
     ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
