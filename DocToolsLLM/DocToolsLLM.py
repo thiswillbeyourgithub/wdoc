@@ -7,7 +7,7 @@ import copy
 from textwrap import indent
 from functools import wraps
 from typing import List, Union, Any, Optional, Callable
-from typeguard import check_type, TypeCheckError
+from typeguard import typechecked, check_type, TypeCheckError
 import tldextract
 from joblib import Parallel, delayed
 from threading import Lock
@@ -88,7 +88,8 @@ class DocToolsLLM_class:
         "source_tag": str,
     }
 
-    @optional_typecheck
+    #@optional_typecheck
+    @typechecked
     def __init__(
         self,
         task: str,
