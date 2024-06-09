@@ -108,7 +108,6 @@ class DocToolsLLM_class:
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[str] = None,
-
         top_k: int = 20,
 
         query: Optional[Union[str, bool]] = None,
@@ -123,8 +122,8 @@ class DocToolsLLM_class:
         summary_n_recursion: int = 0,
         summary_language: str = "[same as input]",
 
-        debug: bool = False,
         llm_verbosity: bool = False,
+        debug: bool = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
         chat_memory: bool = True,
@@ -149,9 +148,6 @@ class DocToolsLLM_class:
                 * summarize means the input will be passed through a summarization prompt.
                 * summarize_then_query
 
-        --query str, default None
-            if str, will be directly used for the first query if task in ["query", "search"]
-
         --filetype str, default infer
             the type of input. Depending on the value, different other parameters
             are needed. If json_list is used, the line of the input file can contain
@@ -172,7 +168,6 @@ class DocToolsLLM_class:
                 * json_list => --path is path to a txt file that contains a json for each line containing at least a filetype and a path key/value but can contain any parameters described here
                 * recursive => --path is the starting path --pattern is the globbing patterns to append --exclude and --include can be a list of regex applying to found paths (include is run first then exclude, if the pattern is only lowercase it will be case insensitive) --recursed_filetype is the filetype to use for each of the found path
                 * link_file => --path must point to a file where each line is a link that will be summarized. The resulting summary will be added to --out_file. Links that have already been summarized in out_file will be skipped (the out_file is never overwritten). If a line is a markdown linke like [this](link) then it will be parsed as a link. Empty lines and starting with # are ignored.
-
 
         --modelname str, default openai/gpt-4o
             Keep in mind that given that the default backend used is litellm
@@ -218,6 +213,9 @@ class DocToolsLLM_class:
             eval model is used to refilter the document after the embeddings
             first pass.
 
+        --query str, default None
+            if str, will be directly used for the first query if task in ["query", "search"]
+
         --query_retrievers: str, default 'default'
             must be a string that specifies which retriever will be used for
             queries depending on which keyword is inside this string:
@@ -249,6 +247,13 @@ class DocToolsLLM_class:
             threshold underwhich a document cannot be considered relevant by
             embeddings alone.
 
+        --query_condense_question: bool, default True
+            if True, will not use a special LLM call to reformulate the question
+            when task is "query". Otherwise, the query will be reformulated as
+            a standalone question. Useful when you have multiple questions in
+            a row.
+            Disabled if using a testing model.
+
         --summary_n_recursion: int, default 0
             will recursively summarize the summary this many times.
             1 means that the original summary will be summarize. 0 means disabled.
@@ -258,20 +263,20 @@ class DocToolsLLM_class:
             specified in this argument. If it's '[same as input]', the LLM
             will not translate.
 
-        --dollar_limit: int, default 5
-            If the estimated price is above this limit, stop instead.
-            Note that the cost estimate for the embeddings is using the
-            openai tokenizer, which is not universal.
-            This check is skipped if the api_base url are changed.
+        --llm_verbosity: bool, default False
+            if True, will print the intermediate reasonning steps of LLMs
+            if debug is set, llm_verbosity is also set to True
 
         --debug: bool, default False
             if True will enable langchain tracing, increase verbosity etc.
             Will also disable multithreading for summaries and for loading
             files.
 
-        --llm_verbosity: bool, default False
-            if True, will print the intermediate reasonning steps of LLMs
-            if debug is set, llm_verbosity is also set to True
+        --dollar_limit: int, default 5
+            If the estimated price is above this limit, stop instead.
+            Note that the cost estimate for the embeddings is using the
+            openai tokenizer, which is not universal.
+            This check is skipped if the api_base url are changed.
 
         --notification_callback: Callable, default None
             a function that must take as input a string and return the same
@@ -279,22 +284,9 @@ class DocToolsLLM_class:
             can be used for example to send notification on your phone
             using ntfy.sh to get summaries.
 
-        --query_condense_question: bool, default True
-            if True, will not use a special LLM call to reformulate the question
-            when task is "query". Otherwise, the query will be reformulated as
-            a standalone question. Useful when you have multiple questions in
-            a row.
-            Disabled if using a testing model.
-
         --chat_memory: bool, default True
             if True, will remember the messages across a given chat exchange.
             Disabled if using a testing model.
-
-        --private: bool, default False
-            add extra check that your data will never be sent to another
-            server: for example check that the api_base was modified and used,
-            check that no api keys are used, check that embedding models are
-            local only. It will also use a separate cache from non private.
 
         --no_llm_cache: bool, default False
             WARNING: The cache is temporarily ignored in non openaillms
@@ -313,6 +305,12 @@ class DocToolsLLM_class:
             multiprocessing while "threading" means multithreading.
             The number of jobs can be specified with 'file_loader_n_jobs'
             but it's a loader specific kwargs.
+
+        --private: bool, default False
+            add extra check that your data will never be sent to another
+            server: for example check that the api_base was modified and used,
+            check that no api keys are used, check that embedding models are
+            local only. It will also use a separate cache from non private.
 
         --llms_api_bases: dict, default None
             a dict with keys in ["model", "query_eval_model"]
