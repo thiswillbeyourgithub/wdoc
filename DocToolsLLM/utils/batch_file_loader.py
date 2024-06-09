@@ -21,7 +21,7 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
@@ -96,6 +96,9 @@ def batch_load_doc(
     # except Exception as err:
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
+
+    # just in case, make sure all modules are loaded
+    unlazyload_modules()
 
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()

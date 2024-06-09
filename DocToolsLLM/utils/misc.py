@@ -2,6 +2,7 @@
 Miscellanous functions etc.
 """
 
+import sys
 from typing import List, Union, Any
 from joblib import Memory
 import os
@@ -335,3 +336,17 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
         )
     return prob
 
+
+def unlazyload_modules():
+    """make sure no modules are lazy loaded. Useful when we wan't to make
+    sure not to loose time and that everything works smoothly. For example
+    who knows what happens when multiprocessing with lazy loaded modules."""
+    found_one = False
+    while True:
+        for k, v in sys.modules.items():
+            if "Lazily-loaded" in str(v):
+                dir(v)  # this is enough to trigger the loading
+                found_one = True
+            assert "Lazily-loaded" not in str(v)
+        if not found_one:
+            break
