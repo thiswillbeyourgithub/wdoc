@@ -113,8 +113,8 @@
 5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
 6. To know more about each argument supported by each filetype, `DoctoolsLLM --help`
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by DoctoolsLLM. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and DoctoolsLLM automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
-8. If you want to make sure your data remains private here's an example with ollama: `DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" --task=my_task`
-9. Now say you just want to summarize a webpage: `DocToolsLLM --task="summary" --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
+8. If you want to make sure your data remains private here's an example with ollama: `DoctoolsLLM --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
+9. Now say you just want to summarize a webpage: `DocToolsLLM summary --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
 
 ![](./images/summary.png)
 
@@ -123,9 +123,9 @@
 * `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
 * Or for the supposedly more stable branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
 * Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
-* Launch using `DocToolsLLM --task=query [ARGS]`
+* Launch using `DocToolsLLM query [ARGS]`
 * **Note: if for some reason this fails, maybe try with `python -m DocToolsLLM`. And if everything fails, clone this repo and try again after `cd` inside it.
-* To ask questions about a document: `DoctoolsLLM --task="query" --path="PATH/TO/YOUR/FILE" --filetype="infer"`
+* To ask questions about a document: `DoctoolsLLM query --path="PATH/TO/YOUR/FILE" --filetype="infer"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `DocToolsLLM --help`
 * For shell autocompletion: `eval "$(DocToolsLLM -- --completion)"`
