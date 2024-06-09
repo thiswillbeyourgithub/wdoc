@@ -118,9 +118,9 @@ class DocToolsLLM_class:
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.1,
-        n_recursive_summary: int = 0,
         condense_question: bool = True,
 
+        summary_n_recursion: int = 0,
         summary_language: str = "[same as input]",
 
         debug: bool = False,
@@ -249,7 +249,7 @@ class DocToolsLLM_class:
             threshold underwhich a document cannot be considered relevant by
             embeddings alone.
 
-        --n_recursive_summary: int, default 0
+        --summary_n_recursion: int, default 0
             will recursively summarize the summary this many times.
             1 means that the original summary will be summarize. 0 means disabled.
 
@@ -594,7 +594,7 @@ class DocToolsLLM_class:
         self.debug = debug
         self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
-        self.n_recursive_summary = n_recursive_summary
+        self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.condense_question = bool(condense_question) if "testing" not in modelname else False
@@ -791,8 +791,8 @@ class DocToolsLLM_class:
         # of tokens of a document to summarize it
         price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
         estimate_dol = full_tkn / 1000 * price * 1.1
-        if self.n_recursive_summary:
-            for i in range(1, self.n_recursive_summary + 1):
+        if self.summary_n_recursion:
+            for i in range(1, self.summary_n_recursion + 1):
                 estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
         whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
@@ -881,10 +881,10 @@ class DocToolsLLM_class:
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
             n_recursion_done = 0
-            if self.n_recursive_summary > 0:
+            if self.summary_n_recursion > 0:
                 summary_text = summary
 
-                for n_recur in range(1, self.n_recursive_summary + 1):
+                for n_recur in range(1, self.summary_n_recursion + 1):
                     red(f"Doing recursive summary #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
@@ -960,7 +960,7 @@ class DocToolsLLM_class:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
             header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
-            header += f"    parameters: n_recursion_summary={self.n_recursive_summary};n_recursion_done={n_recursion_done}"
+            header += f"    parameters: n_recursion_summary={self.summary_n_recursion};n_recursion_done={n_recursion_done}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
