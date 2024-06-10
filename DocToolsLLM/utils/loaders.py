@@ -344,22 +344,23 @@ def load_youtube_video(
     path: str,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
+    youtube_audio_backend: Optional[str] = "youtube",
 
-    youtube_use_whisper: Optional[bool] = False,
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
 
-    youtube_use_deepgram: Optional[bool] = False,
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
-    assert not (youtube_use_whisper and youtube_use_deepgram), "Can't try to use both deepgram and whisper"
+    assert youtube_audio_backend in [
+        "youtube", "whisper", "deepgram"
+    ], f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
 
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
     assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
-    if not (youtube_use_whisper or youtube_use_deepgram):
+    if youtube_audio_backend == "youtube"
         whi(f"Loading youtube: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
@@ -392,8 +393,7 @@ def load_youtube_video(
         audio_file = str(candidate[0].absolute())
         audio_hash=file_hasher({"path": audio_file})
 
-        if youtube_use_whisper:
-            whi(f"Using whisper to transcribe '{audio_file}'")
+        if youtube_audio_backend == "whisper"
             content = transcribe_audio_whisper(
                 audio_path=audio_file,
                 audio_hash=audio_hash,
@@ -416,8 +416,7 @@ def load_youtube_video(
             elif whisper_lang:
                 docs[-1].metadata["language"] = whisper_lang
 
-        elif youtube_use_deepgram:
-            whi(f"Using deepgram to transcribe '{audio_file}'")
+        elif youtube_audio_backend == "deepgram"
             content = transcribe_audio_deepgram(
                 audio_path=audio_file,
                 audio_hash=audio_hash,
@@ -438,6 +437,9 @@ def load_youtube_video(
             ]
             docs[-1].metadata.update(content["metadata"])
             docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+        else:
+            raise ValueError(youtube_audio_backend)
 
         Path(audio_file).unlink(missing_ok=True)
 
@@ -929,7 +931,7 @@ def load_local_audio(
 def transcribe_audio_deepgram(
     audio_path: str,
     audio_hash: str,
-    deepgram_kwargs: dict = None,
+    deepgram_kwargs: Optional[dict] = None,
     ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")

@@ -273,11 +273,13 @@
     possible and english otherwise
 * `--youtube_translation`:
     * For youtube. e.g. `en` to use the transcripts after translation to english
-* `--youtube_use_whisper`:
-    * If True DocToolsLLM will download
+* `--youtube_audio_backend`:
+    Either 'youtube', 'whisper' or 'deepgram'.
+    Default is 'youtube'.
+    * If 'youtube': will take the youtube transcripts as text content.
+    * If 'whisper': DocToolsLLM will download
     the audio from the youtube link, and whisper will be used to turn the audio into text. whisper_prompt and whisper_lang will be used if set.
-* `--youtube_use_deepgram`:
-    * If True DocToolsLLM will download
+    * If 'deepgram' will download
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`:
