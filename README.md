@@ -68,7 +68,6 @@
     * Web search retriever, online information lookup via jina.ai reader and search.
     * LLM powered synonym expansion for embeddings search.
 * investigate switching to Milvius Lite instead of handling split faiss indexes.
-* Deepgram support for audio files.
 * A way to specify at indexing time how trusting you are of a given set of document.
 * A way to open the documents automatically, based on the platform used. For ex if okular is installed, open pdfs directly at the appropriate page.
 * Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
@@ -88,7 +87,7 @@
 * **anki** collection
 * **string** (just paste your text into the app)
 * **html files** (useful for website dumps)
-* **audio files** (beta-ish but mostly stable: mp3, m4a, ogg, flac)
+* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)
 * **epub files**
 * **Microsoft Powerpoint files** (.ppt, .pptx, .odp, ...)
 * **Microsoft Word documents** (.doc, .docx, .odt, ...)
