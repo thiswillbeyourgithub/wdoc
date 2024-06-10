@@ -19,6 +19,7 @@ import re
 from tqdm import tqdm
 import json
 import dill
+import httpx
 
 import lazy_import
 
@@ -62,6 +63,10 @@ prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 
+from deepgram import (
+    DeepgramClient,
+    PrerecordedOptions,
+)
 
 try:
     import pdftotext
@@ -385,12 +390,13 @@ def load_youtube_video(
         assert len(candidate), f"Audio file of {path} failed to download?"
         assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
         audio_file = str(candidate[0].absolute())
+        audio_hash=file_hasher({"path": audio_file})
 
         if youtube_use_whisper:
             whi(f"Using whisper to transcribe '{audio_file}'")
-            content = transcribe_audio(
+            content = transcribe_audio_whisper(
                 audio_path=audio_file,
-                audio_hash=file_hasher({"path": audio_file}),
+                audio_hash=audio_hash,
                 language=whisper_lang,
                 prompt=whisper_prompt,
             )
@@ -412,7 +418,28 @@ def load_youtube_video(
 
         elif youtube_use_deepgram:
             whi(f"Using deepgram to transcribe '{audio_file}'")
-            raise NotImplementedError()
+            content = transcribe_audio_deepgram(
+                audio_path=audio_file,
+                audio_hash=audio_hash,
+                deepgram_kwargs=deepgram_kwargs,
+            )
+            assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
+            assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+            text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
+            assert text, "Empty text from deepgram transcription"
+
+            docs = [
+                Document(
+                    page_content=text,
+                    metadata={
+                        "source": "youtube_deepgram",
+                    },
+                )
+            ]
+            docs[-1].metadata.update(content["metadata"])
+            docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+        Path(audio_file).unlink(missing_ok=True)
 
     return docs
 
@@ -842,7 +869,7 @@ def load_local_audio(
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    content = transcribe_audio(
+    content = transcribe_audio_whisper(
         audio_path=path,
         audio_hash=file_hash,
         language=whisper_lang,
@@ -856,26 +883,95 @@ def load_local_audio(
             },
         )
     ]
-    if "duration" in content:
-        docs[-1].metadata["duration"] = content["duration"]
+    if "duration" in content["metadata"]:
+        docs[-1].metadata["duration"] = content["metadata"]["duration"]
     if "language" in content:
-        docs[-1].metadata["language"] = content["duration"]
+        docs[-1].metadata["language"] = content["language"]
     elif whisper_lang:
         docs[-1].metadata["language"] = whisper_lang
     return docs
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["audio_path"])
-def transcribe_audio(
+def transcribe_audio_deepgram(
+    audio_path: str,
+    audio_hash: str,
+    deepgram_kwargs: dict = None,
+    ) -> dict:
+    "Use whisper to transcribe an audio file"
+    whi(f"Calling deepgram to transcribe {audio_path}")
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+        "Private mode detected, aborting before trying to use deepgram's API"
+    )
+    assert "DEEPGRAM_API_KEY" in os.environ and not os.environ["DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
+
+    # client
+    try:
+        deepgram = DeepgramClient()
+    except Exception as err:
+        raise Exception(f"Error when creating deepgram client: '{err}'")
+
+    # set options
+    options = dict(
+        # docs: https://playground.deepgram.com/?endpoint=listen&smart_format=true&language=en&model=nova-2
+        model="nova-2",
+
+        detect_language=True,
+        # not all features below are available for all languages
+
+        # intelligence
+        summarize=False,
+        topics=False,
+        intents=False,
+        sentiment=False,
+
+        # transcription
+        smart_format=True,
+        punctuate=True,
+        paragraphs=True,
+        utterances=True,
+        diarize=True,
+
+        # redact=None,
+        # replace=None,
+        # search=None,
+        # keywords=None,
+        # filler_words=False,
+    )
+    if deepgram_kwargs is None:
+        deepgram_kwargs = {}
+    if "language" in deepgram_kwargs and deepgram_kwargs["language"]:
+        del options["detect_language"]
+    options.update(deepgram_kwargs)
+    options = PrerecordedOptions(**options)
+
+    # load file
+    with open(audio_path, "rb") as f:
+        payload = {"buffer": f.read()}
+
+    # get content
+    t = time.time()
+    content = deepgram.listen.prerecorded.v("1").transcribe_file(
+        payload,
+        options,
+        timeout=httpx.Timeout(300.0, connect=10.0)  # timeout for large files
+    )
+    whi(f"Done deepgram transcribing {audio_path} in {int(time.time()-t)}s")
+    d = content.to_dict()
+    return d
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["audio_path"])
+def transcribe_audio_whisper(
     audio_path: str,
     audio_hash: str,
     language: str,
     prompt: str) -> dict:
     "Use whisper to transcribe an audio file"
+    whi(f"Calling openai's whisper to transcribe {audio_path}")
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use openai's whisper"
     )
-    whi(f"Calling openai's whisper to transcribe file {audio_path}")
 
     assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 

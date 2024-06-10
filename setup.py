@@ -69,12 +69,14 @@ setup(
         'goose3 >= 3.1.16',  # url
         'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
+        'deepgram-sdk >= 3.2.7',  # audio file
+        "httpx >= 0.27.0",  # to increase deepgram timeout
 
 
 
     ],
     extra_require={
-            'optionnal_feature': [
+    'optionnal_feature': [
         # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
         'fasttext-langdetect >= 1.0.5',
         'langdetect >= 1.0.9',
