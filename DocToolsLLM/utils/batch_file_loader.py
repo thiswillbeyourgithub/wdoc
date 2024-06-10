@@ -21,7 +21,7 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
@@ -63,23 +63,6 @@ recursive_types = [
 for k, v in inference_rules.items():
     for i, vv in enumerate(v):
         inference_rules[k][i] = re.compile(vv)
-
-doc_kwargs_keys = [
-    "path",
-    "filetype",
-    "file_hash",
-    "anki_profile",
-    "anki_notetype",
-    "anki_fields",
-    "anki_deck",
-    "anki_mode",
-    "whisper_lang",
-    "whisper_prompt",
-    "youtube_language",
-    "youtube_translation",
-    "load_functions",
-    "source_tag",
-]
 
 
 @optional_typecheck

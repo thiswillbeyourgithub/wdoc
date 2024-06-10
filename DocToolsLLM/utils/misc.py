@@ -81,6 +81,45 @@ max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
 
+# loader specific arguments
+loader_specific_keys = {
+    "anki_deck": str,
+    "anki_fields": str,
+    "anki_mode": str,
+    "anki_notetype": str,
+    "anki_profile": str,
+
+    "whisper_lang": str,
+    "whisper_prompt": str,
+
+    "youtube_language": str,
+    "youtube_translation": str,
+
+    "load_functions": List[str],
+}
+
+# extra arguments supported when instanciating doctools
+extra_args_keys = {
+    "embed_instruct": str,
+    "exclude": str,
+    "file_loader_n_jobs": int,
+    "filter_content": Union[List[str], str],
+    "filter_metadata": Union[List[str], str],
+    "include": str,
+    "out_file": str,
+    "path": str,
+    "source_tag": str,
+}
+extra_args_keys.update(loader_specific_keys)
+
+# keys that can legally be part of a doc_kwarg
+doc_kwargs_keys = [
+    "path",
+    "filetype",
+    "file_hash",
+    "source_tag",
+] + list(loader_specific_keys.keys())
+
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""

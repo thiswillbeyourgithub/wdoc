@@ -26,9 +26,11 @@ from tqdm import tqdm
 import lazy_import
 
 # cannot be lazy loaded because some are not callable but objects directly
-from .utils.misc import (ankiconnect, debug_chain, model_name_matcher,
-                         cache_dir, average_word_length, wpm, get_splitter,
-                         check_docs_tkn_length, get_tkn_length)
+from .utils.misc import (
+    ankiconnect, debug_chain, model_name_matcher,
+    cache_dir, average_word_length, wpm, get_splitter,
+    check_docs_tkn_length, get_tkn_length,
+    extra_args_keys)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 
@@ -74,27 +76,6 @@ class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
     VERSION: str = "0.20"
-    extra_args_keys = {
-        "anki_profile": str,
-        "anki_notetype": str,
-        "anki_fields": str,
-        "anki_deck": str,
-        "anki_mode": str,
-        "whisper_lang": str,
-        "whisper_prompt": str,
-        "path": str,
-        "include": str,
-        "exclude": str,
-        "out_file": str,
-        "youtube_language": str,
-        "youtube_translation": str,
-        "embed_instruct": str,
-        "file_loader_n_jobs": int,
-        "load_functions": List[str],
-        "filter_metadata": Union[List[str], str],
-        "filter_content": Union[List[str], str],
-        "source_tag": str,
-    }
 
     #@optional_typecheck
     @typechecked
@@ -151,14 +132,14 @@ class DocToolsLLM_class:
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in self.extra_args_keys:
+            if k not in extra_args_keys:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = self.extra_args_keys[k]
+                expected_type = extra_args_keys[k]
                 if not check_type(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
