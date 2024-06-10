@@ -393,7 +393,7 @@ def load_youtube_video(
         audio_file = str(candidate[0].absolute())
         audio_hash=file_hasher({"path": audio_file})
 
-        if youtube_audio_backend == "whisper"
+        if youtube_audio_backend == "whisper":
             content = transcribe_audio_whisper(
                 audio_path=audio_file,
                 audio_hash=audio_hash,
