@@ -394,16 +394,22 @@ def load_youtube_video(
                 language=whisper_lang,
                 prompt=whisper_prompt,
             )
+
             docs = [
                 Document(
                     page_content=content,
                     metadata={
-                        "duration": content["duration"],
-                        "language": content["language"],
                         "source": "youtube_whisper",
                     },
                 )
             ]
+            if "duration" in content:
+                docs[-1].metadata["duration"] = content["duration"]
+            if "language" in content:
+                docs[-1].metadata["language"] = content["duration"]
+            elif whisper_lang:
+                docs[-1].metadata["language"] = whisper_lang
+
         elif youtube_use_deepgram:
             whi(f"Using deepgram to transcribe '{audio_file}'")
             raise NotImplementedError()
@@ -846,12 +852,16 @@ def load_local_audio(
         Document(
             page_content=content,
             metadata={
-                "duration": content["duration"],
-                "language": content["language"],
                 "source": path,
             },
         )
     ]
+    if "duration" in content:
+        docs[-1].metadata["duration"] = content["duration"]
+    if "language" in content:
+        docs[-1].metadata["language"] = content["duration"]
+    elif whisper_lang:
+        docs[-1].metadata["language"] = whisper_lang
     return docs
 
 @optional_typecheck
