@@ -68,7 +68,7 @@
     * Web search retriever, online information lookup via jina.ai reader and search.
     * LLM powered synonym expansion for embeddings search.
 * investigate switching to Milvius Lite instead of handling split faiss indexes.
-* Whisper and Deepgram support for audio files (including youtube links).
+* Deepgram support for audio files.
 * A way to specify at indexing time how trusting you are of a given set of document.
 * A way to open the documents automatically, based on the platform used. For ex if okular is installed, open pdfs directly at the appropriate page.
 * Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
@@ -80,7 +80,7 @@
 
 ### Supported filetypes
 * **infer** (default, guess the filetype for you)
-* **youtube videos**
+* **youtube videos** (either using subtitles or using whisper)
 * **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
 * **local PDF** (10 loaders are used, heuristics are used to keep the best one)
 * **remote PDF** via URL
@@ -132,6 +132,3 @@
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer usedto count tokens to embed is the OpenAI tokenizer, which is not universal)
-
-### Known issues
-* whisper implementation is a bit flaky and will be improved
