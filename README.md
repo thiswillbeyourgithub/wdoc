@@ -82,21 +82,21 @@
 * **youtube videos** (either using subtitles or using whisper)
 * **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
 * **local PDF** (10 loaders are used, heuristics are used to keep the best one)
-* **remote PDF** via URL
-* **text files** (.txt, markdown, etc)
-* **anki** collection
-* **string** (just paste your text into the app)
-* **html files** (useful for website dumps)
+* **remote PDF**: via URL
+* **text files**: .txt, markdown, etc
+* **anki**: collection
+* **string**: just paste your text into the app
+* **html files**: useful for website dumps
 * **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)
 * **epub files**
-* **Microsoft Powerpoint files** (.ppt, .pptx, .odp, ...)
-* **Microsoft Word documents** (.doc, .docx, .odt, ...)
-* **string** (the cli prompts you for a text so you can easily paste something, handy for paywalled articles!)
+* **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...
+* **Microsoft Word documents**: .doc, .docx, .odt, ...
+* **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
 * **Recursive types**
     * **youtube playlists**: turns a youtube_playlist into a list of youtube videos.
     * **recursive**: turns a path, a regex pattern and a filetype into all the files found recurisvely.
     * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
-    * **json_list**: turns a path to a file where each line is a json **dict** that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `utils/json_list_example.txt`.
+    * **json_list**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `utils/json_list_example.txt`.
 
 ### Supported tasks
 * **query** give documents and asks questions about it.
