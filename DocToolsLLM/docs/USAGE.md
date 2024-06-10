@@ -139,8 +139,12 @@
 ---
 
 * `--summary_n_recursion`: int, default `0`
-    * will recursively summarize the summary this many times.
-    1 means that the original summary will be summarize. 0 means disabled.
+    * will recursively summarize the summary this many times. The idea is
+    to deal with very long summary (think books etc).
+        * 0 means disabled.
+        * 1 means that the original summary will be summarized once again.
+        * 2 means that the original summary, will be sumarized, then
+        its summary will be sumarized again.
 
 * `--summary_language`: str, default `"[same as input]"`
     * When writing a summary, the LLM will write using the language
