@@ -26,7 +26,7 @@
         below for details.
         * `string`: no other parameters needed, will provide a field where
         you must type or paste the string
-        * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`
+        * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
 
         * `json_list`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
