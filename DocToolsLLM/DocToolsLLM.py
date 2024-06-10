@@ -171,10 +171,6 @@ class DocToolsLLM_class:
         assert isinstance(embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
-        if filetype == "string":
-            top_k = 1
-            red("Input is 'string' so setting 'top_k' to 1")
-
         if llms_api_bases is None:
             llms_api_bases = {}
         elif isinstance(llms_api_bases, str):
