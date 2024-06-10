@@ -446,6 +446,9 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
 def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     assert "path" in load_kwargs, "missing 'path' key in args"
     path = load_kwargs["path"]
+    if "\\" in path:
+        red(f"Removed backslash found in '{path}'")
+        path = path.replace("\\", "")
     whi(f"Loading youtube playlist: '{path}'")
     video = load_youtube_playlist(path)
 
