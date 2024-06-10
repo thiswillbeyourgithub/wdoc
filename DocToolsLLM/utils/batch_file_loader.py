@@ -190,7 +190,7 @@ def batch_load_doc(
 
     if "summar" not in task:
         # shuffle the list of files to load to make
-        # the progress bar more representative
+        # the hashing progress bar more representative
         to_load = sorted(to_load, key=lambda x: random.random())
 
     # store the file hash in the doc kwarg
