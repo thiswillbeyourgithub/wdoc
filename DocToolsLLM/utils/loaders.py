@@ -818,7 +818,7 @@ def transcribe_audio(
     t = time.time()
     with open(audio_path, "rb") as audio_file:
         transcript = litellm.transcription(
-            model="whisper",
+            model="whisper-1",
             file=audio_file,
             prompt=prompt,
             language=language,
