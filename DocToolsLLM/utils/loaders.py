@@ -360,7 +360,7 @@ def load_youtube_video(
         path = path.replace("\\", "")
     assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
-    if youtube_audio_backend == "youtube"
+    if youtube_audio_backend == "youtube":
         whi(f"Loading youtube: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
