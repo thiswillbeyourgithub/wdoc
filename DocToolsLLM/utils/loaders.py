@@ -343,13 +343,18 @@ def load_youtube_video(
     youtube_use_whisper: Optional[bool] = False,
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
+
+    youtube_use_deepgram: Optional[bool] = False,
+    deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
+    assert not (youtube_use_whisper and youtube_use_deepgram), "Can't try to use both deepgram and whisper"
+
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
     assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
-    if not (youtube_use_whisper):
+    if not (youtube_use_whisper or youtube_use_deepgram):
         whi(f"Loading youtube: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
@@ -399,6 +404,9 @@ def load_youtube_video(
                     },
                 )
             ]
+        elif youtube_use_deepgram:
+            whi(f"Using deepgram to transcribe '{audio_file}'")
+            raise NotImplementedError()
 
     return docs
 

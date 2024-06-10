@@ -92,9 +92,12 @@ loader_specific_keys = {
     "whisper_lang": str,
     "whisper_prompt": str,
 
+    "deepgram_kwargs": dict,
+
     "youtube_language": str,
     "youtube_translation": str,
     "youtube_use_whisper": bool,
+    "youtube_use_deepgram": bool,
 
     "load_functions": List[str],
 }
