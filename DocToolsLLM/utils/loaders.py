@@ -397,7 +397,7 @@ def load_youtube_video(
 
             docs = [
                 Document(
-                    page_content=content,
+                    page_content=content["text"],
                     metadata={
                         "source": "youtube_whisper",
                     },
@@ -850,7 +850,7 @@ def load_local_audio(
     )
     docs = [
         Document(
-            page_content=content,
+            page_content=content["text"],
             metadata={
                 "source": path,
             },
