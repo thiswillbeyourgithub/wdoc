@@ -416,7 +416,7 @@ def load_youtube_video(
             elif whisper_lang:
                 docs[-1].metadata["language"] = whisper_lang
 
-        elif youtube_audio_backend == "deepgram"
+        elif youtube_audio_backend == "deepgram":
             content = transcribe_audio_deepgram(
                 audio_path=audio_file,
                 audio_hash=audio_hash,
