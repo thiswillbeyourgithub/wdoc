@@ -339,21 +339,67 @@ def load_youtube_video(
     path: str,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
+
+    youtube_use_whisper: Optional[bool] = False,
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
     ) -> List[Document]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
     assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
-    whi(f"Loading youtube: '{path}'")
-    fyu = YoutubeLoader.from_youtube_url
-    docs = cached_yt_loader(
-        loader=fyu,
-        path=path,
-        add_video_info=True,
-        language=youtube_language if youtube_language else ["fr-FR", "fr", "en", "en-US", "en-UK"],
-        translation=youtube_translation if youtube_translation else None,
-    )
+    if not (youtube_use_whisper):
+        whi(f"Loading youtube: '{path}'")
+        fyu = YoutubeLoader.from_youtube_url
+        docs = cached_yt_loader(
+            loader=fyu,
+            path=path,
+            add_video_info=True,
+            language=youtube_language if youtube_language else ["fr-FR", "fr", "en", "en-US", "en-UK"],
+            translation=youtube_translation if youtube_translation else None,
+        )
+    else:
+        whi("Downloading audio from youtube")
+        file_name = cache_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s'  # with extension
+        }
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([path])
+        candidate = []
+        for f in cache_dir.iterdir():
+            if file_name.name in f.name:
+                candidate.append(f)
+        assert len(candidate), f"Audio file of {path} failed to download?"
+        assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
+        audio_file = str(candidate[0].absolute())
+
+        if youtube_use_whisper:
+            whi(f"Using whisper to transcribe '{audio_file}'")
+            content = transcribe_audio(
+                audio_path=audio_file,
+                audio_hash=file_hasher({"path": audio_file}),
+                language=whisper_lang,
+                prompt=whisper_prompt,
+            )
+            docs = [
+                Document(
+                    page_content=content,
+                    metadata={
+                        "duration": content["duration"],
+                        "language": content["language"],
+                        "source": "youtube_whisper",
+                    },
+                )
+            ]
+
     return docs
 
 @optional_typecheck

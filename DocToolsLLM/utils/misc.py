@@ -94,6 +94,7 @@ loader_specific_keys = {
 
     "youtube_language": str,
     "youtube_translation": str,
+    "youtube_use_whisper": bool,
 
     "load_functions": List[str],
 }

@@ -267,6 +267,9 @@
     possible and english otherwise
 * `--youtube_translation`:
     * For youtube. e.g. `en` to use the transcripts after translation to english
+* `--youtube_use_whisper`:
+    * If True DocToolsLLM will download
+    the audio from the youtube link, and whisper will be used to turn the audio into text. whisper_prompt and whisper_lang will be used if set.
 
 * `--include`:
     * Only active if `--filetype` is one of json_list, recursive,
