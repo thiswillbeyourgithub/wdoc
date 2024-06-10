@@ -255,6 +255,9 @@
     Whichever you choose, you can later filter out documents by metadata
     filtering over the `anki_mode` key.
 
+* `--audio_backend`:
+    * either 'whisper' or 'deepgram' to transcribe audio. Not taken into account for the filetype "youtube" but for "local_audio"
+
 * `--whisper_lang`:
     * if using whisper to transcribe an audio file, this if the language
     specified to whisper

@@ -864,31 +864,64 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
 def load_local_audio(
     path: str,
     file_hash: str,
+    audio_backend: str,
+
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    content = transcribe_audio_whisper(
-        audio_path=path,
-        audio_hash=file_hash,
-        language=whisper_lang,
-        prompt=whisper_prompt,
-    )
-    docs = [
-        Document(
-            page_content=content["text"],
-            metadata={
-                "source": path,
-            },
+    if audio_backend == "whisper":
+        assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"
+        content = transcribe_audio_whisper(
+            audio_path=path,
+            audio_hash=file_hash,
+            language=whisper_lang,
+            prompt=whisper_prompt,
         )
-    ]
-    if "duration" in content["metadata"]:
-        docs[-1].metadata["duration"] = content["metadata"]["duration"]
-    if "language" in content:
-        docs[-1].metadata["language"] = content["language"]
-    elif whisper_lang:
-        docs[-1].metadata["language"] = whisper_lang
+        docs = [
+            Document(
+                page_content=content["text"],
+                metadata={
+                    "source": path,
+                },
+            )
+        ]
+        if "duration" in content["metadata"]:
+            docs[-1].metadata["duration"] = content["metadata"]["duration"]
+        if "language" in content:
+            docs[-1].metadata["language"] = content["language"]
+        elif whisper_lang:
+            docs[-1].metadata["language"] = whisper_lang
+
+    elif audio_backend == "deepgram":
+        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        content = transcribe_audio_deepgram(
+            audio_path=path,
+            audio_hash=file_hash,
+            deepgram_kwargs=deepgram_kwargs,
+        )
+        assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
+        assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+        text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
+        assert text, "Empty text from deepgram transcription"
+
+        docs = [
+            Document(
+                page_content=text,
+                metadata={
+                    "source": "local_audio_deepgram",
+                },
+            )
+        ]
+        docs[-1].metadata.update(content["metadata"])
+        docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+    else:
+        raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
+
     return docs
 
 @optional_typecheck

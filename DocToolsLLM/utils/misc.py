@@ -89,6 +89,8 @@ loader_specific_keys = {
     "anki_notetype": str,
     "anki_profile": str,
 
+    "audio_backend": str,
+
     "whisper_lang": str,
     "whisper_prompt": str,
 
