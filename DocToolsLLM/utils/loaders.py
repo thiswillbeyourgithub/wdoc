@@ -406,7 +406,7 @@ def load_youtube_video(
             if "duration" in content:
                 docs[-1].metadata["duration"] = content["duration"]
             if "language" in content:
-                docs[-1].metadata["language"] = content["duration"]
+                docs[-1].metadata["language"] = content["language"]
             elif whisper_lang:
                 docs[-1].metadata["language"] = whisper_lang
 
