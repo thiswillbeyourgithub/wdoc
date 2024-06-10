@@ -479,6 +479,8 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
         doclist[i] = doc_kwargs
+
+    assert doclist, f"No video found in youtube playlist: {load_kwargs}"
     return doclist
 
 
