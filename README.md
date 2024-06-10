@@ -118,7 +118,7 @@
 ![](./images/summary.png)
 
 ## Getting started
-*Tested on python 3.9 and 3.11.7*
+*Tested on python 3.10 and 3.11.7*
 * `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
 * Or for the supposedly more stable branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
 * Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
