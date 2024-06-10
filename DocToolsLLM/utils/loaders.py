@@ -334,7 +334,11 @@ def cloze_stripper(clozed: str) -> str:
 # loaders #######################################
 
 @optional_typecheck
-def load_youtube_video(path: str, youtube_language: Optional[str] = None, youtube_translation: Optional[str] = None) -> List[Document]:
+def load_youtube_video(
+    path: str,
+    youtube_language: Optional[str] = None,
+    youtube_translation: Optional[str] = None,
+    ) -> List[Document]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
