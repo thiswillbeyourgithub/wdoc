@@ -204,6 +204,8 @@ def batch_load_doc(
       colour="magenta",
       )
     )
+    for i, h in enumerate(doc_hashes):
+        to_load[i]["file_hash"] = doc_hashes[i]
 
     if "summar" not in task:
         # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
@@ -231,7 +233,6 @@ def batch_load_doc(
                 n_dupl += 1
             else:
                 assert doc_hash_counts[h] in [0, 1]
-                to_load[i]["file_hash"] = doc_hashes[i]
         to_load = [tl for tl in to_load if tl is not None]
         if n_dupl:
             red(f"Ignored '{n_dupl}' duplicate files")
