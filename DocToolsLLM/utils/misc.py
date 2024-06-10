@@ -32,7 +32,7 @@ TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 
 try:
-    ftlangdetect = lazy_import.lazy_module("ftlangdetect")
+    import ftlangdetect
 except Exception as err:
     if is_verbose:
         print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
