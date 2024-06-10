@@ -860,7 +860,7 @@ def transcribe_audio(
     audio_path: str,
     audio_hash: str,
     language: str,
-    prompt: str) -> str:
+    prompt: str) -> dict:
     "Use whisper to transcribe an audio file"
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use openai's whisper"
@@ -878,7 +878,7 @@ def transcribe_audio(
             language=language,
             temperature=0,
             response_format="verbose_json",
-            )
+            ).json()
     whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
     return transcript
 
