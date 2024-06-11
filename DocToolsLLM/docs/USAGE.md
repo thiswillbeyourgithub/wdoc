@@ -110,7 +110,7 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openai/gpt-3.5-turbo-0125"`
+* `--query_eval_modelname`: str, default `"openai/gpt-3.5-turbo"`
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
