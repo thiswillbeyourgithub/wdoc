@@ -186,7 +186,7 @@ class DocToolsLLM_class:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
         if llms_api_bases["model"] == llms_api_bases["query_eval_model"] and llms_api_bases["model"]:
-            red(f"Setting litellm wide api_base because it's the same for model and query_eval_model")
+            red("Setting litellm wide api_base because it's the same for model and query_eval_model")
             litellm.api_base = llms_api_bases["model"]
         assert isinstance(private, bool), "private arg should be a boolean, not {private}"
         if private:
