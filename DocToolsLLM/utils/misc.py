@@ -385,12 +385,15 @@ def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
     who knows what happens when multiprocessing with lazy loaded modules."""
-    found_one = False
     while True:
+        found_one = False
         for k, v in sys.modules.items():
             if "Lazily-loaded" in str(v):
                 dir(v)  # this is enough to trigger the loading
                 found_one = True
+                break  # otherwise dict size change during iteration
             assert "Lazily-loaded" not in str(v)
-        if not found_one:
+        if found_one:
+            continue
+        else:
             break
