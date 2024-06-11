@@ -95,9 +95,7 @@ def load_embeddings(
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
         assert not private, f"Set private but tried to use openai embeddings"
-        if not ("OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]):
-            assert Path("OPENAI_API_KEY.txt").exists(), "No OPENAI_API_KEY.txt found"
-            os.environ["OPENAI_API_KEY"] = str(Path("OPENAI_API_KEY.txt").read_text()).strip()
+        assert "OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"] and "REDACTED" not in os.environ["OPENAI_API_KEY"], "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
             model=embed_model,
@@ -114,11 +112,8 @@ def load_embeddings(
         }
         model_kwargs.update(embed_kwargs)
         if "google" in embed_model and "gemma" in embed_model.lower():
-            if not ("HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"]):
-                assert Path("HUGGINGFACE_API_KEY.txt").exists(), "No HUGGINGFACE_API_KEY.txt found"
-                hftkn = str(Path("HUGGINGFACE_API_KEY.txt").read_text()).strip()
-            else:
-                hftkn = os.environ["HUGGINGFACE_API_KEY"]
+            assert "HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"] and "REDACTED" not in os.environ["HUGGINGFACE_API_KEY"], "Missing HUGGINGFACE_API_KEY"
+            hftkn = os.environ["HUGGINGFACE_API_KEY"]
             model_kwargs['use_auth_token'] = hftkn #your token to use the models
         if instruct:
             embeddings = HuggingFaceInstructEmbeddings(
