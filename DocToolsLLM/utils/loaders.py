@@ -74,9 +74,9 @@ try:
     import pdftotext
 except Exception as err:
     if is_verbose:
-        print(f"Failed to import optional package 'pdftotext': '{err}'")
+        red(f"Failed to import optional package 'pdftotext': '{err}'")
         if is_linux:
-            print(
+            red(
                 "On linux, you can try to install pdftotext with :\nsudo "
                 "apt install build-essential libpoppler-cpp-dev pkg-config "
                 "python3-dev\nThen:\npython -m pip install pdftotext"
