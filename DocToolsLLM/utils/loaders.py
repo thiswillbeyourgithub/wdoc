@@ -64,6 +64,7 @@ prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 deepgram = lazy_import.lazy_module("deepgram")
+pydub = lazy_import.lazy_module("pydub")
 
 
 try:
@@ -207,6 +208,9 @@ def load_one_doc(
 
     elif filetype == "local_audio":
         docs = load_local_audio(file_hash=file_hash, **kwargs)
+
+    elif filetype == "local_video":
+        docs = load_local_video(file_hash=file_hash, **kwargs)
 
     elif filetype == "epub":
         docs = load_epub(file_hash=file_hash, **kwargs)
@@ -872,6 +876,89 @@ def load_local_audio(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
+
+    if audio_backend == "whisper":
+        assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"
+        content = transcribe_audio_whisper(
+            audio_path=path,
+            audio_hash=file_hash,
+            language=whisper_lang,
+            prompt=whisper_prompt,
+        )
+        docs = [
+            Document(
+                page_content=content["text"],
+                metadata={
+                    "source": path,
+                },
+            )
+        ]
+        if "duration" in content["metadata"]:
+            docs[-1].metadata["duration"] = content["metadata"]["duration"]
+        if "language" in content:
+            docs[-1].metadata["language"] = content["language"]
+        elif whisper_lang:
+            docs[-1].metadata["language"] = whisper_lang
+
+    elif audio_backend == "deepgram":
+        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        content = transcribe_audio_deepgram(
+            audio_path=path,
+            audio_hash=file_hash,
+            deepgram_kwargs=deepgram_kwargs,
+        )
+        assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
+        assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+        text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
+        assert text, "Empty text from deepgram transcription"
+
+        docs = [
+            Document(
+                page_content=text,
+                metadata={
+                    "source": "local_audio_deepgram",
+                },
+            )
+        ]
+        docs[-1].metadata.update(content["metadata"])
+        docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+    else:
+        raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
+
+    return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_local_video(
+    path: str,
+    file_hash: str,
+    audio_backend: str,
+
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+
+    # extract audio
+    try:
+        audio = pydub.AudioSegment.from_file(path)
+    except Exception as err:
+        raise Exception(f"Error when loading video using pydub: '{err}'")
+
+    video_path = path
+    video_hash = file_hash
+
+    # audio path
+    path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    whi(f"Saving audio from {video_path} to {path}")
+    audio.export(path, format="mp3")
+    whi("Done saving audio.")
+
+    # need the hash from the mp3, not video
+    file_hash=file_hasher({"path": path})
 
     if audio_backend == "whisper":
         assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"

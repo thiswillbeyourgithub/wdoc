@@ -47,6 +47,7 @@ inference_rules = {
     "epub": [".epub$"],
     "powerpoint": [".ppt$", ".pptx$", ".odp$"],
     "word": [".doc$", ".docx$", ".odt$"],
+    "local_video": [".mp4", ".avi", ".mkv"],
 
     "json_list": [".*.json"],
 }
