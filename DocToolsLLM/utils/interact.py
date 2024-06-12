@@ -1,3 +1,7 @@
+"""
+Code related to the prompt (in the sense of "directly ask the user a question")
+"""
+
 from typing import Optional, Tuple, Any
 import time
 import re

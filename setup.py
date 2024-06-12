@@ -16,7 +16,7 @@ class PostInstallCommand(install):
 
 setup(
     name="DocToolsLLM",
-    version="0.19",
+    version="0.21",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
     long_description="A perfect RAG and AI summary setup for my needs. All LLM supported. Virtually any input filetypes including epub, youtube_playlist, pdf, etc",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
@@ -29,8 +29,11 @@ setup(
     license="GPLv3",
     keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq"],
     entry_points={
-        'console_scripts': ['DocToolsLLM=DocToolsLLM.__init__:cli_launcher'],
+        'console_scripts': [
+            'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
+        ],
     },
+    python_requires=">=3.10",
     install_requires=[
         'sqlalchemy>=2.0.29',
         'beautifulsoup4>=4.10.0',
@@ -67,12 +70,14 @@ setup(
         'goose3 >= 3.1.16',  # url
         'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
+        'deepgram-sdk >= 3.2.7',  # audio file
+        "httpx >= 0.27.0",  # to increase deepgram timeout
 
 
 
     ],
     extra_require={
-            'optionnal_feature': [
+    'optionnal_feature': [
         # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
         'fasttext-langdetect >= 1.0.5',
         'langdetect >= 1.0.9',

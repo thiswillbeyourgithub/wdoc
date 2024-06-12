@@ -1,3 +1,7 @@
+"""
+Prompts used by DocToolsLLM.
+"""
+
 from langchain_core.prompts import ChatPromptTemplate
 
 # PROMPT FOR SUMMARY TASKS

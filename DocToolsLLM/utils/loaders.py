@@ -1,5 +1,13 @@
-import fire
+"""
+Called by batch_file_loader.py's threads. Contains many cached function to
+load each document.
+The imports are taking a substantial amount of time so loaders.py is
+lazily loaded.
+"""
+
+import sys
 import os
+import time
 from typing import List, Union, Any, Optional, Callable
 from textwrap import dedent
 from functools import partial
@@ -12,6 +20,7 @@ import re
 from tqdm import tqdm
 import json
 import dill
+import httpx
 
 import lazy_import
 
@@ -33,16 +42,18 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import loaddoc_cache, html_to_text, hasher, cache_dir, file_hasher
+from .misc import (loaddoc_cache, html_to_text, hasher, cache_dir,
+                   file_hasher, get_splitter, check_docs_tkn_length,
+                   average_word_length, wpm)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
-from .llm import transcribe
-from .loaders_misc import  get_splitter, check_docs_tkn_length, average_word_length, wpm
+from .verbose_flag import is_verbose, is_linux
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+youtube_dl = lazy_import.lazy_module('youtube_dl')
 DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
 ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
 akp = lazy_import.lazy_module('ankipandas')
@@ -51,24 +62,17 @@ BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
 Goose = lazy_import.lazy_class('goose3.Goose')
 prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
+litellm = lazy_import.lazy_module("litellm")
+deepgram = lazy_import.lazy_module("deepgram")
 
-# parse args again to know what to print for failed imports
-kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
-if "debug" in kwargs and kwargs["debug"]:
-    verbose = True
-    import platform
-    is_linux = platform.system() == "Linux"
-else:
-    verbose = False
-    is_linux = False
 
 try:
     import pdftotext
 except Exception as err:
-    if verbose:
-        print(f"Failed to import optional package 'pdftotext': '{err}'")
+    if is_verbose:
+        red(f"Failed to import optional package 'pdftotext': '{err}'")
         if is_linux:
-            print(
+            red(
                 "On linux, you can try to install pdftotext with :\nsudo "
                 "apt install build-essential libpoppler-cpp-dev pkg-config "
                 "python3-dev\nThen:\npython -m pip install pdftotext"
@@ -149,7 +153,7 @@ def load_one_doc(
     debug: bool,
     filetype: str,
     file_hash: str,
-    source_tag: str = None,
+    source_tag: Optional[str] = None,
     **kwargs,
     ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -334,21 +338,109 @@ def cloze_stripper(clozed: str) -> str:
 # loaders #######################################
 
 @optional_typecheck
-def load_youtube_video(path: str, youtube_language: Optional[str] = None, youtube_translation: Optional[str] = None) -> List[Document]:
+def load_youtube_video(
+    path: str,
+    youtube_language: Optional[str] = None,
+    youtube_translation: Optional[str] = None,
+    youtube_audio_backend: Optional[str] = "youtube",
+
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
+    ) -> List[Document]:
+    assert youtube_audio_backend in [
+        "youtube", "whisper", "deepgram"
+    ], f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
+
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
     assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
 
-    whi(f"Loading youtube: '{path}'")
-    fyu = YoutubeLoader.from_youtube_url
-    docs = cached_yt_loader(
-        loader=fyu,
-        path=path,
-        add_video_info=True,
-        language=youtube_language if youtube_language else ["fr-FR", "fr", "en", "en-US", "en-UK"],
-        translation=youtube_translation if youtube_translation else None,
-    )
+    if youtube_audio_backend == "youtube":
+        whi(f"Loading youtube: '{path}'")
+        fyu = YoutubeLoader.from_youtube_url
+        docs = cached_yt_loader(
+            loader=fyu,
+            path=path,
+            add_video_info=True,
+            language=youtube_language if youtube_language else ["fr-FR", "fr", "en", "en-US", "en-UK"],
+            translation=youtube_translation if youtube_translation else None,
+        )
+    else:
+        whi("Downloading audio from youtube")
+        file_name = cache_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s'  # with extension
+        }
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([path])
+        candidate = []
+        for f in cache_dir.iterdir():
+            if file_name.name in f.name:
+                candidate.append(f)
+        assert len(candidate), f"Audio file of {path} failed to download?"
+        assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
+        audio_file = str(candidate[0].absolute())
+        audio_hash=file_hasher({"path": audio_file})
+
+        if youtube_audio_backend == "whisper":
+            content = transcribe_audio_whisper(
+                audio_path=audio_file,
+                audio_hash=audio_hash,
+                language=whisper_lang,
+                prompt=whisper_prompt,
+            )
+
+            docs = [
+                Document(
+                    page_content=content["text"],
+                    metadata={
+                        "source": "youtube_whisper",
+                    },
+                )
+            ]
+            if "duration" in content:
+                docs[-1].metadata["duration"] = content["duration"]
+            if "language" in content:
+                docs[-1].metadata["language"] = content["language"]
+            elif whisper_lang:
+                docs[-1].metadata["language"] = whisper_lang
+
+        elif youtube_audio_backend == "deepgram":
+            content = transcribe_audio_deepgram(
+                audio_path=audio_file,
+                audio_hash=audio_hash,
+                deepgram_kwargs=deepgram_kwargs,
+            )
+            assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
+            assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+            text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
+            assert text, "Empty text from deepgram transcription"
+
+            docs = [
+                Document(
+                    page_content=text,
+                    metadata={
+                        "source": "youtube_deepgram",
+                    },
+                )
+            ]
+            docs[-1].metadata.update(content["metadata"])
+            docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+        else:
+            raise ValueError(youtube_audio_backend)
+
+        Path(audio_file).unlink(missing_ok=True)
+
     return docs
 
 @optional_typecheck
@@ -772,30 +864,162 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
 def load_local_audio(
     path: str,
     file_hash: str,
+    audio_backend: str,
+
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
-    cache_transcribe = loaddoc_cache.cache(
-        transcribe, ignore=["audio_path"])
 
-    content = cache_transcribe(
-        audio_path=path,
-        audio_hash=file_hash,
-        language=whisper_lang,
-        prompt=whisper_prompt,
-    )
-    docs = [
-        Document(
-            page_content=content,
-            metadata={
-                "duration": content["duration"],
-                "language": content["language"],
-                "source": path,
-            },
+    if audio_backend == "whisper":
+        assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"
+        content = transcribe_audio_whisper(
+            audio_path=path,
+            audio_hash=file_hash,
+            language=whisper_lang,
+            prompt=whisper_prompt,
         )
-    ]
+        docs = [
+            Document(
+                page_content=content["text"],
+                metadata={
+                    "source": path,
+                },
+            )
+        ]
+        if "duration" in content["metadata"]:
+            docs[-1].metadata["duration"] = content["metadata"]["duration"]
+        if "language" in content:
+            docs[-1].metadata["language"] = content["language"]
+        elif whisper_lang:
+            docs[-1].metadata["language"] = whisper_lang
+
+    elif audio_backend == "deepgram":
+        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        content = transcribe_audio_deepgram(
+            audio_path=path,
+            audio_hash=file_hash,
+            deepgram_kwargs=deepgram_kwargs,
+        )
+        assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
+        assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+        text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
+        assert text, "Empty text from deepgram transcription"
+
+        docs = [
+            Document(
+                page_content=text,
+                metadata={
+                    "source": "local_audio_deepgram",
+                },
+            )
+        ]
+        docs[-1].metadata.update(content["metadata"])
+        docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
+
+    else:
+        raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
+
     return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["audio_path"])
+def transcribe_audio_deepgram(
+    audio_path: str,
+    audio_hash: str,
+    deepgram_kwargs: Optional[dict] = None,
+    ) -> dict:
+    "Use whisper to transcribe an audio file"
+    whi(f"Calling deepgram to transcribe {audio_path}")
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+        "Private mode detected, aborting before trying to use deepgram's API"
+    )
+    assert "DEEPGRAM_API_KEY" in os.environ and not os.environ["DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
+
+    # client
+    try:
+        client = deepgram.DeepgramClient()
+    except Exception as err:
+        raise Exception(f"Error when creating deepgram client: '{err}'")
+
+    # set options
+    options = dict(
+        # docs: https://playground.deepgram.com/?endpoint=listen&smart_format=true&language=en&model=nova-2
+        model="nova-2",
+
+        detect_language=True,
+        # not all features below are available for all languages
+
+        # intelligence
+        summarize=False,
+        topics=False,
+        intents=False,
+        sentiment=False,
+
+        # transcription
+        smart_format=True,
+        punctuate=True,
+        paragraphs=True,
+        utterances=True,
+        diarize=True,
+
+        # redact=None,
+        # replace=None,
+        # search=None,
+        # keywords=None,
+        # filler_words=False,
+    )
+    if deepgram_kwargs is None:
+        deepgram_kwargs = {}
+    if "language" in deepgram_kwargs and deepgram_kwargs["language"]:
+        del options["detect_language"]
+    options.update(deepgram_kwargs)
+    options = deepgram.PrerecordedOptions(**options)
+
+    # load file
+    with open(audio_path, "rb") as f:
+        payload = {"buffer": f.read()}
+
+    # get content
+    t = time.time()
+    content = client.listen.prerecorded.v("1").transcribe_file(
+        payload,
+        options,
+        timeout=httpx.Timeout(300.0, connect=10.0)  # timeout for large files
+    )
+    whi(f"Done deepgram transcribing {audio_path} in {int(time.time()-t)}s")
+    d = content.to_dict()
+    return d
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["audio_path"])
+def transcribe_audio_whisper(
+    audio_path: str,
+    audio_hash: str,
+    language: str,
+    prompt: str) -> dict:
+    "Use whisper to transcribe an audio file"
+    whi(f"Calling openai's whisper to transcribe {audio_path}")
+    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+        "Private mode detected, aborting before trying to use openai's whisper"
+    )
+
+    assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
+
+    t = time.time()
+    with open(audio_path, "rb") as audio_file:
+        transcript = litellm.transcription(
+            model="whisper-1",
+            file=audio_file,
+            prompt=prompt,
+            language=language,
+            temperature=0,
+            response_format="verbose_json",
+            ).json()
+    whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
+    return transcript
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["path"])

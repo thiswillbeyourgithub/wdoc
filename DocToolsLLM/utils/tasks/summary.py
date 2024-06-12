@@ -1,3 +1,7 @@
+"""
+Chain (logic) used to summarize a document.
+"""
+
 from textwrap import indent
 from tqdm import tqdm
 from typing import List, Tuple, Any, Union

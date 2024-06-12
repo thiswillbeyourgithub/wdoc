@@ -1,3 +1,7 @@
+"""
+Code related to loggings, coloured logs, etc.
+"""
+
 import rtoml
 import json
 import requests
@@ -6,7 +10,7 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Type, Callable, Optional, Union
 from rich.markdown import Markdown
 from rich.console import Console
 from platformdirs import user_cache_dir
@@ -67,14 +71,14 @@ def get_coloured_logger(color_asked: str) -> Callable:
         if isinstance(string, list):
             try:
                 string = ",".join(string)
-            except:
+            except Exception:
                 pass
         try:
             string = str(string)
-        except:
+        except Exception:
             try:
                 string = string.__str__()
-            except:
+            except Exception:
                 string = string.__repr__()
         log.info(string)
         tqdm.write(col + string + colors["reset"], **args)
@@ -90,7 +94,20 @@ console = Console()
 
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
+    "markdown printing"
     log.info(message)
     md = Markdown(message)
     console.print(md, style=color)
     return message
+
+@optional_typecheck
+def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
+    "set the docstring of DocToolsLLM class to DocToolsLLM/docs/USAGE.md's content"
+    usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
+    assert usage_file.exists()
+    usage = usage_file.read_text().strip()
+    assert usage
+    obj.__doc__ = usage
+    if isinstance(obj, type):
+        obj.__init__.__doc__ = usage
+    return obj

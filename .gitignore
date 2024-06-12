@@ -8,3 +8,4 @@ pages
 .env
 **/__pycache__
 DocToolsLLM.egg-info
+build

@@ -1,3 +1,11 @@
+"""
+called at DocToolsLLM instance creation. It parsed the combined filetype
+into an individual list of dict describing each a document (or in some cases
+a list of documents for example a whole anki database).
+This list is then processed in loaders.py, multithreading or multiprocessing
+is used.
+"""
+
 import re
 from tqdm import tqdm
 from functools import cache as memoizer
@@ -13,11 +21,10 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
-from .loaders_misc import min_token, get_tkn_length
 
 
 # rules used to attribute input to proper filetype. For example
@@ -57,23 +64,6 @@ for k, v in inference_rules.items():
     for i, vv in enumerate(v):
         inference_rules[k][i] = re.compile(vv)
 
-doc_kwargs_keys = [
-    "path",
-    "filetype",
-    "file_hash",
-    "anki_profile",
-    "anki_notetype",
-    "anki_fields",
-    "anki_deck",
-    "anki_mode",
-    "whisper_lang",
-    "whisper_prompt",
-    "youtube_language",
-    "youtube_translation",
-    "load_functions",
-    "source_tag",
-]
-
 
 @optional_typecheck
 def batch_load_doc(
@@ -89,6 +79,9 @@ def batch_load_doc(
     # except Exception as err:
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
+
+    # just in case, make sure all modules are loaded
+    unlazyload_modules()
 
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
@@ -180,7 +173,7 @@ def batch_load_doc(
 
     if "summar" not in task:
         # shuffle the list of files to load to make
-        # the progress bar more representative
+        # the hashing progress bar more representative
         to_load = sorted(to_load, key=lambda x: random.random())
 
     # store the file hash in the doc kwarg
@@ -192,8 +185,11 @@ def batch_load_doc(
       desc="Hashing files",
       unit="doc",
       colour="magenta",
+      disable=len(to_load) <= 10_000,
       )
     )
+    for i, h in enumerate(doc_hashes):
+        to_load[i]["file_hash"] = doc_hashes[i]
 
     if "summar" not in task:
         # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
@@ -209,22 +205,21 @@ def batch_load_doc(
             )
         )
 
-    # deduplicate files based on hash
-    whi("Deduplicating files")
-    doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
-    assert len(doc_hashes) == len(to_load)
-    n_dupl = 0
-    for i, h in enumerate(doc_hashes):
-        if doc_hash_counts[h] > 1:
-            doc_hash_counts[h] -= 1
-            to_load[i] = None
-            n_dupl += 1
-        else:
-            assert doc_hash_counts[h] in [0, 1]
-            to_load[i]["file_hash"] = doc_hashes[i]
-    to_load = [tl for tl in to_load if tl is not None]
-    if n_dupl:
-        red(f"Ignored '{n_dupl}' duplicate files")
+        # deduplicate files based on hash
+        whi("Deduplicating files")
+        doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
+        assert len(doc_hashes) == len(to_load)
+        n_dupl = 0
+        for i, h in enumerate(doc_hashes):
+            if doc_hash_counts[h] > 1:
+                doc_hash_counts[h] -= 1
+                to_load[i] = None
+                n_dupl += 1
+            else:
+                assert doc_hash_counts[h] == 1
+        to_load = [tl for tl in to_load if tl is not None]
+        if n_dupl:
+            red(f"Ignored '{n_dupl}' duplicate files")
 
     # load_functions are slow to load so loading them here in advance for every file
     if any(
@@ -451,6 +446,9 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
 def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     assert "path" in load_kwargs, "missing 'path' key in args"
     path = load_kwargs["path"]
+    if "\\" in path:
+        red(f"Removed backslash found in '{path}'")
+        path = path.replace("\\", "")
     whi(f"Loading youtube playlist: '{path}'")
     video = load_youtube_playlist(path)
 
@@ -484,6 +482,8 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
         doclist[i] = doc_kwargs
+
+    assert doclist, f"No video found in youtube playlist: {load_kwargs}"
     return doclist
 
 
