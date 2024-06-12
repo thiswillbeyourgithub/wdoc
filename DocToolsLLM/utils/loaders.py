@@ -5,6 +5,7 @@ The imports are taking a substantial amount of time so loaders.py is
 lazily loaded.
 """
 
+import sys
 import os
 import time
 from typing import List, Union, Any, Optional, Callable
@@ -63,10 +64,11 @@ prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 
-from deepgram import (
-    DeepgramClient,
-    PrerecordedOptions,
-)
+if sys.version.split(".")[1] >= 10:  # deepgram is the only package that needs python 3.10+
+    from deepgram import (
+        DeepgramClient,
+        PrerecordedOptions,
+    )
 
 try:
     import pdftotext
@@ -935,6 +937,7 @@ def transcribe_audio_deepgram(
     ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
+    assert int(sys.version.split(".")[1]) >= 10, "deepgram needs python 3.10+"
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use deepgram's API"
     )

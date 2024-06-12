@@ -414,10 +414,10 @@ def disable_internet(allowed: dict) -> None:
     unlazyload_modules()
 
     # list of certainly allowed IPs
-    allowed_IPs = set(
+    allowed_IPs = set([
         "localhost",
         "127.0.0.1",
-    )
+    ])
     vals = list(allowed.values())
     vals = [v.split("//")[1].split(":")[0] for v in vals]
     [allowed_IPs.add(v) for v in vals]
