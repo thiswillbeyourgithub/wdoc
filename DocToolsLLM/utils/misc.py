@@ -25,7 +25,7 @@ from langchain_core.runnables import chain
 
 from .logger import red
 from .typechecker import optional_typecheck
-from .verbose_flag import is_verbose
+from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')

@@ -47,7 +47,7 @@ from .misc import (loaddoc_cache, html_to_text, hasher, cache_dir,
                    average_word_length, wpm)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
-from .verbose_flag import is_verbose, is_linux
+from .flags import is_verbose, is_linux
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
