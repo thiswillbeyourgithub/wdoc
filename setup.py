@@ -70,12 +70,10 @@ setup(
         'goose3 >= 3.1.16',  # url
         'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
-        'deepgram-sdk >= 3.2.7',  # audio file
+        'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
-        'pydub >= 0.25.1',  # for extracting audio from local video
-
-
-
+        'pydub >= 0.25.1',  # extracting audio from local video
+        'ffmpeg >= 1.4',  # extracting audio from local video
     ],
     extra_require={
     'optionnal_feature': [

@@ -65,6 +65,7 @@ LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 deepgram = lazy_import.lazy_module("deepgram")
 pydub = lazy_import.lazy_module("pydub")
+ffmpeg = lazy_import.lazy_module("ffmpeg")
 
 
 try:
@@ -944,17 +945,23 @@ def load_local_video(
     # load video file
     try:
         audio = pydub.AudioSegment.from_file(path)
-    except Exception as err:
-        raise Exception(f"Error when loading video using pydub: '{err}'")
-
-    # extract audio from video
-    whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
-    t = time.time()
-    try:
+        # extract audio from video
+        whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
+        t = time.time()
         audio.export(audio_path, format="mp3")
+        whi(f"Done exporting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        raise Exception(f"Error when saving the audio from video using pydub: '{err}'")
-    whi(f"Done exporting audio in {time.time()-t:.2f}s")
+        red(f"Error when getting audio from video using pydub. Retrying with ffmpeg. Error: '{err}'")
+
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+            stream = ffmpeg.input(path)
+            stream = ffmpeg.output(stream, audio_path)
+            ffmpeg.run(stream)
+        except Exception as err:
+            raise Exception(
+                f"Error when getting audio from video using ffmpeg: '{err}'")
+    assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
 
     # need the hash from the mp3, not video
     audio_hash=file_hasher({"path": audio_path})
