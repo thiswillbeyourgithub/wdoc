@@ -6,6 +6,8 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
+import shutil
+import uuid
 import re
 from tqdm import tqdm
 from functools import cache as memoizer
@@ -21,10 +23,10 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
-from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
+from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, global_temp_dir
 from .flags import is_debug
 
 
@@ -263,6 +265,18 @@ def batch_load_doc(
         for tl in to_load:
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
+    # dir name where to store temporary files
+    load_temp_name="file_load_" + str(uuid.uuid4())
+    # delete previous temp dir
+    for f in cache_dir.iterdir():
+        f = f.resolve()
+        if f.is_dir() and f.name.startswith("file_load_"):
+            assert str(cache_dir.absolute()) in str(f.absolute())
+            shutil.rmtree(f)
+    temp_dir = cache_dir / load_temp_name
+    temp_dir.mkdir(exist_ok=False)
+    global_temp_dir[0] = temp_dir
+
     docs = []
     t_load = time.time()
     doc_lists = Parallel(
@@ -271,6 +285,7 @@ def batch_load_doc(
     )(delayed(load_one_doc_wrapped)(
         task=task,
         debug=is_debug,
+        temp_dir=temp_dir,
         **d,
         ) for d in tqdm(
             to_load,
@@ -292,6 +307,10 @@ def batch_load_doc(
         raise Exception(
             f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
         )
+
+    # delete temp dir
+    shutil.rmtree(temp_dir)
+    assert not temp_dir.exists()
 
     return docs
 

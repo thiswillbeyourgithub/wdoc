@@ -15,7 +15,7 @@ import uuid
 import tempfile
 import requests
 import shutil
-from pathlib import Path
+from pathlib import Path, PosixPath
 import re
 from tqdm import tqdm
 import json
@@ -42,7 +42,7 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import (loaddoc_cache, html_to_text, hasher, cache_dir,
+from .misc import (loaddoc_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm)
 from .typechecker import optional_typecheck
@@ -147,11 +147,14 @@ if "pdftotext" in globals():
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
 
+global_temp_dir = [None]  # will be replaced when load_one_doc is called
+
 
 @optional_typecheck
 def load_one_doc(
     task: str,
     debug: bool,
+    temp_dir: PosixPath,
     filetype: str,
     file_hash: str,
     source_tag: Optional[str] = None,
@@ -161,6 +164,8 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     text_splitter = get_splitter(task)
+
+    assert global_temp_dir[0] is temp_dir
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
@@ -181,17 +186,7 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        random_val = str(uuid.uuid4()).split("-")[-1]
-        try:
-            docs = load_anki(random_val=random_val, **kwargs)
-        except:
-            # delete the failed db files from cache
-            name = kwargs['anki_profile'].replace(" ", "_")
-            new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
-            new_db_path.unlink(missing_ok=True)
-            Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
-            Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
-            raise
+        docs = load_anki(**kwargs)
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
@@ -374,7 +369,7 @@ def load_youtube_video(
         )
     else:
         whi("Downloading audio from youtube")
-        file_name = cache_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = global_temp_dir[0] / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -387,7 +382,7 @@ def load_youtube_video(
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
         candidate = []
-        for f in cache_dir.iterdir():
+        for f in global_temp_dir[0].iterdir():
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
@@ -490,7 +485,6 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
-    random_val: str,
     anki_mode: str = "window_single_note",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
@@ -507,7 +501,8 @@ def load_anki(
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
-    new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    random_val = str(uuid.uuid4()).split("-")[-1]
+    new_db_path = global_temp_dir[0] / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -944,7 +939,7 @@ def load_local_video(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
-    audio_path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
 
     # load video file
     try:
