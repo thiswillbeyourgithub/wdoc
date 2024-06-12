@@ -940,27 +940,33 @@ def load_local_video(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
-    audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
 
-    # load video file
+    audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
+    assert not Path(audio_path).exists()
+
+    # extract audio from video
     try:
-        audio = pydub.AudioSegment.from_file(path)
-        # extract audio from video
         whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
         t = time.time()
-        audio.export(audio_path, format="mp3")
-        whi(f"Done exporting audio in {time.time()-t:.2f}s")
+        stream = ffmpeg.input(path)
+        stream = ffmpeg.output(stream, audio_path)
+        ffmpeg.run(stream)
+        whi(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        red(f"Error when getting audio from video using pydub. Retrying with ffmpeg. Error: '{err}'")
+        red(f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
 
         try:
             Path(audio_path).unlink(missing_ok=True)
-            stream = ffmpeg.input(path)
-            stream = ffmpeg.output(stream, audio_path)
-            ffmpeg.run(stream)
+            audio = pydub.AudioSegment.from_file(path)
+            # extract audio from video
+            whi(f"Extracting audio from {path} to {audio_path} (this can take some time)")
+            t = time.time()
+            audio.export(audio_path, format="mp3")
+            whi(f"Done extracting audio in {time.time()-t:.2f}s")
         except Exception as err:
             raise Exception(
                 f"Error when getting audio from video using ffmpeg: '{err}'")
+
     assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
 
     # need the hash from the mp3, not video
