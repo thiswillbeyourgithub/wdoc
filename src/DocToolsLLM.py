@@ -30,7 +30,7 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     cache_dir, average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, unlazyload_modules)
+    extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
 
@@ -199,30 +199,9 @@ class DocToolsLLM_class:
                     os.environ[k] = "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
 
             # to be extra safe, let's try to block any remote connection
-            unlazyload_modules()  # unlazy load all modules
-            import socket
-            def is_private(ip) -> bool:
-                "detect if the connection would go to our computer or to a remote server"
-                private_ranges = [
-                    ('10.0.0.0', '10.255.255.255'),
-                    ('172.16.0', '172.31.255.255'),
-                    ('192.168.0.0', '192.168.255.255'),
-                    ('127.0.0.0', '127.255.255.255')
-                ]
-                ip = int.from_bytes(socket.inet_aton(ip), 'big')
-                for start, end in private_ranges:
-                    if int.from_bytes(socket.inet_aton(start), 'big') <= ip <= int.from_bytes(socket.inet_aton(end), 'big'):
-                        return True
-                return False
-            def create_connection(address, *args, **kwargs):
-                "overload socket.create_connection to forbid outgoing connections"
-                ip = socket.gethostbyname(address[0])
-                if not is_private(ip):
-                    raise RuntimeError("Network connections to the open internet are blocked")
-                return socket._original_create_connection(address, *args, **kwargs)
-            socket.socket = lambda *args, **kwargs: None
-            socket._original_create_connection = socket.create_connection
-            socket.create_connection = create_connection
+            disable_internet(
+                allowed=llms_api_bases,
+            )
 
         else:
             os.environ["DOCTOOLS_PRIVATEMODE"] = "false"

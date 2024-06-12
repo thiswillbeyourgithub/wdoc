@@ -5,6 +5,7 @@ Miscellanous functions etc.
 import sys
 from typing import List, Union, Any
 from joblib import Memory
+import socket
 import os
 import urllib
 import json
@@ -397,3 +398,57 @@ def unlazyload_modules():
             continue
         else:
             break
+
+def disable_internet(allowed: dict) -> None:
+    """
+    To be extra sure that no connection goes out of the computer when
+    --private is used, we overload the socket module to make it only able to
+    reach local connection.
+    """
+    red(
+        "Disabling outgoing internet because private mode is on. "
+        "The only allowed IPs from now on are the ones from the "
+        "argument llm_api_bases")
+
+    # unlazy load all modules as otherwise the overloading can happen too late
+    unlazyload_modules()
+
+    # list of certainly allowed IPs
+    allowed_IPs = set(
+        "localhost",
+        "127.0.0.1",
+    )
+    vals = list(allowed.values())
+    vals = [v.split("//")[1].split(":")[0] for v in vals]
+    [allowed_IPs.add(v) for v in vals]
+
+    # list of probably allowed IPs
+    private_ranges = [
+        ('10.0.0.0', '10.255.255.255'),
+        ('172.16.0', '172.31.255.255'),
+        ('192.168.0.0', '192.168.255.255'),
+        ('127.0.0.0', '127.255.255.255')
+    ]
+
+    def is_private(ip) -> bool:
+        "detect if the connection would go to our computer or to a remote server"
+        if ip in allowed_IPs:
+            return True
+        ip = int.from_bytes(socket.inet_aton(ip), 'big')
+        if ip in allowed_IPs:
+            return True
+        for start, end in private_ranges:
+            if int.from_bytes(socket.inet_aton(start), 'big') <= ip <= int.from_bytes(socket.inet_aton(end), 'big'):
+                return True
+        return False
+
+    def create_connection(address, *args, **kwargs):
+        "overload socket.create_connection to forbid outgoing connections"
+        ip = socket.gethostbyname(address[0])
+        if not is_private(ip):
+            raise RuntimeError("Network connections to the open internet are blocked")
+        return socket._original_create_connection(address, *args, **kwargs)
+
+    socket.socket = lambda *args, **kwargs: None
+    socket._original_create_connection = socket.create_connection
+    socket.create_connection = create_connection
