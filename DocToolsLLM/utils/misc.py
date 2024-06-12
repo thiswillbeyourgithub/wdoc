@@ -56,7 +56,7 @@ else:
         return None
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
-cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
+cache_dir = (Path(user_cache_dir()) / "DocToolsLLM").resolve()
 cache_dir.mkdir(exist_ok=True)
 loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
 loaddoc_cache_dir.mkdir(exist_ok=True)
