@@ -25,6 +25,7 @@ from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyl
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
+from .flags import is_debug
 
 
 # rules used to attribute input to proper filetype. For example
@@ -69,7 +70,6 @@ for k, v in inference_rules.items():
 @optional_typecheck
 def batch_load_doc(
     filetype: str,
-    debug: bool,
     task: str,
     backend: str,
     **cli_kwargs) -> List[Document]:
@@ -243,13 +243,12 @@ def batch_load_doc(
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
-    def load_one_doc_wrapped(*args, **doc_kwargs):
-        assert not args
+    def load_one_doc_wrapped(**doc_kwargs):
         try:
             return load_one_doc(**doc_kwargs)
         except Exception as err:
             filetype = doc_kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {doc_kwargs}")
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
             if load_failure == "crash":
                 raise
             elif load_failure == "warn":
@@ -257,7 +256,7 @@ def batch_load_doc(
             else:
                 raise ValueError(load_failure)
 
-    if len(to_load) == 1 or debug:
+    if len(to_load) == 1 or is_debug:
         n_jobs = 1
 
     if len(to_load) > 1:
@@ -271,7 +270,7 @@ def batch_load_doc(
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
-        debug=debug,
+        debug=is_debug,
         **d,
         ) for d in tqdm(
             to_load,

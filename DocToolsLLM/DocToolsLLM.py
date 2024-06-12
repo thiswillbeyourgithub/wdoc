@@ -358,7 +358,6 @@ class DocToolsLLM_class:
         if not load_embeds_from:
             self.loaded_docs = batch_load_doc(
                 filetype=self.filetype,
-                debug=self.debug,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
                 **self.cli_kwargs)
@@ -656,7 +655,6 @@ class DocToolsLLM_class:
             embed_kwargs=self.embed_kwargs,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
-            debug=self.debug,
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
             private=self.private,
