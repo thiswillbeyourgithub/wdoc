@@ -63,16 +63,7 @@ Goose = lazy_import.lazy_class('goose3.Goose')
 prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
-
-# deepgram is the only package that needs python 3.10+ so importing carefully
-try:
-    deepgram = lazy_import.lazy_module("deepgram")
-except Exception as err:
-    if sys.version.split(".")[1] >= 10:
-        raise Exception(f"Error when importing deepgram: '{err}'")
-    elif is_verbose:
-        yel("Warning: trying to import deepgram but deepgram does not "
-            f"work on python version prior to 3.10: '{err}'")
+deepgram = lazy_import.lazy_module("deepgram")
 
 
 try:
@@ -942,7 +933,6 @@ def transcribe_audio_deepgram(
     ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
-    assert int(sys.version.split(".")[1]) >= 10, "deepgram needs python 3.10+"
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use deepgram's API"
     )

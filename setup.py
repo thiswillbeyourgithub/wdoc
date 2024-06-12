@@ -33,6 +33,7 @@ setup(
             'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
         ],
     },
+    python_requires=">=3.10",
     install_requires=[
         'sqlalchemy>=2.0.29',
         'beautifulsoup4>=4.10.0',
