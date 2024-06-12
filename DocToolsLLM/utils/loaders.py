@@ -941,75 +941,35 @@ def load_local_video(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
+    audio_path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
 
-    # extract audio
+    # load video file
     try:
         audio = pydub.AudioSegment.from_file(path)
     except Exception as err:
         raise Exception(f"Error when loading video using pydub: '{err}'")
 
-    video_path = path
-    video_hash = file_hash
-
-    # audio path
-    path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
-    whi(f"Saving audio from {video_path} to {path}")
-    audio.export(path, format="mp3")
-    whi("Done saving audio.")
+    # extract audio from video
+    whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
+    t = time.time()
+    try:
+        audio.export(audio_path, format="mp3")
+    except Exception as err:
+        raise Exception(f"Error when saving the audio from video using pydub: '{err}'")
+    whi(f"Done exporting audio in {time.time()-t:.2f}s")
 
     # need the hash from the mp3, not video
-    file_hash=file_hasher({"path": path})
+    audio_hash=file_hasher({"path": audio_path})
 
-    if audio_backend == "whisper":
-        assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"
-        content = transcribe_audio_whisper(
-            audio_path=path,
-            audio_hash=file_hash,
-            language=whisper_lang,
-            prompt=whisper_prompt,
-        )
-        docs = [
-            Document(
-                page_content=content["text"],
-                metadata={
-                    "source": path,
-                },
-            )
-        ]
-        if "duration" in content["metadata"]:
-            docs[-1].metadata["duration"] = content["metadata"]["duration"]
-        if "language" in content:
-            docs[-1].metadata["language"] = content["language"]
-        elif whisper_lang:
-            docs[-1].metadata["language"] = whisper_lang
+    return load_local_audio(
+        path=audio_path,
+        file_hash=audio_hash,
+        audio_backend=audio_backend,
+        whisper_lang=whisper_lang,
+        whisper_prompt=whisper_prompt,
+        deepgram_kwargs=deepgram_kwargs,
+    )
 
-    elif audio_backend == "deepgram":
-        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
-        content = transcribe_audio_deepgram(
-            audio_path=path,
-            audio_hash=file_hash,
-            deepgram_kwargs=deepgram_kwargs,
-        )
-        assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
-        assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
-        text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
-        assert text, "Empty text from deepgram transcription"
-
-        docs = [
-            Document(
-                page_content=text,
-                metadata={
-                    "source": "local_audio_deepgram",
-                },
-            )
-        ]
-        docs[-1].metadata.update(content["metadata"])
-        docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
-
-    else:
-        raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
-
-    return docs
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["audio_path"])
