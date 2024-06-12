@@ -419,7 +419,12 @@ def disable_internet(allowed: dict) -> None:
         "127.0.0.1",
     ])
     vals = list(allowed.values())
-    vals = [v.split("//")[1].split(":")[0] for v in vals]
+    vals = [
+        v.split("//")[1].split(":")[0]
+        if "//" in v
+        else v.split(":")[0]
+        for v in vals
+    ]
     [allowed_IPs.add(v) for v in vals]
 
     # list of probably allowed IPs
