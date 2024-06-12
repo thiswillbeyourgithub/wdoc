@@ -30,7 +30,7 @@ setup(
     keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq"],
     entry_points={
         'console_scripts': [
-            'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
+            'DocToolsLLM=src.__init__:cli_launcher',
         ],
     },
     install_requires=[
