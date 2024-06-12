@@ -71,7 +71,8 @@ setup(
         'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
         'deepgram-sdk >= 3.2.7',  # audio file
-        "httpx >= 0.27.0",  # to increase deepgram timeout
+        'httpx >= 0.27.0',  # to increase deepgram timeout
+        'pydub >= 0.25.1',  # for extracting audio from local video
 
 
 

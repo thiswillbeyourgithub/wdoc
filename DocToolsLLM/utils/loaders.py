@@ -64,6 +64,7 @@ prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 deepgram = lazy_import.lazy_module("deepgram")
+pydub = lazy_import.lazy_module("pydub")
 
 
 try:
@@ -207,6 +208,9 @@ def load_one_doc(
 
     elif filetype == "local_audio":
         docs = load_local_audio(file_hash=file_hash, **kwargs)
+
+    elif filetype == "local_video":
+        docs = load_local_video(file_hash=file_hash, **kwargs)
 
     elif filetype == "epub":
         docs = load_epub(file_hash=file_hash, **kwargs)
@@ -923,6 +927,49 @@ def load_local_audio(
         raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
 
     return docs
+
+@optional_typecheck
+@loaddoc_cache.cache(ignore=["path"])
+def load_local_video(
+    path: str,
+    file_hash: str,
+    audio_backend: str,
+
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
+    ) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+    audio_path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+
+    # load video file
+    try:
+        audio = pydub.AudioSegment.from_file(path)
+    except Exception as err:
+        raise Exception(f"Error when loading video using pydub: '{err}'")
+
+    # extract audio from video
+    whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
+    t = time.time()
+    try:
+        audio.export(audio_path, format="mp3")
+    except Exception as err:
+        raise Exception(f"Error when saving the audio from video using pydub: '{err}'")
+    whi(f"Done exporting audio in {time.time()-t:.2f}s")
+
+    # need the hash from the mp3, not video
+    audio_hash=file_hasher({"path": audio_path})
+
+    return load_local_audio(
+        path=audio_path,
+        file_hash=audio_hash,
+        audio_backend=audio_backend,
+        whisper_lang=whisper_lang,
+        whisper_prompt=whisper_prompt,
+        deepgram_kwargs=deepgram_kwargs,
+    )
+
 
 @optional_typecheck
 @loaddoc_cache.cache(ignore=["audio_path"])
