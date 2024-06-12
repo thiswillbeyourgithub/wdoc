@@ -64,11 +64,16 @@ prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
 LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 
-if sys.version.split(".")[1] >= 10:  # deepgram is the only package that needs python 3.10+
-    from deepgram import (
-        DeepgramClient,
-        PrerecordedOptions,
-    )
+# deepgram is the only package that needs python 3.10+ so importing carefully
+try:
+    deepgram = lazy_import.lazy_module("deepgram")
+except Exception as err:
+    if sys.version.split(".")[1] >= 10:
+        raise Exception(f"Error when importing deepgram: '{err}'")
+    elif is_verbose:
+        yel("Warning: trying to import deepgram but deepgram does not "
+            f"work on python version prior to 3.10: '{err}'")
+
 
 try:
     import pdftotext
@@ -945,7 +950,7 @@ def transcribe_audio_deepgram(
 
     # client
     try:
-        deepgram = DeepgramClient()
+        client = deepgram.DeepgramClient()
     except Exception as err:
         raise Exception(f"Error when creating deepgram client: '{err}'")
 
@@ -981,7 +986,7 @@ def transcribe_audio_deepgram(
     if "language" in deepgram_kwargs and deepgram_kwargs["language"]:
         del options["detect_language"]
     options.update(deepgram_kwargs)
-    options = PrerecordedOptions(**options)
+    options = deepgram.PrerecordedOptions(**options)
 
     # load file
     with open(audio_path, "rb") as f:
@@ -989,7 +994,7 @@ def transcribe_audio_deepgram(
 
     # get content
     t = time.time()
-    content = deepgram.listen.prerecorded.v("1").transcribe_file(
+    content = client.listen.prerecorded.v("1").transcribe_file(
         payload,
         options,
         timeout=httpx.Timeout(300.0, connect=10.0)  # timeout for large files
