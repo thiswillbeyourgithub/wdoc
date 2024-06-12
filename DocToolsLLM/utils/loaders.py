@@ -443,7 +443,10 @@ def load_youtube_video(
         else:
             raise ValueError(youtube_audio_backend)
 
-        Path(audio_file).unlink(missing_ok=True)
+        for f in Path(audio_file).parent.iterdir():
+            if str(file_name.name) in f.stem:
+                f.unlink()
+        assert not Path(audio_file).exists()
 
     return docs
 
