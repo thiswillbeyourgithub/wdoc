@@ -115,6 +115,7 @@ extra_args_keys = {
     "out_file": str,
     "path": str,
     "source_tag": str,
+    "loading_failure": str,
 }
 extra_args_keys.update(loader_specific_keys)
 

@@ -373,6 +373,11 @@
     * a string that will be added to the document metadata at the
     key `source_tag`. Useful when using filetype combination.
 
+* `--loading_failure`: str, default `crash`
+    * either `crash` or `warn`. Determines what to do with
+    exceptions happening when loading a document. This can be set
+    per document if a recursive filetype is used.
+
 # Runtime flags
 
 * `DOCTOOLS_TYPECHECKING`

@@ -87,6 +87,9 @@ def batch_load_doc(
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
+    load_failure = cli_kwargs["load_failure"] if "load_failure" in cli_kwargs else "crash"
+    assert load_failure in ["crash", "warn"], f"load_failure must be either crash or warn. Not {load_failure}"
+
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype
@@ -247,10 +250,12 @@ def batch_load_doc(
         except Exception as err:
             filetype = doc_kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {doc_kwargs}")
-            if debug:
+            if load_failure == "crash":
                 raise
-            else:
+            elif load_failure == "warn":
                 return None
+            else:
+                raise ValueError(load_failure)
 
     if len(to_load) == 1 or debug:
         n_jobs = 1
