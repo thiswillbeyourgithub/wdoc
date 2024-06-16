@@ -74,13 +74,6 @@ setup(
         'httpx >= 0.27.0',  # to increase deepgram timeout
         'pydub >= 0.25.1',  # extracting audio from local video
         'ffmpeg >= 1.4',  # extracting audio from local video
-
-        # pdf
-        'pdfminer.six >= 20231228',
-        "pillow_heif >= 0.16.0",
-        "pypdfium2 >= 4.30.0",
-        "pymupdf >= 1.24.5",
-        "pdfplumber >= 0.11.1",
     ],
     extra_require={
     'optional_feature': [
@@ -88,6 +81,14 @@ setup(
         'fasttext-langdetect >= 1.0.5',
         'langdetect >= 1.0.9',
         'pdftotext >= 2.2.2',  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
+
+        # pdf
+        'pdfminer.six >= 20231228',
+        "pillow_heif >= 0.16.0",
+        "pypdfium2 >= 4.30.0",
+        "pymupdf >= 1.24.5",
+        "pdfplumber >= 0.11.1",
+        "pdf2image >= 1.17.0",
         ]
     },
     cmdclass={
