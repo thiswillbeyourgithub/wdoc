@@ -1344,13 +1344,19 @@ def load_pdf(
     ) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
+    name = Path(path).name
+    if len(name) > 30:
+        name = name[:15] + "..." + name[-15:]
 
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
 
+    pbar = tqdm(total=len(pdf_loaders), desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
+        pbar.desc = f"Parsing PDF {name} with {loader_name}"
+        pbar.update(1)
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
@@ -1393,6 +1399,7 @@ def load_pdf(
         except Exception as err:
             yel(f"Error when parsing '{path}' with {loader_name}: {err}")
 
+    pbar.close()
     assert probs.keys(), f"No pdf parser succedded to parse {path}"
 
     # no loader worked, exiting
