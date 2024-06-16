@@ -33,7 +33,7 @@ def do_summarize(
     total_cost = 0
 
     assert "[PROGRESS]" in metadata
-    for ird, rd in tqdm(enumerate(docs), desc="Summarising splits"):
+    for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
 
         messages = BASE_SUMMARY_PROMPT.format_messages(
@@ -45,6 +45,8 @@ def do_summarize(
         )
         output = llm._generate(messages)
         assert len(output.generations) == 1
+        finish = output.generations[0].generation_info["finish_reason"]
+        assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
         out = output.generations[0].text
         new_p = output.llm_output["token_usage"]["prompt_tokens"]
         new_c = output.llm_output["token_usage"]["completion_tokens"]

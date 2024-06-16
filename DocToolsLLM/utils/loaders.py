@@ -15,7 +15,7 @@ import uuid
 import tempfile
 import requests
 import shutil
-from pathlib import Path
+from pathlib import Path, PosixPath
 import re
 from tqdm import tqdm
 import json
@@ -42,12 +42,12 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import (loaddoc_cache, html_to_text, hasher, cache_dir,
+from .misc import (loaddoc_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
-from .verbose_flag import is_verbose, is_linux
+from .flags import is_verbose, is_linux
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -65,6 +65,7 @@ LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
 litellm = lazy_import.lazy_module("litellm")
 deepgram = lazy_import.lazy_module("deepgram")
 pydub = lazy_import.lazy_module("pydub")
+ffmpeg = lazy_import.lazy_module("ffmpeg")
 
 
 try:
@@ -96,17 +97,19 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 
 pdf_loaders = {
-    "pdftotext": None,  # optional support
     "PDFMiner": PDFMinerLoader,
     "PyPDFLoader": PyPDFLoader,
-    "Unstructured_elements_hires": partial(
+    "Unstructured_fast": partial(
         UnstructuredPDFLoader,
-        mode="elements",
-        strategy="hi_res",
+        strategy="fast",
         post_processors=[clean_extra_whitespace],
         infer_table_structure=True,
         # languages=["fr"],
     ),
+    "PyPDFium2": PyPDFium2Loader,
+    "PyMuPDF": PyMuPDFLoader,
+    "PdfPlumber": PDFPlumberLoader,
+    "pdftotext": None,  # optional support, see below
     "Unstructured_elements_fast": partial(
         UnstructuredPDFLoader,
         mode="elements",
@@ -122,16 +125,14 @@ pdf_loaders = {
         infer_table_structure=True,
         # languages=["fr"],
     ),
-    "Unstructured_fast": partial(
+    "Unstructured_elements_hires": partial(
         UnstructuredPDFLoader,
-        strategy="fast",
+        mode="elements",
+        strategy="hi_res",
         post_processors=[clean_extra_whitespace],
         infer_table_structure=True,
         # languages=["fr"],
     ),
-    "PyPDFium2": PyPDFium2Loader,
-    "PyMuPDF": PyMuPDFLoader,
-    "PdfPlumber": PDFPlumberLoader,
 }
 
 # pdftotext is kinda weird to install on windows so support it
@@ -147,11 +148,14 @@ if "pdftotext" in globals():
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
 
+global_temp_dir = [None]  # will be replaced when load_one_doc is called
+
 
 @optional_typecheck
 def load_one_doc(
     task: str,
     debug: bool,
+    temp_dir: PosixPath,
     filetype: str,
     file_hash: str,
     source_tag: Optional[str] = None,
@@ -161,6 +165,8 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     text_splitter = get_splitter(task)
+
+    assert global_temp_dir[0] is temp_dir
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
@@ -181,17 +187,7 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        random_val = str(uuid.uuid4()).split("-")[-1]
-        try:
-            docs = load_anki(random_val=random_val, **kwargs)
-        except:
-            # delete the failed db files from cache
-            name = kwargs['anki_profile'].replace(" ", "_")
-            new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
-            new_db_path.unlink(missing_ok=True)
-            Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
-            Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
-            raise
+        docs = load_anki(**kwargs)
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
@@ -374,7 +370,7 @@ def load_youtube_video(
         )
     else:
         whi("Downloading audio from youtube")
-        file_name = cache_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = global_temp_dir[0] / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -387,7 +383,7 @@ def load_youtube_video(
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
         candidate = []
-        for f in cache_dir.iterdir():
+        for f in global_temp_dir[0].iterdir():
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
@@ -443,7 +439,10 @@ def load_youtube_video(
         else:
             raise ValueError(youtube_audio_backend)
 
-        Path(audio_file).unlink(missing_ok=True)
+        for f in Path(audio_file).parent.iterdir():
+            if str(file_name.name) in f.stem:
+                f.unlink()
+        assert not Path(audio_file).exists()
 
     return docs
 
@@ -487,7 +486,6 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
-    random_val: str,
     anki_mode: str = "window_single_note",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
@@ -504,7 +502,8 @@ def load_anki(
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
-    new_db_path = cache_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    random_val = str(uuid.uuid4()).split("-")[-1]
+    new_db_path = global_temp_dir[0] / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -941,22 +940,34 @@ def load_local_video(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
-    audio_path = cache_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
 
-    # load video file
-    try:
-        audio = pydub.AudioSegment.from_file(path)
-    except Exception as err:
-        raise Exception(f"Error when loading video using pydub: '{err}'")
+    audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
+    assert not Path(audio_path).exists()
 
     # extract audio from video
-    whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
-    t = time.time()
     try:
-        audio.export(audio_path, format="mp3")
+        whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
+        t = time.time()
+        stream = ffmpeg.input(path)
+        stream = ffmpeg.output(stream, audio_path)
+        ffmpeg.run(stream)
+        whi(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        raise Exception(f"Error when saving the audio from video using pydub: '{err}'")
-    whi(f"Done exporting audio in {time.time()-t:.2f}s")
+        red(f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
+
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+            audio = pydub.AudioSegment.from_file(path)
+            # extract audio from video
+            whi(f"Extracting audio from {path} to {audio_path} (this can take some time)")
+            t = time.time()
+            audio.export(audio_path, format="mp3")
+            whi(f"Done extracting audio in {time.time()-t:.2f}s")
+        except Exception as err:
+            raise Exception(
+                f"Error when getting audio from video using ffmpeg: '{err}'")
+
+    assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
 
     # need the hash from the mp3, not video
     audio_hash=file_hasher({"path": audio_path})
@@ -1333,18 +1344,24 @@ def load_pdf(
     ) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
+    name = Path(path).name
+    if len(name) > 30:
+        name = name[:15] + "..." + name[-15:]
 
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
 
+    pbar = tqdm(total=len(pdf_loaders), desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
+        pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
             content = _pdf_loader(loader_name, path, file_hash)
+            pbar.update(1)
 
             if "unstructured" in loader_name.lower():
                 # remove empty lines. frequent in pdfs
@@ -1363,7 +1380,7 @@ def load_pdf(
                 # only consider it okay if decent quality
                 probs[loader_name] = prob
                 loaded_docs[loader_name] = docs
-                if prob > 0.90:
+                if prob > 0.95:
                     # select this one as its bound to be okay
                     whi(
                         f"Early stopping of PDF parsing because {loader_name} has prob {prob} for {path}"
@@ -1381,7 +1398,10 @@ def load_pdf(
                 break
         except Exception as err:
             yel(f"Error when parsing '{path}' with {loader_name}: {err}")
+            if "content" not in locals():
+                pbar.update(1)
 
+    pbar.close()
     assert probs.keys(), f"No pdf parser succedded to parse {path}"
 
     # no loader worked, exiting

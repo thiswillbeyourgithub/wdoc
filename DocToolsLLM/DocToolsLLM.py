@@ -75,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.21"
+    VERSION: str = "0.23"
 
     #@optional_typecheck
     @typechecked
@@ -358,7 +358,6 @@ class DocToolsLLM_class:
         if not load_embeds_from:
             self.loaded_docs = batch_load_doc(
                 filetype=self.filetype,
-                debug=self.debug,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
                 **self.cli_kwargs)
@@ -437,17 +436,17 @@ class DocToolsLLM_class:
         full_tkn = sum(list(docs_tkn_cost.values()))
         red("Token price of each document:")
         for k, v in docs_tkn_cost.items():
-            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5 / 1000
+            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5
             red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
         red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
         # a conservative estimate is that it takes 4 times the number
         # of tokens of a document to summarize it
         price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
-        estimate_dol = full_tkn / 1000 * price * 1.1
+        estimate_dol = full_tkn * price * 1.1
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
-                estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
+                estimate_dol += full_tkn * ((2/5) ** i) * price * 1.1
         whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
@@ -656,7 +655,6 @@ class DocToolsLLM_class:
             embed_kwargs=self.embed_kwargs,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
-            debug=self.debug,
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
             private=self.private,
@@ -1190,6 +1188,8 @@ class DocToolsLLM_class:
                 ) -> List[str]:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                     out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
+                    assert all(r == "stop" for r in reasons), f"Unexpected generation finish_reason: '{reasons}'"
                     outputs = [gen.text for gen in out.generations]
                     assert outputs, "No generations found by query eval llm"
                     outputs = [parse_eval_output(o) for o in outputs]
@@ -1214,6 +1214,8 @@ class DocToolsLLM_class:
                     for out in outs:
                         assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                         outputs.append(out.generations[0].text)
+                        finish_reason = out.generations[0].generation_info["finish_reason"]
+                        assert finish_reason == "stop", f"unexpected finish_reason: '{finish}'"
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
                     assert outputs, "No generations found by query eval llm"

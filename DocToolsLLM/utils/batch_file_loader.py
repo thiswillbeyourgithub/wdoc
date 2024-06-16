@@ -6,6 +6,8 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
+import shutil
+import uuid
 import re
 from tqdm import tqdm
 from functools import cache as memoizer
@@ -21,10 +23,11 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys
+from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
-from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex
+from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, global_temp_dir
+from .flags import is_debug
 
 
 # rules used to attribute input to proper filetype. For example
@@ -69,7 +72,6 @@ for k, v in inference_rules.items():
 @optional_typecheck
 def batch_load_doc(
     filetype: str,
-    debug: bool,
     task: str,
     backend: str,
     **cli_kwargs) -> List[Document]:
@@ -86,6 +88,9 @@ def batch_load_doc(
 
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
+
+    load_failure = cli_kwargs["load_failure"] if "load_failure" in cli_kwargs else "crash"
+    assert load_failure in ["crash", "warn"], f"load_failure must be either crash or warn. Not {load_failure}"
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
@@ -169,6 +174,8 @@ def batch_load_doc(
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
+    # filter out the usuall unexpected
+    all_unexp_keys = [a for a in all_unexp_keys if a not in ["out_file"]]
     if all_unexp_keys:
         red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
 
@@ -232,32 +239,39 @@ def batch_load_doc(
                 if doc["load_functions"]:
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
 
-    # if in private mode, check that we won't try to use whisper
-    if os.environ["DOCTOOLS_PRIVATEMODE"] == "true":
-        assert not any(d["filetype"] == "local_audio" for d in to_load), (
-            "Private mode is set but trying to use whisper"
-        )
-
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
-    def load_one_doc_wrapped(*args, **doc_kwargs):
-        assert not args
+    def load_one_doc_wrapped(**doc_kwargs):
         try:
             return load_one_doc(**doc_kwargs)
         except Exception as err:
             filetype = doc_kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {args} ; {doc_kwargs}")
-            if debug:
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
+            if load_failure == "crash":
                 raise
-            else:
+            elif load_failure == "warn":
                 return None
+            else:
+                raise ValueError(load_failure)
 
-    if len(to_load) == 1 or debug:
+    if len(to_load) == 1 or is_debug:
         n_jobs = 1
 
     if len(to_load) > 1:
         for tl in to_load:
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
+
+    # dir name where to store temporary files
+    load_temp_name="file_load_" + str(uuid.uuid4())
+    # delete previous temp dir
+    for f in cache_dir.iterdir():
+        f = f.resolve()
+        if f.is_dir() and f.name.startswith("file_load_"):
+            assert str(cache_dir.absolute()) in str(f.absolute())
+            shutil.rmtree(f)
+    temp_dir = cache_dir / load_temp_name
+    temp_dir.mkdir(exist_ok=False)
+    global_temp_dir[0] = temp_dir
 
     docs = []
     t_load = time.time()
@@ -266,7 +280,8 @@ def batch_load_doc(
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
-        debug=debug,
+        debug=is_debug,
+        temp_dir=temp_dir,
         **d,
         ) for d in tqdm(
             to_load,
@@ -280,7 +295,7 @@ def batch_load_doc(
     if n_failed:
         red(f"Number of failed documents: {n_failed}")
     [docs.extend(d) for d in doc_lists if d is not None]
-    assert not None in docs
+    assert None not in docs
     assert docs, "No documents were succesfully loaded!"
 
     size = sum([get_tkn_length(d.page_content) for d in docs])
@@ -288,6 +303,10 @@ def batch_load_doc(
         raise Exception(
             f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
         )
+
+    # delete temp dir
+    shutil.rmtree(temp_dir)
+    assert not temp_dir.exists()
 
     return docs
 

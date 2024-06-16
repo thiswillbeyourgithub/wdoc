@@ -14,11 +14,15 @@ class PostInstallCommand(install):
             print(f"Error when installing playwright: '{err}'")
 
 
+with open("README.md", "r") as readme:
+    long_description = readme.read()
+
 setup(
     name="DocToolsLLM",
-    version="0.21",
+    version="0.23",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
-    long_description="A perfect RAG and AI summary setup for my needs. All LLM supported. Virtually any input filetypes including epub, youtube_playlist, pdf, etc",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
     packages=find_packages(),
     classifiers=[
@@ -70,19 +74,25 @@ setup(
         'goose3 >= 3.1.16',  # url
         'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
-        'deepgram-sdk >= 3.2.7',  # audio file
+        'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
-        'pydub >= 0.25.1',  # for extracting audio from local video
-
-
-
+        'pydub >= 0.25.1',  # extracting audio from local video
+        'ffmpeg >= 1.4',  # extracting audio from local video
     ],
     extra_require={
-    'optionnal_feature': [
+    'optional_feature': [
         # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
         'fasttext-langdetect >= 1.0.5',
         'langdetect >= 1.0.9',
         'pdftotext >= 2.2.2',  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
+
+        # pdf
+        'pdfminer.six >= 20231228',
+        "pillow_heif >= 0.16.0",
+        "pypdfium2 >= 4.30.0",
+        "pymupdf >= 1.24.5",
+        "pdfplumber >= 0.11.1",
+        "pdf2image >= 1.17.0",
         ]
     },
     cmdclass={

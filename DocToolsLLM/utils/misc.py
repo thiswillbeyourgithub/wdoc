@@ -25,7 +25,7 @@ from langchain_core.runnables import chain
 
 from .logger import red
 from .typechecker import optional_typecheck
-from .verbose_flag import is_verbose
+from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -56,7 +56,7 @@ else:
         return None
 
 assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
-cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
+cache_dir = (Path(user_cache_dir()) / "DocToolsLLM").resolve()
 cache_dir.mkdir(exist_ok=True)
 loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
 loaddoc_cache_dir.mkdir(exist_ok=True)
@@ -115,6 +115,7 @@ extra_args_keys = {
     "out_file": str,
     "path": str,
     "source_tag": str,
+    "loading_failure": str,
 }
 extra_args_keys.update(loader_specific_keys)
 
@@ -294,9 +295,9 @@ def get_splitter(
     ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
 
-    max_input_tokens = 4096
+    max_tokens = 4096
     try:
-        max_input_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
+        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
     except Exception as err:
         red(f"Failed to get max_token limit for model {modelname}: '{err}'")
 
@@ -305,21 +306,21 @@ def get_splitter(
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(3 / 4 * max_input_tokens),  # default 4000
+            chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
             length_function=model_tkn_length,
         )
     elif task in ["summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(1 / 2 * max_input_tokens),
+            chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
             length_function=model_tkn_length,
         )
     elif task == "recursive_summary":
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(1 / 4 * max_input_tokens),
+            chunk_size=int(1 / 4 * max_tokens),
             chunk_overlap=300,
             length_function=model_tkn_length,
         )
@@ -358,20 +359,14 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
         )
 
     # check if language check is above a threshold
-    prob = [language_detector(docs[0].page_content.replace("\n", "<br>"))]
-    if prob[0] is None:
+    probs = [
+        language_detector(d.page_content.replace("\n", "<br>"))
+        for d in docs
+    ]
+    if probs[0] is None:
         # bypass if language_detector not defined
         return 1
-    if len(docs) > 1:
-        prob.append(language_detector(docs[1].page_content.replace("\n",
-                                "<br>")))
-        if len(docs) > 2:
-            prob.append(
-                    language_detector(
-                        docs[len(docs) // 2].page_content.replace("\n", "<br>")
-                    )
-            )
-    prob = max(prob)
+    prob = sum(probs) / len(probs)
     if prob <= min_lang_prob:
         red(
             f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"

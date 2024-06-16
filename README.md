@@ -74,7 +74,6 @@
     * Include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
     * Add a gradio GUI.
 * include the possible whisper/deepgram extra expenses.
-* upload DocToolsLLM on PyPI.
 * Add support for user defined loaders.
 * Automatically caption document images using an LLM, especially nice for anki cards.
 

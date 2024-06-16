@@ -30,6 +30,7 @@ from langchain_openai import OpenAIEmbeddings
 from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
+from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -75,7 +76,6 @@ def load_embeddings(
     embed_kwargs: dict,
     load_embeds_from: Optional[str],
     save_embeds_as: str,
-    debug: bool,
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
@@ -91,7 +91,7 @@ def load_embeddings(
     else:
         instruct = False
 
-    if debug:
+    if is_verbose:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
         assert not private, f"Set private but tried to use openai embeddings"
