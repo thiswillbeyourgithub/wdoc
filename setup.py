@@ -6,12 +6,21 @@ import sys
 class PostInstallCommand(install):
     def run(self):
         install.run(self)
+
+        # do "playwright install"
         try:
             subprocess.check_call(
                     [sys.executable, '-m', 'playwright', 'install']
                 )
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
+
+        try:
+            subprocess.check_call(
+                    [sys.executable, '-m', 'pip', 'install', '-U", "git+https://github.com/ytdl-org/youtube-dl.git'],
+                )
+        except Exception as err:
+            print(f"Error when pip updating youtube_dl: '{err}'")
 
 
 with open("README.md", "r") as readme:
@@ -72,7 +81,7 @@ setup(
         'ankipandas>=0.3.13',  # anki
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
-        'youtube_dl @ git+https://github.com/ytdl-org/youtube-dl.git',  # youtube
+        "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
         'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
         'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
