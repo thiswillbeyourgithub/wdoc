@@ -1356,12 +1356,12 @@ def load_pdf(
     pbar = tqdm(total=len(pdf_loaders), desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
-        pbar.update(1)
         try:
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
             content = _pdf_loader(loader_name, path, file_hash)
+            pbar.update(1)
 
             if "unstructured" in loader_name.lower():
                 # remove empty lines. frequent in pdfs
@@ -1398,6 +1398,8 @@ def load_pdf(
                 break
         except Exception as err:
             yel(f"Error when parsing '{path}' with {loader_name}: {err}")
+            if "content" not in locals():
+                pbar.update(1)
 
     pbar.close()
     assert probs.keys(), f"No pdf parser succedded to parse {path}"
