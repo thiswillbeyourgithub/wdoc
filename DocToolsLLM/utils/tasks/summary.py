@@ -35,6 +35,8 @@ def do_summarize(
     assert "[PROGRESS]" in metadata
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
+        if ird > 0:
+            assert llm.callbacks[0].total_tokens > 0
 
         messages = BASE_SUMMARY_PROMPT.format_messages(
             text=rd.page_content,
