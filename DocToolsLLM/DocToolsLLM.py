@@ -436,17 +436,17 @@ class DocToolsLLM_class:
         full_tkn = sum(list(docs_tkn_cost.values()))
         red("Token price of each document:")
         for k, v in docs_tkn_cost.items():
-            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5 / 1000
+            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5
             red(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
         red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
         # a conservative estimate is that it takes 4 times the number
         # of tokens of a document to summarize it
         price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
-        estimate_dol = full_tkn / 1000 * price * 1.1
+        estimate_dol = full_tkn * price * 1.1
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
-                estimate_dol += full_tkn / 1000 * ((2/5) ** i) * price * 1.1
+                estimate_dol += full_tkn * ((2/5) ** i) * price * 1.1
         whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
