@@ -14,11 +14,15 @@ class PostInstallCommand(install):
             print(f"Error when installing playwright: '{err}'")
 
 
+with open("README.md", "r") as readme:
+    long_description = readme.read()
+
 setup(
     name="DocToolsLLM",
     version="0.23",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
-    long_description="A perfect RAG and AI summary setup for my needs. All LLM supported. Virtually any input filetypes including epub, youtube_playlist, pdf, etc",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
     packages=find_packages(),
     classifiers=[
