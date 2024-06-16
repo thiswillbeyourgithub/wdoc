@@ -76,7 +76,7 @@ setup(
         'ffmpeg >= 1.4',  # extracting audio from local video
     ],
     extra_require={
-    'optionnal_feature': [
+    'optional_feature': [
         # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
         'fasttext-langdetect >= 1.0.5',
         'langdetect >= 1.0.9',
