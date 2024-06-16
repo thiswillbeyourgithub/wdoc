@@ -53,6 +53,11 @@ def do_summarize(
         total_tokens += new_p + new_c
         total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
 
+        # the callback need to be updated manually when _generate is called
+        llm.callbacks[0].prompt_tokens += new_p
+        llm.callbacks[0].completion_tokens += new_c
+        llm.callbacks[0].total_tokens += new_p + new_c
+
         output_lines = out.rstrip().splitlines()
 
         for il, ll in enumerate(output_lines):
