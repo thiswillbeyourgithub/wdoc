@@ -97,7 +97,6 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 
 pdf_loaders = {
-    "pdftotext": None,  # optional support, see below
     "PDFMiner": PDFMinerLoader,
     "PyPDFLoader": PyPDFLoader,
     "Unstructured_fast": partial(
@@ -110,6 +109,7 @@ pdf_loaders = {
     "PyPDFium2": PyPDFium2Loader,
     "PyMuPDF": PyMuPDFLoader,
     "PdfPlumber": PDFPlumberLoader,
+    "pdftotext": None,  # optional support, see below
     "Unstructured_elements_fast": partial(
         UnstructuredPDFLoader,
         mode="elements",
