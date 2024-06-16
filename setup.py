@@ -74,6 +74,7 @@ setup(
         'httpx >= 0.27.0',  # to increase deepgram timeout
         'pydub >= 0.25.1',  # extracting audio from local video
         'ffmpeg >= 1.4',  # extracting audio from local video
+        'pdfminer.six >= 20231228',  # pdf
     ],
     extra_require={
     'optional_feature': [
