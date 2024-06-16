@@ -295,9 +295,9 @@ def get_splitter(
     ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
 
-    max_input_tokens = 4096
+    max_tokens = 4096
     try:
-        max_input_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
+        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
     except Exception as err:
         red(f"Failed to get max_token limit for model {modelname}: '{err}'")
 
@@ -306,21 +306,21 @@ def get_splitter(
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(3 / 4 * max_input_tokens),  # default 4000
+            chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
             length_function=model_tkn_length,
         )
     elif task in ["summarize_then_query", "summarize"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(1 / 2 * max_input_tokens),
+            chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
             length_function=model_tkn_length,
         )
     elif task == "recursive_summary":
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
-            chunk_size=int(1 / 4 * max_input_tokens),
+            chunk_size=int(1 / 4 * max_tokens),
             chunk_overlap=300,
             length_function=model_tkn_length,
         )
