@@ -75,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.24"
+    VERSION: str = "0.27"
 
     #@optional_typecheck
     @typechecked
@@ -442,10 +442,10 @@ class DocToolsLLM_class:
         red(f"Total number of tokens in documents to summarize: '{full_tkn}'")
         # use an heuristic to estimate the price to summarize
         adj_price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
-        estimate_dol = full_tkn * adj_price / 100
+        estimate_dol = full_tkn * adj_price / 100 * 1.2
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
-                estimate_dol += full_tkn * ((2/5) ** i) * adj_price / 100
+                estimate_dol += full_tkn * ((2/5) ** i) * adj_price / 100 * 1.2
         whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
@@ -646,6 +646,12 @@ class DocToolsLLM_class:
 
         red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
         red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+
+        assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+        llmcallback = self.llm.callbacks[0]
+        total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
+        if llmcallback.total_tokens != results['doc_total_tokens']:
+            red(f"Discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
 
     def prepare_query_task(self):
         # load embeddings for querying
