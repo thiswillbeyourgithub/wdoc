@@ -1374,7 +1374,7 @@ def load_pdf(
                 # only consider it okay if decent quality
                 probs[loader_name] = prob
                 loaded_docs[loader_name] = docs
-                if prob > 0.90:
+                if prob > 0.95:
                     # select this one as its bound to be okay
                     whi(
                         f"Early stopping of PDF parsing because {loader_name} has prob {prob} for {path}"
