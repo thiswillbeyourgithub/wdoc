@@ -647,6 +647,11 @@ class DocToolsLLM_class:
         red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
         red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
 
+        assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+        llmcallback = self.llm.callbacks[0]
+        total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
+        yel(f"Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+
     def prepare_query_task(self):
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
