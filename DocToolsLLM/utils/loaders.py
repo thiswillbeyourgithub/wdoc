@@ -97,17 +97,6 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 
 pdf_loaders = {
-    "pdftotext": None,  # optional support
-    "PDFMiner": PDFMinerLoader,
-    "PyPDFLoader": PyPDFLoader,
-    "Unstructured_elements_hires": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
     "Unstructured_elements_fast": partial(
         UnstructuredPDFLoader,
         mode="elements",
@@ -116,13 +105,9 @@ pdf_loaders = {
         infer_table_structure=True,
         # languages=["fr"],
     ),
-    "Unstructured_hires": partial(
-        UnstructuredPDFLoader,
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    "pdftotext": None,  # optional support, see below
+    "PDFMiner": PDFMinerLoader,
+    "PyPDFLoader": PyPDFLoader,
     "Unstructured_fast": partial(
         UnstructuredPDFLoader,
         strategy="fast",
@@ -133,6 +118,21 @@ pdf_loaders = {
     "PyPDFium2": PyPDFium2Loader,
     "PyMuPDF": PyMuPDFLoader,
     "PdfPlumber": PDFPlumberLoader,
+    "Unstructured_hires": partial(
+        UnstructuredPDFLoader,
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "Unstructured_elements_hires": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["fr"],
+    ),
 }
 
 # pdftotext is kinda weird to install on windows so support it
