@@ -650,7 +650,8 @@ class DocToolsLLM_class:
         assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
         total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
-        yel(f"Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+        if llmcallback.total_tokens != results['doc_total_tokens']:
+            red(f"Discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
 
     def prepare_query_task(self):
         # load embeddings for querying
