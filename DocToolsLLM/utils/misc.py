@@ -359,20 +359,14 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
         )
 
     # check if language check is above a threshold
-    prob = [language_detector(docs[0].page_content.replace("\n", "<br>"))]
-    if prob[0] is None:
+    probs = [
+        language_detector(d.page_content.replace("\n", "<br>"))
+        for d in docs
+    ]
+    if probs[0] is None:
         # bypass if language_detector not defined
         return 1
-    if len(docs) > 1:
-        prob.append(language_detector(docs[1].page_content.replace("\n",
-                                "<br>")))
-        if len(docs) > 2:
-            prob.append(
-                    language_detector(
-                        docs[len(docs) // 2].page_content.replace("\n", "<br>")
-                    )
-            )
-    prob = max(prob)
+    prob = sum(probs) / len(probs)
     if prob <= min_lang_prob:
         red(
             f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
