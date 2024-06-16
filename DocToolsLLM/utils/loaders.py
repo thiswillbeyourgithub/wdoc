@@ -5,6 +5,7 @@ The imports are taking a substantial amount of time so loaders.py is
 lazily loaded.
 """
 
+import signal
 import sys
 import os
 import time
@@ -1353,6 +1354,11 @@ def load_pdf(
     # probability
     probs = {}
 
+    def timeout_handler(signum, frame):
+        "crash if a pdf loader is taking too much time"
+        raise TimeoutError
+    pdf_timeout = 5 * 60  # in seconds
+
     pbar = tqdm(total=len(pdf_loaders), desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
@@ -1360,7 +1366,11 @@ def load_pdf(
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(pdf_timeout)
             content = _pdf_loader(loader_name, path, file_hash)
+            signal.alarm(0)
+
             pbar.update(1)
 
             if "unstructured" in loader_name.lower():
@@ -1397,6 +1407,7 @@ def load_pdf(
                 # time on running all the others
                 break
         except Exception as err:
+            signal.alarm(0)
             yel(f"Error when parsing '{path}' with {loader_name}: {err}")
             if "content" not in locals():
                 pbar.update(1)

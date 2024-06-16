@@ -28,7 +28,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.23",
+    version="0.24",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
     long_description=long_description,
     long_description_content_type="text/markdown",

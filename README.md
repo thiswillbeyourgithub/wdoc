@@ -120,8 +120,9 @@
 
 ## Getting started
 *Tested on python 3.10 and 3.11.7*
-* `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
-* Or for the supposedly more stable branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
+* `pip install -U DocToolsLLM`
+* Or from the git `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@dev`
+* Or from the (supposedly more stable) `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/DocToolsLLM.git@main`
 * Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
 * Launch using `DocToolsLLM query [ARGS]`
 * *Note: if for some reason this fails, maybe try with `python -m DocToolsLLM`. And if everything fails, clone this repo and try again after `cd` inside it.*
