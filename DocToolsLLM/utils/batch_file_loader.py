@@ -263,10 +263,10 @@ def batch_load_doc(
 
     # dir name where to store temporary files
     load_temp_name="file_load_" + str(uuid.uuid4())
-    # delete previous temp dir
+    # delete previous temp dir if it's several days old
     for f in cache_dir.iterdir():
         f = f.resolve()
-        if f.is_dir() and f.name.startswith("file_load_"):
+        if f.is_dir() and f.name.startswith("file_load_") and (abs(time.time() - f.stat().st_mtime) > 2 * 86400):
             assert str(cache_dir.absolute()) in str(f.absolute())
             shutil.rmtree(f)
     temp_dir = cache_dir / load_temp_name
