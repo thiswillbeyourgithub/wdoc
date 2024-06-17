@@ -646,14 +646,15 @@ class DocToolsLLM_class:
             if "out_file" in self.cli_kwargs:
                 for nrecur, sum in recursive_summaries.items():
                     outfile = Path(self.cli_kwargs["out_file"])
-                    if nrecur > 0:  # also store intermediate summaries if present
+                    if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
+                        # also store intermediate summaries if present
                         outfile = outfile.parent / (outfile.stem + f".{nrecur}.md")
 
                     with open(str(outfile), "a") as f:
-                        if outfile.exists():
+                        if outfile.exists() and outfile.read_text().strip():
                             f.write("\n\n\n")
                         f.write(header)
-                        for bulletpoint in summary.split("\n"):
+                        for bulletpoint in sum.split("\n"):
                             f.write("\n")
                             bulletpoint = bulletpoint.rstrip()
                             # # make sure the line begins with a bullet point
