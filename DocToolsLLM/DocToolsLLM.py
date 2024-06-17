@@ -654,6 +654,9 @@ class DocToolsLLM_class:
                         if outfile.exists() and outfile.read_text().strip():
                             f.write("\n\n\n")
                         f.write(header)
+                        if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
+                            f.write(f"\n    Current recursion number: {nrecur}")
+
                         for bulletpoint in sum.split("\n"):
                             f.write("\n")
                             bulletpoint = bulletpoint.rstrip()
