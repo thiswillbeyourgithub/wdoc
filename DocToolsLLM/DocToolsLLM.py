@@ -463,11 +463,34 @@ class DocToolsLLM_class:
                     # 532: logit_val,  # ' -'
                     # 9: logit_val,  # '*'
                     # 1635: logit_val,  # ' *'
-                    197: logit_val,  # '\t'
+                    # 197: logit_val,  # '\t'
                     334: logit_val,  # '**'
                     # 25: logit_val,  # ':'
                     # 551: logit_val,  # ' :'
                     # 13: -1,  # '.'
+                    # logit bias for indentation, the number of space
+                    257: logit_val,      # "    "
+                    260: logit_val,      # "        "
+                    1835: logit_val,     # "            "
+                    338: logit_val,      # "                "
+                    3909: logit_val,     # "                    "
+                    5218: logit_val,     # "                        "
+                    6663: logit_val,     # "                            "
+                    792: logit_val,      # "                                "
+                    10812: logit_val,    # "                                    "
+                    13137: logit_val,    # "                                        "
+                    15791: logit_val,    # "                                            "
+                    19273: logit_val,    # "                                                "
+                    25343: logit_val,    # "                                                    "
+                    29902: logit_val,    # "                                                        "
+                    39584: logit_val,    # "                                                            "
+                    5341: logit_val,     # "                                                                "
+                    52168: logit_val,    # "                                                                    "
+                    38244: logit_val,    # "                                                                        "
+                    56899: logit_val,    # "                                                                            "
+                    98517: logit_val,    # "                                                                                "
+
+
                     }
             self.llm.model_kwargs["frequency_penalty"] = 0.5
             self.llm.model_kwargs["temperature"] = 0.0
