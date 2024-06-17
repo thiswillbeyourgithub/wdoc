@@ -19,7 +19,7 @@ from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
 
-from .logger import whi, red
+from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
