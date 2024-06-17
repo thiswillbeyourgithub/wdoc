@@ -271,7 +271,7 @@ def model_name_matcher(model: str) -> str:
     # warn if ambiguous
     if len(match) > 1:
         red(f"Several match found for model named '{model}': '{','.join(match)}'\nWill use {best_match}")
-    red(f"Maching name for model with heuristics: {model}->{best_match}")
+    red(f"Matching name for model with heuristics: {model}->{best_match}")
     return best_match
 
 
