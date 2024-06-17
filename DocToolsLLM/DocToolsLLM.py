@@ -664,12 +664,6 @@ class DocToolsLLM_class:
                         for bulletpoint in sum.split("\n"):
                             f.write("\n")
                             bulletpoint = bulletpoint.rstrip()
-                            # # make sure the line begins with a bullet point
-                            # if not bulletpoint.lstrip().startswith("- "):
-                            #     begin_space = re.search(r"^(\s+)", bulletpoint)
-                            #     if not begin_space:
-                            #         begin_space = [""]
-                            #     bulletpoint = begin_space[0] + "- " + bulletpoint
                             f.write(f"    {bulletpoint}")
 
             return {
