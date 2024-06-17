@@ -558,6 +558,7 @@ class DocToolsLLM_class:
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
             n_recursion_done = 0
+            recursive_summaries = {n_recursion_done: summary}
             if self.summary_n_recursion > 0:
                 summary_text = summary
 
@@ -601,6 +602,8 @@ class DocToolsLLM_class:
                     doc_total_cost += new_doc_total_cost
                     n_recursion_done += 1
 
+                    recursive_summaries[n_recursion_done] = summary_text
+
                     # clean text again to compute the reading length
                     sp = summary_text.split("\n")
                     for i, l in enumerate(sp):
@@ -641,20 +644,26 @@ class DocToolsLLM_class:
 
             # save to output file
             if "out_file" in self.cli_kwargs:
-                Path(self.cli_kwargs["out_file"]).touch()  # create file if missing
-                with open(self.cli_kwargs["out_file"], "a") as f:
-                    f.write(header)
-                    for bulletpoint in summary.split("\n"):
-                        f.write("\n")
-                        bulletpoint = bulletpoint.rstrip()
-                        # # make sure the line begins with a bullet point
-                        # if not bulletpoint.lstrip().startswith("- "):
-                        #     begin_space = re.search(r"^(\s+)", bulletpoint)
-                        #     if not begin_space:
-                        #         begin_space = [""]
-                        #     bulletpoint = begin_space[0] + "- " + bulletpoint
-                        f.write(f"    {bulletpoint}")
-                    f.write("\n\n\n")
+                for nrecur, sum in recursive_summaries.items():
+                    outfile = Path(self.cli_kwargs["out_file"])
+                    if nrecur > 0:  # also store intermediate summaries if present
+                        outfile = outfile.parent / (outfile.stem + f".{nrecur}.md")
+
+                    with open(str(outfile), "a") as f:
+                        if outfile.exists():
+                            f.write("\n\n\n")
+                        f.write(header)
+                        for bulletpoint in summary.split("\n"):
+                            f.write("\n")
+                            bulletpoint = bulletpoint.rstrip()
+                            # # make sure the line begins with a bullet point
+                            # if not bulletpoint.lstrip().startswith("- "):
+                            #     begin_space = re.search(r"^(\s+)", bulletpoint)
+                            #     if not begin_space:
+                            #         begin_space = [""]
+                            #     bulletpoint = begin_space[0] + "- " + bulletpoint
+                            f.write(f"    {bulletpoint}")
+
             return {
                     "path": path,
                     "sum_reading_length": sum_reading_length,
