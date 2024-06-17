@@ -75,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.27"
+    VERSION: str = "0.28"
 
     #@optional_typecheck
     @typechecked
@@ -107,22 +107,22 @@ class DocToolsLLM_class:
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
         query_relevancy: float = 0.1,
-        query_condense_question: bool = True,
+        query_condense_question: Union[bool, int] = True,
 
         summary_n_recursion: int = 0,
         summary_language: str = "[same as input]",
 
-        llm_verbosity: bool = False,
-        debug: bool = False,
+        llm_verbosity: Union[bool, int] = False,
+        debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
-        chat_memory: bool = True,
-        no_llm_cache: bool = False,
+        chat_memory: Union[bool, int] = True,
+        no_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
-        private: bool = False,
+        private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
-        DIY_rolling_window_embedding: bool = False,
-        import_mode: bool = False,
+        DIY_rolling_window_embedding: Union[bool, int] = False,
+        import_mode: Union[bool, int] = False,
 
         **cli_kwargs,
         ) -> None:
@@ -145,6 +145,10 @@ class DocToolsLLM_class:
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                     elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
                         raise TypeCheckError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                if expected_type is str:
+                    assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
+                if isinstance(val, list):
+                    assert val, f"Empty list found for cli_kwargs: '{k}'"
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
@@ -446,7 +450,7 @@ class DocToolsLLM_class:
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
                 estimate_dol += full_tkn * ((2/5) ** i) * adj_price / 100 * 1.2
-        whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
+        whi(self.ntfy(f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
                 raise Exception(red(self.ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
@@ -458,18 +462,40 @@ class DocToolsLLM_class:
             # biasing towards adding space.
             logit_val = 3
             self.llm.model_kwargs["logit_bias"] = {
-                    12: logit_val,  # '-'
-                    # 220: logit_val,  # ' '
-                    # 532: logit_val,  # ' -'
-                    # 9: logit_val,  # '*'
-                    # 1635: logit_val,  # ' *'
-                    197: logit_val,  # '\t'
-                    334: logit_val,  # '**'
-                    # 25: logit_val,  # ':'
-                    # 551: logit_val,  # ' :'
-                    # 13: -1,  # '.'
-                    }
-            self.llm.model_kwargs["frequency_penalty"] = 0.5
+                12: logit_val,  # '-'
+                # 220: logit_val,  # ' '
+                # 532: logit_val,  # ' -'
+                # 9: logit_val,  # '*'
+                # 1635: logit_val,  # ' *'
+                # 197: logit_val,  # '\t'
+                334: logit_val,  # '**'
+                # 25: logit_val,  # ':'
+                # 551: logit_val,  # ' :'
+                # 13: -1,  # '.'
+                # logit bias for indentation, the number of space, because it consumes less token than using \t
+                257: logit_val,      # "    "
+                260: logit_val,      # "        "
+                1835: logit_val,     # "            "
+                338: logit_val,      # "                "
+                3909: logit_val,     # "                    "
+                5218: logit_val,     # "                        "
+                6663: logit_val,     # "                            "
+                792: logit_val,      # "                                "
+                10812: logit_val,    # "                                    "
+                13137: logit_val,    # "                                        "
+                15791: logit_val,    # "                                            "
+                19273: logit_val,    # "                                                "
+                25343: logit_val,    # "                                                    "
+                29902: logit_val,    # "                                                        "
+                39584: logit_val,    # "                                                            "
+                5341: logit_val,     # "                                                                "
+                52168: logit_val,    # "                                                                    "
+                38244: logit_val,    # "                                                                        "
+                56899: logit_val,    # "                                                                            "
+                98517: logit_val,    # "                                                                                "
+                }
+            self.llm.model_kwargs["frequency_penalty"] = 0.0
+            self.llm.model_kwargs["presence_penalty"] = 0.0
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
@@ -509,12 +535,10 @@ class DocToolsLLM_class:
                 author = None
 
             if metadata:
-                metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
-                metadata += "\t- Section number: [PROGRESS]\n"
+                metadata = "- Text metadata:\n    - " + "\n    - ".join(metadata) + "\n"
+                metadata += "    - Section number: [PROGRESS]\n"
             else:
                 metadata = ""
-
-            splitter = get_splitter("recursive_summary", modelname=self.modelname)
 
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
@@ -533,10 +557,10 @@ class DocToolsLLM_class:
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
             n_recursion_done = 0
+            recursive_summaries = {0: summary}
             if self.summary_n_recursion > 0:
-                summary_text = summary
-
                 for n_recur in range(1, self.summary_n_recursion + 1):
+                    summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
                     red(f"Doing recursive summary #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
@@ -555,13 +579,16 @@ class DocToolsLLM_class:
                     assert "- Chunk " not in summary_text, "Found chunk marker"
                     assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
+                    splitter = get_splitter("recursive_summary", modelname=self.modelname)
                     summary_docs = [Document(page_content=summary_text)]
                     summary_docs = splitter.transform_documents(summary_docs)
+                    assert summary_docs != relevant_docs
                     try:
                         check_docs_tkn_length(summary_docs, item_name)
                     except Exception as err:
                         red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
+                    bef = copy.deepcopy(summary_text)
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
@@ -572,9 +599,9 @@ class DocToolsLLM_class:
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             )
+                    assert summary_text != bef
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
-                    n_recursion_done += 1
 
                     # clean text again to compute the reading length
                     sp = summary_text.split("\n")
@@ -594,16 +621,31 @@ class DocToolsLLM_class:
                     real_text = "".join([letter for letter in list(real_text) if letter.isalpha()])
                     sum_reading_length = len(real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
-                summary = summary_text
+                    if "prev_real_text" in locals():
+                        if real_text == prev_real_text:
+                            red(f"Identical summary after {n_recur} "
+                                "recursion, adding more recursion will not "
+                                "help so stopping here")
+                            break
+                    prev_real_text = real_text
+
+                    assert n_recur not in recursive_summaries
+                    if summary_text not in recursive_summaries:
+                        red(f"Identical summary after {n_recur} "
+                            "recursion, adding more recursion will not "
+                            "help so stopping here")
+                        break
+                    else:
+                        recursive_summaries[n_recur] = summary_text
 
             print("\n\n")
             md_printer("# Summary")
             md_printer(f'## {path}')
-            md_printer(summary)
+            md_printer(recursive_summaries[0])
 
             red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
-            summary_tkn_length = get_tkn_length(summary)
+            summary_tkn_length = get_tkn_length(recursive_summaries[0])
 
             header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
             if doc_reading_length:
@@ -612,31 +654,35 @@ class DocToolsLLM_class:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
             header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
-            header += f"    parameters: n_recursion_summary={self.summary_n_recursion};n_recursion_done={n_recursion_done}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
-                Path(self.cli_kwargs["out_file"]).touch()  # create file if missing
-                with open(self.cli_kwargs["out_file"], "a") as f:
-                    f.write(header)
-                    for bulletpoint in summary.split("\n"):
-                        f.write("\n")
-                        bulletpoint = bulletpoint.rstrip()
-                        # # make sure the line begins with a bullet point
-                        # if not bulletpoint.lstrip().startswith("- "):
-                        #     begin_space = re.search(r"^(\s+)", bulletpoint)
-                        #     if not begin_space:
-                        #         begin_space = [""]
-                        #     bulletpoint = begin_space[0] + "- " + bulletpoint
-                        f.write(f"\t{bulletpoint}")
-                    f.write("\n\n\n")
+                for nrecur, sum in recursive_summaries.items():
+                    outfile = Path(self.cli_kwargs["out_file"])
+                    if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
+                        # also store intermediate summaries if present
+                        outfile = outfile.parent / (outfile.stem + f".{nrecur + 1}.md")
+
+                    with open(str(outfile), "a") as f:
+                        if outfile.exists() and outfile.read_text().strip():
+                            f.write("\n\n\n")
+                        f.write(header)
+                        if len(recursive_summaries) > 1:
+                            f.write(f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}")
+
+                        for bulletpoint in sum.split("\n"):
+                            f.write("\n")
+                            bulletpoint = bulletpoint.rstrip()
+                            f.write(f"    {bulletpoint}")
+
             return {
                     "path": path,
                     "sum_reading_length": sum_reading_length,
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
                     "doc_total_cost": doc_total_cost,
-                    "summary": summary,
+                    "summary": recursive_summaries[0],
+                    "recursive_summaries": recursive_summaries,
                     }
 
         results = summarize_documents(

@@ -13,19 +13,20 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 - Detailed instructions:
  ```
 - Include:
-\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
+    - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
 - Exclude:
-\t- Sponsors, advertisements, etc.
-\t- Jokes, ramblings.
-\t- When in doubt, keep the information in your summary.
+    - Sponsors, advertisements, etc.
+    - Jokes, ramblings.
+    - End of page references, sources, links etc.
+    - When in doubt, keep the information in your summary.
 - Format:
-\t- Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
-\t- Don't use complete sentence, I'm in a hurry and need bullet points.
-\t- Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
-\t- Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
-\t- Write in {language}.
-\t- Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
-\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
+    - Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
+    - Don't use complete sentence, I'm in a hurry and need bullet points.
+    - Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
+    - Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
+    - Write in {language}.
+    - Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
+    - Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
 ```"""),
         ("human", """{recursion_instruction}{metadata}{previous_summary}
 
@@ -71,6 +72,7 @@ PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
         ("system", """Given some statements and an answer, your task it to first answer directly the question in a md bullet point, then combine all additional information as additional bullet points. You must only use information from the statements.
 BUT, and above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
+No redundant bullet points must remain: you must combine redundant bullet points into a single more complicated bullet point.
 
 Ignore statements that are completely irrelevant to the question.
 Don't narrate, just do what I asked without acknowledging those rules.

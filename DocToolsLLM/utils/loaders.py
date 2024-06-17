@@ -845,14 +845,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
                 meta[k] = v
                 cont = cont.replace(f"{k}:: {v}", "").strip()
             cont = dedent(cont)
-            # note: should it be dedented? that saves a lot of token
-            # use tabs instead of spaces to save tokens and avoid confusion the LLM
-            lines = cont.splitlines()
-            lines = [li.expandtabs(tabsize=2) for li in lines if li.strip()]
-            lines = [li.replace("  ", "\t") for li in lines]
-            cont = "\n".join(lines)
-            if cont.count("\t") * 2 ==  cont.count("\t\t"):
-                cont = cont.replace("\t\t", "\t")
+            cont = cont.replace("\t", "    ")
             content += "\n" + cont
 
         doc = Document(
