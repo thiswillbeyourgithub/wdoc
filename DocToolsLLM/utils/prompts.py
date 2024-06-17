@@ -13,19 +13,19 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 - Detailed instructions:
  ```
 - Include:
-\t- All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
+    - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
 - Exclude:
-\t- Sponsors, advertisements, etc.
-\t- Jokes, ramblings.
-\t- When in doubt, keep the information in your summary.
+    - Sponsors, advertisements, etc.
+    - Jokes, ramblings.
+    - When in doubt, keep the information in your summary.
 - Format:
-\t- Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
-\t- Don't use complete sentence, I'm in a hurry and need bullet points.
-\t- Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
-\t- Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
-\t- Write in {language}.
-\t- Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
-\t- Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
+    - Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
+    - Don't use complete sentence, I'm in a hurry and need bullet points.
+    - Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
+    - Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
+    - Write in {language}.
+    - Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
+    - Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
 ```"""),
         ("human", """{recursion_instruction}{metadata}{previous_summary}
 
