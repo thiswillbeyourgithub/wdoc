@@ -654,7 +654,6 @@ class DocToolsLLM_class:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
             header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
-            header += f"    parameters: n_recursion_summary={self.summary_n_recursion};n_recursion_done={n_recursion_done}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
@@ -669,7 +668,7 @@ class DocToolsLLM_class:
                             f.write("\n\n\n")
                         f.write(header)
                         if len(recursive_summaries) > 1:
-                            f.write(f"\n    Current recursion number: {nrecur + 1} / {len(recursive_summaries)}")
+                            f.write(f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}")
 
                         for bulletpoint in sum.split("\n"):
                             f.write("\n")
