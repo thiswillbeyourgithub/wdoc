@@ -72,6 +72,7 @@ PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
         ("system", """Given some statements and an answer, your task it to first answer directly the question in a md bullet point, then combine all additional information as additional bullet points. You must only use information from the statements.
 BUT, and above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
+No redundant bullet points must remain: you must combine redundant bullet points into a single more complicated bullet point.
 
 Ignore statements that are completely irrelevant to the question.
 Don't narrate, just do what I asked without acknowledging those rules.
