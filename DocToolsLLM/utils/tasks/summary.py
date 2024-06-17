@@ -46,9 +46,9 @@ def do_summarize(
             recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION
         )
         output = llm._generate(messages)
-        assert len(output.generations) == 1
         finish = output.generations[0].generation_info["finish_reason"]
         assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
+        assert len(output.generations) == 1
         out = output.generations[0].text
         new_p = output.llm_output["token_usage"]["prompt_tokens"]
         new_c = output.llm_output["token_usage"]["completion_tokens"]

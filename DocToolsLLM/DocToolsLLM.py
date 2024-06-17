@@ -540,8 +540,6 @@ class DocToolsLLM_class:
             else:
                 metadata = ""
 
-            splitter = get_splitter("recursive_summary", modelname=self.modelname)
-
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
                     docs=relevant_docs,
@@ -582,8 +580,10 @@ class DocToolsLLM_class:
                     assert "- Chunk " not in summary_text, "Found chunk marker"
                     assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
+                    splitter = get_splitter("recursive_summary", modelname=self.modelname)
                     summary_docs = [Document(page_content=summary_text)]
                     summary_docs = splitter.transform_documents(summary_docs)
+                    assert summary_docs != relevant_docs
                     try:
                         check_docs_tkn_length(summary_docs, item_name)
                     except Exception as err:
@@ -603,6 +603,7 @@ class DocToolsLLM_class:
                     doc_total_cost += new_doc_total_cost
                     n_recursion_done += 1
 
+                    assert n_recursion_done not in recursive_summaries
                     recursive_summaries[n_recursion_done] = summary_text
 
                     # clean text again to compute the reading length
