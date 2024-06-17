@@ -107,13 +107,14 @@ def do_summarize(
 
         output_text = "\n".join([s for s in output_lines if s])
 
-        # if recursive, keep the previous summary and store it as a collapsed
-        # block
-        if n_recursion:
-            old = [f"- BEFORE RECURSION \#{n_recursion}\n  collapsed:: true"]
-            old += [indent(o.rstrip(), "    ") for o in rd.page_content.splitlines()]
-            old = "\n".join(old)
-            output_text += "\n" + old
+        # commented as this is useful for logseq only
+        # # if recursive, keep the previous summary and store it as a collapsed
+        # # block
+        # if n_recursion:
+        #     old = [f"- BEFORE RECURSION \#{n_recursion}\n  collapsed:: true"]
+        #     old += [indent(o.rstrip(), "    ") for o in rd.page_content.splitlines()]
+        #     old = "\n".join(old)
+        #     output_text += "\n" + old
 
         if verbose:
             whi(output_text)
