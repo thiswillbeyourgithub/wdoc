@@ -275,8 +275,6 @@ def model_name_matcher(model: str) -> str:
     return best_match
 
 
-
-
 @optional_typecheck
 def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
     if modelname in tokenizers:
