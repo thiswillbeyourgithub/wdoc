@@ -557,11 +557,10 @@ class DocToolsLLM_class:
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
             n_recursion_done = 0
-            recursive_summaries = {n_recursion_done: summary}
+            recursive_summaries = {0: summary}
             if self.summary_n_recursion > 0:
-                summary_text = summary
-
                 for n_recur in range(1, self.summary_n_recursion + 1):
+                    summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
                     red(f"Doing recursive summary #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
@@ -601,10 +600,6 @@ class DocToolsLLM_class:
                             )
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
-                    n_recursion_done += 1
-
-                    assert n_recursion_done not in recursive_summaries
-                    recursive_summaries[n_recursion_done] = summary_text
 
                     # clean text again to compute the reading length
                     sp = summary_text.split("\n")
@@ -624,6 +619,14 @@ class DocToolsLLM_class:
                     real_text = "".join([letter for letter in list(real_text) if letter.isalpha()])
                     sum_reading_length = len(real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
+
+                    assert n_recur not in recursive_summaries
+                    if summary_text not in recursive_summaries:
+                        # identical summary, stopping summaries
+                        recursive_summaries[n_recur] = summary_text
+                        break
+                    else:
+                        recursive_summaries[n_recur] = summary_text
 
             print("\n\n")
             md_printer("# Summary")
@@ -655,8 +658,8 @@ class DocToolsLLM_class:
                         if outfile.exists() and outfile.read_text().strip():
                             f.write("\n\n\n")
                         f.write(header)
-                        if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
-                            f.write(f"\n    Current recursion number: {nrecur}")
+                        if len(recursive_summaries) > 1:
+                            f.write(f"\n    Current recursion number: {nrecur + 1} / {len(recursive_summaries)}")
 
                         for bulletpoint in sum.split("\n"):
                             f.write("\n")
