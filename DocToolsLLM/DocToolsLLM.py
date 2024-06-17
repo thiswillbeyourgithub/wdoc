@@ -446,7 +446,7 @@ class DocToolsLLM_class:
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
                 estimate_dol += full_tkn * ((2/5) ** i) * adj_price / 100 * 1.2
-        whi(self.ntfy(f"Conservative estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
+        whi(self.ntfy(f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
                 raise Exception(red(self.ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
