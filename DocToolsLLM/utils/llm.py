@@ -80,13 +80,13 @@ def load_llm(
     else:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
 
-    if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
+    if not private and backend == "openai" and api_base is None and no_llm_cache is False:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
-        max_tokens = litellm.get_model_info(modelname.split("/")[1])["max_tokens"]
+        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if max_tokens not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname.split("/")[1],
+                model_name=modelname,
                 cache=not no_llm_cache,
                 verbose=verbose,
                 callbacks=[PriceCountingCallback(verbose=verbose)],
