@@ -69,6 +69,10 @@ def do_summarize(
                 continue
 
             ll = ll.rstrip()
+
+            # replace tabs by 4 spaces
+            ll = ll.replace("\t", "    ")
+
             stripped = ll.lstrip()
 
             # if a line starts with * instead of -, fix it
@@ -99,14 +103,6 @@ def do_summarize(
             if ll.count("*") % 2 == 1:
                 ll += "*"  # end the italic
 
-            # replace leading double spaces by tabs
-            cnt_inside = ll.lstrip().count("  ")
-            cnt_leading = ll.count("  ") - cnt_inside
-            if cnt_leading:
-                ll = ll.replace("  ", "\t", cnt_leading)
-            # make sure no space have been forgotten
-            ll = ll.replace("\t ", "\t\t")
-
             output_lines[il] = ll
 
         output_text = "\n".join([s for s in output_lines if s])
@@ -115,7 +111,7 @@ def do_summarize(
         # block
         if n_recursion:
             old = [f"- BEFORE RECURSION \#{n_recursion}\n  collapsed:: true"]
-            old += [indent(o.rstrip(), "\t") for o in rd.page_content.splitlines()]
+            old += [indent(o.rstrip(), "    ") for o in rd.page_content.splitlines()]
             old = "\n".join(old)
             output_text += "\n" + old
 

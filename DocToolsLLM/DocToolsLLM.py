@@ -530,8 +530,8 @@ class DocToolsLLM_class:
                 author = None
 
             if metadata:
-                metadata = "- Text metadata:\n\t- " + "\n\t- ".join(metadata) + "\n"
-                metadata += "\t- Section number: [PROGRESS]\n"
+                metadata = "- Text metadata:\n    - " + "\n    - ".join(metadata) + "\n"
+                metadata += "    - Section number: [PROGRESS]\n"
             else:
                 metadata = ""
 
@@ -649,7 +649,7 @@ class DocToolsLLM_class:
                         #     if not begin_space:
                         #         begin_space = [""]
                         #     bulletpoint = begin_space[0] + "- " + bulletpoint
-                        f.write(f"\t{bulletpoint}")
+                        f.write(f"    {bulletpoint}")
                     f.write("\n\n\n")
             return {
                     "path": path,
