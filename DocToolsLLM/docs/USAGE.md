@@ -146,7 +146,7 @@
         * 2 means that the original summary, will be sumarized, then
         its summary will be sumarized again.
     * If `--out_file` is used, each intermediate summary will be saved
-    with the name `{out_file}.n.md` with n being the nth recursive summary.
+    with the name `{out_file}.n.md` with n being the n-1th recursive summary.
 
 * `--summary_language`: str, default `"[same as input]"`
     * When writing a summary, the LLM will write using the language
@@ -304,7 +304,7 @@
     be written to this file. Note that the file is not erased and
     Doctools will simply append to it.
     * If `--summary_n_recursion` is used, additional files will be
-    created with the name `{out_file}.n.md` with n being the nth recursive
+    created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
 
 * `--filter_metadata`: dict, default `None`

@@ -661,7 +661,7 @@ class DocToolsLLM_class:
                     outfile = Path(self.cli_kwargs["out_file"])
                     if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
                         # also store intermediate summaries if present
-                        outfile = outfile.parent / (outfile.stem + f".{nrecur}.md")
+                        outfile = outfile.parent / (outfile.stem + f".{nrecur + 1}.md")
 
                     with open(str(outfile), "a") as f:
                         if outfile.exists() and outfile.read_text().strip():
