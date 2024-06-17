@@ -112,7 +112,7 @@ class DocToolsLLM_class:
         summary_n_recursion: int = 0,
         summary_language: str = "[same as input]",
 
-        llm_verbosity: Unio[bool, int] = False,
+        llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
