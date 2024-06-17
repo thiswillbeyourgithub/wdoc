@@ -145,6 +145,10 @@ class DocToolsLLM_class:
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                     elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
                         raise TypeCheckError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                if expected_type is str:
+                    assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
+                if isinstance(val, list):
+                    assert val, f"Empty list found for cli_kwargs: '{k}'"
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
