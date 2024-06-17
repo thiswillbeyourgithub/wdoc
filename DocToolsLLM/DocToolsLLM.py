@@ -494,7 +494,8 @@ class DocToolsLLM_class:
                 56899: logit_val,    # "                                                                            "
                 98517: logit_val,    # "                                                                                "
                 }
-            self.llm.model_kwargs["frequency_penalty"] = 0.5
+            self.llm.model_kwargs["frequency_penalty"] = 0.0
+            self.llm.model_kwargs["presence_penalty"] = 0.0
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
