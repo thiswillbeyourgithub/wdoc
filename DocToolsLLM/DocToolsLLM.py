@@ -588,6 +588,7 @@ class DocToolsLLM_class:
                     except Exception as err:
                         red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
+                    bef = copy.deepcopy(summary_text)
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
@@ -598,6 +599,7 @@ class DocToolsLLM_class:
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             )
+                    assert summary_text != bef
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
 
@@ -619,11 +621,19 @@ class DocToolsLLM_class:
                     real_text = "".join([letter for letter in list(real_text) if letter.isalpha()])
                     sum_reading_length = len(real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
+                    if "prev_real_text" in locals():
+                        if real_text == prev_real_text:
+                            red(f"Identical summary after {n_recur} "
+                                "recursion, adding more recursion will not "
+                                "help so stopping here")
+                            break
+                    prev_real_text = real_text
 
                     assert n_recur not in recursive_summaries
                     if summary_text not in recursive_summaries:
-                        # identical summary, stopping summaries
-                        recursive_summaries[n_recur] = summary_text
+                        red(f"Identical summary after {n_recur} "
+                            "recursion, adding more recursion will not "
+                            "help so stopping here")
                         break
                     else:
                         recursive_summaries[n_recur] = summary_text
