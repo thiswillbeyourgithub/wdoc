@@ -17,6 +17,7 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 - Exclude:
     - Sponsors, advertisements, etc.
     - Jokes, ramblings.
+    - End of page references, sources, links etc.
     - When in doubt, keep the information in your summary.
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
