@@ -468,7 +468,7 @@ class DocToolsLLM_class:
                 # 25: logit_val,  # ':'
                 # 551: logit_val,  # ' :'
                 # 13: -1,  # '.'
-                # logit bias for indentation, the number of space
+                # logit bias for indentation, the number of space, because it consumes less token than using \t
                 257: logit_val,      # "    "
                 260: logit_val,      # "        "
                 1835: logit_val,     # "            "
