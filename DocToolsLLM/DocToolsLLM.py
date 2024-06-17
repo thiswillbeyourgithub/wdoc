@@ -623,16 +623,15 @@ class DocToolsLLM_class:
                     real_text = "".join([letter for letter in list(real_text) if letter.isalpha()])
                     sum_reading_length = len(real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
-                summary = summary_text
 
             print("\n\n")
             md_printer("# Summary")
             md_printer(f'## {path}')
-            md_printer(summary)
+            md_printer(recursive_summaries[0])
 
             red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
-            summary_tkn_length = get_tkn_length(summary)
+            summary_tkn_length = get_tkn_length(recursive_summaries[0])
 
             header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
             if doc_reading_length:
@@ -672,7 +671,8 @@ class DocToolsLLM_class:
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
                     "doc_total_cost": doc_total_cost,
-                    "summary": summary,
+                    "summary": recursive_summaries[0],
+                    "recursive_summaries": recursive_summaries,
                     }
 
         results = summarize_documents(
