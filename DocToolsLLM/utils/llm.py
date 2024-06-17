@@ -19,7 +19,7 @@ from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models import ChatOpenAI
 
-from .logger import whi, red
+from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
@@ -80,27 +80,29 @@ def load_llm(
     else:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
 
-    if not private and modelname.startswith("openai/") and api_base is None and no_llm_cache is False:
+    if not private and backend == "openai" and api_base is None and no_llm_cache is False:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
-        max_tokens = litellm.get_model_info(modelname.split("/")[1])["max_tokens"]
+        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
+        if max_tokens not in extra_model_args:
+            extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname.split("/")[1],
+                model_name=modelname,
                 cache=not no_llm_cache,
                 verbose=verbose,
                 callbacks=[PriceCountingCallback(verbose=verbose)],
-                max_tokens=max_tokens,
                 **extra_model_args,
                 )
     else:
         red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
+        if max_tokens not in extra_model_args:
+            extra_model_args["max_tokens"] = max_tokens
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
             cache=False, # not no_llm_cache
             verbose=verbose,
             callbacks=[PriceCountingCallback(verbose=verbose)],
-            max_tokens=max_tokens,
             **extra_model_args,
             )
     if private:
