@@ -441,7 +441,8 @@ class DocToolsLLM_class:
         else:
             whi("Ready to query, call your_instance._query(your_question)")
 
-    def _summary_task(self):
+    @optional_typecheck
+    def _summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
