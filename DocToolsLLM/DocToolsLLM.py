@@ -635,6 +635,7 @@ class DocToolsLLM_class:
                             red(f"Identical summary after {n_recur} "
                                 "recursion, adding more recursion will not "
                                 "help so stopping here")
+                            recursive_summaries[n_recur] = summary_text
                             break
                     prev_real_text = real_text
 
@@ -643,6 +644,7 @@ class DocToolsLLM_class:
                         red(f"Identical summary after {n_recur} "
                             "recursion, adding more recursion will not "
                             "help so stopping here")
+                        recursive_summaries[n_recur] = summary_text
                         break
                     else:
                         recursive_summaries[n_recur] = summary_text
@@ -690,7 +692,7 @@ class DocToolsLLM_class:
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
                     "doc_total_cost": doc_total_cost,
-                    "summary": recursive_summaries[0],
+                    "summary": recursive_summaries[max(list(recursive_summaries.keys()))],
                     "recursive_summaries": recursive_summaries,
                     }
 
