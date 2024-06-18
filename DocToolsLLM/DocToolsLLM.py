@@ -599,7 +599,6 @@ class DocToolsLLM_class:
                     except Exception as err:
                         red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
-                    bef = copy.deepcopy(summary_text)
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
@@ -610,7 +609,6 @@ class DocToolsLLM_class:
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             )
-                    assert summary_text != bef
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
 
