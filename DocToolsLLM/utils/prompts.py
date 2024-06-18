@@ -17,7 +17,7 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 - Exclude:
     - Sponsors, advertisements, etc.
     - Jokes, ramblings.
-    - End of page references, sources, links etc.
+    - End of page references, tables of content, sources, links etc.
     - When in doubt, keep the information in your summary.
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
@@ -37,7 +37,7 @@ Text section:
         ],
 )
 # if the summary is recursive, add those instructions
-RECURSION_INSTRUCTION = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. You can rearrange the text freely but don't lose information I'm interested in. Don't forget the instructions I gave you. This is important."
+RECURSION_INSTRUCTION = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remve the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you. This is important."
 
 # PROMPT FOR QUERY TASKS
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(

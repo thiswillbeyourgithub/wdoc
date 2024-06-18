@@ -38,11 +38,11 @@
 
 ## Features
 * **Advanced RAG**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
-* **Advanced summary**: Instead of unusable high level points, compress the reasonning, arguments, though process etc of the author into an easy to skim markdown file. If you find the summaries too long you can even do recursive summaries.
+* **Advanced summary**: Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file. The summaries are then checked again n times for correct logical indentation etc.
 * **Multiple LLM providers**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
 * **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
-* **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).
+* **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
 * **Conversation friendly**: If asking several questions in a row, the questions are automatically reformulated as standalone questions to make querying more natural.
 * **Documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./DocToolsLLM/docs/USAGE.md) or via `python -m DocToolsLLM --help`.
@@ -73,8 +73,9 @@
 * Improve the scriptability of DocToolsLLM. Add examples for how you use it with Logseq.
     * Include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
     * Add a gradio GUI.
-* include the possible whisper/deepgram extra expenses.
+* Include the possible whisper/deepgram extra expenses when counting costs.
 * Add support for user defined loaders.
+* Add support for custom user prompt.
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
@@ -87,7 +88,7 @@
 * **anki**: collection
 * **string**: just paste your text into the app
 * **html files**: useful for website dumps
-* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)
+* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
 * **video files**: tries to extract the audio then treat it as an audio file
 * **epub files**
 * **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...

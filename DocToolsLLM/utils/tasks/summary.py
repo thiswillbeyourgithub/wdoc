@@ -45,7 +45,7 @@ def do_summarize(
             previous_summary=previous_summary,
             recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION
         )
-        output = llm._generate(messages)
+        output = llm._generate_with_cache(messages)
         finish = output.generations[0].generation_info["finish_reason"]
         assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
         assert len(output.generations) == 1

@@ -5,6 +5,9 @@ Main class.
 # import this first because it sets the logging level
 from .utils.logger import whi, yel, red, md_printer, log, set_docstring
 
+import sys
+import faulthandler
+import pdb
 import json
 import pyfiglet
 import copy
@@ -75,7 +78,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.29"
+    VERSION: str = "0.33"
 
     #@optional_typecheck
     @typechecked
@@ -109,7 +112,7 @@ class DocToolsLLM_class:
         query_relevancy: float = 0.1,
         query_condense_question: Union[bool, int] = True,
 
-        summary_n_recursion: int = 0,
+        summary_n_recursion: int = 1,
         summary_language: str = "[same as input]",
 
         llm_verbosity: Union[bool, int] = False,
@@ -127,6 +130,14 @@ class DocToolsLLM_class:
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+        if debug:
+            def handle_exception(exc_type, exc_value, exc_traceback):
+                if not issubclass(exc_type, KeyboardInterrupt):
+                    pdb.post_mortem(exc_traceback)
+            sys.excepthook = handle_exception
+            faulthandler.enable()
+
+
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
 
@@ -266,9 +277,11 @@ class DocToolsLLM_class:
 
         if not no_llm_cache:
             if not private:
-                set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+                self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
+                set_llm_cache(self.llm_cache)
             else:
-                set_llm_cache(SQLiteCache(database_path=cache_dir / "private_langchain.db"))
+                self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
+                set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base was modified")
@@ -351,7 +364,7 @@ class DocToolsLLM_class:
         self.llm = load_llm(
             modelname=modelname,
             backend=self.modelbackend,
-            no_llm_cache=self.no_llm_cache,
+            llm_cache=self.llm_cache if not self.no_llm_cache else False,
             temperature=0,
             verbose=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
@@ -428,7 +441,8 @@ class DocToolsLLM_class:
         else:
             whi("Ready to query, call your_instance._query(your_question)")
 
-    def _summary_task(self):
+    @optional_typecheck
+    def _summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
@@ -561,7 +575,7 @@ class DocToolsLLM_class:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    red(f"Doing recursive summary #{n_recur} of {item_name}")
+                    red(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
                     sp = summary_text.split("\n")
@@ -588,7 +602,6 @@ class DocToolsLLM_class:
                     except Exception as err:
                         red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
-                    bef = copy.deepcopy(summary_text)
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
                             docs=summary_docs,
                             metadata=metadata,
@@ -599,7 +612,6 @@ class DocToolsLLM_class:
                             verbose=self.llm_verbosity,
                             n_recursion=n_recur,
                             )
-                    assert summary_text != bef
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
 
@@ -626,6 +638,7 @@ class DocToolsLLM_class:
                             red(f"Identical summary after {n_recur} "
                                 "recursion, adding more recursion will not "
                                 "help so stopping here")
+                            recursive_summaries[n_recur] = summary_text
                             break
                     prev_real_text = real_text
 
@@ -634,18 +647,20 @@ class DocToolsLLM_class:
                         red(f"Identical summary after {n_recur} "
                             "recursion, adding more recursion will not "
                             "help so stopping here")
+                        recursive_summaries[n_recur] = summary_text
                         break
                     else:
                         recursive_summaries[n_recur] = summary_text
 
+            best_sum_i = max(list(recursive_summaries.keys()))
             print("\n\n")
             md_printer("# Summary")
             md_printer(f'## {path}')
-            md_printer(recursive_summaries[0])
+            md_printer(recursive_summaries[best_sum_i])
 
             red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
-            summary_tkn_length = get_tkn_length(recursive_summaries[0])
+            summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
             header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
             if doc_reading_length:
@@ -681,7 +696,7 @@ class DocToolsLLM_class:
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
                     "doc_total_cost": doc_total_cost,
-                    "summary": recursive_summaries[0],
+                    "summary": recursive_summaries[best_sum_i],
                     "recursive_summaries": recursive_summaries,
                     }
 
@@ -697,7 +712,8 @@ class DocToolsLLM_class:
         llmcallback = self.llm.callbacks[0]
         total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
         if llmcallback.total_tokens != results['doc_total_tokens']:
-            red(f"Discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+            red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+        return results
 
     def prepare_query_task(self):
         # load embeddings for querying
@@ -1019,7 +1035,7 @@ class DocToolsLLM_class:
                 eval_model_name: str = self.query_eval_modelname,
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
@@ -1030,7 +1046,7 @@ class DocToolsLLM_class:
                 new_p = 0
                 new_c = 0
                 async def eval(inputs):
-                    return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outs = [
                     eval(inputs)
                     for i in range(self.query_eval_check_number)
@@ -1079,7 +1095,7 @@ class DocToolsLLM_class:
                     self.eval_llm = load_llm(
                         modelname=self.query_eval_modelname,
                         backend=self.query_eval_modelbackend,
-                        no_llm_cache=self.no_llm_cache,
+                        llm_cache=self.llm_cache if not self.no_llm_cache else False,
                         verbose=self.llm_verbosity,
                         temperature=1,
                         api_base=self.llms_api_bases["query_eval_model"],
@@ -1215,7 +1231,7 @@ class DocToolsLLM_class:
                 self.eval_llm = load_llm(
                     modelname=self.query_eval_modelname,
                     backend=self.query_eval_modelbackend,
-                    no_llm_cache=self.no_llm_cache,
+                    llm_cache=self.llm_cache if not self.no_llm_cache else False,
                     verbose=self.llm_verbosity,
                     temperature=1,
                     api_base=self.llms_api_bases["query_eval_model"],
@@ -1238,7 +1254,7 @@ class DocToolsLLM_class:
                     eval_model_name: str = self.query_eval_modelname,
                 ) -> List[str]:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                    out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                     reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                     assert all(r == "stop" for r in reasons), f"Unexpected generation finish_reason: '{reasons}'"
                     outputs = [gen.text for gen in out.generations]
@@ -1251,7 +1267,7 @@ class DocToolsLLM_class:
                     new_p = 0
                     new_c = 0
                     async def eval(inputs):
-                        return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                        return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                     outs = [
                         eval(inputs)
                         for i in range(self.query_eval_check_number)

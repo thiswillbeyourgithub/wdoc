@@ -91,6 +91,7 @@ loader_specific_keys = {
     "anki_profile": str,
 
     "audio_backend": str,
+    "audio_unsilence": bool,
 
     "whisper_lang": str,
     "whisper_prompt": str,
@@ -282,7 +283,7 @@ def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
     else:
         try:
             tokenizers[modelname] = tiktoken.encoding_for_model(modelname.split("/")[-1]).encode
-        except:
+        except Exception:
             modelname="gpt-3.5-turbo"
         return get_tkn_length(tosplit=tosplit, modelname=modelname)
 

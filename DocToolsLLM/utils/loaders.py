@@ -67,6 +67,7 @@ litellm = lazy_import.lazy_module("litellm")
 deepgram = lazy_import.lazy_module("deepgram")
 pydub = lazy_import.lazy_module("pydub")
 ffmpeg = lazy_import.lazy_module("ffmpeg")
+torchaudio = lazy_import.lazy_module("torchaudio")
 
 
 try:
@@ -148,6 +149,21 @@ if "pdftotext" in globals():
             with open(self.path, "rb") as f:
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
+
+# unsilence audio
+sox_effects = [
+    # ["norm"],  # normalize audio
+    # isolate voice frequency
+    # ["highpass", "-1", "100"],
+    # ["lowpass", "-1", "3000"],
+    # -2 is for a steeper filtering: removes high frequency and very low ones
+    # ["highpass", "-2", "50"],
+    # ["lowpass", "-2", "5000"],
+    ["norm"],  # normalize audio
+    # max silence should be 3s
+    ["silence", "-l", "1", "0", "1%", "-1", "3.0", "1%"],
+    ["norm"],
+]
 
 global_temp_dir = [None]  # will be replaced when load_one_doc is called
 
@@ -862,6 +878,7 @@ def load_local_audio(
     path: str,
     file_hash: str,
     audio_backend: str,
+    audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
@@ -869,6 +886,46 @@ def load_local_audio(
     deepgram_kwargs: Optional[dict] = None,
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
+
+    if audio_unsilence:
+        red(f"Removing silence from audio file {path.name}")
+        waveform, sample_rate = torchaudio.load(path)
+
+        dur = waveform.size[1] / sample_rate
+        start = time.time()
+        waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
+            waveform,
+            sample_rate,
+            sox_effects,
+            )
+        elapsed = time.time() - start
+        new_dur = waveform.size[1] / sample_rate
+        assert new_dur < dur, (
+            f"Failed to remove silence for {path.name}:\n"
+            f"Original duration: {dur:.1f}\n"
+            f"New duration: {new_dur:.1f}\n"
+        )
+        assert new_dur > 10, (
+            f"Silence removal ended up with a suspiciously short audio for {path.name}:\n"
+            f"Original duration: {dur:.1f}\n"
+            f"New duration: {new_dur:.1f}\n"
+        )
+        red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
+
+        unsilenced_path = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        assert not unsilenced_path.exists()
+        torchaudio.save(
+            uri=str(unsilenced_path.resolve().absolute()),
+            sample_rate=sample_rate,
+            src=waveform,
+            format="ogg",
+        )
+        unsilenced_hash=file_hasher({"path": unsilenced_path})
+
+        old_path = path
+        old_hash = file_hash
+        path = unsilenced_path
+        file_hash = unsilenced_hash
 
     if audio_backend == "whisper":
         assert deepgram_kwargs is None, "Found kwargs for deepgram but selected whisper backend for local_audio"
@@ -927,6 +984,7 @@ def load_local_video(
     path: str,
     file_hash: str,
     audio_backend: str,
+    audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
@@ -973,6 +1031,7 @@ def load_local_video(
         whisper_lang=whisper_lang,
         whisper_prompt=whisper_prompt,
         deepgram_kwargs=deepgram_kwargs,
+        audio_unsilence=audio_unsilence,
     )
 
 
