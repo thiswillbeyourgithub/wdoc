@@ -162,9 +162,9 @@
     if debug is set, llm_verbosity is also set to True
 
 * `--debug`: bool, default `False`
-    * if True will enable langchain tracing, increase verbosity etc.
-    Will also disable multithreading for summaries and for loading
-    files.
+    * if True will enable langchain tracing, increase verbosity,
+    disable multithreading for summaries and loading files,
+    automatically trigger the debugger on exceptions.
 
 * `--dollar_limit`: int, default `5`
     * If the estimated price is above this limit, stop instead.

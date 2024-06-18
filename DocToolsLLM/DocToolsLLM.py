@@ -5,6 +5,9 @@ Main class.
 # import this first because it sets the logging level
 from .utils.logger import whi, yel, red, md_printer, log, set_docstring
 
+import sys
+import faulthandler
+import pdb
 import json
 import pyfiglet
 import copy
@@ -127,6 +130,14 @@ class DocToolsLLM_class:
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+        if debug:
+            def handle_exception(exc_type, exc_value, exc_traceback):
+                if not issubclass(exc_type, KeyboardInterrupt):
+                    pdb.post_mortem(exc_traceback)
+            sys.excepthook = handle_exception
+            faulthandler.enable()
+
+
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
 
