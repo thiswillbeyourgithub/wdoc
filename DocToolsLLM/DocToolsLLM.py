@@ -649,14 +649,15 @@ class DocToolsLLM_class:
                     else:
                         recursive_summaries[n_recur] = summary_text
 
+            best_sum_i = max(list(recursive_summaries.keys()))
             print("\n\n")
             md_printer("# Summary")
             md_printer(f'## {path}')
-            md_printer(recursive_summaries[0])
+            md_printer(recursive_summaries[best_sum_i])
 
             red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
-            summary_tkn_length = get_tkn_length(recursive_summaries[0])
+            summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
             header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
             if doc_reading_length:
@@ -692,7 +693,7 @@ class DocToolsLLM_class:
                     "doc_reading_length": doc_reading_length,
                     "doc_total_tokens": doc_total_tokens,
                     "doc_total_cost": doc_total_cost,
-                    "summary": recursive_summaries[max(list(recursive_summaries.keys()))],
+                    "summary": recursive_summaries[best_sum_i],
                     "recursive_summaries": recursive_summaries,
                     }
 
