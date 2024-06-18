@@ -912,19 +912,23 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
-        assert not unsilenced_path.exists()
+        unsilenced_path_wav = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        assert not unsilenced_path_wav.exists()
+        assert not unsilenced_path_ogg.exists()
         torchaudio.save(
-            uri=str(unsilenced_path.resolve().absolute()),
-            sample_rate=sample_rate,
+            uri=str(unsilenced_path_wav.resolve().absolute()),
             src=waveform,
-            format="ogg",
+            sample_rate=sample_rate,
+            format="wav",
         )
-        unsilenced_hash=file_hasher({"path": unsilenced_path})
+        # turn the .wav into .ogg
+        ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(str(unsilenced_path_ogg.resolve().absolute())).run()
+        unsilenced_hash=file_hasher({"path": unsilenced_path_ogg})
 
         old_path = path
         old_hash = file_hash
-        path = unsilenced_path
+        path = unsilenced_path_ogg
         file_hash = unsilenced_hash
 
     if audio_backend == "whisper":
