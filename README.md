@@ -75,6 +75,7 @@
     * Add a gradio GUI.
 * Include the possible whisper/deepgram extra expenses when counting costs.
 * Add support for user defined loaders.
+* Add support for custom user prompt.
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
