@@ -138,13 +138,15 @@
 
 ---
 
-* `--summary_n_recursion`: int, default `0`
-    * will recursively summarize the summary this many times. The idea is
-    to deal with very long summary (think books etc).
+* `--summary_n_recursion`: int, default `1`
+    * after summarizing, will go over the summary that many times to fix
+    indentation, repetitions etc.
         * 0 means disabled.
-        * 1 means that the original summary will be summarized once again.
-        * 2 means that the original summary, will be sumarized, then
-        its summary will be sumarized again.
+        * 1 means that the original summary will be checked once.
+        * 2 means that the original summary, will checked, then
+        the check version will be checked again.
+        We stop when equilibrium is reached (meaning the summary
+        did not change).
     * If `--out_file` is used, each intermediate summary will be saved
     with the name `{out_file}.n.md` with n being the n-1th recursive summary.
 

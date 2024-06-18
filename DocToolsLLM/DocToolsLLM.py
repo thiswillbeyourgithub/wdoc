@@ -109,7 +109,7 @@ class DocToolsLLM_class:
         query_relevancy: float = 0.1,
         query_condense_question: Union[bool, int] = True,
 
-        summary_n_recursion: int = 0,
+        summary_n_recursion: int = 1,
         summary_language: str = "[same as input]",
 
         llm_verbosity: Union[bool, int] = False,
@@ -561,7 +561,7 @@ class DocToolsLLM_class:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    red(f"Doing recursive summary #{n_recur} of {item_name}")
+                    red(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
                     sp = summary_text.split("\n")
