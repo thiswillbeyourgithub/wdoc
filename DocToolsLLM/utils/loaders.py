@@ -891,7 +891,7 @@ def load_local_audio(
         red(f"Removing silence from audio file {path.name}")
         waveform, sample_rate = torchaudio.load(path)
 
-        dur = waveform.size[1] / sample_rate
+        dur = waveform.shape[1] / sample_rate
         start = time.time()
         waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
             waveform,
@@ -899,7 +899,7 @@ def load_local_audio(
             sox_effects,
             )
         elapsed = time.time() - start
-        new_dur = waveform.size[1] / sample_rate
+        new_dur = waveform.shape[1] / sample_rate
         assert new_dur < dur, (
             f"Failed to remove silence for {path.name}:\n"
             f"Original duration: {dur:.1f}\n"
