@@ -28,7 +28,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.33",
+    version="0.35",
     description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -86,7 +86,7 @@ setup(
         'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
         'pydub >= 0.25.1',  # extracting audio from local video
-        'ffmpeg >= 1.4',  # extracting audio from local video
+        'ffmpeg-python >= 0.2.0',  # extracting audio from local video
         'torchaudio >= 2.3.1',  # silence removal from audio
     ],
     extra_require={

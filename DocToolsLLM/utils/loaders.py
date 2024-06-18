@@ -891,7 +891,7 @@ def load_local_audio(
         red(f"Removing silence from audio file {path.name}")
         waveform, sample_rate = torchaudio.load(path)
 
-        dur = waveform.size[1] / sample_rate
+        dur = waveform.shape[1] / sample_rate
         start = time.time()
         waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
             waveform,
@@ -899,7 +899,7 @@ def load_local_audio(
             sox_effects,
             )
         elapsed = time.time() - start
-        new_dur = waveform.size[1] / sample_rate
+        new_dur = waveform.shape[1] / sample_rate
         assert new_dur < dur, (
             f"Failed to remove silence for {path.name}:\n"
             f"Original duration: {dur:.1f}\n"
@@ -912,19 +912,23 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
-        assert not unsilenced_path.exists()
+        unsilenced_path_wav = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        assert not unsilenced_path_wav.exists()
+        assert not unsilenced_path_ogg.exists()
         torchaudio.save(
-            uri=str(unsilenced_path.resolve().absolute()),
-            sample_rate=sample_rate,
+            uri=str(unsilenced_path_wav.resolve().absolute()),
             src=waveform,
-            format="ogg",
+            sample_rate=sample_rate,
+            format="wav",
         )
-        unsilenced_hash=file_hasher({"path": unsilenced_path})
+        # turn the .wav into .ogg
+        ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(str(unsilenced_path_ogg.resolve().absolute())).run()
+        unsilenced_hash=file_hasher({"path": unsilenced_path_ogg})
 
         old_path = path
         old_hash = file_hash
-        path = unsilenced_path
+        path = unsilenced_path_ogg
         file_hash = unsilenced_hash
 
     if audio_backend == "whisper":
@@ -994,15 +998,17 @@ def load_local_video(
     assert Path(path).exists(), f"file not found: '{path}'"
 
     audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
-    assert not Path(audio_path).exists()
+    assert not audio_path.exists()
 
     # extract audio from video
     try:
         whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
         t = time.time()
-        stream = ffmpeg.input(path)
-        stream = ffmpeg.output(stream, audio_path)
-        ffmpeg.run(stream)
+        ffmpeg.input(
+            path
+        ).output(
+            str(audio_path.resolve().absolute())
+        ).run()
         whi(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
         red(f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
