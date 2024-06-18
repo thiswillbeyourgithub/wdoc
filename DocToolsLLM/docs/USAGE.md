@@ -231,22 +231,22 @@
     to a loader. They apply depending on the value of `--filetype`.
     An unexpected argument for a given filetype will result in a crash.
 
-* `--path`:
+* `--path`: str
     * Used by most loaders. For example for `--filetype=youtube` the path
     must point to a youtube video.
 
-* `--anki_profile`:
+* `--anki_profile`: str
     * The name of the profile
-* `--anki_deck`:
+* `--anki_deck`: str
     * The beginning of the deckname
     e.g. `science::physics::freshman_year::lesson1`
 * `--anki_notetype`: str
     * If it's part of the card's notetype, that notetype will be kept.
     Case insensitive.
 
-* `--anki_fields`:
+* `--anki_fields`: List[str]
     * List of fields to keep
-* `--anki_mode`:
+* `--anki_mode`: str
     * any of `window`, `concatenate`, `single_note`: (or _ separated
     value like `concatenate_window`). By default `window_single_note`
     is used.
@@ -259,27 +259,27 @@
     Whichever you choose, you can later filter out documents by metadata
     filtering over the `anki_mode` key.
 
-* `--audio_backend`:
+* `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.
     Not taken into account for the filetype "youtube".
     Taken into account if filetype if "local_audio" or "local_video"
 
-* `--whisper_lang`:
+* `--whisper_lang`: str
     * if using whisper to transcribe an audio file, this if the language
     specified to whisper
-* `--whisper_prompt`:
+* `--whisper_prompt`: str
     * if using whisper to transcribe an audio file, this if the prompt
     given to whisper
 
-* `--deepgram_kwargs`:
+* `--deepgram_kwargs`: dict
     * if using deepgram for transcription, those arguments will be used.
 
-* `--youtube_language`:
+* `--youtube_language`: List[str]
     * For youtube. e.g. `["fr","en"]` to use french transcripts if
     possible and english otherwise
-* `--youtube_translation`:
+* `--youtube_translation`: str
     * For youtube. e.g. `en` to use the transcripts after translation to english
-* `--youtube_audio_backend`:
+* `--youtube_audio_backend`: str
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
     * If 'youtube': will take the youtube transcripts as text content.
@@ -288,7 +288,7 @@
     * If 'deepgram' will download
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
-* `--include`:
+* `--include`: str
     * Only active if `--filetype` is one of json_list, recursive,
     link_file, youtube_playlist.
     `--include` can be a list of regex that must be present in the
@@ -296,7 +296,7 @@
     `--exclude` can be a list of regex that if present in the PATH
     will exclude it.
     Exclude is run AFTER include
-* `--exclude`:
+* `--exclude`: str
     * See `--include`
 
 # Other specific arguments
