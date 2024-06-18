@@ -277,10 +277,10 @@ class DocToolsLLM_class:
 
         if not no_llm_cache:
             if not private:
-                self.llm_cache = SQLiteCache(database_path=cache_dir / "langchain.db")
+                self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
                 set_llm_cache(self.llm_cache)
             else:
-                self.llm_cache = SQLiteCache(database_path=cache_dir / "private_langchain.db")
+                self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
                 set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
@@ -1035,7 +1035,7 @@ class DocToolsLLM_class:
                 eval_model_name: str = self.query_eval_modelname,
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outputs = [gen.text for gen in out.generations]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
@@ -1046,7 +1046,7 @@ class DocToolsLLM_class:
                 new_p = 0
                 new_c = 0
                 async def eval(inputs):
-                    return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outs = [
                     eval(inputs)
                     for i in range(self.query_eval_check_number)
@@ -1254,7 +1254,7 @@ class DocToolsLLM_class:
                     eval_model_name: str = self.query_eval_modelname,
                 ) -> List[str]:
                 if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                    out = self.eval_llm._generate(PR_EVALUATE_DOC.format_messages(**inputs))
+                    out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                     reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                     assert all(r == "stop" for r in reasons), f"Unexpected generation finish_reason: '{reasons}'"
                     outputs = [gen.text for gen in out.generations]
@@ -1267,7 +1267,7 @@ class DocToolsLLM_class:
                     new_p = 0
                     new_c = 0
                     async def eval(inputs):
-                        return await self.eval_llm._agenerate(PR_EVALUATE_DOC.format_messages(**inputs))
+                        return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                     outs = [
                         eval(inputs)
                         for i in range(self.query_eval_check_number)
