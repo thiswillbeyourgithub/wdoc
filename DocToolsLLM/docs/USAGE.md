@@ -264,6 +264,9 @@
     Not taken into account for the filetype "youtube".
     Taken into account if filetype if "local_audio" or "local_video"
 
+* `--audio_unsilence`: bool
+    * When processing audio files, remove silence before transcribing.
+
 * `--whisper_lang`: str
     * if using whisper to transcribe an audio file, this if the language
     specified to whisper

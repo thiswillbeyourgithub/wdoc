@@ -42,7 +42,7 @@
 * **Multiple LLM providers**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
 * **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
-* **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs).
+* **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
 * **Conversation friendly**: If asking several questions in a row, the questions are automatically reformulated as standalone questions to make querying more natural.
 * **Documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./DocToolsLLM/docs/USAGE.md) or via `python -m DocToolsLLM --help`.
@@ -87,7 +87,7 @@
 * **anki**: collection
 * **string**: just paste your text into the app
 * **html files**: useful for website dumps
-* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)
+* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
 * **video files**: tries to extract the audio then treat it as an audio file
 * **epub files**
 * **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...

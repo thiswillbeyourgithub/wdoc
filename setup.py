@@ -87,6 +87,7 @@ setup(
         'httpx >= 0.27.0',  # to increase deepgram timeout
         'pydub >= 0.25.1',  # extracting audio from local video
         'ffmpeg >= 1.4',  # extracting audio from local video
+        'torchaudio >= 2.3.1',  # silence removal from audio
     ],
     extra_require={
     'optional_feature': [

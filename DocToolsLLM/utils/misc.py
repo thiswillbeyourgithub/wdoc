@@ -91,6 +91,7 @@ loader_specific_keys = {
     "anki_profile": str,
 
     "audio_backend": str,
+    "audio_unsilence": bool,
 
     "whisper_lang": str,
     "whisper_prompt": str,
