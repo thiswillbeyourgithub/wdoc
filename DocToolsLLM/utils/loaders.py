@@ -994,15 +994,17 @@ def load_local_video(
     assert Path(path).exists(), f"file not found: '{path}'"
 
     audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
-    assert not Path(audio_path).exists()
+    assert not audio_path.exists()
 
     # extract audio from video
     try:
         whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
         t = time.time()
-        stream = ffmpeg.input(path)
-        stream = ffmpeg.output(stream, audio_path)
-        ffmpeg.run(stream)
+        ffmpeg.input(
+            path
+        ).output(
+            str(audio_path.resolve().absolute())
+        ).run()
         whi(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
         red(f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
