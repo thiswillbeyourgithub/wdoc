@@ -277,9 +277,11 @@ class DocToolsLLM_class:
 
         if not no_llm_cache:
             if not private:
-                set_llm_cache(SQLiteCache(database_path=cache_dir / "langchain.db"))
+                self.llm_cache = SQLiteCache(database_path=cache_dir / "langchain.db")
+                set_llm_cache(self.llm_cache)
             else:
-                set_llm_cache(SQLiteCache(database_path=cache_dir / "private_langchain.db"))
+                self.llm_cache = SQLiteCache(database_path=cache_dir / "private_langchain.db")
+                set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base was modified")
@@ -362,7 +364,7 @@ class DocToolsLLM_class:
         self.llm = load_llm(
             modelname=modelname,
             backend=self.modelbackend,
-            no_llm_cache=self.no_llm_cache,
+            llm_cache=self.llm_cache if not self.no_llm_cache else False,
             temperature=0,
             verbose=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
@@ -710,6 +712,7 @@ class DocToolsLLM_class:
         total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
         if llmcallback.total_tokens != results['doc_total_tokens']:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+        return results
 
     def prepare_query_task(self):
         # load embeddings for querying
@@ -1091,7 +1094,7 @@ class DocToolsLLM_class:
                     self.eval_llm = load_llm(
                         modelname=self.query_eval_modelname,
                         backend=self.query_eval_modelbackend,
-                        no_llm_cache=self.no_llm_cache,
+                        llm_cache=self.llm_cache if not self.no_llm_cache else False,
                         verbose=self.llm_verbosity,
                         temperature=1,
                         api_base=self.llms_api_bases["query_eval_model"],
@@ -1227,7 +1230,7 @@ class DocToolsLLM_class:
                 self.eval_llm = load_llm(
                     modelname=self.query_eval_modelname,
                     backend=self.query_eval_modelbackend,
-                    no_llm_cache=self.no_llm_cache,
+                    llm_cache=self.llm_cache if not self.no_llm_cache else False,
                     verbose=self.llm_verbosity,
                     temperature=1,
                     api_base=self.llms_api_bases["query_eval_model"],
