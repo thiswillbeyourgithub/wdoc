@@ -95,67 +95,27 @@ _complete-DocToolsLLM()
   lastcommand=$(get_lastcommand)
 
   opts=""
-  GLOBAL_OPTIONS="--dollar-limit --no-llm-cache --query --top-k --load-embeds-from --llms-api-bases --embed-kwargs --query-eval-modelname --debug --task --query-retrievers --embed-model --chat-memory --summary-language --import-mode --save-embeds-as --query-eval-check-number --private --notification-callback --filetype --query-relevancy --query-condense-question --file-loader-parallel-backend --summary-n-recursion --modelname --DIY-rolling-window-embedding --llm-verbosity"
+  GLOBAL_OPTIONS="--debug --llm-verbosity --load-embeds-from --query-retrievers --notification-callback --query-eval-check-number --embed-model --DIY-rolling-window-embedding --llms-api-bases --chat-memory --filetype --query-condense-question --summary-n-recursion --query-eval-modelname --import-mode --save-embeds-as --query-relevancy --no-llm-cache --query --file-loader-parallel-backend --summary-language --embed-kwargs --task --dollar-limit --private --modelname --top-k"
 
 
   case "${lastcommand}" in
   
-    center)
+    translate)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--fillchar --width ${GLOBAL_OPTIONS}"
+        opts="--table ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
 
-    ljust)
+    removeprefix)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--fillchar --width ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    prepare-query-task)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    expandtabs)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--tabsize ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    encode)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--encoding --errors ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    rstrip)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--chars ${GLOBAL_OPTIONS}"
+        opts="--prefix ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -166,6 +126,56 @@ _complete-DocToolsLLM()
         opts="${GLOBAL_OPTIONS}"
       else
         opts="--suffix ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    replace)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--count --new --old ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    split)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--maxsplit --sep ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    join)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    VERSION)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    zfill)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--width ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -190,26 +200,6 @@ _complete-DocToolsLLM()
       opts=$(filter_options $opts)
     ;;
 
-    partition)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--sep ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    translate)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--table ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
     lstrip)
       
       if is_prev_global; then
@@ -220,7 +210,7 @@ _complete-DocToolsLLM()
       opts=$(filter_options $opts)
     ;;
 
-    rjust)
+    ljust)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
@@ -230,12 +220,32 @@ _complete-DocToolsLLM()
       opts=$(filter_options $opts)
     ;;
 
-    join)
+    expandtabs)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--iterable ${GLOBAL_OPTIONS}"
+        opts="--tabsize ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    rstrip)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--chars ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    prepare-query-task)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -250,28 +260,38 @@ _complete-DocToolsLLM()
       opts=$(filter_options $opts)
     ;;
 
-    replace)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--count --new --old ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
     DocToolsLLM)
       
       opts="VERSION prepare-query-task ${GLOBAL_OPTIONS}" 
       opts=$(filter_options $opts)
     ;;
 
-    split)
+    encode)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--maxsplit --sep ${GLOBAL_OPTIONS}"
+        opts="--encoding --errors ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    rjust)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--fillchar --width ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    partition)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--sep ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -286,32 +306,12 @@ _complete-DocToolsLLM()
       opts=$(filter_options $opts)
     ;;
 
-    removeprefix)
+    center)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--prefix ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    VERSION)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    zfill)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--width ${GLOBAL_OPTIONS}"
+        opts="--fillchar --width ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
