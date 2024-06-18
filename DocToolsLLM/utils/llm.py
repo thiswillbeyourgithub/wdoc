@@ -86,7 +86,7 @@ def load_llm(
         if max_tokens not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname,
+                model_name=modelname.split("/")[1],
                 cache=not no_llm_cache,
                 verbose=verbose,
                 callbacks=[PriceCountingCallback(verbose=verbose)],
