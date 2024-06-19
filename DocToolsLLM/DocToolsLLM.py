@@ -1282,7 +1282,7 @@ class DocToolsLLM_class:
                         assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                         outputs.append(out.generations[0].text)
                         finish_reason = out.generations[0].generation_info["finish_reason"]
-                        assert finish_reason == "stop", f"unexpected finish_reason: '{finish}'"
+                        assert finish_reason == "stop", f"unexpected finish_reason: '{finish_reason}'"
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
                     assert outputs, "No generations found by query eval llm"
