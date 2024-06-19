@@ -1065,7 +1065,9 @@ class DocToolsLLM_class:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
-                assert all(r == "stop" for r in reasons), f"Unexpected generation finish_reason: '{reasons}'"
+                # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
+                if not all(r == "stop" for r in reasons):
+                    red(f"Unexpected generation finish_reason: '{reasons}'")
                 outputs = [gen.text for gen in out.generations]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
@@ -1094,7 +1096,8 @@ class DocToolsLLM_class:
                 for out in outs:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                     finish_reason = out.generations[0].generation_info["finish_reason"]
-                    assert finish_reason == "stop", f"unexpected finish_reason: '{finish_reason}'"
+                    if not finish_reason == "stop":
+                        red(f"Unexpected finish_reason: '{finish_reason}'")
                     outputs.append(out.generations[0].text)
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
