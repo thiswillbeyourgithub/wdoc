@@ -39,7 +39,7 @@ def load_llm(
     modelname: str,
     backend: str,
     verbose: bool,
-    llm_cache: Union[bool, SQLiteCache],
+    llm_cache: Union[None, bool, SQLiteCache],
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
@@ -81,7 +81,7 @@ def load_llm(
     else:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
 
-    if not private and backend == "openai" and api_base is None and llm_cache is not False:
+    if not private and backend == "openai" and api_base is None:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
@@ -98,7 +98,7 @@ def load_llm(
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
-        if llm_cache is not False:
+        if llm_cache is not None:
             red(f"Reminder: caching is disabled for non openai models until langchain approves the fix.")
         llm = ChatLiteLLM(
             model_name=modelname,
@@ -111,6 +111,12 @@ def load_llm(
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
         assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
+
+    # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
+    if llm.cache:
+        cur = str(llm.cache)
+        llm.cache.__class__.__repr__ = lambda: cur.split(" at ")[0]
+        llm.cache.__class__.__str__ = lambda: cur.split(" at ")[0]
     return llm
 
 
@@ -132,6 +138,14 @@ class PriceCountingCallback(BaseCallbackHandler):
                 "on_chain_end",
                 "on_chain_error",
         ]
+
+    def __repr__(self) -> str:
+        # setting __repr__ and __str__ is important because it can
+        # maybe be used for caching?
+        return "PriceCountingCallback"
+
+    def __str__(self) -> str:
+        return "PriceCountingCallback"
 
     def _check_methods_called(self) -> None:
         assert all(meth in dir(self) for meth in self.methods_called), (
