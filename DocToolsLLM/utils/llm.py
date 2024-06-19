@@ -84,7 +84,7 @@ def load_llm(
     if not private and backend == "openai" and api_base is None and llm_cache is not False:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
-        if max_tokens not in extra_model_args:
+        if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
                 model_name=modelname.split("/")[1],
@@ -96,7 +96,7 @@ def load_llm(
     else:
         red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
-        if max_tokens not in extra_model_args:
+        if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         if llm_cache is not False:
             red(f"Reminder: caching is disabled for non openai models until langchain approves the fix.")
