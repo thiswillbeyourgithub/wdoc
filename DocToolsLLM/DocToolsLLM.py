@@ -1039,8 +1039,12 @@ class DocToolsLLM_class:
                 outputs = [gen.text for gen in out.generations]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
-                new_p = out.llm_output["token_usage"]["prompt_tokens"]
-                new_c = out.llm_output["token_usage"]["completion_tokens"]
+                if out.llm_output:
+                    new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                    new_c = out.llm_output["token_usage"]["completion_tokens"]
+                else:
+                    new_p = 0
+                    new_c = 0
             else:
                 outputs = []
                 new_p = 0
@@ -1060,8 +1064,9 @@ class DocToolsLLM_class:
                 for out in outs:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                     outputs.append(out.generations[0].text)
-                    new_p += out.llm_output["token_usage"]["prompt_tokens"]
-                    new_c += out.llm_output["token_usage"]["completion_tokens"]
+                    if out.llm_output:
+                        new_p += out.llm_output["token_usage"]["prompt_tokens"]
+                        new_c += out.llm_output["token_usage"]["completion_tokens"]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
 
@@ -1260,8 +1265,12 @@ class DocToolsLLM_class:
                     outputs = [gen.text for gen in out.generations]
                     assert outputs, "No generations found by query eval llm"
                     outputs = [parse_eval_output(o) for o in outputs]
-                    new_p = out.llm_output["token_usage"]["prompt_tokens"]
-                    new_c = out.llm_output["token_usage"]["completion_tokens"]
+                    if out.llm_output:
+                        new_p = out.llm_output["token_usage"]["prompt_tokens"]
+                        new_c = out.llm_output["token_usage"]["completion_tokens"]
+                    else:
+                        new_p = 0
+                        new_c = 0
                 else:
                     outputs = []
                     new_p = 0
@@ -1283,8 +1292,9 @@ class DocToolsLLM_class:
                         outputs.append(out.generations[0].text)
                         finish_reason = out.generations[0].generation_info["finish_reason"]
                         assert finish_reason == "stop", f"unexpected finish_reason: '{finish_reason}'"
-                        new_p += out.llm_output["token_usage"]["prompt_tokens"]
-                        new_c += out.llm_output["token_usage"]["completion_tokens"]
+                        if out.llm_output:
+                            new_p += out.llm_output["token_usage"]["prompt_tokens"]
+                            new_c += out.llm_output["token_usage"]["completion_tokens"]
                     assert outputs, "No generations found by query eval llm"
                     outputs = [parse_eval_output(o) for o in outputs]
 
