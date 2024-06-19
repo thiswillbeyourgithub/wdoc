@@ -282,6 +282,8 @@ class DocToolsLLM_class:
             else:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
                 set_llm_cache(self.llm_cache)
+        else:
+            self.llm_cache = not no_llm_cache
 
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base was modified")
@@ -364,7 +366,7 @@ class DocToolsLLM_class:
         self.llm = load_llm(
             modelname=modelname,
             backend=self.modelbackend,
-            llm_cache=self.llm_cache if not self.no_llm_cache else False,
+            llm_cache=self.llm_cache,
             temperature=0,
             verbose=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
@@ -1021,7 +1023,7 @@ class DocToolsLLM_class:
         whi(f"Question to answer: {query_an}")
 
         # the eval doc chain needs its own caching
-        if not self.no_llm_cache:
+        if self.llm_cache:
             eval_cache_wrapper = doc_eval_cache.cache
         else:
             def eval_cache_wrapper(func): return func
