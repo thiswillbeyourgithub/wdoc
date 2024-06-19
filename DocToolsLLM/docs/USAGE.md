@@ -252,7 +252,8 @@
     is used.
     * Modes:
         * `single_note`: 1 document is 1 anki note.
-        * `window`: 1 documents is 5 anki note, overlapping
+        * `window`: 1 documents is 5 anki note, overlapping (so
+        10 anki notes will result in 5 documents)
         * `concatenate`: 1 document is all anki notes concatenated as a
         single wall of text then split like any long document.
 
