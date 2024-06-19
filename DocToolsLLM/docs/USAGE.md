@@ -248,7 +248,7 @@
     * List of fields to keep
 * `--anki_mode`: str
     * any of `window`, `concatenate`, `single_note`: (or _ separated
-    value like `concatenate_window`). By default `window_single_note`
+    value like `concatenate_window`). By default `single_note`
     is used.
     * Modes:
         * `single_note`: 1 document is 1 anki note.
