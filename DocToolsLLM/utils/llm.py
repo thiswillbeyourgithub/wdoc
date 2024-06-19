@@ -98,7 +98,7 @@ def load_llm(
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
-        if llm_cache is not False:
+        if llm_cache is not None:
             red(f"Reminder: caching is disabled for non openai models until langchain approves the fix.")
         llm = ChatLiteLLM(
             model_name=modelname,
