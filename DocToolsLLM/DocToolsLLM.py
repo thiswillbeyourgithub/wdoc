@@ -1236,7 +1236,7 @@ class DocToolsLLM_class:
                 self.eval_llm = load_llm(
                     modelname=self.query_eval_modelname,
                     backend=self.query_eval_modelbackend,
-                    llm_cache=self.llm_cache if not self.no_llm_cache else False,
+                    llm_cache=False,  # disables caching because another caching is used on top
                     verbose=self.llm_verbosity,
                     temperature=1,
                     api_base=self.llms_api_bases["query_eval_model"],
