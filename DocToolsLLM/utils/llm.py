@@ -39,7 +39,7 @@ def load_llm(
     modelname: str,
     backend: str,
     verbose: bool,
-    llm_cache: Union[bool, SQLiteCache],
+    llm_cache: Union[None, bool, SQLiteCache],
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
