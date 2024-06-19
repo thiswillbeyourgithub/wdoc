@@ -1079,36 +1079,38 @@ class DocToolsLLM_class:
             self.eval_llm.callbacks[0].total_tokens += new_p + new_c
             return outputs
 
+        # answer 0 or 1 if the document is related
+        if not hasattr(self, "eval_llm"):
+            self.eval_llm_params = litellm.get_supported_openai_params(
+                model=self.query_eval_modelname,
+                custom_llm_provider=self.query_eval_modelbackend,
+            )
+            eval_args = {}
+            if "n" in self.eval_llm_params:
+                eval_args["n"] = self.query_eval_check_number
+            else:
+                red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
+            if "max_tokens" in self.eval_llm_params:
+                eval_args["max_tokens"] = 2
+            else:
+                red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
+            self.eval_llm = load_llm(
+                modelname=self.query_eval_modelname,
+                backend=self.query_eval_modelbackend,
+                llm_cache=False,  # disables caching because another caching is used on top
+                verbose=self.llm_verbosity,
+                temperature=1,
+                api_base=self.llms_api_bases["query_eval_model"],
+                private=self.private,
+                **eval_args,
+            )
+
+        # uses in most places to increase concurrency limit
+        multi = {"max_concurrency": 50 if not self.debug else 1}
+
         if self.task == "search":
             if self.query_eval_modelname:
-                # uses in most places to increase concurrency limit
-                multi = {"max_concurrency": 50 if not self.debug else 1}
 
-                # answer 0 or 1 if the document is related
-                if not hasattr(self, "eval_llm"):
-                    self.eval_llm_params = litellm.get_supported_openai_params(
-                        model=self.query_eval_modelname,
-                        custom_llm_provider=self.query_eval_modelbackend,
-                    )
-                    eval_args = {}
-                    if "n" in self.eval_llm_params:
-                        eval_args["n"] = self.query_eval_check_number
-                    else:
-                        red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
-                    if "max_tokens" in self.eval_llm_params:
-                        eval_args["max_tokens"] = 2
-                    else:
-                        red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
-                    self.eval_llm = load_llm(
-                        modelname=self.query_eval_modelname,
-                        backend=self.query_eval_modelbackend,
-                        llm_cache=False,  # disables caching because another caching is used on top
-                        verbose=self.llm_verbosity,
-                        temperature=1,
-                        api_base=self.llms_api_bases["query_eval_model"],
-                        private=self.private,
-                        **eval_args,
-                    )
 
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
@@ -1216,35 +1218,6 @@ class DocToolsLLM_class:
                         | self.llm
                         | StrOutputParser()
                 }
-
-            # uses in most places to increase concurrency limit
-            multi = {"max_concurrency": 50 if not self.debug else 1}
-
-            # answer 0 or 1 if the document is related
-            if not hasattr(self, "eval_llm"):
-                self.eval_llm_params = litellm.get_supported_openai_params(
-                    model=self.query_eval_modelname,
-                    custom_llm_provider=self.query_eval_modelbackend,
-                )
-                eval_args = {}
-                if "n" in self.eval_llm_params:
-                    eval_args["n"] = self.query_eval_check_number
-                else:
-                    red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
-                if "max_tokens" in self.eval_llm_params:
-                    eval_args["max_tokens"] = 2
-                else:
-                    red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
-                self.eval_llm = load_llm(
-                    modelname=self.query_eval_modelname,
-                    backend=self.query_eval_modelbackend,
-                    llm_cache=False,  # disables caching because another caching is used on top
-                    verbose=self.llm_verbosity,
-                    temperature=1,
-                    api_base=self.llms_api_bases["query_eval_model"],
-                    private=self.private,
-                    **eval_args,
-                )
 
             # the eval doc chain needs its own caching
             if self.no_llm_cache:
