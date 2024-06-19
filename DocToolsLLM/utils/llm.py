@@ -139,6 +139,14 @@ class PriceCountingCallback(BaseCallbackHandler):
                 "on_chain_error",
         ]
 
+    def __repr__(self) -> str:
+        # setting __repr__ and __str__ is important because it can
+        # maybe be used for caching?
+        return "PriceCountingCallback"
+
+    def __str__(self) -> str:
+        return "PriceCountingCallback"
+
     def _check_methods_called(self) -> None:
         assert all(meth in dir(self) for meth in self.methods_called), (
             "unexpected method names!")
