@@ -35,8 +35,6 @@ def do_summarize(
     assert "[PROGRESS]" in metadata
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
-        if ird > 0:
-            assert llm.callbacks[0].total_tokens > 0
 
         messages = BASE_SUMMARY_PROMPT.format_messages(
             text=rd.page_content,
@@ -50,8 +48,12 @@ def do_summarize(
         assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
         assert len(output.generations) == 1
         out = output.generations[0].text
-        new_p = output.llm_output["token_usage"]["prompt_tokens"]
-        new_c = output.llm_output["token_usage"]["completion_tokens"]
+        if output.llm_output:  # only present if not caching
+            new_p = output.llm_output["token_usage"]["prompt_tokens"]
+            new_c = output.llm_output["token_usage"]["completion_tokens"]
+        else:
+            new_p = 0
+            new_c = 0
         total_tokens += new_p + new_c
         total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
 
