@@ -297,6 +297,7 @@ def get_splitter(
     max_tokens = 4096
     try:
         max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
+        # max_tokens = litellm.get_model_info(modelname)["max_tokens"]
 
         # don't use overly large chunks anyway
         max_tokens = min(max_tokens, int(2.5 * litellm.get_model_info(modelname)["max_tokens"]))
