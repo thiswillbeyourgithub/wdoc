@@ -115,8 +115,8 @@ def load_llm(
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
     if llm.cache:
         cur = str(llm.cache)
-        llm.cache.__class__.__repr__ = lambda x=None: cur.split(" at ")[0]
-        llm.cache.__class__.__str__ = lambda x=None: cur.split(" at ")[0]
+        llm.cache.__class__.__repr__ = lambda: cur.split(" at ")[0]
+        llm.cache.__class__.__str__ = lambda: cur.split(" at ")[0]
     return llm
 
 
