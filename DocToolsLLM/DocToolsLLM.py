@@ -78,7 +78,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.37"
+    VERSION: str = "0.38"
 
     #@optional_typecheck
     @typechecked
@@ -1064,6 +1064,10 @@ class DocToolsLLM_class:
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
+                reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
+                # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
+                if not all(r == "stop" for r in reasons):
+                    red(f"Unexpected generation finish_reason: '{reasons}'")
                 outputs = [gen.text for gen in out.generations]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
@@ -1085,12 +1089,15 @@ class DocToolsLLM_class:
                 ]
                 try:
                     loop = asyncio.get_event_loop()
-                except:
+                except RuntimeError:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                 outs = loop.run_until_complete(asyncio.gather(*outs))
                 for out in outs:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
+                    finish_reason = out.generations[0].generation_info["finish_reason"]
+                    if not finish_reason == "stop":
+                        red(f"Unexpected finish_reason: '{finish_reason}'")
                     outputs.append(out.generations[0].text)
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
@@ -1218,67 +1225,6 @@ class DocToolsLLM_class:
                         | self.llm
                         | StrOutputParser()
                 }
-
-            # the eval doc chain needs its own caching
-            if self.no_llm_cache:
-                def eval_cache_wrapper(func): return func
-            else:
-                eval_cache_wrapper = doc_eval_cache.cache
-
-            @chain
-            @optional_typecheck
-            @eval_cache_wrapper
-            def evaluate_doc_chain(
-                    inputs: dict,
-                    query_nb: int = self.query_eval_check_number,
-                    eval_model_name: str = self.query_eval_modelname,
-                ) -> List[str]:
-                if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                    out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
-                    reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
-                    assert all(r == "stop" for r in reasons), f"Unexpected generation finish_reason: '{reasons}'"
-                    outputs = [gen.text for gen in out.generations]
-                    assert outputs, "No generations found by query eval llm"
-                    outputs = [parse_eval_output(o) for o in outputs]
-                    if out.llm_output:
-                        new_p = out.llm_output["token_usage"]["prompt_tokens"]
-                        new_c = out.llm_output["token_usage"]["completion_tokens"]
-                    else:
-                        new_p = 0
-                        new_c = 0
-                else:
-                    outputs = []
-                    new_p = 0
-                    new_c = 0
-                    async def eval(inputs):
-                        return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
-                    outs = [
-                        eval(inputs)
-                        for i in range(self.query_eval_check_number)
-                    ]
-                    try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                    outs = loop.run_until_complete(asyncio.gather(*outs))
-                    for out in outs:
-                        assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
-                        outputs.append(out.generations[0].text)
-                        finish_reason = out.generations[0].generation_info["finish_reason"]
-                        assert finish_reason == "stop", f"unexpected finish_reason: '{finish_reason}'"
-                        if out.llm_output:
-                            new_p += out.llm_output["token_usage"]["prompt_tokens"]
-                            new_c += out.llm_output["token_usage"]["completion_tokens"]
-                    assert outputs, "No generations found by query eval llm"
-                    outputs = [parse_eval_output(o) for o in outputs]
-
-                assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs"
-
-                self.eval_llm.callbacks[0].prompt_tokens += new_p
-                self.eval_llm.callbacks[0].completion_tokens += new_c
-                self.eval_llm.callbacks[0].total_tokens += new_p + new_c
-                return outputs
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
