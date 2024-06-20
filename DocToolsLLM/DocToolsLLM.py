@@ -473,7 +473,9 @@ class DocToolsLLM_class:
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
-        if self.modelbackend == "openai":
+        if "logit_bias" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
