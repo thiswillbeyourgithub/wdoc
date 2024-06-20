@@ -38,7 +38,7 @@ Text section:
         ],
 )
 # if the summary is recursive, add those instructions
-RECURSION_INSTRUCTION = "\nBut today, I'm giving you back your own summary because it was too long and contained repetition. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remve the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you. This is important."
+RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important."
 
 # PROMPT FOR QUERY TASKS
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
