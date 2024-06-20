@@ -7,27 +7,34 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
         [
-        ("system", """You are Alfred, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not interested simply in high level takeaways. What I'm interested in is the thought process of the author(s), the reasonning, the arguments used etc. Your summary has to be as quick and easy to read as possible while following the rules.
+        ("system", """You are Alfred, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
 ```
-- Take a deep breath before answering.
+- Take a deep breath before answering
 - Include:
-    - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
+    - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
+    - Epistemic indicators: you need to make explicit what markers of uncertainty for each information
 - Exclude:
-    - Sponsors, advertisements, etc.
-    - Jokes, ramblings.
-    - End of page references, tables of content, sources, links etc.
-    - When in doubt, keep the information in your summary.
+    - Sponsors, advertisements, etc
+    - Jokes, ramblings
+    - End of page references and sources, tables of content, links etc
+    - When in doubt about wether to include an information, include it
 - Format:
-    - Use markdown format: that means logical indentation, bullet points, bold etc. Don't use headers.
-    - Don't use complete sentence, I'm in a hurry and need bullet points.
-    - Use one bullet point per information, with the use of logical indentation this makes the whole piece quick and easy to skim.
-    - Use bold for important concepts (i.e. "- Mentions that **dietary supplements are healty** because ...")
-    - Write in {language}.
-    - Reformulate direct quotes to be concise, but stay faithful to the tone of the author.
-    - Avoid repetitions:  e.g. don't start several bullet points by 'The author thinks that', just say it once then use indentation to make it implied..
+    - Use markdown format: that means logical indentation, bullet points, bold etc
+        - Don't use headers
+        - Use bold for important concepts, and italic for epistemic markers
+            - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
+    - Stay faithful to the tone of the author
+    - You don't always have to use full sentences: you can ignore end of line punctuation etc
+        - BUT it is more important to be unambiguous and truthful than concise
+        - EVERY TIME POSSIBLE: use direct quote, 'formatted like that'
+    - Use one bullet point per information
+        - With the use of logical indentation this makes the whole piece quick and easy to skim
+    - Write your summary in {language}
+    - Avoid repetitions
+        - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
 ```"""),
         ("human", """{recursion_instruction}{metadata}{previous_summary}
 
@@ -70,7 +77,7 @@ Detailed instructions:
     - But then reply directly without acknowledging your task.
 - Use a maximum of 5 markdown bullet points to answer the question.
     - If the document is ENTIRELY irrelevant to the question, answer simply 'IRRELEVANT' and NOTHING ELSE (especially no formatting).
-    - EVERY TIME POSSIBLE: use direct quote from the document, 'surrounded like that'.
+    - EVERY TIME POSSIBLE: use direct quote from the document, 'formatted like that'.
     - DON'T use your own knowledge of the subject, only use the document.
     - Remain as concise as possible, you can use [...] in your quotes to remove unecessary text.
 - DON'T interpret the question too strictly:
