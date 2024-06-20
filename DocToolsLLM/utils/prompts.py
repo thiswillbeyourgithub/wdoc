@@ -58,13 +58,24 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an assistant for question-answering tasks.
-You are given a piece of document and a question to answer.
-If the document is ENTIRELY irrelevant to the question, answer directly 'IRRELEVANT' without anything else and no other formatting.
-Otherwise, use a maximum of 3 md bulletpoints to answer the question using only information from the provided document.
-Use markdown formatting for easier reading, but don't wrap your answer in a code block or anything like that: reply instantly without acknowledging those rules.
-Doing all that you have to remain VERY concise while remaining truthful to the document content.
-But DON'T interpret the question too strictly, e.g. the question can be implicit because phrased as an instruction like "give me all information about such and such", use common sense!"""),
+        ("system", """Given a piece of document and a question, your task is to answer the question while following specific instructions.
+
+Detailed instructions:
+```
+- Use markdown formatting
+    - Use bullet points, but no headers, bold, italic etc.
+    - Use logic based indentation for the bullet points.
+    - DON'T wrap your answer in a code block or anything like that.
+- Take a deep breath before answering.
+    - But then reply directly without acknowledging your task.
+- Use a maximum of 5 markdown bullet points to answer the question.
+    - If the document is ENTIRELY irrelevant to the question, answer simply 'IRRELEVANT' and NOTHING ELSE (especially no formatting).
+    - EVERY TIME POSSIBLE: use direct quote from the document, 'surrounded like that'.
+    - DON'T use your own knowledge of the subject, only use the document.
+    - Remain as concise as possible, you can use [...] in your quotes to remove unecessary text.
+- DON'T interpret the question too strictly:
+    - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
+```"""),
         ("human", "Question: '{question_to_answer}'\nContext:\n```\n{context}\n```\nWhat's your reply?")
     ]
 )
