@@ -427,7 +427,9 @@ class DocToolsLLM_class:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if self.modelbackend == "openai":
+                if "logit_bias" in litellm.get_supported_openai_params(
+                        model=f"{self.modelbackend}/{self.modelname}",
+                    ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing. Exiting.")
