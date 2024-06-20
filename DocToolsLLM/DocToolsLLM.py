@@ -113,7 +113,7 @@ class DocToolsLLM_class:
         query_condense_question: Union[bool, int] = True,
 
         summary_n_recursion: int = 1,
-        summary_language: str = "[same as input]",
+        summary_language: str = "the same language as the document",
 
         llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
