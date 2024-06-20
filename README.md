@@ -37,8 +37,15 @@
     * I use it to ask questions about entire youtube playlists.
 
 ## Features
-* **Advanced RAG**: first the documents are retrieved using embedding, then a weak LLM model is used to tell which of those document is not relevant, then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer. It even supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
-* **Advanced summary**: Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file. The summaries are then checked again n times for correct logical indentation etc.
+* **Advanced RAG to query lots of diverse documents**:
+    1. the documents are retrieved using embedding
+    2. then a weak LLM model is used to tell which of those document is not relevant
+    3. then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer.
+    * Supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+* **Advanced summary**:
+    * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
+    * The summaries are then checked again n times for correct logical indentation etc.
+    * The summary can be in the same language as the documents or directly translated.
 * **Multiple LLM providers**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
 * **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
@@ -64,6 +71,7 @@
 ### Planned features
 *(These don't include improvements, bugfixes, refactoring etc.)*
 * Accept input from stdin, to for example query directly from a manpage
+* Much faster startup time
 * Much improved retriever:
     * More configurable HyDE.
     * Web search retriever, online information lookup via jina.ai reader and search.
@@ -109,7 +117,7 @@
 
 ## Walkthrough and examples
 1. Say you want to ask a question about one pdf, that's simple: `DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
-2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"!
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive" --recursed_filetype "pdf" --query "My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"! Note that you can either directly ask your question with `--query "my question"`, or wait for an interactive prompt to pop up.
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources.
 4. You can specify a "source_tag" metadata to help distinguish between documents you imported.
 5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!

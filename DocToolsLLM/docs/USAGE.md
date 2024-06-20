@@ -150,7 +150,7 @@
     * If `--out_file` is used, each intermediate summary will be saved
     with the name `{out_file}.n.md` with n being the n-1th recursive summary.
 
-* `--summary_language`: str, default `"[same as input]"`
+* `--summary_language`: str, default `"the same language as the document"`
     * When writing a summary, the LLM will write using the language
     specified in this argument. If it's `[same as input]`, the LLM
     will not translate.

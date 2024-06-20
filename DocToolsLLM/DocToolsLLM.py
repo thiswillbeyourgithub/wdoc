@@ -78,7 +78,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.38"
+    VERSION: str = "0.39"
 
     #@optional_typecheck
     @typechecked
@@ -113,7 +113,7 @@ class DocToolsLLM_class:
         query_condense_question: Union[bool, int] = True,
 
         summary_n_recursion: int = 1,
-        summary_language: str = "[same as input]",
+        summary_language: str = "the same language as the document",
 
         llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
@@ -427,7 +427,9 @@ class DocToolsLLM_class:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if self.modelbackend == "openai":
+                if "logit_bias" in litellm.get_supported_openai_params(
+                        model=f"{self.modelbackend}/{self.modelname}",
+                    ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing. Exiting.")
@@ -473,7 +475,9 @@ class DocToolsLLM_class:
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
-        if self.modelbackend == "openai":
+        if "logit_bias" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -510,8 +514,17 @@ class DocToolsLLM_class:
                 56899: logit_val,    # "                                                                            "
                 98517: logit_val,    # "                                                                                "
                 }
+        if "frequency_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
+        if "presence_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
+        if "temperature" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
@@ -717,7 +730,61 @@ class DocToolsLLM_class:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
-    def prepare_query_task(self):
+    @optional_typecheck
+    def prepare_query_task(self) -> None:
+        # set argument that are better suited for querying
+        if "logit_bias" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
+            # increase likelyhood that chatgpt will use indentation by
+            # biasing towards adding space.
+            logit_val = 3
+            self.llm.model_kwargs["logit_bias"] = {
+                12: logit_val,  # '-'
+                # 220: logit_val,  # ' '
+                # 532: logit_val,  # ' -'
+                # 9: logit_val,  # '*'
+                # 1635: logit_val,  # ' *'
+                # 197: logit_val,  # '\t'
+                334: logit_val,  # '**'
+                # 25: logit_val,  # ':'
+                # 551: logit_val,  # ' :'
+                # 13: -1,  # '.'
+                # logit bias for indentation, the number of space, because it consumes less token than using \t
+                257: logit_val,      # "    "
+                260: logit_val,      # "        "
+                1835: logit_val,     # "            "
+                338: logit_val,      # "                "
+                3909: logit_val,     # "                    "
+                5218: logit_val,     # "                        "
+                6663: logit_val,     # "                            "
+                792: logit_val,      # "                                "
+                10812: logit_val,    # "                                    "
+                13137: logit_val,    # "                                        "
+                15791: logit_val,    # "                                            "
+                19273: logit_val,    # "                                                "
+                25343: logit_val,    # "                                                    "
+                29902: logit_val,    # "                                                        "
+                39584: logit_val,    # "                                                            "
+                5341: logit_val,     # "                                                                "
+                52168: logit_val,    # "                                                                    "
+                38244: logit_val,    # "                                                                        "
+                56899: logit_val,    # "                                                                            "
+                98517: logit_val,    # "                                                                                "
+                }
+        if "frequency_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
+            self.llm.model_kwargs["frequency_penalty"] = 0.0
+        if "presence_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
+            self.llm.model_kwargs["presence_penalty"] = 0.0
+        if "temperature" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
+            self.llm.model_kwargs["temperature"] = 0.0
+
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
             embed_model=self.embed_model,

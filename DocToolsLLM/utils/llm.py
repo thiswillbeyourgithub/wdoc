@@ -17,7 +17,7 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.llms import FakeListLLM
 from langchain_community.chat_models import ChatLiteLLM
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_community.cache import SQLiteCache
 
 from .logger import whi, red, yel
