@@ -64,6 +64,7 @@
 ### Planned features
 *(These don't include improvements, bugfixes, refactoring etc.)*
 * Accept input from stdin, to for example query directly from a manpage
+* Much faster startup time
 * Much improved retriever:
     * More configurable HyDE.
     * Web search retriever, online information lookup via jina.ai reader and search.
