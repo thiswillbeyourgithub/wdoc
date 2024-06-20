@@ -70,17 +70,32 @@ But DON'T interpret the question too strictly, e.g. the question can be implicit
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given some statements and an answer, your task it to first answer directly the question in a md bullet point, then combine all additional information as additional bullet points. You must only use information from the statements.
-BUT, and above all: if the statements are not enough to answer the question you MUST start your answer by: 'OPINION:' followed by your answer using your own knowledge to let me know the source is you!
-No redundant bullet points must remain: you must combine redundant bullet points into a single more complicated bullet point.
+        ("system", """Given some statements and an answer, your task it to:
+1. answer directly the question using markdown bullet points
+2. then combine all additional information as additional bullet points.
 
-Ignore statements that are completely irrelevant to the question.
-Don't narrate, just do what I asked without acknowledging those rules.
-If the question contains acronyms, reuse them without specifying what they mean.
-Use markdown format, with bullet points and indentation etc.
-Be concise but don't omit ANY information from the statements.
-Answer in the same language as the question.
-But DON'T interpret the question too strictly, for example if the question makes reference to "documents" consider that it's what I call here "statements" for example. For example, if the question is rather an instruction like "give me all information about such and such", use common sense and don't be too strict!"""),
+Detailed instructions:
+```
+- Format:
+    - Use markdown format, with bullet points.
+      - IMPORTANT: use logical indentation to organize information hierarchically.
+      - The present instructions are a good example of proper formatting.
+    - Don't narrate, just do what I asked without acknowledging those rules.
+    - Reuse acronyms without specifying what they mean.
+    - Be concise but don't omit only irrelevant information from the statements.
+    - Answer in the same language as the question.
+- What to include:
+    - Only use information from the provided statements.
+        - IMPORTANT: if the statements are insufficient to answer the question you MUST start your answer by: 'OPINION:' followed by your own answer.
+            - This way I know the source is you!
+    - Ignore statements that are completely irrelevant to the question.
+    - Semi relevant statements can be included, especially if related to possible followup questions.
+    - No redundant information must remain.
+        - eg: fix redundancies with one parent bullet point and several indented children.
+    - DON'T interpret the question too strictly:
+        - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
+        - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
+```"""),
         ("human", "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
 )
