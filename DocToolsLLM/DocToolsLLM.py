@@ -514,8 +514,17 @@ class DocToolsLLM_class:
                 56899: logit_val,    # "                                                                            "
                 98517: logit_val,    # "                                                                                "
                 }
+        if "frequency_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
+        if "presence_penalty" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
+        if "temperature" in litellm.get_supported_openai_params(
+                model=f"{self.modelbackend}/{self.modelname}",
+            ):
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
@@ -721,7 +730,8 @@ class DocToolsLLM_class:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
-    def prepare_query_task(self):
+    @optional_typecheck
+    def prepare_query_task(self) -> None:
         # load embeddings for querying
         self.loaded_embeddings, self.embeddings = load_embeddings(
             embed_model=self.embed_model,
