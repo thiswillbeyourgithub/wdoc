@@ -71,7 +71,7 @@ But DON'T interpret the question too strictly, e.g. the question can be implicit
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given some statements and an answer, your task it to:
+        ("system", """Given some statements and an answer, your task is to:
 1. answer directly the question using markdown bullet points
 2. then combine all additional information as additional bullet points.
 
