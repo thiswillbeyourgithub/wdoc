@@ -1,6 +1,12 @@
 # DocToolsLLM
 * **Goal and project specifications** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
-* **Current status**: **Already great but still under development**. Expect some breakage but they can be fixed usually in a few minutes if you open an issue here. The main branch is usually fine but the dev branch is better. I use it almost daily and have been for months now. I accept feature requests, pull requests, issues are extremely appreciated for any reason including typos etc. Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
+* **Current status**: **still under development**.
+    * I use it almost daily and have been for months now.
+    * Expect some breakage but they can be fixed usually in a few minutes if you open an issue here.
+    * The main branch is usually fine but the dev branch has more features.
+    * I accept feature requests and pull requests.
+    * Issues are extremely appreciated for any reason including typos etc.
+    * Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
 
 ### Table of contents
 - [What is DocToolsLLM in a few questions](#doctoolsllm-in-a-few-questions)
