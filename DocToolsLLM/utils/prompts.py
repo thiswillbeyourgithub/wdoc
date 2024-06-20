@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
         [
         ("system", """You are Alfred, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not interested simply in high level takeaways. What I'm interested in is the thought process of the author(s), the reasonning, the arguments used etc. Your summary has to be as quick and easy to read as possible while following the rules.
-This is very important to me so if you succeed, I'll tip you up to $2000!
+This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
 ```
