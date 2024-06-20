@@ -12,6 +12,7 @@ This is very important to me so if you succeed, I'll tip you up to $2000!
 
 Detailed instructions:
 ```
+- Take a deep breath before answering.
 - Include:
     - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc.
 - Exclude:
@@ -76,6 +77,7 @@ PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
 
 Detailed instructions:
 ```
+- Take a deep breath before answering.
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
