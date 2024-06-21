@@ -672,10 +672,11 @@ class DocToolsLLM_class:
                         recursive_summaries[n_recur] = summary_text
 
             best_sum_i = max(list(recursive_summaries.keys()))
-            print("\n\n")
-            md_printer("# Summary")
-            md_printer(f'## {path}')
-            md_printer(recursive_summaries[best_sum_i])
+            if not self.import_mode:
+                print("\n\n")
+                md_printer("# Summary")
+                md_printer(f'## {path}')
+                md_printer(recursive_summaries[best_sum_i])
 
             red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
