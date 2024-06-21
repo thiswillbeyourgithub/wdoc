@@ -427,11 +427,11 @@ class DocToolsLLM_class:
 
         if self.import_mode:
             if self.debug:
-                whi("Ready to query or summarize, call your_instance._query(your_question)")
+                whi("Ready to query or summarize, call your_instance.query_task(your_question)")
             return
 
         if self.task in ["summarize", "summarize_then_query"]:
-            self._summary_task()
+            self.summary_task()
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
@@ -446,11 +446,11 @@ class DocToolsLLM_class:
         else:
             assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
             while True:
-                self._query(query=query)
+                self.query_task(query=query)
                 query = None
 
     @optional_typecheck
-    def _summary_task(self) -> dict:
+    def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
@@ -999,7 +999,7 @@ class DocToolsLLM_class:
 
 
     #@optional_typecheck
-    def _query(self, query: Optional[str]) -> Optional[str]:
+    def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
             if "do_reset_memory" in self.interaction_settings:
