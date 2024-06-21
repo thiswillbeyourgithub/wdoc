@@ -692,6 +692,7 @@ class DocToolsLLM_class:
 
             # save to output file
             if "out_file" in self.cli_kwargs:
+                assert not self.import_mode, "Can't use import_mode with --out_file"
                 for nrecur, sum in recursive_summaries.items():
                     outfile = Path(self.cli_kwargs["out_file"])
                     if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
