@@ -422,6 +422,14 @@ class DocToolsLLM_class:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
+        if self.task in ["query", "search", "summary_then_query"]:
+            self.prepare_query_task()
+
+        if self.import_mode:
+            if self.debug:
+                whi("Ready to query or summarize, call your_instance._query(your_question)")
+            return
+
         if self.task in ["summarize", "summarize_then_query"]:
             self._summary_task()
 
@@ -432,18 +440,14 @@ class DocToolsLLM_class:
                     ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
-                whi("Done summarizing. Exiting.")
-                raise SystemExit()
+                whi("Done summarizing.")
+                return
 
-        assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
-        self.prepare_query_task()
-
-        if not self.import_mode:
+        else:
+            assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
             while True:
                 self._query(query=query)
                 query = None
-        if self.verbose:
-            whi("Ready to query or summarize, call your_instance._query(your_question)")
 
     @optional_typecheck
     def _summary_task(self) -> dict:
