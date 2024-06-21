@@ -82,6 +82,8 @@ setup(
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
         "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
+        "youtube-transcript-api >= 0.6.2",  # youtube
+        "pytube >= 15.0.0",  # youtube
         'LogseqMarkdownParser >= 2.8',  # logseq files (I'm the dev behind it)
         'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
