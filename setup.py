@@ -40,7 +40,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     license="GPLv3",
-    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq"],
+    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
     entry_points={
         'console_scripts': [
             'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
