@@ -717,6 +717,7 @@ class DocToolsLLM_class:
             return {
                 "path": path,
                 "sum_reading_length": sum_reading_length,
+                "sum_tkn_length": summary_tkn_length,
                 "doc_reading_length": doc_reading_length,
                 "doc_total_tokens": doc_total_tokens,
                 "doc_total_cost": doc_total_cost,
