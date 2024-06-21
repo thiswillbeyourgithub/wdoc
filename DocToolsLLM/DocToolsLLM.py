@@ -442,8 +442,8 @@ class DocToolsLLM_class:
             while True:
                 self._query(query=query)
                 query = None
-        else:
-            whi("Ready to query, call your_instance._query(your_question)")
+        if self.verbose:
+            whi("Ready to query or summarize, call your_instance._query(your_question)")
 
     @optional_typecheck
     def _summary_task(self) -> dict:
