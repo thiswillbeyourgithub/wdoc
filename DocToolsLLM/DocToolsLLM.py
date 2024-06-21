@@ -594,7 +594,8 @@ class DocToolsLLM_class:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    red(f"Doing summary check #{n_recur} of {item_name}")
+                    if not self.import_mode:
+                        red(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
                     sp = summary_text.split("\n")
@@ -654,18 +655,20 @@ class DocToolsLLM_class:
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     if "prev_real_text" in locals():
                         if real_text == prev_real_text:
-                            red(f"Identical summary after {n_recur} "
-                                "recursion, adding more recursion will not "
-                                "help so stopping here")
+                            if not self.import_mode:
+                                red(f"Identical summary after {n_recur} "
+                                    "recursion, adding more recursion will not "
+                                    "help so stopping here")
                             recursive_summaries[n_recur] = summary_text
                             break
                     prev_real_text = real_text
 
                     assert n_recur not in recursive_summaries
                     if summary_text not in recursive_summaries:
-                        red(f"Identical summary after {n_recur} "
-                            "recursion, adding more recursion will not "
-                            "help so stopping here")
+                        if not self.import_mode:
+                            red(f"Identical summary after {n_recur} "
+                                "recursion, adding more recursion will not "
+                                "help so stopping here")
                         recursive_summaries[n_recur] = summary_text
                         break
                     else:
@@ -678,7 +681,7 @@ class DocToolsLLM_class:
                 md_printer(f'## {path}')
                 md_printer(recursive_summaries[best_sum_i])
 
-            red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
+                red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
             summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
@@ -726,8 +729,12 @@ class DocToolsLLM_class:
             relevant_docs=self.loaded_docs,
         )
 
-        red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
-        red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+        if not self.import_mode:
+            red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
+            red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+        else:
+            self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})")
+            self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
 
         assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
