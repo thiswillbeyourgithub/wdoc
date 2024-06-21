@@ -715,14 +715,16 @@ class DocToolsLLM_class:
                             f.write(f"    {bulletpoint}")
 
             return {
-                    "path": path,
-                    "sum_reading_length": sum_reading_length,
-                    "doc_reading_length": doc_reading_length,
-                    "doc_total_tokens": doc_total_tokens,
-                    "doc_total_cost": doc_total_cost,
-                    "summary": recursive_summaries[best_sum_i],
-                    "recursive_summaries": recursive_summaries,
-                    }
+                "path": path,
+                "sum_reading_length": sum_reading_length,
+                "doc_reading_length": doc_reading_length,
+                "doc_total_tokens": doc_total_tokens,
+                "doc_total_cost": doc_total_cost,
+                "summary": recursive_summaries[best_sum_i],
+                "recursive_summaries": recursive_summaries,
+                "author": author,
+                "n_chunk": n_chunk,
+                }
 
         results = summarize_documents(
             path=self.cli_kwargs["path"],
