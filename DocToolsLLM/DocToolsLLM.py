@@ -126,6 +126,7 @@ class DocToolsLLM_class:
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+        self.allowed_extra_keys = extra_args_keys
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
@@ -138,14 +139,14 @@ class DocToolsLLM_class:
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in extra_args_keys:
+            if k not in self.allowed_extra_keys:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = extra_args_keys[k]
+                expected_type = self.allowed_extra_keys[k]
                 if not check_type(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
