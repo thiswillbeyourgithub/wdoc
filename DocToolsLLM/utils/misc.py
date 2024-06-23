@@ -215,7 +215,7 @@ def model_name_matcher(model: str) -> str:
     if model in list(litellm.model_cost.keys()):
         return model
 
-    # some openai models are identified by their name directly without
+    # some models are identified by their name directly without
     # the usual 'openai/modelname' syntax
     if "/" in model and model.split("/", 1)[1] in list(litellm.model_cost.keys()):
         return model
