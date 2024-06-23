@@ -12,44 +12,55 @@ from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
 
 
 def fire_wrapper(
-    h: bool = False,
-    help: bool = False,
     *args,
     **kwargs,
-    ) -> Tuple[List, dict]:
+    ) -> dict:
     "used to catch --help arg to display it better then fire does on its own"
-    assert "h" not in args and "h" not in kwargs
-    assert "help" not in args and "help" not in kwargs
 
-    if (h in ["h", "help", True] or help in ["h", "help", True]):  # --help or similar intentions
+    # --help or similar
+    if ("help" in args and len(args) == 1) or ("help" in kwargs and kwargs["help"]):
         print("Showing help")
-        return [], {"help": True}
+        md = Markdown(DocToolsLLM.__doc__)
+        console = Console()
+        console.print(md, style=None)
+        raise SystemExit()
 
-    if not (h or help or args or kwargs):
+    # no args given
+    if not any([args, kwargs]):
         print("Empty arguments, showing help")
-        return [], {"help": True}
-
-    # parse args as if nothing happened
-    args = list(args)
-    if h:
-        args.insert(0, h)
-    if help:
-        args.insert(1, help)
+        md = Markdown(DocToolsLLM.__doc__)
+        console = Console()
+        console.print(md, style=None)
+        raise SystemExit()
 
     # while we're at it, make it so that
     # "DocToolsLLM summary" is parsed like "DocToolsLLM --task=summary"
+    args = list(args)
     if args and isinstance(args[0], str):
-        args[0] = args[0].replace("summary", "summarize")
-        if args[0] in ["query", "search", "summarize", "summarize_then_query"]:
-            assert "task" not in kwargs, f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
-            kwargs["task"] = args.pop(0)
+        if args[0].replace("summary", "summarize") in ["query", "search", "summarize", "summarize_then_query"]:
+            assert "task" not in kwargs or not kwargs["task"], f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
+            kwargs["task"] = args.pop(0).replace("summary", "summarize")
 
-    # if query is None but we still got args, parse them as the question
-    if ("query" not in kwargs or kwargs["query"] in [True, None, False]) and args:
-        kwargs["query"] = " ".join(map(str, args))
+    # prepare the parsing of --query
+    if "query" not in kwargs:
+        kwargs["query"] = None
+    if kwargs["query"] in [True, None, False]:
+        kwargs["query"] = ""
+    else:
+        kwargs["query"] = str(kwargs["query"])
+
+    # any remaining args is put in --query
+    if args:
+        if not kwargs["query"]:
+            kwargs["query"] = " ".join(map(str, args))
+        else:
+            kwargs["query"] += " " + " ".join(map(str, args))
         args = []
 
-    return args, kwargs
+    kwargs["query"] = kwargs["query"].replace("summary", "summarize")
+
+    assert not args
+    return kwargs
 
 
 def cli_launcher() -> None:
@@ -57,12 +68,5 @@ def cli_launcher() -> None:
     if "--completion" in sys_args:
         return fire.Fire(DocToolsLLM)
 
-    args, kwargs = fire.Fire(fire_wrapper)
-
-    if "help" in kwargs:
-        md = Markdown(DocToolsLLM.__doc__)
-        console = Console()
-        console.print(md, style=None)
-        raise SystemExit()
-    else:
-        instance = DocToolsLLM(*args, **kwargs)
+    kwargs = fire.Fire(fire_wrapper)
+    instance = DocToolsLLM(**kwargs)

@@ -103,7 +103,7 @@ class DocToolsLLM_class:
         load_embeds_from: Optional[str] = None,
         top_k: int = 20,
 
-        query: Optional[Union[str, bool]] = None,
+        query: Optional[str] = None,
         query_retrievers: str = "default",
         query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
