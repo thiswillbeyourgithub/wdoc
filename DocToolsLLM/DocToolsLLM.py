@@ -181,7 +181,7 @@ class DocToolsLLM_class:
                 f"{litellm.model_by_providers.keys()}"
             )
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
+        assert embed_model.split("/", 1)[0].lower() in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
@@ -252,10 +252,10 @@ class DocToolsLLM_class:
             llm_verbosity = True
 
         # storing as attributes
-        self.modelbackend = modelname.split("/")[0].lower() if "/" in modelname else "openai"
+        self.modelbackend = modelname.split("/", 1)[0].lower()
         self.modelname = modelname
         if query_eval_modelname is not None:
-            self.query_eval_modelbackend = query_eval_modelname.split("/")[0].lower() if "/" in modelname else "openai"
+            self.query_eval_modelbackend = query_eval_modelname.split("/", 1)[0].lower()
             self.query_eval_modelname = query_eval_modelname
         self.task = task
         self.filetype = filetype
@@ -300,10 +300,10 @@ class DocToolsLLM_class:
                 litellm.model_cost[modelname]["input_cost_per_token"],
                 litellm.model_cost[modelname]["output_cost_per_token"]
             ]
-        elif modelname.split("/")[1] in litellm.model_cost:
+        elif modelname.split("/", 1)[1] in litellm.model_cost:
             self.llm_price = [
-                litellm.model_cost[modelname.split("/")[1]]["input_cost_per_token"],
-                litellm.model_cost[modelname.split("/")[1]]["output_cost_per_token"]
+                litellm.model_cost[modelname.split("/", 1)[1]]["input_cost_per_token"],
+                litellm.model_cost[modelname.split("/", 1)[1]]["output_cost_per_token"]
             ]
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
@@ -316,10 +316,10 @@ class DocToolsLLM_class:
                     litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
                     litellm.model_cost[query_eval_modelname]["output_cost_per_token"]
                 ]
-            elif query_eval_modelname.split("/")[1] in litellm.model_cost:
+            elif query_eval_modelname.split("/", 1)[1] in litellm.model_cost:
                 self.query_evalllm_price = [
-                    litellm.model_cost[query_eval_modelname.split("/")[1]]["input_cost_per_token"],
-                    litellm.model_cost[query_eval_modelname.split("/")[1]]["output_cost_per_token"]
+                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["input_cost_per_token"],
+                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["output_cost_per_token"]
                 ]
             else:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
