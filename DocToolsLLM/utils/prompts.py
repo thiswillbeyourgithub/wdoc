@@ -65,7 +65,7 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given a piece of document and a question, your task is to answer the question while following specific instructions.
+        ("system", """Given a piece of document and a question, your task is to extract the information relevant to the question in a standalone format while following specific instructions.
 
 Detailed instructions:
 ```
@@ -78,6 +78,9 @@ Detailed instructions:
 - Use a maximum of 5 markdown bullet points to answer the question.
     - If the document is ENTIRELY irrelevant to the question, answer simply 'IRRELEVANT' and NOTHING ELSE (especially no formatting).
     - EVERY TIME POSSIBLE: use direct quote from the document, 'formatted like that'.
+        - Indicators of uncertainty are very important, if you forget them I'll make mistakes using your answer!
+        - Your answer CANNOT simply be quotes, you have to contextualize them using the question to make your answer standalone.
+            - If you don't, this will snowball into large issues.
     - DON'T use your own knowledge of the subject, only use the document.
     - Remain as concise as possible, you can use [...] in your quotes to remove unecessary text.
 - DON'T interpret the question too strictly:
