@@ -100,7 +100,7 @@
 * **local PDF** (10 loaders are used, heuristics are used to keep the best one)
 * **remote PDF**: via URL
 * **text files**: .txt, markdown, etc
-* **anki**: collection
+* **anki flashcards**: any subset of a anki collection db
 * **string**: just paste your text into the app
 * **html files**: useful for website dumps
 * **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
