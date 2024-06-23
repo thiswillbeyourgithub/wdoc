@@ -35,7 +35,7 @@ from .utils.misc import (
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
 # lazy loading from local files
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
@@ -1114,7 +1114,7 @@ class DocToolsLLM_class:
 
         # the eval doc chain needs its own caching
         if self.llm_cache:
-            eval_cache_wrapper = doc_eval_cache.cache
+            eval_cache_wrapper = query_eval_cache.cache
         else:
             def eval_cache_wrapper(func): return func
 
