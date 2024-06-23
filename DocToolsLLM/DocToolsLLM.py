@@ -173,6 +173,13 @@ class DocToolsLLM_class:
             query_eval_modelname = None
         if filetype == "infer":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
+        assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
+        if not modelname.split("/", 1)[0] in ["testing"] + list(litellm.models_by_provider.keys()):
+            raise Exception(
+                f"For model '{modelname}': backend not found in "
+                "litellm nor 'testing'.\nList of litellm providers/backend:\n"
+                f"{litellm.model_by_providers.keys()}"
+            )
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         if embed_kwargs is None:

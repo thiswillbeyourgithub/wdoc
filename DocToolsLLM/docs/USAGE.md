@@ -47,7 +47,7 @@
 
 * `--modelname`: str, default `"openai/gpt-4o"`
     * Keep in mind that given that the default backend used is litellm
-    the part of modelname before the slash (/) is the server name.
+    the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then a fake LLM will be used
     for debugging purposes.
     If the value is not part of the model list of litellm, will use

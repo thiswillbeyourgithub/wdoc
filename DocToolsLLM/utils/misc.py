@@ -23,7 +23,7 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
 
-from .logger import red
+from .logger import red, yel
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
@@ -206,74 +206,58 @@ def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     breakpoint()
     return inputs
 
-
 @optional_typecheck
-def model_name_matcher(model: str) -> str:
-    "find the best match for a modelname"
-    assert "testing" not in model
-
-    if model in list(litellm.model_cost.keys()):
-        return model
-
-    # some models are identified by their name directly without
-    # the usual 'openai/modelname' syntax
-    if "/" in model and model.split("/", 1)[1] in list(litellm.model_cost.keys()):
-        return model
-
+def wrapped_model_name_matcher(model: str) -> str:
+    "find the best match for a modelname (wrapped to make some check)"
     # find the currently set api keys to avoid matching models from
     # unset providers
+    all_backends = list(litellm.models_by_provider.keys())
     backends = []
     for k, v in dict(os.environ).items():
         if k.endswith("_API_KEY"):
-            backend = k.split("_API_KEY")[0]
-            if backend not in backends:
-                backends.append(backend.lower())
-    for file in Path(".").iterdir():
-        if file.name.endswith("_API_KEY.txt"):
-            backend = file.name.split("_API_KEY.txt")[0]
-            if backend not in backends:
-                backends.append(backend.lower())
-    assert backends, "No API keys found in environnment nor local files"
+            backend = k.split("_API_KEY")[0].lower()
+            if backend not in all_backends:
+                yel(f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
+            else:
+                backends.append(backend)
+    assert backends, "No API keys found in environnment"
 
-    models = []
-    for m in list(litellm.model_cost.keys()):
-        if "/" in m and get_close_matches(m.split("/", 1)[0].lower(), backends, n=1):
-            models.append(m)
-        elif "." in m and get_close_matches(m.split(".", 1)[0].lower(), backends, n=1):
-            models.append(m)
-        elif not ("/" in m or "." in m):
-            models.append(m)
-    assert models, "No models found after filtering for backends"
+    # filter by providers
+    backend, modelname = model.split("/", 1)
+    if backend not in all_backends:
+        raise Exception(
+            f"Model {model} with backend {backend}: backend not found in "
+            "litellm.\nList of litellm providers/backend:\n"
+            f"{all_backends}"
+        )
+    if backend not in backends:
+        raise Exception(f"Trying to use backend {backend} but no API KEY was found for it in the environnment.")
+    candidates = litellm.models_by_provider[backend]
+    if modelname in candidates:
+        return model
+    subcandidates = [m for m in candidates if m.startswith(modelname)]
+    if len(subcandidates) == 1:
+        good = f"{backend}/{subcandidates[0]}"
+        return good
+    match = get_close_matches(modelname, candidates, n=1)
+    if match:
+        return match[0]
 
-    match = []
-
-    # trying with heuristics
-
-    # match a turbo model in priority
-    if not match and "turbo" not in model:
-        match = get_close_matches(f"{model}-turbo", models, n=1)
-
-    # fuzzy search
-    if not match:
-        match = get_close_matches(model, models, n=1)
-
-    # keep trying without the backend
-    if not match and "/" in model and "turbo" not in model:
-        match = get_close_matches(model.split("/", 1)[1] + "-turbo", models, n=1)
-
-    if not match and "/" in model:
-        match = get_close_matches(model.split("/", 1)[1], models, n=1)
-
-    if not match:
-        raise Exception(f"Couldn't find a model to match {model} after filtering for backends {','.join(backends)}")
-
-    best_match = match[0]
-
-    # warn if ambiguous
-    if len(match) > 1:
-        red(f"Several match found for model named '{model}': '{','.join(match)}'\nWill use {best_match}")
     red(f"Matching name for model with heuristics: {model}->{best_match}")
     return best_match
+
+def model_name_matcher(model: str) -> str:
+    """find the best match for a modelname (wrapper that checks if the matched
+    model has a known cost and print the matched name)"""
+    assert "testing" not in model
+    assert "/" in model, f"expected / in model '{model}'"
+
+    out = wrapped_model_name_matcher(model)
+    if out != model and is_verbose:
+        yel(f"Matched model name {model} to {out}")
+    match = get_close_matches(out, list(litellm.model_cost.keys()), n=1)
+    assert match, f"{out} not part of litellm.model_cost!"
+    return out
 
 
 @optional_typecheck
