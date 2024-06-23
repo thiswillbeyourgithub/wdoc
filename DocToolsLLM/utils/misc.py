@@ -216,7 +216,7 @@ def wrapped_model_name_matcher(model: str) -> str:
     for k, v in dict(os.environ).items():
         if k.endswith("_API_KEY"):
             backend = k.split("_API_KEY")[0].lower()
-            if backend not in all_backends:
+            if backend not in all_backends and is_verbose:
                 yel(f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
             else:
                 backends.append(backend)
