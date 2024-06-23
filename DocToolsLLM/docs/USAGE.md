@@ -94,7 +94,7 @@
 ---
 
 * `--query`: str, default `None`
-    * if str, will be directly used for the first query if task in `["query", "search"]`
+    * if str, will be directly used for the first query if task in `["query", "search", "summarize_then_query"]`
 
 * `--query_retrievers`: str, default `"default"`
     * must be a string that specifies which retriever will be used for
