@@ -137,7 +137,6 @@ class DocToolsLLM_class:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
-
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
 
@@ -235,6 +234,7 @@ class DocToolsLLM_class:
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
+
         if isinstance(query, str):
             query = query.strip() or None
         assert file_loader_parallel_backend in ["loky", "threading"], "Invalid value for file_loader_parallel_backend"

@@ -22,9 +22,11 @@ def fire_wrapper(
     assert "help" not in args and "help" not in kwargs
 
     if (h in ["h", "help", True] or help in ["h", "help", True]):  # --help or similar intentions
+        print("Showing help")
         return [], {"help": True}
 
     if not (h or help or args or kwargs):
+        print("Empty arguments, showing help")
         return [], {"help": True}
 
     # parse args as if nothing happened
@@ -39,7 +41,7 @@ def fire_wrapper(
     if args and isinstance(args[0], str):
         args[0] = args[0].replace("summary", "summarize")
         if args[0] in ["query", "search", "summarize", "summarize_then_query"]:
-            assert "task" not in kwargs, f"Tried to give task as arg and kwarg?\nargs: {args}\bnkwargs: {kwargs}"
+            assert "task" not in kwargs, f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
             kwargs["task"] = args.pop(0)
     return args, kwargs
 
