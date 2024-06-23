@@ -255,8 +255,7 @@ def model_name_matcher(model: str) -> str:
     out = wrapped_model_name_matcher(model)
     if out != model and is_verbose:
         yel(f"Matched model name {model} to {out}")
-    match = get_close_matches(out, list(litellm.model_cost.keys()), n=1)
-    assert match, f"{out} not part of litellm.model_cost!"
+    assert out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost, f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
     return out
 
 
