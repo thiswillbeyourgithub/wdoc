@@ -8,7 +8,7 @@ from typing import List, Tuple
 from rich.markdown import Markdown
 from rich.console import Console
 
-from .DocToolsLLM import DocToolsLLM_class
+from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
 
 
 def fire_wrapper(
@@ -55,14 +55,14 @@ def fire_wrapper(
 def cli_launcher() -> None:
     sys_args = sys.argv
     if "--completion" in sys_args:
-        return fire.Fire(DocToolsLLM_class)
+        return fire.Fire(DocToolsLLM)
 
     args, kwargs = fire.Fire(fire_wrapper)
 
     if "help" in kwargs:
-        md = Markdown(DocToolsLLM_class.__doc__)
+        md = Markdown(DocToolsLLM.__doc__)
         console = Console()
         console.print(md, style=None)
         raise SystemExit()
     else:
-        instance = DocToolsLLM_class(*args, **kwargs)
+        instance = DocToolsLLM(*args, **kwargs)
