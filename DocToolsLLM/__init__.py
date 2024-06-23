@@ -43,6 +43,12 @@ def fire_wrapper(
         if args[0] in ["query", "search", "summarize", "summarize_then_query"]:
             assert "task" not in kwargs, f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
             kwargs["task"] = args.pop(0)
+
+    # if query is None but we still got args, parse them as the question
+    if ("query" not in kwargs or kwargs["query"] in [True, None, False]) and args:
+        kwargs["query"] = " ".join(map(str, args))
+        args = []
+
     return args, kwargs
 
 
