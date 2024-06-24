@@ -36,7 +36,7 @@
 * **Which LLM providers are supported by DocToolsLLM?**
     * DocToolsLLM supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
 * **What do you use DocToolsLLM for?**
-    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a buch of `TODO` blocks.
+    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to DocToolsLLM I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
     * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
     * I use it to query my personal documents using the `--private` argument.
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
