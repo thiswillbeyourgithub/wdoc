@@ -397,7 +397,9 @@ def load_youtube_video(
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s'  # with extension
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',  # with extension
+            'verbose': is_verbose,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         }
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
