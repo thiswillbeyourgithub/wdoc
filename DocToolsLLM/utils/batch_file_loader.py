@@ -245,11 +245,12 @@ def batch_load_doc(
     @wraps(load_one_doc)
     def load_one_doc_wrapped(**doc_kwargs):
         try:
-            return load_one_doc(**doc_kwargs)
+            out = load_one_doc(**doc_kwargs)
+            return out
         except Exception as err:
             filetype = doc_kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
-            if load_failure == "crash":
+            if load_failure == "crash" or is_debug:
                 raise
             elif load_failure == "warn":
                 return None
