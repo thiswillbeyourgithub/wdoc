@@ -373,7 +373,9 @@ def load_youtube_video(
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
-    assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
+
+    if not yt_link_regex.search(path):
+        whi(f"Not a youtube link but trying anyway: '{path}'")
 
     if youtube_audio_backend == "youtube":
         whi(f"Loading youtube: '{path}'")

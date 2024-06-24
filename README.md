@@ -95,7 +95,7 @@
 
 ### Supported filetypes
 * **infer** (default, guess the filetype for you)
-* **youtube videos** (either using subtitles or using whisper)
+* **youtube videos and online videos** (text is then either from the yt subtitles / translation or even better: using whisper / deepgram)
 * **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
 * **local PDF** (10 loaders are used, heuristics are used to keep the best one)
 * **remote PDF**: via URL
