@@ -31,7 +31,7 @@
         * `json_entries`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
         but can contain any parameters described here
-        * `recursive`: `--path` is the starting path `--pattern` is the globbing
+        * `recursive_paths`: `--path` is the starting path `--pattern` is the globbing
         patterns to append `--exclude` and `--include` can be a list of regex
         applying to found paths (include is run first then exclude, if the
         pattern is only lowercase it will be case insensitive) `--recursed_filetype`
@@ -228,7 +228,7 @@
 
 # Loader specific arguments
     Those arguments can be set at cli time but can also be used
-    when using recursive filetype combination to have arguments specific
+    when using recursive_paths filetype combination to have arguments specific
     to a loader. They apply depending on the value of `--filetype`.
     An unexpected argument for a given filetype will result in a crash.
 
@@ -294,8 +294,8 @@
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`: str
-    * Only active if `--filetype` is one of json_entries, recursive,
-    link_file, youtube_playlist.
+    * Only active if `--filetype` is one of 'json_entries', 'recursive_paths',
+    'link_file', 'youtube_playlist'.
     `--include` can be a list of regex that must be present in the
     document PATH (not content!)
     `--exclude` can be a list of regex that if present in the PATH
@@ -388,7 +388,7 @@
 * `--loading_failure`: str, default `crash`
     * either `crash` or `warn`. Determines what to do with
     exceptions happening when loading a document. This can be set
-    per document if a recursive filetype is used.
+    per document if a recursive_paths filetype is used.
 
 # Runtime flags
 

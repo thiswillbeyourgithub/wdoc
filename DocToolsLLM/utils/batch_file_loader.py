@@ -56,7 +56,7 @@ inference_rules = {
 }
 
 recursive_types = [
-    "recursive",
+    "recursive_paths",
     "json_entries",
     "link_file",
     "youtube_playlist",
@@ -117,9 +117,9 @@ def batch_load_doc(
                 to_load[ild]["filetype"] = load_filetype
 
 
-            if load_filetype == "recursive":
+            if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
-                    parse_recursive(load_kwargs)
+                    parse_recursive_paths(load_kwargs)
                 )
                 break
 
@@ -314,7 +314,7 @@ def batch_load_doc(
     return docs
 
 @optional_typecheck
-def parse_recursive(load_kwargs: dict) -> List[dict]:
+def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Parsing recursive load_filetype: '{load_path}'")
     assert "pattern" in load_kwargs, "missing 'pattern' key in args"
@@ -322,12 +322,12 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     assert (
         load_kwargs["recursed_filetype"]
         not in [
-            "recursive",
+            "recursive_paths",
             "json_entries",
             "youtube",
             "anki",
         ]
-    ), "'recursed_filetype' cannot be 'recursive', 'json_entries', 'anki' or 'youtube'"
+    ), "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
     pattern = load_kwargs["pattern"]
 
     if not Path(load_path).exists() and Path(load_path.replace(r"\ ", " ")).exists():
