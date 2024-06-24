@@ -10,6 +10,12 @@ from rich.console import Console
 
 from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
 
+__all__ = [
+    "DocToolsLLM",
+    "cli_launcher",
+    "utils",
+]
+
 
 def fire_wrapper(
     *args,
