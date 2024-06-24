@@ -1099,9 +1099,9 @@ class DocToolsLLM_class:
                 base_compressor=pipeline, base_retriever=retriever
             )
 
-        if " // " in query:
-            sp = query.split(" // ")
-            assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
+        if " >>>> " in query:
+            sp = query.split(">>>>")
+            assert len(sp) == 2, "The query must contain a maximum of 1 occurence of '>>>>'"
             query_fe = sp[0].strip()
             query_an = sp[1].strip()
         else:

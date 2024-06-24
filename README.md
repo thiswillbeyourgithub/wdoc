@@ -47,7 +47,7 @@
     1. the documents are retrieved using embedding
     2. then a weak LLM model is used to tell which of those document is not relevant
     3. then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer.
-    * Supports a special syntax like "QE // QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+    * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
