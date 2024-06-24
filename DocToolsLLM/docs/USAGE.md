@@ -9,9 +9,9 @@
 
 * `--filetype`: str, default `infer`
     * the type of input. Depending on the value, different other parameters
-    are needed. If json_list is used, the line of the input file can contain
+    are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_list file in `DocToolsLLM/docs/json_list_example.txt`
+    an example of json_entries file in `DocToolsLLM/docs/json_entries_example.txt`
 
     * Supported values:
         * `infer`: will guess the appropriate filetype based on `--path`.
@@ -28,7 +28,7 @@
         you must type or paste the string
         * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
 
-        * `json_list`: `--path` is path to a txt file that contains a json
+        * `json_entries`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
         but can contain any parameters described here
         * `recursive`: `--path` is the starting path `--pattern` is the globbing
@@ -294,7 +294,7 @@
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`: str
-    * Only active if `--filetype` is one of json_list, recursive,
+    * Only active if `--filetype` is one of json_entries, recursive,
     link_file, youtube_playlist.
     `--include` can be a list of regex that must be present in the
     document PATH (not content!)

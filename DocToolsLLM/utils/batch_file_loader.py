@@ -52,12 +52,12 @@ inference_rules = {
     "word": [".doc$", ".docx$", ".odt$"],
     "local_video": [".mp4", ".avi", ".mkv"],
 
-    "json_list": [".*.json"],
+    "json_entries": [".*.json"],
 }
 
 recursive_types = [
     "recursive",
-    "json_list",
+    "json_entries",
     "link_file",
     "youtube_playlist",
     "infer"
@@ -123,9 +123,9 @@ def batch_load_doc(
                 )
                 break
 
-            elif load_filetype == "json_list":
+            elif load_filetype == "json_entries":
                 new_doc_to_load.extend(
-                    parse_json_list(load_kwargs)
+                    parse_json_entries(load_kwargs)
                 )
                 break
 
@@ -323,11 +323,11 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         load_kwargs["recursed_filetype"]
         not in [
             "recursive",
-            "json_list",
+            "json_entries",
             "youtube",
             "anki",
         ]
-    ), "'recursed_filetype' cannot be 'recursive', 'json_list', 'anki' or 'youtube'"
+    ), "'recursed_filetype' cannot be 'recursive', 'json_entries', 'anki' or 'youtube'"
     pattern = load_kwargs["pattern"]
 
     if not Path(load_path).exists() and Path(load_path.replace(r"\ ", " ")).exists():
@@ -371,9 +371,9 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     return doclist
 
 @optional_typecheck
-def parse_json_list(load_kwargs: dict) -> List[dict]:
+def parse_json_entries(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
-    whi(f"Loading json_list: '{load_path}'")
+    whi(f"Loading json_entries: '{load_path}'")
     doclist = str(Path(load_path).read_text()).splitlines()
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
