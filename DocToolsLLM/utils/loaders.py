@@ -378,7 +378,7 @@ def load_youtube_video(
         whi(f"Not a youtube link but trying anyway: '{path}'")
 
     if youtube_audio_backend == "youtube":
-        whi(f"Loading youtube: '{path}'")
+        whi(f"Using youtube.com loader: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
             loader=fyu,
@@ -388,7 +388,7 @@ def load_youtube_video(
             translation=youtube_translation if youtube_translation else None,
         )
     else:
-        whi("Downloading audio from youtube")
+        whi(f"Downloading audio from url: '{path}'")
         file_name = global_temp_dir[0] / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
