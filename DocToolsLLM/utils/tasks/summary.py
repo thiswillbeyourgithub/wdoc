@@ -74,6 +74,7 @@ def do_summarize(
 
             # replace tabs by 4 spaces
             ll = ll.replace("\t", "    ")
+            ll = ll.replace("	", "    ")
 
             stripped = ll.lstrip()
 
