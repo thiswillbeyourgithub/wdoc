@@ -1141,6 +1141,17 @@ class DocToolsLLM_class:
             def eval_cache_wrapper(func):
                 return func
 
+        if " object at " in self.llm._get_llm_string():
+            red(
+                "Found llm._get_llm_string() value that potentially "
+                f"invalidates the cache: '{self.llm._get_llm_string()}'\n"
+                f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
+        if " object at " in self.eval_llm._get_llm_string():
+            red(
+                "Found eval_llm._get_llm_string() value that potentially "
+                f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
+                f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
+
         @chain
         @eval_cache_wrapper
         @optional_typecheck
