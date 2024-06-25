@@ -290,7 +290,7 @@ class DocToolsLLM_class:
             self.llm_cache = not disable_llm_cache
 
         if llms_api_bases["model"]:
-            red(f"Disabling price computation for model because api_base was modified")
+            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0, 0]
         elif modelname in litellm.model_cost:
             self.llm_price = [
