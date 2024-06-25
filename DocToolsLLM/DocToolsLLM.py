@@ -1148,7 +1148,7 @@ class DocToolsLLM_class:
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
-            eval_prompt: str = PR_EVALUATE_DOC.pretty_print(),
+            eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
