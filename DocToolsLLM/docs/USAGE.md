@@ -183,7 +183,7 @@
     * if True, will remember the messages across a given chat exchange.
     Disabled if using a testing model.
 
-* `--no_llm_cache`: bool, default `False`
+* `--disable_llm_cache`: bool, default `False`
     * WARNING: The cache is temporarily ignored in non openaillms
     generations because of an error with langchain's ChatLiteLLM.
     Basically if you don't use `--private` and use llm form openai,

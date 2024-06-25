@@ -116,7 +116,7 @@ class DocToolsLLM_class:
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
         chat_memory: Union[bool, int] = True,
-        no_llm_cache: Union[bool, int] = False,
+        disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
@@ -273,13 +273,13 @@ class DocToolsLLM_class:
         self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.private = bool(private)
-        self.no_llm_cache = bool(no_llm_cache)
+        self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
 
-        if not no_llm_cache:
+        if not disable_llm_cache:
             if not private:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
                 set_llm_cache(self.llm_cache)
@@ -287,7 +287,7 @@ class DocToolsLLM_class:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
                 set_llm_cache(self.llm_cache)
         else:
-            self.llm_cache = not no_llm_cache
+            self.llm_cache = not disable_llm_cache
 
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base was modified")
