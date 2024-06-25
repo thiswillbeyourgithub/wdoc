@@ -76,13 +76,13 @@ Detailed instructions:
 - Take a deep breath before answering.
     - But then reply directly without acknowledging your task.
 - Use a maximum of 5 markdown bullet points to answer the question.
-    - If the document is ENTIRELY irrelevant to the question, answer simply 'IRRELEVANT' and NOTHING ELSE (especially no formatting).
-    - EVERY TIME POSSIBLE: use direct quote from the document, 'formatted like that'.
-        - Indicators of uncertainty are very important, if you forget them I'll make mistakes using your answer!
-        - Your answer CANNOT simply be quotes, you have to contextualize them using the question to make your answer standalone.
-            - If you don't, this will snowball into large issues.
-    - DON'T use your own knowledge of the subject, only use the document.
-    - Remain as concise as possible, you can use [...] in your quotes to remove unecessary text.
+    - If the document is ENTIRELY irrelevant to the question, answer only 'IRRELEVANT' and NOTHING ELSE (and no formatting).
+    - Your answer ALWAYS HAS TO BE standalone / contextualized (ie we have to be able to understand the question and its answer from your reply).
+        - If you don't, your lack of precision will snowball into big lies!
+    - EVERY TIME POSSIBLE: add direct quotes from the document as indented bullet to your answer, 'formatted like that'.
+        - Indicators of uncertainty of the original text are very important, if you forget them I'll make mistakes using your answer!
+    - DON'T use your own knowledge of the subject, only use the document or answer 'IRRELEVANT'.
+    - Remain concise, you can use [...] in your quotes to remove unecessary text.
 - DON'T interpret the question too strictly:
     - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 ```"""),
