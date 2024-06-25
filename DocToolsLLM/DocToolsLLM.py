@@ -1108,12 +1108,6 @@ class DocToolsLLM_class:
         whi(f"Query for the embeddings: {query_fe}")
         whi(f"Question to answer: {query_an}")
 
-        # the eval doc chain needs its own caching
-        if self.llm_cache:
-            eval_cache_wrapper = query_eval_cache.cache
-        else:
-            def eval_cache_wrapper(func): return func
-
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
             self.eval_llm_params = litellm.get_supported_openai_params(
@@ -1139,6 +1133,13 @@ class DocToolsLLM_class:
                 private=self.private,
                 **eval_args,
             )
+
+        # the eval doc chain needs its own caching
+        if self.llm_cache:
+            eval_cache_wrapper = query_eval_cache.cache
+        else:
+            def eval_cache_wrapper(func):
+                return func
 
         @chain
         @eval_cache_wrapper
