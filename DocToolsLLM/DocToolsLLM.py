@@ -1169,10 +1169,10 @@ class DocToolsLLM_class:
                 outputs = []
                 new_p = 0
                 new_c = 0
-                async def eval(inputs):
+                async def do_eval(inputs):
                     return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outs = [
-                    eval(inputs)
+                    do_eval(inputs)
                     for i in range(self.query_eval_check_number)
                 ]
                 try:
