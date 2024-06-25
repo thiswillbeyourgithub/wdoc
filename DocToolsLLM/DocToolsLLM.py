@@ -279,15 +279,14 @@ class DocToolsLLM_class:
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
 
-        if not disable_llm_cache:
+        if disable_llm_cache:
+            self.llm_cache = False
+        else:
             if not private:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
-                set_llm_cache(self.llm_cache)
             else:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
-                set_llm_cache(self.llm_cache)
-        else:
-            self.llm_cache = not disable_llm_cache
+            set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
