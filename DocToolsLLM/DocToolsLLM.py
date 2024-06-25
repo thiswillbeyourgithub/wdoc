@@ -1347,7 +1347,7 @@ class DocToolsLLM_class:
             )
             combine_answers = (
                 PR_COMBINE_INTERMEDIATE_ANSWERS
-                | self.llm.bind(max_tokens=2000)
+                | self.llm
                 | StrOutputParser()
             )
 
