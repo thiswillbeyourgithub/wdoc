@@ -1147,7 +1147,7 @@ class DocToolsLLM_class:
         def evaluate_doc_chain(
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
-            eval_model_string: str = self.query_eval._get_llm_string(),  # just for caching
+            eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
             eval_prompt: str = PR_EVALUATE_DOC.pretty_print(),
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
