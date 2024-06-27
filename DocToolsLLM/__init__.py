@@ -16,6 +16,8 @@ __all__ = [
     "utils",
 ]
 
+__VERSION__ = DocToolsLLM.VERSION
+
 
 def fire_wrapper(
     *args,
