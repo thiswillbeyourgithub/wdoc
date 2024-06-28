@@ -89,7 +89,7 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
-markdownlinkparser_regex = pattern = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
+markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
 # to check that a youtube link is valid
 yt_link_regex = re.compile("youtube.*watch")
 emptyline_regex = re.compile(r"^\s*$", re.MULTILINE)
