@@ -90,6 +90,7 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
+markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])')  # to remove image from jina reader that take a lot of tokens but are not yet used
 # to check that a youtube link is valid
 yt_link_regex = re.compile("youtube.*watch")
 emptyline_regex = re.compile(r"^\s*$", re.MULTILINE)
@@ -1220,6 +1221,7 @@ def load_url(path: str, title=None) -> List[Document]:
                     title = text.splitlines()[0].replace("Title: ", "", 1)
             text = text.split("Markdown Content:", 1)[1]
             text = markdownlinkparser_regex.sub(r'\1', text)  # remove links
+            text = markdownimage_regex.sub(" ", text, flags=re.MULTILINE)  # remove markdown images for now as caption is disabled so it's just base64 or something like that
             docs = [
                 Document(
                     page_content=text,
