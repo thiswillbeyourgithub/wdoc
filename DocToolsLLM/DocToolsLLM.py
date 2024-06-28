@@ -137,9 +137,9 @@ class DocToolsLLM_class:
                             red(message)
                         except Exception as err:
                             print(message)
-                    p(exc_type)
-                    p(exc_value)
                     [p(line) for line in traceback.format_tb(exc_traceback)]
+                    p(str(exc_value))
+                    p(str(exc_type))
                     p("\n--verbose was used so opening debug console at the "
                       "appropriate frame. Press 'c' to continue to the frame "
                       "of this print.")
