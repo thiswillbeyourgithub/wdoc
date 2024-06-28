@@ -43,7 +43,7 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import (loaddoc_cache, html_to_text, hasher,
+from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm)
 from .typechecker import optional_typecheck
@@ -468,7 +468,7 @@ def load_youtube_video(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
@@ -733,7 +733,7 @@ def load_anki(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_string() -> List[Document]:
     whi("Loading string")
     content = prompt(
@@ -750,7 +750,7 @@ def load_string() -> List[Document]:
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -760,7 +760,7 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
     path: str,
     file_hash: str,
@@ -810,7 +810,7 @@ def load_local_html(
     ]
     return docs
 
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
     ) -> List[Callable]:
@@ -827,7 +827,7 @@ def eval_load_functions(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -877,7 +877,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
     path: str,
     file_hash: str,
@@ -987,7 +987,7 @@ def load_local_audio(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
     path: str,
     file_hash: str,
@@ -1046,7 +1046,7 @@ def load_local_video(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["audio_path"])
+@doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
     audio_path: str,
     audio_hash: str,
@@ -1115,7 +1115,7 @@ def transcribe_audio_deepgram(
     return d
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["audio_path"])
+@doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
     audio_path: str,
     audio_hash: str,
@@ -1143,7 +1143,7 @@ def transcribe_audio_whisper(
     return transcript
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
     path: str,
     file_hash: str,
@@ -1161,7 +1161,7 @@ def load_epub(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
     path: str,
     file_hash: str,
@@ -1178,7 +1178,7 @@ def load_powerpoint(
     ]
     return docs
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
     path: str,
     file_hash: str,
@@ -1198,7 +1198,7 @@ def load_word_document(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
     whi(f"Loading url: '{path}'")
 
@@ -1348,7 +1348,7 @@ def load_url(path: str, title=None) -> List[Document]:
 
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
         try:
@@ -1362,7 +1362,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["loader"])
+@doc_loaders_cache.cache(ignore=["loader"])
 def cached_yt_loader(
         loader: Any,
         path: str,
@@ -1380,7 +1380,7 @@ def cached_yt_loader(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
     loader = pdf_loaders[loader_name](path)
     content = loader.load()

@@ -23,7 +23,7 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
+from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, global_temp_dir
@@ -78,7 +78,7 @@ def batch_load_doc(
     """load the input"""
     # # remove cache files older than 90 days
     # try:
-    #     loaddoc_cache.reduce_size(age_limit=timedelta(90))
+    #     doc_loaders_cache.reduce_size(age_limit=timedelta(90))
     # except Exception as err:
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
