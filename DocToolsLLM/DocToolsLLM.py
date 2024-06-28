@@ -3,7 +3,7 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_docstring, config_dir, cache_dir
+from .utils.logger import whi, yel, red, md_printer, log, set_docstring, log_dir, cache_dir
 
 import sys
 import faulthandler
@@ -247,6 +247,8 @@ class DocToolsLLM_class:
 
         if debug:
             llm_verbosity = True
+            whi(f"Cache location: {cache_dir.absolute()}")
+            whi(f"Config location: {log_dir.absolute()}")
 
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()

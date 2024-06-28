@@ -13,21 +13,24 @@ from pathlib import Path
 from typing import Type, Callable, Optional, Union
 from rich.markdown import Markdown
 from rich.console import Console
-from platformdirs import user_cache_dir
+from platformdirs import user_cache_dir, user_log_dir
 
 from .typechecker import optional_typecheck
 
-assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
-cache_dir = Path(user_cache_dir()) / "DocToolsLLM"
-cache_dir.mkdir(exist_ok=True)
-log_dir = cache_dir / "logs"
-log_dir.mkdir(exist_ok=True)
-(log_dir / "logs.txt").touch(exist_ok=True)
+cache_dir = Path(user_cache_dir(appname="DocToolsLLM"))
+assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(), f"Invalid cache dir location: '{cache_dir}'"
+cache_dir.mkdir(parents=True, exist_ok=True)
+
+log_dir = Path(user_log_dir(appname="DocToolsLLM"))
+assert log_dir.parent.exists() or log_dir.parent.parent.exists() or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
+log_dir.mkdir(exist_ok=True, parents=True)
+log_file = (log_dir / "logs.txt")
+log_file.touch(exist_ok=True)
 
 # logger
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 handler = logging.handlers.RotatingFileHandler(
-        filename=log_dir / "logs.txt",
+        filename=log_file,
         mode="a",
         encoding=None,
         delay=0,
