@@ -3,7 +3,7 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_docstring
+from .utils.logger import whi, yel, red, md_printer, log, set_docstring, config_dir, cache_dir
 
 import sys
 import faulthandler
@@ -27,7 +27,7 @@ import lazy_import
 # cannot be lazy loaded because some are not callable but objects directly
 from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
-    cache_dir, average_word_length, wpm, get_splitter,
+    average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS

@@ -11,7 +11,6 @@ import urllib
 import json
 import re
 from pathlib import Path
-from platformdirs import user_cache_dir
 from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
@@ -23,7 +22,7 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
 
-from .logger import red, yel
+from .logger import red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
@@ -55,9 +54,6 @@ else:
     def language_detector(text: str) -> None:
         return None
 
-assert Path(user_cache_dir()).exists(), f"User cache dir not found: '{user_cache_dir()}'"
-cache_dir = (Path(user_cache_dir()) / "DocToolsLLM").resolve()
-cache_dir.mkdir(exist_ok=True)
 loaddoc_cache_dir = (cache_dir / "loaddoc_cache")
 loaddoc_cache_dir.mkdir(exist_ok=True)
 loaddoc_cache = Memory(loaddoc_cache_dir, verbose=0)
