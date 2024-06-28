@@ -242,9 +242,11 @@ def wrapped_model_name_matcher(model: str) -> str:
     match = get_close_matches(modelname, candidates, n=1)
     if match:
         return match[0]
-
-    red(f"Matching name for model with heuristics: {model}->{best_match}")
-    return best_match
+    else:
+        red(f"Couldn't match the modelname {model} to any known model. "
+            "Continuing but this will probably crash DocToolsLLM further "
+            "down the code.")
+        return model
 
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
