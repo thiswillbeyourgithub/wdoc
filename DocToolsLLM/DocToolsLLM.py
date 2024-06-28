@@ -7,6 +7,7 @@ from .utils.logger import whi, yel, red, md_printer, log, set_docstring, log_dir
 
 import sys
 import faulthandler
+import traceback
 import pdb
 import json
 import pyfiglet
@@ -130,7 +131,23 @@ class DocToolsLLM_class:
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
+                    def p(message: str) -> None:
+                        "print error, in red if possible"
+                        try:
+                            red(message)
+                        except Exception as err:
+                            print(message)
+                    p(exc_type)
+                    p(exc_value)
+                    [p(line) for line in traceback.format_tb(exc_traceback)]
+                    p("\n--verbose was used so opening debug console at the "
+                      "appropriate frame. Press 'c' to continue to the frame "
+                      "of this print.")
                     pdb.post_mortem(exc_traceback)
+                    p("You are now in the exception handling frame.")
+                    breakpoint()
+                    sys.exit(1)
+
             sys.excepthook = handle_exception
             faulthandler.enable()
 
