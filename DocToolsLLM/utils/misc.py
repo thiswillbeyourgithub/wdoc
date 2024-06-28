@@ -78,6 +78,8 @@ max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
 
+printed_unexpected_api_keys = False  # to print it only once
+
 # loader specific arguments
 loader_specific_keys = {
     "anki_deck": str,
@@ -212,10 +214,12 @@ def wrapped_model_name_matcher(model: str) -> str:
     for k, v in dict(os.environ).items():
         if k.endswith("_API_KEY"):
             backend = k.split("_API_KEY")[0].lower()
-            if backend not in all_backends and is_verbose:
+            if backend not in all_backends and is_verbose and not printed_unexpected_api_keys:
                 yel(f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
             else:
                 backends.append(backend)
+    if is_verbose:
+        printed_unexpected_api_keys = True
     assert backends, "No API keys found in environnment"
 
     # filter by providers
