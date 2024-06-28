@@ -57,7 +57,7 @@ else:
 doc_loaders_cache_dir = (cache_dir / "doc_loaders")
 doc_loaders_cache_dir.mkdir(exist_ok=True)
 doc_loaders_cache = Memory(doc_loaders_cache_dir, verbose=0)
-hashdoc_cache_dir = (cache_dir / "hashdoc_cache")
+hashdoc_cache_dir = (cache_dir / "doc_hashing")
 hashdoc_cache_dir.mkdir(exist_ok=True)
 hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 
