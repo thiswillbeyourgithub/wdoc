@@ -301,8 +301,10 @@ def batch_load_doc(
     n_failed = len([d for d in doc_lists if d is None])
     if n_failed:
         red(f"Number of failed documents: {n_failed}")
-    [docs.extend(d) for d in doc_lists if d is not None]
-    assert None not in docs
+    for d in tqdm(doc_lists, desc="Concatenating results"):
+        if d is not None:
+            docs.extend(d)
+    assert None not in docs, "None remained in docs!"
     assert docs, "No documents were succesfully loaded!"
 
     size = sum([get_tkn_length(d.page_content) for d in docs])
