@@ -347,7 +347,13 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -356,7 +362,13 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -387,7 +399,13 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -396,7 +414,13 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -443,7 +467,13 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -452,7 +482,13 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -485,7 +521,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -494,7 +536,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
