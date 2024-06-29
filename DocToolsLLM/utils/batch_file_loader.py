@@ -293,6 +293,10 @@ def batch_load_doc(
             colour="magenta",
         )
     )
+
+    # erases content that links to the loaders temporary files at startup
+    loaders_temp_dir_file.write_text("")
+
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     n_failed = len([d for d in doc_lists if d is None])
     if n_failed:

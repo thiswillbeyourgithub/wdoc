@@ -30,7 +30,7 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, disable_internet, loaders_temp_dir_file)
+    extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
@@ -153,9 +153,6 @@ class DocToolsLLM_class:
 
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
-
-        # erases content that links to the loaders temporary files at startup
-        loaders_temp_dir_file.write_text("")
 
         # make sure the extra args are valid
         for k in cli_kwargs:
