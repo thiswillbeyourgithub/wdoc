@@ -26,7 +26,7 @@ import dill
 from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
-from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, global_temp_dir
+from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug
 
 
@@ -274,7 +274,7 @@ def batch_load_doc(
             shutil.rmtree(f)
     temp_dir = cache_dir / load_temp_name
     temp_dir.mkdir(exist_ok=False)
-    global_temp_dir[0] = temp_dir
+    loaders_temp_dir_file.write_text(str(temp_dir.absolute().resolve()))
 
     docs = []
     t_load = time.time()

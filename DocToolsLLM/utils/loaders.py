@@ -45,7 +45,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm, global_temp_dir)
+                   average_word_length, wpm, loaders_temp_dir_file)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux
@@ -189,7 +189,11 @@ def load_one_doc(
     The loader is cached"""
     text_splitter = get_splitter(task)
 
-    assert global_temp_dir[0] is temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but global_temp_dir is {global_temp_dir}"
+    expected_global_dir = loaders_temp_dir_file.read_text().strip()
+    assert expected_global_dir, f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
+    expected_global_dir = Path(expected_global_dir)
+    assert expected_global_dir.exists(), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
+    assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
@@ -395,7 +399,7 @@ def load_youtube_video(
         )
     else:
         whi(f"Downloading audio from url: '{path}'")
-        file_name = global_temp_dir[0] / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = load_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -410,7 +414,7 @@ def load_youtube_video(
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
         candidate = []
-        for f in global_temp_dir[0].iterdir():
+        for f in load_temp_dir.iterdir():
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
@@ -530,7 +534,7 @@ def load_anki(
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
-    new_db_path = global_temp_dir[0] / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    new_db_path = load_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -922,8 +926,8 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path_wav = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.wav"
-        unsilenced_path_ogg = global_temp_dir[0] / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        unsilenced_path_wav = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
         assert not unsilenced_path_wav.exists()
         assert not unsilenced_path_ogg.exists()
         torchaudio.save(
@@ -1007,7 +1011,7 @@ def load_local_video(
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    audio_path = global_temp_dir[0] / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = load_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
     assert not audio_path.exists()
 
     # extract audio from video
