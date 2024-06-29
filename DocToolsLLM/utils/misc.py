@@ -31,6 +31,9 @@ Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 
+# will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
+loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
+
 try:
     import ftlangdetect
 except Exception as err:
