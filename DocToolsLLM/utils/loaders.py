@@ -45,7 +45,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm)
+                   average_word_length, wpm, global_temp_dir)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux
@@ -172,8 +172,6 @@ sox_effects = [
     ["silence", "-l", "1", "0", "1%", "-1", "3.0", "1%"],
     ["norm"],
 ]
-
-global_temp_dir = [None]  # will be replaced when load_one_doc is called
 
 
 @optional_typecheck
