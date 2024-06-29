@@ -118,7 +118,7 @@ class DocToolsLLM_class:
         notification_callback: Optional[Callable] =  None,
         chat_memory: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
-        file_loader_parallel_backend: str = "loky",
+        file_loader_parallel_backend: str = "threading",
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
