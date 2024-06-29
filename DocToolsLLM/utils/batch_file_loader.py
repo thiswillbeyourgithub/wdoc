@@ -23,7 +23,7 @@ from pathlib import Path
 import json
 import dill
 
-from .misc import loaddoc_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
+from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, global_temp_dir
@@ -52,12 +52,12 @@ inference_rules = {
     "word": [".doc$", ".docx$", ".odt$"],
     "local_video": [".mp4", ".avi", ".mkv"],
 
-    "json_list": [".*.json"],
+    "json_entries": [".*.json"],
 }
 
 recursive_types = [
-    "recursive",
-    "json_list",
+    "recursive_paths",
+    "json_entries",
     "link_file",
     "youtube_playlist",
     "infer"
@@ -78,7 +78,7 @@ def batch_load_doc(
     """load the input"""
     # # remove cache files older than 90 days
     # try:
-    #     loaddoc_cache.reduce_size(age_limit=timedelta(90))
+    #     doc_loaders_cache.reduce_size(age_limit=timedelta(90))
     # except Exception as err:
     #     # red(f"Error when reducing cache size: '{err}'")
     #     pass
@@ -117,15 +117,15 @@ def batch_load_doc(
                 to_load[ild]["filetype"] = load_filetype
 
 
-            if load_filetype == "recursive":
+            if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
-                    parse_recursive(load_kwargs)
+                    parse_recursive_paths(load_kwargs)
                 )
                 break
 
-            elif load_filetype == "json_list":
+            elif load_filetype == "json_entries":
                 new_doc_to_load.extend(
-                    parse_json_list(load_kwargs)
+                    parse_json_entries(load_kwargs)
                 )
                 break
 
@@ -175,7 +175,9 @@ def batch_load_doc(
             all_unexp_keys.add(k)
             del doc[k]
     # filter out the usuall unexpected
-    all_unexp_keys = [a for a in all_unexp_keys if a not in ["out_file"]]
+    all_unexp_keys = [a for a in all_unexp_keys if a not in [
+        "out_file", "file_loader_n_jobs"
+    ]]
     if all_unexp_keys:
         red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
 
@@ -243,11 +245,12 @@ def batch_load_doc(
     @wraps(load_one_doc)
     def load_one_doc_wrapped(**doc_kwargs):
         try:
-            return load_one_doc(**doc_kwargs)
+            out = load_one_doc(**doc_kwargs)
+            return out
         except Exception as err:
             filetype = doc_kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
-            if load_failure == "crash":
+            if load_failure == "crash" or is_debug:
                 raise
             elif load_failure == "warn":
                 return None
@@ -311,7 +314,7 @@ def batch_load_doc(
     return docs
 
 @optional_typecheck
-def parse_recursive(load_kwargs: dict) -> List[dict]:
+def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Parsing recursive load_filetype: '{load_path}'")
     assert "pattern" in load_kwargs, "missing 'pattern' key in args"
@@ -319,12 +322,12 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     assert (
         load_kwargs["recursed_filetype"]
         not in [
-            "recursive",
-            "json_list",
+            "recursive_paths",
+            "json_entries",
             "youtube",
             "anki",
         ]
-    ), "'recursed_filetype' cannot be 'recursive', 'json_list', 'anki' or 'youtube'"
+    ), "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
     pattern = load_kwargs["pattern"]
 
     if not Path(load_path).exists() and Path(load_path.replace(r"\ ", " ")).exists():
@@ -344,7 +347,13 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -353,7 +362,13 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -368,9 +383,9 @@ def parse_recursive(load_kwargs: dict) -> List[dict]:
     return doclist
 
 @optional_typecheck
-def parse_json_list(load_kwargs: dict) -> List[dict]:
+def parse_json_entries(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
-    whi(f"Loading json_list: '{load_path}'")
+    whi(f"Loading json_entries: '{load_path}'")
     doclist = str(Path(load_path).read_text()).splitlines()
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
@@ -384,7 +399,13 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -393,7 +414,13 @@ def parse_json_list(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -440,7 +467,13 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -449,7 +482,13 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 
@@ -482,7 +521,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     if "include" in load_kwargs:
         for i, d in enumerate(doclist):
             keep = True
-            for inc in load_kwargs["include"]:
+            for iinc, inc in enumerate(load_kwargs["include"]):
+                if isinstance(inc, str):
+                    if inc == inc.lower():
+                        inc = re.compile(inc, flags=re.IGNORECASE)
+                    else:
+                        inc = re.compile(inc)
+                    load_kwargs["include"][iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
@@ -491,7 +536,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
         del load_kwargs["include"]
 
     if "exclude" in load_kwargs:
-        for exc in load_kwargs["exclude"]:
+        for iexc, exc in enumerate(load_kwargs["exclude"]):
+            if isinstance(exc, str):
+                if exc == exc.lower():
+                    exc = re.compile(exc, flags=re.IGNORECASE)
+                else:
+                    exc = re.compile(exc)
+                load_kwargs["exclude"][iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
         del load_kwargs["exclude"]
 

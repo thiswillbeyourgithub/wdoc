@@ -28,8 +28,8 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.39",
-    description="A perfect RAG and AI summary setup for my needs. Supports all LLM, virt. any filetypes (epub, youtube_playlist, pdf, mp3, etc)",
+    version="0.44",
+    description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
@@ -40,7 +40,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     license="GPLv3",
-    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq"],
+    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
     entry_points={
         'console_scripts': [
             'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
@@ -82,7 +82,9 @@ setup(
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
         "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
-        'LogseqMarkdownParser >= 2.5',  # logseq files (I'm the dev behind it)
+        "youtube-transcript-api >= 0.6.2",  # youtube
+        "pytube >= 15.0.0",  # youtube
+        'LogseqMarkdownParser >= 2.8',  # logseq files (I'm the dev behind it)
         'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
         'pydub >= 0.25.1',  # extracting audio from local video

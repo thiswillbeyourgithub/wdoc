@@ -114,10 +114,10 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         multiple times).
         * For more information: 'python DocToolsLLM.py --help'
         * History is saved and shared across all runs
-        * If you use '//' once in the middle of your text, the left part will be
+        * If you use '>>>>' once in the middle of your text, the left part will be
         used as a query find the documents and the right part will be the
         question to answer. For example: 'tuberculosis among medical students
-        in the 20th century // what are the statistics about epidemiology
+        in the 20th century >>>> what are the statistics about epidemiology
         of tuberculosis among medical students in the 20th century?'. This is
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
@@ -126,7 +126,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
 
     # loading history from files
     prev_questions = []
-    pp_file = cache_dir / "previous_questions.json"
+    pp_file = cache_dir / "query_history.json"
     if pp_file.exists():
         pp_list = json.load(pp_file.open("r"))
         assert isinstance(pp_list, list), "Invalid cache type"

@@ -6,7 +6,7 @@
 
 
 # this will fetch all the pdf recursively inside a dir according to some parameters
-{"path": "../some/path/to/parent/", "filetype": "recursive", "recursed_filetype": "pdf", "pattern": "*pdf", "exclude": ["regex_to_exclude"], "include": ["regex_that_need_to_be_present"]}
+{"path": "../some/path/to/parent/", "filetype": "recursive_paths", "recursed_filetype": "pdf", "pattern": "*pdf", "exclude": ["regex_to_exclude"], "include": ["regex_that_need_to_be_present"]}
 
 
 # anki deck example

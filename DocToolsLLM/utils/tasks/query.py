@@ -14,7 +14,7 @@ from ..logger import red
 from ..misc import cache_dir
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
-doc_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
+query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 

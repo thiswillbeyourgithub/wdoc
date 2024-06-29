@@ -3,24 +3,21 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_docstring
+from .utils.logger import whi, yel, red, md_printer, log, set_docstring, log_dir, cache_dir
 
 import sys
 import faulthandler
+import traceback
 import pdb
 import json
 import pyfiglet
 import copy
 from textwrap import indent
-from functools import wraps
 from typing import List, Union, Any, Optional, Callable
 from typeguard import typechecked, check_type, TypeCheckError
 import tldextract
-from joblib import Parallel, delayed
-from threading import Lock
 from pathlib import Path
 import time
-from datetime import datetime
 import re
 import textwrap
 import os
@@ -31,11 +28,11 @@ import lazy_import
 # cannot be lazy loaded because some are not callable but objects directly
 from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
-    cache_dir, average_word_length, wpm, get_splitter,
+    average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, doc_eval_cache
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
 # lazy loading from local files
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
@@ -78,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.39"
+    VERSION: str = "0.44"
 
     #@optional_typecheck
     @typechecked
@@ -103,7 +100,7 @@ class DocToolsLLM_class:
         load_embeds_from: Optional[str] = None,
         top_k: int = 20,
 
-        query: Optional[Union[str, bool]] = None,
+        query: Optional[str] = None,
         query_retrievers: str = "default",
         query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
@@ -120,7 +117,7 @@ class DocToolsLLM_class:
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
         chat_memory: Union[bool, int] = True,
-        no_llm_cache: Union[bool, int] = False,
+        disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
@@ -130,27 +127,43 @@ class DocToolsLLM_class:
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+        self.allowed_extra_keys = extra_args_keys
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
+                    def p(message: str) -> None:
+                        "print error, in red if possible"
+                        try:
+                            red(message)
+                        except Exception as err:
+                            print(message)
+                    [p(line) for line in traceback.format_tb(exc_traceback)]
+                    p(str(exc_value))
+                    p(str(exc_type))
+                    p("\n--verbose was used so opening debug console at the "
+                      "appropriate frame. Press 'c' to continue to the frame "
+                      "of this print.")
                     pdb.post_mortem(exc_traceback)
+                    p("You are now in the exception handling frame.")
+                    breakpoint()
+                    sys.exit(1)
+
             sys.excepthook = handle_exception
             faulthandler.enable()
-
 
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in extra_args_keys:
+            if k not in self.allowed_extra_keys:
                 raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = extra_args_keys[k]
+                expected_type = self.allowed_extra_keys[k]
                 if not check_type(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
@@ -174,8 +187,15 @@ class DocToolsLLM_class:
             query_eval_modelname = None
         if filetype == "infer":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
+        assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
+        if not modelname.split("/", 1)[0] in ["testing"] + list(litellm.models_by_provider.keys()):
+            raise Exception(
+                f"For model '{modelname}': backend not found in "
+                "litellm nor 'testing'.\nList of litellm providers/backend:\n"
+                f"{litellm.model_by_providers.keys()}"
+            )
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0] in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
+        assert embed_model.split("/", 1)[0].lower() in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
@@ -235,6 +255,7 @@ class DocToolsLLM_class:
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
+
         if isinstance(query, str):
             query = query.strip() or None
         assert file_loader_parallel_backend in ["loky", "threading"], "Invalid value for file_loader_parallel_backend"
@@ -243,12 +264,14 @@ class DocToolsLLM_class:
 
         if debug:
             llm_verbosity = True
+            whi(f"Cache location: {cache_dir.absolute()}")
+            whi(f"Config location: {log_dir.absolute()}")
 
         # storing as attributes
-        self.modelbackend = modelname.split("/")[0].lower() if "/" in modelname else "openai"
+        self.modelbackend = modelname.split("/", 1)[0].lower()
         self.modelname = modelname
         if query_eval_modelname is not None:
-            self.query_eval_modelbackend = query_eval_modelname.split("/")[0].lower() if "/" in modelname else "openai"
+            self.query_eval_modelbackend = query_eval_modelname.split("/", 1)[0].lower()
             self.query_eval_modelname = query_eval_modelname
         self.task = task
         self.filetype = filetype
@@ -269,34 +292,33 @@ class DocToolsLLM_class:
         self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
         self.chat_memory = chat_memory if "testing" not in modelname else False
         self.private = bool(private)
-        self.no_llm_cache = bool(no_llm_cache)
+        self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
 
-        if not no_llm_cache:
+        if disable_llm_cache:
+            self.llm_cache = False
+        else:
             if not private:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
-                set_llm_cache(self.llm_cache)
             else:
                 self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
-                set_llm_cache(self.llm_cache)
-        else:
-            self.llm_cache = not no_llm_cache
+            set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
-            red(f"Disabling price computation for model because api_base was modified")
+            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0, 0]
         elif modelname in litellm.model_cost:
             self.llm_price = [
                 litellm.model_cost[modelname]["input_cost_per_token"],
                 litellm.model_cost[modelname]["output_cost_per_token"]
             ]
-        elif modelname.split("/")[1] in litellm.model_cost:
+        elif modelname.split("/", 1)[1] in litellm.model_cost:
             self.llm_price = [
-                litellm.model_cost[modelname.split("/")[1]]["input_cost_per_token"],
-                litellm.model_cost[modelname.split("/")[1]]["output_cost_per_token"]
+                litellm.model_cost[modelname.split("/", 1)[1]]["input_cost_per_token"],
+                litellm.model_cost[modelname.split("/", 1)[1]]["output_cost_per_token"]
             ]
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
@@ -309,10 +331,10 @@ class DocToolsLLM_class:
                     litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
                     litellm.model_cost[query_eval_modelname]["output_cost_per_token"]
                 ]
-            elif query_eval_modelname.split("/")[1] in litellm.model_cost:
+            elif query_eval_modelname.split("/", 1)[1] in litellm.model_cost:
                 self.query_evalllm_price = [
-                    litellm.model_cost[query_eval_modelname.split("/")[1]]["input_cost_per_token"],
-                    litellm.model_cost[query_eval_modelname.split("/")[1]]["output_cost_per_token"]
+                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["input_cost_per_token"],
+                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["output_cost_per_token"]
                 ]
             else:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
@@ -422,8 +444,16 @@ class DocToolsLLM_class:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
+        if self.task in ["query", "search", "summary_then_query"]:
+            self.prepare_query_task()
+
+        if self.import_mode:
+            if self.debug:
+                whi("Ready to query or summarize, call your_instance.query_task(your_question)")
+            return
+
         if self.task in ["summarize", "summarize_then_query"]:
-            self._summary_task()
+            self.summary_task()
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
@@ -432,21 +462,17 @@ class DocToolsLLM_class:
                     ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
-                whi("Done summarizing. Exiting.")
-                raise SystemExit()
+                whi("Done summarizing.")
+                return
 
-        assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
-        self.prepare_query_task()
-
-        if not self.import_mode:
-            while True:
-                self._query(query=query)
-                query = None
         else:
-            whi("Ready to query, call your_instance._query(your_question)")
+            assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
+            while True:
+                self.query_task(query=query)
+                query = None
 
     @optional_typecheck
-    def _summary_task(self) -> dict:
+    def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
@@ -590,7 +616,8 @@ class DocToolsLLM_class:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    red(f"Doing summary check #{n_recur} of {item_name}")
+                    if not self.import_mode:
+                        red(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
                     sp = summary_text.split("\n")
@@ -650,30 +677,33 @@ class DocToolsLLM_class:
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     if "prev_real_text" in locals():
                         if real_text == prev_real_text:
-                            red(f"Identical summary after {n_recur} "
-                                "recursion, adding more recursion will not "
-                                "help so stopping here")
+                            if not self.import_mode:
+                                red(f"Identical summary after {n_recur} "
+                                    "recursion, adding more recursion will not "
+                                    "help so stopping here")
                             recursive_summaries[n_recur] = summary_text
                             break
                     prev_real_text = real_text
 
                     assert n_recur not in recursive_summaries
                     if summary_text not in recursive_summaries:
-                        red(f"Identical summary after {n_recur} "
-                            "recursion, adding more recursion will not "
-                            "help so stopping here")
+                        if not self.import_mode:
+                            red(f"Identical summary after {n_recur} "
+                                "recursion, adding more recursion will not "
+                                "help so stopping here")
                         recursive_summaries[n_recur] = summary_text
                         break
                     else:
                         recursive_summaries[n_recur] = summary_text
 
             best_sum_i = max(list(recursive_summaries.keys()))
-            print("\n\n")
-            md_printer("# Summary")
-            md_printer(f'## {path}')
-            md_printer(recursive_summaries[best_sum_i])
+            if not self.import_mode:
+                print("\n\n")
+                md_printer("# Summary")
+                md_printer(f'## {path}')
+                md_printer(recursive_summaries[best_sum_i])
 
-            red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
+                red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
             summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
@@ -687,6 +717,7 @@ class DocToolsLLM_class:
 
             # save to output file
             if "out_file" in self.cli_kwargs:
+                assert not self.import_mode, "Can't use import_mode with --out_file"
                 for nrecur, sum in recursive_summaries.items():
                     outfile = Path(self.cli_kwargs["out_file"])
                     if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
@@ -706,22 +737,29 @@ class DocToolsLLM_class:
                             f.write(f"    {bulletpoint}")
 
             return {
-                    "path": path,
-                    "sum_reading_length": sum_reading_length,
-                    "doc_reading_length": doc_reading_length,
-                    "doc_total_tokens": doc_total_tokens,
-                    "doc_total_cost": doc_total_cost,
-                    "summary": recursive_summaries[best_sum_i],
-                    "recursive_summaries": recursive_summaries,
-                    }
+                "path": path,
+                "sum_reading_length": sum_reading_length,
+                "sum_tkn_length": summary_tkn_length,
+                "doc_reading_length": doc_reading_length,
+                "doc_total_tokens": doc_total_tokens,
+                "doc_total_cost": doc_total_cost,
+                "summary": recursive_summaries[best_sum_i],
+                "recursive_summaries": recursive_summaries,
+                "author": author,
+                "n_chunk": n_chunk,
+                }
 
         results = summarize_documents(
             path=self.cli_kwargs["path"],
             relevant_docs=self.loaded_docs,
         )
 
-        red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
-        red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+        if not self.import_mode:
+            red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
+            red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+        else:
+            self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})")
+            self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
 
         assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
@@ -995,7 +1033,7 @@ class DocToolsLLM_class:
 
 
     #@optional_typecheck
-    def _query(self, query: Optional[str]) -> Optional[str]:
+    def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
             if "do_reset_memory" in self.interaction_settings:
@@ -1079,21 +1117,15 @@ class DocToolsLLM_class:
                 base_compressor=pipeline, base_retriever=retriever
             )
 
-        if " // " in query:
-            sp = query.split(" // ")
-            assert len(sp) == 2, "The query must contain a maximum of 1 // symbol"
+        if " >>>> " in query:
+            sp = query.split(">>>>")
+            assert len(sp) == 2, "The query must contain a maximum of 1 occurence of '>>>>'"
             query_fe = sp[0].strip()
             query_an = sp[1].strip()
         else:
             query_fe, query_an = copy.copy(query), copy.copy(query)
         whi(f"Query for the embeddings: {query_fe}")
         whi(f"Question to answer: {query_an}")
-
-        # the eval doc chain needs its own caching
-        if self.llm_cache:
-            eval_cache_wrapper = doc_eval_cache.cache
-        else:
-            def eval_cache_wrapper(func): return func
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
@@ -1121,13 +1153,32 @@ class DocToolsLLM_class:
                 **eval_args,
             )
 
+        # the eval doc chain needs its own caching
+        if self.llm_cache:
+            eval_cache_wrapper = query_eval_cache.cache
+        else:
+            def eval_cache_wrapper(func):
+                return func
+
+        if " object at " in self.llm._get_llm_string():
+            red(
+                "Found llm._get_llm_string() value that potentially "
+                f"invalidates the cache: '{self.llm._get_llm_string()}'\n"
+                f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
+        if " object at " in self.eval_llm._get_llm_string():
+            red(
+                "Found eval_llm._get_llm_string() value that potentially "
+                f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
+                f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
+
         @chain
-        @optional_typecheck
         @eval_cache_wrapper
+        @optional_typecheck
         def evaluate_doc_chain(
-                inputs: dict,
-                query_nb: int = self.query_eval_check_number,
-                eval_model_name: str = self.query_eval_modelname,
+            inputs: dict,
+            query_nb: int = self.query_eval_check_number,
+            eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
+            eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
             ) -> List[str]:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
@@ -1148,10 +1199,10 @@ class DocToolsLLM_class:
                 outputs = []
                 new_p = 0
                 new_c = 0
-                async def eval(inputs):
+                async def do_eval(inputs):
                     return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outs = [
-                    eval(inputs)
+                    do_eval(inputs)
                     for i in range(self.query_eval_check_number)
                 ]
                 try:
@@ -1327,7 +1378,7 @@ class DocToolsLLM_class:
             )
             combine_answers = (
                 PR_COMBINE_INTERMEDIATE_ANSWERS
-                | self.llm.bind(max_tokens=2000)
+                | self.llm
                 | StrOutputParser()
             )
 

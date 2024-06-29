@@ -322,7 +322,7 @@ def load_embeddings(
                 for i in range(len(to_embed) // batch_size + 1)
                 ]
         n_saver = 10
-        saver_queues = [(queue.Queue(), queue.Queue()) for i in range(n_saver)]
+        saver_queues = [(queue.Queue(maxsize=10), queue.Queue()) for i in range(n_saver)]
         saver_workers = [
                 threading.Thread(
                     target=faiss_saver,

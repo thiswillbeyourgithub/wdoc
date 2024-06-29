@@ -9,7 +9,7 @@ from typing import List, Tuple, Any, Union
 from langchain.docstore.document import Document
 
 from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
-from ..logger import whi
+from ..logger import whi, red
 from ..typechecker import optional_typecheck
 
 @optional_typecheck
@@ -43,6 +43,11 @@ def do_summarize(
             previous_summary=previous_summary,
             recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION
         )
+        if " object at " in llm._get_llm_string():
+            red(
+                "Found llm._get_llm_string() value that potentially "
+                f"invalidates the cache: '{llm._get_llm_string()}'\n"
+                f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
         output = llm._generate_with_cache(messages)
         finish = output.generations[0].generation_info["finish_reason"]
         assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
@@ -74,6 +79,7 @@ def do_summarize(
 
             # replace tabs by 4 spaces
             ll = ll.replace("\t", "    ")
+            ll = ll.replace("	", "    ")
 
             stripped = ll.lstrip()
 

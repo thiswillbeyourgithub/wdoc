@@ -87,7 +87,7 @@ def load_llm(
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname.split("/")[1],
+                model_name=modelname.split("/", 1)[1],
                 cache=llm_cache,
                 verbose=verbose,
                 callbacks=[PriceCountingCallback(verbose=verbose)],
@@ -115,8 +115,8 @@ def load_llm(
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
     if llm.cache:
         cur = str(llm.cache)
-        llm.cache.__class__.__repr__ = lambda: cur.split(" at ")[0]
-        llm.cache.__class__.__str__ = lambda: cur.split(" at ")[0]
+        llm.cache.__class__.__repr__ = lambda x=None: cur.split(" at ")[0]
+        llm.cache.__class__.__str__ = lambda x=None: cur.split(" at ")[0]
     return llm
 
 

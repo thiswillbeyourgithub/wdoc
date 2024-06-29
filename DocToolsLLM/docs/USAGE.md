@@ -9,9 +9,9 @@
 
 * `--filetype`: str, default `infer`
     * the type of input. Depending on the value, different other parameters
-    are needed. If json_list is used, the line of the input file can contain
+    are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_list file in `DocToolsLLM/docs/json_list_example.txt`
+    an example of json_entries file in `DocToolsLLM/docs/json_entries_example.txt`
 
     * Supported values:
         * `infer`: will guess the appropriate filetype based on `--path`.
@@ -28,10 +28,10 @@
         you must type or paste the string
         * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
 
-        * `json_list`: `--path` is path to a txt file that contains a json
+        * `json_entries`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
         but can contain any parameters described here
-        * `recursive`: `--path` is the starting path `--pattern` is the globbing
+        * `recursive_paths`: `--path` is the starting path `--pattern` is the globbing
         patterns to append `--exclude` and `--include` can be a list of regex
         applying to found paths (include is run first then exclude, if the
         pattern is only lowercase it will be case insensitive) `--recursed_filetype`
@@ -47,7 +47,7 @@
 
 * `--modelname`: str, default `"openai/gpt-4o"`
     * Keep in mind that given that the default backend used is litellm
-    the part of modelname before the slash (/) is the server name.
+    the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then a fake LLM will be used
     for debugging purposes.
     If the value is not part of the model list of litellm, will use
@@ -94,7 +94,7 @@
 ---
 
 * `--query`: str, default `None`
-    * if str, will be directly used for the first query if task in `["query", "search"]`
+    * if str, will be directly used for the first query if task in `["query", "search", "summarize_then_query"]`
 
 * `--query_retrievers`: str, default `"default"`
     * must be a string that specifies which retriever will be used for
@@ -164,6 +164,7 @@
 * `--debug`: bool, default `False`
     * if True will enable langchain tracing, increase verbosity,
     disable multithreading for summaries and loading files,
+    crash if an error is encountered when loading a file,
     automatically trigger the debugger on exceptions.
 
 * `--dollar_limit`: int, default `5`
@@ -182,7 +183,7 @@
     * if True, will remember the messages across a given chat exchange.
     Disabled if using a testing model.
 
-* `--no_llm_cache`: bool, default `False`
+* `--disable_llm_cache`: bool, default `False`
     * WARNING: The cache is temporarily ignored in non openaillms
     generations because of an error with langchain's ChatLiteLLM.
     Basically if you don't use `--private` and use llm form openai,
@@ -227,7 +228,7 @@
 
 # Loader specific arguments
     Those arguments can be set at cli time but can also be used
-    when using recursive filetype combination to have arguments specific
+    when using recursive_paths filetype combination to have arguments specific
     to a loader. They apply depending on the value of `--filetype`.
     An unexpected argument for a given filetype will result in a crash.
 
@@ -293,8 +294,8 @@
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`: str
-    * Only active if `--filetype` is one of json_list, recursive,
-    link_file, youtube_playlist.
+    * Only active if `--filetype` is one of 'json_entries', 'recursive_paths',
+    'link_file', 'youtube_playlist'.
     `--include` can be a list of regex that must be present in the
     document PATH (not content!)
     `--exclude` can be a list of regex that if present in the PATH
@@ -387,7 +388,7 @@
 * `--loading_failure`: str, default `crash`
     * either `crash` or `warn`. Determines what to do with
     exceptions happening when loading a document. This can be set
-    per document if a recursive filetype is used.
+    per document if a recursive_paths filetype is used.
 
 # Runtime flags
 

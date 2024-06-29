@@ -43,7 +43,7 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .misc import (loaddoc_cache, html_to_text, hasher,
+from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm)
 from .typechecker import optional_typecheck
@@ -89,7 +89,15 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
-markdownlinkparser_regex = pattern = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
+markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
+markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)  # to remove image from jina reader that take a lot of tokens but are not yet used
+def md_shorten_image_name(md_image):
+    "turn a markdown image link into just the name"
+    name = md_image.group(1)
+    if len(name) <= 16:
+        return name
+    else:
+        return name[:8] + "…" + name[-8:]
 # to check that a youtube link is valid
 yt_link_regex = re.compile("youtube.*watch")
 emptyline_regex = re.compile(r"^\s*$", re.MULTILINE)
@@ -373,10 +381,12 @@ def load_youtube_video(
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
-    assert yt_link_regex.search(path), f"youtube link is not valid: '{path}'"
+
+    if not yt_link_regex.search(path):
+        whi(f"Not a youtube link but trying anyway: '{path}'")
 
     if youtube_audio_backend == "youtube":
-        whi(f"Loading youtube: '{path}'")
+        whi(f"Using youtube.com loader: '{path}'")
         fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
             loader=fyu,
@@ -386,7 +396,7 @@ def load_youtube_video(
             translation=youtube_translation if youtube_translation else None,
         )
     else:
-        whi("Downloading audio from youtube")
+        whi(f"Downloading audio from url: '{path}'")
         file_name = global_temp_dir[0] / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -395,7 +405,9 @@ def load_youtube_video(
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s'  # with extension
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',  # with extension
+            'verbose': is_verbose,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         }
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
@@ -464,7 +476,7 @@ def load_youtube_video(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
@@ -729,7 +741,7 @@ def load_anki(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_string() -> List[Document]:
     whi("Loading string")
     content = prompt(
@@ -746,7 +758,7 @@ def load_string() -> List[Document]:
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -756,7 +768,7 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
     path: str,
     file_hash: str,
@@ -806,7 +818,7 @@ def load_local_html(
     ]
     return docs
 
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
     ) -> List[Callable]:
@@ -823,7 +835,7 @@ def eval_load_functions(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -873,7 +885,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
     path: str,
     file_hash: str,
@@ -983,7 +995,7 @@ def load_local_audio(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
     path: str,
     file_hash: str,
@@ -1042,7 +1054,7 @@ def load_local_video(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["audio_path"])
+@doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
     audio_path: str,
     audio_hash: str,
@@ -1111,7 +1123,7 @@ def transcribe_audio_deepgram(
     return d
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["audio_path"])
+@doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
     audio_path: str,
     audio_hash: str,
@@ -1139,7 +1151,7 @@ def transcribe_audio_whisper(
     return transcript
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
     path: str,
     file_hash: str,
@@ -1157,7 +1169,7 @@ def load_epub(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
     path: str,
     file_hash: str,
@@ -1174,7 +1186,7 @@ def load_powerpoint(
     ]
     return docs
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
     path: str,
     file_hash: str,
@@ -1194,7 +1206,7 @@ def load_word_document(
     return docs
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
     whi(f"Loading url: '{path}'")
 
@@ -1216,6 +1228,7 @@ def load_url(path: str, title=None) -> List[Document]:
                     title = text.splitlines()[0].replace("Title: ", "", 1)
             text = text.split("Markdown Content:", 1)[1]
             text = markdownlinkparser_regex.sub(r'\1', text)  # remove links
+            text = markdownimage_regex.sub(md_shorten_image_name, text)  # remove markdown images for now as caption is disabled so it's just base64 or something like that, keep only a shorten image name
             docs = [
                 Document(
                     page_content=text,
@@ -1344,7 +1357,7 @@ def load_url(path: str, title=None) -> List[Document]:
 
 
 @optional_typecheck
-@loaddoc_cache.cache
+@doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
         try:
@@ -1358,7 +1371,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["loader"])
+@doc_loaders_cache.cache(ignore=["loader"])
 def cached_yt_loader(
         loader: Any,
         path: str,
@@ -1376,7 +1389,7 @@ def cached_yt_loader(
 
 
 @optional_typecheck
-@loaddoc_cache.cache(ignore=["path"])
+@doc_loaders_cache.cache(ignore=["path"])
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
     loader = pdf_loaders[loader_name](path)
     content = loader.load()
