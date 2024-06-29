@@ -760,7 +760,6 @@ def load_string() -> List[Document]:
     return docs
 
 @optional_typecheck
-@doc_loaders_cache.cache(ignore=["path"])
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
