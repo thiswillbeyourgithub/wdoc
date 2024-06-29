@@ -89,7 +89,7 @@ def batch_load_doc(
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
-    load_failure = cli_kwargs["load_failure"] if "load_failure" in cli_kwargs else "crash"
+    load_failure = cli_kwargs["load_failure"] if "load_failure" in cli_kwargs else "warn"
     assert load_failure in ["crash", "warn"], f"load_failure must be either crash or warn. Not {load_failure}"
 
     # expand the list of document to load as long as there are recursive types
