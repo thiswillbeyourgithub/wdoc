@@ -191,7 +191,7 @@ def load_one_doc(
     The loader is cached"""
     text_splitter = get_splitter(task)
 
-    assert global_temp_dir[0] is temp_dir
+    assert global_temp_dir[0] is temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but global_temp_dir is {global_temp_dir}"
 
     if filetype == "youtube":
         docs = load_youtube_video(**kwargs)
