@@ -770,7 +770,6 @@ def load_anki(
                         "anki_cid": c["cids"].strip(),
                         "anki_mode": f"window_{window_size}",
                         "anki_deck": c["deck_concat"].strip(),
-                        ),
                     },
                 )
             )
