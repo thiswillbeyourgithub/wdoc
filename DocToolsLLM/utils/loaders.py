@@ -644,7 +644,7 @@ def load_anki(
                         "anki_mode": "singlecard",
                         "anki_deck": c["codeck"],
                         "anki_modtime": c["mod"],
-                        "anki_flags": c["flags"]
+                        "anki_flags": c["flags"],
                     },
                 )
             )
@@ -803,7 +803,7 @@ REG_SOUNDS = re.compile(
         r'\[sound:\w+\.\w{2,3}\]',
 )
 REG_LINKS = re.compile(
-        r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*',
+    r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(?:/[A-Za-z0-9%-_])*(?:#|\\?)[A-Za-z0-9%-_&=]*',
 )
 
 @optional_typecheck
