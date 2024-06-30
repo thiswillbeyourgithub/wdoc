@@ -214,7 +214,7 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        docs = load_anki(**kwargs)
+        docs = load_anki(text_spliter=text_splitter, **kwargs)
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
@@ -517,6 +517,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
+    text_splitter: TextSplitter,
     anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
