@@ -1254,7 +1254,7 @@ class DocToolsLLM_class:
             return outputs
 
         # uses in most places to increase concurrency limit
-        multi = {"max_concurrency": 50 if not self.debug else 1}
+        multi = {"max_concurrency": 10 if not self.debug else 1}
 
         if self.task == "search":
             if self.query_eval_modelname:
