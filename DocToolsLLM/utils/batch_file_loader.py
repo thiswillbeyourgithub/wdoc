@@ -174,7 +174,7 @@ def batch_load_doc(
             del doc[k]
     # filter out the usuall unexpected
     all_unexp_keys = [a for a in all_unexp_keys if a not in [
-        "out_file", "file_loader_n_jobs"
+        "out_file", "file_loader_n_jobs", "loading_failure",
     ]]
     if all_unexp_keys:
         red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
