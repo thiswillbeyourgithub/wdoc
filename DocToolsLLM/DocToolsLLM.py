@@ -1140,10 +1140,22 @@ class DocToolsLLM_class:
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
-            self.eval_llm_params = litellm.get_supported_openai_params(
-                model=self.query_eval_modelname,
-                custom_llm_provider=self.query_eval_modelbackend,
-            )
+            failed = False
+            if self.query_eval_modelbackend == "openrouter":
+                try:
+                    self.eval_llm_params = litellm.get_supported_openai_params(
+                        model_name_matcher(
+                            self.query_eval_modelname.split("/", 1)[1]
+                        )
+                    )
+                except Exception as err:
+                    failed = True
+                    red(f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'")
+            if self.modelbackend != "openrouter" or failed:
+                self.eval_llm_params = litellm.get_supported_openai_params(
+                    model=self.query_eval_modelname,
+                    custom_llm_provider=self.query_eval_modelbackend,
+                )
             eval_args = {}
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
