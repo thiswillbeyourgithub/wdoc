@@ -307,11 +307,21 @@ def batch_load_doc(
     if missing_docargs:
         missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
         red(f"Number of failed documents: {len(missing_docargs)}:")
+        missed_recur = []
         for imissed, missed in enumerate(missing_docargs):
             if len(missing_docargs) > 99:
                 red(f"- {imissed + 1:03d}]: '{missed}'")
             else:
                 red(f"- {imissed + 1:02d}]: '{missed}'")
+            if missed["filetype"] in recursive_types:
+                missed_recur.append(missed)
+
+        if missed_recur:
+            missed_recur = sorted(missed_recur, key=lambda x: json.dumps(x))
+            red("Crashing because some recursive filetypes failed:")
+            for imr, mr in enumerate(missed_recur):
+                red(f"- {imr + 1}]: '{mr}'")
+            raise Exception(f"{len(missed_recur)} recursive filetypes failed to load.")
 
     assert docs, "No documents were succesfully loaded!"
 
