@@ -645,8 +645,8 @@ def load_anki(
                         "anki_cid": str(cid),
                         "anki_mode": "singlecard",
                         "anki_deck": c["codeck"],
-                        "anki_modtime": c["mod"],
-                        "anki_flags": c["flags"],
+                        "anki_modtime": c["cmod"],
+                        "anki_flags": c["cflags"],
                     },
                 )
             )
