@@ -693,6 +693,7 @@ def load_anki(
                     "anki_tags": " ".join(tags),
                     "anki_cid": str(cid),
                     "anki_deck": card_deck,
+                    "anki_mode": "concatenate",
                 }
                 full_text = text
             else:
