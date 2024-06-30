@@ -6,7 +6,6 @@ lazily loaded.
 """
 
 import signal
-import sys
 import os
 import time
 from typing import List, Union, Any, Optional, Callable
@@ -371,7 +370,7 @@ def load_one_doc(
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
+            docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
 
     assert docs, "empty list of loaded documents!"
     return docs
@@ -454,7 +453,7 @@ def load_youtube_video(
         assert len(candidate), f"Audio file of {path} failed to download?"
         assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
         audio_file = str(candidate[0].absolute())
-        audio_hash=file_hasher({"path": audio_file})
+        audio_hash = file_hasher({"path": audio_file})
 
         if youtube_audio_backend == "whisper":
             content = transcribe_audio_whisper(
@@ -522,7 +521,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 
     except Exception as err:
         red(
-            f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly."
+            f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly. Error message: '{err}'"
         )
 
         response = requests.get(path)
@@ -774,7 +773,6 @@ def load_anki(
             sorted(docs[i].metadata["anki_cid"].split(" "))
         )
 
-
     # delete temporary db file
     new_db_path.unlink()
     Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
@@ -897,7 +895,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         else:
             pblocks[-1].append(b)
     whi(f"Found {len(pblocks)} parent blocks")
-    assert sum([len(pb) for pb in pblocks]) == len(blocks), f"Unexpected number of blocks after grouping by parent"
+    assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
 
     page_props = parsed.page_properties
 
@@ -977,7 +975,7 @@ def load_local_audio(
         )
         # turn the .wav into .ogg
         ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(str(unsilenced_path_ogg.resolve().absolute())).run()
-        unsilenced_hash=file_hasher({"path": unsilenced_path_ogg})
+        unsilenced_hash = file_hasher({"path": unsilenced_path_ogg})
 
         old_path = path
         old_hash = file_hash
@@ -1008,7 +1006,7 @@ def load_local_audio(
             docs[-1].metadata["language"] = whisper_lang
 
     elif audio_backend == "deepgram":
-        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        assert whisper_prompt is None and whisper_lang is None, "Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
         content = transcribe_audio_deepgram(
             audio_path=path,
             audio_hash=file_hash,
@@ -1082,7 +1080,7 @@ def load_local_video(
     assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
 
     # need the hash from the mp3, not video
-    audio_hash=file_hasher({"path": audio_path})
+    audio_hash = file_hasher({"path": audio_path})
 
     return load_local_audio(
         path=audio_path,
@@ -1380,7 +1378,6 @@ def load_url(path: str, title=None) -> List[Document]:
             red(
                 f"Exception when using html as LAST RESORT to parse url: '{err}'"
             )
-
 
     # last resort, try to get the title from the most basic loader
     if not title:
