@@ -296,13 +296,23 @@ def batch_load_doc(
     loaders_temp_dir_file.write_text("")
 
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
-    n_failed = len([d for d in doc_lists if d is None])
-    if n_failed:
-        red(f"Number of failed documents: {n_failed}")
-    for d in tqdm(doc_lists, desc="Concatenating results"):
+    missing_docargs = []
+    for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results"):
         if d is not None:
             docs.extend(d)
-    assert None not in docs, "None remained in docs!"
+        else:
+            missing_docargs.append(to_load[idoc])
+    assert None not in docs
+
+    if missing_docargs:
+        missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
+        red(f"Number of failed documents: {len(missing_docargs)}:")
+        for imissed, missed in enumerate(missing_docargs):
+            if len(missing_docargs) > 99:
+                red(f"- {imissed + 1:03d}]: '{missed}'")
+            else:
+                red(f"- {imissed + 1:02d}]: '{missed}'")
+
     assert docs, "No documents were succesfully loaded!"
 
     size = sum([get_tkn_length(d.page_content) for d in docs])
