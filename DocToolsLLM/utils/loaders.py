@@ -196,7 +196,10 @@ def load_one_doc(
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
     if filetype == "youtube":
-        docs = load_youtube_video(**kwargs)
+        docs = load_youtube_video(
+            loaders_temp_dir=temp_dir,
+            **kwargs,
+        )
 
     elif filetype == "online_pdf":
         docs = load_online_pdf(
@@ -214,35 +217,65 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        docs = load_anki(text_spliter=text_splitter, **kwargs)
+        docs = load_anki(
+            text_spliter=text_splitter,
+            loaders_temp_dir=temp_dir,
+            **kwargs,
+        )
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
     elif filetype == "txt" or filetype == "text":
-        docs = load_txt(file_hash=file_hash, **kwargs)
+        docs = load_txt(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_html":
-        docs = load_local_html(file_hash=file_hash, **kwargs)
+        docs = load_local_html(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "logseq_markdown":
-        docs = load_logseq_markdown(debug=debug, file_hash=file_hash, **kwargs,)
+        docs = load_logseq_markdown(
+            debug=debug,
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_audio":
-        docs = load_local_audio(file_hash=file_hash, **kwargs)
+        docs = load_local_audio(
+            loaders_temp_dir=temp_dir,
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_video":
-        docs = load_local_video(file_hash=file_hash, **kwargs)
+        docs = load_local_video(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "epub":
-        docs = load_epub(file_hash=file_hash, **kwargs)
+        docs = load_epub(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "powerpoint":
-        docs = load_powerpoint(file_hash=file_hash, **kwargs)
+        docs = load_powerpoint(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "word":
-        docs = load_word_document(file_hash=file_hash, **kwargs)
+        docs = load_word_document(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "url":
         docs = load_url(**kwargs)
@@ -367,6 +400,7 @@ def cloze_stripper(clozed: str) -> str:
 @optional_typecheck
 def load_youtube_video(
     path: str,
+    loaders_temp_dir: PosixPath,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
     youtube_audio_backend: Optional[str] = "youtube",
@@ -399,7 +433,7 @@ def load_youtube_video(
         )
     else:
         whi(f"Downloading audio from url: '{path}'")
-        file_name = load_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = loaders_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -414,7 +448,7 @@ def load_youtube_video(
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
         candidate = []
-        for f in load_temp_dir.iterdir():
+        for f in loaders_temp_dir.iterdir():
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
@@ -518,6 +552,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 def load_anki(
     anki_profile: str,
     text_splitter: TextSplitter,
+    loaders_temp_dir: PosixPath,
     anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
@@ -535,7 +570,7 @@ def load_anki(
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
-    new_db_path = load_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    new_db_path = loaders_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -895,6 +930,7 @@ def load_local_audio(
     path: str,
     file_hash: str,
     audio_backend: str,
+    loaders_temp_dir: PosixPath,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -929,8 +965,8 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path_wav = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
-        unsilenced_path_ogg = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        unsilenced_path_wav = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
         assert not unsilenced_path_wav.exists()
         assert not unsilenced_path_ogg.exists()
         torchaudio.save(
@@ -1005,6 +1041,7 @@ def load_local_video(
     path: str,
     file_hash: str,
     audio_backend: str,
+    loaders_temp_dir: PosixPath,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -1014,7 +1051,7 @@ def load_local_video(
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    audio_path = load_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
     assert not audio_path.exists()
 
     # extract audio from video
