@@ -1208,7 +1208,7 @@ class DocToolsLLM_class:
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
                 # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
-                if not all(r in ["stop", "lenghth"] for r in reasons):
+                if not all(r in ["stop", "length"] for r in reasons):
                     red(f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'")
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
