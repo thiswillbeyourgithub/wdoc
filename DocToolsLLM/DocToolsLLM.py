@@ -1033,7 +1033,7 @@ class DocToolsLLM_class:
             self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
             status = self.loaded_embeddings.delete(ids_to_del)
 
-            # checking deletiong want well
+            # checking deletions went well
             if status is False:
                 raise Exception("Vectorstore filtering failed")
             elif status is None:
