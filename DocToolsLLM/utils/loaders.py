@@ -591,6 +591,8 @@ def load_anki(
         # load each card as a single document
         for cid in cards.index:
             c = cards.loc[cid, :]
+            card_deck = c["codeck"]
+            assert card_deck, f"empty card_deck for cid {cid}"
             docs.append(
                 Document(
                     page_content=c["text"],
@@ -598,6 +600,7 @@ def load_anki(
                         "anki_tags": " ".join(c["ntags"]),
                         "anki_cid": str(cid),
                         "anki_mode": "single_note",
+                        "anki_deck": card_deck,
                     },
                 )
             )
