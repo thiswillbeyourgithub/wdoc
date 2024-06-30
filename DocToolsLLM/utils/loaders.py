@@ -8,7 +8,7 @@ lazily loaded.
 import signal
 import os
 import time
-from typing import List, Union, Any, Optional, Callable
+from typing import List, Union, Any, Optional, Callable, Dict
 from textwrap import dedent
 from functools import partial
 import uuid
@@ -614,7 +614,15 @@ def load_anki(
                 ),
             axis=1,
         )
-    cards = cards[~cards["text"].str.contains("[IMAGE]")]
+    # remove all media
+    cards["text"] = cards["text"].apply(
+        lambda x: anki_replace_media(
+            content=x,
+            media=None,
+            mode="remove_media",
+        )[0]
+    )
+    cards = cards[~cards["text"].str.contains("[IMAGE_")]
     cards["text"] = cards["text"].apply(lambda x: x.strip())
     cards.drop_duplicates(subset="text", inplace=True)
 
@@ -778,6 +786,177 @@ def load_anki(
     Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
     Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
     return docs
+
+REG_IMG = re.compile(
+    r'<img src="[^"]+"(?:[^>]*?)?>' ,
+    flags=re.MULTILINE|re.DOTALL)
+
+REG_SOUNDS = re.compile(
+        r'\[sound:\w+\.\w{2,3}\]',
+)
+REG_LINKS = re.compile(
+        r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*',
+)
+
+@optional_typecheck
+def anki_replace_media(
+    content: str,
+    media: Union[None, Dict],
+    mode: str,
+    ) -> [str, Dict]:
+    """
+    Else: exclude any note that contains in the content:
+        * an image (<img...)
+        * or a sound [sound:...
+        * or a link href / http
+    This is because:
+        1 as LLMs are non deterministic I preferred
+            to avoid taking the risk of botching the content
+        2 it costs less token
+
+    The intended use is to call it first to replace
+    each media by a simple string like [IMAGE1] and check if it's
+    indeed present in the output of the LLM then replace it back.
+
+    It uses both bs4 and regex to be sure of itself
+    """
+    assert mode in ["add_media", "remove_media"]
+    assert content.strip()
+    if media is None:
+        media = {}
+    assert isinstance(media, dict)
+
+    if mode == "remove_media":
+        assert not media
+
+        # Images
+        if "<img" in content:
+            soup = BeautifulSoup(content, 'html.parser')
+            images_bs4 = [str(img) for img in soup.find_all('img')]
+            images_reg = re.findall(REG_IMG, content)
+            assert len(images_bs4) == len(images_reg)
+            images = images_reg
+            assert images
+            assert all(img in content for img in images)
+            assert all(re.search(REG_IMG, img) for img in images)
+            assert not any(re.search(REG_SOUNDS, img) for img in images)
+        else:
+            images = []
+
+        # Sounds
+        if "[sounds:" in content:
+            sounds = re.findall(REG_SOUNDS, content)
+            assert sounds
+            assert all(sound in content for sound in sounds)
+            assert not any(re.search(REG_IMG, sound) for sound in sounds)
+            assert all(re.search(REG_SOUNDS, sound) for sound in sounds)
+        else:
+            sounds = []
+
+        # links
+        if "://" in content:
+            links = re.findall(REG_LINKS, content)
+            assert links
+            assert all(link in content for link in links)
+            assert all(re.search(REG_LINKS, link) for link in links)
+        else:
+            links = []
+
+        if not images + sounds + links:
+            return content, {}
+
+        new_content = content
+
+        # do the replacing
+        for i, img in enumerate(images):
+            assert img in content
+            assert img in new_content
+            assert img not in media.keys() and img not in media.values()
+            replaced = f"[IMAGE_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            new_content = new_content.replace(img, replaced)
+            media[replaced] = img
+            assert img not in new_content
+            assert replaced in new_content
+
+        for i, sound in enumerate(sounds):
+            assert sound in content
+            assert sound in new_content
+            assert sound not in media.keys() and sound not in media.values()
+            replaced = f"[SOUND_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            new_content = new_content.replace(sound, replaced)
+            media[replaced] = sound
+            assert sound not in new_content
+            assert replaced in new_content
+
+        for i, link in enumerate(links):
+            assert link in content
+            assert link not in media.keys()
+            replaced = f"[LINK_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            assert link in new_content or len(
+                [
+                    val for val in media.values()
+                    if link in val
+                ]
+            )
+            if link not in new_content:
+                continue
+            else:
+                new_content = new_content.replace(link, replaced)
+                media[replaced] = link
+                assert link not in new_content
+                assert replaced in new_content
+
+        # check no media can be found anymore
+        assert not re.findall(REG_IMG, new_content)
+        assert "<img" not in new_content
+        assert not BeautifulSoup(new_content, 'html.parser').find_all('img')
+        assert not re.findall(REG_SOUNDS, new_content)
+        assert "[sound:" not in new_content
+        assert not re.findall(REG_LINKS, new_content)
+        assert "://" not in new_content
+
+        # check non empty
+        temp = new_content
+        for med, val in media.items():
+            temp = temp.replace(med, "")
+        assert temp.strip()
+
+        # recursive check:
+        assert anki_replace_media(
+                content=new_content,
+                media=media,
+                mode="add_media",
+        )[0] == content
+
+        return new_content, media
+
+    elif mode == "add_media":
+        assert media
+
+        # TODO check that all media are found
+        new_content = content
+        for med, val in media.items():
+            assert med in content
+            assert val not in content
+            assert val not in new_content
+            new_content = new_content.replace(med, val)
+            assert med not in new_content
+            assert val in new_content
+
+        return new_content, {}
+
+    else:
+        raise ValueError(mode)
+
 
 @optional_typecheck
 @doc_loaders_cache.cache
