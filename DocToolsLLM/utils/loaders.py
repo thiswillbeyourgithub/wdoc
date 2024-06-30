@@ -635,6 +635,7 @@ def load_anki(
         for cid in cards.index:
             c = cards.loc[cid, :]
             card_deck = c["codeck"]
+            mod_time = c["mod"]
             assert card_deck, f"empty card_deck for cid {cid}"
             docs.append(
                 Document(
@@ -644,6 +645,7 @@ def load_anki(
                         "anki_cid": str(cid),
                         "anki_mode": "singlecard",
                         "anki_deck": card_deck,
+                        "anki_modtime": mod_time,
                     },
                 )
             )
