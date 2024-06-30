@@ -322,6 +322,8 @@ def batch_load_doc(
             for imr, mr in enumerate(missed_recur):
                 red(f"- {imr + 1}]: '{mr}'")
             raise Exception(f"{len(missed_recur)} recursive filetypes failed to load.")
+    else:
+        red("No document failed to load!")
 
     assert docs, "No documents were succesfully loaded!"
 
