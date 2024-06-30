@@ -217,7 +217,7 @@ def load_one_doc(
 
     elif filetype == "anki":
         docs = load_anki(
-            text_spliter=text_splitter,
+            text_splitter=text_splitter,
             loaders_temp_dir=temp_dir,
             **kwargs,
         )
