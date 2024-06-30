@@ -44,7 +44,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm, loaders_temp_dir_file)
+                   average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux
