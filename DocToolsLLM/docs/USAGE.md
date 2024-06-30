@@ -248,11 +248,11 @@
 * `--anki_fields`: List[str]
     * List of fields to keep
 * `--anki_mode`: str
-    * any of `window`, `concatenate`, `single_note`: (or _ separated
-    value like `concatenate_window`). By default `single_note`
+    * any of `window`, `concatenate`, `singlecard`: (or _ separated
+    value like `concatenate_window`). By default `singlecard`
     is used.
     * Modes:
-        * `single_note`: 1 document is 1 anki note.
+        * `singlecard`: 1 document is 1 anki card.
         * `window`: 1 documents is 5 anki note, overlapping (so
         10 anki notes will result in 5 documents)
         * `concatenate`: 1 document is all anki notes concatenated as a
@@ -385,7 +385,7 @@
     * a string that will be added to the document metadata at the
     key `source_tag`. Useful when using filetype combination.
 
-* `--loading_failure`: str, default `crash`
+* `--loading_failure`: str, default `warn`
     * either `crash` or `warn`. Determines what to do with
     exceptions happening when loading a document. This can be set
     per document if a recursive_paths filetype is used.

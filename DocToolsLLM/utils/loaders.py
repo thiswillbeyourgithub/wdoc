@@ -6,10 +6,9 @@ lazily loaded.
 """
 
 import signal
-import sys
 import os
 import time
-from typing import List, Union, Any, Optional, Callable
+from typing import List, Union, Any, Optional, Callable, Dict
 from textwrap import dedent
 from functools import partial
 import uuid
@@ -45,7 +44,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm, loaders_temp_dir_file)
+                   average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux
@@ -196,7 +195,10 @@ def load_one_doc(
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
     if filetype == "youtube":
-        docs = load_youtube_video(**kwargs)
+        docs = load_youtube_video(
+            loaders_temp_dir=temp_dir,
+            **kwargs,
+        )
 
     elif filetype == "online_pdf":
         docs = load_online_pdf(
@@ -214,35 +216,65 @@ def load_one_doc(
         )
 
     elif filetype == "anki":
-        docs = load_anki(**kwargs)
+        docs = load_anki(
+            text_splitter=text_splitter,
+            loaders_temp_dir=temp_dir,
+            **kwargs,
+        )
 
     elif filetype == "string":
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
     elif filetype == "txt" or filetype == "text":
-        docs = load_txt(file_hash=file_hash, **kwargs)
+        docs = load_txt(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_html":
-        docs = load_local_html(file_hash=file_hash, **kwargs)
+        docs = load_local_html(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "logseq_markdown":
-        docs = load_logseq_markdown(debug=debug, file_hash=file_hash, **kwargs,)
+        docs = load_logseq_markdown(
+            debug=debug,
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_audio":
-        docs = load_local_audio(file_hash=file_hash, **kwargs)
+        docs = load_local_audio(
+            loaders_temp_dir=temp_dir,
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "local_video":
-        docs = load_local_video(file_hash=file_hash, **kwargs)
+        docs = load_local_video(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "epub":
-        docs = load_epub(file_hash=file_hash, **kwargs)
+        docs = load_epub(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "powerpoint":
-        docs = load_powerpoint(file_hash=file_hash, **kwargs)
+        docs = load_powerpoint(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "word":
-        docs = load_word_document(file_hash=file_hash, **kwargs)
+        docs = load_word_document(
+            file_hash=file_hash,
+            **kwargs,
+        )
 
     elif filetype == "url":
         docs = load_url(**kwargs)
@@ -338,7 +370,7 @@ def load_one_doc(
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-           docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
+            docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
 
     assert docs, "empty list of loaded documents!"
     return docs
@@ -367,6 +399,7 @@ def cloze_stripper(clozed: str) -> str:
 @optional_typecheck
 def load_youtube_video(
     path: str,
+    loaders_temp_dir: PosixPath,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
     youtube_audio_backend: Optional[str] = "youtube",
@@ -399,7 +432,7 @@ def load_youtube_video(
         )
     else:
         whi(f"Downloading audio from url: '{path}'")
-        file_name = load_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = loaders_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -414,13 +447,13 @@ def load_youtube_video(
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([path])
         candidate = []
-        for f in load_temp_dir.iterdir():
+        for f in loaders_temp_dir.iterdir():
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
         assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
         audio_file = str(candidate[0].absolute())
-        audio_hash=file_hasher({"path": audio_file})
+        audio_hash = file_hasher({"path": audio_file})
 
         if youtube_audio_backend == "whisper":
             content = transcribe_audio_whisper(
@@ -488,7 +521,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 
     except Exception as err:
         red(
-            f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly."
+            f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly. Error message: '{err}'"
         )
 
         response = requests.get(path)
@@ -517,7 +550,9 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
-    anki_mode: str = "single_note",
+    text_splitter: TextSplitter,
+    loaders_temp_dir: PosixPath,
+    anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
@@ -525,7 +560,7 @@ def load_anki(
     assert (
         anki_mode.replace("window", "")
         .replace("concatenate", "")
-        .replace("single_note", "")
+        .replace("singlecard", "")
         .replace("_", "")
         == ""
     ), f"Unexpected anki_mode: {anki_mode}"
@@ -534,7 +569,7 @@ def load_anki(
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
-    new_db_path = load_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    new_db_path = loaders_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -579,25 +614,41 @@ def load_anki(
                 ),
             axis=1,
         )
-    cards = cards[~cards["text"].str.contains("[IMAGE]")]
     cards["text"] = cards["text"].apply(lambda x: x.strip())
+    cards = cards[cards["text"].ne('')]  # remove empty text
+    # remove all media
+    cards["text"] = cards["text"].apply(
+        lambda x: anki_replace_media(
+            content=x,
+            media=None,
+            mode="remove_media",
+        )[0]
+    )
+    cards = cards[~cards["text"].str.contains("\[IMAGE_")]
+    cards = cards[~cards["text"].str.contains("\[SOUND_")]
+    cards = cards[~cards["text"].str.contains("\[LINK_")]
+    cards["text"] = cards["text"].apply(lambda x: x.strip())
+    cards = cards[cards["text"].ne('')]  # remove empty text
     cards.drop_duplicates(subset="text", inplace=True)
 
     cards = cards.sort_index()
 
     docs = []
 
-    if "single_note" in anki_mode:
+    if "singlecard" in anki_mode:
         # load each card as a single document
         for cid in cards.index:
             c = cards.loc[cid, :]
+            assert c["codeck"], f"empty card_deck for cid {cid}"
             docs.append(
                 Document(
                     page_content=c["text"],
                     metadata={
                         "anki_tags": " ".join(c["ntags"]),
                         "anki_cid": str(cid),
-                        "anki_mode": "single_note",
+                        "anki_mode": "singlecard",
+                        "anki_deck": c["codeck"],
+                        "anki_modtime": int(c["cmod"]),
                     },
                 )
             )
@@ -647,6 +698,7 @@ def load_anki(
                     "anki_tags": " ".join(tags),
                     "anki_cid": str(cid),
                     "anki_deck": card_deck,
+                    "anki_mode": "concatenate",
                 }
                 full_text = text
             else:
@@ -673,11 +725,13 @@ def load_anki(
         n = len(index_list)
         cards["text_concat"] = ""
         cards["tags_concat"] = ""
+        cards["deck_concat"] = ""
         cards["cids"] = ""
         cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
         for i in tqdm(range(len(index_list)), desc="combining anki cards"):
             text_concat = ""
             tags_concat = ""
+            deck_concat = ""
             cids = ""
             skip = 0
             for w in range(0, window_size):
@@ -700,7 +754,10 @@ def load_anki(
                 )
                 tags_concat += cards.at[index_list[i +
                                                     (w + skip) * s], "ntags_t"]
+                if cards.at[index_list[i + (w + skip) * s], "codeck"] not in deck_concat:
+                    deck_concat +=  " " + cards.at[index_list[i + (w + skip) * s], "codeck"]
                 cids += f"{index_list[i+(w+skip)*s]} "
+            cards.at[index_list[i], "deck_concat"] = deck_concat
             cards.at[index_list[i], "text_concat"] = text_concat
             cards.at[index_list[i], "tags_concat"] = tags_concat
             cards.at[index_list[i], "cids"] = cids
@@ -716,6 +773,7 @@ def load_anki(
                         ),
                         "anki_cid": c["cids"].strip(),
                         "anki_mode": f"window_{window_size}",
+                        "anki_deck": c["deck_concat"].strip(),
                     },
                 )
             )
@@ -735,12 +793,182 @@ def load_anki(
             sorted(docs[i].metadata["anki_cid"].split(" "))
         )
 
-
     # delete temporary db file
     new_db_path.unlink()
     Path(str(new_db_path.absolute()) + "-shm").unlink(missing_ok=True)
     Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
     return docs
+
+REG_IMG = re.compile(
+    r'<img src="[^"]+"(?:[^>]*?)?>' ,
+    flags=re.MULTILINE|re.DOTALL)
+
+REG_SOUNDS = re.compile(
+        r'\[sound:\w+\.\w{2,3}\]',
+)
+REG_LINKS = re.compile(
+    r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(?:/[A-Za-z0-9%-_])*(?:#|\\?)[A-Za-z0-9%-_&=]*',
+)
+
+@optional_typecheck
+def anki_replace_media(
+    content: str,
+    media: Union[None, Dict],
+    mode: str,
+    ) -> [str, Dict]:
+    """
+    Else: exclude any note that contains in the content:
+        * an image (<img...)
+        * or a sound [sound:...
+        * or a link href / http
+    This is because:
+        1 as LLMs are non deterministic I preferred
+            to avoid taking the risk of botching the content
+        2 it costs less token
+
+    The intended use is to call it first to replace
+    each media by a simple string like [IMAGE_1] and check if it's
+    indeed present in the output of the LLM then replace it back.
+
+    It uses both bs4 and regex to be sure of itself
+    """
+    assert mode in ["add_media", "remove_media"]
+    assert content.strip()
+    if media is None:
+        media = {}
+    assert isinstance(media, dict)
+
+    if mode == "remove_media":
+        assert not media
+
+        # Images
+        if "<img" in content:
+            soup = BeautifulSoup(content, 'html.parser')
+            images_bs4 = [str(img) for img in soup.find_all('img')]
+            images_reg = re.findall(REG_IMG, content)
+            assert len(images_bs4) == len(images_reg)
+            images = images_reg
+            assert images
+            assert all(img in content for img in images)
+            assert all(re.search(REG_IMG, img) for img in images)
+            assert not any(re.search(REG_SOUNDS, img) for img in images)
+        else:
+            images = []
+
+        # Sounds
+        if "[sounds:" in content:
+            sounds = re.findall(REG_SOUNDS, content)
+            assert sounds
+            assert all(sound in content for sound in sounds)
+            assert not any(re.search(REG_IMG, sound) for sound in sounds)
+            assert all(re.search(REG_SOUNDS, sound) for sound in sounds)
+        else:
+            sounds = []
+
+        # links
+        if "://" in content:
+            links = re.findall(REG_LINKS, content)
+            assert links
+            assert all(link in content for link in links)
+            assert all(re.search(REG_LINKS, link) for link in links)
+        else:
+            links = []
+
+        if not images + sounds + links:
+            return content, {}
+
+        new_content = content
+
+        # do the replacing
+        for i, img in enumerate(images):
+            assert img in content
+            assert img in new_content
+            assert img not in media.keys() and img not in media.values()
+            replaced = f"[IMAGE_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            new_content = new_content.replace(img, replaced)
+            media[replaced] = img
+            assert img not in new_content
+            assert replaced in new_content
+
+        for i, sound in enumerate(sounds):
+            assert sound in content
+            assert sound in new_content
+            assert sound not in media.keys() and sound not in media.values()
+            replaced = f"[SOUND_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            new_content = new_content.replace(sound, replaced)
+            media[replaced] = sound
+            assert sound not in new_content
+            assert replaced in new_content
+
+        for i, link in enumerate(links):
+            assert link in content
+            assert link not in media.keys()
+            replaced = f"[LINK_{i+1}]"
+            assert replaced not in media.keys() and replaced not in media.values()
+            assert replaced not in content
+            assert replaced not in new_content
+            assert link in new_content or len(
+                [
+                    val for val in media.values()
+                    if link in val
+                ]
+            )
+            if link not in new_content:
+                continue
+            else:
+                new_content = new_content.replace(link, replaced)
+                media[replaced] = link
+                assert link not in new_content
+                assert replaced in new_content
+
+        # check no media can be found anymore
+        assert not re.findall(REG_IMG, new_content)
+        assert "<img" not in new_content
+        assert not BeautifulSoup(new_content, 'html.parser').find_all('img')
+        assert not re.findall(REG_SOUNDS, new_content)
+        assert "[sound:" not in new_content
+        assert not re.findall(REG_LINKS, new_content)
+        assert "://" not in new_content
+
+        # check non empty
+        temp = new_content
+        for med, val in media.items():
+            temp = temp.replace(med, "")
+        assert temp.strip()
+
+        # recursive check:
+        assert anki_replace_media(
+                content=new_content,
+                media=media,
+                mode="add_media",
+        )[0] == content
+
+        return new_content, media
+
+    elif mode == "add_media":
+        assert media
+
+        # TODO check that all media are found
+        new_content = content
+        for med, val in media.items():
+            assert med in content
+            assert val not in content
+            assert val not in new_content
+            new_content = new_content.replace(med, val)
+            assert med not in new_content
+            assert val in new_content
+
+        return new_content, {}
+
+    else:
+        raise ValueError(mode)
+
 
 @optional_typecheck
 @doc_loaders_cache.cache
@@ -760,7 +988,6 @@ def load_string() -> List[Document]:
     return docs
 
 @optional_typecheck
-@doc_loaders_cache.cache(ignore=["path"])
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -859,7 +1086,7 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         else:
             pblocks[-1].append(b)
     whi(f"Found {len(pblocks)} parent blocks")
-    assert sum([len(pb) for pb in pblocks]) == len(blocks), f"Unexpected number of blocks after grouping by parent"
+    assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
 
     page_props = parsed.page_properties
 
@@ -892,6 +1119,7 @@ def load_local_audio(
     path: str,
     file_hash: str,
     audio_backend: str,
+    loaders_temp_dir: PosixPath,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -926,8 +1154,8 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path_wav = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
-        unsilenced_path_ogg = load_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        unsilenced_path_wav = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
         assert not unsilenced_path_wav.exists()
         assert not unsilenced_path_ogg.exists()
         torchaudio.save(
@@ -938,7 +1166,7 @@ def load_local_audio(
         )
         # turn the .wav into .ogg
         ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(str(unsilenced_path_ogg.resolve().absolute())).run()
-        unsilenced_hash=file_hasher({"path": unsilenced_path_ogg})
+        unsilenced_hash = file_hasher({"path": unsilenced_path_ogg})
 
         old_path = path
         old_hash = file_hash
@@ -969,7 +1197,7 @@ def load_local_audio(
             docs[-1].metadata["language"] = whisper_lang
 
     elif audio_backend == "deepgram":
-        assert whisper_prompt is None and whisper_lang is None, f"Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        assert whisper_prompt is None and whisper_lang is None, "Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
         content = transcribe_audio_deepgram(
             audio_path=path,
             audio_hash=file_hash,
@@ -1002,6 +1230,7 @@ def load_local_video(
     path: str,
     file_hash: str,
     audio_backend: str,
+    loaders_temp_dir: PosixPath,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -1011,7 +1240,7 @@ def load_local_video(
     ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    audio_path = load_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
     assert not audio_path.exists()
 
     # extract audio from video
@@ -1042,7 +1271,7 @@ def load_local_video(
     assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
 
     # need the hash from the mp3, not video
-    audio_hash=file_hasher({"path": audio_path})
+    audio_hash = file_hasher({"path": audio_path})
 
     return load_local_audio(
         path=audio_path,
@@ -1340,7 +1569,6 @@ def load_url(path: str, title=None) -> List[Document]:
             red(
                 f"Exception when using html as LAST RESORT to parse url: '{err}'"
             )
-
 
     # last resort, try to get the title from the most basic loader
     if not title:

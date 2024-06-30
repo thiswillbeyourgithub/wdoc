@@ -12,7 +12,6 @@ import re
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-import os
 from typing import List, Tuple
 from functools import wraps
 import random
@@ -89,8 +88,8 @@ def batch_load_doc(
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
-    load_failure = cli_kwargs["load_failure"] if "load_failure" in cli_kwargs else "crash"
-    assert load_failure in ["crash", "warn"], f"load_failure must be either crash or warn. Not {load_failure}"
+    loading_failure = cli_kwargs["loading_failure"] if "loading_failure" in cli_kwargs else "warn"
+    assert loading_failure in ["crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
@@ -144,7 +143,6 @@ def batch_load_doc(
         if new_doc_to_load:
             assert to_load[ild]["filetype"] in recursive_types
             to_load.remove(to_load[ild])
-            ild_done = None
             to_load.extend(new_doc_to_load)
             new_doc_to_load = []
             continue
@@ -176,7 +174,7 @@ def batch_load_doc(
             del doc[k]
     # filter out the usuall unexpected
     all_unexp_keys = [a for a in all_unexp_keys if a not in [
-        "out_file", "file_loader_n_jobs"
+        "out_file", "file_loader_n_jobs", "loading_failure",
     ]]
     if all_unexp_keys:
         red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
@@ -250,12 +248,12 @@ def batch_load_doc(
         except Exception as err:
             filetype = doc_kwargs["filetype"]
             red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
-            if load_failure == "crash" or is_debug:
+            if loading_failure == "crash" or is_debug:
                 raise
-            elif load_failure == "warn":
+            elif loading_failure == "warn":
                 return None
             else:
-                raise ValueError(load_failure)
+                raise ValueError(loading_failure)
 
     if len(to_load) == 1 or is_debug:
         n_jobs = 1
@@ -293,12 +291,40 @@ def batch_load_doc(
             colour="magenta",
         )
     )
+
+    # erases content that links to the loaders temporary files at startup
+    loaders_temp_dir_file.write_text("")
+
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
-    n_failed = len([d for d in doc_lists if d is None])
-    if n_failed:
-        red(f"Number of failed documents: {n_failed}")
-    [docs.extend(d) for d in doc_lists if d is not None]
+    missing_docargs = []
+    for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results"):
+        if d is not None:
+            docs.extend(d)
+        else:
+            missing_docargs.append(to_load[idoc])
     assert None not in docs
+
+    if missing_docargs:
+        missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
+        red(f"Number of failed documents: {len(missing_docargs)}:")
+        missed_recur = []
+        for imissed, missed in enumerate(missing_docargs):
+            if len(missing_docargs) > 99:
+                red(f"- {imissed + 1:03d}]: '{missed}'")
+            else:
+                red(f"- {imissed + 1:02d}]: '{missed}'")
+            if missed["filetype"] in recursive_types:
+                missed_recur.append(missed)
+
+        if missed_recur:
+            missed_recur = sorted(missed_recur, key=lambda x: json.dumps(x))
+            red("Crashing because some recursive filetypes failed:")
+            for imr, mr in enumerate(missed_recur):
+                red(f"- {imr + 1}]: '{mr}'")
+            raise Exception(f"{len(missed_recur)} recursive filetypes failed to load.")
+    else:
+        red("No document failed to load!")
+
     assert docs, "No documents were succesfully loaded!"
 
     size = sum([get_tkn_length(d.page_content) for d in docs])

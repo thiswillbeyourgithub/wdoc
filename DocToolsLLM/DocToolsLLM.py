@@ -30,7 +30,7 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, disable_internet, loaders_temp_dir_file)
+    extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
@@ -75,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.45"
+    VERSION: str = "0.49"
 
     #@optional_typecheck
     @typechecked
@@ -153,9 +153,6 @@ class DocToolsLLM_class:
 
         red(pyfiglet.figlet_format("DocToolsLLM"))
         log.info("Starting DocToolsLLM")
-
-        # erases content that links to the loaders temporary files at startup
-        loaders_temp_dir_file.write_text("")
 
         # make sure the extra args are valid
         for k in cli_kwargs:
@@ -857,6 +854,13 @@ class DocToolsLLM_class:
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.cli_kwargs or "filter_content" in self.cli_kwargs:
             if "filter_metadata" in self.cli_kwargs:
+                # get the list of all metadata to see if a filter was not misspelled
+                all_metadata_keys = set()
+                for doc in tqdm(self.loaded_embeddings.docstore._dict.values(), desc="gathering metadata keys", unit="doc"):
+                    for k in doc.metadata.keys():
+                        all_metadata_keys.add(k)
+                assert all_metadata_keys, "No metadata keys found in any metadata, something went wrong!"
+
                 if isinstance(self.cli_kwargs["filter_metadata"], str):
                     filter_metadata = self.cli_kwargs["filter_metadata"].split(",")
                 else:
@@ -920,6 +924,10 @@ class DocToolsLLM_class:
                 filters_b_plus_values = tuple(filters_b_plus_values)
                 filters_b_minus_keys = tuple(filters_b_minus_keys)
                 filters_b_minus_values = tuple(filters_b_minus_values)
+
+                # check that all key filter indeed match metadata keys
+                for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
+                    assert any(k.match(key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
                 def filter_meta(meta: dict) -> bool:
                     # match keys
@@ -1025,7 +1033,7 @@ class DocToolsLLM_class:
             self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
             status = self.loaded_embeddings.delete(ids_to_del)
 
-            # checking deletiong want well
+            # checking deletions went well
             if status is False:
                 raise Exception("Vectorstore filtering failed")
             elif status is None:
@@ -1132,10 +1140,22 @@ class DocToolsLLM_class:
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
-            self.eval_llm_params = litellm.get_supported_openai_params(
-                model=self.query_eval_modelname,
-                custom_llm_provider=self.query_eval_modelbackend,
-            )
+            failed = False
+            if self.query_eval_modelbackend == "openrouter":
+                try:
+                    self.eval_llm_params = litellm.get_supported_openai_params(
+                        model_name_matcher(
+                            self.query_eval_modelname.split("/", 1)[1]
+                        )
+                    )
+                except Exception as err:
+                    failed = True
+                    red(f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'")
+            if self.modelbackend != "openrouter" or failed:
+                self.eval_llm_params = litellm.get_supported_openai_params(
+                    model=self.query_eval_modelname,
+                    custom_llm_provider=self.query_eval_modelbackend,
+                )
             eval_args = {}
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
@@ -1186,10 +1206,10 @@ class DocToolsLLM_class:
             if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
-                # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
-                if not all(r == "stop" for r in reasons):
-                    red(f"Unexpected generation finish_reason: '{reasons}'")
                 outputs = [gen.text for gen in out.generations]
+                # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
+                if not all(r in ["stop", "lenghth"] for r in reasons):
+                    red(f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'")
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
                 if out.llm_output:
@@ -1216,17 +1236,17 @@ class DocToolsLLM_class:
                 outs = loop.run_until_complete(asyncio.gather(*outs))
                 for out in outs:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
-                    finish_reason = out.generations[0].generation_info["finish_reason"]
-                    if not finish_reason == "stop":
-                        red(f"Unexpected finish_reason: '{finish_reason}'")
                     outputs.append(out.generations[0].text)
+                    finish_reason = out.generations[0].generation_info["finish_reason"]
+                    if not finish_reason in ["stop", "length"]:
+                        red(f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'")
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
 
-            assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs"
+            assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs: '{outputs}'"
 
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
