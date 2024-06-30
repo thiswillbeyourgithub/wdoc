@@ -12,7 +12,6 @@ import re
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-import os
 from typing import List, Tuple
 from functools import wraps
 import random
@@ -144,7 +143,6 @@ def batch_load_doc(
         if new_doc_to_load:
             assert to_load[ild]["filetype"] in recursive_types
             to_load.remove(to_load[ild])
-            ild_done = None
             to_load.extend(new_doc_to_load)
             new_doc_to_load = []
             continue

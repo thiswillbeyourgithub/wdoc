@@ -10,7 +10,6 @@ import queue
 import faiss
 import random
 import time
-import copy
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
