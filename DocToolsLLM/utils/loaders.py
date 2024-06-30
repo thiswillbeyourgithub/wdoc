@@ -626,6 +626,8 @@ def load_anki(
     cards = cards[~cards["text"].str.contains("\[SOUND_")]
     cards = cards[~cards["text"].str.contains("\[LINK_")]
     cards["text"] = cards["text"].apply(lambda x: x.strip())
+    cards = cards[~cards["text"].str.contains("\[LINK_")]
+    cards = cards[cards["text"].ne('')]  # remove empty text
     cards.drop_duplicates(subset="text", inplace=True)
 
     cards = cards.sort_index()
