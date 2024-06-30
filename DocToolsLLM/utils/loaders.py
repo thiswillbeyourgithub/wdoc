@@ -517,7 +517,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 @optional_typecheck
 def load_anki(
     anki_profile: str,
-    anki_mode: str = "single_note",
+    anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
@@ -525,7 +525,7 @@ def load_anki(
     assert (
         anki_mode.replace("window", "")
         .replace("concatenate", "")
-        .replace("single_note", "")
+        .replace("singlecard", "")
         .replace("_", "")
         == ""
     ), f"Unexpected anki_mode: {anki_mode}"
@@ -587,7 +587,7 @@ def load_anki(
 
     docs = []
 
-    if "single_note" in anki_mode:
+    if "singlecard" in anki_mode:
         # load each card as a single document
         for cid in cards.index:
             c = cards.loc[cid, :]
@@ -599,7 +599,7 @@ def load_anki(
                     metadata={
                         "anki_tags": " ".join(c["ntags"]),
                         "anki_cid": str(cid),
-                        "anki_mode": "single_note",
+                        "anki_mode": "singlecard",
                         "anki_deck": card_deck,
                     },
                 )
