@@ -720,11 +720,13 @@ def load_anki(
         n = len(index_list)
         cards["text_concat"] = ""
         cards["tags_concat"] = ""
+        cards["deck_concat"] = ""
         cards["cids"] = ""
         cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
         for i in tqdm(range(len(index_list)), desc="combining anki cards"):
             text_concat = ""
             tags_concat = ""
+            deck_concat = ""
             cids = ""
             skip = 0
             for w in range(0, window_size):
@@ -747,7 +749,10 @@ def load_anki(
                 )
                 tags_concat += cards.at[index_list[i +
                                                     (w + skip) * s], "ntags_t"]
+                if cards.at[index_list[i + (w + skip) * s], "codeck"] not in deck_concat:
+                    deck_concat +=  " " + cards.at[index_list[i + (w + skip) * s], "codeck"]
                 cids += f"{index_list[i+(w+skip)*s]} "
+            cards.at[index_list[i], "deck_concat"] = deck_concat
             cards.at[index_list[i], "text_concat"] = text_concat
             cards.at[index_list[i], "tags_concat"] = tags_concat
             cards.at[index_list[i], "cids"] = cids
@@ -763,6 +768,8 @@ def load_anki(
                         ),
                         "anki_cid": c["cids"].strip(),
                         "anki_mode": f"window_{window_size}",
+                        "anki_deck": c["deck_concat"].strip(),
+                        ),
                     },
                 )
             )
