@@ -622,7 +622,9 @@ def load_anki(
             mode="remove_media",
         )[0]
     )
-    cards = cards[~cards["text"].str.contains("[IMAGE_")]
+    cards = cards[~cards["text"].str.contains("\[IMAGE_")]
+    cards = cards[~cards["text"].str.contains("\[SOUND_")]
+    cards = cards[~cards["text"].str.contains("\[LINK_")]
     cards["text"] = cards["text"].apply(lambda x: x.strip())
     cards.drop_duplicates(subset="text", inplace=True)
 
@@ -823,7 +825,7 @@ def anki_replace_media(
         2 it costs less token
 
     The intended use is to call it first to replace
-    each media by a simple string like [IMAGE1] and check if it's
+    each media by a simple string like [IMAGE_1] and check if it's
     indeed present in the output of the LLM then replace it back.
 
     It uses both bs4 and regex to be sure of itself
