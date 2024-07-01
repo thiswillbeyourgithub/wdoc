@@ -211,7 +211,7 @@ def load_embeddings(
 
     lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
     cache_content = list(lfs.yield_keys())
-    red(f"Found {len(cache_content)} embeddings in local cache")
+    whi(f"Found {len(cache_content)} embeddings in local cache")
 
     # cached_embeddings = embeddings
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
@@ -230,7 +230,7 @@ def load_embeddings(
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
 
-    red("\nLoading embeddings.")
+    whi("\nLoading embeddings.")
 
     docs = loaded_docs
     if len(docs) >= 50:
@@ -295,12 +295,12 @@ def load_embeddings(
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
-    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+    whi(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if private:
-        red(f"Not checking token price because private is set")
+        whi(f"Not checking token price because private is set")
         price = 0
     elif backend != "openai":
-        red(f"Not checking token price because using a private backend: {backend}")
+        whi(f"Not checking token price because using a private backend: {backend}")
         price = 0
     elif f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
