@@ -262,7 +262,7 @@ def load_embeddings(
             fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
             assert fi.exists()
             # select 2 workers at random and choose the one with the smallest queue
-            queue_candidates = random.sample(loader_queues)
+            queue_candidates = random.sample(loader_queues, k=2)
             queue_sizes = [q[0].qsize() for q in queue_candidates]
             lq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
             lq.put((fi, doc.metadata))
@@ -358,7 +358,7 @@ def load_embeddings(
                 assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
 
                 # select 2 workers at random and choose the one with the smallest queue
-                queue_candidates = random.sample(saver_queues)
+                queue_candidates = random.sample(saver_queues, k=2)
                 queue_sizes = [q[0].qsize() for q in queue_candidates]
                 sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
                 sq.put((True, docuid, docu, embe.squeeze()))
