@@ -243,7 +243,6 @@ def load_embeddings(
 
     in_cache = [p for p in embeddings_cache.iterdir()]
     whi(f"Found {len(in_cache)} embeddings in cache")
-    db = None
     to_embed = []
 
     # load previous faiss index from cache
@@ -278,7 +277,9 @@ def load_embeddings(
     assert all([not t.is_alive() for t in loader_workers]), "Faiss loader workers failed to stop"
 
     # merge dbs as one
-    if merged_dbs and db is None:
+    db = None
+    if merged_dbs:
+        assert db is None
         db = merged_dbs.pop(0)
     if merged_dbs:
         [db.merge_from(m) for m in merged_dbs]
