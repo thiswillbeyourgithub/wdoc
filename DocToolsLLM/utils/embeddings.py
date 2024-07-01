@@ -265,12 +265,12 @@ def load_embeddings(
             queue_candidates = random.sample(loader_queues)
             queue_sizes = [q[0].qsize() for q in queue_candidates]
             lq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
-            lq.put(fi, doc.metadata)
+            lq.put((fi, doc.metadata))
         else:
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
-    [q[0].put(False, None) for q in loader_queues]
+    [q[0].put((False, None)) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
