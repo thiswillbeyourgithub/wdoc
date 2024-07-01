@@ -288,7 +288,6 @@ def load_one_doc(
         check_docs_tkn_length(docs, filetype)
 
     # add and format metadata
-    total_reading_length = None
     for i in range(len(docs)):
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
@@ -341,19 +340,9 @@ def load_one_doc(
                 kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
             )
 
-        if "docs_reading_time" not in docs[i].metadata:
-            if not total_reading_length:
-                total_reading_length = (
-                    sum([len(d.page_content)
-                        for d in docs]) / average_word_length / wpm
-                )
-                assert (
-                    total_reading_length > 0.1
-                ), (
-                    "Failing doc: total reading length is suspiciously low "
-                    f"for {docs[i].metadata}: '{total_reading_length:.3f} minutes'"
-                )
-            docs[i].metadata["docs_reading_time"] = total_reading_length
+        if "doc_reading_time" not in docs[i].metadata:
+            reading_length = len(docs[i].page_content) / average_word_length / wpm
+            docs[i].metadata["doc_reading_time"] = reading_length
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["path"]
@@ -371,7 +360,6 @@ def load_one_doc(
         if "file_hash" not in docs[i].metadata:
             docs[i].metadata["file_hash"] = file_hash
 
-
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
         assert docs[i].metadata["content_hash"], f"Empty content_hash for document: {docs[i]}"
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
@@ -379,6 +367,13 @@ def load_one_doc(
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
             docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
+
+    total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
+    assert total_reading_length > 0.1, (
+        f"Failing doc: total reading length is {total_reading_length:.3f}"
+        "min which is  suspiciously low. Filetype {filetype} with kwargs "
+        f"'{kwargs}'"
+    )
 
     assert docs, "empty list of loaded documents!"
     return docs
