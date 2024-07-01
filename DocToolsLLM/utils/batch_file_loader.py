@@ -258,7 +258,7 @@ def batch_load_doc(
             if loading_failure == "crash" or is_debug:
                 raise
             elif loading_failure == "warn":
-                return None
+                return err
             else:
                 raise ValueError(loading_failure)
 
@@ -305,11 +305,13 @@ def batch_load_doc(
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     missing_docargs = []
     for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results"):
-        if d is not None:
+        if isinstance(d, list):
             docs.extend(d)
         else:
+            assert isinstance(d, str)
             missing_docargs.append(to_load[idoc])
-    assert None not in docs
+            missing_docargs[-1]["error_message"] = d
+    assert not any(isinstance(d, str) for d in docs)
 
     if missing_docargs:
         missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
