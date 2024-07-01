@@ -1728,7 +1728,11 @@ def load_pdf(
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
-            prob = check_docs_tkn_length(docs, path)
+            prob = check_docs_tkn_length(
+                docs=docs,
+                identifier=path,
+                check_language=True,
+            )
 
             if prob >= 0.5:
                 # only consider it okay if decent quality
