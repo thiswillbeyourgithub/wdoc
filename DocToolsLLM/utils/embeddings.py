@@ -274,7 +274,7 @@ def load_embeddings(
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
-    whi(f"Asking loader workers to shutdown")
+    whi("Asking loader workers to shutdown")
     [t.join(timeout=timeout) for t in loader_workers]
     assert all([not t.is_alive() for t in loader_workers]), "Faiss loader workers failed to stop"
 
