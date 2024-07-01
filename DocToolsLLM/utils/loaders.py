@@ -368,10 +368,13 @@ def load_one_doc(
             )
         if "content_hash" not in docs[i].metadata:
             docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
-        assert "file_hash" in docs[i].metadata or "path" not in docs[i].metadata, f"Missing file_hash key in metadata for document '{docs[i]}'"
+        if "file_hash" not in docs[i].metadata:
+            docs[i].metadata["file_hash"] = file_hash
 
-        assert docs[i].metadata["all_hash"], f"Invalid hash for document: {docs[i]}"
-        assert docs[i].metadata["content_hash"], f"Invalid hash for document: {docs[i]}"
+
+        assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
+        assert docs[i].metadata["content_hash"], f"Empty content_hash for document: {docs[i]}"
+        assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
