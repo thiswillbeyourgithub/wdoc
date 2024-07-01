@@ -104,6 +104,8 @@ loader_specific_keys = {
     "youtube_audio_backend": str,
 
     "load_functions": List[str],
+
+    "min_lang_prob": float,
 }
 
 # extra arguments supported when instanciating doctools

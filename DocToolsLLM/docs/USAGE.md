@@ -381,6 +381,14 @@
     BeautifulSoup. Useful to decode html stored in .js files.
     Do tell me if you want more of this.
 
+* `--min_lang_prob`: float, default `0.5`
+    * float between 0 and 1 that sets the threshold under which to
+    consider a document invalid if the estimation of
+    fasttext's langdetect of any language is below that value.
+    For example, setting it to 0.9 means that only documents that
+    fasttext thinks have at least 90% probability of being a
+    language are valid.
+
 * `--source_tag`: str, default `None`
     * a string that will be added to the document metadata at the
     key `source_tag`. Useful when using filetype combination.
