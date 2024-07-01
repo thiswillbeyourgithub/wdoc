@@ -259,18 +259,18 @@ def load_embeddings(
     load_counter = -1
     timeout = 10
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
-        fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
+        fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
         if fi.exists():
             # wait for the worker to be ready otherwise tqdm is irrelevant
             load_counter += 1
             assert loader_queues[load_counter % n_loader][1].get(timeout=timeout) == "Waiting"
-            loader_queues[load_counter % n_loader][0].put(fi)
+            loader_queues[load_counter % n_loader][0].put(fi, doc.metadata)
         else:
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
     assert all(q[1].get(timeout=timeout) == "Waiting" for q in loader_queues)
-    [q[0].put(False) for q in loader_queues]
+    [q[0].put(False, None) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
@@ -390,12 +390,15 @@ def faiss_loader(
     db = None
     while True:
         qout.put("Waiting")
-        fi = qin.get()
+        fi, metadata = qin.get()
         if fi is False:
+            assert metadata is None
             qout.put(db)
             qout.put("Stopped")
             break
+        assert metadata is not None
         temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
+        temp.docstore._dict[list(temp.docstore._dict.values())[0]] = metadata
         if not db:
             db = temp
         else:
@@ -421,7 +424,7 @@ def faiss_saver(
             qout.put("Stopped")
             break
 
-        file = (path / str(document.metadata["hash"] + ".faiss_index"))
+        file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
                 text_embeddings=[[document.page_content, embedding]],
                 embedding=cached_embeddings,

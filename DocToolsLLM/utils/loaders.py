@@ -362,11 +362,16 @@ def load_one_doc(
             else:
                 docs[i].metadata["source"] = "undocumented"
 
-        if "hash" not in docs[i].metadata:
-            docs[i].metadata["hash"] = hasher(
+        if "all_hash" not in docs[i].metadata:
+            docs[i].metadata["all_hash"] = hasher(
                 docs[i].page_content + json.dumps(docs[i].metadata)
             )
-        assert docs[i].metadata["hash"], f"Invalid hash for document: {docs[i]}"
+        if "content_hash" not in docs[i].metadata:
+            docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
+        assert "file_hash" in docs[i].metadata or "path" not in docs[i].metadata, f"Missing file_hash key in metadata for document '{docs[i]}'"
+
+        assert docs[i].metadata["all_hash"], f"Invalid hash for document: {docs[i]}"
+        assert docs[i].metadata["content_hash"], f"Invalid hash for document: {docs[i]}"
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():

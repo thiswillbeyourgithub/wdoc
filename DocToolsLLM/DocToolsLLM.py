@@ -410,7 +410,7 @@ class DocToolsLLM_class:
                         "Same metadata object is used to store information on "
                         "multiple documents!")
 
-                hashes = [d.metadata["hash"] for d in self.loaded_docs]
+                hashes = [d.metadata["all_hash"] for d in self.loaded_docs]
                 uniq_hashes = list(set(hashes))
                 removed_paths = []
                 removed_docs = []
@@ -419,7 +419,7 @@ class DocToolsLLM_class:
                     red("Found duplicate hashes after loading documents:")
 
                     for i, doc in enumerate(tqdm(self.loaded_docs, desc="Looking for duplicates")):
-                        h = doc.metadata['hash']
+                        h = doc.metadata['all_hash']
                         n = counter[h]
                         if n > 1:
                             removed_docs.append(self.loaded_docs[i])
