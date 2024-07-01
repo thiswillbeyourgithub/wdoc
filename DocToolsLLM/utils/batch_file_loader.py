@@ -9,6 +9,8 @@ is used.
 import shutil
 import uuid
 import re
+import sys
+import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
@@ -247,7 +249,12 @@ def batch_load_doc(
             return out
         except Exception as err:
             filetype = doc_kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. "
+                f"Arguments: {doc_kwargs}"
+                f"\nLine number: {exc_tb.tb_lineno}"
+                f"\nFull traceback:\n{formatted_tb}")
             if loading_failure == "crash" or is_debug:
                 raise
             elif loading_failure == "warn":
