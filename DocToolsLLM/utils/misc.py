@@ -76,7 +76,7 @@ tokenizers = {
     "gpt-3.5-turbo": tiktoken.encoding_for_model("gpt-3.5-turbo").encode,
 }
 
-min_token = 50
+min_token = 20
 max_token = 1_000_000
 max_lines = 100_000
 min_lang_prob = 0.50
