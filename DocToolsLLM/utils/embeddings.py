@@ -256,9 +256,11 @@ def load_embeddings(
                 ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
     timeout = 10
+    list_of_files = {f.stem for f in embeddings_cache.iterdir() if "faiss_index" in f.suffix}
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
-        fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
-        if fi.exists():
+        if doc.metadata["content_hash"] in list_of_files:
+            fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
+            assert fi.exists()
             # select 2 workers at random and choose the one with the smallest queue
             queue_candidates = random.sample(loader_queues)
             queue_sizes = [q[0].qsize() for q in queue_candidates]
