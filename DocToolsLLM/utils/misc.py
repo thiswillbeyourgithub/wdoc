@@ -321,7 +321,15 @@ def get_splitter(
 
 
 @optional_typecheck
-def check_docs_tkn_length(docs: List[Document], name: str) -> float:
+def check_docs_tkn_length(
+    docs: List[Document],
+    name: str,
+    max_lines: int = max_lines,
+    min_token: int = min_token,
+    max_token: int = max_token,
+    min_lang_prob: float = min_lang_prob,
+    check_language: bool = True,
+    ) -> float:
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
@@ -348,6 +356,8 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
         raise Exception(
             f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?"
         )
+    if check_language is False:
+        return 1
 
     # check if language check is above a threshold
     probs = [
