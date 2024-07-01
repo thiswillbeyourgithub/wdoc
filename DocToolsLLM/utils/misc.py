@@ -330,7 +330,7 @@ def check_docs_tkn_length(
     min_token: int = min_token,
     max_token: int = max_token,
     min_lang_prob: float = min_lang_prob,
-    check_language: bool = True,
+    check_language: bool = False,
     ) -> float:
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
