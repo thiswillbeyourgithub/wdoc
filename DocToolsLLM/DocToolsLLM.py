@@ -84,7 +84,7 @@ class DocToolsLLM_class:
         task: str,
         filetype: str = "infer",
 
-        modelname: str = "openrouter/anthropic/claude-3.5-sonnet",
+        modelname: str = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
@@ -103,7 +103,7 @@ class DocToolsLLM_class:
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
-        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet",
+        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
