@@ -424,6 +424,7 @@ def faiss_saver(
     while True:
         message, docid, document, embedding = qin.get()
         if message is False:
+            assert docid is None and document is None and embedding is None
             qout.put("Stopped")
             break
 
