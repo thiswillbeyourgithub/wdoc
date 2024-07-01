@@ -338,14 +338,15 @@ def load_embeddings(
         [t.start() for t in saver_workers]
         assert all([t.is_alive() for t in saver_workers]), "Saver workers failed to load"
 
-        save_counter = -1
-        for batch in tqdm(batches, desc="Embedding by batch"):
+        for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch"):
+            whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
                     to_embed[batch[0]:batch[1]],
                     cached_embeddings,
                     normalize_L2=True
                     )
 
+            whi(f"Saving batch #{ib + 1}")
             # save the faiss index as 1 embedding for 1 document
             # get the id of each document
             doc_ids = list(temp.docstore._dict.keys())
@@ -354,11 +355,13 @@ def load_embeddings(
             vecs = np.vsplit(vecs, vecs.shape[0])
             for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
                 docu = temp.docstore._dict[docuid]
-                save_counter += 1
                 assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
-                saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
-            results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter]]
+                # select 2 workers at random and choose the one with the smallest queue
+                queue_candidates = random.sample(saver_queues)
+                queue_sizes = [q[0].qsize() for q in queue_candidates]
+                sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+                sq.put((True, docuid, docu, embe.squeeze()))
 
             if not db:
                 db = temp
