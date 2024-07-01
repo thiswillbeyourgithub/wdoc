@@ -1102,7 +1102,7 @@ def load_logseq_markdown(
     # create a single document then for each document add the properties of each block found in the doc
     docs = text_splitter.transform_documents([
         Document(
-            page_content=parsed.content,
+            page_content=parsed.content.replace("\t", "    "),
             metadata=page_props,
         )
     ])
