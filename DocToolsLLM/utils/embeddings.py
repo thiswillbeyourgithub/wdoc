@@ -248,7 +248,7 @@ def load_embeddings(
 
     # load previous faiss index from cache
     n_loader = 10
-    loader_queues = [(queue.Queue(), queue.Queue()) for i in range(n_loader)]
+    loader_queues = [(queue.Queue(max_size=10), queue.Queue()) for i in range(n_loader)]
     loader_workers = [
             threading.Thread(
                 target=faiss_loader,
@@ -256,20 +256,19 @@ def load_embeddings(
                 daemon=False,
                 ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
-    load_counter = -1
     timeout = 10
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
         if fi.exists():
-            # wait for the worker to be ready otherwise tqdm is irrelevant
-            load_counter += 1
-            assert loader_queues[load_counter % n_loader][1].get(timeout=timeout) == "Waiting"
-            loader_queues[load_counter % n_loader][0].put(fi, doc.metadata)
+            # select 2 workers at random and choose the one with the smallest queue
+            queue_candidates = random.sample(loader_queues)
+            queue_sizes = [q[0].qsize() for q in queue_candidates]
+            lq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+            lq.put(fi, doc.metadata)
         else:
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
-    assert all(q[1].get(timeout=timeout) == "Waiting" for q in loader_queues)
     [q[0].put(False, None) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
@@ -352,7 +351,6 @@ def load_embeddings(
                 saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
             results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter]]
-            assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
 
             if not db:
                 db = temp
@@ -389,7 +387,6 @@ def faiss_loader(
     """
     db = None
     while True:
-        qout.put("Waiting")
         fi, metadata = qin.get()
         if fi is False:
             assert metadata is None
@@ -432,7 +429,6 @@ def faiss_saver(
                 ids=[docid],
                 normalize_L2=True)
         db.save_local(file)
-        qout.put(f"Saved {docid}")
     return
 
 
