@@ -337,6 +337,44 @@ def batch_load_doc(
     shutil.rmtree(temp_dir)
     assert not temp_dir.exists()
 
+    # check that the hash are unique
+    if len(docs) > 1:
+        ids = [id(d.metadata) for d in docs]
+        assert len(ids) == len(set(ids)), (
+                "Same metadata object is used to store information on "
+                "multiple documents!")
+
+        hashes = [d.metadata["all_hash"] for d in docs]
+        uniq_hashes = list(set(hashes))
+        removed_paths = []
+        removed_docs = []
+        counter = {h: hashes.count(h) for h in uniq_hashes}
+        if len(hashes) != len(uniq_hashes):
+            red("Found duplicate hashes after loading documents:")
+
+            for i, doc in enumerate(tqdm(docs, desc="Looking for duplicates")):
+                h = doc.metadata['all_hash']
+                n = counter[h]
+                if n > 1:
+                    removed_docs.append(docs[i])
+                    docs[i] = None
+                    counter[h] -= 1
+                assert counter[h] > 0
+            red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
+
+            # check if deduplication likely amputated documents
+            docs = [d for d in docs if d is not None]
+            present_path = [d.metadata["path"] for d in docs]
+
+            intersect = set(removed_paths).intersection(set(present_path))
+            if intersect:
+                red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
+                for i, inte in enumerate(intersect):
+                    red(f"  * #{i + 1}: {inte}")
+                raise Exception()
+            else:
+                red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
+
     return docs
 
 @optional_typecheck
