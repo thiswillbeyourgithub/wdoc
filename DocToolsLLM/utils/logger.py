@@ -14,8 +14,12 @@ from typing import Type, Callable, Optional, Union
 from rich.markdown import Markdown
 from rich.console import Console
 from platformdirs import user_cache_dir, user_log_dir
+import warnings
 
 from .typechecker import optional_typecheck
+
+# ignore warnings from beautiful soup
+warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
 cache_dir = Path(user_cache_dir(appname="DocToolsLLM"))
 assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(), f"Invalid cache dir location: '{cache_dir}'"

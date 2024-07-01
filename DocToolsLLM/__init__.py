@@ -23,10 +23,10 @@ def fire_wrapper(
     *args,
     **kwargs,
     ) -> dict:
-    "used to catch --help arg to display it better then fire does on its own"
+    "used to catch --help arg to display it better than fire would do"
 
-    # --help or similar
-    if ("help" in args and len(args) == 1) or ("help" in kwargs and kwargs["help"]):
+    # --help but not catched by sys.argv
+    if "help" in kwargs and kwargs["help"]:
         print("Showing help")
         md = Markdown(DocToolsLLM.__doc__)
         console = Console()
@@ -73,6 +73,12 @@ def fire_wrapper(
 
 def cli_launcher() -> None:
     sys_args = sys.argv
+    if "--help" in sys_args:
+        print("Showing help")
+        md = Markdown(DocToolsLLM.__doc__)
+        console = Console()
+        console.print(md, style=None)
+        raise SystemExit()
     if "--completion" in sys_args:
         return fire.Fire(DocToolsLLM)
 

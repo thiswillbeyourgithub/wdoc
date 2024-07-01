@@ -75,7 +75,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.49"
+    VERSION: str = "0.52"
 
     #@optional_typecheck
     @typechecked
@@ -84,7 +84,8 @@ class DocToolsLLM_class:
         task: str,
         filetype: str = "infer",
 
-        modelname: str = "openai/gpt-4o",
+        modelname: str = "openrouter/anthropic/claude-3.5-sonnet",
+        # modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
 
@@ -102,10 +103,11 @@ class DocToolsLLM_class:
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
-        query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
+        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet",
+        # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
-        query_eval_check_number: int = 3,
+        query_eval_check_number: int = 1,
         query_relevancy: float = 0.1,
         query_condense_question: Union[bool, int] = True,
 
@@ -402,45 +404,6 @@ class DocToolsLLM_class:
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
                 **self.cli_kwargs)
-
-            # check that the hash are unique
-            if len(self.loaded_docs) > 1:
-                ids = [id(d.metadata) for d in self.loaded_docs]
-                assert len(ids) == len(set(ids)), (
-                        "Same metadata object is used to store information on "
-                        "multiple documents!")
-
-                hashes = [d.metadata["hash"] for d in self.loaded_docs]
-                uniq_hashes = list(set(hashes))
-                removed_paths = []
-                removed_docs = []
-                counter = {h: hashes.count(h) for h in uniq_hashes}
-                if len(hashes) != len(uniq_hashes):
-                    red("Found duplicate hashes after loading documents:")
-
-                    for i, doc in enumerate(tqdm(self.loaded_docs, desc="Looking for duplicates")):
-                        h = doc.metadata['hash']
-                        n = counter[h]
-                        if n > 1:
-                            removed_docs.append(self.loaded_docs[i])
-                            self.loaded_docs[i] = None
-                            counter[h] -= 1
-                        assert counter[h] > 0
-                    red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
-
-                    # check if deduplication likely amputated documents
-                    self.loaded_docs = [d for d in self.loaded_docs if d is not None]
-                    present_path = [d.metadata["path"] for d in self.loaded_docs]
-
-                    intersect = set(removed_paths).intersection(set(present_path))
-                    if intersect:
-                        red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
-                        for i, inte in enumerate(intersect):
-                            red(f"  * #{i + 1}: {inte}")
-                        raise Exception()
-                    else:
-                        red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
-
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
@@ -1128,7 +1091,7 @@ class DocToolsLLM_class:
                 base_compressor=pipeline, base_retriever=retriever
             )
 
-        if " >>>> " in query:
+        if ">>>>" in query:
             sp = query.split(">>>>")
             assert len(sp) == 2, "The query must contain a maximum of 1 occurence of '>>>>'"
             query_fe = sp[0].strip()
@@ -1208,7 +1171,7 @@ class DocToolsLLM_class:
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
                 # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
-                if not all(r in ["stop", "lenghth"] for r in reasons):
+                if not all(r in ["stop", "length"] for r in reasons):
                     red(f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'")
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
@@ -1254,7 +1217,7 @@ class DocToolsLLM_class:
             return outputs
 
         # uses in most places to increase concurrency limit
-        multi = {"max_concurrency": 50 if not self.debug else 1}
+        multi = {"max_concurrency": 10 if not self.debug else 1}
 
         if self.task == "search":
             if self.query_eval_modelname:

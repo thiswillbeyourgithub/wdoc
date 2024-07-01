@@ -9,6 +9,8 @@ is used.
 import shutil
 import uuid
 import re
+import sys
+import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
@@ -247,11 +249,16 @@ def batch_load_doc(
             return out
         except Exception as err:
             filetype = doc_kwargs["filetype"]
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. Arguments: {doc_kwargs}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
+            red(f"Error when loading doc with filetype {filetype}: '{err}'. "
+                f"Arguments: {doc_kwargs}"
+                f"\nLine number: {exc_tb.tb_lineno}"
+                f"\nFull traceback:\n{formatted_tb}")
             if loading_failure == "crash" or is_debug:
                 raise
             elif loading_failure == "warn":
-                return None
+                return err
             else:
                 raise ValueError(loading_failure)
 
@@ -298,11 +305,13 @@ def batch_load_doc(
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     missing_docargs = []
     for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results"):
-        if d is not None:
+        if isinstance(d, list):
             docs.extend(d)
         else:
+            assert isinstance(d, str)
             missing_docargs.append(to_load[idoc])
-    assert None not in docs
+            missing_docargs[-1]["error_message"] = d
+    assert not any(isinstance(d, str) for d in docs)
 
     if missing_docargs:
         missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
@@ -336,6 +345,44 @@ def batch_load_doc(
     # delete temp dir
     shutil.rmtree(temp_dir)
     assert not temp_dir.exists()
+
+    # check that the hash are unique
+    if len(docs) > 1:
+        ids = [id(d.metadata) for d in docs]
+        assert len(ids) == len(set(ids)), (
+                "Same metadata object is used to store information on "
+                "multiple documents!")
+
+        hashes = [d.metadata["all_hash"] for d in docs]
+        uniq_hashes = list(set(hashes))
+        removed_paths = []
+        removed_docs = []
+        counter = {h: hashes.count(h) for h in uniq_hashes}
+        if len(hashes) != len(uniq_hashes):
+            red("Found duplicate hashes after loading documents:")
+
+            for i, doc in enumerate(tqdm(docs, desc="Looking for duplicates")):
+                h = doc.metadata['all_hash']
+                n = counter[h]
+                if n > 1:
+                    removed_docs.append(docs[i])
+                    docs[i] = None
+                    counter[h] -= 1
+                assert counter[h] > 0
+            red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
+
+            # check if deduplication likely amputated documents
+            docs = [d for d in docs if d is not None]
+            present_path = [d.metadata["path"] for d in docs]
+
+            intersect = set(removed_paths).intersection(set(present_path))
+            if intersect:
+                red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
+                for i, inte in enumerate(intersect):
+                    red(f"  * #{i + 1}: {inte}")
+                raise Exception()
+            else:
+                red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
 
     return docs
 

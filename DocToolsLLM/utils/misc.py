@@ -104,6 +104,8 @@ loader_specific_keys = {
     "youtube_audio_backend": str,
 
     "load_functions": List[str],
+
+    "min_lang_prob": float,
 }
 
 # extra arguments supported when instanciating doctools
@@ -321,7 +323,15 @@ def get_splitter(
 
 
 @optional_typecheck
-def check_docs_tkn_length(docs: List[Document], name: str) -> float:
+def check_docs_tkn_length(
+    docs: List[Document],
+    identifier: str,
+    max_lines: int = max_lines,
+    min_token: int = min_token,
+    max_token: int = max_token,
+    min_lang_prob: float = min_lang_prob,
+    check_language: bool = False,
+    ) -> float:
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
@@ -332,22 +342,24 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
             f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
-            f"The number of lines from '{name}' is {nline} > {max_lines}, probably something went wrong?"
+            f"The number of lines from '{identifier}' is {nline} > {max_lines}, probably something went wrong?"
         )
     if size <= min_token:
         red(
             f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
-            f"The number of token from '{name}' is {size} <= {min_token}, probably something went wrong?"
+            f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
         )
     if size >= max_token:
         red(
             f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
-            f"The number of token from '{name}' is {size} >= {max_token}, probably something went wrong?"
+            f"The number of token from '{identifier}' is {size} >= {max_token}, probably something went wrong?"
         )
+    if check_language is False:
+        return 1
 
     # check if language check is above a threshold
     probs = [
@@ -360,10 +372,10 @@ def check_docs_tkn_length(docs: List[Document], name: str) -> float:
     prob = sum(probs) / len(probs)
     if prob <= min_lang_prob:
         red(
-            f"Low language probability for {name}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+            f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
         )
         raise Exception(
-            f"Low language probability for {name}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
+            f"Low language probability for {identifier}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
         )
     return prob
 

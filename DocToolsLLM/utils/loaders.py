@@ -45,6 +45,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
+from .misc import min_lang_prob as default_min_lang_prob
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux
@@ -194,6 +195,12 @@ def load_one_doc(
     assert expected_global_dir.exists(), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
+    if "min_lang_prob" in kwargs:
+        min_lang_prob = kwargs["min_lang_prob"]
+        del kwargs["min_lang_prob"]
+    else:
+        min_lang_prob = default_min_lang_prob
+
     if filetype == "youtube":
         docs = load_youtube_video(
             loaders_temp_dir=temp_dir,
@@ -242,6 +249,7 @@ def load_one_doc(
         docs = load_logseq_markdown(
             debug=debug,
             file_hash=file_hash,
+            text_splitter=text_splitter,
             **kwargs,
         )
 
@@ -284,11 +292,14 @@ def load_one_doc(
 
     docs = text_splitter.transform_documents(docs)
 
-    if filetype not in ["logseq_markdown", "anki", "pdf"]:
-        check_docs_tkn_length(docs, filetype)
+    if filetype not in ["anki", "pdf"]:
+        check_docs_tkn_length(
+            docs=docs,
+            identifier=filetype,
+            min_lang_prob=min_lang_prob,
+        )
 
     # add and format metadata
-    total_reading_length = None
     for i in range(len(docs)):
         # if html, parse it
         soup = BeautifulSoup(docs[i].page_content, "html.parser")
@@ -341,19 +352,9 @@ def load_one_doc(
                 kwargs["playlist_title"] + " - " + docs[i].metadata["title"]
             )
 
-        if "docs_reading_time" not in docs[i].metadata:
-            if not total_reading_length:
-                total_reading_length = (
-                    sum([len(d.page_content)
-                        for d in docs]) / average_word_length / wpm
-                )
-                assert (
-                    total_reading_length > 0.1
-                ), (
-                    "Failing doc: total reading length is suspiciously low "
-                    f"for {docs[i].metadata}: '{total_reading_length:.3f} minutes'"
-                )
-            docs[i].metadata["docs_reading_time"] = total_reading_length
+        if "doc_reading_time" not in docs[i].metadata:
+            reading_length = len(docs[i].page_content) / average_word_length / wpm
+            docs[i].metadata["doc_reading_time"] = reading_length
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["path"]
@@ -362,15 +363,29 @@ def load_one_doc(
             else:
                 docs[i].metadata["source"] = "undocumented"
 
-        if "hash" not in docs[i].metadata:
-            docs[i].metadata["hash"] = hasher(
+        if "all_hash" not in docs[i].metadata:
+            docs[i].metadata["all_hash"] = hasher(
                 docs[i].page_content + json.dumps(docs[i].metadata)
             )
-        assert docs[i].metadata["hash"], f"Invalid hash for document: {docs[i]}"
+        if "content_hash" not in docs[i].metadata:
+            docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
+        if "file_hash" not in docs[i].metadata:
+            docs[i].metadata["file_hash"] = file_hash
+
+        assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
+        assert docs[i].metadata["content_hash"], f"Empty content_hash for document: {docs[i]}"
+        assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
             docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
+
+    total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
+    assert total_reading_length > 0.1, (
+        f"Failing doc: total reading length is {total_reading_length:.3f}"
+        "min which is  suspiciously low. Filetype {filetype} with kwargs "
+        f"'{kwargs}'"
+    )
 
     assert docs, "empty list of loaded documents!"
     return docs
@@ -1065,7 +1080,12 @@ def eval_load_functions(
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
-def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Document]:
+def load_logseq_markdown(
+    debug: bool,
+    path: str,
+    file_hash: str,
+    text_splitter: TextSplitter,
+    ) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
@@ -1077,39 +1097,62 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         raise Exception(f"No logseq blocks loaded for {path} (file size: {Path(path).stat().st_size})")
 
     blocks = parsed.blocks
-
-    # group blocks by parent block
-    pblocks = [[blocks[0]]]
-    for b in blocks[1:]:
-        if b.indentation_level == 0:
-            pblocks.append([b])
-        else:
-            pblocks[-1].append(b)
-    whi(f"Found {len(pblocks)} parent blocks")
-    assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
-
     page_props = parsed.page_properties
 
-    docs = []
-    for grou in pblocks:
-        # store in metadata the properties of the blocks inside a given
-        # parent block
-        meta = page_props.copy()
-        content = ""  # and remove the metadata from the page content
-        for b in grou:
-            cont = b.content
-            for k, v in b.properties.items():
-                meta[k] = v
-                cont = cont.replace(f"{k}:: {v}", "").strip()
-            cont = dedent(cont)
-            cont = cont.replace("\t", "    ")
-            content += "\n" + cont
-
-        doc = Document(
-            page_content=content,
-            metadata=meta,
+    # create a single document then for each document add the properties of each block found in the doc
+    docs = text_splitter.transform_documents([
+        Document(
+            page_content=parsed.content.replace("\t", "    "),
+            metadata=page_props,
         )
-        docs.append(doc)
+    ])
+
+    found = False
+    for b in blocks:
+        cont = b.content.strip()
+        props = b.properties.copy()
+        for k, v in props.items():
+            cont = cont.replace(f"{k}:: {v}", "").strip()
+        if not cont:
+            continue
+        for i, d in enumerate(docs):
+            if cont in d.page_content:
+                docs[i].metadata.update(props)
+                found = True
+                break
+    assert found, "None of the blocks found in document"
+    return docs
+
+    # # group blocks by parent block
+    # pblocks = [[blocks[0]]]
+    # for b in blocks[1:]:
+    #     if b.indentation_level == 0:
+    #         pblocks.append([b])
+    #     else:
+    #         pblocks[-1].append(b)
+    # whi(f"Found {len(pblocks)} parent blocks")
+    # assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
+    #
+    # docs = []
+    # for grou in pblocks:
+    #     # store in metadata the properties of the blocks inside a given
+    #     # parent block
+    #     meta = page_props.copy()
+    #     content = ""  # and remove the metadata from the page content
+    #     for b in grou:
+    #         cont = b.content
+    #         for k, v in b.properties.items():
+    #             meta[k] = v
+    #             cont = cont.replace(f"{k}:: {v}", "").strip()
+    #         cont = dedent(cont)
+    #         cont = cont.replace("\t", "    ")
+    #         content += "\n" + cont
+    #
+    #     doc = Document(
+    #         page_content=content,
+    #         metadata=meta,
+    #     )
+    #     docs.append(doc)
 
     return docs
 
@@ -1674,18 +1717,22 @@ def load_pdf(
 
             pbar.update(1)
 
-            if "unstructured" in loader_name.lower():
-                # remove empty lines. frequent in pdfs
-                content = emptyline_regex.sub("", content)
-                content = emptyline2_regex.sub("\n", content)
-                content = linebreak_before_letter.sub(r"\1", content)
+            # if "unstructured" in loader_name.lower():
+            #     # remove empty lines. frequent in pdfs
+            #     content = emptyline_regex.sub("", content)
+            #     content = emptyline2_regex.sub("\n", content)
+            #     content = linebreak_before_letter.sub(r"\1", content)
 
             content = ftfy.fix_text(content)
 
             texts = text_splitter.split_text(content)
             docs = [Document(page_content=t) for t in texts]
 
-            prob = check_docs_tkn_length(docs, path)
+            prob = check_docs_tkn_length(
+                docs=docs,
+                identifier=path,
+                check_language=True,
+            )
 
             if prob >= 0.5:
                 # only consider it okay if decent quality

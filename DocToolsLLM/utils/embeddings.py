@@ -211,7 +211,7 @@ def load_embeddings(
 
     lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
     cache_content = list(lfs.yield_keys())
-    red(f"Found {len(cache_content)} embeddings in local cache")
+    whi(f"Found {len(cache_content)} embeddings in local cache")
 
     # cached_embeddings = embeddings
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
@@ -230,7 +230,7 @@ def load_embeddings(
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
 
-    red("\nLoading embeddings.")
+    whi("\nLoading embeddings.")
 
     docs = loaded_docs
     if len(docs) >= 50:
@@ -243,12 +243,11 @@ def load_embeddings(
 
     in_cache = [p for p in embeddings_cache.iterdir()]
     whi(f"Found {len(in_cache)} embeddings in cache")
-    db = None
     to_embed = []
 
     # load previous faiss index from cache
     n_loader = 10
-    loader_queues = [(queue.Queue(), queue.Queue()) for i in range(n_loader)]
+    loader_queues = [(queue.Queue(maxsize=10), queue.Queue()) for i in range(n_loader)]
     loader_workers = [
             threading.Thread(
                 target=faiss_loader,
@@ -256,44 +255,52 @@ def load_embeddings(
                 daemon=False,
                 ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
-    load_counter = -1
     timeout = 10
+    list_of_files = {f.stem for f in embeddings_cache.iterdir() if "faiss_index" in f.suffix}
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
-        fi = embeddings_cache / str(doc.metadata["hash"] + ".faiss_index")
-        if fi.exists():
-            # wait for the worker to be ready otherwise tqdm is irrelevant
-            load_counter += 1
-            assert loader_queues[load_counter % n_loader][1].get(timeout=timeout) == "Waiting"
-            loader_queues[load_counter % n_loader][0].put(fi)
+        if doc.metadata["content_hash"] in list_of_files:
+            fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
+            assert fi.exists()
+            # select 2 workers at random and choose the one with the smallest queue
+            queue_candidates = random.sample(loader_queues, k=2)
+            queue_sizes = [q[0].qsize() for q in queue_candidates]
+            lq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+            lq.put((fi, doc.metadata))
         else:
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
-    assert all(q[1].get(timeout=timeout) == "Waiting" for q in loader_queues)
-    [q[0].put(False) for q in loader_queues]
+    [q[0].put((False, None)) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
-    whi(f"Asking loader workers to shutdown")
+    whi("Asking loader workers to shutdown")
     [t.join(timeout=timeout) for t in loader_workers]
     assert all([not t.is_alive() for t in loader_workers]), "Faiss loader workers failed to stop"
 
     # merge dbs as one
-    if merged_dbs and db is None:
+    db = None
+    if merged_dbs:
+        assert db is None
         db = merged_dbs.pop(0)
     if merged_dbs:
         [db.merge_from(m) for m in merged_dbs]
+        in_db = len(db.docstore._dict.keys())
+        assert in_db == len(docs) - len(to_embed), (
+            f"Invalid number of loaded documents: found {in_db} but "
+            f"expected {len(docs)-len(to_embed)}"
+        )
 
     whi(f"Docs left to embed: {len(to_embed)}")
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
-    red(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+    whi(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if private:
-        red(f"Not checking token price because private is set")
+        whi(f"Not checking token price because private is set")
         price = 0
     elif backend != "openai":
-        red(f"Not checking token price because using a private backend: {backend}")
+        whi(f"Not checking token price because using a private backend: {backend}")
         price = 0
     elif f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
@@ -331,14 +338,15 @@ def load_embeddings(
         [t.start() for t in saver_workers]
         assert all([t.is_alive() for t in saver_workers]), "Saver workers failed to load"
 
-        save_counter = -1
-        for batch in tqdm(batches, desc="Embedding by batch"):
+        for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch"):
+            whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
                     to_embed[batch[0]:batch[1]],
                     cached_embeddings,
                     normalize_L2=True
                     )
 
+            whi(f"Saving batch #{ib + 1}")
             # save the faiss index as 1 embedding for 1 document
             # get the id of each document
             doc_ids = list(temp.docstore._dict.keys())
@@ -347,12 +355,13 @@ def load_embeddings(
             vecs = np.vsplit(vecs, vecs.shape[0])
             for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
                 docu = temp.docstore._dict[docuid]
-                save_counter += 1
                 assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
-                saver_queues[save_counter % n_saver][0].put((True, docuid, docu, embe.squeeze()))
 
-            results = [q[1].get(timeout=timeout) for q in saver_queues[:save_counter]]
-            assert all(r.startswith("Saved ") for r in results), f"Invalid output from workers: {results}"
+                # select 2 workers at random and choose the one with the smallest queue
+                queue_candidates = random.sample(saver_queues, k=2)
+                queue_sizes = [q[0].qsize() for q in queue_candidates]
+                sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+                sq.put((True, docuid, docu, embe.squeeze()))
 
             if not db:
                 db = temp
@@ -389,13 +398,15 @@ def faiss_loader(
     """
     db = None
     while True:
-        qout.put("Waiting")
-        fi = qin.get()
+        fi, metadata = qin.get()
         if fi is False:
+            assert metadata is None
             qout.put(db)
             qout.put("Stopped")
             break
+        assert metadata is not None
         temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
+        temp.docstore._dict[list(temp.docstore._dict.values())[0]].metadata = metadata
         if not db:
             db = temp
         else:
@@ -418,10 +429,11 @@ def faiss_saver(
     while True:
         message, docid, document, embedding = qin.get()
         if message is False:
+            assert docid is None and document is None and embedding is None
             qout.put("Stopped")
             break
 
-        file = (path / str(document.metadata["hash"] + ".faiss_index"))
+        file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
                 text_embeddings=[[document.page_content, embedding]],
                 embedding=cached_embeddings,
@@ -429,7 +441,6 @@ def faiss_saver(
                 ids=[docid],
                 normalize_L2=True)
         db.save_local(file)
-        qout.put(f"Saved {docid}")
     return
 
 

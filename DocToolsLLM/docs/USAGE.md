@@ -45,7 +45,7 @@
 
 ---
 
-* `--modelname`: str, default `"openai/gpt-4o"`
+* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
     * Keep in mind that given that the default backend used is litellm
     the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then a fake LLM will be used
@@ -110,14 +110,14 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openai/gpt-3.5-turbo"`
+* `--query_eval_modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
     None to disable.
 
-* `--query_eval_check_number`: int, default `3`
+* `--query_eval_check_number`: int, default `1`
     * number of pass to do with the eval llm to check if the document
     is indeed relevant to the question. The document will not
     be processed if all answers from the eval llm are 0, and will
@@ -380,6 +380,14 @@
     specify lambda functions that modify the text before running
     BeautifulSoup. Useful to decode html stored in .js files.
     Do tell me if you want more of this.
+
+* `--min_lang_prob`: float, default `0.5`
+    * float between 0 and 1 that sets the threshold under which to
+    consider a document invalid if the estimation of
+    fasttext's langdetect of any language is below that value.
+    For example, setting it to 0.9 means that only documents that
+    fasttext thinks have at least 90% probability of being a
+    language are valid.
 
 * `--source_tag`: str, default `None`
     * a string that will be added to the document metadata at the
