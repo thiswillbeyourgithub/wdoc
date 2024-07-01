@@ -242,6 +242,7 @@ def load_one_doc(
         docs = load_logseq_markdown(
             debug=debug,
             file_hash=file_hash,
+            text_splitter=text_splitter,
             **kwargs,
         )
 
@@ -1070,7 +1071,12 @@ def eval_load_functions(
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
-def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Document]:
+def load_logseq_markdown(
+    debug: bool,
+    path: str,
+    file_hash: str,
+    text_splitter: TextSplitter,
+    ) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
@@ -1082,39 +1088,62 @@ def load_logseq_markdown(debug: bool, path: str, file_hash: str) -> List[Documen
         raise Exception(f"No logseq blocks loaded for {path} (file size: {Path(path).stat().st_size})")
 
     blocks = parsed.blocks
-
-    # group blocks by parent block
-    pblocks = [[blocks[0]]]
-    for b in blocks[1:]:
-        if b.indentation_level == 0:
-            pblocks.append([b])
-        else:
-            pblocks[-1].append(b)
-    whi(f"Found {len(pblocks)} parent blocks")
-    assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
-
     page_props = parsed.page_properties
 
-    docs = []
-    for grou in pblocks:
-        # store in metadata the properties of the blocks inside a given
-        # parent block
-        meta = page_props.copy()
-        content = ""  # and remove the metadata from the page content
-        for b in grou:
-            cont = b.content
-            for k, v in b.properties.items():
-                meta[k] = v
-                cont = cont.replace(f"{k}:: {v}", "").strip()
-            cont = dedent(cont)
-            cont = cont.replace("\t", "    ")
-            content += "\n" + cont
-
-        doc = Document(
-            page_content=content,
-            metadata=meta,
+    # create a single document then for each document add the properties of each block found in the doc
+    docs = text_splitter.transform_documents([
+        Document(
+            page_content=parsed.content,
+            metadata=page_props,
         )
-        docs.append(doc)
+    ])
+
+    found = False
+    for b in blocks:
+        cont = b.content.strip()
+        props = b.properties.copy()
+        for k, v in props.items():
+            cont = cont.replace(f"{k}:: {v}", "").strip()
+        if not cont:
+            continue
+        for i, d in enumerate(docs):
+            if cont in d.page_content:
+                docs[i].metadata.update(props)
+                found = True
+                break
+    assert found, "None of the blocks found in document"
+    return docs
+
+    # # group blocks by parent block
+    # pblocks = [[blocks[0]]]
+    # for b in blocks[1:]:
+    #     if b.indentation_level == 0:
+    #         pblocks.append([b])
+    #     else:
+    #         pblocks[-1].append(b)
+    # whi(f"Found {len(pblocks)} parent blocks")
+    # assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
+    #
+    # docs = []
+    # for grou in pblocks:
+    #     # store in metadata the properties of the blocks inside a given
+    #     # parent block
+    #     meta = page_props.copy()
+    #     content = ""  # and remove the metadata from the page content
+    #     for b in grou:
+    #         cont = b.content
+    #         for k, v in b.properties.items():
+    #             meta[k] = v
+    #             cont = cont.replace(f"{k}:: {v}", "").strip()
+    #         cont = dedent(cont)
+    #         cont = cont.replace("\t", "    ")
+    #         content += "\n" + cont
+    #
+    #     doc = Document(
+    #         page_content=content,
+    #         metadata=meta,
+    #     )
+    #     docs.append(doc)
 
     return docs
 
