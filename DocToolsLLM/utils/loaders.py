@@ -1677,11 +1677,11 @@ def load_pdf(
 
             pbar.update(1)
 
-            if "unstructured" in loader_name.lower():
-                # remove empty lines. frequent in pdfs
-                content = emptyline_regex.sub("", content)
-                content = emptyline2_regex.sub("\n", content)
-                content = linebreak_before_letter.sub(r"\1", content)
+            # if "unstructured" in loader_name.lower():
+            #     # remove empty lines. frequent in pdfs
+            #     content = emptyline_regex.sub("", content)
+            #     content = emptyline2_regex.sub("\n", content)
+            #     content = linebreak_before_letter.sub(r"\1", content)
 
             content = ftfy.fix_text(content)
 
