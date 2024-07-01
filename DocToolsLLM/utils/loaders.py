@@ -284,7 +284,9 @@ def load_one_doc(
 
     docs = text_splitter.transform_documents(docs)
 
-    if filetype not in ["logseq_markdown", "anki", "pdf"]:
+    if filetype in ["logseq_markdown"]:
+        check_docs_tkn_length(docs, filetype, min_token=20)
+    elif filetype not in ["anki", "pdf"]:
         check_docs_tkn_length(docs, filetype)
 
     # add and format metadata
