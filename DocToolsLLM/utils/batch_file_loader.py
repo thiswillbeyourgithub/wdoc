@@ -28,6 +28,7 @@ from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unl
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug
+from .typechecking import optional_typechecker
 
 
 # rules used to attribute input to proper filetype. For example
@@ -69,6 +70,7 @@ for k, v in inference_rules.items():
         inference_rules[k][i] = re.compile(vv)
 
 
+@optional_typechecker
 def batch_load_doc(
     filetype: str,
     task: str,
@@ -241,6 +243,7 @@ def batch_load_doc(
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
+    @optional_typechecker
     def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
@@ -384,6 +387,7 @@ def batch_load_doc(
 
     return docs
 
+@optional_typechecker
 def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Parsing recursive load_filetype: '{load_path}'")
@@ -452,6 +456,7 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
+@optional_typechecker
 def parse_json_entries(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Loading json_entries: '{load_path}'")
@@ -507,6 +512,7 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
         doclist[i] = meta
     return doclist
 
+@optional_typechecker
 def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Loading link_file: '{load_path}'")
@@ -569,6 +575,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
+@optional_typechecker
 def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     assert "path" in load_kwargs, "missing 'path' key in args"
     path = load_kwargs["path"]
@@ -626,6 +633,7 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
 
 
 @memoizer
+@optional_typechecker
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
     assert isinstance(load_functions, list), "load_functions must be a list"

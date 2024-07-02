@@ -42,6 +42,7 @@ from langchain_community.document_loaders import WebBaseLoader
 
 from unstructured.cleaners.core import clean_extra_whitespace
 
+from .typechecking import optional_typechecker
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
@@ -91,6 +92,7 @@ markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
 markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)  # to remove image from jina reader that take a lot of tokens but are not yet used
 
+@optional_typechecker
 def md_shorten_image_name(md_image: str) -> str:
     "turn a markdown image link into just the name"
     name = md_image.group(1)
@@ -150,9 +152,11 @@ pdf_loaders = {
 if "pdftotext" in globals():
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
+        @optional_typechecker
         def __init__(self, path: Union[str, PosixPath]):
             self.path = path
 
+        @optional_typechecker
         def load(self) -> str:
             with open(self.path, "rb") as f:
                 return "\n\n".join(pdftotext.PDF(f))
@@ -174,6 +178,7 @@ sox_effects = [
 ]
 
 
+@optional_typechecker
 def load_one_doc(
     task: str,
     debug: bool,
@@ -391,6 +396,7 @@ def load_one_doc(
 
 # Convenience functions #########################
 
+@optional_typechecker
 def get_url_title(url: str) -> Union[str, type(None)]:
     """if the title of the url is not loaded from the loader, trying as last
     resort with this one"""
@@ -402,12 +408,14 @@ def get_url_title(url: str) -> Union[str, type(None)]:
         return None
 
 
+@optional_typechecker
 def cloze_stripper(clozed: str) -> str:
     clozed = clozeregex.sub(" ", clozed)
     return clozed
 
 # loaders #######################################
 
+@optional_typechecker
 def load_youtube_video(
     path: str,
     loaders_temp_dir: PosixPath,
@@ -521,6 +529,7 @@ def load_youtube_video(
 
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache
 def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
@@ -557,6 +566,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
     return docs
 
 
+@optional_typechecker
 def load_anki(
     anki_profile: str,
     text_splitter: TextSplitter,
@@ -819,6 +829,7 @@ REG_LINKS = re.compile(
     r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(?:/[A-Za-z0-9%-_])*(?:#|\\?)[A-Za-z0-9%-_&=]*',
 )
 
+@optional_typechecker
 def anki_replace_media(
     content: str,
     media: Union[Nonetype, Dict],
@@ -978,6 +989,7 @@ def anki_replace_media(
         raise ValueError(mode)
 
 
+@optional_typechecker
 @doc_loaders_cache.cache
 def load_string() -> List[Document]:
     whi("Loading string")
@@ -994,6 +1006,7 @@ def load_string() -> List[Document]:
     ]
     return docs
 
+@optional_typechecker
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -1002,6 +1015,7 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     docs = [Document(page_content=content, metadata={})]
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
     path: str,
@@ -1052,6 +1066,7 @@ def load_local_html(
     ]
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
@@ -1068,6 +1083,7 @@ def eval_load_functions(
             f"Some load_functions are not callable: {load_functions}")
 
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
     debug: bool,
@@ -1145,6 +1161,7 @@ def load_logseq_markdown(
 
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
     path: str,
@@ -1255,6 +1272,7 @@ def load_local_audio(
 
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
     path: str,
@@ -1314,6 +1332,7 @@ def load_local_video(
     )
 
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
     audio_path: str,
@@ -1382,6 +1401,7 @@ def transcribe_audio_deepgram(
     d = content.to_dict()
     return d
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
     audio_path: str,
@@ -1409,6 +1429,7 @@ def transcribe_audio_whisper(
     whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
     return transcript
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
     path: str,
@@ -1426,6 +1447,7 @@ def load_epub(
     ]
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
     path: str,
@@ -1442,6 +1464,8 @@ def load_powerpoint(
         )
     ]
     return docs
+
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
     path: str,
@@ -1461,6 +1485,7 @@ def load_word_document(
 
     return docs
 
+@optional_typechecker
 @doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
     whi(f"Loading url: '{path}'")
@@ -1610,6 +1635,7 @@ def load_url(path: str, title=None) -> List[Document]:
     return docs
 
 
+@optional_typechecker
 @doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
@@ -1623,6 +1649,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
     return loaded
 
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["loader"])
 def cached_yt_loader(
         loader: Any,
@@ -1640,6 +1667,7 @@ def cached_yt_loader(
     return docs
 
 
+@optional_typechecker
 @doc_loaders_cache.cache(ignore=["path"])
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
     loader = pdf_loaders[loader_name](path)
@@ -1658,6 +1686,7 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
     raise ValueError(f"Unexpected type of content: '{content}'")
 
 
+@optional_typechecker
 def load_pdf(
     path: str,
     text_splitter: TextSplitter,

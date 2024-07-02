@@ -20,9 +20,11 @@ from functools import partial
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
+from langchain.text_splitter import TextSplitter
 
 from .logger import red, yel, cache_dir
 from .flags import is_verbose
+from .typechecking import optional_typechecker
 
 litellm = lazy_import.lazy_module("litellm")
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -44,12 +46,15 @@ except Exception as err:
             print(f"Couldn't import optional package 'langdetect': '{err}'")
 
 if "ftlangdetect" in globals():
+    @optional_typechecker
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text)["score"]
 elif "language_detect" in globals():
+    @optional_typechecker
     def language_detector(text: str) -> float:
         return langdetect.detect_langs(text)[0].prob
 else:
+    @optional_typechecker
     def language_detector(text: str) -> None:
         return None
 
@@ -127,11 +132,13 @@ doc_kwargs_keys = [
     "source_tag",
 ] + list(loader_specific_keys.keys())
 
+@optional_typechecker
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
+@optional_typechecker
 def file_hasher(doc: dict) -> str:
     """used to hash a file's content, as describe by a dict
     A caching mechanism is used to avoid recomputing hash of file that
@@ -149,11 +156,13 @@ def file_hasher(doc: dict) -> str:
     else:
         return hasher(json.dumps(doc))
 
+@optional_typechecker
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[int]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
 
+@optional_typechecker
 def html_to_text(html: str) -> str:
     """used to strip any html present in the text files"""
     soup = BeautifulSoup(html, 'html.parser')
@@ -164,9 +173,11 @@ def html_to_text(html: str) -> str:
             red("Failed to remove <img from anki card")
     return text
 
+@optional_typechecker
 def _request_wrapper(action: str, **params) -> dict:
     return {'action': action, 'params': params, 'version': 6}
 
+@optional_typechecker
 def ankiconnect(action: str, **params) -> Union[List, str]:
     "talk to anki via ankiconnect addon"
 
@@ -193,6 +204,7 @@ def ankiconnect(action: str, **params) -> Union[List, str]:
     return response['result']
 
 
+@optional_typechecker
 def debug_chainnable(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
@@ -202,6 +214,7 @@ def debug_chainnable(inputs: Union[dict, List]) -> Union[dict, List]:
 
 debug_chain = chain(debug_chainnable)
 
+@optional_typechecker
 def wrapped_model_name_matcher(model: str) -> str:
     "find the best match for a modelname (wrapped to make some check)"
     # find the currently set api keys to avoid matching models from
@@ -245,6 +258,7 @@ def wrapped_model_name_matcher(model: str) -> str:
             "down the code.")
         return model
 
+@optional_typechecker
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
     model has a known cost and print the matched name)"""
@@ -258,6 +272,7 @@ def model_name_matcher(model: str) -> str:
     return out
 
 
+@optional_typechecker
 def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
     if modelname in tokenizers:
         return len(tokenizers[modelname](tosplit))
@@ -268,6 +283,7 @@ def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
             modelname="gpt-3.5-turbo"
         return get_tkn_length(tosplit=tosplit, modelname=modelname)
 
+@optional_typechecker
 def get_splitter(
     task: str,
     modelname="gpt-3.5-turbo",
@@ -312,6 +328,7 @@ def get_splitter(
     return text_splitter
 
 
+@optional_typechecker
 def check_docs_tkn_length(
     docs: List[Document],
     identifier: str,
@@ -369,6 +386,7 @@ def check_docs_tkn_length(
     return prob
 
 
+@optional_typechecker
 def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
@@ -386,6 +404,7 @@ def unlazyload_modules():
         else:
             break
 
+@optional_typechecker
 def disable_internet(allowed: dict) -> None:
     """
     To be extra sure that no connection goes out of the computer when
@@ -422,6 +441,7 @@ def disable_internet(allowed: dict) -> None:
         ('127.0.0.0', '127.255.255.255')
     ]
 
+    @optional_typechecker
     def is_private(ip) -> bool:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
@@ -434,6 +454,7 @@ def disable_internet(allowed: dict) -> None:
                 return True
         return False
 
+    @optional_typechecker
     def create_connection(address, *args, **kwargs):
         "overload socket.create_connection to forbid outgoing connections"
         ip = socket.gethostbyname(address[0])

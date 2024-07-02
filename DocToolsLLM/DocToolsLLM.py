@@ -24,6 +24,7 @@ import os
 import asyncio
 from tqdm import tqdm
 from langchain_community.llms import FakeListLLM
+from langchain_core.runnables import chain
 import lazy_import
 
 # cannot be lazy loaded because some are not callable but objects directly
@@ -34,6 +35,7 @@ from .utils.misc import (
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
+from .utils.typechecking import optional_typechecker
 
 # lazy loading from local files
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
@@ -60,7 +62,6 @@ from langchain_community.retrievers import KNNRetriever, SVMRetriever
 SQLiteCache = lazy_import.lazy_class("langchain_community.cache.SQLiteCache")
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-chain = lazy_import.lazy_class("langchain_core.runnables.chain")
 RunnableEach = lazy_import.lazy_class("langchain_core.runnables.base.RunnableEach")
 StrOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.string.StrOutputParser")
 BaseGenerationOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.BaseGenerationOutputParser")
@@ -71,6 +72,7 @@ litellm = lazy_import.lazy_module("litellm")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+@optional_typechecker
 @set_docstring
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
@@ -79,6 +81,7 @@ class DocToolsLLM_class:
     allowed_extra_keys = extra_args_keys
     md_printer = md_printer
 
+    @optional_typechecker
     def __init__(
         self,
         task: str,
@@ -133,6 +136,7 @@ class DocToolsLLM_class:
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
+                    @optional_typechecker
                     def p(message: str) -> None:
                         "print error, in red if possible"
                         try:
@@ -342,12 +346,14 @@ class DocToolsLLM_class:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
         if notification_callback is not None:
+            @optional_typechecker
             def ntfy(text: str) -> str:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
             ntfy("Starting DocToolsLLM")
         else:
+            @optional_typechecker
             def ntfy(text: str) -> str:
                 return text
             self.ntfy = ntfy
@@ -432,6 +438,7 @@ class DocToolsLLM_class:
                 self.query_task(query=query)
                 query = None
 
+    @optional_typechecker
     def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
@@ -513,6 +520,7 @@ class DocToolsLLM_class:
             ):
             self.llm.model_kwargs["temperature"] = 0.0
 
+        @optional_typechecker
         def summarize_documents(
             path: Any,
             relevant_docs: List,
@@ -727,6 +735,7 @@ class DocToolsLLM_class:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
+    @optional_typechecker
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
         if "logit_bias" in litellm.get_supported_openai_params(
@@ -887,6 +896,7 @@ class DocToolsLLM_class:
                 for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
                     assert any(k.match(key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
+                @optional_typechecker
                 def filter_meta(meta: dict) -> bool:
                     # match keys
                     for inc in filters_k_plus:
@@ -926,6 +936,7 @@ class DocToolsLLM_class:
 
                     return True
             else:
+                @optional_typechecker
                 def filter_meta(meta: dict) -> bool:
                     return True
 
@@ -955,6 +966,7 @@ class DocToolsLLM_class:
                 filters_cont_plus = tuple(filters_cont_plus)
                 filters_cont_minus = tuple(filters_cont_minus)
 
+                @optional_typechecker
                 def filter_cont(cont: str) -> bool:
                     if not all(inc.match(cont) for inc in filters_cont_plus):
                         return False
@@ -963,6 +975,7 @@ class DocToolsLLM_class:
                     return True
 
             else:
+                @optional_typechecker
                 def filter_cont(cont: str) -> bool:
                     return True
 
@@ -1001,6 +1014,7 @@ class DocToolsLLM_class:
             assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
+    @optional_typechecker
     def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
@@ -1137,6 +1151,7 @@ class DocToolsLLM_class:
         if self.llm_cache:
             eval_cache_wrapper = query_eval_cache.cache
         else:
+            @optional_typechecker
             def eval_cache_wrapper(func: Callable) -> Callable:
                 return func
 
@@ -1151,8 +1166,11 @@ class DocToolsLLM_class:
                 f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
 
+
+        @chain
+        @optional_typechecker
         @eval_cache_wrapper
-        def evaluate_doc_chainnable(
+        def evaluate_doc_chain(
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
@@ -1214,8 +1232,6 @@ class DocToolsLLM_class:
             self.eval_llm.callbacks[0].total_tokens += new_p + new_c
             return outputs
 
-        evaluate_doc_chain = chain(evaluate_doc_chainnable)
-
         # uses in most places to increase concurrency limit
         multi = {"max_concurrency": 10 if not self.debug else 1}
 
@@ -1224,13 +1240,14 @@ class DocToolsLLM_class:
 
 
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-                def retrieve_documents_chainnable(inputs):
+                @chain
+                @optional_typechecker
+                def retrieve_documents(inputs):
                     return {
                             "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
                             "question_to_answer": inputs["question_to_answer"],
                     }
                     return inputs
-                retrieve_documents = chain(retrieve_documents_chainnable)
 
                 refilter_documents =  {
                     "filtered_docs": (
@@ -1335,13 +1352,14 @@ class DocToolsLLM_class:
                 }
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-            def retrieve_documents_chainnable(inputs):
+            @chain
+            @optional_typechecker
+            def retrieve_documents(inputs):
                 return {
                         "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
                         "question_to_answer": inputs["question_to_answer"],
                 }
                 return inputs
-            retrieve_documents = chain(retrieve_documents_chainnable)
             refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(

@@ -15,7 +15,9 @@ from prompt_toolkit.completion import WordCompleter
 
 from .misc import cache_dir
 from .logger import whi, red, md_printer
+from .typechecking import optional_typechecker
 
+@optional_typechecker
 def get_toolbar_text(settings: dict) -> Any:
     "parsed settings to be well displayed in the prompt toolbar"
     out = []
@@ -30,6 +32,7 @@ def get_toolbar_text(settings: dict) -> Any:
 
 
 class SettingsCompleter(Completer):
+    @optional_typechecker
     def __init__(
         self,
         doctoolsCliSettings,
@@ -42,6 +45,7 @@ class SettingsCompleter(Completer):
         self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
         self.doctoolsHistoryWords = doctoolsHistoryWords
 
+    @optional_typechecker
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if not text.strip():
@@ -81,10 +85,12 @@ class SettingsCompleter(Completer):
                 if hist.lower().startswith(text.lower()):
                     yield Completion(hist, start_position=-len(text))
 
+@optional_typechecker
 def show_help() -> None:
     "display CLI help"
     md_printer(dedent(ask_user.__doc__).strip())
 
+@optional_typechecker
 def ask_user(settings: dict) -> Tuple[str, dict]:
     """
     ## Command line manual

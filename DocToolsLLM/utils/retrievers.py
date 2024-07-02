@@ -13,9 +13,10 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 
 from .misc import cache_dir, get_splitter
+from .typechecking import optional_typechecker
 
 
-
+@optional_typechecker
 def create_hyde_retriever(
     query: str,
 
@@ -70,6 +71,7 @@ Answer:"""
     return retriever
 
 
+@optional_typechecker
 def create_parent_retriever(
     task: str,
     loaded_embeddings: Any,

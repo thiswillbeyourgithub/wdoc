@@ -10,7 +10,9 @@ from langchain.docstore.document import Document
 
 from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
 from ..logger import whi, red
+from ..typechecking import optional_typechecker
 
+@optional_typechecker
 def do_summarize(
     docs: List[Document],
     metadata: str,
