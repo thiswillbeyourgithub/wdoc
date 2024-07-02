@@ -1151,9 +1151,8 @@ class DocToolsLLM_class:
                 f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
 
-        @chain
         @eval_cache_wrapper
-        def evaluate_doc_chain(
+        def evaluate_doc_chainnable(
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
@@ -1215,6 +1214,8 @@ class DocToolsLLM_class:
             self.eval_llm.callbacks[0].total_tokens += new_p + new_c
             return outputs
 
+        evaluate_doc_chain = chain(evaluate_doc_chainnable)
+
         # uses in most places to increase concurrency limit
         multi = {"max_concurrency": 10 if not self.debug else 1}
 
@@ -1223,13 +1224,13 @@ class DocToolsLLM_class:
 
 
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-                @chain
-                def retrieve_documents(inputs):
+                def retrieve_documents_chainnable(inputs):
                     return {
                             "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
                             "question_to_answer": inputs["question_to_answer"],
                     }
                     return inputs
+                retrieve_documents = chain(retrieve_documents_chainnable)
 
                 refilter_documents =  {
                     "filtered_docs": (
@@ -1334,13 +1335,13 @@ class DocToolsLLM_class:
                 }
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-            @chain
-            def retrieve_documents(inputs):
+            def retrieve_documents_chainnable(inputs):
                 return {
                         "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
                         "question_to_answer": inputs["question_to_answer"],
                 }
                 return inputs
+            retrieve_documents = chain(retrieve_documents_chainnable)
             refilter_documents =  {
                 "filtered_docs": (
                         RunnablePassthrough.assign(
