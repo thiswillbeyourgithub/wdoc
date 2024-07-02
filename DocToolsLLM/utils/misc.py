@@ -19,7 +19,6 @@ import tiktoken
 from functools import partial
 
 from langchain.docstore.document import Document
-from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
 
 from .logger import red, yel, cache_dir
