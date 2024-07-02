@@ -1181,6 +1181,7 @@ class DocToolsLLM_class:
                 else:
                     new_p = 0
                     new_c = 0
+
             else:
                 outputs = []
                 new_p = 0
@@ -1201,7 +1202,7 @@ class DocToolsLLM_class:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                     outputs.append(out.generations[0].text)
                     finish_reason = out.generations[0].generation_info["finish_reason"]
-                    if not finish_reason in ["stop", "length"]:
+                    if finish_reason not in ["stop", "length"]:
                         red(f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'")
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
