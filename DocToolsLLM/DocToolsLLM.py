@@ -23,6 +23,7 @@ import textwrap
 import os
 import asyncio
 from tqdm import tqdm
+from langchain_community.llms import FakeListLLM
 import lazy_import
 
 # cannot be lazy loaded because some are not callable but objects directly
@@ -40,7 +41,6 @@ NoDocumentsAfterLLMEvalFiltering = lazy_import.lazy_class("DocToolsLLM.utils.err
 do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_summarize")
 load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
 AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
-FakeListLLM = lazy_import.lazy_class("DocToolsLLM.utils.llm.FakeListLLM")
 ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
 create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
 create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
