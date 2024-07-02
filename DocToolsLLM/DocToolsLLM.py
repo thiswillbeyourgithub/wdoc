@@ -77,6 +77,7 @@ class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
     VERSION: str = "0.52"
+    allowed_extra_keys = extra_args_keys
 
     #@optional_typecheck
     @typechecked
@@ -130,7 +131,6 @@ class DocToolsLLM_class:
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
-        self.allowed_extra_keys = extra_args_keys
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
