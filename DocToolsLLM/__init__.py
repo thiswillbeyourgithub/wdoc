@@ -5,9 +5,6 @@ Default file, used as entry point.
 import os
 import sys
 import fire
-from typing import List, Tuple
-from rich.markdown import Markdown
-from rich.console import Console
 
 # optional type checking via beartype
 if "DOCTOOLS_TYPECHECKING" not in os.environ:
