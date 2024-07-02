@@ -4,7 +4,6 @@ Code related to the prompt (in the sense of "directly ask the user a question")
 
 from typing import Optional, Tuple, Any
 import time
-import re
 from pathlib import Path
 import json
 from textwrap import dedent
@@ -15,9 +14,9 @@ from prompt_toolkit.completion import WordCompleter
 
 from .misc import cache_dir
 from .logger import whi, red, md_printer
-from .typechecking import optional_typechecker
+from .typechecker import optional_typecheck
 
-@optional_typechecker
+@optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
     "parsed settings to be well displayed in the prompt toolbar"
     out = []
@@ -32,7 +31,7 @@ def get_toolbar_text(settings: dict) -> Any:
 
 
 class SettingsCompleter(Completer):
-    @optional_typechecker
+    @optional_typecheck
     def __init__(
         self,
         doctoolsCliSettings,
@@ -45,7 +44,7 @@ class SettingsCompleter(Completer):
         self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
         self.doctoolsHistoryWords = doctoolsHistoryWords
 
-    @optional_typechecker
+    @optional_typecheck
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if not text.strip():
@@ -85,12 +84,12 @@ class SettingsCompleter(Completer):
                 if hist.lower().startswith(text.lower()):
                     yield Completion(hist, start_position=-len(text))
 
-@optional_typechecker
+@optional_typecheck
 def show_help() -> None:
     "display CLI help"
     md_printer(dedent(ask_user.__doc__).strip())
 
-@optional_typechecker
+@optional_typecheck
 def ask_user(settings: dict) -> Tuple[str, dict]:
     """
     ## Command line manual

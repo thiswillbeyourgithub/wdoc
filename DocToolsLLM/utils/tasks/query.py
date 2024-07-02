@@ -8,17 +8,17 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from joblib import Memory
 
+from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
 from ..misc import cache_dir
-from ..typechecking import optional_typechecker
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
-@optional_typechecker
+@optional_typecheck
 def format_chat_history(chat_history: List[Tuple]) -> str:
     "to load the chat history into the RAG chain"
     buffer = ""
@@ -28,7 +28,7 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
         buffer += "\n" + "\n".join([human, ai])
     return buffer
 
-@optional_typechecker
+@optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if (
@@ -40,8 +40,9 @@ def check_intermediate_answer(ans: str) -> bool:
     return False
 
 
-@optional_typechecker
-def refilter_docs_chainnable(inputs: dict) -> List[Document]:
+@chain
+@optional_typecheck
+def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the eval llm answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
@@ -65,9 +66,8 @@ def refilter_docs_chainnable(inputs: dict) -> List[Document]:
         raise NoDocumentsAfterLLMEvalFiltering(
             "No document remained after filtering with the query")
     return filtered_docs
-refilter_docs = chain(refilter_docs_chainnable)
 
-@optional_typechecker
+@optional_typecheck
 def parse_eval_output(output: str) -> str:
     mess = f"The eval LLM returned an output that can't be parsed as 0 or 1: '{output}'"
     # empty

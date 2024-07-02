@@ -28,6 +28,7 @@ from langchain_openai import OpenAIEmbeddings
 
 from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
+from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .typechecking import optional_typechecker
 
@@ -72,7 +73,7 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
         return list(map(float, embedding))
 
 
-@optional_typechecker
+@optional_typecheck
 def load_embeddings(
     embed_model: str,
     embed_kwargs: dict,
@@ -391,7 +392,7 @@ def load_embeddings(
     return db, cached_embeddings
 
 
-@optional_typechecker
+@optional_typecheck
 def faiss_loader(
     cached_embeddings: CacheBackedEmbeddings,
     qin: queue.Queue,
@@ -422,7 +423,7 @@ def faiss_loader(
     return
 
 
-@optional_typechecker
+@optional_typecheck
 def faiss_saver(
     path: Union[str, PosixPath],
     cached_embeddings: CacheBackedEmbeddings,

@@ -14,7 +14,7 @@ import pyfiglet
 import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable
-from typeguard import check_type, TypeCheckError
+from typeguard import typechecked, check_type, TypeCheckError
 import tldextract
 from pathlib import Path
 import time
@@ -35,19 +35,20 @@ from .utils.misc import (
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
-from .utils.typechecking import optional_typechecker
 
 # lazy loading from local files
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
 NoDocumentsAfterLLMEvalFiltering = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsAfterLLMEvalFiltering")
 do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_summarize")
+optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
 load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
 AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
 ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
 create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
 create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
 load_embeddings = lazy_import.lazy_function("DocToolsLLM.utils.embeddings.load_embeddings")
-batch_load_doc = lazy_import.lazy_module("DocToolsLLM.utils.batch_file_loader").batch_load_doc
+# batch_load_doc = lazy_import.lazy_module("DocToolsLLM.utils.batch_file_loader").batch_load_doc
+from .utils.batch_file_loader import batch_load_doc
 
 # lazy imports
 set_verbose = lazy_import.lazy_function("langchain.globals.set_verbose")
@@ -72,7 +73,7 @@ litellm = lazy_import.lazy_module("litellm")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-@optional_typechecker
+@optional_typecheck
 @set_docstring
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
@@ -81,7 +82,8 @@ class DocToolsLLM_class:
     allowed_extra_keys = extra_args_keys
     md_printer = md_printer
 
-    @optional_typechecker
+    #@optional_typecheck
+    @typechecked
     def __init__(
         self,
         task: str,
@@ -136,7 +138,7 @@ class DocToolsLLM_class:
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
-                    @optional_typechecker
+                    @optional_typecheck
                     def p(message: str) -> None:
                         "print error, in red if possible"
                         try:
@@ -346,14 +348,14 @@ class DocToolsLLM_class:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
         if notification_callback is not None:
-            @optional_typechecker
+            @optional_typecheck
             def ntfy(text: str) -> str:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
             ntfy("Starting DocToolsLLM")
         else:
-            @optional_typechecker
+            @optional_typecheck
             def ntfy(text: str) -> str:
                 return text
             self.ntfy = ntfy
@@ -438,7 +440,7 @@ class DocToolsLLM_class:
                 self.query_task(query=query)
                 query = None
 
-    @optional_typechecker
+    @optional_typecheck
     def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
@@ -520,7 +522,7 @@ class DocToolsLLM_class:
             ):
             self.llm.model_kwargs["temperature"] = 0.0
 
-        @optional_typechecker
+        @optional_typecheck
         def summarize_documents(
             path: Any,
             relevant_docs: List,
@@ -735,7 +737,7 @@ class DocToolsLLM_class:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
-    @optional_typechecker
+    @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
         if "logit_bias" in litellm.get_supported_openai_params(
@@ -896,7 +898,7 @@ class DocToolsLLM_class:
                 for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
                     assert any(k.match(key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
-                @optional_typechecker
+                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     # match keys
                     for inc in filters_k_plus:
@@ -936,7 +938,7 @@ class DocToolsLLM_class:
 
                     return True
             else:
-                @optional_typechecker
+                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     return True
 
@@ -966,7 +968,7 @@ class DocToolsLLM_class:
                 filters_cont_plus = tuple(filters_cont_plus)
                 filters_cont_minus = tuple(filters_cont_minus)
 
-                @optional_typechecker
+                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     if not all(inc.match(cont) for inc in filters_cont_plus):
                         return False
@@ -975,7 +977,7 @@ class DocToolsLLM_class:
                     return True
 
             else:
-                @optional_typechecker
+                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     return True
 
@@ -1014,7 +1016,7 @@ class DocToolsLLM_class:
             assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
-    @optional_typechecker
+    @optional_typecheck
     def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
@@ -1151,7 +1153,7 @@ class DocToolsLLM_class:
         if self.llm_cache:
             eval_cache_wrapper = query_eval_cache.cache
         else:
-            @optional_typechecker
+            @optional_typecheck
             def eval_cache_wrapper(func: Callable) -> Callable:
                 return func
 
@@ -1168,7 +1170,7 @@ class DocToolsLLM_class:
 
 
         @chain
-        @optional_typechecker
+        @optional_typecheck
         @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
@@ -1241,7 +1243,7 @@ class DocToolsLLM_class:
 
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
-                @optional_typechecker
+                @optional_typecheck
                 def retrieve_documents(inputs):
                     return {
                             "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
@@ -1353,7 +1355,7 @@ class DocToolsLLM_class:
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
-            @optional_typechecker
+            @optional_typecheck
             def retrieve_documents(inputs):
                 return {
                         "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
