@@ -179,8 +179,8 @@
     can be used for example to send notification on your phone
     using ntfy.sh to get summaries.
 
-* `--chat_memory`: bool, default `True`
-    * if True, will remember the messages across a given chat exchange.
+* `--memoryless`: bool, default `False`
+    * if False, will remember the messages across a given chat exchange.
     Disabled if using a testing model.
 
 * `--disable_llm_cache`: bool, default `False`

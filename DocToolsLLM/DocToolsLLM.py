@@ -121,7 +121,7 @@ class DocToolsLLM_class:
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
-        chat_memory: Union[bool, int] = True,
+        memoryless: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
@@ -295,7 +295,7 @@ class DocToolsLLM_class:
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
-        self.chat_memory = chat_memory if "testing" not in modelname else False
+        self.memoryless = memoryless if "testing" not in modelname else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
