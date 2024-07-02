@@ -1137,7 +1137,7 @@ class DocToolsLLM_class:
         if self.llm_cache:
             eval_cache_wrapper = query_eval_cache.cache
         else:
-            def eval_cache_wrapper(func):
+            def eval_cache_wrapper(func: Callable) -> Callable:
                 return func
 
         if " object at " in self.llm._get_llm_string():
