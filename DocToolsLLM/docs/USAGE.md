@@ -220,6 +220,9 @@
 * `--import_mode`: bool, default `False`
     * if True, will return the answer from query instead of printing it
 
+* `--disable_md_printing`: bool, default `True`
+    * if True, instead of using rich to display some information, default to simpler colored prints.
+
 * `--cli_kwargs`: dict, optional
     * Any remaining keyword argument will be parsed as a loader
     specific argument ((see below)[#loader-specific-arguments]).

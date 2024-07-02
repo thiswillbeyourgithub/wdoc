@@ -17,6 +17,7 @@ from platformdirs import user_cache_dir, user_log_dir
 import warnings
 
 from .typechecker import optional_typecheck
+from .flags import disable_md_printing
 
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
@@ -102,9 +103,21 @@ console = Console()
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
-    log.info(message)
-    md = Markdown(message)
-    console.print(md, style=color)
+    if not disable_md_printing:
+        log.info(message)
+        md = Markdown(message)
+        console.print(md, style=color)
+    else:
+        if not color:
+            whi(message)
+        elif color in "red":
+            red(message)
+        elif color in "white":
+            whi(message)
+        elif color in "yellow":
+            yel(message)
+        else:
+            whi(message)
     return message
 
 @optional_typecheck

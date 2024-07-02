@@ -78,6 +78,7 @@ class DocToolsLLM_class:
 
     VERSION: str = "0.52"
     allowed_extra_keys = extra_args_keys
+    md_printer = md_printer
 
     #@optional_typecheck
     @typechecked
@@ -127,6 +128,7 @@ class DocToolsLLM_class:
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
+        disable_md_printing: bool = False,
 
         **cli_kwargs,
         ) -> None:
