@@ -1316,7 +1316,11 @@ class DocToolsLLM_class:
         else:
             if self.query_condense_question:
                 loaded_memory = RunnablePassthrough.assign(
-                    chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
+                    chat_history=RunnableLambda(
+                        self.memory.load_memory_variables
+                        if not self.memoryless
+                        else AnswerConversationBufferMemory(memory_key="chat_history", return_messages=True).load_memory_variables
+                    ) | itemgetter("chat_history"),
                 )
                 standalone_question = {
                     "question_to_answer": RunnablePassthrough(),
