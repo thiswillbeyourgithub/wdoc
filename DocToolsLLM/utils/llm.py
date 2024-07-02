@@ -145,7 +145,7 @@ class PriceCountingCallback(BaseCallbackHandler):
     def __str__(self) -> str:
         return "PriceCountingCallback"
 
-    def _check_methods_called(self) -> None:
+    def _check_methods_called(self) -> bool:
         assert all(meth in dir(self) for meth in self.methods_called), (
             "unexpected method names!")
         wrong = [
