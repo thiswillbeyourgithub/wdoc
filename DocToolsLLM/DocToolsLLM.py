@@ -41,6 +41,7 @@ do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_sum
 optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
 load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
 AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
+FakeListLLM = lazy_import.lazy_class("DocToolsLLM.utils.llm.FakeListLLM")
 ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
 create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
 create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
@@ -1166,7 +1167,12 @@ class DocToolsLLM_class:
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
             eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
             ) -> List[str]:
-            if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
+            if isinstance(self.eval_llm, FakeListLLM):
+                outputs = ["1" for i in range(self.query_eval_check_number)]
+                new_p = 0
+                new_c = 0
+
+            elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
