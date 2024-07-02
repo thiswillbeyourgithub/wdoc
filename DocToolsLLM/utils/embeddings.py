@@ -3,7 +3,7 @@
 * Loads and store embeddings for each document.
 """
 
-from typing import List, Union, Optional, Any
+from typing import List, Union, Optional, Any, Tuple
 import hashlib
 import os
 import queue
@@ -78,7 +78,7 @@ def load_embeddings(
     private: bool,
     use_rolling: bool,
     cli_kwargs: dict,
-    ):
+    ) -> Tuple[FAISS, CacheBackedEmbeddings]:
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")

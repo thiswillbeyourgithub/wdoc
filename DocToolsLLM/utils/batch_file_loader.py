@@ -241,7 +241,7 @@ def batch_load_doc(
 
     # wrap doc_loader to cach errors cleanly
     @wraps(load_one_doc)
-    def load_one_doc_wrapped(**doc_kwargs):
+    def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
             return out

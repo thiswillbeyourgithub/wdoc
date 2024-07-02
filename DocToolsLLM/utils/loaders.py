@@ -8,7 +8,7 @@ lazily loaded.
 import signal
 import os
 import time
-from typing import List, Union, Any, Optional, Callable, Dict
+from typing import List, Union, Any, Optional, Callable, Dict, Nonetype
 from textwrap import dedent
 from functools import partial
 import uuid
@@ -90,7 +90,8 @@ clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
 markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)  # to remove image from jina reader that take a lot of tokens but are not yet used
-def md_shorten_image_name(md_image):
+
+def md_shorten_image_name(md_image: str) -> str:
     "turn a markdown image link into just the name"
     name = md_image.group(1)
     if len(name) <= 16:
@@ -149,10 +150,10 @@ pdf_loaders = {
 if "pdftotext" in globals():
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
-        def __init__(self, path):
+        def __init__(self, path: Union[str, PosixPath]):
             self.path = path
 
-        def load(self):
+        def load(self) -> str:
             with open(self.path, "rb") as f:
                 return "\n\n".join(pdftotext.PDF(f))
     pdf_loaders["pdftotext"] = pdftotext_loader_class
@@ -820,7 +821,7 @@ REG_LINKS = re.compile(
 
 def anki_replace_media(
     content: str,
-    media: Union[None, Dict],
+    media: Union[Nonetype, Dict],
     mode: str,
     ) -> [str, Dict]:
     """
