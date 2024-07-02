@@ -14,7 +14,7 @@ import pyfiglet
 import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable
-from typeguard import typechecked, check_type, TypeCheckError
+from typeguard import check_type, TypeCheckError
 import tldextract
 from pathlib import Path
 import time
@@ -38,7 +38,6 @@ from .utils.tasks.query import format_chat_history, refilter_docs, check_interme
 NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
 NoDocumentsAfterLLMEvalFiltering = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsAfterLLMEvalFiltering")
 do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_summarize")
-optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
 load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
 AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
 FakeListLLM = lazy_import.lazy_class("DocToolsLLM.utils.llm.FakeListLLM")
@@ -80,8 +79,6 @@ class DocToolsLLM_class:
     allowed_extra_keys = extra_args_keys
     md_printer = md_printer
 
-    #@optional_typecheck
-    @typechecked
     def __init__(
         self,
         task: str,
@@ -345,14 +342,12 @@ class DocToolsLLM_class:
                 raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
 
         if notification_callback is not None:
-            @optional_typecheck
             def ntfy(text: str) -> str:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
             ntfy("Starting DocToolsLLM")
         else:
-            @optional_typecheck
             def ntfy(text: str) -> str:
                 return text
             self.ntfy = ntfy
@@ -437,7 +432,6 @@ class DocToolsLLM_class:
                 self.query_task(query=query)
                 query = None
 
-    @optional_typecheck
     def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
@@ -519,7 +513,6 @@ class DocToolsLLM_class:
             ):
             self.llm.model_kwargs["temperature"] = 0.0
 
-        @optional_typecheck
         def summarize_documents(
             path: Any,
             relevant_docs: List,
@@ -734,7 +727,6 @@ class DocToolsLLM_class:
             red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
-    @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
         if "logit_bias" in litellm.get_supported_openai_params(
@@ -1009,7 +1001,6 @@ class DocToolsLLM_class:
             assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
-    #@optional_typecheck
     def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
@@ -1162,7 +1153,6 @@ class DocToolsLLM_class:
 
         @chain
         @eval_cache_wrapper
-        @optional_typecheck
         def evaluate_doc_chain(
             inputs: dict,
             query_nb: int = self.query_eval_check_number,

@@ -25,7 +25,6 @@ import json
 import dill
 
 from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
-from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug
@@ -70,7 +69,6 @@ for k, v in inference_rules.items():
         inference_rules[k][i] = re.compile(vv)
 
 
-@optional_typecheck
 def batch_load_doc(
     filetype: str,
     task: str,
@@ -386,7 +384,6 @@ def batch_load_doc(
 
     return docs
 
-@optional_typecheck
 def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Parsing recursive load_filetype: '{load_path}'")
@@ -455,7 +452,6 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
-@optional_typecheck
 def parse_json_entries(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Loading json_entries: '{load_path}'")
@@ -511,7 +507,6 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
         doclist[i] = meta
     return doclist
 
-@optional_typecheck
 def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
     load_path = load_kwargs["path"]
     whi(f"Loading link_file: '{load_path}'")
@@ -574,7 +569,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
-@optional_typecheck
 def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     assert "path" in load_kwargs, "missing 'path' key in args"
     path = load_kwargs["path"]
@@ -631,7 +625,6 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     return doclist
 
 
-@optional_typecheck
 @memoizer
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)

@@ -23,7 +23,6 @@ from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
 
 from .logger import red, yel, cache_dir
-from .typechecker import optional_typecheck
 from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
@@ -46,11 +45,9 @@ except Exception as err:
             print(f"Couldn't import optional package 'langdetect': '{err}'")
 
 if "ftlangdetect" in globals():
-    @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text)["score"]
 elif "language_detect" in globals():
-    @optional_typecheck
     def language_detector(text: str) -> float:
         return langdetect.detect_langs(text)[0].prob
 else:
@@ -158,7 +155,6 @@ def _file_hasher(abs_path: str, stats: List[int]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
 
-@optional_typecheck
 def html_to_text(html: str) -> str:
     """used to strip any html present in the text files"""
     soup = BeautifulSoup(html, 'html.parser')
@@ -169,11 +165,9 @@ def html_to_text(html: str) -> str:
             red("Failed to remove <img from anki card")
     return text
 
-@optional_typecheck
 def _request_wrapper(action: str, **params) -> dict:
     return {'action': action, 'params': params, 'version': 6}
 
-@optional_typecheck
 def ankiconnect(action: str, **params) -> Union[List, str]:
     "talk to anki via ankiconnect addon"
 
@@ -200,16 +194,15 @@ def ankiconnect(action: str, **params) -> Union[List, str]:
     return response['result']
 
 
-@chain
-@optional_typecheck
-def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
+def debug_chainnable(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
         red(inputs.keys())
     breakpoint()
     return inputs
 
-@optional_typecheck
+debug_chain = chain(debug_chainnable)
+
 def wrapped_model_name_matcher(model: str) -> str:
     "find the best match for a modelname (wrapped to make some check)"
     # find the currently set api keys to avoid matching models from
@@ -266,7 +259,6 @@ def model_name_matcher(model: str) -> str:
     return out
 
 
-@optional_typecheck
 def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
     if modelname in tokenizers:
         return len(tokenizers[modelname](tosplit))
@@ -277,7 +269,6 @@ def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
             modelname="gpt-3.5-turbo"
         return get_tkn_length(tosplit=tosplit, modelname=modelname)
 
-@optional_typecheck
 def get_splitter(
     task: str,
     modelname="gpt-3.5-turbo",
@@ -322,7 +313,6 @@ def get_splitter(
     return text_splitter
 
 
-@optional_typecheck
 def check_docs_tkn_length(
     docs: List[Document],
     identifier: str,

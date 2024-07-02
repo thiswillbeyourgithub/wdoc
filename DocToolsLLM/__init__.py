@@ -2,11 +2,27 @@
 Default file, used as entry point.
 """
 
+import os
 import sys
 import fire
 from typing import List, Tuple
 from rich.markdown import Markdown
 from rich.console import Console
+
+# optional type checking via beartype
+if "DOCTOOLS_TYPECHECKING" not in os.environ:
+    os.environ["DOCTOOLS_TYPECHECKING"] = "disabled"
+if os.environ["DOCTOOLS_TYPECHECKING"] == "disabled":
+    pass
+else:
+    from beartype.claw import beartype_this_package
+    if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
+        from beartype import BeartypeConf
+        beartype_this_package(conf=BeartypeConf(violation_type=UserWarning))
+    elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
+        beartype_this_package()
+    else:
+        raise ValueError(f"Unexpected env value for DOCTOOLS_TYPECHECKING")
 
 from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
 

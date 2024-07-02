@@ -16,7 +16,6 @@ from rich.console import Console
 from platformdirs import user_cache_dir, user_log_dir
 import warnings
 
-from .typechecker import optional_typecheck
 from .flags import disable_md_printing
 
 # ignore warnings from beautiful soup
@@ -61,14 +60,12 @@ colors = {
         }
 
 
-@optional_typecheck
 def get_coloured_logger(color_asked: str) -> Callable:
     """used to print color coded logs"""
     col = colors[color_asked]
 
     # all logs are considered "errors" otherwise the datascience libs just
     # overwhelm the logs
-    @optional_typecheck
     def printer(string: str, **args) -> str:
         inp = string
         if isinstance(string, dict):
@@ -100,7 +97,6 @@ red = get_coloured_logger("red")
 
 console = Console()
 
-@optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
     if not disable_md_printing:
@@ -120,7 +116,6 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
             whi(message)
     return message
 
-@optional_typecheck
 def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of DocToolsLLM class to DocToolsLLM/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"

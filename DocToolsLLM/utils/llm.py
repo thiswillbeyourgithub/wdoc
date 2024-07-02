@@ -21,7 +21,6 @@ from langchain_openai import ChatOpenAI
 from langchain_community.cache import SQLiteCache
 
 from .logger import whi, red, yel
-from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -34,7 +33,6 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
 
-@optional_typecheck
 def load_llm(
     modelname: str,
     backend: str,
