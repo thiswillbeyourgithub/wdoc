@@ -263,6 +263,7 @@
 
     Whichever you choose, you can later filter out documents by metadata
     filtering over the `anki_mode` key.
+    Note that the suspended cards will always be discarded.
 
 * `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.
