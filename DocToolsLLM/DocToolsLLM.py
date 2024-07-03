@@ -1239,8 +1239,6 @@ class DocToolsLLM_class:
 
         if self.task == "search":
             if self.query_eval_modelname:
-
-
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
                 @optional_typecheck
