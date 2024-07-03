@@ -1731,7 +1731,12 @@ def load_pdf(
             content = ftfy.fix_text(content)
 
             texts = text_splitter.split_text(content)
-            docs = [Document(page_content=t) for t in texts]
+            docs = [
+                Document(
+                    page_content=t,
+                )
+                for t in texts
+            ]
 
             prob = check_docs_tkn_length(
                 docs=docs,
