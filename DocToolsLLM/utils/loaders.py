@@ -157,9 +157,15 @@ if "pdftotext" in globals():
             self.path = path
 
         @optional_typecheck
-        def load(self) -> str:
+        def load(self) -> List[Document]:
             with open(self.path, "rb") as f:
-                return "\n\n".join(pdftotext.PDF(f))
+                docs = [
+                        Document(
+                        page_content=d,
+                    )
+                    for d in pdftotext.PDF(f)
+                ]
+                return docs
     pdf_loaders["pdftotext"] = pdftotext_loader_class
 
 # unsilence audio
@@ -1668,21 +1674,12 @@ def cached_yt_loader(
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
-def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
+def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
     content = loader.load()
-    if isinstance(content, str):
-        return content
-    elif isinstance(content, list):
-        if isinstance(content[0], str):
-            return "\n".join(content)
-        elif hasattr(content[0], "page_content"):
-            return "\n".join([d.page_content for d in content])
-        else:
-            raise ValueError(f"Unexpected type of content[0]: '{content}'")
-    elif hasattr(content, "page_content"):
-        return content.page_content
-    raise ValueError(f"Unexpected type of content: '{content}'")
+    assert isinstance(content, list), f"Output of {loader_name} is of type {type(content)}"
+    assert all(isinstance(d, Document) for d in content), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    return content
 
 
 @optional_typecheck
@@ -1717,26 +1714,15 @@ def load_pdf(
 
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(pdf_timeout)
-            content = _pdf_loader(loader_name, path, file_hash)
+            docs = _pdf_loader(loader_name, path, file_hash)
             signal.alarm(0)
 
             pbar.update(1)
 
-            # if "unstructured" in loader_name.lower():
-            #     # remove empty lines. frequent in pdfs
-            #     content = emptyline_regex.sub("", content)
-            #     content = emptyline2_regex.sub("\n", content)
-            #     content = linebreak_before_letter.sub(r"\1", content)
-
-            content = ftfy.fix_text(content)
-
-            texts = text_splitter.split_text(content)
-            docs = [
-                Document(
-                    page_content=t,
-                )
-                for t in texts
-            ]
+            for i, d in enumerate(docs):
+                docs[i].page_content = ftfy.fix_text(d.page_content)
+                if "pdf_loader_name" not in docs[i].metadata:
+                    docs[i].metadata["pdf_loader_name"] = loader_name
 
             prob = check_docs_tkn_length(
                 docs=docs,
