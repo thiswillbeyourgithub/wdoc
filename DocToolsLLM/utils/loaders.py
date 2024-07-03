@@ -613,7 +613,7 @@ def load_anki(
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
 
     # remove suspended
-    cards = cards[cards["cqueue"] != -1]
+    cards = cards[cards["cqueue"] != "suspended"]
 
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
