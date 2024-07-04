@@ -636,9 +636,10 @@ def load_anki(
             axis=1,
         )
         if len(cards[cards["fields_dict"] != {}]) != len(cards):
+            expec_fd = cards["fields_name"].iloc[0]
             raise Exception(
                 f"Something is wrong with the anki_fields '{anki_fields}' "
-                f"of notetype {anki_notetype} of profile {anki_profile}"
+                f"of notetype {anki_notetype} that has fields '{expec_fd}'"
             )
         if debug:
             tqdm.pandas(desc="Joining fields")
