@@ -68,7 +68,7 @@
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document parsing and embedding.
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
-* **Static typed**: Optional runtime type checking. Opt in with an environment flag: `DOCTOOLS_TYPECHECKING="disabled / warn / crash" DocToolsLLM`.
+* **Static typed**: Optional runtime type checking. Opt in with an environment flag: `DOCTOOLS_TYPECHECKING="disabled / warn / crash" DocToolsLLM`. As it slows down the speed it is disabled by default.
 * **Scriptable**: You can use DocToolsLLM in other python project using `--import_mode`
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
 * **Fully documented**: I work hard to maintain an exhaustive documentation at `DocToolsLLM --help`
