@@ -396,10 +396,8 @@
 # Runtime flags
 
 * `DOCTOOLS_TYPECHECKING`
-    * Setting for runtime type checking. Default value is `disabled`. Note that any other value than `disabled` will
-    considerably slow down DocToolsLLM and is meant to be
-    used only for debugging purposes.
-    * Possible values:
+    * Setting for runtime type checking. Default value is `warn`.     * Possible values:
+    The typing is checked using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
         * `disabled`: disable typechecking.
         * `warn`: print a red warning if a typechecking fails.
         * `crash`: crash if a typechecking fails in any function.

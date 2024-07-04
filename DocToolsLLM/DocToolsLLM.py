@@ -14,7 +14,6 @@ import pyfiglet
 import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable
-from typeguard import typechecked, check_type, TypeCheckError
 import tldextract
 from pathlib import Path
 import time
@@ -82,8 +81,7 @@ class DocToolsLLM_class:
     allowed_extra_keys = extra_args_keys
     md_printer = md_printer
 
-    #@optional_typecheck
-    @typechecked
+    @optional_typecheck
     def __init__(
         self,
         task: str,
@@ -172,11 +170,11 @@ class DocToolsLLM_class:
                 val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = self.allowed_extra_keys[k]
-                if not check_type(val, expected_type):
+                if not isinstance(val, expected_type):
                     if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
                         red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                     elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
-                        raise TypeCheckError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
+                        raise TypeError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                 if expected_type is str:
                     assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
