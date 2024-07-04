@@ -804,8 +804,13 @@ def anki_replace_media(
 
         # links
         if "://" in content:
+            while ":// " in content:
+                content = content.replace(":// ", "://")
             links = re.findall(REG_LINKS, content)
-            assert links
+            if strict:
+                assert links
+            elif not links:
+                red(f"AnkiMediaReplacer: Expected to found linke because '://' in '{content}'")
             assert all(link in content for link in links)
             assert all(re.search(REG_LINKS, link) for link in links)
         else:
