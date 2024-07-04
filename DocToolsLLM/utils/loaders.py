@@ -624,6 +624,7 @@ def load_anki(
     cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
     assert cards.index.tolist(), "empty dataframe!"
     if anki_fields:
+        anki_fields = [k.lower() for k in anki_fields]
         cards["fields_dict"] = cards.apply(
             lambda x: {
                 k: html_to_text(cloze_stripper(v)).strip()
