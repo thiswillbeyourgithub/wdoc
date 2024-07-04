@@ -5,6 +5,7 @@ The imports are taking a substantial amount of time so loaders.py is
 lazily loaded.
 """
 
+import sys
 import signal
 import os
 import time
@@ -150,7 +151,7 @@ pdf_loaders = {
 
 # pdftotext is kinda weird to install on windows so support it
 # only if it's correctly imported
-if "pdftotext" in globals():
+if "pdftotext" in sys.modules:
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
         @optional_typecheck

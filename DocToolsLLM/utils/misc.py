@@ -45,11 +45,11 @@ except Exception as err:
         if is_verbose:
             print(f"Couldn't import optional package 'langdetect': '{err}'")
 
-if "ftlangdetect" in globals():
+if "ftlangdetect" in sys.modules:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text)["score"]
-elif "language_detect" in globals():
+elif "language_detect" in sys.modules:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return langdetect.detect_langs(text)[0].prob
