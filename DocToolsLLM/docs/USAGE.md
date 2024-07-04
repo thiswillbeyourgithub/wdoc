@@ -396,8 +396,10 @@
 # Runtime flags
 
 * `DOCTOOLS_TYPECHECKING`
-    * Setting for runtime type checking. Default value is `disabled`.
+    * Setting for runtime type checking. Default value is `disabled`. Note that any other value than `disabled` will
+    considerably slow down DocToolsLLM and is meant to be
+    used only for debugging purposes.
     * Possible values:
-        * `disabled`: disable typechecking
-        * `warn`: print a red warning if a typechecking fails
-        * `crash`: crash if a typechecking fails in any function
+        * `disabled`: disable typechecking.
+        * `warn`: print a red warning if a typechecking fails.
+        * `crash`: crash if a typechecking fails in any function.
