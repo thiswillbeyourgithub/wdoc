@@ -238,6 +238,7 @@ def load_one_doc(
 
     elif filetype == "anki":
         docs = load_anki(
+            debug=debug,
             text_splitter=text_splitter,
             loaders_temp_dir=temp_dir,
             **kwargs,
@@ -578,6 +579,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 
 @optional_typecheck
 def load_anki(
+    debug: bool,
     anki_profile: str,
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
@@ -585,6 +587,7 @@ def load_anki(
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
     ) -> List[Document]:
+
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
@@ -595,6 +598,10 @@ def load_anki(
     shutil.copy(original_db, new_db_path)
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
+
+    if debug:
+        tqdm.pandas()
+        cards.apply = cards.progress_apply
 
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
@@ -617,6 +624,8 @@ def load_anki(
     assert cards.index.tolist(), "empty dataframe!"
     if anki_fields:
         anki_fields = [k.lower() for k in anki_fields]
+        if debug:
+            tqdm.pandas(desc="Parsing fields")
         cards["fields_dict"] = cards.apply(
             lambda x: {
                 k.lower(): html_to_text(cloze_stripper(v)).strip()
@@ -630,10 +639,14 @@ def load_anki(
                 f"Something is wrong with the anki_fields '{anki_fields}' "
                 f"of notetype {anki_notetype} of profile {anki_profile}"
             )
+        if debug:
+            tqdm.pandas(desc="Joining fields")
         cards["text"] = cards["fields_dict"].apply(
             lambda x: "\n".join(f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
+        if debug:
+            tqdm.pandas(desc="Parsing text")
         cards["text"] = cards.apply(
                 lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
                     {
@@ -645,7 +658,10 @@ def load_anki(
         )
     cards["text"] = cards["text"].apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
+
     # remove all media
+    if debug:
+        tqdm.pandas(desc="Replacing media in anki")
     cards["text"] = cards["text"].apply(
         lambda x: anki_replace_media(
             content=x,
