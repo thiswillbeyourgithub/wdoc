@@ -244,6 +244,7 @@ def batch_load_doc(
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
+    @optional_typecheck
     def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
