@@ -167,6 +167,8 @@ def _file_hasher(abs_path: str, stats: List[int]) -> str:
 @optional_typecheck
 def html_to_text(html: str) -> str:
     """used to strip any html present in the text files"""
+    html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
+    html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
     if "<img" in text:
