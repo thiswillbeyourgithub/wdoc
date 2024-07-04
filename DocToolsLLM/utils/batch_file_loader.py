@@ -163,7 +163,10 @@ def batch_load_doc(
         n_jobs = cli_kwargs["file_loader_n_jobs"]
         del cli_kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = 10
+        if is_debug:
+            n_jobs = 1
+        else:
+            n_jobs = 10
 
     # look for unexpected keys that are not relevant to doc loading, because that would
     # skip the cache
@@ -260,9 +263,6 @@ def batch_load_doc(
             else:
                 raise ValueError(loading_failure)
 
-    if len(to_load) == 1 or is_debug:
-        n_jobs = 1
-
     if len(to_load) > 1:
         for tl in to_load:
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
@@ -281,6 +281,8 @@ def batch_load_doc(
 
     docs = []
     t_load = time.time()
+    if len(to_load) == 1:
+        n_jobs = 1
     doc_lists = Parallel(
         n_jobs=n_jobs,
         backend=backend,
