@@ -14,7 +14,7 @@ import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from functools import wraps
 import random
 
