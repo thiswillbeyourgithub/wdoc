@@ -9,7 +9,7 @@ import sys
 import signal
 import os
 import time
-from typing import List, Union, Any, Optional, Callable, Dict
+from typing import List, Union, Any, Optional, Callable, Dict, Tuple
 from textwrap import dedent
 from functools import partial
 import uuid
@@ -852,7 +852,7 @@ def anki_replace_media(
     content: str,
     media: Union[None, Dict],
     mode: str,
-    ) -> [str, Dict]:
+    ) -> Tuple[str, Dict]:
     """
     Else: exclude any note that contains in the content:
         * an image (<img...)
