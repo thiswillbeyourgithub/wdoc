@@ -50,7 +50,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
 from .misc import min_lang_prob as default_min_lang_prob
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
-from .flags import is_verbose, is_linux
+from .flags import is_verbose, is_linux, is_debug
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -190,7 +190,6 @@ sox_effects = [
 @optional_typecheck
 def load_one_doc(
     task: str,
-    debug: bool,
     temp_dir: PosixPath,
     filetype: str,
     file_hash: str,
@@ -200,6 +199,7 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
+    debug = is_debug
     text_splitter = get_splitter(task)
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
@@ -213,6 +213,7 @@ def load_one_doc(
         del kwargs["min_lang_prob"]
     else:
         min_lang_prob = default_min_lang_prob
+
 
     if filetype == "youtube":
         docs = load_youtube_video(

@@ -287,7 +287,6 @@ def batch_load_doc(
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
-        debug=is_debug,
         temp_dir=temp_dir,
         **d,
         ) for d in tqdm(
