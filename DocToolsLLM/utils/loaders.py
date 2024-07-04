@@ -163,8 +163,9 @@ if "pdftotext" in globals():
                 docs = [
                         Document(
                         page_content=d,
+                        metadata={"page": idoc}
                     )
-                    for d in pdftotext.PDF(f)
+                    for idoc, d in enumerate(pdftotext.PDF(f))
                 ]
                 return docs
     pdf_loaders["pdftotext"] = pdftotext_loader_class
