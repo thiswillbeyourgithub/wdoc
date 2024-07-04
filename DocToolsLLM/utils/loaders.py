@@ -863,13 +863,13 @@ def anki_replace_media(
                 assert replaced in new_content
 
         # check no media can be found anymore
-        assert not re.findall(REG_IMG, new_content)
-        assert "<img" not in new_content
-        assert not BeautifulSoup(new_content, 'html.parser').find_all('img')
-        assert not re.findall(REG_SOUNDS, new_content)
-        assert "[sound:" not in new_content
-        assert not re.findall(REG_LINKS, new_content)
-        assert "://" not in new_content
+        assert not re.findall(REG_IMG, new_content), new_content
+        assert "<img" not in new_content, new_content
+        assert not BeautifulSoup(new_content, 'html.parser').find_all('img'), new_content
+        assert not re.findall(REG_SOUNDS, new_content), new_content
+        assert "[sound:" not in new_content, new_content
+        assert not re.findall(REG_LINKS, new_content), new_content
+        assert "://" not in new_content, new_content
 
         # check non empty
         temp = new_content
