@@ -7,7 +7,7 @@ from typing import List, Union, Any
 from joblib import Memory
 import socket
 import os
-import urllib
+import urllib.request
 import json
 import re
 from pathlib import Path
@@ -178,15 +178,17 @@ def html_to_text(html: str) -> str:
     return text
 
 @optional_typecheck
-def _request_wrapper(action: str, **params) -> dict:
-    return {'action': action, 'params': params, 'version': 6}
-
-@optional_typecheck
 def ankiconnect(action: str, **params) -> Union[List, str]:
     "talk to anki via ankiconnect addon"
 
-    requestJson = json.dumps(_request_wrapper(action, **params)
-                             ).encode('utf-8')
+    requestJson: bytes = json.dumps(
+            {
+                'action': action,
+                'params': params,
+                'version': 6
+            }
+        ).encode('utf-8')
+
 
     try:
         response = json.load(urllib.request.urlopen(
