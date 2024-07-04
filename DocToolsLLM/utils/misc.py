@@ -371,7 +371,7 @@ def check_docs_tkn_length(
         language_detector(d.page_content.replace("\n", "<br>"))
         for d in docs
     ]
-    if probs[0] is None:
+    if probs[0] is None or not probs:
         # bypass if language_detector not defined
         return 1
     prob = sum(probs) / len(probs)
