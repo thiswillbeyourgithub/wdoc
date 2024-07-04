@@ -111,19 +111,19 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 
 pdf_loaders = {
-    "PDFMiner": PDFMinerLoader,
-    "PyPDFLoader": PyPDFLoader,
-    "PyPDFium2": PyPDFium2Loader,
-    "PyMuPDF": PyMuPDFLoader,
-    "PdfPlumber": PDFPlumberLoader,
+    "PDFMiner": PDFMinerLoader,  # little metadata
+    "PyPDFLoader": PyPDFLoader,  # little metadata
+    "PyPDFium2": PyPDFium2Loader,  # little metadata
+    "PyMuPDF": PyMuPDFLoader,  # good for metadata
+    "PdfPlumber": PDFPlumberLoader,  # good for metadata
     "pdftotext": None,  # optional support, see below
-    # "Unstructured_fast": partial(
-    #     UnstructuredPDFLoader,
-    #     strategy="fast",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
+    "Unstructured_fast": partial(
+        UnstructuredPDFLoader,
+        strategy="fast",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
     # "Unstructured_elements_fast": partial(
     #     UnstructuredPDFLoader,
     #     mode="elements",
@@ -132,13 +132,13 @@ pdf_loaders = {
     #     # infer_table_structure=True,
     #     # languages=["fr"],
     # ),
-    # "Unstructured_hires": partial(
-    #     UnstructuredPDFLoader,
-    #     strategy="hi_res",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
+    "Unstructured_hires": partial(
+        UnstructuredPDFLoader,
+        strategy="hi_res",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
     # "Unstructured_elements_hires": partial(
     #     UnstructuredPDFLoader,
     #     mode="elements",
