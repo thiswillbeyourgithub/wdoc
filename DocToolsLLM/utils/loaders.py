@@ -601,16 +601,17 @@ def load_anki(
 
     if debug:
         tqdm.pandas()
-        cards.apply = cards.progress_apply
+    else:
+        cards.progress_apply = cards.apply
 
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
     ]
-    cards["codeck"] = cards["codeck"].apply(
+    cards["codeck"] = cards["codeck"].progress_apply(
         lambda x: x.replace("\x1f", "::"))
     if anki_deck:
         cards = cards[cards["codeck"].str.startswith(anki_deck)]
-    cards["nmodel"] = cards["nmodel"].apply(lambda x: x.lower())
+    cards["nmodel"] = cards["nmodel"].progress_apply(lambda x: x.lower())
     if anki_notetype:
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
 
@@ -620,13 +621,13 @@ def load_anki(
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
     # mod2mid = akp.raw.get_model2mid(col.db)
-    cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
+    cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
     assert cards.index.tolist(), "empty dataframe!"
     if anki_fields:
         anki_fields = [k.lower() for k in anki_fields]
         if debug:
             tqdm.pandas(desc="Parsing fields")
-        cards["fields_dict"] = cards.apply(
+        cards["fields_dict"] = cards.progress_apply(
             lambda x: {
                 k.lower(): html_to_text(cloze_stripper(v)).strip()
                 for k, v in zip(x["fields_name"], x["nflds"])
@@ -641,13 +642,13 @@ def load_anki(
             )
         if debug:
             tqdm.pandas(desc="Joining fields")
-        cards["text"] = cards["fields_dict"].apply(
+        cards["text"] = cards["fields_dict"].progress_apply(
             lambda x: "\n".join(f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
         if debug:
             tqdm.pandas(desc="Parsing text")
-        cards["text"] = cards.apply(
+        cards["text"] = cards.progress_apply(
                 lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
                     {
                         k: html_to_text(cloze_stripper(v)).strip()
@@ -656,7 +657,7 @@ def load_anki(
                 ),
             axis=1,
         )
-    cards["text"] = cards["text"].apply(lambda x: x.strip())
+    cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
 
     # remove all media
