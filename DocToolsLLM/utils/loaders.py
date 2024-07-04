@@ -627,7 +627,7 @@ def load_anki(
         anki_fields = [k.lower() for k in anki_fields]
         cards["fields_dict"] = cards.apply(
             lambda x: {
-                k: html_to_text(cloze_stripper(v)).strip()
+                k.lower(): html_to_text(cloze_stripper(v)).strip()
                 for k, v in zip(x["fields_name"], x["nflds"])
                 if k.lower() in anki_fields
             },
