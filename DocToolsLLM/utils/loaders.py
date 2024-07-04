@@ -778,6 +778,11 @@ def anki_replace_media(
     if mode == "remove_media":
         assert not media
 
+        # fix common issues
+        content = content.replace(":// ", "://")
+        content = content.replace("http ://", "http://")
+        content = content.replace("https ://", "http://")
+
         # Images
         if "<img" in content:
             soup = BeautifulSoup(content, 'html.parser')
@@ -804,8 +809,6 @@ def anki_replace_media(
 
         # links
         if "://" in content:
-            while ":// " in content:
-                content = content.replace(":// ", "://")
             links = re.findall(REG_LINKS, content)
             if strict:
                 assert links
