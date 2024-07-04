@@ -46,8 +46,9 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
-from .misc import min_lang_prob as default_min_lang_prob
+                   average_word_length, wpm, loaders_temp_dir_file,
+                   min_lang_prob, min_token, max_token, max_lines,
+)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux, is_debug
@@ -208,11 +209,22 @@ def load_one_doc(
     assert expected_global_dir.exists(), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
-    if "min_lang_prob" in kwargs:
-        min_lang_prob = kwargs["min_lang_prob"]
-        del kwargs["min_lang_prob"]
-    else:
-        min_lang_prob = default_min_lang_prob
+    doccheck_extra_args = {
+        "min_lang_prob": min_lang_prob,
+        "max_lines": max_lines,
+        "min_token": min_token,
+        "max_token": max_token,
+    }
+    for doccheckarg in [
+        "doccheck_min_lang_prob",
+        "doccheck_min_token",
+        "doccheck_max_token",
+        "doccheck_max_lines",
+    ]:
+        if doccheckarg in kwargs:
+            assert doccheckarg.split("doccheck_")[1] in doccheck_extra_args
+            doccheck_extra_args[doccheckarg.split("doccheck_")[1]] = kwargs[doccheckarg]
+            del kwargs[doccheckarg]
 
 
     if filetype == "youtube":
@@ -311,7 +323,7 @@ def load_one_doc(
         check_docs_tkn_length(
             docs=docs,
             identifier=filetype,
-            min_lang_prob=min_lang_prob,
+            **doccheck_extra_args,
         )
 
     # add and format metadata

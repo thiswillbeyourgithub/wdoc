@@ -105,7 +105,10 @@ loader_specific_keys = {
 
     "load_functions": List[str],
 
-    "min_lang_prob": float,
+    "doccheck_min_token": int,
+    "doccheck_max_token": int,
+    "doccheck_max_lines": int,
+    "doccheck_min_lang_prob": float,
 }
 
 # extra arguments supported when instanciating doctools
