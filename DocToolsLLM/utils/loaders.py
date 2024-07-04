@@ -112,40 +112,40 @@ linebreak_before_letter = re.compile(
 pdf_loaders = {
     "PDFMiner": PDFMinerLoader,
     "PyPDFLoader": PyPDFLoader,
-    "Unstructured_fast": partial(
-        UnstructuredPDFLoader,
-        strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
     "PyPDFium2": PyPDFium2Loader,
     "PyMuPDF": PyMuPDFLoader,
     "PdfPlumber": PDFPlumberLoader,
     "pdftotext": None,  # optional support, see below
-    "Unstructured_elements_fast": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "Unstructured_hires": partial(
-        UnstructuredPDFLoader,
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
-    "Unstructured_elements_hires": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    # "Unstructured_fast": partial(
+    #     UnstructuredPDFLoader,
+    #     strategy="fast",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
+    # "Unstructured_elements_fast": partial(
+    #     UnstructuredPDFLoader,
+    #     mode="elements",
+    #     strategy="fast",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
+    # "Unstructured_hires": partial(
+    #     UnstructuredPDFLoader,
+    #     strategy="hi_res",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
+    # "Unstructured_elements_hires": partial(
+    #     UnstructuredPDFLoader,
+    #     mode="elements",
+    #     strategy="hi_res",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
 }
 
 # pdftotext is kinda weird to install on windows so support it
