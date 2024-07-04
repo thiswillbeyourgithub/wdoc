@@ -256,7 +256,7 @@ def batch_load_doc(
             if loading_failure == "crash" or is_debug:
                 raise
             elif loading_failure == "warn":
-                return err
+                return str(err)
             else:
                 raise ValueError(loading_failure)
 
