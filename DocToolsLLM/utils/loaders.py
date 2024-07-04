@@ -28,6 +28,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
+from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
@@ -1607,6 +1608,24 @@ def load_url(path: str, title=None) -> List[Document]:
         except Exception as err:
             red(
                 f"Exception when using goose to parse url: '{err}'"
+            )
+
+    if not loaded_success:
+        try:
+            loader = UnstructuredURLLoader([path])
+            docs = loader.load()
+            assert docs, "Empty docs when using UnstructuredURLLoader"
+            if (
+                not title
+                and "title" in docs[0].metadata
+                and docs[0].metadata["title"]
+            ):
+                title = docs[0].metadata["title"]
+            check_docs_tkn_length(docs, path)
+            loaded_success = True
+        except Exception as err:
+            red(
+                f"Exception when using UnstructuredURLLoader to parse url: '{err}'"
             )
 
     if not loaded_success:
