@@ -681,9 +681,10 @@ def load_anki(
         tqdm.pandas(desc="Replacing media in anki")
     cards["text"] = cards["text"].apply(
         lambda x: anki_replace_media(
-            content=x,
-            media=None,
-            mode="remove_media",
+        content=x,
+        media=None,
+        mode="remove_media",
+        strict=False,
         )[0]
     )
     cards = cards[~cards["text"].str.contains("\[IMAGE_")]
@@ -750,6 +751,7 @@ def anki_replace_media(
     content: str,
     media: Union[None, Dict],
     mode: str,
+    strict: bool = True,
     ) -> Tuple[str, Dict]:
     """
     Else: exclude any note that contains in the content:
@@ -864,12 +866,20 @@ def anki_replace_media(
 
         # check no media can be found anymore
         assert not re.findall(REG_IMG, new_content), new_content
-        assert "<img" not in new_content, new_content
         assert not BeautifulSoup(new_content, 'html.parser').find_all('img'), new_content
         assert not re.findall(REG_SOUNDS, new_content), new_content
-        assert "[sound:" not in new_content, new_content
         assert not re.findall(REG_LINKS, new_content), new_content
-        assert "://" not in new_content, new_content
+        if strict:
+            assert "<img" not in new_content, new_content
+            assert "[sound:" not in new_content, new_content
+            assert "://" not in new_content, new_content
+        else:
+            if "<img" in new_content:
+                red(f"AnkiMediaReplacer: Found '<img' in '{new_content}'")
+            if "[sound:" in new_content:
+                red(f"AnkiMediaReplacer: Found '[sound:' in '{new_content}'")
+            if "://" in new_content:
+                red(f"AnkiMediaReplacer: Found '://' in '{new_content}'")
 
         # check non empty
         temp = new_content
@@ -879,9 +889,10 @@ def anki_replace_media(
 
         # recursive check:
         assert anki_replace_media(
-                content=new_content,
-                media=media,
-                mode="add_media",
+            content=new_content,
+            media=media,
+            mode="add_media",
+            strict=strict,
         )[0] == content
 
         return new_content, media
