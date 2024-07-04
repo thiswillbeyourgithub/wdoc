@@ -22,7 +22,7 @@
         * `txt`: `--path` is path to txt
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
-        `--anki_notetype`, `--anki_mode`. See in loader specific arguments
+        `--anki_notetype`, `--anki_fields`. See in loader specific arguments
         below for details.
         * `string`: no other parameters needed, will provide a field where
         you must type or paste the string
@@ -246,24 +246,9 @@
     e.g. `science::physics::freshman_year::lesson1`
 * `--anki_notetype`: str
     * If it's part of the card's notetype, that notetype will be kept.
-    Case insensitive.
-
+    Case insensitive. Note that suspended cards are always ignored.
 * `--anki_fields`: List[str]
     * List of fields to keep
-* `--anki_mode`: str
-    * any of `window`, `concatenate`, `singlecard`: (or _ separated
-    value like `concatenate_window`). By default `singlecard`
-    is used.
-    * Modes:
-        * `singlecard`: 1 document is 1 anki card.
-        * `window`: 1 documents is 5 anki note, overlapping (so
-        10 anki notes will result in 5 documents)
-        * `concatenate`: 1 document is all anki notes concatenated as a
-        single wall of text then split like any long document.
-
-    Whichever you choose, you can later filter out documents by metadata
-    filtering over the `anki_mode` key.
-    Note that the suspended cards will always be discarded.
 
 * `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.

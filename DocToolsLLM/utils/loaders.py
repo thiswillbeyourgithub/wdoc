@@ -580,19 +580,10 @@ def load_anki(
     anki_profile: str,
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
-    anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
     ) -> List[Document]:
-    assert (
-        anki_mode.replace("window", "")
-        .replace("concatenate", "")
-        .replace("singlecard", "")
-        .replace("_", "")
-        == ""
-    ), f"Unexpected anki_mode: {anki_mode}"
-
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
@@ -672,148 +663,21 @@ def load_anki(
 
     docs = []
 
-    if "singlecard" in anki_mode:
-        # load each card as a single document
-        for cid in cards.index:
-            c = cards.loc[cid, :]
-            assert c["codeck"], f"empty card_deck for cid {cid}"
-            docs.append(
-                Document(
-                    page_content=c["text"],
-                    metadata={
-                        "anki_tags": " ".join(c["ntags"]),
-                        "anki_cid": str(cid),
-                        "anki_mode": "singlecard",
-                        "anki_deck": c["codeck"],
-                        "anki_modtime": int(c["cmod"]),
-                    },
-                )
-            )
-
-    if "concatenate" in anki_mode:
-        # # turn all cards into a single wall of text then use text_splitter
-        # pro: fill the context window as much I possible I guess
-        # con: - editing cards will force re-embedding a lot of cards
-        #      - ignores tags
-        chunksize = text_splitter._chunk_size
-        full_text = ""
-        spacer = "\n\n#####\n\n"
-        metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
-        for cid in sorted(cards.index):
-            c = cards.loc[cid, :]
-            cid = str(cid)
-            tags = c["ntags"]
-            text = ftfy.fix_text(c["text"].strip())
-            card_deck = c["codeck"]
-            assert card_deck, f"empty card_deck for cid {cid}"
-
-            if not full_text:  # always add first
-                full_text = text
-                metadata = {
-                    "anki_tags": " ".join(tags),
+    # load each card as a single document
+    for cid in cards.index:
+        c = cards.loc[cid, :]
+        assert c["codeck"], f"empty card_deck for cid {cid}"
+        docs.append(
+            Document(
+                page_content=c["text"],
+                metadata={
+                    "anki_tags": " ".join(c["ntags"]),
                     "anki_cid": str(cid),
-                    "anki_deck": card_deck,
-                    "anki_mode": "concatenate",
-                }
-                continue
-
-            # if too many token, add the current chunk of text and start
-            # the next chunk with this card
-            if get_tkn_length(full_text + spacer + text) >= chunksize:
-                assert (
-                    full_text
-                ), f"An anki card is too large for the text splitter: {text}"
-                assert metadata["anki_cid"], "No anki_cid in metadata"
-                docs.append(
-                    Document(
-                        page_content=full_text,
-                        metadata=metadata,
-                    )
-                )
-
-                metadata = {
-                    "anki_tags": " ".join(tags),
-                    "anki_cid": str(cid),
-                    "anki_deck": card_deck,
-                    "anki_mode": "concatenate",
-                }
-                full_text = text
-            else:
-                for t in tags:
-                    if t not in metadata["anki_tags"]:
-                        metadata["anki_tags"] += f" {t}"
-                metadata["anki_cid"] += " " + str(cid)
-                if card_deck not in metadata["anki_deck"]:
-                    metadata["anki_deck"] += " " + card_deck
-                full_text += spacer + text
-
-        if full_text:  # add latest chunk
-            docs.append(
-                Document(
-                    page_content=full_text,
-                    metadata=metadata,
-                )
+                    "anki_deck": c["codeck"],
+                    "anki_modtime": int(c["cmod"]),
+                },
             )
-
-    if "window" in anki_mode:
-        # # set window_size to X turn each X cards into one document, overlapping
-        window_size = 5
-        index_list = cards.index.tolist()
-        n = len(index_list)
-        cards["text_concat"] = ""
-        cards["tags_concat"] = ""
-        cards["deck_concat"] = ""
-        cards["cids"] = ""
-        cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
-        for i in tqdm(range(len(index_list)), desc="combining anki cards"):
-            text_concat = ""
-            tags_concat = ""
-            deck_concat = ""
-            cids = ""
-            skip = 0
-            for w in range(0, window_size):
-                if i + window_size + skip >= n:
-                    s = (
-                        -1
-                    )  # when at the end of the list, apply the window in reverse
-                    # s for 'sign'
-                else:
-                    s = 1
-                if (
-                    cards.at[index_list[i + w * s], "text"]
-                    in cards.at[index_list[i], "text_concat"]
-                ):
-                    # skipping this card because it's a duplicate
-                    skip += 1
-                text_concat += (
-                    "\n\n" +
-                    cards.at[index_list[i + (w + skip) * s], "text"]
-                )
-                tags_concat += cards.at[index_list[i +
-                                                    (w + skip) * s], "ntags_t"]
-                if cards.at[index_list[i + (w + skip) * s], "codeck"] not in deck_concat:
-                    deck_concat +=  " " + cards.at[index_list[i + (w + skip) * s], "codeck"]
-                cids += f"{index_list[i+(w+skip)*s]} "
-            cards.at[index_list[i], "deck_concat"] = deck_concat
-            cards.at[index_list[i], "text_concat"] = text_concat
-            cards.at[index_list[i], "tags_concat"] = tags_concat
-            cards.at[index_list[i], "cids"] = cids
-
-        for cid in sorted(cards.index):
-            c = cards.loc[cid,]
-            docs.append(
-                Document(
-                    page_content=c["text_concat"].strip(),
-                    metadata={
-                        "anki_tags": " ".join(
-                            list(set(c["tags_concat"].split(" ")))
-                        ),
-                        "anki_cid": c["cids"].strip(),
-                        "anki_mode": f"window_{window_size}",
-                        "anki_deck": c["deck_concat"].strip(),
-                    },
-                )
-            )
+        )
 
     assert docs, "List of loaded anki document is empty!"
 

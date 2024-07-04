@@ -88,7 +88,6 @@ printed_unexpected_api_keys = [False]  # to print it only once
 loader_specific_keys = {
     "anki_deck": str,
     "anki_fields": str,
-    "anki_mode": str,
     "anki_notetype": str,
     "anki_profile": str,
 
