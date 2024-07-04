@@ -61,6 +61,7 @@ youtube_dl = lazy_import.lazy_module('youtube_dl')
 DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
 ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
 akp = lazy_import.lazy_module('ankipandas')
+pd = lazy_import.lazy_module('pandas')
 ftfy = lazy_import.lazy_module('ftfy')
 BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
 Goose = lazy_import.lazy_class('goose3.Goose')
@@ -614,11 +615,13 @@ def load_anki(
     if debug:
         tqdm.pandas()
     else:
-        cards.progress_apply = cards.apply
+        pd.DataFrame.progress_apply = pd.DataFrame.apply
+        pd.Series.progress_apply = pd.Series.apply
 
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
     ]
+
     cards["codeck"] = cards["codeck"].progress_apply(
         lambda x: x.replace("\x1f", "::"))
     if anki_deck:
