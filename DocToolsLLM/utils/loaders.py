@@ -632,6 +632,11 @@ def load_anki(
             },
             axis=1,
         )
+        if len(cards[cards["fields_dict"] != {}]) != len(cards):
+            raise Exception(
+                f"Something is wrong with the anki_fields '{anki_fields}' "
+                f"of notetype {anki_notetype} of profile {anki_profile}"
+            )
         cards["text"] = cards["fields_dict"].apply(
             lambda x: "\n".join(f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
