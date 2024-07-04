@@ -15,7 +15,6 @@ from tqdm import tqdm
 from functools import cache as memoizer
 import time
 from typing import List, Tuple, Union
-from functools import wraps
 import random
 
 from langchain.docstore.document import Document
@@ -242,7 +241,6 @@ def batch_load_doc(
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
-    @wraps(load_one_doc)
     @optional_typecheck
     def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
