@@ -60,7 +60,7 @@ def load_llm(
             cache=False,
             **extra_model_args,
         )
-        setattr(llm.__class__, "_get_llm_string", lambda self: f"FakeListLLM_{random.random()}")
+        setattr(llm.__class__, "_get_llm_string", lambda self: f"testing: FakeListLLM_{random.random()}")
         setattr(llm.__class__, "_generate_with_cache", llm.__class__.generate)
         setattr(llm.__class__, "_agenerate_with_cache", llm.__class__.agenerate)
         return llm
