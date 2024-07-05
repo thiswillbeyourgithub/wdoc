@@ -45,7 +45,7 @@ def load_llm(
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
-    ) -> Union[ChatLiteLLM, ChatOpenAI]:
+    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListLLM]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
