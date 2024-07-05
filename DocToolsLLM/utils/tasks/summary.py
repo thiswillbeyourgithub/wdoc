@@ -55,7 +55,7 @@ def do_summarize(
             finish = "stop"
             assert "testing" in llm._get_llm_string(), f"Only the testing LLM can lack generation_info in its response"
         assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
-        assert len(output.generations) == 1
+        assert len(output.generations) == 1 or "testing" in llm._get_llm_string()
         out = output.generations[0].text
         if hasattr(output, "llm_output"):
             if output.llm_output:  # only present if not caching
