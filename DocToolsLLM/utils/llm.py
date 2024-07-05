@@ -8,6 +8,7 @@ import time
 import os
 from pathlib import Path
 from typing import Dict
+import random
 
 import lazy_import
 from langchain_core.callbacks import BaseCallbackHandler
@@ -59,6 +60,7 @@ def load_llm(
             cache=False,
             **extra_model_args,
         )
+        setattr(llm.__class__, "_get_llm_string", lambda self: f"FakeListLLM_{random.random()}")
         return llm
 
     if verbose:
