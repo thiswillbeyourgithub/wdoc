@@ -11,7 +11,7 @@ from beartype import beartype, BeartypeConf
 
 
 if "DOCTOOLS_TYPECHECKING" not in os.environ:
-    os.environ["DOCTOOLS_TYPECHECKING"] = "warn"
+    os.environ["DOCTOOLS_TYPECHECKING"] = "disabled"
 
 if os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
     optional_typecheck = beartype
