@@ -17,6 +17,7 @@ import hashlib
 import lazy_import
 import tiktoken
 from functools import partial
+from py_ankiconnect import PyAnkiconnect
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -30,6 +31,8 @@ litellm = lazy_import.lazy_module("litellm")
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
 RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+
+ankiconnect = optional_typecheck(PyAnkiconnect())
 
 # will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
 loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
@@ -176,39 +179,6 @@ def html_to_text(html: str) -> str:
         if "<img" in text:
             red("Failed to remove <img from anki card")
     return text
-
-@optional_typecheck
-def ankiconnect(action: str, **params) -> Union[List, str]:
-    "talk to anki via ankiconnect addon"
-
-    requestJson: bytes = json.dumps(
-            {
-                'action': action,
-                'params': params,
-                'version': 6
-            }
-        ).encode('utf-8')
-
-
-    try:
-        response = json.load(urllib.request.urlopen(
-            urllib.request.Request(
-                'http://localhost:8765',
-                requestJson)))
-    except (ConnectionRefusedError, urllib.error.URLError) as e:
-        raise Exception(f"{str(e)}: is Anki open and 'ankiconnect "
-                        "addon' enabled? Firewall issue?")
-
-    if len(response) != 2:
-        raise Exception('response has an unexpected number of fields')
-    if 'error' not in response:
-        raise Exception('response is missing required error field')
-    if 'result' not in response:
-        raise Exception('response is missing required result field')
-    if response['error'] is not None:
-        raise Exception(response['error'])
-    return response['result']
-
 
 @chain
 @optional_typecheck

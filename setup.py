@@ -73,6 +73,7 @@ setup(
         'rtoml >= 0.10.0',
         'grandalf >= 0.8',  # to print ascii graph
         'lazy-import >= 0.2.2',
+        'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
