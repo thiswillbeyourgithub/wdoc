@@ -465,9 +465,8 @@ class DocToolsLLM_class:
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
-        if "logit_bias" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        llm_params = litellm.get_supported_openai_params(model=f"{self.modelbackend}/{self.modelname}") if "testing" not in self.modelbackend else {}
+        if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -504,17 +503,11 @@ class DocToolsLLM_class:
                 56899: logit_val,    # "                                                                            "
                 98517: logit_val,    # "                                                                                "
                 }
-        if "frequency_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "frequency_penalty" in llm_params:
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "presence_penalty" in llm_params:
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "temperature" in llm_params:
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
