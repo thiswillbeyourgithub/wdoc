@@ -310,6 +310,9 @@ class DocToolsLLM_class:
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0, 0]
+        elif "testing" in modelname:
+            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
+            self.llm_price = [0, 0]
         elif modelname in litellm.model_cost:
             self.llm_price = [
                 litellm.model_cost[modelname]["input_cost_per_token"],
