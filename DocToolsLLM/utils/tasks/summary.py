@@ -49,25 +49,22 @@ def do_summarize(
                 f"invalidates the cache: '{llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
         output = llm._generate_with_cache(messages)
-        if hasattr(output.generations[0], "generation_info"):
-            finish = output.generations[0].generation_info["finish_reason"]
-        else:
+        if "testing" in llm._get_llm_string():
             finish = "stop"
-            assert "testing" in llm._get_llm_string(), f"Only the testing LLM can lack generation_info in its response"
-        assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
-        assert len(output.generations) == 1 or "testing" in llm._get_llm_string()
-        out = output.generations[0].text
-        if hasattr(output, "llm_output"):
+            new_p = 0
+            new_c = 0
+            out = output.generations[0][0].text
+        else:
+            finish = output.generations[0].generation_info["finish_reason"]
+            assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
+            assert len(output.generations) == 1
+            out = output.generations[0].text
             if output.llm_output:  # only present if not caching
                 new_p = output.llm_output["token_usage"]["prompt_tokens"]
                 new_c = output.llm_output["token_usage"]["completion_tokens"]
             else:
                 new_p = 0
                 new_c = 0
-        else:
-            assert "testing" in llm._get_llm_string(), f"Only the testing LLM can lack llm_output in its response"
-            new_p = 0
-            new_c = 0
         total_tokens += new_p + new_c
         total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
 
