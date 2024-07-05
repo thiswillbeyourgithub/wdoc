@@ -539,11 +539,11 @@ class DocToolsLLM_class:
             # replace # in title as it would be parsed as a tag
             item_name = item_name.replace("#", r"\#")
 
-            if "docs_reading_time" in relevant_docs[0].metadata:
-                doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
+            if "doc_reading_time" in relevant_docs[0].metadata:
+                doc_reading_length = relevant_docs[0].metadata["doc_reading_time"]
                 metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
             else:
-                doc_reading_length = None
+                doc_reading_length = 0
             if "author" in relevant_docs[0].metadata:
                 author = relevant_docs[0].metadata["author"].strip()
                 metadata.append(f"Author: '{author}'")
