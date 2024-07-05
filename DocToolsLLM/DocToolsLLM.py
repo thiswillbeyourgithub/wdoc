@@ -25,6 +25,7 @@ from tqdm import tqdm
 from langchain_community.llms import FakeListLLM
 from langchain_core.runnables import chain
 import lazy_import
+from beartype.door import die_if_unbearable
 
 # cannot be lazy loaded because some are not callable but objects directly
 from .utils.misc import (
@@ -170,15 +171,11 @@ class DocToolsLLM_class:
                 val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = self.allowed_extra_keys[k]
-                if not isinstance(val, expected_type):
-                    if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
-                        red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
-                    elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
-                        raise TypeError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                 if expected_type is str:
                     assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
                     assert val, f"Empty list found for cli_kwargs: '{k}'"
+                die_if_unbearable(val, expected_type)
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
