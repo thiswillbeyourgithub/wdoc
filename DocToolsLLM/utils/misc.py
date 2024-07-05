@@ -21,16 +21,13 @@ from py_ankiconnect import PyAnkiconnect
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
-from langchain.text_splitter import TextSplitter
+from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
 from .logger import red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
-Document = lazy_import.lazy_class('langchain.docstore.document.Document')
-TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
 

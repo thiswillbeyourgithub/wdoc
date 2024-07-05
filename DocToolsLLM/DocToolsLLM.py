@@ -24,10 +24,8 @@ import asyncio
 from tqdm import tqdm
 from langchain_community.llms import FakeListLLM
 from langchain_core.runnables import chain
-import lazy_import
 from beartype.door import die_if_unbearable
 
-# cannot be lazy loaded because some are not callable but objects directly
 from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
@@ -36,38 +34,37 @@ from .utils.misc import (
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
-# lazy loading from local files
-NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
-NoDocumentsAfterLLMEvalFiltering = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsAfterLLMEvalFiltering")
-do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_summarize")
-optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
-load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
-AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
-ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
-create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
-create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
-load_embeddings = lazy_import.lazy_function("DocToolsLLM.utils.embeddings.load_embeddings")
-# batch_load_doc = lazy_import.lazy_module("DocToolsLLM.utils.batch_file_loader").batch_load_doc
+from .utils.errors import NoDocumentsRetrieved
+from .utils.errors import NoDocumentsAfterLLMEvalFiltering
+from .utils.tasks.summary import do_summarize
+from .utils.typechecker import optional_typecheck
+from .utils.llm import load_llm
+from .utils.llm import AnswerConversationBufferMemory
+from .utils.interact import ask_user
+from .utils.retrievers import create_hyde_retriever
+from .utils.retrievers import create_parent_retriever
+from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 
-# lazy imports
-set_verbose = lazy_import.lazy_function("langchain.globals.set_verbose")
-set_debug = lazy_import.lazy_function("langchain.globals.set_debug")
-set_llm_cache = lazy_import.lazy_function("langchain.globals.set_llm_cache")
-MergerRetriever = lazy_import.lazy_class("langchain.retrievers.merger_retriever.MergerRetriever")
-Document = lazy_import.lazy_class("langchain.docstore.document.Document")
-EmbeddingsRedundantFilter = lazy_import.lazy_class("langchain_community.document_transformers.EmbeddingsRedundantFilter")
-DocumentCompressorPipeline = lazy_import.lazy_class("langchain.retrievers.document_compressors.DocumentCompressorPipeline")
-ContextualCompressionRetriever = lazy_import.lazy_class("langchain.retrievers.ContextualCompressionRetriever")
+from langchain.globals import set_verbose
+from langchain.globals import set_debug
+from langchain.globals import set_llm_cache
+from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.docstore.document import Document
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-SQLiteCache = lazy_import.lazy_class("langchain_community.cache.SQLiteCache")
+from langchain_community.cache import SQLiteCache
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-RunnableEach = lazy_import.lazy_class("langchain_core.runnables.base.RunnableEach")
-StrOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.string.StrOutputParser")
-BaseGenerationOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.BaseGenerationOutputParser")
-Generation = lazy_import.lazy_class("langchain_core.outputs.Generation")
-ChatGeneration = lazy_import.lazy_class("langchain_core.outputs.ChatGeneration")
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation
+from langchain_core.outputs import ChatGeneration
+
+import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
 

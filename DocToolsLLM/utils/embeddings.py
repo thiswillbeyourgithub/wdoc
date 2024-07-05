@@ -13,7 +13,6 @@ import time
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
-import lazy_import
 
 import numpy as np
 from pydantic import Extra
@@ -31,6 +30,7 @@ from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
+import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
 
