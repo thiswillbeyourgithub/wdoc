@@ -8,6 +8,7 @@ import time
 import os
 from pathlib import Path
 from typing import Dict
+import random
 
 import lazy_import
 from langchain_core.callbacks import BaseCallbackHandler
@@ -30,6 +31,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
     quick fix from https://github.com/hwchase17/langchain/issues/5630
     """
+    @optional_typecheck
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
         return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
 
@@ -43,7 +45,7 @@ def load_llm(
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
-    ) -> Union[ChatLiteLLM, ChatOpenAI]:
+    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListLLM]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
@@ -58,6 +60,9 @@ def load_llm(
             cache=False,
             **extra_model_args,
         )
+        setattr(llm.__class__, "_get_llm_string", lambda self: f"testing: FakeListLLM_{random.random()}")
+        setattr(llm.__class__, "_generate_with_cache", llm.__class__.generate)
+        setattr(llm.__class__, "_agenerate_with_cache", llm.__class__.agenerate)
         return llm
 
     if verbose:
@@ -122,6 +127,7 @@ def load_llm(
 
 class PriceCountingCallback(BaseCallbackHandler):
     "source: https://python.langchain.com/docs/modules/callbacks/"
+    @optional_typecheck
     def __init__(self, verbose, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.verbose = verbose
@@ -139,15 +145,18 @@ class PriceCountingCallback(BaseCallbackHandler):
                 "on_chain_error",
         ]
 
+    @optional_typecheck
     def __repr__(self) -> str:
         # setting __repr__ and __str__ is important because it can
         # maybe be used for caching?
         return "PriceCountingCallback"
 
+    @optional_typecheck
     def __str__(self) -> str:
         return "PriceCountingCallback"
 
-    def _check_methods_called(self) -> None:
+    @optional_typecheck
+    def _check_methods_called(self) -> bool:
         assert all(meth in dir(self) for meth in self.methods_called), (
             "unexpected method names!")
         wrong = [
@@ -157,6 +166,7 @@ class PriceCountingCallback(BaseCallbackHandler):
             raise Exception(f"Unauthorized_method were called: {','.join(wrong)}")
         return True
 
+    @optional_typecheck
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> Any:
@@ -170,6 +180,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_llm_start")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_chat_model_start(
         self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], **kwargs: Any
     ) -> Any:
@@ -183,6 +194,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_chat_model_start")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
         """Run when LLM ends running."""
         if self.verbose:
@@ -200,6 +212,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_llm_end")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_llm_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> Any:
@@ -212,6 +225,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_llm_error")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_chain_start(
         self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
     ) -> Any:
@@ -225,6 +239,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_chain_start")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
         """Run when chain ends running."""
         if self.verbose:
@@ -235,6 +250,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_chain_end")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_chain_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> Any:
@@ -247,12 +263,14 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.methods_called.append("on_chain_error")
         self._check_methods_called()
 
+    @optional_typecheck
     def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
         """Run on new LLM token. Only available when streaming is enabled."""
         self.methods_called.append("on_llm_new_token")
         self._check_methods_called()
         raise NotImplementedError("Not expecting streaming")
 
+    @optional_typecheck
     def on_tool_start(
         self, serialized: Dict[str, Any], input_str: str, **kwargs: Any
     ) -> Any:
@@ -261,12 +279,14 @@ class PriceCountingCallback(BaseCallbackHandler):
         self._check_methods_called()
         raise NotImplementedError("Not expecting tool call")
 
+    @optional_typecheck
     def on_tool_end(self, output: Any, **kwargs: Any) -> Any:
         """Run when tool ends running."""
         self.methods_called.append("on_tool_end")
         self._check_methods_called()
         raise NotImplementedError("Not expecting tool call")
 
+    @optional_typecheck
     def on_tool_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> Any:
@@ -275,18 +295,21 @@ class PriceCountingCallback(BaseCallbackHandler):
         self._check_methods_called()
         raise NotImplementedError("Not expecting tool call")
 
+    @optional_typecheck
     def on_text(self, text: str, **kwargs: Any) -> Any:
         """Run on arbitrary text."""
         self.methods_called.append("on_text")
         self._check_methods_called()
         raise NotImplementedError("Not expecting to call self.on_text")
 
+    @optional_typecheck
     def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
         """Run on agent action."""
         self.methods_called.append("on_agent_action")
         self._check_methods_called()
         raise NotImplementedError("Not expecting agent call")
 
+    @optional_typecheck
     def on_agent_finish(self, finish: AgentFinish, **kwargs: Any) -> Any:
         """Run on agent end."""
         self.methods_called.append("on_agent_finish")

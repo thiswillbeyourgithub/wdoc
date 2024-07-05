@@ -14,8 +14,7 @@ import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-from typing import List, Tuple
-from functools import wraps
+from typing import List, Tuple, Union
 import random
 
 from langchain.docstore.document import Document
@@ -164,7 +163,10 @@ def batch_load_doc(
         n_jobs = cli_kwargs["file_loader_n_jobs"]
         del cli_kwargs["file_loader_n_jobs"]
     else:
-        n_jobs = 10
+        if is_debug:
+            n_jobs = 1
+        else:
+            n_jobs = 10
 
     # look for unexpected keys that are not relevant to doc loading, because that would
     # skip the cache
@@ -242,8 +244,8 @@ def batch_load_doc(
                     to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
-    @wraps(load_one_doc)
-    def load_one_doc_wrapped(**doc_kwargs):
+    @optional_typecheck
+    def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
             return out
@@ -258,12 +260,9 @@ def batch_load_doc(
             if loading_failure == "crash" or is_debug:
                 raise
             elif loading_failure == "warn":
-                return err
+                return str(err)
             else:
                 raise ValueError(loading_failure)
-
-    if len(to_load) == 1 or is_debug:
-        n_jobs = 1
 
     if len(to_load) > 1:
         for tl in to_load:
@@ -283,12 +282,13 @@ def batch_load_doc(
 
     docs = []
     t_load = time.time()
+    if len(to_load) == 1:
+        n_jobs = 1
     doc_lists = Parallel(
         n_jobs=n_jobs,
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
         task=task,
-        debug=is_debug,
         temp_dir=temp_dir,
         **d,
         ) for d in tqdm(

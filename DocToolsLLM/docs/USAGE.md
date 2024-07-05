@@ -22,7 +22,7 @@
         * `txt`: `--path` is path to txt
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
-        `--anki_notetype`, `--anki_mode`. See in loader specific arguments
+        `--anki_notetype`, `--anki_fields`. See in loader specific arguments
         below for details.
         * `string`: no other parameters needed, will provide a field where
         you must type or paste the string
@@ -45,7 +45,7 @@
 
 ---
 
-* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
+* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet:beta"`
     * Keep in mind that given that the default backend used is litellm
     the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then a fake LLM will be used
@@ -110,7 +110,7 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
+* `--query_eval_modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet:beta"`
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
@@ -179,8 +179,8 @@
     can be used for example to send notification on your phone
     using ntfy.sh to get summaries.
 
-* `--chat_memory`: bool, default `True`
-    * if True, will remember the messages across a given chat exchange.
+* `--memoryless`: bool, default `False`
+    * if False, will remember the messages across a given chat exchange.
     Disabled if using a testing model.
 
 * `--disable_llm_cache`: bool, default `False`
@@ -220,6 +220,9 @@
 * `--import_mode`: bool, default `False`
     * if True, will return the answer from query instead of printing it
 
+* `--disable_md_printing`: bool, default `True`
+    * if True, instead of using rich to display some information, default to simpler colored prints.
+
 * `--cli_kwargs`: dict, optional
     * Any remaining keyword argument will be parsed as a loader
     specific argument ((see below)[#loader-specific-arguments]).
@@ -243,23 +246,9 @@
     e.g. `science::physics::freshman_year::lesson1`
 * `--anki_notetype`: str
     * If it's part of the card's notetype, that notetype will be kept.
-    Case insensitive.
-
+    Case insensitive. Note that suspended cards are always ignored.
 * `--anki_fields`: List[str]
     * List of fields to keep
-* `--anki_mode`: str
-    * any of `window`, `concatenate`, `singlecard`: (or _ separated
-    value like `concatenate_window`). By default `singlecard`
-    is used.
-    * Modes:
-        * `singlecard`: 1 document is 1 anki card.
-        * `window`: 1 documents is 5 anki note, overlapping (so
-        10 anki notes will result in 5 documents)
-        * `concatenate`: 1 document is all anki notes concatenated as a
-        single wall of text then split like any long document.
-
-    Whichever you choose, you can later filter out documents by metadata
-    filtering over the `anki_mode` key.
 
 * `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.
@@ -381,13 +370,19 @@
     BeautifulSoup. Useful to decode html stored in .js files.
     Do tell me if you want more of this.
 
-* `--min_lang_prob`: float, default `0.5`
+* `--docheck_min_lang_prob`: float, default `0.5`
     * float between 0 and 1 that sets the threshold under which to
     consider a document invalid if the estimation of
     fasttext's langdetect of any language is below that value.
     For example, setting it to 0.9 means that only documents that
     fasttext thinks have at least 90% probability of being a
     language are valid.
+* `--docheck_min_token`: int, default `50`
+    * if we find less that that many token in a document, crash.
+* `--docheck_max_token`: int, default `1_000_000`
+    * if we find more that that many token in a document, crash.
+* `--docheck_max_lines`: int, default `100_000`
+    * if we find more that that many lines in a document, crash.
 
 * `--source_tag`: str, default `None`
     * a string that will be added to the document metadata at the
@@ -401,8 +396,8 @@
 # Runtime flags
 
 * `DOCTOOLS_TYPECHECKING`
-    * Setting for runtime type checking. Default value is `disabled`.
-    * Possible values:
-        * `disabled`: disable typechecking
-        * `warn`: print a red warning if a typechecking fails
-        * `crash`: crash if a typechecking fails in any function
+    * Setting for runtime type checking. Default value is `warn`.     * Possible values:
+    The typing is checked using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
+        * `disabled`: disable typechecking.
+        * `warn`: print a red warning if a typechecking fails.
+        * `crash`: crash if a typechecking fails in any function.

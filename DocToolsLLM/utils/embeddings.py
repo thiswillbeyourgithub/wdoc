@@ -3,7 +3,7 @@
 * Loads and store embeddings for each document.
 """
 
-from typing import List, Union, Optional, Any
+from typing import List, Union, Optional, Any, Tuple
 import hashlib
 import os
 import queue
@@ -13,7 +13,6 @@ import time
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
-import lazy_import
 
 import numpy as np
 from pydantic import Extra
@@ -31,6 +30,7 @@ from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
+import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
 
@@ -44,6 +44,7 @@ DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting do
 class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
     """wrapper around the class LlamaCppEmbeddings to add an instruction
     before the text to embed."""
+    @optional_typecheck
     def __init__(self, *args, **kwargs):
         embed_instruction=DEFAULT_EMBED_INSTRUCTION
         query_instruction=DEFAULT_QUERY_INSTRUCTION
@@ -58,11 +59,13 @@ class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
         self.embed_instruction = embed_instruction
         self.query_instruction = query_instruction
 
+    @optional_typecheck
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         texts = [self.embed_instruction + t for t in texts]
         embeddings = [self.client.embed(text) for text in texts]
         return [list(map(float, e)) for e in embeddings]
 
+    @optional_typecheck
     def embed_query(self, text: str) -> List[float]:
         text = self.query_instruction + text
         embedding = self.client.embed(text)
@@ -80,7 +83,7 @@ def load_embeddings(
     private: bool,
     use_rolling: bool,
     cli_kwargs: dict,
-    ):
+    ) -> Tuple[FAISS, CacheBackedEmbeddings]:
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
@@ -445,6 +448,7 @@ def faiss_saver(
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
+    @optional_typecheck
     def __init__(self, *args, **kwargs):
         assert "encode_kwargs" in kwargs
         if "normalize_embeddings" in kwargs["encode_kwargs"]:
@@ -457,6 +461,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         super().__init__(*args, **kwargs)
         self.__pool_technique = pooltech
 
+    @optional_typecheck
     def embed_documents(self, texts, *args, **kwargs):
         """sbert silently crops any token above the max_seq_length,
         so we do a windowing embedding then pool (maxpool or meanpool)

@@ -5,10 +5,11 @@ The imports are taking a substantial amount of time so loaders.py is
 lazily loaded.
 """
 
+import sys
 import signal
 import os
 import time
-from typing import List, Union, Any, Optional, Callable, Dict
+from typing import List, Union, Any, Optional, Callable, Dict, Tuple
 from textwrap import dedent
 from functools import partial
 import uuid
@@ -28,6 +29,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
+from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
 from langchain_community.document_loaders import PyPDFium2Loader
@@ -44,11 +46,12 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
-                   average_word_length, wpm, loaders_temp_dir_file, get_tkn_length)
-from .misc import min_lang_prob as default_min_lang_prob
+                   average_word_length, wpm, loaders_temp_dir_file,
+                   min_lang_prob, min_token, max_token, max_lines,
+)
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
-from .flags import is_verbose, is_linux
+from .flags import is_verbose, is_linux, is_debug
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -58,6 +61,7 @@ youtube_dl = lazy_import.lazy_module('youtube_dl')
 DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
 ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
 akp = lazy_import.lazy_module('ankipandas')
+pd = lazy_import.lazy_module('pandas')
 ftfy = lazy_import.lazy_module('ftfy')
 BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
 Goose = lazy_import.lazy_class('goose3.Goose')
@@ -91,7 +95,9 @@ clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
 markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)  # to remove image from jina reader that take a lot of tokens but are not yet used
-def md_shorten_image_name(md_image):
+
+@optional_typecheck
+def md_shorten_image_name(md_image: str) -> str:
     "turn a markdown image link into just the name"
     name = md_image.group(1)
     if len(name) <= 16:
@@ -107,55 +113,64 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 
 pdf_loaders = {
-    "PDFMiner": PDFMinerLoader,
-    "PyPDFLoader": PyPDFLoader,
+    "PDFMiner": PDFMinerLoader,  # little metadata
+    "PyPDFLoader": PyPDFLoader,  # little metadata
+    "PyPDFium2": PyPDFium2Loader,  # little metadata
+    "PyMuPDF": PyMuPDFLoader,  # good for metadata
+    "PdfPlumber": PDFPlumberLoader,  # good for metadata
+    "pdftotext": None,  # optional support, see below
     "Unstructured_fast": partial(
         UnstructuredPDFLoader,
         strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
         # languages=["fr"],
     ),
-    "PyPDFium2": PyPDFium2Loader,
-    "PyMuPDF": PyMuPDFLoader,
-    "PdfPlumber": PDFPlumberLoader,
-    "pdftotext": None,  # optional support, see below
-    "Unstructured_elements_fast": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="fast",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    # "Unstructured_elements_fast": partial(
+    #     UnstructuredPDFLoader,
+    #     mode="elements",
+    #     strategy="fast",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
     "Unstructured_hires": partial(
         UnstructuredPDFLoader,
         strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
         # languages=["fr"],
     ),
-    "Unstructured_elements_hires": partial(
-        UnstructuredPDFLoader,
-        mode="elements",
-        strategy="hi_res",
-        post_processors=[clean_extra_whitespace],
-        infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    # "Unstructured_elements_hires": partial(
+    #     UnstructuredPDFLoader,
+    #     mode="elements",
+    #     strategy="hi_res",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
 }
 
 # pdftotext is kinda weird to install on windows so support it
 # only if it's correctly imported
-if "pdftotext" in globals():
+if "pdftotext" in sys.modules:
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
-        def __init__(self, path):
+        @optional_typecheck
+        def __init__(self, path: Union[str, PosixPath]):
             self.path = path
 
-        def load(self):
+        @optional_typecheck
+        def load(self) -> List[Document]:
             with open(self.path, "rb") as f:
-                return "\n\n".join(pdftotext.PDF(f))
+                docs = [
+                        Document(
+                        page_content=d,
+                        metadata={"page": idoc}
+                    )
+                    for idoc, d in enumerate(pdftotext.PDF(f))
+                ]
+                return docs
     pdf_loaders["pdftotext"] = pdftotext_loader_class
 
 # unsilence audio
@@ -177,7 +192,6 @@ sox_effects = [
 @optional_typecheck
 def load_one_doc(
     task: str,
-    debug: bool,
     temp_dir: PosixPath,
     filetype: str,
     file_hash: str,
@@ -187,6 +201,7 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
+    debug = is_debug
     text_splitter = get_splitter(task)
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
@@ -195,11 +210,23 @@ def load_one_doc(
     assert expected_global_dir.exists(), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
-    if "min_lang_prob" in kwargs:
-        min_lang_prob = kwargs["min_lang_prob"]
-        del kwargs["min_lang_prob"]
-    else:
-        min_lang_prob = default_min_lang_prob
+    doccheck_extra_args = {
+        "min_lang_prob": min_lang_prob,
+        "max_lines": max_lines,
+        "min_token": min_token,
+        "max_token": max_token,
+    }
+    for doccheckarg in [
+        "doccheck_min_lang_prob",
+        "doccheck_min_token",
+        "doccheck_max_token",
+        "doccheck_max_lines",
+    ]:
+        if doccheckarg in kwargs:
+            assert doccheckarg.split("doccheck_")[1] in doccheck_extra_args
+            doccheck_extra_args[doccheckarg.split("doccheck_")[1]] = kwargs[doccheckarg]
+            del kwargs[doccheckarg]
+
 
     if filetype == "youtube":
         docs = load_youtube_video(
@@ -224,6 +251,7 @@ def load_one_doc(
 
     elif filetype == "anki":
         docs = load_anki(
+            debug=debug,
             text_splitter=text_splitter,
             loaders_temp_dir=temp_dir,
             **kwargs,
@@ -296,7 +324,7 @@ def load_one_doc(
         check_docs_tkn_length(
             docs=docs,
             identifier=filetype,
-            min_lang_prob=min_lang_prob,
+            **doccheck_extra_args,
         )
 
     # add and format metadata
@@ -564,21 +592,14 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 
 @optional_typecheck
 def load_anki(
+    debug: bool,
     anki_profile: str,
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
-    anki_mode: str = "singlecard",
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
     ) -> List[Document]:
-    assert (
-        anki_mode.replace("window", "")
-        .replace("concatenate", "")
-        .replace("singlecard", "")
-        .replace("_", "")
-        == ""
-    ), f"Unexpected anki_mode: {anki_mode}"
 
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
@@ -591,36 +612,59 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
+    if debug:
+        tqdm.pandas()
+    else:
+        pd.DataFrame.progress_apply = pd.DataFrame.apply
+        pd.Series.progress_apply = pd.Series.apply
+
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
     ]
-    cards["codeck"] = cards["codeck"].apply(
+
+    cards["codeck"] = cards["codeck"].progress_apply(
         lambda x: x.replace("\x1f", "::"))
     if anki_deck:
         cards = cards[cards["codeck"].str.startswith(anki_deck)]
-    cards["nmodel"] = cards["nmodel"].apply(lambda x: x.lower())
+    cards["nmodel"] = cards["nmodel"].progress_apply(lambda x: x.lower())
     if anki_notetype:
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
+
+    # remove suspended
+    cards = cards[cards["cqueue"] != "suspended"]
 
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
     # mod2mid = akp.raw.get_model2mid(col.db)
-    cards["fields_name"] = cards["mid"].apply(lambda x: mid2fields[x])
+    cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
     assert cards.index.tolist(), "empty dataframe!"
     if anki_fields:
-        cards["fields_dict"] = cards.apply(
+        anki_fields = [k.lower() for k in anki_fields]
+        if debug:
+            tqdm.pandas(desc="Parsing fields")
+        cards["fields_dict"] = cards.progress_apply(
             lambda x: {
-                k: html_to_text(cloze_stripper(v)).strip()
+                k.lower(): html_to_text(cloze_stripper(v)).strip()
                 for k, v in zip(x["fields_name"], x["nflds"])
                 if k.lower() in anki_fields
             },
             axis=1,
         )
-        cards["text"] = cards["fields_dict"].apply(
+        if len(cards[cards["fields_dict"] != {}]) != len(cards):
+            expec_fd = cards["fields_name"].iloc[0]
+            raise Exception(
+                f"Something is wrong with the anki_fields '{anki_fields}' "
+                f"of notetype {anki_notetype} that has fields '{expec_fd}'"
+            )
+        if debug:
+            tqdm.pandas(desc="Joining fields")
+        cards["text"] = cards["fields_dict"].progress_apply(
             lambda x: "\n".join(f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
-        cards["text"] = cards.apply(
+        if debug:
+            tqdm.pandas(desc="Parsing text")
+        cards["text"] = cards.progress_apply(
                 lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
                     {
                         k: html_to_text(cloze_stripper(v)).strip()
@@ -629,14 +673,18 @@ def load_anki(
                 ),
             axis=1,
         )
-    cards["text"] = cards["text"].apply(lambda x: x.strip())
+    cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
+
     # remove all media
+    if debug:
+        tqdm.pandas(desc="Replacing media in anki")
     cards["text"] = cards["text"].apply(
         lambda x: anki_replace_media(
-            content=x,
-            media=None,
-            mode="remove_media",
+        content=x,
+        media=None,
+        mode="remove_media",
+        strict=False,
         )[0]
     )
     cards = cards[~cards["text"].str.contains("\[IMAGE_")]
@@ -650,148 +698,21 @@ def load_anki(
 
     docs = []
 
-    if "singlecard" in anki_mode:
-        # load each card as a single document
-        for cid in cards.index:
-            c = cards.loc[cid, :]
-            assert c["codeck"], f"empty card_deck for cid {cid}"
-            docs.append(
-                Document(
-                    page_content=c["text"],
-                    metadata={
-                        "anki_tags": " ".join(c["ntags"]),
-                        "anki_cid": str(cid),
-                        "anki_mode": "singlecard",
-                        "anki_deck": c["codeck"],
-                        "anki_modtime": int(c["cmod"]),
-                    },
-                )
-            )
-
-    if "concatenate" in anki_mode:
-        # # turn all cards into a single wall of text then use text_splitter
-        # pro: fill the context window as much I possible I guess
-        # con: - editing cards will force re-embedding a lot of cards
-        #      - ignores tags
-        chunksize = text_splitter._chunk_size
-        full_text = ""
-        spacer = "\n\n#####\n\n"
-        metadata = {"anki_tags": "", "anki_cid": "", "anki_deck": ""}
-        for cid in sorted(cards.index):
-            c = cards.loc[cid, :]
-            cid = str(cid)
-            tags = c["ntags"]
-            text = ftfy.fix_text(c["text"].strip())
-            card_deck = c["codeck"]
-            assert card_deck, f"empty card_deck for cid {cid}"
-
-            if not full_text:  # always add first
-                full_text = text
-                metadata = {
-                    "anki_tags": " ".join(tags),
+    # load each card as a single document
+    for cid in cards.index:
+        c = cards.loc[cid, :]
+        assert c["codeck"], f"empty card_deck for cid {cid}"
+        docs.append(
+            Document(
+                page_content=c["text"],
+                metadata={
+                    "anki_tags": " ".join(c["ntags"]),
                     "anki_cid": str(cid),
-                    "anki_deck": card_deck,
-                    "anki_mode": "concatenate",
-                }
-                continue
-
-            # if too many token, add the current chunk of text and start
-            # the next chunk with this card
-            if get_tkn_length(full_text + spacer + text) >= chunksize:
-                assert (
-                    full_text
-                ), f"An anki card is too large for the text splitter: {text}"
-                assert metadata["anki_cid"], "No anki_cid in metadata"
-                docs.append(
-                    Document(
-                        page_content=full_text,
-                        metadata=metadata,
-                    )
-                )
-
-                metadata = {
-                    "anki_tags": " ".join(tags),
-                    "anki_cid": str(cid),
-                    "anki_deck": card_deck,
-                    "anki_mode": "concatenate",
-                }
-                full_text = text
-            else:
-                for t in tags:
-                    if t not in metadata["anki_tags"]:
-                        metadata["anki_tags"] += f" {t}"
-                metadata["anki_cid"] += " " + str(cid)
-                if card_deck not in metadata["anki_deck"]:
-                    metadata["anki_deck"] += " " + card_deck
-                full_text += spacer + text
-
-        if full_text:  # add latest chunk
-            docs.append(
-                Document(
-                    page_content=full_text,
-                    metadata=metadata,
-                )
+                    "anki_deck": c["codeck"],
+                    "anki_modtime": int(c["cmod"]),
+                },
             )
-
-    if "window" in anki_mode:
-        # # set window_size to X turn each X cards into one document, overlapping
-        window_size = 5
-        index_list = cards.index.tolist()
-        n = len(index_list)
-        cards["text_concat"] = ""
-        cards["tags_concat"] = ""
-        cards["deck_concat"] = ""
-        cards["cids"] = ""
-        cards["ntags_t"] = cards["ntags"].apply(lambda x: " ".join(x))
-        for i in tqdm(range(len(index_list)), desc="combining anki cards"):
-            text_concat = ""
-            tags_concat = ""
-            deck_concat = ""
-            cids = ""
-            skip = 0
-            for w in range(0, window_size):
-                if i + window_size + skip >= n:
-                    s = (
-                        -1
-                    )  # when at the end of the list, apply the window in reverse
-                    # s for 'sign'
-                else:
-                    s = 1
-                if (
-                    cards.at[index_list[i + w * s], "text"]
-                    in cards.at[index_list[i], "text_concat"]
-                ):
-                    # skipping this card because it's a duplicate
-                    skip += 1
-                text_concat += (
-                    "\n\n" +
-                    cards.at[index_list[i + (w + skip) * s], "text"]
-                )
-                tags_concat += cards.at[index_list[i +
-                                                    (w + skip) * s], "ntags_t"]
-                if cards.at[index_list[i + (w + skip) * s], "codeck"] not in deck_concat:
-                    deck_concat +=  " " + cards.at[index_list[i + (w + skip) * s], "codeck"]
-                cids += f"{index_list[i+(w+skip)*s]} "
-            cards.at[index_list[i], "deck_concat"] = deck_concat
-            cards.at[index_list[i], "text_concat"] = text_concat
-            cards.at[index_list[i], "tags_concat"] = tags_concat
-            cards.at[index_list[i], "cids"] = cids
-
-        for cid in sorted(cards.index):
-            c = cards.loc[cid,]
-            docs.append(
-                Document(
-                    page_content=c["text_concat"].strip(),
-                    metadata={
-                        "anki_tags": " ".join(
-                            list(set(c["tags_concat"].split(" ")))
-                        ),
-                        "anki_cid": c["cids"].strip(),
-                        "anki_mode": f"window_{window_size}",
-                        "anki_deck": c["deck_concat"].strip(),
-                    },
-                )
-            )
+        )
 
     assert docs, "List of loaded anki document is empty!"
 
@@ -830,7 +751,8 @@ def anki_replace_media(
     content: str,
     media: Union[None, Dict],
     mode: str,
-    ) -> [str, Dict]:
+    strict: bool = True,
+    ) -> Tuple[str, Dict]:
     """
     Else: exclude any note that contains in the content:
         * an image (<img...)
@@ -855,6 +777,11 @@ def anki_replace_media(
 
     if mode == "remove_media":
         assert not media
+
+        # fix common issues
+        content = content.replace(":// ", "://")
+        content = content.replace("http ://", "http://")
+        content = content.replace("https ://", "http://")
 
         # Images
         if "<img" in content:
@@ -883,7 +810,10 @@ def anki_replace_media(
         # links
         if "://" in content:
             links = re.findall(REG_LINKS, content)
-            assert links
+            if strict:
+                assert links
+            elif not links:
+                red(f"AnkiMediaReplacer: Expected to found linke because '://' in '{content}'")
             assert all(link in content for link in links)
             assert all(re.search(REG_LINKS, link) for link in links)
         else:
@@ -943,13 +873,21 @@ def anki_replace_media(
                 assert replaced in new_content
 
         # check no media can be found anymore
-        assert not re.findall(REG_IMG, new_content)
-        assert "<img" not in new_content
-        assert not BeautifulSoup(new_content, 'html.parser').find_all('img')
-        assert not re.findall(REG_SOUNDS, new_content)
-        assert "[sound:" not in new_content
-        assert not re.findall(REG_LINKS, new_content)
-        assert "://" not in new_content
+        assert not re.findall(REG_IMG, new_content), new_content
+        assert not BeautifulSoup(new_content, 'html.parser').find_all('img'), new_content
+        assert not re.findall(REG_SOUNDS, new_content), new_content
+        assert not re.findall(REG_LINKS, new_content), new_content
+        if strict:
+            assert "<img" not in new_content, new_content
+            assert "[sound:" not in new_content, new_content
+            assert "://" not in new_content, new_content
+        else:
+            if "<img" in new_content:
+                red(f"AnkiMediaReplacer: Found '<img' in '{new_content}'")
+            if "[sound:" in new_content:
+                red(f"AnkiMediaReplacer: Found '[sound:' in '{new_content}'")
+            if "://" in new_content:
+                red(f"AnkiMediaReplacer: Found '://' in '{new_content}'")
 
         # check non empty
         temp = new_content
@@ -959,9 +897,10 @@ def anki_replace_media(
 
         # recursive check:
         assert anki_replace_media(
-                content=new_content,
-                media=media,
-                mode="add_media",
+            content=new_content,
+            media=media,
+            mode="add_media",
+            strict=strict,
         )[0] == content
 
         return new_content, media
@@ -1062,6 +1001,7 @@ def load_local_html(
     ]
     return docs
 
+@optional_typecheck
 @doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
@@ -1597,6 +1537,24 @@ def load_url(path: str, title=None) -> List[Document]:
 
     if not loaded_success:
         try:
+            loader = UnstructuredURLLoader([path])
+            docs = loader.load()
+            assert docs, "Empty docs when using UnstructuredURLLoader"
+            if (
+                not title
+                and "title" in docs[0].metadata
+                and docs[0].metadata["title"]
+            ):
+                title = docs[0].metadata["title"]
+            check_docs_tkn_length(docs, path)
+            loaded_success = True
+        except Exception as err:
+            red(
+                f"Exception when using UnstructuredURLLoader to parse url: '{err}'"
+            )
+
+    if not loaded_success:
+        try:
             loader = WebBaseLoader(path, raise_for_status=True)
             docs = loader.load()
             assert docs, "Empty docs when using html"
@@ -1663,21 +1621,12 @@ def cached_yt_loader(
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
-def _pdf_loader(loader_name: str, path: str, file_hash: str) -> str:
+def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
     content = loader.load()
-    if isinstance(content, str):
-        return content
-    elif isinstance(content, list):
-        if isinstance(content[0], str):
-            return "\n".join(content)
-        elif hasattr(content[0], "page_content"):
-            return "\n".join([d.page_content for d in content])
-        else:
-            raise ValueError(f"Unexpected type of content[0]: '{content}'")
-    elif hasattr(content, "page_content"):
-        return content.page_content
-    raise ValueError(f"Unexpected type of content: '{content}'")
+    assert isinstance(content, list), f"Output of {loader_name} is of type {type(content)}"
+    assert all(isinstance(d, Document) for d in content), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    return content
 
 
 @optional_typecheck
@@ -1712,21 +1661,15 @@ def load_pdf(
 
             signal.signal(signal.SIGALRM, timeout_handler)
             signal.alarm(pdf_timeout)
-            content = _pdf_loader(loader_name, path, file_hash)
+            docs = _pdf_loader(loader_name, path, file_hash)
             signal.alarm(0)
 
             pbar.update(1)
 
-            # if "unstructured" in loader_name.lower():
-            #     # remove empty lines. frequent in pdfs
-            #     content = emptyline_regex.sub("", content)
-            #     content = emptyline2_regex.sub("\n", content)
-            #     content = linebreak_before_letter.sub(r"\1", content)
-
-            content = ftfy.fix_text(content)
-
-            texts = text_splitter.split_text(content)
-            docs = [Document(page_content=t) for t in texts]
+            for i, d in enumerate(docs):
+                docs[i].page_content = ftfy.fix_text(d.page_content)
+                if "pdf_loader_name" not in docs[i].metadata:
+                    docs[i].metadata["pdf_loader_name"] = loader_name
 
             prob = check_docs_tkn_length(
                 docs=docs,

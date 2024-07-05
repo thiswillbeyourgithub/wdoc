@@ -4,7 +4,6 @@ Code related to the prompt (in the sense of "directly ask the user a question")
 
 from typing import Optional, Tuple, Any
 import time
-import re
 from pathlib import Path
 import json
 from textwrap import dedent
@@ -32,6 +31,7 @@ def get_toolbar_text(settings: dict) -> Any:
 
 
 class SettingsCompleter(Completer):
+    @optional_typecheck
     def __init__(
         self,
         doctoolsCliSettings,
@@ -44,6 +44,7 @@ class SettingsCompleter(Completer):
         self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
         self.doctoolsHistoryWords = doctoolsHistoryWords
 
+    @optional_typecheck
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if not text.strip():

@@ -14,7 +14,6 @@ import pyfiglet
 import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable
-from typeguard import typechecked, check_type, TypeCheckError
 import tldextract
 from pathlib import Path
 import time
@@ -23,9 +22,10 @@ import textwrap
 import os
 import asyncio
 from tqdm import tqdm
-import lazy_import
+from langchain_community.llms import FakeListLLM
+from langchain_core.runnables import chain
+from beartype.door import die_if_unbearable
 
-# cannot be lazy loaded because some are not callable but objects directly
 from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
@@ -34,57 +34,58 @@ from .utils.misc import (
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
 
-# lazy loading from local files
-NoDocumentsRetrieved = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsRetrieved")
-NoDocumentsAfterLLMEvalFiltering = lazy_import.lazy_class("DocToolsLLM.utils.errors.NoDocumentsAfterLLMEvalFiltering")
-do_summarize = lazy_import.lazy_function("DocToolsLLM.utils.tasks.summary.do_summarize")
-optional_typecheck = lazy_import.lazy_function("DocToolsLLM.utils.typechecker.optional_typecheck")
-load_llm = lazy_import.lazy_function("DocToolsLLM.utils.llm.load_llm")
-AnswerConversationBufferMemory = lazy_import.lazy_class("DocToolsLLM.utils.llm.AnswerConversationBufferMemory")
-ask_user = lazy_import.lazy_function("DocToolsLLM.utils.interact.ask_user")
-create_hyde_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_hyde_retriever")
-create_parent_retriever = lazy_import.lazy_function("DocToolsLLM.utils.retrievers.create_parent_retriever")
-load_embeddings = lazy_import.lazy_function("DocToolsLLM.utils.embeddings.load_embeddings")
-batch_load_doc = lazy_import.lazy_module("DocToolsLLM.utils.batch_file_loader").batch_load_doc
+from .utils.errors import NoDocumentsRetrieved
+from .utils.errors import NoDocumentsAfterLLMEvalFiltering
+from .utils.tasks.summary import do_summarize
+from .utils.typechecker import optional_typecheck
+from .utils.llm import load_llm
+from .utils.llm import AnswerConversationBufferMemory
+from .utils.interact import ask_user
+from .utils.retrievers import create_hyde_retriever
+from .utils.retrievers import create_parent_retriever
+from .utils.embeddings import load_embeddings
+from .utils.batch_file_loader import batch_load_doc
 
-# lazy imports
-set_verbose = lazy_import.lazy_function("langchain.globals.set_verbose")
-set_debug = lazy_import.lazy_function("langchain.globals.set_debug")
-set_llm_cache = lazy_import.lazy_function("langchain.globals.set_llm_cache")
-MergerRetriever = lazy_import.lazy_class("langchain.retrievers.merger_retriever.MergerRetriever")
-Document = lazy_import.lazy_class("langchain.docstore.document.Document")
-EmbeddingsRedundantFilter = lazy_import.lazy_class("langchain_community.document_transformers.EmbeddingsRedundantFilter")
-DocumentCompressorPipeline = lazy_import.lazy_class("langchain.retrievers.document_compressors.DocumentCompressorPipeline")
-ContextualCompressionRetriever = lazy_import.lazy_class("langchain.retrievers.ContextualCompressionRetriever")
+from langchain.globals import set_verbose
+from langchain.globals import set_debug
+from langchain.globals import set_llm_cache
+from langchain.retrievers.merger_retriever import MergerRetriever
+from langchain.docstore.document import Document
+from langchain_community.document_transformers import EmbeddingsRedundantFilter
+from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-SQLiteCache = lazy_import.lazy_class("langchain_community.cache.SQLiteCache")
+from langchain_community.cache import SQLiteCache
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-chain = lazy_import.lazy_class("langchain_core.runnables.chain")
-RunnableEach = lazy_import.lazy_class("langchain_core.runnables.base.RunnableEach")
-StrOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.string.StrOutputParser")
-BaseGenerationOutputParser = lazy_import.lazy_class("langchain_core.output_parsers.BaseGenerationOutputParser")
-Generation = lazy_import.lazy_class("langchain_core.outputs.Generation")
-ChatGeneration = lazy_import.lazy_class("langchain_core.outputs.ChatGeneration")
+from langchain_core.runnables.base import RunnableEach
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers import BaseGenerationOutputParser
+from langchain_core.outputs import Generation
+from langchain_core.outputs import ChatGeneration
+
+import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+@optional_typecheck
 @set_docstring
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.52"
+    VERSION: str = "0.54"
+    allowed_extra_keys = extra_args_keys
+    md_printer = md_printer
 
-    #@optional_typecheck
-    @typechecked
+    @optional_typecheck
     def __init__(
         self,
         task: str,
         filetype: str = "infer",
 
-        modelname: str = "openrouter/anthropic/claude-3.5-sonnet",
+        modelname: str = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",
@@ -103,7 +104,7 @@ class DocToolsLLM_class:
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
-        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet",
+        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
@@ -118,21 +119,22 @@ class DocToolsLLM_class:
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] =  None,
-        chat_memory: Union[bool, int] = True,
+        memoryless: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
+        disable_md_printing: bool = False,
 
         **cli_kwargs,
         ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
-        self.allowed_extra_keys = extra_args_keys
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
+                    @optional_typecheck
                     def p(message: str) -> None:
                         "print error, in red if possible"
                         try:
@@ -166,15 +168,11 @@ class DocToolsLLM_class:
                 val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = self.allowed_extra_keys[k]
-                if not check_type(val, expected_type):
-                    if os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
-                        red(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
-                    elif os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
-                        raise TypeCheckError(f"Invalid type in cli_kwargs: '{k}' is {val} of type {curr_type} instead of {expected_type}")
                 if expected_type is str:
                     assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
                     assert val, f"Empty list found for cli_kwargs: '{k}'"
+                die_if_unbearable(val, expected_type)
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
@@ -292,7 +290,7 @@ class DocToolsLLM_class:
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
         self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
-        self.chat_memory = chat_memory if "testing" not in modelname else False
+        self.memoryless = memoryless if "testing" not in modelname else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
@@ -310,6 +308,9 @@ class DocToolsLLM_class:
             set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
+            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
+            self.llm_price = [0, 0]
+        elif "testing" in modelname:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0, 0]
         elif modelname in litellm.model_cost:
@@ -464,9 +465,8 @@ class DocToolsLLM_class:
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
-        if "logit_bias" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        llm_params = litellm.get_supported_openai_params(model=f"{self.modelbackend}/{self.modelname}") if "testing" not in self.modelbackend else {}
+        if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -503,17 +503,11 @@ class DocToolsLLM_class:
                 56899: logit_val,    # "                                                                            "
                 98517: logit_val,    # "                                                                                "
                 }
-        if "frequency_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "frequency_penalty" in llm_params:
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "presence_penalty" in llm_params:
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+        if "temperature" in llm_params:
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
@@ -541,11 +535,11 @@ class DocToolsLLM_class:
             # replace # in title as it would be parsed as a tag
             item_name = item_name.replace("#", r"\#")
 
-            if "docs_reading_time" in relevant_docs[0].metadata:
-                doc_reading_length = relevant_docs[0].metadata["docs_reading_time"]
+            if "doc_reading_time" in relevant_docs[0].metadata:
+                doc_reading_length = relevant_docs[0].metadata["doc_reading_time"]
                 metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
             else:
-                doc_reading_length = None
+                doc_reading_length = 0
             if "author" in relevant_docs[0].metadata:
                 author = relevant_docs[0].metadata["author"].strip()
                 metadata.append(f"Author: '{author}'")
@@ -556,7 +550,7 @@ class DocToolsLLM_class:
                 metadata = "- Text metadata:\n    - " + "\n    - ".join(metadata) + "\n"
                 metadata += "    - Section number: [PROGRESS]\n"
             else:
-                metadata = ""
+                metadata = "- Text metadata:\n    - Section number: [PROGRESS]\n"
 
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
@@ -892,6 +886,7 @@ class DocToolsLLM_class:
                 for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
                     assert any(k.match(key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
+                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     # match keys
                     for inc in filters_k_plus:
@@ -931,6 +926,7 @@ class DocToolsLLM_class:
 
                     return True
             else:
+                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     return True
 
@@ -960,6 +956,7 @@ class DocToolsLLM_class:
                 filters_cont_plus = tuple(filters_cont_plus)
                 filters_cont_minus = tuple(filters_cont_minus)
 
+                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     if not all(inc.match(cont) for inc in filters_cont_plus):
                         return False
@@ -968,6 +965,7 @@ class DocToolsLLM_class:
                     return True
 
             else:
+                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     return True
 
@@ -1006,7 +1004,7 @@ class DocToolsLLM_class:
             assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
 
-    #@optional_typecheck
+    @optional_typecheck
     def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
             query, self.interaction_settings = ask_user(self.interaction_settings)
@@ -1143,7 +1141,8 @@ class DocToolsLLM_class:
         if self.llm_cache:
             eval_cache_wrapper = query_eval_cache.cache
         else:
-            def eval_cache_wrapper(func):
+            @optional_typecheck
+            def eval_cache_wrapper(func: Callable) -> Callable:
                 return func
 
         if " object at " in self.llm._get_llm_string():
@@ -1157,16 +1156,22 @@ class DocToolsLLM_class:
                 f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
 
+
         @chain
-        @eval_cache_wrapper
         @optional_typecheck
+        @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
             eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
             ) -> List[str]:
-            if "n" in self.eval_llm_params or self.query_eval_check_number == 1:
+            if isinstance(self.eval_llm, FakeListLLM):
+                outputs = ["1" for i in range(self.query_eval_check_number)]
+                new_p = 0
+                new_c = 0
+
+            elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
@@ -1181,6 +1186,7 @@ class DocToolsLLM_class:
                 else:
                     new_p = 0
                     new_c = 0
+
             else:
                 outputs = []
                 new_p = 0
@@ -1201,7 +1207,7 @@ class DocToolsLLM_class:
                     assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                     outputs.append(out.generations[0].text)
                     finish_reason = out.generations[0].generation_info["finish_reason"]
-                    if not finish_reason in ["stop", "length"]:
+                    if finish_reason not in ["stop", "length"]:
                         red(f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'")
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
@@ -1221,10 +1227,9 @@ class DocToolsLLM_class:
 
         if self.task == "search":
             if self.query_eval_modelname:
-
-
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
+                @optional_typecheck
                 def retrieve_documents(inputs):
                     return {
                             "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
@@ -1317,7 +1322,11 @@ class DocToolsLLM_class:
         else:
             if self.query_condense_question:
                 loaded_memory = RunnablePassthrough.assign(
-                    chat_history=RunnableLambda(self.memory.load_memory_variables) | itemgetter("chat_history"),
+                    chat_history=RunnableLambda(
+                        self.memory.load_memory_variables
+                        if not self.memoryless
+                        else AnswerConversationBufferMemory(memory_key="chat_history", return_messages=True).load_memory_variables
+                    ) | itemgetter("chat_history"),
                 )
                 standalone_question = {
                     "question_to_answer": RunnablePassthrough(),
@@ -1332,6 +1341,7 @@ class DocToolsLLM_class:
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
+            @optional_typecheck
             def retrieve_documents(inputs):
                 return {
                         "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),

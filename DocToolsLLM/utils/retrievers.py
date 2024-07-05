@@ -16,7 +16,6 @@ from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
 
 
-
 @optional_typecheck
 def create_hyde_retriever(
     query: str,

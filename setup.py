@@ -28,7 +28,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.52",
+    version="0.54",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -66,18 +66,19 @@ setup(
         'faiss-cpu>=1.8.0',
         'llama-cpp-python>=0.2.76',
         'rich>=13.7.1',
-        'typeguard >= 4.2.1',
+        'beartype >= 0.18.5',
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.10.0',
         'grandalf >= 0.8',  # to print ascii graph
         'lazy-import >= 0.2.2',
+        'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
         'pandoc >= 2.3', # epub
-        'unstructured>=0.6.2',  # many file formats
+        'unstructured[all-docs]>=0.6.2',  # many file formats
         'ankipandas>=0.3.13',  # anki
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url

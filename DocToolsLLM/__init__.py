@@ -4,9 +4,6 @@ Default file, used as entry point.
 
 import sys
 import fire
-from typing import List, Tuple
-from rich.markdown import Markdown
-from rich.console import Console
 
 from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
 
@@ -28,17 +25,13 @@ def fire_wrapper(
     # --help but not catched by sys.argv
     if "help" in kwargs and kwargs["help"]:
         print("Showing help")
-        md = Markdown(DocToolsLLM.__doc__)
-        console = Console()
-        console.print(md, style=None)
+        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
         raise SystemExit()
 
     # no args given
     if not any([args, kwargs]):
         print("Empty arguments, showing help")
-        md = Markdown(DocToolsLLM.__doc__)
-        console = Console()
-        console.print(md, style=None)
+        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
         raise SystemExit()
 
     # while we're at it, make it so that
@@ -75,9 +68,7 @@ def cli_launcher() -> None:
     sys_args = sys.argv
     if "--help" in sys_args:
         print("Showing help")
-        md = Markdown(DocToolsLLM.__doc__)
-        console = Console()
-        console.print(md, style=None)
+        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
         raise SystemExit()
     if "--completion" in sys_args:
         return fire.Fire(DocToolsLLM)

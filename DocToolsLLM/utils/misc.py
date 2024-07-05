@@ -7,7 +7,7 @@ from typing import List, Union, Any
 from joblib import Memory
 import socket
 import os
-import urllib
+import urllib.request
 import json
 import re
 from pathlib import Path
@@ -17,19 +17,19 @@ import hashlib
 import lazy_import
 import tiktoken
 from functools import partial
+from py_ankiconnect import PyAnkiconnect
 
 from langchain.docstore.document import Document
-from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables import chain
+from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
 from .logger import red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
-Document = lazy_import.lazy_class('langchain.docstore.document.Document')
-TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+
+ankiconnect = optional_typecheck(PyAnkiconnect())
 
 # will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
 loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
@@ -45,15 +45,16 @@ except Exception as err:
         if is_verbose:
             print(f"Couldn't import optional package 'langdetect': '{err}'")
 
-if "ftlangdetect" in globals():
+if "ftlangdetect" in sys.modules:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text)["score"]
-elif "language_detect" in globals():
+elif "language_detect" in sys.modules:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return langdetect.detect_langs(text)[0].prob
 else:
+    @optional_typecheck
     def language_detector(text: str) -> None:
         return None
 
@@ -87,7 +88,6 @@ printed_unexpected_api_keys = [False]  # to print it only once
 loader_specific_keys = {
     "anki_deck": str,
     "anki_fields": str,
-    "anki_mode": str,
     "anki_notetype": str,
     "anki_profile": str,
 
@@ -105,7 +105,10 @@ loader_specific_keys = {
 
     "load_functions": List[str],
 
-    "min_lang_prob": float,
+    "doccheck_min_token": int,
+    "doccheck_max_token": int,
+    "doccheck_max_lines": int,
+    "doccheck_min_lang_prob": float,
 }
 
 # extra arguments supported when instanciating doctools
@@ -131,11 +134,13 @@ doc_kwargs_keys = [
     "source_tag",
 ] + list(loader_specific_keys.keys())
 
+@optional_typecheck
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
+@optional_typecheck
 def file_hasher(doc: dict) -> str:
     """used to hash a file's content, as describe by a dict
     A caching mechanism is used to avoid recomputing hash of file that
@@ -153,6 +158,7 @@ def file_hasher(doc: dict) -> str:
     else:
         return hasher(json.dumps(doc))
 
+@optional_typecheck
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[int]) -> str:
     with open(abs_path, "rb") as f:
@@ -161,6 +167,8 @@ def _file_hasher(abs_path: str, stats: List[int]) -> str:
 @optional_typecheck
 def html_to_text(html: str) -> str:
     """used to strip any html present in the text files"""
+    html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
+    html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
     if "<img" in text:
@@ -168,37 +176,6 @@ def html_to_text(html: str) -> str:
         if "<img" in text:
             red("Failed to remove <img from anki card")
     return text
-
-@optional_typecheck
-def _request_wrapper(action: str, **params) -> dict:
-    return {'action': action, 'params': params, 'version': 6}
-
-@optional_typecheck
-def ankiconnect(action: str, **params) -> Union[List, str]:
-    "talk to anki via ankiconnect addon"
-
-    requestJson = json.dumps(_request_wrapper(action, **params)
-                             ).encode('utf-8')
-
-    try:
-        response = json.load(urllib.request.urlopen(
-            urllib.request.Request(
-                'http://localhost:8765',
-                requestJson)))
-    except (ConnectionRefusedError, urllib.error.URLError) as e:
-        raise Exception(f"{str(e)}: is Anki open and 'ankiconnect "
-                        "addon' enabled? Firewall issue?")
-
-    if len(response) != 2:
-        raise Exception('response has an unexpected number of fields')
-    if 'error' not in response:
-        raise Exception('response is missing required error field')
-    if 'result' not in response:
-        raise Exception('response is missing required result field')
-    if response['error'] is not None:
-        raise Exception(response['error'])
-    return response['result']
-
 
 @chain
 @optional_typecheck
@@ -253,6 +230,7 @@ def wrapped_model_name_matcher(model: str) -> str:
             "down the code.")
         return model
 
+@optional_typecheck
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
     model has a known cost and print the matched name)"""
@@ -366,7 +344,7 @@ def check_docs_tkn_length(
         language_detector(d.page_content.replace("\n", "<br>"))
         for d in docs
     ]
-    if probs[0] is None:
+    if probs[0] is None or not probs:
         # bypass if language_detector not defined
         return 1
     prob = sum(probs) / len(probs)
@@ -380,6 +358,7 @@ def check_docs_tkn_length(
     return prob
 
 
+@optional_typecheck
 def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
@@ -397,6 +376,7 @@ def unlazyload_modules():
         else:
             break
 
+@optional_typecheck
 def disable_internet(allowed: dict) -> None:
     """
     To be extra sure that no connection goes out of the computer when
@@ -433,6 +413,7 @@ def disable_internet(allowed: dict) -> None:
         ('127.0.0.0', '127.255.255.255')
     ]
 
+    @optional_typecheck
     def is_private(ip) -> bool:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
@@ -445,6 +426,7 @@ def disable_internet(allowed: dict) -> None:
                 return True
         return False
 
+    @optional_typecheck
     def create_connection(address, *args, **kwargs):
         "overload socket.create_connection to forbid outgoing connections"
         ip = socket.gethostbyname(address[0])
