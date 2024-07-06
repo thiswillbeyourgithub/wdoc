@@ -337,7 +337,7 @@ def check_docs_tkn_length(
             f"The number of token from '{identifier}' is {size} >= {max_token}, probably something went wrong?"
         )
     if check_language is False:
-        return 1
+        return 1.0
 
     # check if language check is above a threshold
     probs = [
@@ -346,7 +346,7 @@ def check_docs_tkn_length(
     ]
     if probs[0] is None or not probs:
         # bypass if language_detector not defined
-        return 1
+        return 1.0
     prob = sum(probs) / len(probs)
     if prob <= min_lang_prob:
         red(
