@@ -71,10 +71,10 @@ for k, v in inference_rules.items():
 
 @optional_typecheck
 def batch_load_doc(
-    filetype: str,
-    task: str,
-    backend: str,
-    **cli_kwargs) -> List[Document]:
+        filetype: str,
+        task: str,
+        backend: str,
+        **cli_kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
     # try:
@@ -90,7 +90,8 @@ def batch_load_doc(
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
     loading_failure = cli_kwargs["loading_failure"] if "loading_failure" in cli_kwargs else "warn"
-    assert loading_failure in ["crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
+    assert loading_failure in [
+        "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
@@ -115,7 +116,6 @@ def batch_load_doc(
                     load_filetype != "infer"
                 ), f"Could not infer load_filetype of {load_kwargs['path']}. Use the 'load_filetype' argument."
                 to_load[ild]["filetype"] = load_filetype
-
 
             if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
@@ -199,7 +199,7 @@ def batch_load_doc(
       colour="magenta",
       disable=len(to_load) <= 10_000,
       )
-    )
+      )
     for i, h in enumerate(doc_hashes):
         to_load[i]["file_hash"] = doc_hashes[i]
 
@@ -236,12 +236,13 @@ def batch_load_doc(
     # load_functions are slow to load so loading them here in advance for every file
     if any(
         ("load_functions" in doc and doc["load_functions"])
-        for doc in to_load):
+            for doc in to_load):
         whi("Preloading load_functions")
         for idoc, doc in enumerate(to_load):
             if "load_functions" in doc:
                 if doc["load_functions"]:
-                    to_load[idoc]["load_functions"] = parse_load_functions(tuple(doc["load_functions"]))
+                    to_load[idoc]["load_functions"] = parse_load_functions(
+                        tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
     @optional_typecheck
@@ -269,7 +270,7 @@ def batch_load_doc(
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
     # dir name where to store temporary files
-    load_temp_name="file_load_" + str(uuid.uuid4())
+    load_temp_name = "file_load_" + str(uuid.uuid4())
     # delete previous temp dir if it's several days old
     for f in cache_dir.iterdir():
         f = f.resolve()
@@ -291,12 +292,12 @@ def batch_load_doc(
         task=task,
         temp_dir=temp_dir,
         **d,
-        ) for d in tqdm(
-            to_load,
-            desc="Loading",
-            unit="doc",
-            colour="magenta",
-        )
+    ) for d in tqdm(
+        to_load,
+        desc="Loading",
+        unit="doc",
+        colour="magenta",
+    )
     )
 
     # erases content that links to the loaders temporary files at startup
@@ -330,7 +331,8 @@ def batch_load_doc(
             red("Crashing because some recursive filetypes failed:")
             for imr, mr in enumerate(missed_recur):
                 red(f"- {imr + 1}]: '{mr}'")
-            raise Exception(f"{len(missed_recur)} recursive filetypes failed to load.")
+            raise Exception(
+                f"{len(missed_recur)} recursive filetypes failed to load.")
     else:
         red("No document failed to load!")
 
@@ -350,8 +352,8 @@ def batch_load_doc(
     if len(docs) > 1:
         ids = [id(d.metadata) for d in docs]
         assert len(ids) == len(set(ids)), (
-                "Same metadata object is used to store information on "
-                "multiple documents!")
+            "Same metadata object is used to store information on "
+            "multiple documents!")
 
         hashes = [d.metadata["all_hash"] for d in docs]
         uniq_hashes = list(set(hashes))
@@ -385,6 +387,7 @@ def batch_load_doc(
                 red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
 
     return docs
+
 
 @optional_typecheck
 def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
@@ -455,6 +458,7 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
+
 @optional_typecheck
 def parse_json_entries(load_kwargs: dict) -> List[dict]:
     load_path = load_kwargs["path"]
@@ -510,6 +514,7 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
             del meta["path"]
         doclist[i] = meta
     return doclist
+
 
 @optional_typecheck
 def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
@@ -574,6 +579,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doclist[i] = doc_kwargs
     return doclist
 
+
 @optional_typecheck
 def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     assert "path" in load_kwargs, "missing 'path' key in args"
@@ -636,13 +642,15 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
     assert isinstance(load_functions, list), "load_functions must be a list"
-    assert all(isinstance(lf, str) for lf in load_functions), "load_functions elements must be strings"
+    assert all(isinstance(lf, str)
+               for lf in load_functions), "load_functions elements must be strings"
 
     try:
         for ilf, lf in enumerate(load_functions):
             load_functions[ilf] = eval(lf)
     except Exception as err:
-        raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+        raise Exception(
+            f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
     load_functions = tuple(load_functions)
     pickled = dill.dumps(load_functions)
     return pickled

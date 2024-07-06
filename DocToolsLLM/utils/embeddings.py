@@ -34,20 +34,20 @@ import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
 
-
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
 
+
 class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
     """wrapper around the class LlamaCppEmbeddings to add an instruction
     before the text to embed."""
     @optional_typecheck
     def __init__(self, *args, **kwargs):
-        embed_instruction=DEFAULT_EMBED_INSTRUCTION
-        query_instruction=DEFAULT_QUERY_INSTRUCTION
+        embed_instruction = DEFAULT_EMBED_INSTRUCTION
+        query_instruction = DEFAULT_QUERY_INSTRUCTION
         if "embed_instruction" in kwargs:
             embed_instruction = kwargs["embed_instruction"]
             del kwargs["embed_instruction"]
@@ -83,7 +83,7 @@ def load_embeddings(
     private: bool,
     use_rolling: bool,
     cli_kwargs: dict,
-    ) -> Tuple[FAISS, CacheBackedEmbeddings]:
+) -> Tuple[FAISS, CacheBackedEmbeddings]:
     """loads embeddings for each document"""
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
@@ -97,14 +97,15 @@ def load_embeddings(
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
         assert not private, f"Set private but tried to use openai embeddings"
-        assert "OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"] and "REDACTED" not in os.environ["OPENAI_API_KEY"], "Missing OPENAI_API_KEY"
+        assert "OPENAI_API_KEY" in os.environ and os.environ[
+            "OPENAI_API_KEY"] and "REDACTED" not in os.environ["OPENAI_API_KEY"], "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
             model=embed_model,
             # model="text-embedding-ada-002",
             openai_api_key=os.environ["OPENAI_API_KEY"],
             **embed_kwargs,
-            )
+        )
 
     elif backend == "huggingface":
         assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers or llamacppembeddings"
@@ -114,9 +115,11 @@ def load_embeddings(
         }
         model_kwargs.update(embed_kwargs)
         if "google" in embed_model and "gemma" in embed_model.lower():
-            assert "HUGGINGFACE_API_KEY" in os.environ and os.environ["HUGGINGFACE_API_KEY"] and "REDACTED" not in os.environ["HUGGINGFACE_API_KEY"], "Missing HUGGINGFACE_API_KEY"
+            assert "HUGGINGFACE_API_KEY" in os.environ and os.environ[
+                "HUGGINGFACE_API_KEY"] and "REDACTED" not in os.environ["HUGGINGFACE_API_KEY"], "Missing HUGGINGFACE_API_KEY"
             hftkn = os.environ["HUGGINGFACE_API_KEY"]
-            model_kwargs['use_auth_token'] = hftkn #your token to use the models
+            # your token to use the models
+            model_kwargs['use_auth_token'] = hftkn
         if instruct:
             embeddings = HuggingFaceInstructEmbeddings(
                 model_name=embed_model,
@@ -131,36 +134,36 @@ def load_embeddings(
             )
 
         if "google" in embed_model and "gemma" in embed_model.lower():
-            #please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
-            #or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
-            embeddings.client.tokenizer.pad_token =  embeddings.client.tokenizer.eos_token
+            # please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
+            # or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
+            embeddings.client.tokenizer.pad_token = embeddings.client.tokenizer.eos_token
 
     elif backend == "sentencetransformers":
         if private:
             red(f"Private is set and will use sentencetransformers backend")
         if use_rolling:
             embed_kwargs.update(
-                    {
-                        "batch_size": 1,
-                        "pooling": "meanpool",
-                        "device": None,
-                        }
+                {
+                    "batch_size": 1,
+                    "pooling": "meanpool",
+                    "device": None,
+                }
             )
             embeddings = RollingWindowEmbeddings(
-                    model_name=embed_model,
-                    encode_kwargs=embed_kwargs,
-                    )
+                model_name=embed_model,
+                encode_kwargs=embed_kwargs,
+            )
         else:
             embed_kwargs.update(
-                    {
-                        "batch_size": 1,
-                        "device": None,
-                        }
+                {
+                    "batch_size": 1,
+                    "device": None,
+                }
             )
             embeddings = SentenceTransformerEmbeddings(
-                    model_name=embed_model,
-                    encode_kwargs=embed_kwargs,
-                    )
+                model_name=embed_model,
+                encode_kwargs=embed_kwargs,
+            )
 
     elif backend == "llamacppembeddings":
         if private:
@@ -183,7 +186,8 @@ def load_embeddings(
 
         assert "model_path" not in llamacppkwargs, "llamacppembeddings model_path must be supplied via --embed_model arg"
 
-        red(f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
+        red(
+            f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
         # method overloading to make it an instruct model
         if instruct:
             embeddings = InstructLlamaCPPEmbeddings(
@@ -218,17 +222,18 @@ def load_embeddings(
 
     # cached_embeddings = embeddings
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-            embeddings,
-            lfs,
-            namespace=embed_model_str,
-            )
+        embeddings,
+        lfs,
+        namespace=embed_model_str,
+    )
 
     # reload passed embeddings
     if load_embeds_from:
         red("Reloading documents and embeddings from file")
         path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), cached_embeddings, allow_dangerous_deserialization=True)
+        db = FAISS.load_local(str(path), cached_embeddings,
+                              allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
@@ -250,19 +255,22 @@ def load_embeddings(
 
     # load previous faiss index from cache
     n_loader = 10
-    loader_queues = [(queue.Queue(maxsize=10), queue.Queue()) for i in range(n_loader)]
+    loader_queues = [(queue.Queue(maxsize=10), queue.Queue())
+                     for i in range(n_loader)]
     loader_workers = [
-            threading.Thread(
-                target=faiss_loader,
-                args=(cached_embeddings, qin, qout),
-                daemon=False,
-                ) for qin, qout in loader_queues]
+        threading.Thread(
+            target=faiss_loader,
+            args=(cached_embeddings, qin, qout),
+            daemon=False,
+        ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
     timeout = 10
-    list_of_files = {f.stem for f in embeddings_cache.iterdir() if "faiss_index" in f.suffix}
+    list_of_files = {f.stem for f in embeddings_cache.iterdir()
+                     if "faiss_index" in f.suffix}
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         if doc.metadata["content_hash"] in list_of_files:
-            fi = embeddings_cache / str(doc.metadata["content_hash"] + ".faiss_index")
+            fi = embeddings_cache / \
+                str(doc.metadata["content_hash"] + ".faiss_index")
             assert fi.exists()
             # select 2 workers at random and choose the one with the smallest queue
             queue_candidates = random.sample(loader_queues, k=2)
@@ -279,7 +287,8 @@ def load_embeddings(
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
     whi("Asking loader workers to shutdown")
     [t.join(timeout=timeout) for t in loader_workers]
-    assert all([not t.is_alive() for t in loader_workers]), "Faiss loader workers failed to stop"
+    assert all([not t.is_alive() for t in loader_workers]
+               ), "Faiss loader workers failed to stop"
 
     # merge dbs as one
     db = None
@@ -298,12 +307,14 @@ def load_embeddings(
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
-    whi(f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+    whi(
+        f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if private:
         whi(f"Not checking token price because private is set")
         price = 0
     elif backend != "openai":
-        whi(f"Not checking token price because using a private backend: {backend}")
+        whi(
+            f"Not checking token price because using a private backend: {backend}")
         price = 0
     elif f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
@@ -312,7 +323,8 @@ def load_embeddings(
         price = litellm.model_cost[embed_model]["input_cost_per_token"]
         assert litellm.model_cost[embed_model]["output_cost_per_token"] == 0
     else:
-        raise Exception(red(f"Couldn't find the price of embedding model {embed_model}"))
+        raise Exception(
+            red(f"Couldn't find the price of embedding model {embed_model}"))
 
     dol_price = full_tkn * price
     red(f"Total cost to embed all tokens is ${dol_price:.6f}")
@@ -327,38 +339,42 @@ def load_embeddings(
     if to_embed:
         batch_size = 1000
         batches = [
-                [i * batch_size, (i + 1) * batch_size]
-                for i in range(len(to_embed) // batch_size + 1)
-                ]
+            [i * batch_size, (i + 1) * batch_size]
+            for i in range(len(to_embed) // batch_size + 1)
+        ]
         n_saver = 10
-        saver_queues = [(queue.Queue(maxsize=10), queue.Queue()) for i in range(n_saver)]
+        saver_queues = [(queue.Queue(maxsize=10), queue.Queue())
+                        for i in range(n_saver)]
         saver_workers = [
-                threading.Thread(
-                    target=faiss_saver,
-                    args=(embeddings_cache, cached_embeddings, qin, qout),
-                    daemon=False,
-                    ) for qin, qout in saver_queues]
+            threading.Thread(
+                target=faiss_saver,
+                args=(embeddings_cache, cached_embeddings, qin, qout),
+                daemon=False,
+            ) for qin, qout in saver_queues]
         [t.start() for t in saver_workers]
-        assert all([t.is_alive() for t in saver_workers]), "Saver workers failed to load"
+        assert all([t.is_alive() for t in saver_workers]
+                   ), "Saver workers failed to load"
 
         for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch"):
             whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
-                    to_embed[batch[0]:batch[1]],
-                    cached_embeddings,
-                    normalize_L2=True
-                    )
+                to_embed[batch[0]:batch[1]],
+                cached_embeddings,
+                normalize_L2=True
+            )
 
             whi(f"Saving batch #{ib + 1}")
             # save the faiss index as 1 embedding for 1 document
             # get the id of each document
             doc_ids = list(temp.docstore._dict.keys())
             # get the embedding of each document
-            vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
+            vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(
+                doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
             vecs = np.vsplit(vecs, vecs.shape[0])
             for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
                 docu = temp.docstore._dict[docuid]
-                assert all([t.is_alive() for t in saver_workers]), "Some saving thread died"
+                assert all([t.is_alive()
+                           for t in saver_workers]), "Some saving thread died"
 
                 # select 2 workers at random and choose the one with the smallest queue
                 queue_candidates = random.sample(saver_queues, k=2)
@@ -375,12 +391,16 @@ def load_embeddings(
         stop_counter = 0
         while any(t.is_alive() for t in saver_workers):
             stop_counter += 1
-            [q[0].put((False, None, None, None)) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
-            exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(saver_queues) if saver_workers[i].is_alive()]
+            [q[0].put((False, None, None, None)) for i, q in enumerate(
+                saver_queues) if saver_workers[i].is_alive()]
+            exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(
+                saver_queues) if saver_workers[i].is_alive()]
             if not all(e.startswith("Stopped") for e in exit_code):
-                whi(f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
+                whi(
+                    f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
-        assert all([not t.is_alive() for t in saver_workers]), "Faiss saver workers failed to stop"
+        assert all([not t.is_alive() for t in saver_workers]
+                   ), "Faiss saver workers failed to stop"
     whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
     whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
@@ -393,9 +413,9 @@ def load_embeddings(
 
 @optional_typecheck
 def faiss_loader(
-    cached_embeddings: CacheBackedEmbeddings,
-    qin: queue.Queue,
-    qout: queue.Queue) -> None:
+        cached_embeddings: CacheBackedEmbeddings,
+        qin: queue.Queue,
+        qout: queue.Queue) -> None:
     """load a faiss index. Merge many other index to it. Then return the
     merged index. This makes it way fast to load a very large number of index
     """
@@ -408,8 +428,10 @@ def faiss_loader(
             qout.put("Stopped")
             break
         assert metadata is not None
-        temp = FAISS.load_local(fi, cached_embeddings, allow_dangerous_deserialization=True)
-        temp.docstore._dict[list(temp.docstore._dict.values())[0]].metadata = metadata
+        temp = FAISS.load_local(fi, cached_embeddings,
+                                allow_dangerous_deserialization=True)
+        temp.docstore._dict[list(temp.docstore._dict.values())[
+            0]].metadata = metadata
         if not db:
             db = temp
         else:
@@ -424,10 +446,10 @@ def faiss_loader(
 
 @optional_typecheck
 def faiss_saver(
-    path: Union[str, PosixPath],
-    cached_embeddings: CacheBackedEmbeddings,
-    qin: queue.Queue,
-    qout: queue.Queue) -> None:
+        path: Union[str, PosixPath],
+        cached_embeddings: CacheBackedEmbeddings,
+        qin: queue.Queue,
+        qout: queue.Queue) -> None:
     """create a faiss index containing only a single document then save it"""
     while True:
         message, docid, document, embedding = qin.get()
@@ -438,11 +460,11 @@ def faiss_saver(
 
         file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
-                text_embeddings=[[document.page_content, embedding]],
-                embedding=cached_embeddings,
-                metadatas=[document.metadata],
-                ids=[docid],
-                normalize_L2=True)
+            text_embeddings=[[document.page_content, embedding]],
+            embedding=cached_embeddings,
+            metadatas=[document.metadata],
+            ids=[docid],
+            normalize_L2=True)
         db.save_local(file)
     return
 
@@ -503,7 +525,8 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             sub_sentences = []
             words = s.split(" ")
             avg_tkn = length / len(words)
-            j = int(max_len / avg_tkn * 0.8)  # start at 90% of the supposed max_len
+            # start at 90% of the supposed max_len
+            j = int(max_len / avg_tkn * 0.8)
             while len(encode(" ".join(words))) > max_len:
 
                 # if reached max length, use that minus one word
@@ -545,13 +568,13 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
 
         if add_sent:
             sent_check = [
-                    len(encode(s)) > max_len
-                    for s in sentences
-                    ]
+                len(encode(s)) > max_len
+                for s in sentences
+            ]
             addsent_check = [
-                    len(encode(s)) > max_len
-                    for s in add_sent
-                    ]
+                len(encode(s)) > max_len
+                for s in add_sent
+            ]
             assert sum(sent_check + addsent_check) == 0, (
                 f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
 
@@ -571,7 +594,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             for sid in list(set(add_sent_idx)):
                 id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                 add_sent_vec = vectors[
-                        offset + min(id_range): offset + max(id_range), :]
+                    offset + min(id_range): offset + max(id_range), :]
                 if self.__pool_technique == "maxpool":
                     vectors[sid] = np.amax(add_sent_vec, axis=0)
                 elif self.__pool_technique == "meanpool":

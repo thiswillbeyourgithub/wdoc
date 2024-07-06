@@ -16,7 +16,8 @@ if "DOCTOOLS_TYPECHECKING" not in os.environ:
 if os.environ["DOCTOOLS_TYPECHECKING"] == "crash":
     optional_typecheck = beartype
 elif os.environ["DOCTOOLS_TYPECHECKING"] == "warn":
-    optional_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
+    optional_typecheck = beartype(
+        conf=BeartypeConf(violation_type=UserWarning))
 elif os.environ["DOCTOOLS_TYPECHECKING"] == "disabled":
     def optional_typecheck(func: Callable) -> Callable:
         return func

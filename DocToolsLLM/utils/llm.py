@@ -35,7 +35,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
     @optional_typecheck
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
-        return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
+        return super(AnswerConversationBufferMemory, self).save_context(inputs, {'response': outputs['answer']})
 
 
 @optional_typecheck
@@ -47,7 +47,7 @@ def load_llm(
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
-    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
+) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
@@ -76,14 +76,16 @@ def load_llm(
         red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         if not api_base:
-            raise Exception(f"No environment variable named {backend.upper()}_API_KEY found")
+            raise Exception(
+                f"No environment variable named {backend.upper()}_API_KEY found")
         else:
             yel(f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this.")
 
     # extra check for private mode
     if private:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "true"
-        red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
+        red(
+            f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
     else:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
@@ -94,12 +96,12 @@ def load_llm(
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname.split("/", 1)[1],
-                cache=llm_cache,
-                verbose=verbose,
-                callbacks=[PriceCountingCallback(verbose=verbose)],
-                **extra_model_args,
-                )
+            model_name=modelname.split("/", 1)[1],
+            cache=llm_cache,
+            verbose=verbose,
+            callbacks=[PriceCountingCallback(verbose=verbose)],
+            **extra_model_args,
+        )
     else:
         red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
@@ -110,11 +112,11 @@ def load_llm(
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
-            cache=False, # llm_cache
+            cache=False,  # llm_cache
             verbose=verbose,
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
-            )
+        )
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
         assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
@@ -138,13 +140,13 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.completion_tokens = 0
         self.methods_called = []
         self.authorized_methods = [
-                "on_llm_start",
-                "on_chat_model_start",
-                "on_llm_end",
-                "on_llm_error",
-                "on_chain_start",
-                "on_chain_end",
-                "on_chain_error",
+            "on_llm_start",
+            "on_chat_model_start",
+            "on_llm_end",
+            "on_llm_error",
+            "on_chain_start",
+            "on_chain_end",
+            "on_chain_error",
         ]
 
     @optional_typecheck
@@ -165,7 +167,8 @@ class PriceCountingCallback(BaseCallbackHandler):
             meth for meth in self.methods_called
             if meth not in self.authorized_methods]
         if wrong:
-            raise Exception(f"Unauthorized_method were called: {','.join(wrong)}")
+            raise Exception(
+                f"Unauthorized_method were called: {','.join(wrong)}")
         return True
 
     @optional_typecheck

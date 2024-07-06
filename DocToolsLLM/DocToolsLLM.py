@@ -69,6 +69,7 @@ litellm = lazy_import.lazy_module("litellm")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+
 @optional_typecheck
 @set_docstring
 class DocToolsLLM_class:
@@ -117,7 +118,7 @@ class DocToolsLLM_class:
         llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
-        notification_callback: Optional[Callable] =  None,
+        notification_callback: Optional[Callable] = None,
         memoryless: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
@@ -128,7 +129,7 @@ class DocToolsLLM_class:
         disable_md_printing: bool = False,
 
         **cli_kwargs,
-        ) -> None:
+    ) -> None:
         "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
@@ -160,7 +161,8 @@ class DocToolsLLM_class:
         # make sure the extra args are valid
         for k in cli_kwargs:
             if k not in self.allowed_extra_keys:
-                raise Exception(red(f"Found unexpected keyword argument: '{k}'"))
+                raise Exception(
+                    red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
@@ -168,27 +170,31 @@ class DocToolsLLM_class:
                 curr_type = type(val)
                 expected_type = self.allowed_extra_keys[k]
                 if expected_type is str:
-                    assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
+                    assert val.strip(
+                    ), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
                     assert val, f"Empty list found for cli_kwargs: '{k}'"
                 die_if_unbearable(val, expected_type)
 
         if modelname == TESTING_LLM:
             if modelname != TESTING_LLM:
-                red(f"Detected 'testing' model in {modelname}, setting it to '{TESTING_LLM}'")
+                red(
+                    f"Detected 'testing' model in {modelname}, setting it to '{TESTING_LLM}'")
                 modelname = TESTING_LLM
             else:
                 red(f"Detected 'testing' model in {modelname}")
             if isinstance(query_eval_modelname, str):
                 if query_eval_modelname != TESTING_LLM:
-                    red(f"Setting the query_eval_modelname to {TESTING_LLM} too")
+                    red(
+                        f"Setting the query_eval_modelname to {TESTING_LLM} too")
                     query_eval_modelname = TESTING_LLM
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
         assert "loaded_embeddings" not in cli_kwargs, "'loaded_embeddings' cannot be an argument as it is used internally"
         task = task.replace("summary", "summarize")
-        assert task in ["query", "search", "summarize", "summarize_then_query"], "invalid task value"
+        assert task in ["query", "search", "summarize",
+                        "summarize_then_query"], "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
@@ -205,15 +211,18 @@ class DocToolsLLM_class:
                 f"{litellm.model_by_providers.keys()}"
             )
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0].lower() in ["openai", "sentencetransformers", "huggingface", "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
+        assert embed_model.split("/", 1)[0].lower() in ["openai", "sentencetransformers", "huggingface",
+                                                        "llamacppembeddings"], "Backend of embeddings must be either openai, sentencetransformers, huggingface of llamacppembeddings"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
             try:
                 embed_kwargs = json.loads(embed_kwargs)
             except Exception as err:
-                raise Exception(f"Failed to parse embed_kwargs: '{embed_kwargs}'")
-        assert isinstance(embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
+                raise Exception(
+                    f"Failed to parse embed_kwargs: '{embed_kwargs}'")
+        assert isinstance(
+            embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if llms_api_bases is None:
@@ -222,8 +231,10 @@ class DocToolsLLM_class:
             try:
                 llms_api_bases = json.loads(llms_api_bases)
             except Exception as err:
-                raise Exception(f"Error when parsing llms_api_bases as a dict: {err}")
-        assert isinstance(llms_api_bases, dict), "llms_api_bases must be a dict"
+                raise Exception(
+                    f"Error when parsing llms_api_bases as a dict: {err}")
+        assert isinstance(
+            llms_api_bases, dict), "llms_api_bases must be a dict"
         for k in llms_api_bases:
             assert k in ["model", "query_eval_model"], (
                 f"Invalid k of llms_api_bases: {k}")
@@ -233,14 +244,16 @@ class DocToolsLLM_class:
         if llms_api_bases["model"] == llms_api_bases["query_eval_model"] and llms_api_bases["model"]:
             red("Setting litellm wide api_base because it's the same for model and query_eval_model")
             litellm.api_base = llms_api_bases["model"]
-        assert isinstance(private, bool), "private arg should be a boolean, not {private}"
+        assert isinstance(
+            private, bool), "private arg should be a boolean, not {private}"
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
             os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
             for k in dict(os.environ):
                 if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
-                    red(f"private mode enabled: overwriting '{k}' from environment variables just in case")
+                    red(
+                        f"private mode enabled: overwriting '{k}' from environment variables just in case")
                     os.environ[k] = "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
 
             # to be extra safe, let's try to block any remote connection
@@ -265,9 +278,11 @@ class DocToolsLLM_class:
 
         if isinstance(query, str):
             query = query.strip() or None
-        assert file_loader_parallel_backend in ["loky", "threading"], "Invalid value for file_loader_parallel_backend"
+        assert file_loader_parallel_backend in [
+            "loky", "threading"], "Invalid value for file_loader_parallel_backend"
         if "{user_cache}" in save_embeds_as:
-            save_embeds_as = save_embeds_as.replace("{user_cache}", str(cache_dir))
+            save_embeds_as = save_embeds_as.replace(
+                "{user_cache}", str(cache_dir))
 
         if debug:
             llm_verbosity = True
@@ -278,7 +293,8 @@ class DocToolsLLM_class:
         self.modelbackend = modelname.split("/", 1)[0].lower()
         self.modelname = modelname
         if query_eval_modelname is not None:
-            self.query_eval_modelbackend = query_eval_modelname.split("/", 1)[0].lower()
+            self.query_eval_modelbackend = query_eval_modelname.split(
+                "/", 1)[0].lower()
             self.query_eval_modelname = query_eval_modelname
         self.task = task
         self.filetype = filetype
@@ -287,7 +303,8 @@ class DocToolsLLM_class:
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
-        self.query_retrievers = query_retrievers if modelname != TESTING_LLM else query_retrievers.replace("hyde", "")
+        self.query_retrievers = query_retrievers if modelname != TESTING_LLM else query_retrievers.replace(
+            "hyde", "")
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
@@ -296,7 +313,8 @@ class DocToolsLLM_class:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.query_condense_question = bool(query_condense_question) if modelname  != TESTING_LLM else False
+        self.query_condense_question = bool(
+            query_condense_question) if modelname != TESTING_LLM else False
         self.memoryless = memoryless if modelname != TESTING_LLM else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
@@ -309,16 +327,20 @@ class DocToolsLLM_class:
             self.llm_cache = False
         else:
             if not private:
-                self.llm_cache = SQLiteCache(database_path=(cache_dir / "langchain.db").resolve().absolute())
+                self.llm_cache = SQLiteCache(database_path=(
+                    cache_dir / "langchain.db").resolve().absolute())
             else:
-                self.llm_cache = SQLiteCache(database_path=(cache_dir / "private_langchain.db").resolve().absolute())
+                self.llm_cache = SQLiteCache(database_path=(
+                    cache_dir / "private_langchain.db").resolve().absolute())
             set_llm_cache(self.llm_cache)
 
         if llms_api_bases["model"]:
-            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
+            red(
+                f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
         elif modelname == TESTING_LLM:
-            red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
+            red(
+                f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
         elif modelname in litellm.model_cost:
             self.llm_price = [
@@ -327,8 +349,10 @@ class DocToolsLLM_class:
             ]
         elif modelname.split("/", 1)[1] in litellm.model_cost:
             self.llm_price = [
-                litellm.model_cost[modelname.split("/", 1)[1]]["input_cost_per_token"],
-                litellm.model_cost[modelname.split("/", 1)[1]]["output_cost_per_token"]
+                litellm.model_cost[modelname.split(
+                    "/", 1)[1]]["input_cost_per_token"],
+                litellm.model_cost[modelname.split(
+                    "/", 1)[1]]["output_cost_per_token"]
             ]
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
@@ -343,11 +367,14 @@ class DocToolsLLM_class:
                 ]
             elif query_eval_modelname.split("/", 1)[1] in litellm.model_cost:
                 self.query_evalllm_price = [
-                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["input_cost_per_token"],
-                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]]["output_cost_per_token"]
+                    litellm.model_cost[query_eval_modelname.split(
+                        "/", 1)[1]]["input_cost_per_token"],
+                    litellm.model_cost[query_eval_modelname.split(
+                        "/", 1)[1]]["output_cost_per_token"]
                 ]
             else:
-                raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
+                raise Exception(
+                    red(f"Can't find the price of {query_eval_modelname}"))
 
         if notification_callback is not None:
             @optional_typecheck
@@ -367,9 +394,9 @@ class DocToolsLLM_class:
             set_verbose(True)
             set_debug(True)
             cli_kwargs["file_loader_n_jobs"] = 1
-            litellm.set_verbose=True
+            litellm.set_verbose = True
         else:
-            litellm.set_verbose=False
+            litellm.set_verbose = False
             # fix from https://github.com/BerriAI/litellm/issues/2256
             import logging
             for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
@@ -384,13 +411,15 @@ class DocToolsLLM_class:
         if "include" in self.cli_kwargs:
             for i, inc in enumerate(self.cli_kwargs["include"]):
                 if inc == inc.lower():
-                    self.cli_kwargs["include"][i] = re.compile(inc, flags=re.IGNORECASE)
+                    self.cli_kwargs["include"][i] = re.compile(
+                        inc, flags=re.IGNORECASE)
                 else:
                     self.cli_kwargs["include"][i] = re.compile(inc)
         if "exclude" in self.cli_kwargs:
             for i, exc in enumerate(self.cli_kwargs["exclude"]):
                 if exc == exc.lower():
-                    self.cli_kwargs["exclude"][i] = re.compile(exc, flags=re.IGNORECASE)
+                    self.cli_kwargs["exclude"][i] = re.compile(
+                        exc, flags=re.IGNORECASE)
                 else:
                     self.cli_kwargs["exclude"][i] = re.compile(exc)
 
@@ -429,15 +458,16 @@ class DocToolsLLM_class:
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
                 if "logit_bias" in litellm.get_supported_openai_params(
-                        model=f"{self.modelbackend}/{self.modelname}",
-                    ):
+                    model=f"{self.modelbackend}/{self.modelname}",
+                ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing.")
                 return
 
         else:
-            assert self.task in ["query", "search", "summary_then_query"], f"Invalid task: {self.task}"
+            assert self.task in [
+                "query", "search", "summary_then_query"], f"Invalid task: {self.task}"
             while True:
                 self.query_task(query=query)
                 query = None
@@ -465,14 +495,17 @@ class DocToolsLLM_class:
         if self.summary_n_recursion:
             for i in range(1, self.summary_n_recursion + 1):
                 estimate_dol += full_tkn * ((2/5) ** i) * adj_price / 100 * 1.2
-        whi(self.ntfy(f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
+        whi(self.ntfy(
+            f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."))
         if estimate_dol > self.dollar_limit:
             if self.llms_api_bases["model"]:
-                raise Exception(red(self.ntfy(f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
+                raise Exception(red(self.ntfy(
+                    f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
             else:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
-        llm_params = litellm.get_supported_openai_params(model=f"{self.modelbackend}/{self.modelname}") if self.modelbackend == "testing" else {}
+        llm_params = litellm.get_supported_openai_params(
+            model=f"{self.modelbackend}/{self.modelname}") if self.modelbackend == "testing" else {}
         if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
@@ -521,7 +554,7 @@ class DocToolsLLM_class:
         def summarize_documents(
             path: Any,
             relevant_docs: List,
-            ) -> dict:
+        ) -> dict:
             assert relevant_docs, 'Empty relevant_docs!'
 
             # parse metadata from the doc
@@ -538,13 +571,13 @@ class DocToolsLLM_class:
             else:
                 metadata.append(f"Title: '{item_name.strip()}'")
 
-
             # replace # in title as it would be parsed as a tag
             item_name = item_name.replace("#", r"\#")
 
             if "doc_reading_time" in relevant_docs[0].metadata:
                 doc_reading_length = relevant_docs[0].metadata["doc_reading_time"]
-                metadata.append(f"Reading length: {doc_reading_length:.1f} minutes")
+                metadata.append(
+                    f"Reading length: {doc_reading_length:.1f} minutes")
             else:
                 doc_reading_length = 0
             if "author" in relevant_docs[0].metadata:
@@ -554,24 +587,26 @@ class DocToolsLLM_class:
                 author = None
 
             if metadata:
-                metadata = "- Text metadata:\n    - " + "\n    - ".join(metadata) + "\n"
+                metadata = "- Text metadata:\n    - " + \
+                    "\n    - ".join(metadata) + "\n"
                 metadata += "    - Section number: [PROGRESS]\n"
             else:
                 metadata = "- Text metadata:\n    - Section number: [PROGRESS]\n"
 
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
-                    docs=relevant_docs,
-                    metadata=metadata,
-                    language=self.summary_language,
-                    modelbackend=self.modelbackend,
-                    llm=self.llm,
-                    llm_price=self.llm_price,
-                    verbose=self.llm_verbosity,
-                    )
+                docs=relevant_docs,
+                metadata=metadata,
+                language=self.summary_language,
+                modelbackend=self.modelbackend,
+                llm=self.llm,
+                llm_price=self.llm_price,
+                verbose=self.llm_verbosity,
+            )
 
             # get reading length of the summary
-            real_text = "".join([letter for letter in list(summary) if letter.isalpha()])
+            real_text = "".join(
+                [letter for letter in list(summary) if letter.isalpha()])
             sum_reading_length = len(real_text) / average_word_length / wpm
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
@@ -579,7 +614,8 @@ class DocToolsLLM_class:
             recursive_summaries = {0: summary}
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
-                    summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
+                    summary_text = copy.deepcopy(
+                        recursive_summaries[n_recur - 1])
                     if not self.import_mode:
                         red(f"Doing summary check #{n_recur} of {item_name}")
 
@@ -599,25 +635,27 @@ class DocToolsLLM_class:
                     assert "- Chunk " not in summary_text, "Found chunk marker"
                     assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
-                    splitter = get_splitter("recursive_summary", modelname=self.modelname)
+                    splitter = get_splitter(
+                        "recursive_summary", modelname=self.modelname)
                     summary_docs = [Document(page_content=summary_text)]
                     summary_docs = splitter.transform_documents(summary_docs)
                     assert summary_docs != relevant_docs
                     try:
                         check_docs_tkn_length(summary_docs, item_name)
                     except Exception as err:
-                        red(f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
+                        red(
+                            f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
                     summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
-                            docs=summary_docs,
-                            metadata=metadata,
-                            language=self.summary_language,
-                            modelbackend=self.modelbackend,
-                            llm=self.llm,
-                            llm_price=self.llm_price,
-                            verbose=self.llm_verbosity,
-                            n_recursion=n_recur,
-                            )
+                        docs=summary_docs,
+                        metadata=metadata,
+                        language=self.summary_language,
+                        modelbackend=self.modelbackend,
+                        llm=self.llm,
+                        llm_price=self.llm_price,
+                        verbose=self.llm_verbosity,
+                        n_recursion=n_recur,
+                    )
                     doc_total_tokens += new_doc_total_tokens
                     doc_total_cost += new_doc_total_cost
 
@@ -636,8 +674,10 @@ class DocToolsLLM_class:
                     assert "- ---" not in real_text, "Found chunk separator"
                     assert "- Chunk " not in real_text, "Found chunk marker"
                     assert "- BEFORE RECURSION # " not in real_text, "Found recursion block"
-                    real_text = "".join([letter for letter in list(real_text) if letter.isalpha()])
-                    sum_reading_length = len(real_text) / average_word_length / wpm
+                    real_text = "".join(
+                        [letter for letter in list(real_text) if letter.isalpha()])
+                    sum_reading_length = len(
+                        real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
                     if "prev_real_text" in locals():
                         if real_text == prev_real_text:
@@ -669,7 +709,8 @@ class DocToolsLLM_class:
 
                 red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
 
-            summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
+            summary_tkn_length = get_tkn_length(
+                recursive_summaries[best_sum_i])
 
             header = f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
             if doc_reading_length:
@@ -686,14 +727,16 @@ class DocToolsLLM_class:
                     outfile = Path(self.cli_kwargs["out_file"])
                     if len(recursive_summaries) > 1 and nrecur < max(list(recursive_summaries.keys())):
                         # also store intermediate summaries if present
-                        outfile = outfile.parent / (outfile.stem + f".{nrecur + 1}.md")
+                        outfile = outfile.parent / \
+                            (outfile.stem + f".{nrecur + 1}.md")
 
                     with open(str(outfile), "a") as f:
                         if outfile.exists() and outfile.read_text().strip():
                             f.write("\n\n\n")
                         f.write(header)
                         if len(recursive_summaries) > 1:
-                            f.write(f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}")
+                            f.write(
+                                f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}")
 
                         for bulletpoint in sum.split("\n"):
                             f.write("\n")
@@ -711,7 +754,7 @@ class DocToolsLLM_class:
                 "recursive_summaries": recursive_summaries,
                 "author": author,
                 "n_chunk": n_chunk,
-                }
+            }
 
         results = summarize_documents(
             path=self.cli_kwargs["path"],
@@ -719,25 +762,32 @@ class DocToolsLLM_class:
         )
 
         if not self.import_mode:
-            red(self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
-            red(self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
+            red(self.ntfy(
+                f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
+            red(self.ntfy(
+                f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
         else:
-            self.ntfy(f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})")
-            self.ntfy(f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
+            self.ntfy(
+                f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})")
+            self.ntfy(
+                f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
 
-        assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+        assert len(
+            self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
-        total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
+        total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
+            self.llm_price[1] * llmcallback.completion_tokens
         if llmcallback.total_tokens != results['doc_total_tokens']:
-            red(f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+            red(
+                f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         return results
 
     @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
         if "logit_bias" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+            model=f"{self.modelbackend}/{self.modelname}",
+        ):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -775,16 +825,16 @@ class DocToolsLLM_class:
                 98517: logit_val,    # "                                                                                "
                 }
         if "frequency_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+            model=f"{self.modelbackend}/{self.modelname}",
+        ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
         if "presence_penalty" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+            model=f"{self.modelbackend}/{self.modelname}",
+        ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
         if "temperature" in litellm.get_supported_openai_params(
-                model=f"{self.modelbackend}/{self.modelname}",
-            ):
+            model=f"{self.modelbackend}/{self.modelname}",
+        ):
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
@@ -802,18 +852,19 @@ class DocToolsLLM_class:
 
         # conversational memory
         self.memory = AnswerConversationBufferMemory(
-                memory_key="chat_history",
-                return_messages=True)
+            memory_key="chat_history",
+            return_messages=True)
 
         # set default ask_user argument
         self.interaction_settings = {
-                "top_k": self.top_k,
-                "multiline": False,
-                "retriever": self.query_retrievers,
-                "task": self.task,
-                "relevancy": self.query_relevancy,
-                }
-        self.all_texts = [v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()]
+            "top_k": self.top_k,
+            "multiline": False,
+            "retriever": self.query_retrievers,
+            "task": self.task,
+            "relevancy": self.query_relevancy,
+        }
+        self.all_texts = [v.page_content for k,
+                          v in self.loaded_embeddings.docstore._dict.items()]
 
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.cli_kwargs or "filter_content" in self.cli_kwargs:
@@ -826,10 +877,12 @@ class DocToolsLLM_class:
                 assert all_metadata_keys, "No metadata keys found in any metadata, something went wrong!"
 
                 if isinstance(self.cli_kwargs["filter_metadata"], str):
-                    filter_metadata = self.cli_kwargs["filter_metadata"].split(",")
+                    filter_metadata = self.cli_kwargs["filter_metadata"].split(
+                        ",")
                 else:
                     filter_metadata = self.cli_kwargs["filter_metadata"]
-                assert isinstance(filter_metadata, list), f"filter_metadata must be a list, not {self.cli_kwargs['filter_metadata']}"
+                assert isinstance(
+                    filter_metadata, list), f"filter_metadata must be a list, not {self.cli_kwargs['filter_metadata']}"
 
                 # storing fast as list then in tupples for faster iteration
                 filters_k_plus = []
@@ -841,13 +894,17 @@ class DocToolsLLM_class:
                 filters_b_minus_keys = []
                 filters_b_minus_values = []
                 for f in filter_metadata:
-                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    assert isinstance(
+                        f, str), f"Filter must be a string: '{f}'"
                     kvb = f[0]
-                    assert kvb in ["k", "v", "b"], f"filter 1st character must be k, v or b: '{f}'"
+                    assert kvb in [
+                        "k", "v", "b"], f"filter 1st character must be k, v or b: '{f}'"
                     incexc = f[1]
-                    assert incexc in ["+", "-"], f"filter 2nd character must be + or -: '{f}'"
+                    assert incexc in [
+                        "+", "-"], f"filter 2nd character must be + or -: '{f}'"
                     incexc_str = "plus" if incexc == "+" else "minus"
-                    assert f[2:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    assert f[2:].strip(
+                    ), f"Filter can't be an empty regex: '{f}'"
                     pattern = f[2:].strip()
                     if kvb == "b":
                         assert ":" in f, (
@@ -860,7 +917,8 @@ class DocToolsLLM_class:
                         else:
                             key_pat = re.compile(key_pat)
                         if value_pat == value_pat.lower():
-                            value_pat = re.compile(value_pat, flags=re.IGNORECASE)
+                            value_pat = re.compile(
+                                value_pat, flags=re.IGNORECASE)
                         else:
                             value_pat = re.compile(value_pat)
                         assert key_pat not in locals()[f"filters_b_{incexc_str}_keys"], (
@@ -868,8 +926,10 @@ class DocToolsLLM_class:
                             "regex. Use a single but more complex regex"
                             f": '{f}'"
                         )
-                        locals()[f"filters_b_{incexc_str}_keys"].append(key_pat)
-                        locals()[f"filters_b_{incexc_str}_values"].append(value_pat)
+                        locals()[f"filters_b_{incexc_str}_keys"].append(
+                            key_pat)
+                        locals()[f"filters_b_{incexc_str}_values"].append(
+                            value_pat)
                     else:
                         if pattern == pattern.lower():
                             pattern = re.compile(pattern, flags=re.IGNORECASE)
@@ -891,7 +951,8 @@ class DocToolsLLM_class:
 
                 # check that all key filter indeed match metadata keys
                 for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
-                    assert any(k.match(key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
+                    assert any(k.match(
+                        key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
                 @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
@@ -939,21 +1000,26 @@ class DocToolsLLM_class:
 
             if "filter_content" in self.cli_kwargs:
                 if isinstance(self.cli_kwargs["filter_content"], str):
-                    filter_content = self.cli_kwargs["filter_content"].split(",")
+                    filter_content = self.cli_kwargs["filter_content"].split(
+                        ",")
                 else:
                     filter_content = self.cli_kwargs["filter_content"]
-                assert isinstance(filter_content, list), f"filter_content must be a list, not {self.cli_kwargs['filter_content']}"
+                assert isinstance(
+                    filter_content, list), f"filter_content must be a list, not {self.cli_kwargs['filter_content']}"
 
                 # storing fast as list then in tupples for faster iteration
                 filters_cont_plus = []
                 filters_cont_minus = []
 
                 for f in filter_content:
-                    assert isinstance(f, str), f"Filter must be a string: '{f}'"
+                    assert isinstance(
+                        f, str), f"Filter must be a string: '{f}'"
                     incexc = f[0]
-                    assert incexc in ["+", "-"], f"filter 1st character must be + or -: '{f}'"
+                    assert incexc in [
+                        "+", "-"], f"filter 1st character must be + or -: '{f}'"
                     incexc_str = "plus" if incexc == "+" else "minus"
-                    assert f[1:].strip(), f"Filter can't be an empty regex: '{f}'"
+                    assert f[1:].strip(
+                    ), f"Filter can't be an empty regex: '{f}'"
                     pattern = f[1:].strip()
                     if pattern == pattern.lower():
                         pattern = re.compile(pattern, flags=re.IGNORECASE)
@@ -984,7 +1050,7 @@ class DocToolsLLM_class:
                 self.loaded_embeddings.docstore._dict.items(),
                 desc="filtering",
                 unit="docs",
-                ):
+            ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
                     good += 1
@@ -1006,21 +1072,24 @@ class DocToolsLLM_class:
                 raise Exception("Vectorstore filtering failed")
             elif status is None:
                 raise Exception("Vectorstore filtering not implemented")
-            assert len(self.loaded_embeddings.docstore._dict) == checked - len(ids_to_del), "Something went wrong when deleting filtered out documents"
-            assert len(self.loaded_embeddings.docstore._dict), "Something went wrong when deleting filtered out documents: no document left"
-            assert len(self.loaded_embeddings.docstore._dict) == len(self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
-
+            assert len(self.loaded_embeddings.docstore._dict) == checked - \
+                len(ids_to_del), "Something went wrong when deleting filtered out documents"
+            assert len(
+                self.loaded_embeddings.docstore._dict), "Something went wrong when deleting filtered out documents: no document left"
+            assert len(self.loaded_embeddings.docstore._dict) == len(
+                self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
     @optional_typecheck
     def query_task(self, query: Optional[str]) -> Optional[str]:
         if not query:
-            query, self.interaction_settings = ask_user(self.interaction_settings)
+            query, self.interaction_settings = ask_user(
+                self.interaction_settings)
             if "do_reset_memory" in self.interaction_settings:
                 assert self.interaction_settings["do_reset_memory"]
                 del self.interaction_settings["do_reset_memory"]
                 self.memory = AnswerConversationBufferMemory(
-                        memory_key="chat_history",
-                        return_messages=True)
+                    memory_key="chat_history",
+                    return_messages=True)
         assert all(
             retriev in ["default", "hyde", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
@@ -1028,57 +1097,57 @@ class DocToolsLLM_class:
         retrievers = []
         if "hyde" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                    create_hyde_retriever(
-                        query=query,
+                create_hyde_retriever(
+                    query=query,
 
-                        llm=self.llm,
-                        top_k=self.interaction_settings["top_k"],
-                        relevancy=self.interaction_settings["relevancy"],
+                    llm=self.llm,
+                    top_k=self.interaction_settings["top_k"],
+                    relevancy=self.interaction_settings["relevancy"],
 
-                        embeddings=self.embeddings,
-                        loaded_embeddings=self.loaded_embeddings,
-                        )
-                    )
+                    embeddings=self.embeddings,
+                    loaded_embeddings=self.loaded_embeddings,
+                )
+            )
 
         if "knn" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                    KNNRetriever.from_texts(
-                        self.all_texts,
-                        self.embeddings,
-                        relevancy_threshold=self.interaction_settings["relevancy"],
-                        k=self.interaction_settings["top_k"],
-                        )
-                    )
+                KNNRetriever.from_texts(
+                    self.all_texts,
+                    self.embeddings,
+                    relevancy_threshold=self.interaction_settings["relevancy"],
+                    k=self.interaction_settings["top_k"],
+                )
+            )
         if "svm" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                    SVMRetriever.from_texts(
-                        self.all_texts,
-                        self.embeddings,
-                        relevancy_threshold=self.interaction_settings["relevancy"],
-                        k=self.interaction_settings["top_k"],
-                        )
-                    )
+                SVMRetriever.from_texts(
+                    self.all_texts,
+                    self.embeddings,
+                    relevancy_threshold=self.interaction_settings["relevancy"],
+                    k=self.interaction_settings["top_k"],
+                )
+            )
         if "parent" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                    create_parent_retriever(
-                        task=self.task,
-                        loaded_embeddings=self.loaded_embeddings,
-                        loaded_docs=self.loaded_docs,
-                        top_k=self.interaction_settings["top_k"],
-                        relevancy=self.interaction_settings["relevancy"],
-                        )
-                    )
+                create_parent_retriever(
+                    task=self.task,
+                    loaded_embeddings=self.loaded_embeddings,
+                    loaded_docs=self.loaded_docs,
+                    top_k=self.interaction_settings["top_k"],
+                    relevancy=self.interaction_settings["relevancy"],
+                )
+            )
 
         if "default" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                    self.loaded_embeddings.as_retriever(
-                        search_type="similarity_score_threshold",
-                        search_kwargs={
-                            "k": self.interaction_settings["top_k"],
-                            "distance_metric": "cos",
-                            "score_threshold": self.interaction_settings["relevancy"],
-                            })
-                        )
+                self.loaded_embeddings.as_retriever(
+                    search_type="similarity_score_threshold",
+                    search_kwargs={
+                        "k": self.interaction_settings["top_k"],
+                        "distance_metric": "cos",
+                        "score_threshold": self.interaction_settings["relevancy"],
+                    })
+            )
 
         assert retrievers, "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
         if len(retrievers) == 1:
@@ -1088,9 +1157,9 @@ class DocToolsLLM_class:
 
             # remove redundant results from the merged retrievers:
             filtered = EmbeddingsRedundantFilter(
-                    embeddings=self.embeddings,
-                    similarity_threshold=0.999,
-                    )
+                embeddings=self.embeddings,
+                similarity_threshold=0.999,
+            )
             pipeline = DocumentCompressorPipeline(transformers=[filtered])
             retriever = ContextualCompressionRetriever(
                 base_compressor=pipeline, base_retriever=retriever
@@ -1098,7 +1167,8 @@ class DocToolsLLM_class:
 
         if ">>>>" in query:
             sp = query.split(">>>>")
-            assert len(sp) == 2, "The query must contain a maximum of 1 occurence of '>>>>'"
+            assert len(
+                sp) == 2, "The query must contain a maximum of 1 occurence of '>>>>'"
             query_fe = sp[0].strip()
             query_an = sp[1].strip()
         else:
@@ -1118,7 +1188,8 @@ class DocToolsLLM_class:
                     )
                 except Exception as err:
                     failed = True
-                    red(f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'")
+                    red(
+                        f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'")
             if self.modelbackend != "openrouter" or failed:
                 self.eval_llm_params = litellm.get_supported_openai_params(
                     model=self.query_eval_modelname,
@@ -1163,7 +1234,6 @@ class DocToolsLLM_class:
                 f"invalidates the cache: '{self.eval_llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
 
-
         @chain
         @optional_typecheck
         @eval_cache_wrapper
@@ -1172,19 +1242,22 @@ class DocToolsLLM_class:
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
             eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
-            ) -> List[str]:
+        ) -> List[str]:
             if isinstance(self.eval_llm, FakeListLLM):
                 outputs = ["1" for i in range(self.query_eval_check_number)]
                 new_p = 0
                 new_c = 0
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                out = self.eval_llm._generate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
-                reasons = [gen.generation_info["finish_reason"] for gen in out.generations]
+                out = self.eval_llm._generate_with_cache(
+                    PR_EVALUATE_DOC.format_messages(**inputs))
+                reasons = [gen.generation_info["finish_reason"]
+                           for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
                 # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
                 if not all(r in ["stop", "length"] for r in reasons):
-                    red(f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'")
+                    red(
+                        f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'")
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
                 if out.llm_output:
@@ -1198,6 +1271,7 @@ class DocToolsLLM_class:
                 outputs = []
                 new_p = 0
                 new_c = 0
+
                 async def do_eval(inputs):
                     return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
                 outs = [
@@ -1211,18 +1285,21 @@ class DocToolsLLM_class:
                     asyncio.set_event_loop(loop)
                 outs = loop.run_until_complete(asyncio.gather(*outs))
                 for out in outs:
-                    assert len(out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
+                    assert len(
+                        out.generations) == 1, f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
                     outputs.append(out.generations[0].text)
                     finish_reason = out.generations[0].generation_info["finish_reason"]
                     if finish_reason not in ["stop", "length"]:
-                        red(f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'")
+                        red(
+                            f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'")
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
 
-            assert len(outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs: '{outputs}'"
+            assert len(
+                outputs) == self.query_eval_check_number, f"query eval model failed to produce {self.query_eval_check_number} outputs: '{outputs}'"
 
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
@@ -1239,24 +1316,25 @@ class DocToolsLLM_class:
                 @optional_typecheck
                 def retrieve_documents(inputs):
                     return {
-                            "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
-                            "question_to_answer": inputs["question_to_answer"],
+                        "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                        "question_to_answer": inputs["question_to_answer"],
                     }
                     return inputs
 
-                refilter_documents =  {
+                refilter_documents = {
                     "filtered_docs": (
-                            RunnablePassthrough.assign(
-                                evaluations=RunnablePassthrough.assign(
-                                    doc=lambda inputs: inputs["unfiltered_docs"],
-                                    q=lambda inputs: [inputs["question_to_answer"] for i in range(len(inputs["unfiltered_docs"]))],
-                                    )
-                                | RunnablePassthrough.assign(
-                                    inputs=lambda inputs: [
-                                        {"doc":d.page_content, "q":q}
-                                        for d, q in zip(inputs["doc"], inputs["q"])])
-                                    | itemgetter("inputs")
-                                    | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
+                        RunnablePassthrough.assign(
+                            evaluations=RunnablePassthrough.assign(
+                                doc=lambda inputs: inputs["unfiltered_docs"],
+                                q=lambda inputs: [inputs["question_to_answer"] for i in range(
+                                    len(inputs["unfiltered_docs"]))],
+                            )
+                            | RunnablePassthrough.assign(
+                                inputs=lambda inputs: [
+                                    {"doc": d.page_content, "q": q}
+                                    for d, q in zip(inputs["doc"], inputs["q"])])
+                            | itemgetter("inputs")
+                            | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                         )
                         | refilter_docs
                     ),
@@ -1280,7 +1358,6 @@ class DocToolsLLM_class:
                 if len(docs) < self.interaction_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
-
             md_printer("\n\n# Documents")
             anki_cid = []
             to_print = ""
@@ -1299,20 +1376,23 @@ class DocToolsLLM_class:
                             anki_cid.append(cid)
             md_printer(to_print)
             if self.query_eval_modelname:
-                red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
-                red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
+                red(
+                    f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+                red(
+                    f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
             if anki_cid:
-                open_answ = input(f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
+                open_answ = input(
+                    f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
                 if open_answ == "debug":
                     breakpoint()
                 elif open_answ in ["y", "yes"]:
                     whi("Opening anki.")
                     query = f"cid:{','.join(anki_cid)}"
                     ankiconnect(
-                            action="guiBrowse",
-                            query=query,
-                            )
+                        action="guiBrowse",
+                        query=query,
+                    )
             all_filepaths = []
             for doc in docs:
                 if "path" in doc.metadata:
@@ -1341,9 +1421,9 @@ class DocToolsLLM_class:
                         "question_for_embedding": lambda x: x["question_for_embedding"],
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
-                        | PR_CONDENSE_QUESTION
-                        | self.llm
-                        | StrOutputParser()
+                    | PR_CONDENSE_QUESTION
+                    | self.llm
+                    | StrOutputParser()
                 }
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
@@ -1351,23 +1431,24 @@ class DocToolsLLM_class:
             @optional_typecheck
             def retrieve_documents(inputs):
                 return {
-                        "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
-                        "question_to_answer": inputs["question_to_answer"],
+                    "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                    "question_to_answer": inputs["question_to_answer"],
                 }
                 return inputs
-            refilter_documents =  {
+            refilter_documents = {
                 "filtered_docs": (
-                        RunnablePassthrough.assign(
-                            evaluations=RunnablePassthrough.assign(
-                                doc=lambda inputs: inputs["unfiltered_docs"],
-                                q=lambda inputs: [inputs["question_to_answer"] for i in range(len(inputs["unfiltered_docs"]))],
-                                )
-                            | RunnablePassthrough.assign(
-                                inputs=lambda inputs: [
-                                    {"doc":d.page_content, "q":q}
-                                    for d, q in zip(inputs["doc"], inputs["q"])])
-                                | itemgetter("inputs")
-                                | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
+                    RunnablePassthrough.assign(
+                        evaluations=RunnablePassthrough.assign(
+                            doc=lambda inputs: inputs["unfiltered_docs"],
+                            q=lambda inputs: [inputs["question_to_answer"] for i in range(
+                                len(inputs["unfiltered_docs"]))],
+                        )
+                        | RunnablePassthrough.assign(
+                            inputs=lambda inputs: [
+                                {"doc": d.page_content, "q": q}
+                                for d, q in zip(inputs["doc"], inputs["q"])])
+                        | itemgetter("inputs")
+                        | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
                     | refilter_docs
                 ),
@@ -1387,33 +1468,34 @@ class DocToolsLLM_class:
 
             answer_all_docs = RunnablePassthrough.assign(
                 inputs=lambda inputs: [
-                    {"context":d.page_content, "question_to_answer":q}
+                    {"context": d.page_content, "question_to_answer": q}
                     for d, q in zip(
                         inputs["filtered_docs"],
-                        [inputs["question_to_answer"]] * len(inputs["filtered_docs"])
+                        [inputs["question_to_answer"]] *
+                        len(inputs["filtered_docs"])
                     )
                 ]
             ) | {
-                    "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
-                    "question_to_answer": itemgetter("question_to_answer"),
-                    "filtered_docs": itemgetter("filtered_docs"),
-                    "unfiltered_docs": itemgetter("unfiltered_docs"),
-                }
+                "intermediate_answers": itemgetter("inputs") | RunnableEach(bound=answer_each_doc_chain),
+                "question_to_answer": itemgetter("question_to_answer"),
+                "filtered_docs": itemgetter("filtered_docs"),
+                "unfiltered_docs": itemgetter("unfiltered_docs"),
+            }
 
             final_answer_chain = RunnablePassthrough.assign(
-                        final_answer=RunnablePassthrough.assign(
-                            question=lambda inputs: inputs["question_to_answer"],
-                            # remove answers deemed irrelevant
-                            intermediate_answers=lambda inputs: "\n".join(
-                                [
-                                    inp
-                                    for inp in inputs["intermediate_answers"]
-                                    if check_intermediate_answer(inp)
-                                ]
-                            )
-                        )
-                        | combine_answers,
+                final_answer=RunnablePassthrough.assign(
+                    question=lambda inputs: inputs["question_to_answer"],
+                    # remove answers deemed irrelevant
+                    intermediate_answers=lambda inputs: "\n".join(
+                        [
+                            inp
+                            for inp in inputs["intermediate_answers"]
+                            if check_intermediate_answer(inp)
+                        ]
+                    )
                 )
+                | combine_answers,
+            )
             if self.query_condense_question:
                 rag_chain = (
                     loaded_memory
@@ -1463,9 +1545,11 @@ class DocToolsLLM_class:
                 batch_args = [
                     {"question_to_answer": query_an, "intermediate_answers": b}
                     for b in batches]
-                intermediate_answers = [a["final_answer"] for a in final_answer_chain.batch(batch_args)]
+                intermediate_answers = [a["final_answer"]
+                                        for a in final_answer_chain.batch(batch_args)]
             all_intermediate_answers.append(intermediate_answers)
-            final_answer = final_answer_chain.invoke({"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
+            final_answer = final_answer_chain.invoke(
+                {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
             output["final_answer"] = final_answer
             output["all_intermediate_answeers"] = all_intermediate_answers
             # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
@@ -1474,12 +1558,15 @@ class DocToolsLLM_class:
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):
                 if check_intermediate_answer(a):
-                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
+                    output["relevant_filtered_docs"].append(
+                        output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
             if not output["relevant_intermediate_answers"]:
-                md_printer("\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
-                md_printer("\n\n# No document filtered so no intermediate answers to combine")
+                md_printer(
+                    "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
+                md_printer(
+                    "\n\n# No document filtered so no intermediate answers to combine")
             else:
                 md_printer("\n\n# Intermediate answers for each document:")
             counter = 0
@@ -1498,23 +1585,32 @@ class DocToolsLLM_class:
 
             md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
 
-            red(f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
-            red(f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
-            red(f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
+            red(
+                f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+            red(
+                f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
+            red(
+                f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
             if chain_time:
                 red(f"Time took by the chain: {chain_time:.2f}s")
 
             if self.import_mode:
                 return output
 
-            assert len(self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
+            assert len(
+                self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
             llmcallback = self.llm.callbacks[0]
-            total_cost = self.llm_price[0] * llmcallback.prompt_tokens + self.llm_price[1] * llmcallback.completion_tokens
-            yel(f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+            total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
+                self.llm_price[1] * llmcallback.completion_tokens
+            yel(
+                f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
 
-            assert len(self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
+            assert len(
+                self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
             evalllmcallback = self.eval_llm.callbacks[0]
-            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
-            yel(f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
+                self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+            yel(
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")

@@ -48,7 +48,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm, loaders_temp_dir_file,
                    min_lang_prob, min_token, max_token, max_lines,
-)
+                   )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, log
 from .flags import is_verbose, is_linux, is_debug
@@ -56,7 +56,8 @@ from .flags import is_verbose, is_linux, is_debug
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
 TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+RecursiveCharacterTextSplitter = lazy_import.lazy_class(
+    'langchain.text_splitter.RecursiveCharacterTextSplitter')
 youtube_dl = lazy_import.lazy_module('youtube_dl')
 DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
 ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
@@ -93,8 +94,12 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
-markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')  # to replace markdown links by their text
-markdownimage_regex = re.compile(r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)  # to remove image from jina reader that take a lot of tokens but are not yet used
+# to replace markdown links by their text
+markdownlinkparser_regex = re.compile(r'\[([^\]]+)\]\(http[s]?://[^)]+\)')
+# to remove image from jina reader that take a lot of tokens but are not yet used
+markdownimage_regex = re.compile(
+    r'!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])', flags=re.MULTILINE)
+
 
 @optional_typecheck
 def md_shorten_image_name(md_image: str) -> str:
@@ -104,6 +109,8 @@ def md_shorten_image_name(md_image: str) -> str:
         return name
     else:
         return name[:8] + "…" + name[-8:]
+
+
 # to check that a youtube link is valid
 yt_link_regex = re.compile("youtube.*watch")
 emptyline_regex = re.compile(r"^\s*$", re.MULTILINE)
@@ -164,7 +171,7 @@ if "pdftotext" in sys.modules:
         def load(self) -> List[Document]:
             with open(self.path, "rb") as f:
                 docs = [
-                        Document(
+                    Document(
                         page_content=d,
                         metadata={"page": idoc}
                     )
@@ -197,7 +204,7 @@ def load_one_doc(
     file_hash: str,
     source_tag: Optional[str] = None,
     **kwargs,
-    ) -> List[Document]:
+) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
@@ -207,7 +214,8 @@ def load_one_doc(
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
     assert expected_global_dir, f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
     expected_global_dir = Path(expected_global_dir)
-    assert expected_global_dir.exists(), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
+    assert expected_global_dir.exists(
+    ), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
     doccheck_extra_args = {
@@ -224,9 +232,9 @@ def load_one_doc(
     ]:
         if doccheckarg in kwargs:
             assert doccheckarg.split("doccheck_")[1] in doccheck_extra_args
-            doccheck_extra_args[doccheckarg.split("doccheck_")[1]] = kwargs[doccheckarg]
+            doccheck_extra_args[doccheckarg.split(
+                "doccheck_")[1]] = kwargs[doccheckarg]
             del kwargs[doccheckarg]
-
 
     if filetype == "youtube":
         docs = load_youtube_video(
@@ -341,7 +349,8 @@ def load_one_doc(
             if "source_tag" not in docs[i].metadata:
                 docs[i].metadata["source_tag"] = source_tag
             else:
-                docs[i].metadata["source_tag"] = docs[i].metadata["source_tag"].replace("unset", "").strip()
+                docs[i].metadata["source_tag"] = docs[i].metadata["source_tag"].replace(
+                    "unset", "").strip()
                 docs[i].metadata["source_tag"] += f" {source_tag}"
         else:
             docs[i].metadata["source_tag"] = "unset"
@@ -381,7 +390,8 @@ def load_one_doc(
             )
 
         if "doc_reading_time" not in docs[i].metadata:
-            reading_length = len(docs[i].page_content) / average_word_length / wpm
+            reading_length = len(docs[i].page_content) / \
+                average_word_length / wpm
             docs[i].metadata["doc_reading_time"] = reading_length
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
@@ -401,12 +411,14 @@ def load_one_doc(
             docs[i].metadata["file_hash"] = file_hash
 
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
-        assert docs[i].metadata["content_hash"], f"Empty content_hash for document: {docs[i]}"
+        assert docs[i].metadata[
+            "content_hash"], f"Empty content_hash for document: {docs[i]}"
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
 
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-            docs[i].metadata["path"] = str(Path(docs[i].metadata["path"]).resolve().absolute())
+            docs[i].metadata["path"] = str(
+                Path(docs[i].metadata["path"]).resolve().absolute())
 
     total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
     assert total_reading_length > 0.1, (
@@ -419,6 +431,7 @@ def load_one_doc(
     return docs
 
 # Convenience functions #########################
+
 
 @optional_typecheck
 def get_url_title(url: str) -> Union[str, type(None)]:
@@ -439,6 +452,7 @@ def cloze_stripper(clozed: str) -> str:
 
 # loaders #######################################
 
+
 @optional_typecheck
 def load_youtube_video(
     path: str,
@@ -451,7 +465,7 @@ def load_youtube_video(
     whisper_prompt: Optional[str] = None,
 
     deepgram_kwargs: Optional[dict] = None,
-    ) -> List[Document]:
+) -> List[Document]:
     assert youtube_audio_backend in [
         "youtube", "whisper", "deepgram"
     ], f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
@@ -470,12 +484,14 @@ def load_youtube_video(
             loader=fyu,
             path=path,
             add_video_info=True,
-            language=youtube_language if youtube_language else ["fr-FR", "fr", "en", "en-US", "en-UK"],
+            language=youtube_language if youtube_language else [
+                "fr-FR", "fr", "en", "en-US", "en-UK"],
             translation=youtube_translation if youtube_translation else None,
         )
     else:
         whi(f"Downloading audio from url: '{path}'")
-        file_name = loaders_temp_dir / f"youtube_audio_{uuid.uuid4()}"  # without extension!
+        file_name = loaders_temp_dir / \
+            f"youtube_audio_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -483,7 +499,8 @@ def load_youtube_video(
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
             }],
-            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',  # with extension
+            # with extension
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',
             'verbose': is_verbose,
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         }
@@ -494,7 +511,8 @@ def load_youtube_video(
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
-        assert len(candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
+        assert len(
+            candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
         audio_file = str(candidate[0].absolute())
         audio_hash = file_hasher({"path": audio_file})
 
@@ -527,8 +545,10 @@ def load_youtube_video(
                 audio_hash=audio_hash,
                 deepgram_kwargs=deepgram_kwargs,
             )
-            assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
-            assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+            assert len(content["results"]["channels"]
+                       ) == 1, "unexpected deepgram output"
+            assert len(content["results"]["channels"][0]
+                       ["alternatives"]) == 1, "unexpected deepgram output"
             text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
             assert text, "Empty text from deepgram transcription"
 
@@ -552,6 +572,7 @@ def load_youtube_video(
         assert not Path(audio_file).exists()
 
     return docs
+
 
 @optional_typecheck
 @doc_loaders_cache.cache
@@ -599,13 +620,14 @@ def load_anki(
     anki_deck: Optional[str] = None,
     anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
-    ) -> List[Document]:
+) -> List[Document]:
 
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
-    new_db_path = loaders_temp_dir / f"anki_collection_{name.replace('/', '_')}_{random_val}"
+    new_db_path = loaders_temp_dir / \
+        f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
     ), f"{new_db_path} already existing!"
     shutil.copy(original_db, new_db_path)
@@ -659,18 +681,19 @@ def load_anki(
         if debug:
             tqdm.pandas(desc="Joining fields")
         cards["text"] = cards["fields_dict"].progress_apply(
-            lambda x: "\n".join(f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
+            lambda x: "\n".join(
+                f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
         if debug:
             tqdm.pandas(desc="Parsing text")
         cards["text"] = cards.progress_apply(
-                lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
-                    {
-                        k: html_to_text(cloze_stripper(v)).strip()
-                        for k, v in zip(x["fields_name"], x["nflds"])
-                    }
-                ),
+            lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
+                {
+                    k: html_to_text(cloze_stripper(v)).strip()
+                    for k, v in zip(x["fields_name"], x["nflds"])
+                }
+            ),
             axis=1,
         )
     cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
@@ -681,10 +704,10 @@ def load_anki(
         tqdm.pandas(desc="Replacing media in anki")
     cards["text"] = cards["text"].apply(
         lambda x: anki_replace_media(
-        content=x,
-        media=None,
-        mode="remove_media",
-        strict=False,
+            content=x,
+            media=None,
+            mode="remove_media",
+            strict=False,
         )[0]
     )
     cards = cards[~cards["text"].str.contains("\[IMAGE_")]
@@ -735,16 +758,18 @@ def load_anki(
     Path(str(new_db_path.absolute()) + "-wal").unlink(missing_ok=True)
     return docs
 
+
 REG_IMG = re.compile(
-    r'<img src="[^"]+"(?:[^>]*?)?>' ,
-    flags=re.MULTILINE|re.DOTALL)
+    r'<img src="[^"]+"(?:[^>]*?)?>',
+    flags=re.MULTILINE | re.DOTALL)
 
 REG_SOUNDS = re.compile(
-        r'\[sound:\w+\.\w{2,3}\]',
+    r'\[sound:\w+\.\w{2,3}\]',
 )
 REG_LINKS = re.compile(
     r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(?:/[A-Za-z0-9%-_])*(?:#|\\?)[A-Za-z0-9%-_&=]*',
 )
+
 
 @optional_typecheck
 def anki_replace_media(
@@ -752,7 +777,7 @@ def anki_replace_media(
     media: Union[None, Dict],
     mode: str,
     strict: bool = True,
-    ) -> Tuple[str, Dict]:
+) -> Tuple[str, Dict]:
     """
     Else: exclude any note that contains in the content:
         * an image (<img...)
@@ -813,7 +838,8 @@ def anki_replace_media(
             if strict:
                 assert links
             elif not links:
-                red(f"AnkiMediaReplacer: Expected to found linke because '://' in '{content}'")
+                red(
+                    f"AnkiMediaReplacer: Expected to found linke because '://' in '{content}'")
             assert all(link in content for link in links)
             assert all(re.search(REG_LINKS, link) for link in links)
         else:
@@ -874,7 +900,8 @@ def anki_replace_media(
 
         # check no media can be found anymore
         assert not re.findall(REG_IMG, new_content), new_content
-        assert not BeautifulSoup(new_content, 'html.parser').find_all('img'), new_content
+        assert not BeautifulSoup(
+            new_content, 'html.parser').find_all('img'), new_content
         assert not re.findall(REG_SOUNDS, new_content), new_content
         assert not re.findall(REG_LINKS, new_content), new_content
         if strict:
@@ -941,6 +968,7 @@ def load_string() -> List[Document]:
     ]
     return docs
 
+
 @optional_typecheck
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
@@ -950,13 +978,14 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     docs = [Document(page_content=content, metadata={})]
     return docs
 
+
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
     path: str,
     file_hash: str,
     load_functions: Optional[bytes] = None,
-    ) -> List[Document]:
+) -> List[Document]:
     whi(f"Loading local html: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
 
@@ -1001,21 +1030,25 @@ def load_local_html(
     ]
     return docs
 
+
 @optional_typecheck
 @doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
-    ) -> List[Callable]:
-    assert isinstance(load_functions, list), "load_functions must be of type list"
-    assert all(isinstance(lf, str) for lf in load_functions), "elements of load_functions must be of type str"
+) -> List[Callable]:
+    assert isinstance(
+        load_functions, list), "load_functions must be of type list"
+    assert all(isinstance(lf, str)
+               for lf in load_functions), "elements of load_functions must be of type str"
 
     try:
         for ilf, lf in enumerate(load_functions):
             load_functions[ilf] = eval(lf)
     except Exception as err:
-        raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+        raise Exception(
+            f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
     assert all(callable(lf) for lf in load_functions), (
-            f"Some load_functions are not callable: {load_functions}")
+        f"Some load_functions are not callable: {load_functions}")
 
 
 @optional_typecheck
@@ -1025,16 +1058,18 @@ def load_logseq_markdown(
     path: str,
     file_hash: str,
     text_splitter: TextSplitter,
-    ) -> List[Document]:
+) -> List[Document]:
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
         parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
     except Exception as err:
-        raise Exception(f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
+        raise Exception(
+            f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
 
     if not parsed.blocks:
-        raise Exception(f"No logseq blocks loaded for {path} (file size: {Path(path).stat().st_size})")
+        raise Exception(
+            f"No logseq blocks loaded for {path} (file size: {Path(path).stat().st_size})")
 
     blocks = parsed.blocks
     page_props = parsed.page_properties
@@ -1096,6 +1131,7 @@ def load_logseq_markdown(
 
     return docs
 
+
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
@@ -1109,7 +1145,7 @@ def load_local_audio(
     whisper_prompt: Optional[str] = None,
 
     deepgram_kwargs: Optional[dict] = None,
-    ) -> List[Document]:
+) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
     if audio_unsilence:
@@ -1122,7 +1158,7 @@ def load_local_audio(
             waveform,
             sample_rate,
             sox_effects,
-            )
+        )
         elapsed = time.time() - start
         new_dur = waveform.shape[1] / sample_rate
         assert new_dur < dur, (
@@ -1137,8 +1173,10 @@ def load_local_audio(
         )
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
-        unsilenced_path_wav = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.wav"
-        unsilenced_path_ogg = loaders_temp_dir / f"unsilenced_audio_{uuid.uuid4()}.ogg"
+        unsilenced_path_wav = loaders_temp_dir / \
+            f"unsilenced_audio_{uuid.uuid4()}.wav"
+        unsilenced_path_ogg = loaders_temp_dir / \
+            f"unsilenced_audio_{uuid.uuid4()}.ogg"
         assert not unsilenced_path_wav.exists()
         assert not unsilenced_path_ogg.exists()
         torchaudio.save(
@@ -1148,7 +1186,8 @@ def load_local_audio(
             format="wav",
         )
         # turn the .wav into .ogg
-        ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(str(unsilenced_path_ogg.resolve().absolute())).run()
+        ffmpeg.input(str(unsilenced_path_wav.resolve().absolute())).output(
+            str(unsilenced_path_ogg.resolve().absolute())).run()
         unsilenced_hash = file_hasher({"path": unsilenced_path_ogg})
 
         old_path = path
@@ -1186,8 +1225,10 @@ def load_local_audio(
             audio_hash=file_hash,
             deepgram_kwargs=deepgram_kwargs,
         )
-        assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
-        assert len(content["results"]["channels"][0]["alternatives"]) == 1, "unexpected deepgram output"
+        assert len(content["results"]["channels"]
+                   ) == 1, "unexpected deepgram output"
+        assert len(content["results"]["channels"][0]
+                   ["alternatives"]) == 1, "unexpected deepgram output"
         text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"]["transcript"].strip()
         assert text, "Empty text from deepgram transcription"
 
@@ -1203,9 +1244,11 @@ def load_local_audio(
         docs[-1].metadata["deepgram_kwargs"] = deepgram_kwargs
 
     else:
-        raise ValueError(f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
+        raise ValueError(
+            f"Invalid audio backend: must be either 'deepgram' or 'whisper'. Not '{audio_backend}'")
 
     return docs
+
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
@@ -1220,7 +1263,7 @@ def load_local_video(
     whisper_prompt: Optional[str] = None,
 
     deepgram_kwargs: Optional[dict] = None,
-    ) -> List[Document]:
+) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
     audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
@@ -1237,7 +1280,8 @@ def load_local_video(
         ).run()
         whi(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        red(f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
+        red(
+            f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
 
         try:
             Path(audio_path).unlink(missing_ok=True)
@@ -1273,13 +1317,14 @@ def transcribe_audio_deepgram(
     audio_path: str,
     audio_hash: str,
     deepgram_kwargs: Optional[dict] = None,
-    ) -> dict:
+) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use deepgram's API"
     )
-    assert "DEEPGRAM_API_KEY" in os.environ and not os.environ["DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
+    assert "DEEPGRAM_API_KEY" in os.environ and not os.environ[
+        "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
 
     # client
     try:
@@ -1336,20 +1381,22 @@ def transcribe_audio_deepgram(
     d = content.to_dict()
     return d
 
+
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
-    audio_path: str,
-    audio_hash: str,
-    language: str,
-    prompt: str) -> dict:
+        audio_path: str,
+        audio_hash: str,
+        language: str,
+        prompt: str) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use openai's whisper"
     )
 
-    assert "OPENAI_API_KEY" in os.environ and not os.environ["OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
+    assert "OPENAI_API_KEY" in os.environ and not os.environ[
+        "OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:
@@ -1360,16 +1407,17 @@ def transcribe_audio_whisper(
             language=language,
             temperature=0,
             response_format="verbose_json",
-            ).json()
+        ).json()
     whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
     return transcript
+
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
     path: str,
     file_hash: str,
-    ) -> List[Document]:
+) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
     loader = UnstructuredEPubLoader(path)
     content = loader.load()
@@ -1382,12 +1430,13 @@ def load_epub(
     ]
     return docs
 
+
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
     path: str,
     file_hash: str,
-    ) -> List[Document]:
+) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
     loader = UnstructuredPowerPointLoader(path)
     content = loader.load()
@@ -1399,12 +1448,14 @@ def load_powerpoint(
         )
     ]
     return docs
+
+
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
     path: str,
     file_hash: str,
-    ) -> List[Document]:
+) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
         loader = Docx2txtLoader(path)
@@ -1412,12 +1463,14 @@ def load_word_document(
         docs = [Document(page_content=content)]
         check_docs_tkn_length(docs, path)
     except Exception as err:
-        red(f"Error when loading word document with docx2txt, trying with unstructured: '{err}'")
+        red(
+            f"Error when loading word document with docx2txt, trying with unstructured: '{err}'")
         loader = UnstructuredWordDocumentLoader(path)
         content = loader.load()
         docs = [Document(page_content=content)]
 
     return docs
+
 
 @optional_typecheck
 @doc_loaders_cache.cache
@@ -1435,19 +1488,21 @@ def load_url(path: str, title=None) -> List[Document]:
             loader = WebBaseLoader(
                 "https://r.jina.ai/" + path,
                 raise_for_status=True)
-            text = "\n".join([doc.page_content for doc in loader.load()]).strip()
+            text = "\n".join(
+                [doc.page_content for doc in loader.load()]).strip()
             assert text, "Empty text"
             if not title:
                 if text.splitlines()[0].startswith("Title: "):
                     title = text.splitlines()[0].replace("Title: ", "", 1)
             text = text.split("Markdown Content:", 1)[1]
             text = markdownlinkparser_regex.sub(r'\1', text)  # remove links
-            text = markdownimage_regex.sub(md_shorten_image_name, text)  # remove markdown images for now as caption is disabled so it's just base64 or something like that, keep only a shorten image name
+            # remove markdown images for now as caption is disabled so it's just base64 or something like that, keep only a shorten image name
+            text = markdownimage_regex.sub(md_shorten_image_name, text)
             docs = [
                 Document(
                     page_content=text,
                     metadata={
-                    "parser": "jinareader",
+                        "parser": "jinareader",
                     }
                 )
             ]
@@ -1624,8 +1679,10 @@ def cached_yt_loader(
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
     content = loader.load()
-    assert isinstance(content, list), f"Output of {loader_name} is of type {type(content)}"
-    assert all(isinstance(d, Document) for d in content), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    assert isinstance(
+        content, list), f"Output of {loader_name} is of type {type(content)}"
+    assert all(isinstance(d, Document)
+               for d in content), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
     return content
 
 
@@ -1635,7 +1692,7 @@ def load_pdf(
     text_splitter: TextSplitter,
     debug: bool,
     file_hash: str,
-    ) -> List[Document]:
+) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     name = Path(path).name
@@ -1652,7 +1709,8 @@ def load_pdf(
         raise TimeoutError
     pdf_timeout = 5 * 60  # in seconds
 
-    pbar = tqdm(total=len(pdf_loaders), desc=f"Parsing PDF {name}", unit="loader")
+    pbar = tqdm(total=len(pdf_loaders),
+                desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:

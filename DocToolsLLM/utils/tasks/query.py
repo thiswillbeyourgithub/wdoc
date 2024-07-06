@@ -28,6 +28,7 @@ def format_chat_history(chat_history: List[Tuple]) -> str:
         buffer += "\n" + "\n".join([human, ai])
     return buffer
 
+
 @optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
@@ -35,7 +36,7 @@ def check_intermediate_answer(ans: str) -> bool:
         ((not irrelevant_regex.search(ans)) and len(ans) < len("IRRELEVANT") * 2)
         or
         len(ans) >= len("IRRELEVANT") * 2
-        ):
+    ):
         return True
     return False
 
@@ -46,9 +47,12 @@ def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents find via RAG based on if the eval llm answered 0 or 1"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
-    assert isinstance(unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
-    assert isinstance(evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
-    assert len(unfiltered_docs) == len(evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
+    assert isinstance(
+        unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
+    assert isinstance(
+        evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
+    assert len(unfiltered_docs) == len(
+        evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
     if not unfiltered_docs:
         raise NoDocumentsRetrieved("No document corresponding to the query")
     filtered_docs = []
@@ -66,6 +70,7 @@ def refilter_docs(inputs: dict) -> List[Document]:
         raise NoDocumentsAfterLLMEvalFiltering(
             "No document remained after filtering with the query")
     return filtered_docs
+
 
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
@@ -98,5 +103,5 @@ def parse_eval_output(output: str) -> str:
     elif "0" not in digits and "1" not in digits:
         raise InvalidDocEvaluationByLLMEval(mess)
 
-    raise Exception(f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")
-
+    raise Exception(
+        f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")

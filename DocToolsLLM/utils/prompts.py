@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
-        [
+    [
         ("system", """You are Alfred, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
@@ -42,7 +42,7 @@ Text section:
 ```
 {text}
 ```"""),
-        ],
+    ],
 )
 # if the summary is recursive, add those instructions
 RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important."
@@ -51,16 +51,18 @@ RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from las
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
     [
         ("system", "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
-    ("human", "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?")
-        ]
+        ("human",
+         "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?")
+    ]
 )
 
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
         ("system", "You are given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."),
-        ("human", "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
-        ]
+        ("human",
+         "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
+    ]
 )
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
@@ -120,6 +122,7 @@ Detailed instructions:
         - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 ```"""),
-        ("human", "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
+        ("human",
+         "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
 )

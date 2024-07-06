@@ -26,7 +26,7 @@ def create_hyde_retriever(
 
     embeddings: Any,
     loaded_embeddings: Any,
-    ) -> Any:
+) -> Any:
     """
     create a retriever only for the subset of documents from the
     loaded_embeddings that were found using HyDE technique (i.e. asking
@@ -43,21 +43,22 @@ def create_hyde_retriever(
 User question: {question}
 Answer:"""
     hyde_prompt = PromptTemplate(
-            input_variables=["question"],
-            template=HyDE_template,
-            )
+        input_variables=["question"],
+        template=HyDE_template,
+    )
 
     hyde_chain = LLMChain(
-            llm=llm,
-            prompt=hyde_prompt,
-            )
+        llm=llm,
+        prompt=hyde_prompt,
+    )
 
     hyde_embeddings = HypotheticalDocumentEmbedder(
         llm_chain=hyde_chain,
         base_embeddings=embeddings,
-        )
+    )
     loaded_embeddings.save_local("temp")
-    db = FAISS.load_local("temp", hyde_embeddings, allow_dangerous_deserialization=True)
+    db = FAISS.load_local("temp", hyde_embeddings,
+                          allow_dangerous_deserialization=True)
     rmtree("temp")
 
     retriever = db.as_retriever(
@@ -66,8 +67,8 @@ Answer:"""
             "k": top_k,
             "distance_metric": "cos",
             "score_threshold": relevancy,
-            }
-        )
+        }
+    )
     return retriever
 
 
@@ -78,22 +79,22 @@ def create_parent_retriever(
     loaded_docs: List[Document],
     top_k: int,
     relevancy: float,
-    ) -> Any:
+) -> Any:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
     psp = get_splitter(task)
     psp._chunk_size *= 4
     parent = ParentDocumentRetriever(
-            vectorstore=loaded_embeddings,
-            docstore=LocalFileStore(cache_dir / "parent_retriever"),
-            child_splitter=csp,
-            parent_splitter=psp,
-            search_type="similarity",
-            search_kwargs={
-                "k": top_k,
-                "distance_metric": "cos",
-                "score_threshold": relevancy,
-                }
-            )
+        vectorstore=loaded_embeddings,
+        docstore=LocalFileStore(cache_dir / "parent_retriever"),
+        child_splitter=csp,
+        parent_splitter=psp,
+        search_type="similarity",
+        search_kwargs={
+            "k": top_k,
+            "distance_metric": "cos",
+            "score_threshold": relevancy,
+        }
+    )
     parent.add_documents(loaded_docs)
     return parent

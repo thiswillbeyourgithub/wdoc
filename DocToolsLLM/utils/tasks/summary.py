@@ -12,6 +12,7 @@ from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
 from ..logger import whi, red
 from ..typechecker import optional_typecheck
 
+
 @optional_typecheck
 def do_summarize(
     docs: List[Document],
@@ -21,8 +22,8 @@ def do_summarize(
     llm: Any,
     llm_price: List[float],
     verbose: bool,
-    n_recursion: int=0,
-    ) -> Tuple[str, int, int, Union[float, int]]:
+    n_recursion: int = 0,
+) -> Tuple[str, int, int, Union[float, int]]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""

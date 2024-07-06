@@ -23,25 +23,28 @@ from .flags import disable_md_printing
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
 cache_dir = Path(user_cache_dir(appname="DocToolsLLM"))
-assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(), f"Invalid cache dir location: '{cache_dir}'"
+assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(
+), f"Invalid cache dir location: '{cache_dir}'"
 cache_dir.mkdir(parents=True, exist_ok=True)
 
 log_dir = Path(user_log_dir(appname="DocToolsLLM"))
-assert log_dir.parent.exists() or log_dir.parent.parent.exists() or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
+assert log_dir.parent.exists() or log_dir.parent.parent.exists(
+) or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
 log_dir.mkdir(exist_ok=True, parents=True)
 log_file = (log_dir / "logs.txt")
 log_file.touch(exist_ok=True)
 
 # logger
-log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
+log_formatter = logging.Formatter(
+    '%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 handler = logging.handlers.RotatingFileHandler(
-        filename=log_file,
-        mode="a",
-        encoding=None,
-        delay=0,
-        maxBytes=1024*1024*100,  # max 100mb
-        # backupCount=3,
-        )
+    filename=log_file,
+    mode="a",
+    encoding=None,
+    delay=0,
+    maxBytes=1024*1024*100,  # max 100mb
+    # backupCount=3,
+)
 handler.setLevel(logging.INFO)
 handler.setFormatter(log_formatter)
 
@@ -53,12 +56,12 @@ log.addHandler(handler)
 
 
 colors = {
-        "red": "\033[91m",
-        "yellow": "\033[93m",
-        "reset": "\033[0m",
-        "white": "\033[0m",
-        "purple": "\033[95m",
-        }
+    "red": "\033[91m",
+    "yellow": "\033[93m",
+    "reset": "\033[0m",
+    "white": "\033[0m",
+    "purple": "\033[95m",
+}
 
 
 @optional_typecheck
@@ -100,6 +103,7 @@ red = get_coloured_logger("red")
 
 console = Console()
 
+
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
@@ -119,6 +123,7 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
         else:
             whi(message)
     return message
+
 
 @optional_typecheck
 def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:

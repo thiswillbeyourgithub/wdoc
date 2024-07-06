@@ -3,6 +3,7 @@ from setuptools.command.install import install
 import subprocess
 import sys
 
+
 class PostInstallCommand(install):
     def run(self):
         install.run(self)
@@ -10,15 +11,16 @@ class PostInstallCommand(install):
         # do "playwright install"
         try:
             subprocess.check_call(
-                    [sys.executable, '-m', 'playwright', 'install']
-                )
+                [sys.executable, '-m', 'playwright', 'install']
+            )
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
         try:
             subprocess.check_call(
-                    [sys.executable, '-m', 'pip', 'install', '-U", "git+https://github.com/ytdl-org/youtube-dl.git'],
-                )
+                [sys.executable, '-m', 'pip', 'install',
+                    '-U", "git+https://github.com/ytdl-org/youtube-dl.git'],
+            )
         except Exception as err:
             print(f"Error when pip updating youtube_dl: '{err}'")
 
@@ -40,7 +42,8 @@ setup(
         "Operating System :: OS Independent",
     ],
     license="GPLv3",
-    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx", "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
+    keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx",
+              "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
     entry_points={
         'console_scripts': [
             'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
@@ -77,7 +80,7 @@ setup(
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
-        'pandoc >= 2.3', # epub
+        'pandoc >= 2.3',  # epub
         'unstructured[all-docs]>=0.6.2',  # many file formats
         'ankipandas>=0.3.13',  # anki
         'tldextract>=3.4.1',  # url
@@ -93,19 +96,20 @@ setup(
         'torchaudio >= 2.3.1',  # silence removal from audio
     ],
     extra_require={
-    'optional_feature': [
-        # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
-        'fasttext-langdetect >= 1.0.5',
-        'langdetect >= 1.0.9',
-        'pdftotext >= 2.2.2',  # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
+        'optional_feature': [
+            # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
+            'fasttext-langdetect >= 1.0.5',
+            'langdetect >= 1.0.9',
+            # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
+            'pdftotext >= 2.2.2',
 
-        # pdf
-        'pdfminer.six >= 20231228',
-        "pillow_heif >= 0.16.0",
-        "pypdfium2 >= 4.30.0",
-        "pymupdf >= 1.24.5",
-        "pdfplumber >= 0.11.1",
-        "pdf2image >= 1.17.0",
+            # pdf
+            'pdfminer.six >= 20231228',
+            "pillow_heif >= 0.16.0",
+            "pypdfium2 >= 4.30.0",
+            "pymupdf >= 1.24.5",
+            "pdfplumber >= 0.11.1",
+            "pdf2image >= 1.17.0",
         ]
     },
     cmdclass={

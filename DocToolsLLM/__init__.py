@@ -19,7 +19,7 @@ __VERSION__ = DocToolsLLM.VERSION
 def fire_wrapper(
     *args,
     **kwargs,
-    ) -> dict:
+) -> dict:
     "used to catch --help arg to display it better than fire would do"
 
     # --help but not catched by sys.argv
@@ -39,7 +39,8 @@ def fire_wrapper(
     args = list(args)
     if args and isinstance(args[0], str):
         if args[0].replace("summary", "summarize") in ["query", "search", "summarize", "summarize_then_query"]:
-            assert "task" not in kwargs or not kwargs["task"], f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
+            assert "task" not in kwargs or not kwargs[
+                "task"], f"Tried to give task as arg and kwarg?\n- args: {args}\n- kwargs: {kwargs}"
             kwargs["task"] = args.pop(0).replace("summary", "summarize")
 
     # prepare the parsing of --query

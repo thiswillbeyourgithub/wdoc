@@ -16,6 +16,7 @@ from .misc import cache_dir
 from .logger import whi, red, md_printer
 from .typechecker import optional_typecheck
 
+
 @optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
     "parsed settings to be well displayed in the prompt toolbar"
@@ -33,12 +34,12 @@ def get_toolbar_text(settings: dict) -> Any:
 class SettingsCompleter(Completer):
     @optional_typecheck
     def __init__(
-        self,
-        doctoolsCliSettings,
-        doctoolsHistoryPrompts,
-        doctoolsHistoryWords,
-        *args,
-        **kwargs):
+            self,
+            doctoolsCliSettings,
+            doctoolsHistoryPrompts,
+            doctoolsHistoryWords,
+            *args,
+            **kwargs):
         super().__init__(*args, **kwargs)
         self.doctoolsCliSettings = doctoolsCliSettings
         self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
@@ -84,10 +85,12 @@ class SettingsCompleter(Completer):
                 if hist.lower().startswith(text.lower()):
                     yield Completion(hist, start_position=-len(text))
 
+
 @optional_typecheck
 def show_help() -> None:
     "display CLI help"
     md_printer(dedent(ask_user.__doc__).strip())
+
 
 @optional_typecheck
 def ask_user(settings: dict) -> Tuple[str, dict]:
@@ -142,13 +145,15 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             if pp not in prev_questions:
                 prev_questions.append(pp)
         prev_questions = sorted(
-                prev_questions,
-                key=lambda x: x["timestamp"],
-                )
+            prev_questions,
+            key=lambda x: x["timestamp"],
+        )
 
-    prompts = [x["prompt"] for x in prev_questions if x["task"] == settings["task"]]
-    words = [w for w in " ".join(prompts).split(" ") if len(w) > 2 and w.isalpha()]
-    completer=SettingsCompleter(
+    prompts = [x["prompt"]
+               for x in prev_questions if x["task"] == settings["task"]]
+    words = [w for w in " ".join(prompts).split(
+        " ") if len(w) > 2 and w.isalpha()]
+    completer = SettingsCompleter(
         doctoolsCliSettings=settings,
         doctoolsHistoryPrompts=prompts,
         doctoolsHistoryWords=words
@@ -160,11 +165,11 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         session = PromptSession(
             bottom_toolbar=lambda: get_toolbar_text(settings),
             completer=completer,
-            )
+        )
         try:
             user_input = session.prompt(
                 "> ",
-                #completer=autocomplete,
+                # completer=autocomplete,
                 vi_mode=True,
                 multiline=settings["multiline"],
             )
@@ -229,9 +234,11 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 continue
             try:
                 if sett_k == "top_k":
-                    assert int(sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
+                    assert int(
+                        sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
                 elif sett_k == "relevancy":
-                    assert float(sett_v) > 0 and float(sett_v) <= 1, f"Can't set relevancy to <= 0 or >1 ({sett_v})"
+                    assert float(sett_v) > 0 and float(
+                        sett_v) <= 1, f"Can't set relevancy to <= 0 or >1 ({sett_v})"
                 elif sett_k == "retriever":
                     assert all(
                         retriev in ["default", "hyde", "knn", "svm", "parent"]
@@ -262,21 +269,21 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
 
     # saving new history to file
     if len(
-        [
-            x
-            for x in prev_questions
-            if x["prompt"].strip() == user_input
-        ]) == 0:
+            [
+                x
+                for x in prev_questions
+                if x["prompt"].strip() == user_input
+            ]) == 0:
         prev_questions.append(
-                {
-                    "prompt": user_input,
-                    "timestamp": int(time.time()),
-                    "task": settings["task"],
-                    })
+            {
+                "prompt": user_input,
+                "timestamp": int(time.time()),
+                "task": settings["task"],
+            })
     prev_questions = sorted(
-            prev_questions,
-            key=lambda x: x["timestamp"],
-            )
+        prev_questions,
+        key=lambda x: x["timestamp"],
+    )
     temp_file = Path(str(pp_file.resolve().absolute()) + ".temp")
     json.dump(prev_questions, temp_file.open("w"), indent=4)
     assert temp_file.exists()
