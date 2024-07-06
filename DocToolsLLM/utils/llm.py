@@ -56,9 +56,20 @@ def load_llm(
         assert modelname == "testing/testing"
         if verbose:
             whi("Loading a fake LLM using the testing/ backend")
+        lorem_ipsum = (
+                "Lorem ipsum dolor sit amet, consectetur adipiscing "
+                "elit, sed do eiusmod tempor incididunt ut labore et "
+                "dolore magna aliqua. Ut enim ad minim veniam, quis "
+                "nostrud exercitation ullamco laboris nisi ut aliquip "
+                "ex ea commodo consequat. Duis aute irure dolor in "
+                "reprehenderit in voluptate velit esse cillum dolore eu "
+                "fugiat nulla pariatur. Excepteur sint occaecat cupidatat "
+                "non proident, sunt in culpa qui officia deserunt mollit "
+                "anim id est laborum."
+        )
         llm = FakeListChatModel(
             verbose=verbose,
-            responses=[f"Fake answer n°{i}" for i in range(1, 100)],
+            responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
             callbacks=[PriceCountingCallback(verbose=verbose)],
             cache=False,
             **extra_model_args,
