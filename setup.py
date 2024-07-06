@@ -66,7 +66,7 @@ setup(
         'faiss-cpu>=1.8.0',
         'llama-cpp-python>=0.2.76',
         'rich>=13.7.1',
-        'beartype >= 0.18.5',
+        'beartype >= 0.19.0rc0',
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
