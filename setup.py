@@ -28,7 +28,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.54",
+    version="0.55",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -66,7 +66,7 @@ setup(
         'faiss-cpu>=1.8.0',
         'llama-cpp-python>=0.2.76',
         'rich>=13.7.1',
-        'beartype >= 0.18.5',
+        'beartype >= 0.19.0rc0',
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
