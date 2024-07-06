@@ -26,7 +26,7 @@ from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
 
-TESTING_MODEL = "testing/testing"
+TESTING_LLM = "testing/testing"
 
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
