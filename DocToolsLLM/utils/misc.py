@@ -274,7 +274,6 @@ def get_splitter(
     modelname="gpt-3.5-turbo",
 ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
-
     max_tokens = 4096
     try:
         max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
@@ -284,7 +283,8 @@ def get_splitter(
         max_tokens = min(max_tokens, int(
             2.5 * litellm.get_model_info(modelname)["max_tokens"]))
     except Exception as err:
-        red(f"Failed to get max_token limit for model {modelname}: '{err}'")
+        if modelname != "testing/testing":
+            red(f"Failed to get max_tokens limit for model {modelname}: '{err}'")
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname)
 
