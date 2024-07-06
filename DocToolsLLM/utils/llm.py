@@ -16,7 +16,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
-from langchain_community.llms import FakeListLLM
+from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 from langchain_community.cache import SQLiteCache
@@ -45,7 +45,7 @@ def load_llm(
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
-    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListLLM]:
+    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
@@ -53,16 +53,13 @@ def load_llm(
     if backend == "testing":
         if verbose:
             whi("Loading a fake LLM using the testing/ backend")
-        llm = FakeListLLM(
+        llm = FakeListChatModel(
             verbose=verbose,
             responses=[f"Fake answer n°{i}" for i in range(1, 100)],
             callbacks=[PriceCountingCallback(verbose=verbose)],
             cache=False,
             **extra_model_args,
         )
-        setattr(llm.__class__, "_get_llm_string", lambda self: f"testing: FakeListLLM_{random.random()}")
-        setattr(llm.__class__, "_generate_with_cache", llm.__class__.generate)
-        setattr(llm.__class__, "_agenerate_with_cache", llm.__class__.agenerate)
         return llm
 
     if verbose:
