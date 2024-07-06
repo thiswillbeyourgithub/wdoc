@@ -188,7 +188,7 @@ class DocToolsLLM_class:
         if filetype == "infer":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
-        if not modelname.split("/", 1)[0] in ["testing"] + list(litellm.models_by_provider.keys()):
+        if not modelname.startswith("testing") and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
             raise Exception(
                 f"For model '{modelname}': backend not found in "
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
@@ -280,7 +280,7 @@ class DocToolsLLM_class:
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
-        self.query_retrievers = query_retrievers if "testing" not in modelname else query_retrievers.replace("hyde", "")
+        self.query_retrievers = query_retrievers if not modelname.startswith("testing") else query_retrievers.replace("hyde", "")
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
@@ -289,8 +289,8 @@ class DocToolsLLM_class:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.query_condense_question = bool(query_condense_question) if "testing" not in modelname else False
-        self.memoryless = memoryless if "testing" not in modelname else False
+        self.query_condense_question = bool(query_condense_question) if not modelname.startswith("testing") else False
+        self.memoryless = memoryless if not modelname.startswith("testing") else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
@@ -310,7 +310,7 @@ class DocToolsLLM_class:
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
-        elif "testing" in modelname:
+        elif modelname.startswith("testing"):
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
         elif modelname in litellm.model_cost:
