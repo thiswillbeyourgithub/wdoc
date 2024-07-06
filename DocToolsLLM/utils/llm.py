@@ -26,6 +26,8 @@ from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
 
+TESTING_MODEL = "testing/testing"
+
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
@@ -51,6 +53,7 @@ def load_llm(
         extra_model_args = {}
     assert "cache" not in extra_model_args
     if backend == "testing":
+        assert modelname == "testing"
         if verbose:
             whi("Loading a fake LLM using the testing/ backend")
         llm = FakeListChatModel(
@@ -61,6 +64,8 @@ def load_llm(
             **extra_model_args,
         )
         return llm
+    else:
+        assert "testing" not in modelname.lower()
 
     if verbose:
         whi("Loading model via litellm")

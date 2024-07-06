@@ -38,8 +38,7 @@ from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
-from .utils.llm import load_llm
-from .utils.llm import AnswerConversationBufferMemory
+from .utils.llm import load_llm, AnswerConversationBufferMemory, TESTING_LLM
 from .utils.interact import ask_user
 from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
@@ -174,16 +173,16 @@ class DocToolsLLM_class:
                     assert val, f"Empty list found for cli_kwargs: '{k}'"
                 die_if_unbearable(val, expected_type)
 
-        if modelname == "testing/testing":
-            if modelname != "testing/testing":
-                red(f"Detected 'testing' model in {modelname}, setting it to 'testing/testing'")
-                modelname = "testing/testing"
+        if modelname == TESTING_LLM:
+            if modelname != TESTING_LLM:
+                red(f"Detected 'testing' model in {modelname}, setting it to '{TESTING_LLM}'")
+                modelname = TESTING_LLM
             else:
                 red(f"Detected 'testing' model in {modelname}")
             if isinstance(query_eval_modelname, str):
-                if query_eval_modelname != "testing/testing":
-                    red("Setting the query_eval_modelname to testing/testing too")
-                    query_eval_modelname = "testing/testing"
+                if query_eval_modelname != TESTING_LLM:
+                    red(f"Setting the query_eval_modelname to {TESTING_LLM} too")
+                    query_eval_modelname = TESTING_LLM
 
         # checking argument validity
         assert "loaded_docs" not in cli_kwargs, "'loaded_docs' cannot be an argument as it is used internally"
@@ -199,7 +198,7 @@ class DocToolsLLM_class:
         if filetype == "infer":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
-        if modelname != "testing/testing" and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
+        if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
             raise Exception(
                 f"For model '{modelname}': backend not found in "
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
@@ -252,11 +251,11 @@ class DocToolsLLM_class:
         else:
             os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
 
-        if (modelname != "testing/testing") and (not llms_api_bases["model"]):
+        if (modelname != TESTING_LLM) and (not llms_api_bases["model"]):
             modelname = model_name_matcher(modelname)
         if (query_eval_modelname is not None) and (not llms_api_bases["query_eval_model"]):
-            if modelname == "testing/testing":
-                assert query_eval_modelname == "testing/testing"
+            if modelname == TESTING_LLM:
+                assert query_eval_modelname == TESTING_LLM
             else:
                 query_eval_modelname = model_name_matcher(query_eval_modelname)
 
@@ -288,7 +287,7 @@ class DocToolsLLM_class:
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
-        self.query_retrievers = query_retrievers if modelname != "testing/testing" else query_retrievers.replace("hyde", "")
+        self.query_retrievers = query_retrievers if modelname != TESTING_LLM else query_retrievers.replace("hyde", "")
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
@@ -297,8 +296,8 @@ class DocToolsLLM_class:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.query_condense_question = bool(query_condense_question) if modelname  != "testing/testing" else False
-        self.memoryless = memoryless if modelname != "testing/testing" else False
+        self.query_condense_question = bool(query_condense_question) if modelname  != TESTING_LLM else False
+        self.memoryless = memoryless if modelname != TESTING_LLM else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
@@ -318,7 +317,7 @@ class DocToolsLLM_class:
         if llms_api_bases["model"]:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
-        elif modelname == "testing/testing":
+        elif modelname == TESTING_LLM:
             red(f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
         elif modelname in litellm.model_cost:
