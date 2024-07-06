@@ -381,8 +381,11 @@ def unlazyload_modules():
         found_one = False
         for k, v in sys.modules.items():
             if "Lazily-loaded" in str(v):
-                dir(v)  # this is enough to trigger the loading
-                found_one = True
+                try:
+                    dir(v)  # this is enough to trigger the loading
+                    found_one = True
+                except Exception as err:
+                    red(f"Error when unlazyloading module '{k}'. Error: '{err}'")
                 break  # otherwise dict size change during iteration
             assert "Lazily-loaded" not in str(v)
         if found_one:
