@@ -38,7 +38,8 @@ try:
     import ftlangdetect
 except Exception as err:
     if is_verbose:
-        print(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+        print(
+            f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
     try:
         import langdetect
     except Exception as err:
@@ -134,11 +135,13 @@ doc_kwargs_keys = [
     "source_tag",
 ] + list(loader_specific_keys.keys())
 
+
 @optional_typecheck
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
+
 
 @optional_typecheck
 def file_hasher(doc: dict) -> str:
@@ -158,11 +161,13 @@ def file_hasher(doc: dict) -> str:
     else:
         return hasher(json.dumps(doc))
 
+
 @optional_typecheck
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[int]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
+
 
 @optional_typecheck
 def html_to_text(html: str) -> str:
@@ -172,10 +177,11 @@ def html_to_text(html: str) -> str:
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
     if "<img" in text:
-        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M|re.DOTALL)
+        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
         if "<img" in text:
             red("Failed to remove <img from anki card")
     return text
+
 
 @chain
 @optional_typecheck
@@ -185,6 +191,7 @@ def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
         red(inputs.keys())
     breakpoint()
     return inputs
+
 
 @optional_typecheck
 def wrapped_model_name_matcher(model: str) -> str:
@@ -197,7 +204,8 @@ def wrapped_model_name_matcher(model: str) -> str:
         if k.endswith("_API_KEY"):
             backend = k.split("_API_KEY")[0].lower()
             if backend not in all_backends and is_verbose and not printed_unexpected_api_keys[0]:
-                yel(f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
+                yel(
+                    f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
             else:
                 backends.append(backend)
     if is_verbose:
@@ -213,7 +221,8 @@ def wrapped_model_name_matcher(model: str) -> str:
             f"{all_backends}"
         )
     if backend not in backends:
-        raise Exception(f"Trying to use backend {backend} but no API KEY was found for it in the environnment.")
+        raise Exception(
+            f"Trying to use backend {backend} but no API KEY was found for it in the environnment.")
     candidates = litellm.models_by_provider[backend]
     if modelname in candidates:
         return model
@@ -230,6 +239,7 @@ def wrapped_model_name_matcher(model: str) -> str:
             "down the code.")
         return model
 
+
 @optional_typecheck
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
@@ -240,7 +250,8 @@ def model_name_matcher(model: str) -> str:
     out = wrapped_model_name_matcher(model)
     if out != model and is_verbose:
         yel(f"Matched model name {model} to {out}")
-    assert out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost, f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    assert out in litellm.model_cost or out.split(
+        "/", 1)[1] in litellm.model_cost, f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
     return out
 
 
@@ -250,27 +261,30 @@ def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
         return len(tokenizers[modelname](tosplit))
     else:
         try:
-            tokenizers[modelname] = tiktoken.encoding_for_model(modelname.split("/")[-1]).encode
+            tokenizers[modelname] = tiktoken.encoding_for_model(
+                modelname.split("/")[-1]).encode
         except Exception:
-            modelname="gpt-3.5-turbo"
+            modelname = "gpt-3.5-turbo"
         return get_tkn_length(tosplit=tosplit, modelname=modelname)
+
 
 @optional_typecheck
 def get_splitter(
     task: str,
     modelname="gpt-3.5-turbo",
-    ) -> TextSplitter:
+) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
-
     max_tokens = 4096
     try:
         max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
         # max_tokens = litellm.get_model_info(modelname)["max_tokens"]
 
         # don't use overly large chunks anyway
-        max_tokens = min(max_tokens, int(2.5 * litellm.get_model_info(modelname)["max_tokens"]))
+        max_tokens = min(max_tokens, int(
+            2.5 * litellm.get_model_info(modelname)["max_tokens"]))
     except Exception as err:
-        red(f"Failed to get max_token limit for model {modelname}: '{err}'")
+        if modelname != "testing/testing":
+            red(f"Failed to get max_tokens limit for model {modelname}: '{err}'")
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname)
 
@@ -309,7 +323,7 @@ def check_docs_tkn_length(
     max_token: int = max_token,
     min_lang_prob: float = min_lang_prob,
     check_language: bool = False,
-    ) -> float:
+) -> float:
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
@@ -324,7 +338,7 @@ def check_docs_tkn_length(
         )
     if size <= min_token:
         red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
@@ -337,7 +351,7 @@ def check_docs_tkn_length(
             f"The number of token from '{identifier}' is {size} >= {max_token}, probably something went wrong?"
         )
     if check_language is False:
-        return 1
+        return 1.0
 
     # check if language check is above a threshold
     probs = [
@@ -346,7 +360,7 @@ def check_docs_tkn_length(
     ]
     if probs[0] is None or not probs:
         # bypass if language_detector not defined
-        return 1
+        return 1.0
     prob = sum(probs) / len(probs)
     if prob <= min_lang_prob:
         red(
@@ -367,14 +381,21 @@ def unlazyload_modules():
         found_one = False
         for k, v in sys.modules.items():
             if "Lazily-loaded" in str(v):
-                dir(v)  # this is enough to trigger the loading
-                found_one = True
+                try:
+                    dir(v)  # this is enough to trigger the loading
+                    found_one = True
+                except Exception as err:
+                    red(
+                        f"Error when unlazyloading module '{k}'. Error: '{err}'"
+                        "\nThis can be caused by beartype's typechecking"
+                    )
                 break  # otherwise dict size change during iteration
             assert "Lazily-loaded" not in str(v)
         if found_one:
             continue
         else:
             break
+
 
 @optional_typecheck
 def disable_internet(allowed: dict) -> None:
@@ -431,7 +452,8 @@ def disable_internet(allowed: dict) -> None:
         "overload socket.create_connection to forbid outgoing connections"
         ip = socket.gethostbyname(address[0])
         if not is_private(ip):
-            raise RuntimeError("Network connections to the open internet are blocked")
+            raise RuntimeError(
+                "Network connections to the open internet are blocked")
         return socket._original_create_connection(address, *args, **kwargs)
 
     socket.socket = lambda *args, **kwargs: None

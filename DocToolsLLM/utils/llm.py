@@ -16,7 +16,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
-from langchain_community.llms import FakeListLLM
+from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 from langchain_community.cache import SQLiteCache
@@ -26,6 +26,8 @@ from .typechecker import optional_typecheck
 
 litellm = lazy_import.lazy_module("litellm")
 
+TESTING_LLM = "testing/testing"
+
 
 class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
@@ -33,7 +35,7 @@ class AnswerConversationBufferMemory(ConversationBufferMemory):
     """
     @optional_typecheck
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
-        return super(AnswerConversationBufferMemory, self).save_context(inputs,{'response': outputs['answer']})
+        return super(AnswerConversationBufferMemory, self).save_context(inputs, {'response': outputs['answer']})
 
 
 @optional_typecheck
@@ -45,25 +47,36 @@ def load_llm(
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
-    ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListLLM]:
+) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
     assert "cache" not in extra_model_args
     if backend == "testing":
+        assert modelname == "testing/testing"
         if verbose:
             whi("Loading a fake LLM using the testing/ backend")
-        llm = FakeListLLM(
+        lorem_ipsum = (
+                "Lorem ipsum dolor sit amet, consectetur adipiscing "
+                "elit, sed do eiusmod tempor incididunt ut labore et "
+                "dolore magna aliqua. Ut enim ad minim veniam, quis "
+                "nostrud exercitation ullamco laboris nisi ut aliquip "
+                "ex ea commodo consequat. Duis aute irure dolor in "
+                "reprehenderit in voluptate velit esse cillum dolore eu "
+                "fugiat nulla pariatur. Excepteur sint occaecat cupidatat "
+                "non proident, sunt in culpa qui officia deserunt mollit "
+                "anim id est laborum."
+        )
+        llm = FakeListChatModel(
             verbose=verbose,
-            responses=[f"Fake answer n°{i}" for i in range(1, 100)],
+            responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
             callbacks=[PriceCountingCallback(verbose=verbose)],
             cache=False,
             **extra_model_args,
         )
-        setattr(llm.__class__, "_get_llm_string", lambda self: f"testing: FakeListLLM_{random.random()}")
-        setattr(llm.__class__, "_generate_with_cache", llm.__class__.generate)
-        setattr(llm.__class__, "_agenerate_with_cache", llm.__class__.agenerate)
         return llm
+    else:
+        assert "testing" not in modelname.lower()
 
     if verbose:
         whi("Loading model via litellm")
@@ -74,14 +87,16 @@ def load_llm(
         red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
         if not api_base:
-            raise Exception(f"No environment variable named {backend.upper()}_API_KEY found")
+            raise Exception(
+                f"No environment variable named {backend.upper()}_API_KEY found")
         else:
             yel(f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this.")
 
     # extra check for private mode
     if private:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "true"
-        red(f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
+        red(
+            f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
     else:
         assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
@@ -92,12 +107,12 @@ def load_llm(
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatOpenAI(
-                model_name=modelname.split("/", 1)[1],
-                cache=llm_cache,
-                verbose=verbose,
-                callbacks=[PriceCountingCallback(verbose=verbose)],
-                **extra_model_args,
-                )
+            model_name=modelname.split("/", 1)[1],
+            cache=llm_cache,
+            verbose=verbose,
+            callbacks=[PriceCountingCallback(verbose=verbose)],
+            **extra_model_args,
+        )
     else:
         red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
@@ -108,11 +123,11 @@ def load_llm(
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
-            cache=False, # llm_cache
+            cache=False,  # llm_cache
             verbose=verbose,
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
-            )
+        )
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
         assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
@@ -136,13 +151,13 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.completion_tokens = 0
         self.methods_called = []
         self.authorized_methods = [
-                "on_llm_start",
-                "on_chat_model_start",
-                "on_llm_end",
-                "on_llm_error",
-                "on_chain_start",
-                "on_chain_end",
-                "on_chain_error",
+            "on_llm_start",
+            "on_chat_model_start",
+            "on_llm_end",
+            "on_llm_error",
+            "on_chain_start",
+            "on_chain_end",
+            "on_chain_error",
         ]
 
     @optional_typecheck
@@ -163,7 +178,8 @@ class PriceCountingCallback(BaseCallbackHandler):
             meth for meth in self.methods_called
             if meth not in self.authorized_methods]
         if wrong:
-            raise Exception(f"Unauthorized_method were called: {','.join(wrong)}")
+            raise Exception(
+                f"Unauthorized_method were called: {','.join(wrong)}")
         return True
 
     @optional_typecheck
