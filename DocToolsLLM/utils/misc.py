@@ -338,7 +338,7 @@ def check_docs_tkn_length(
         )
     if size <= min_token:
         red(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
