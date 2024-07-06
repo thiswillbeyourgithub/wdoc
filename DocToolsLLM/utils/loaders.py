@@ -102,7 +102,7 @@ markdownimage_regex = re.compile(
 
 
 @optional_typecheck
-def md_shorten_image_name(md_image: str) -> str:
+def md_shorten_image_name(md_image: re.Match) -> str:
     "turn a markdown image link into just the name"
     name = md_image.group(1)
     if len(name) <= 16:
