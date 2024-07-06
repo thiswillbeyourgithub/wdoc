@@ -425,7 +425,7 @@ class DocToolsLLM_class:
 
         # loading llm
         self.llm = load_llm(
-            modelname=modelname,
+            modelname=self.modelname,
             backend=self.modelbackend,
             llm_cache=self.llm_cache,
             temperature=0,

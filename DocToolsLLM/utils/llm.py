@@ -53,7 +53,7 @@ def load_llm(
         extra_model_args = {}
     assert "cache" not in extra_model_args
     if backend == "testing":
-        assert modelname == "testing"
+        assert modelname == "testing/testing"
         if verbose:
             whi("Loading a fake LLM using the testing/ backend")
         llm = FakeListChatModel(
