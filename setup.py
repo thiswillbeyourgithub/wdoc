@@ -57,7 +57,7 @@ setup(
         'ftfy>=6.1.1',
         'joblib>=1.2.0',
         'langchain>=0.2.1,<0.2.5',
-        'langchain-community>=0.2.1,<0.2.5',
+        'langchain-community>=0.2.1',
         'langchain-openai>=0.1.8',
         'langchain-mistralai>=0.1.7',
         'litellm>=1.38.10',
