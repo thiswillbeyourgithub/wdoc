@@ -188,7 +188,7 @@ def html_to_text(html: str) -> str:
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
-        red(inputs.keys())
+        red(str(inputs.keys())
     breakpoint()
     return inputs
 
