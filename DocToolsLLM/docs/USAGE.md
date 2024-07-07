@@ -243,7 +243,9 @@
 * `--anki_profile`: str
     * The name of the profile
 * `--anki_deck`: str
-    * The beginning of the deckname
+    * The beginning of the deckname. Note that we only look at decks, filtered
+    decks are not taken into acount (so a card of deck 'A' that is temporarily
+    in 'B::filtered_deck' will still be considered as part of 'A'.
     e.g. `science::physics::freshman_year::lesson1`
 * `--anki_notetype`: str
     * If it's part of the card's notetype, that notetype will be kept.
