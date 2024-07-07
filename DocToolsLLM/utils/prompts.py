@@ -121,6 +121,7 @@ Detailed instructions:
     - DON'T interpret the question too strictly:
         - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
+- If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 ```"""),
         ("human",
          "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
