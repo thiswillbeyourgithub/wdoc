@@ -1209,7 +1209,7 @@ class DocToolsLLM_class:
                 backend=self.query_eval_modelbackend,
                 llm_cache=False,  # disables caching because another caching is used on top
                 verbose=self.llm_verbosity,
-                temperature=1,
+                temperature=0 if self.query_eval_check_number == 1 else 1,
                 api_base=self.llms_api_bases["query_eval_model"],
                 private=self.private,
                 **eval_args,
