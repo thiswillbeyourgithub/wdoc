@@ -113,7 +113,6 @@ def load_llm(
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
         )
-        litellm.drop_params = True
     else:
         red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
@@ -129,6 +128,7 @@ def load_llm(
             callbacks=[PriceCountingCallback(verbose=verbose)],
             **extra_model_args,
         )
+        litellm.drop_params = True
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
         assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
