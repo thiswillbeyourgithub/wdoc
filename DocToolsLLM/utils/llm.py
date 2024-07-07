@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from typing import Dict
 import random
+from tqdm import tqdm
 
 import lazy_import
 from langchain_core.callbacks import BaseCallbackHandler
@@ -160,6 +161,7 @@ class PriceCountingCallback(BaseCallbackHandler):
             "on_chain_end",
             "on_chain_error",
         ]
+        self.pbar = None
 
     def __repr__(self) -> str:
         # setting __repr__ and __str__ is important because it can
@@ -257,6 +259,8 @@ class PriceCountingCallback(BaseCallbackHandler):
             print("Callback method end: on_chain_end")
         self.methods_called.append("on_chain_end")
         self._check_methods_called()
+        if self.pbar is not None:
+            self.pbar.update(1)
 
     def on_chain_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any

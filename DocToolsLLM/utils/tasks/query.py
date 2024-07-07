@@ -3,10 +3,12 @@ Chain (logic) used to query a document.
 """
 
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Any, Union
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
+from langchain_core.runnables.base import RunnableLambda
 from joblib import Memory
+from tqdm import tqdm
 
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
@@ -105,3 +107,35 @@ def parse_eval_output(output: str) -> str:
 
     raise Exception(
         f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")
+
+
+@optional_typecheck
+def pbar_chain(
+    pbar_list: List,
+    len_func: str,
+    **tqdm_kwargs,
+    ) -> RunnableLambda:
+    "create a chain that just sets a tqdm progress bar"
+    assert len(pbar_list) == 1
+    assert pbar_list[0] is None
+
+    @chain
+    def actual_pbar_chain(inputs: Union[dict, List]) -> Union[dict, List]:
+        if pbar_list[0] is None:
+            n_total = eval(len_func)
+            pbar_list[0] = tqdm(total=n_total, **tqdm_kwargs)
+        return inputs
+
+    return actual_pbar_chain
+
+@optional_typecheck
+def pbar_closer(pbar_list: List) -> RunnableLambda:
+    assert len(pbar_list) == 1
+
+    @chain
+    def actual_pbar_closer(inputs: Union[dict, List]) -> Union[dict, List]:
+        assert len(pbar_list) == 1
+        if pbar_list[0] is not None:
+            pbar_list[0].close()
+        return inputs
+    return actual_pbar_closer

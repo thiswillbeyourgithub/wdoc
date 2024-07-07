@@ -32,7 +32,7 @@ from .utils.misc import (
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
 from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -1501,14 +1501,42 @@ class DocToolsLLM_class:
                     loaded_memory
                     | standalone_question
                     | retrieve_documents
+                    | pbar_chain(
+                            pbar_list=[self.eval_llm.callbacks[0].pbar],
+                            len_func="len(inputs['unfiltered_docs'])",
+                            desc="LLM evaluation",
+                            unit="doc",
+                        )
                     | refilter_documents
+                    | pbar_closer(pbar_list=[self.eval_llm.callbacks[0].pbar])
+                    | pbar_chain(
+                            pbar_list=[self.llm.callbacks[0].pbar],
+                            len_func="len(inputs['filtered_docs'])",
+                            desc="Answering each",
+                            unit="doc",
+                        )
                     | answer_all_docs
+                    | pbar_closer(pbar_list=[self.llm.callbacks[0].pbar])
                 )
             else:
                 rag_chain = (
                     retrieve_documents
+                    | pbar_chain(
+                            pbar_list=[self.eval_llm.callbacks[0].pbar],
+                            len_func="len(inputs['unfiltered_docs'])",
+                            desc="LLM evaluation",
+                            unit="doc",
+                        )
                     | refilter_documents
+                    | pbar_closer(pbar_list=[self.eval_llm.callbacks[0].pbar])
+                    | pbar_chain(
+                            pbar_list=[self.llm.callbacks[0].pbar],
+                            len_func="len(inputs['filtered_docs'])",
+                            desc="Answering each",
+                            unit="doc",
+                        )
                     | answer_all_docs
+                    | pbar_closer(pbar_list=[self.llm.callbacks[0].pbar])
                 )
 
             if self.debug:
