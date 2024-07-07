@@ -10,7 +10,7 @@ from tqdm import tqdm
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Type, Callable, Optional, Union
+from typing import Type, Callable, Optional, Union, List, Dict
 from rich.markdown import Markdown
 from rich.console import Console
 from platformdirs import user_cache_dir, user_log_dir
@@ -72,7 +72,7 @@ def get_coloured_logger(color_asked: str) -> Callable:
     # all logs are considered "errors" otherwise the datascience libs just
     # overwhelm the logs
     @optional_typecheck
-    def printer(string: str, **args) -> str:
+    def printer(string: Union[str, Dict, List], **args) -> str:
         inp = string
         if isinstance(string, dict):
             try:
