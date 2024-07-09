@@ -22,8 +22,8 @@
         * `txt`: `--path` is path to txt
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
-        `--anki_notetype`, `--anki_fields`. See in loader specific arguments
-        below for details.
+        `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.
+        See in loader specific arguments below for details.
         * `string`: no other parameters needed, will provide a field where
         you must type or paste the string
         * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
@@ -250,8 +250,32 @@
 * `--anki_notetype`: str
     * If it's part of the card's notetype, that notetype will be kept.
     Case insensitive. Note that suspended cards are always ignored.
-* `--anki_fields`: List[str]
-    * List of fields to keep
+* `--anki_template`: str
+    * The template to use for the anki card. For example if you have
+    a notetype with fields "fieldA","fieldB","fieldC" then you could
+    set --anki_template="Question:{fieldA}\nAnswer:{fieldB}". The field
+    "fieldC" would not be used and each document would look like your
+    template.
+    Notes:
+    * '{tags}' can be used to include a '\n* ' separated
+        string of the tag list. Use --anki_tag_filter to restrict which tag
+        can be shown (to avoid privacy leakage).
+        Example of what the tag formating looks like:
+        "
+        Anki tags:
+        '''
+        * my::tag1
+        * my_othertag
+        '''
+        "
+    * '{allfields}' can be used to format automatically all fields
+    (not including tags). It will be replaced
+    as "fieldA: 'fieldAContent'\n\nfieldB: 'fieldBContent'" etc
+    The ' are added.
+    * The default value is '{allfields}'.
+* `--anki_tag_filter`: str
+    Only the tags that match this regex will be put in the template.
+
 
 * `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.

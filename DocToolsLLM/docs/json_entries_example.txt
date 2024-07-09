@@ -10,4 +10,4 @@
 
 
 # anki deck example
-{"filetype": "anki", "anki_profile": "name_of_your_anki_profile_for_ankipandas", "anki_deck": "personnal::paintings", "anki_notetype": "my_note_type", "anki_fields": ["question", "answer"]}
+{"filetype": "anki", "anki_profile": "name_of_your_anki_profile_for_ankipandas", "anki_deck": "personnal::paintings", "anki_notetype": "my_note_type", "anki_template": "Question:{question_field}\nAnswer:{answer_field}"}

@@ -118,6 +118,7 @@ emptyline2_regex = re.compile(r"\n\n+", re.MULTILINE)
 linebreak_before_letter = re.compile(
     r"\n([a-záéíóúü])", re.MULTILINE
 )  # match any linebreak that is followed by a lowercase letter
+anki_replacements_regex = re.compile(r'\{([^}]*)\}')
 
 pdf_loaders = {
     "PDFMiner": PDFMinerLoader,  # little metadata
@@ -618,11 +619,14 @@ def load_anki(
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
     anki_deck: Optional[str] = None,
-    anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
+    anki_template: Optional[str] = "{allfields}",
+    anki_tag_filter: Optional[str] = None,
 ) -> List[Document]:
-
     whi(f"Loading anki profile: '{anki_profile}'")
+    if anki_tag_filter:
+        assert "{tags}" in anki_template, "Can't use anki_tag_filter without using {tags} in anki_template"
+        anki_tag_filter = re.compile(anki_tag_filter)
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
@@ -655,47 +659,85 @@ def load_anki(
     # remove suspended
     cards = cards[cards["cqueue"] != "suspended"]
 
+    # merge models and fields for easy handling
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
     # mod2mid = akp.raw.get_model2mid(col.db)
     cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
-    assert cards.index.tolist(), "empty dataframe!"
-    if anki_fields:
-        anki_fields = [k.lower() for k in anki_fields]
+    assert not cards.empty, "empty dataframe!"
+
+    # check placeholders validity
+    placeholders = anki_replacements_regex.findall(anki_template)
+    assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
+    for ph in placeholders:
+        for ic, c in cards.iterrows():
+            if ph not in c["fields_name"] + ["allfields", "tags"]:
+                raise Exception(
+                    "A placeholder in anki template didn't match fields of "
+                    f"a card.\nCulprit placeholder: {ph}\nTemplate: "
+                    f"{anki_template}\nExample card: {c}"
+                )
+
+    # prepare field values
+    if "{allfields}" in anki_template:
+        useallfields = True
         if debug:
-            tqdm.pandas(desc="Parsing fields")
-        cards["fields_dict"] = cards.progress_apply(
-            lambda x: {
-                k.lower(): html_to_text(cloze_stripper(v)).strip()
+            tqdm.pandas(desc="Parsing allfields value")
+        cards["allfields"] = cards.progress_apply(
+            lambda x: "\n\n".join([
+                f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
                 for k, v in zip(x["fields_name"], x["nflds"])
-                if k.lower() in anki_fields
-            },
+            ]),
             axis=1,
-        )
-        if len(cards[cards["fields_dict"] != {}]) != len(cards):
-            expec_fd = cards["fields_name"].iloc[0]
-            raise Exception(
-                f"Something is wrong with the anki_fields '{anki_fields}' "
-                f"of notetype {anki_notetype} that has fields '{expec_fd}'"
-            )
-        if debug:
-            tqdm.pandas(desc="Joining fields")
-        cards["text"] = cards["fields_dict"].progress_apply(
-            lambda x: "\n".join(
-                f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
+        useallfields = False
+
+    if "{tags}" in anki_template:
+        usetags = True
         if debug:
-            tqdm.pandas(desc="Parsing text")
-        cards["text"] = cards.progress_apply(
-            lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
-                {
-                    k: html_to_text(cloze_stripper(v)).strip()
-                    for k, v in zip(x["fields_name"], x["nflds"])
-                }
-            ),
+            tqdm.pandas(desc="Formatting tags")
+        cards["tags_formatted"] = cards.progress_apply(
+            lambda x: "Anki tags:\n'''\n" +  "\n".join([
+                f"* {t}"
+                for t in x["ntags"]
+                if (
+                    anki_tag_filter is None or anki_tag_filter.match(t)
+                )
+            ]).strip() + "\n'''",
             axis=1,
         )
+        # remove the tags formatting if it didn't match anything
+        cards["tags_formatted"] = cards["tags_formatted"].str.replace(
+            "Anki tags:\n'''\n'''",
+            "",
+        )
+    else:
+        usetags = False
+
+
+    def placeholder_replacer(x: pd.Series) -> str:
+        text = anki_template
+        if useallfields:
+            text = text.replace("{allfields}", x["allfields"])
+        if usetags:
+            text = text.replace("{tags}", x["tags_formatted"])
+        for ph in placeholders:
+            field_val = x["nflds"][x["fields_name"].index(ph)]
+            text = text.replace(
+                "{" + ph + "}",
+                html_to_text(
+                    cloze_stripper(
+                        field_val
+                    )
+                )
+            )
+        return text
+
+    if debug:
+        tqdm.pandas(desc="Formatting all cards")
+    cards["text"] = cards.progress_apply(placeholder_replacer)
+
     cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
 
@@ -739,7 +781,7 @@ def load_anki(
 
     assert docs, "List of loaded anki document is empty!"
 
-    path = f"Anki_profile='{anki_profile}',deck='{anki_deck}'notetype={anki_notetype},fields={','.join(anki_fields)}"
+    path = f"Anki_profile='{anki_profile}',deck='{anki_deck}',notetype='{anki_notetype}'"
     for i in range(len(docs)):
         docs[i].metadata["anki_profile"] = anki_profile
         docs[i].metadata["anki_topdeck"] = anki_deck
