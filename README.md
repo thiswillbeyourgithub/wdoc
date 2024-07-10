@@ -44,9 +44,11 @@
 
 ## Features
 * **Advanced RAG to query lots of diverse documents**:
-    1. the documents are retrieved using embedding
-    2. then a weak LLM model is used to tell which of those document is not relevant
-    3. then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer.
+    1. The documents are retrieved using embedding
+    2. Then a weak LLM model ("Evaluator") is used to tell which of those document is not relevant
+    3. Then the strong LLM is used to answer ("Answerer") the question using each individual remaining documents.
+    4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer.
+    Evaluator, Answerer and Combiner are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
