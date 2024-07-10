@@ -1306,6 +1306,8 @@ class DocToolsLLM_class:
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
             self.eval_llm.callbacks[0].total_tokens += new_p + new_c
+            if self.eval_llm.callbacks[0].pbar:
+                self.eval_llm.callbacks[0].pbar[-1].update(1)
             return outputs
 
         # uses in most places to increase concurrency limit
@@ -1504,41 +1506,41 @@ class DocToolsLLM_class:
                     | standalone_question
                     | retrieve_documents
                     | pbar_chain(
-                            pbar_list=[self.eval_llm.callbacks[0].pbar],
+                            llm=self.eval_llm,
                             len_func="len(inputs['unfiltered_docs'])",
                             desc="LLM evaluation",
                             unit="doc",
                         )
                     | refilter_documents
-                    | pbar_closer(pbar_list=[self.eval_llm.callbacks[0].pbar])
+                    | pbar_closer(llm=self.eval_llm)
                     | pbar_chain(
-                            pbar_list=[self.llm.callbacks[0].pbar],
+                            llm=self.llm,
                             len_func="len(inputs['filtered_docs'])",
                             desc="Answering each",
                             unit="doc",
                         )
                     | answer_all_docs
-                    | pbar_closer(pbar_list=[self.llm.callbacks[0].pbar])
+                    | pbar_closer(llm=self.llm)
                 )
             else:
                 rag_chain = (
                     retrieve_documents
                     | pbar_chain(
-                            pbar_list=[self.eval_llm.callbacks[0].pbar],
+                            llm=self.eval_llm,
                             len_func="len(inputs['unfiltered_docs'])",
                             desc="LLM evaluation",
                             unit="doc",
                         )
                     | refilter_documents
-                    | pbar_closer(pbar_list=[self.eval_llm.callbacks[0].pbar])
+                    | pbar_closer(llm=self.eval_llm)
                     | pbar_chain(
-                            pbar_list=[self.llm.callbacks[0].pbar],
+                            llm=self.llm,
                             len_func="len(inputs['filtered_docs'])",
                             desc="Answering each",
                             unit="doc",
                         )
                     | answer_all_docs
-                    | pbar_closer(pbar_list=[self.llm.callbacks[0].pbar])
+                    | pbar_closer(llm=self.llm)
                 )
 
             if self.debug:

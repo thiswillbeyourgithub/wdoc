@@ -161,7 +161,7 @@ class PriceCountingCallback(BaseCallbackHandler):
             "on_chain_end",
             "on_chain_error",
         ]
-        self.pbar = None
+        self.pbar = []
 
     def __repr__(self) -> str:
         # setting __repr__ and __str__ is important because it can
@@ -259,8 +259,8 @@ class PriceCountingCallback(BaseCallbackHandler):
             print("Callback method end: on_chain_end")
         self.methods_called.append("on_chain_end")
         self._check_methods_called()
-        if self.pbar is not None:
-            self.pbar.update(1)
+        if self.pbar:
+            self.pbar[-1].update(1)
 
     def on_chain_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any

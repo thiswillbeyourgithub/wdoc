@@ -10,6 +10,10 @@ from langchain_core.runnables.base import RunnableLambda
 from joblib import Memory
 from tqdm import tqdm
 
+from langchain_community.chat_models.fake import FakeListChatModel
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_openai import ChatOpenAI
+
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
@@ -111,31 +115,44 @@ def parse_eval_output(output: str) -> str:
 
 @optional_typecheck
 def pbar_chain(
-    pbar_list: List,
+    llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
     len_func: str,
     **tqdm_kwargs,
     ) -> RunnableLambda:
     "create a chain that just sets a tqdm progress bar"
-    assert len(pbar_list) == 1
-    assert pbar_list[0] is None
 
     @chain
-    def actual_pbar_chain(inputs: Union[dict, List]) -> Union[dict, List]:
-        if pbar_list[0] is None:
-            n_total = eval(len_func)
-            pbar_list[0] = tqdm(total=n_total, **tqdm_kwargs)
+    def actual_pbar_chain(
+        inputs: Union[dict, List],
+        llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
+        ) -> Union[dict, List]:
+
+        llm.callbacks[0].pbar.append(
+            tqdm(
+                total=eval(len_func),
+                **tqdm_kwargs,
+            )
+        )
+        assert llm.callbacks[0].pbar[-1].total
+
         return inputs
 
     return actual_pbar_chain
 
 @optional_typecheck
-def pbar_closer(pbar_list: List) -> RunnableLambda:
-    assert len(pbar_list) == 1
+def pbar_closer(
+    llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
+    ) -> RunnableLambda:
+    "close a pbar created by pbar_chain"
 
     @chain
-    def actual_pbar_closer(inputs: Union[dict, List]) -> Union[dict, List]:
-        assert len(pbar_list) == 1
-        if pbar_list[0] is not None:
-            pbar_list[0].close()
+    def actual_pbar_closer(
+        inputs: Union[dict, List],
+        llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
+        ) -> Union[dict, List]:
+        pbar = llm.callbacks[0].pbar[-1]
+        pbar.update(pbar.total - pbar.n)
+        pbar.close()
+
         return inputs
     return actual_pbar_closer
