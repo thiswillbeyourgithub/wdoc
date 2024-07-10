@@ -1563,6 +1563,11 @@ class DocToolsLLM_class:
             batch_size = 5
             intermediate_answers = output["intermediate_answers"]
             all_intermediate_answers = [intermediate_answers]
+            pbar = tqdm(
+                desc="Combibing answers",
+                unit="answer",
+                total=len(intermediate_answers),
+            )
             while len(intermediate_answers) > batch_size:
                 batches = [[]]
                 for ia in intermediate_answers:
@@ -1577,9 +1582,12 @@ class DocToolsLLM_class:
                     for b in batches]
                 intermediate_answers = [a["final_answer"]
                                         for a in final_answer_chain.batch(batch_args)]
+                pbar.n = pbar.total - len(intermediate_answers)
             all_intermediate_answers.append(intermediate_answers)
             final_answer = final_answer_chain.invoke(
                 {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
+            pbar.n = pbar.total
+            pbar.close()
             output["final_answer"] = final_answer
             output["all_intermediate_answeers"] = all_intermediate_answers
             # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
