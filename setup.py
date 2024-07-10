@@ -82,7 +82,7 @@ setup(
         'docx2txt >= 0.8',  # word documents
         'pandoc >= 2.3',  # epub
         'unstructured[all-docs]>=0.6.2',  # many file formats
-        'ankipandas>=0.3.13',  # anki
+        'ankipandas>=0.3.15',  # anki
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
         "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
