@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are Alfred, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+        ("system", """You are a Summarizer, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
@@ -59,7 +59,7 @@ PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", "You are given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."),
+        ("system", "You are an Evaluator: given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.\nDon't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."),
         ("human",
          "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
     ]
@@ -67,7 +67,7 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given a piece of document and a question, your task is to extract the relevant information while following specific instructions.
+        ("system", """You are a Answerer: given a piece of document and a question, your task is to extract the relevant information while following specific instructions.
 
 Detailed instructions:
 ```
@@ -95,7 +95,7 @@ Detailed instructions:
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """Given some statements and an answer, your task is to:
+        ("system", """You are a Combiner: given some statements and an answer, your task is to:
 1. answer directly the question using markdown bullet points
 2. then combine all additional information as additional bullet points.
 
