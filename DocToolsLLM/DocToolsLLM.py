@@ -44,6 +44,7 @@ from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
+from .utils.flags import is_verbose
 
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
@@ -871,7 +872,7 @@ class DocToolsLLM_class:
             if "filter_metadata" in self.cli_kwargs:
                 # get the list of all metadata to see if a filter was not misspelled
                 all_metadata_keys = set()
-                for doc in tqdm(self.loaded_embeddings.docstore._dict.values(), desc="gathering metadata keys", unit="doc"):
+                for doc in tqdm(self.loaded_embeddings.docstore._dict.values(), desc="gathering metadata keys", unit="doc", disable=not is_verbose):
                     for k in doc.metadata.keys():
                         all_metadata_keys.add(k)
                 assert all_metadata_keys, "No metadata keys found in any metadata, something went wrong!"
@@ -1048,8 +1049,9 @@ class DocToolsLLM_class:
             ids_to_del = []
             for doc_id, doc in tqdm(
                 self.loaded_embeddings.docstore._dict.items(),
-                desc="filtering",
+                desc="Filtering",
                 unit="docs",
+                disable=not is_verbose,
             ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
