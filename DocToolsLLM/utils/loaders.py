@@ -1134,9 +1134,35 @@ def load_logseq_markdown(
             continue
         for i, d in enumerate(docs):
             if cont in d.page_content:
-                docs[i].metadata.update(props)
+
+                # merge metadata dictionnaries
+                for k, v in props.items():
+                    if k not in docs[i].metadata:
+                        docs[i].metadata[k] = v
+                    elif docs[i].metadata[k] == v:
+                        continue
+                    elif isinstance(docs[i].metadata[k], list):
+                        if isinstance(v, list):
+                            docs[i].metadata[k].extend(v)
+                        else:
+                            docs[i].metadata[k].append(v)
+                    else:
+                        assert k in docs[i].metadata
+                        assert not isinstance(docs[i].metadata[k], list)
+                        assert docs[i].metadata[k] != v
+                        if isinstance(v, list):
+                            docs[i].metadata[k] = [docs[i].metadata[k]] + v
+                        else:
+                            docs[i].metadata[k] = [docs[i].metadata[k], v]
                 found = True
                 break
+
+    # sort and deduplicate metadata
+    for i, d in enumerate(docs):
+        for k, v in d.metadata.items():
+            if isinstance(v, list):
+                d.metadata[k] = list(sorted(list(set(v))))
+
     assert found, "None of the blocks found in document"
     return docs
 
