@@ -707,6 +707,8 @@ def load_anki(
             ]).strip() + "\n'''",
             axis=1,
         )
+        if cards["ntags"].notnull().any():
+            assert cards["tags_formatted"].notnull.any(), "Not tags were extracted because of your filter. Crashing to let you recheck your setup."
         # remove the tags formatting if it didn't match anything
         cards["tags_formatted"] = cards["tags_formatted"].str.replace(
             "Anki tags:\n'''\n'''",
