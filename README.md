@@ -20,6 +20,8 @@
   - [Known issues](#known-issues)
 
 ## DocToolsLLM in a few questions
+* **Who is this for?**
+    * DocToolsLLM is for power users who want document querying on steroid, and in depth AI powered document summaries.
 * **What's RAG?**
     * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
