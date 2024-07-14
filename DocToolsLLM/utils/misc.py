@@ -409,7 +409,11 @@ def disable_internet(allowed: dict) -> None:
     red(
         "Disabling outgoing internet because private mode is on. "
         "The only allowed IPs from now on are the ones from the "
-        "argument llm_api_bases")
+        "argument llm_api_bases. Note that this permanently filters "
+        "outgoing python connections so might interfere with other "
+        "python programs is you are importing DocToolsLLM instead "
+        "of calling it from the shell"
+    )
 
     # unlazyload all modules as otherwise the overloading can happen too late
     unlazyload_modules()
