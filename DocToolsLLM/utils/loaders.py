@@ -1139,6 +1139,8 @@ def load_logseq_markdown(
 
                 # merge metadata dictionnaries
                 for k, v in props.items():
+                    if not v:
+                        continue
                     if k not in docs[i].metadata:
                         docs[i].metadata[k] = v
                     elif docs[i].metadata[k] == v:
@@ -1164,6 +1166,7 @@ def load_logseq_markdown(
         for k, v in d.metadata.items():
             if isinstance(v, list):
                 d.metadata[k] = list(sorted(list(set(v))))
+            assert d.metadata[k], f"There shouldn't be any empty metadata value but key '{k}' of doc '{d}' is empty."
 
     assert found, "None of the blocks found in document"
     return docs
