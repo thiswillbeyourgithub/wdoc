@@ -17,6 +17,7 @@ import hashlib
 import lazy_import
 import tiktoken
 from functools import partial
+from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 
 from langchain.docstore.document import Document
@@ -435,8 +436,9 @@ def disable_internet(allowed: dict) -> None:
         ('127.0.0.0', '127.255.255.255')
     ]
 
+    @memoize
     @optional_typecheck
-    def is_private(ip) -> bool:
+    def is_private(ip: str) -> bool:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
             return True
