@@ -423,12 +423,11 @@ def disable_internet(allowed: dict) -> None:
         "localhost",
         "127.0.0.1",
     ])
-    vals = list(allowed.values())
     vals = [
         v.split("//")[1].split(":")[0]
         if "//" in v
         else v.split(":")[0]
-        for v in vals
+        for v in list(allowed.values())
     ]
     [allowed_IPs.add(v) for v in vals]
 
@@ -463,12 +462,29 @@ def disable_internet(allowed: dict) -> None:
                 "Network connections to the open internet are blocked")
         return socket._original_create_connection(address, *args, **kwargs)
 
-    # sanity check
-    assert is_private("localhost")
-    assert is_private("10.0.1.32")
-    assert is_private("192.169.2.35")
-    assert is_private("127.12.13.15")
-
     socket.socket = lambda *args, **kwargs: None
     socket._original_create_connection = socket.create_connection
     socket.create_connection = create_connection
+
+    # sanity check
+    assert is_private("localhost")
+    assert is_private("10.0.1.32")
+    assert is_private("192.168.2.35")
+    assert is_private("127.12.13.15")
+
+    # checking allowed ips are okay
+    for v in vals:
+        assert is_private(v), f"An address failed to be set as private: '{v}'"
+    for al in list(allowed.values()):
+        ip = socket.gethostbyname(al)
+        assert is_private(ip), f"An address failed to be set as private: '{al}'"
+    try:
+        ip = socket.gethostbyname("www.google.com")
+        skip = False
+    except Exception as err:
+        red("Failed to get IP address of www.google.com to check if it is "
+            "indeed blocked. You probably did this on purpose so not "
+            f"crashing. Error: '{err}'")
+        skip = True
+    if not skip:
+        assert not is_private(ip), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
