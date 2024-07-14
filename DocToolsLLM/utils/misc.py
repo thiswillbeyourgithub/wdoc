@@ -457,6 +457,12 @@ def disable_internet(allowed: dict) -> None:
                 "Network connections to the open internet are blocked")
         return socket._original_create_connection(address, *args, **kwargs)
 
+    # sanity check
+    assert is_private("localhost")
+    assert is_private("10.0.1.32")
+    assert is_private("192.169.2.35")
+    assert is_private("127.12.13.15")
+
     socket.socket = lambda *args, **kwargs: None
     socket._original_create_connection = socket.create_connection
     socket.create_connection = create_connection
