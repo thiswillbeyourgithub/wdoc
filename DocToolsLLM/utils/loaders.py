@@ -718,14 +718,14 @@ def load_anki(
         usetags = False
 
 
-    def placeholder_replacer(x: pd.Series) -> str:
+    def placeholder_replacer(row: pd.Series) -> str:
         text = anki_template
         if useallfields:
-            text = text.replace("{allfields}", x["allfields"])
+            text = text.replace("{allfields}", row["allfields"])
         if usetags:
-            text = text.replace("{tags}", x["tags_formatted"])
+            text = text.replace("{tags}", row["tags_formatted"])
         for ph in placeholders:
-            field_val = x["nflds"][x["fields_name"].index(ph)]
+            field_val = row["nflds"][row["fields_name"].index(ph)]
             text = text.replace(
                 "{" + ph + "}",
                 html_to_text(
@@ -738,7 +738,7 @@ def load_anki(
 
     if debug:
         tqdm.pandas(desc="Formatting all cards")
-    cards["text"] = cards.progress_apply(placeholder_replacer)
+    cards["text"] = cards.progress_apply(placeholder_replacer, axis=1)
 
     cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
