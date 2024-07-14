@@ -176,7 +176,7 @@ def batch_load_doc(
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
-    # filter out the usuall unexpected
+    # filter out the usual unexpected
     all_unexp_keys = [a for a in all_unexp_keys if a not in [
         "out_file", "file_loader_n_jobs", "loading_failure",
     ]]

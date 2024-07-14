@@ -410,7 +410,7 @@ def disable_internet(allowed: dict) -> None:
         "The only allowed IPs from now on are the ones from the "
         "argument llm_api_bases")
 
-    # unlazy load all modules as otherwise the overloading can happen too late
+    # unlazyload all modules as otherwise the overloading can happen too late
     unlazyload_modules()
 
     # list of certainly allowed IPs
