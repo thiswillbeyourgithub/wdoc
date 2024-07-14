@@ -2,6 +2,7 @@
 Prompts used by DocToolsLLM.
 """
 
+from dataclasses import dataclass
 from langchain_core.prompts import ChatPromptTemplate
 
 # PROMPT FOR SUMMARY TASKS
@@ -131,4 +132,18 @@ Detailed instructions:
         ("human",
          "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
     ]
+)
+
+@dataclass(frozen=False)
+class Prompts_class:
+    condense: ChatPromptTemplate
+    evaluate: ChatPromptTemplate
+    answer: ChatPromptTemplate
+    combine: ChatPromptTemplate
+
+prompts = Prompts_class(
+    condense=PR_CONDENSE_QUESTION,
+    evaluate=PR_EVALUATE_DOC,
+    answer=PR_ANSWER_ONE_DOC,
+    combine=PR_COMBINE_INTERMEDIATE_ANSWERS,
 )

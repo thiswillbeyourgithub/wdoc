@@ -31,7 +31,7 @@ from .utils.misc import (
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
-from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
+from .utils.prompts import prompts
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
 
 from .utils.errors import NoDocumentsRetrieved
@@ -1243,7 +1243,7 @@ class DocToolsLLM_class:
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
-            eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
+            eval_prompt: str = str(prompts.evaluate.to_json()),
         ) -> List[str]:
             if isinstance(self.eval_llm, FakeListLLM):
                 outputs = ["1" for i in range(self.query_eval_check_number)]
@@ -1252,7 +1252,7 @@ class DocToolsLLM_class:
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(
-                    PR_EVALUATE_DOC.format_messages(**inputs))
+                    prompts.evaluate.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"]
                            for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
@@ -1275,7 +1275,7 @@ class DocToolsLLM_class:
                 new_c = 0
 
                 async def do_eval(inputs):
-                    return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
+                    return await self.eval_llm._agenerate_with_cache(prompts.evaluate.format_messages(**inputs))
                 outs = [
                     do_eval(inputs)
                     for i in range(self.query_eval_check_number)
@@ -1425,7 +1425,7 @@ class DocToolsLLM_class:
                         "question_for_embedding": lambda x: x["question_for_embedding"],
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
-                    | PR_CONDENSE_QUESTION
+                    | prompts.condense
                     | self.llm
                     | StrOutputParser()
                 }
@@ -1460,12 +1460,12 @@ class DocToolsLLM_class:
                 "question_to_answer": itemgetter("question_to_answer")
             }
             answer_each_doc_chain = (
-                PR_ANSWER_ONE_DOC
+                prompts.answer
                 | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
-                PR_COMBINE_INTERMEDIATE_ANSWERS
+                prompts.combine
                 | self.llm
                 | StrOutputParser()
             )
