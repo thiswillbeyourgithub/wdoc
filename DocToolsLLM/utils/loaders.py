@@ -720,6 +720,8 @@ def load_anki(
 
     def placeholder_replacer(row: pd.Series) -> str:
         text = anki_template
+        text = text.replace("\\xa0", " ")
+
         if useallfields:
             text = text.replace("{allfields}", row["allfields"])
         if usetags:
