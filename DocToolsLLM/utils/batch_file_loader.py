@@ -342,11 +342,7 @@ def batch_load_doc(
     size = sum(
         [
             get_tkn_length(d.page_content)
-            for d in tqdm(
-                docs,
-                desc="Computing token size",
-                unit="doc"
-            )
+            for d in docs
         ]
     )
     if size <= min_token:
@@ -368,7 +364,7 @@ def batch_load_doc(
 
         counter = dict(Counter(
             d.metadata["all_hash"]
-            for d in tqdm(docs, desc="Counting hashes", unit="doc")
+            for d in docs
         ))
         uniq_hashes = list(counter.keys())
         removed_docs = 0
