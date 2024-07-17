@@ -883,6 +883,16 @@ def anki_replace_media(
         # links
         if "://" in content:
             links = re.findall(REG_LINKS, content)
+            links = [
+                link
+                for link in links
+                if not any(
+                    other != link
+                    and
+                    other in link
+                    for other in links
+                )
+            ]
             if strict:
                 assert links
             elif not links:
