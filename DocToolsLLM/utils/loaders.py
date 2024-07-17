@@ -662,12 +662,17 @@ def load_anki(
     # merge models and fields for easy handling
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
+    # make the model fields lowercase
+    mid2fields = {
+        k: (lambda x: [y.lower() for y in x])(v)
+        for k, v in mid2fields.items()
+    }
     # mod2mid = akp.raw.get_model2mid(col.db)
     cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
     assert not cards.empty, "empty dataframe!"
 
     # check placeholders validity
-    placeholders = anki_replacements_regex.findall(anki_template)
+    placeholders = [ph.lower() for ph in anki_replacements_regex.findall(anki_template)]
     assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
     for ph in placeholders:
         for ic, c in cards.iterrows():
