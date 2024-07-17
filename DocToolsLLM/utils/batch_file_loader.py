@@ -338,7 +338,16 @@ def batch_load_doc(
 
     assert docs, "No documents were succesfully loaded!"
 
-    size = sum([get_tkn_length(d.page_content) for d in docs])
+    size = sum(
+        [
+            get_tkn_length(d.page_content)
+            for d in tqdm(
+                docs,
+                desc="Computing token size",
+                unit="doc"
+            )
+        ]
+    )
     if size <= min_token:
         raise Exception(
             f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
@@ -350,6 +359,7 @@ def batch_load_doc(
 
     # check that the hash are unique
     if len(docs) > 1:
+        whi(f"Checking document uniqueness using hash")
         ids = [id(d.metadata) for d in docs]
         assert len(ids) == len(set(ids)), (
             "Same metadata object is used to store information on "
