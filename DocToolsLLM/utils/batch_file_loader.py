@@ -6,6 +6,7 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
+from collections import Counter
 import shutil
 import uuid
 import re
@@ -365,23 +366,24 @@ def batch_load_doc(
             "Same metadata object is used to store information on "
             "multiple documents!")
 
-        hashes = [d.metadata["all_hash"] for d in docs]
-        uniq_hashes = list(set(hashes))
-        removed_paths = []
-        removed_docs = []
-        counter = {h: hashes.count(h) for h in uniq_hashes}
-        if len(hashes) != len(uniq_hashes):
+        counter = dict(Counter(
+            d.metadata["all_hash"]
+            for d in tqdm(docs, desc="Counting hashes", unit="doc")
+        ))
+        uniq_hashes = list(counter.keys())
+        removed_docs = 0
+        if len(docs) != len(uniq_hashes):
             red("Found duplicate hashes after loading documents:")
 
             for i, doc in enumerate(tqdm(docs, desc="Looking for duplicates")):
                 h = doc.metadata['all_hash']
                 n = counter[h]
                 if n > 1:
-                    removed_docs.append(docs[i])
+                    removed_docs += 1
                     docs[i] = None
                     counter[h] -= 1
                 assert counter[h] > 0
-            red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
+            red(f"Removed {removed_docs}/{len(docs)} documents because they had the same hash")
 
             docs = [d for d in docs if d is not None]
     return docs
