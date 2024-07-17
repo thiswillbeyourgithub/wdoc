@@ -725,7 +725,6 @@ def load_anki(
 
     def placeholder_replacer(row: pd.Series) -> str:
         text = anki_template
-        text = text.replace("\\xa0", " ")
 
         if useallfields:
             text = text.replace("{allfields}", row["allfields"])
@@ -743,6 +742,7 @@ def load_anki(
                     )
                 )
             )
+        text = text.replace("\\n", "\n").replace("\\xa0", " ")
         return text
 
     if debug:
