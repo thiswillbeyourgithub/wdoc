@@ -73,6 +73,7 @@ deepgram = lazy_import.lazy_module("deepgram")
 pydub = lazy_import.lazy_module("pydub")
 ffmpeg = lazy_import.lazy_module("ffmpeg")
 torchaudio = lazy_import.lazy_module("torchaudio")
+sync_playwright = lazy_import.lazy_class("playwright.sync_api.sync_playwright")
 
 
 try:
@@ -300,6 +301,12 @@ def load_one_doc(
     elif filetype == "local_video":
         docs = load_local_video(
             file_hash=file_hash,
+            **kwargs,
+        )
+
+    elif filetype == "online_media":
+        docs = load_online_media(
+            loaders_temp_dir=temp_dir,
             **kwargs,
         )
 
@@ -1866,3 +1873,266 @@ def load_pdf(
         red(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
+
+
+@optional_typecheck
+def find_onlinemedia(
+    url: str,
+    onlinemedia_url_regex: Optional[str] = None,
+    onlinemedia_resourcetype_regex: Optional[str] = None,
+    headless: bool = True,
+    ) -> dict:
+    @optional_typecheck
+
+    def check_browser_installation(browser_type: str) -> bool:
+        try:
+            with sync_playwright() as p:
+                browser = getattr(p, browser_type).launch()
+                browser.close()
+            return True
+        except Exception as err:
+            red(str(p))
+            red(str(err))
+            return False
+
+    # the media request will be stored in this dict
+    video_urls = {
+        "url_regex": [],
+        "resourcetype_regex": [],
+        "media": [],
+        "mpeg": [],
+        "mp4": [],
+        "mp3": [],
+        "m3u": [],
+    }
+    if onlinemedia_url_regex:
+        onlinemedia_url_regex = re.compile(onlinemedia_url_regex)
+    if onlinemedia_resourcetype_regex:
+        onlinemedia_resourcetype_regex = re.compile(onlinemedia_resourcetype_regex)
+    nonmedia_urls = []
+
+    @optional_typecheck
+    def request_filter(req) -> None:
+        if onlinemedia_url_regex is not None and onlinemedia_url_regex.match(req.url):
+            video_urls["url_regex"].append(req.url)
+        elif onlinemedia_resourcetype_regex is not None and onlinemedia_resourcetype_regex.match(req.resource_type):
+            video_urls["resourcetype_regex"].append(req.url)
+        elif req.resource_type == "media":
+            video_urls["media"].append(req.url)
+        elif "media" in req.resource_type:
+            video_urls["media"].append(req.url)
+        elif "mpeg" in req.resource_type:
+            video_urls["mpeg"].append(req.url)
+        elif "m3u" in req.resource_type or ".m3u" in req.url:
+            video_urls["m3u"].append(req.url)
+        elif "mp3" in req.resource_type or ".mp3" in req.url:
+            video_urls["mp3"].append(req.url)
+        elif "mp4" in req.resource_type or ".mp4" in req.url:
+            video_urls["mp4"].append(req.url)
+        else:
+            nonmedia_urls.append(req.url)
+
+    if check_browser_installation("firefox"):
+        installed = "firefox"
+    elif check_browser_installation("chromium"):
+        installed = "chromium"
+    else:
+        raise Exception("Couldn't launch either firefox or chromium using playwright. Maybe try running 'playwright install'")
+
+    with sync_playwright() as p:
+        browser = getattr(p, installed).launch(headless=headless)
+
+        context = browser.new_context(
+            java_script_enabled=True,
+            geolocation={
+                "latitude": 38.8954381,
+                "longitude": -77.0312812,
+            },
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            ignore_https_errors=True,
+
+        )
+        page = context.new_page()
+
+        # start logging requests
+        page.on("request", lambda request: request_filter(request))
+        browser.on("request", lambda request: request_filter(request))
+        context.on("request", lambda request: request_filter(request))
+
+        # load page
+        page.goto(url)
+        page.wait_for_load_state('networkidle')
+
+        # Scroll the page to trigger lazy-loaded content
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        page.wait_for_timeout(1000)  # Wait for X seconds after scrolling
+        page.evaluate("window.scrollTo(0, 0)")
+
+        # Try to click on video play buttons
+        for trial in [
+            '[class*="play-button"]',
+            '[class*="playback"]',
+            '[class*="play-back"]',
+        ]:
+            playback_elements = page.query_selector_all(trial)
+            for element in playback_elements:
+                try:
+                    element.click(timeout=500)
+                    print(f"Clicked element: {element.evaluate('el => el.outerHTML')}")
+                    page.wait_for_timeout(1000)  # Wait for X seconds after each click
+                except Exception:
+                    pass
+        play_button_selectors = [
+            '[aria-label="Play"]',
+            '.ytp-play-button',
+            '.play-button',
+            '[aria-label="播放"]',
+            'div.avp-icon.avp-icon-playback',
+        ]
+        for selector in play_button_selectors:
+            try:
+                page.click(selector, timeout=500)
+            except Exception:
+                pass
+
+
+        if not any(v for v in video_urls.values()):
+            # Wait a bit more for any video to start loading
+            page.wait_for_timeout(10000)
+
+        browser.close()
+
+    # deduplicate urls
+    for k, v in video_urls.items():
+        video_urls[k] = list(set(v))
+
+    return video_urls
+
+@optional_typecheck
+@doc_loaders_cache.cache(ignore=["path"])
+def load_online_media(
+    path: str,
+    audio_backend: str,
+    loaders_temp_dir: PosixPath,
+
+    audio_unsilence: Optional[bool] = None,
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
+
+    onlinemedia_url_regex: Optional[str] = None,
+    onlinemedia_resourcetype_regex: Optional[str] = None,
+    ) -> List[Document]:
+
+    urls_to_try = [path]
+    extra_media = find_onlinemedia(
+        url=path,
+        onlinemedia_url_regex=onlinemedia_url_regex,
+        onlinemedia_resourcetype_regex=onlinemedia_resourcetype_regex,
+    )
+    for k in [
+        "url_regex",
+        "resourcetype_regex",
+        "media",
+        "mpeg",
+        "mp4",
+        "mp3",
+        "m3u",
+    ]:
+        urls_to_try.extend(extra_media[k])
+    urls_to_try = list(set(urls_to_try))
+    whi(f"Found {len(urls_to_try)} urls to try to get the media")
+
+
+    @optional_typecheck
+    def dl_audio_from_url(trial: int, url: str) -> PosixPath:
+        file_name = loaders_temp_dir / \
+            f"onlinemedia_{uuid.uuid4()}"  # without extension!
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            # 'force_generic_extractor': True,
+            # 'default_search': 'auto',
+            # 'match_filter': lambda x: None,
+            'hls_prefer_native': True,
+            'postprocessors': [{ 'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192',
+            }],
+            # with extension
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',
+            'verbose': is_verbose,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        }
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        candidate = []
+        for f in loaders_temp_dir.iterdir():
+            if file_name.name in f.name:
+                candidate.append(f)
+        assert len(candidate), f"Audio file of {url} failed to download?"
+        assert len(
+            candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
+        audio_file = candidate[0].absolute()
+        return audio_file
+
+
+    audio_file = None
+    good_url = None
+    for iurl, url in enumerate(urls_to_try):
+        try:
+            audio_file = dl_audio_from_url(trial=iurl, url=url)
+            good_url = url
+            break
+        except Exception as err:
+            red(f"Failed #{iurl+1}/{len(urls_to_try)} to download a media from url '{url}': '{err}'")
+
+    assert audio_file is not None, f"Failed to find suitable media for url '{path}'"
+
+    audio_hash = file_hasher({"path": str(Path(audio_file).absolute())})
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    assert not audio_path.exists()
+
+    # extract audio from video
+    try:
+        whi(f"Exporting audio from {audio_file} to {audio_path} (this can take some time)")
+        t = time.time()
+        ffmpeg.input(
+            audio_file,
+        ).output(
+            str(audio_path.resolve().absolute())
+        ).run()
+        whi(f"Done extracting audio in {time.time()-t:.2f}s")
+    except Exception as err:
+        red(
+            f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
+
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+            audio = pydub.AudioSegment.from_file(audio_file)
+            # extract audio from video
+            whi(f"Extracting audio from {audio_file} to {audio_path} (this can take some time)")
+            t = time.time()
+            audio.export(audio_path, format="mp3")
+            whi(f"Done extracting audio in {time.time()-t:.2f}s")
+        except Exception as err:
+            raise Exception(
+                f"Error when getting audio from video using ffmpeg: '{err}'")
+
+    assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
+
+    # now need the hash from the mp3, not video
+    audio_hash = file_hasher({"path": audio_path})
+
+    parsed_audio = load_local_audio(
+        path=audio_path,
+        file_hash=audio_hash,
+        audio_backend=audio_backend,
+        whisper_lang=whisper_lang,
+        whisper_prompt=whisper_prompt,
+        deepgram_kwargs=deepgram_kwargs,
+        audio_unsilence=audio_unsilence,
+    )
+
+    for ipa, pa in enumerate(parsed_audio):
+        parsed_audio[ipa].metadata["onlinemedia_url"] = good_url
+
+    return parsed_audio

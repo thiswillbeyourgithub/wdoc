@@ -112,6 +112,9 @@ loader_specific_keys = {
     "doccheck_max_token": int,
     "doccheck_max_lines": int,
     "doccheck_min_lang_prob": float,
+
+    "onlinemedia_url_regex": str,
+    "onlinemedia_resourcetype_regex": str,
 }
 
 # extra arguments supported when instanciating doctools

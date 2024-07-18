@@ -28,6 +28,12 @@
         you must type or paste the string
         * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
         * `local_video`: must be set: `--audio_backend`. Optional: `--audio_unsilence`, `--whisper_lang`, `--whisper_prompt`, `--deepgram_kwargs`.
+        * `online_media`: load the url using youtube_dl to download a media
+        (video or audio) then treat it as `filetype=local_audio`.
+        If youtube_dl failed to find the media, try using playwright browser
+        where any requested element that looks like a possible media will try
+        be downloaded. Possible arguments are `--onlinemedia_url_regex`,
+        `--onlinemedia_resourcetype_regex`. Then arguments of `local_audio`.
 
         * `json_entries`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
@@ -411,6 +417,13 @@
     * if we find more that that many token in a document, crash.
 * `--doccheck_max_lines`: int, default `100_000`
     * if we find more that that many lines in a document, crash.
+
+* `--onlinemedia_url_regex`: str
+    * a regex that if matching a request's url, will consider the
+    request to be leading to a media. We then try to fetch those media
+    using youtube_dl. The default is already a sensible value.
+* `--onlinemedia_resourcetype_regex`: str
+    * Same as `--onlinemedia_url_regex` but checking request.resource_type
 
 * `--source_tag`: str, default `None`
     * a string that will be added to the document metadata at the

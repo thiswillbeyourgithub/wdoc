@@ -109,6 +109,7 @@
 * **html files**: useful for website dumps
 * **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
 * **video files**: tries to extract the audio then treat it as an audio file
+* **online media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page.
 * **epub files**
 * **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...
 * **Microsoft Word documents**: .doc, .docx, .odt, ...

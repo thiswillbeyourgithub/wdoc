@@ -94,6 +94,7 @@ setup(
         'pydub >= 0.25.1',  # extracting audio from local video
         'ffmpeg-python >= 0.2.0',  # extracting audio from local video
         'torchaudio >= 2.3.1',  # silence removal from audio
+        'playwright >= 1.45.0',  # for online_media and urls
     ],
     extra_require={
         'optional_feature': [
