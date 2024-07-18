@@ -1488,7 +1488,7 @@ def transcribe_audio_deepgram(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
-        audio_path: str,
+        audio_path: Union[PosixPath, str],
         audio_hash: str,
         language: str,
         prompt: str) -> dict:
