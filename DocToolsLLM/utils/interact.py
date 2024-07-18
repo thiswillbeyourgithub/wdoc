@@ -114,6 +114,8 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         To use several '/settings retriever=knn_svm_default'
         * relevancy: float, from set ]0:1]
     * **Tips:**
+        * Each LLM used has a nickname: use it to adress specific instructions.
+          The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
         * In multiline mode, use ctrl+D to send the text (sometimes
         multiple times).
         * For more information: 'python DocToolsLLM.py --help'

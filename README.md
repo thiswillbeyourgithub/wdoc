@@ -20,6 +20,8 @@
   - [Known issues](#known-issues)
 
 ## DocToolsLLM in a few questions
+* **Who is this for?**
+    * DocToolsLLM is for power users who want document querying on steroid, and in depth AI powered document summaries.
 * **What's RAG?**
     * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
@@ -27,7 +29,7 @@
 * **Why is DocToolsLLM better than most RAG system to ask questions on documents?**
     * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also DocToolsLLM is very customizable.
 * **Why can DocToolsLLM also produce summaries?**
-    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good!
+    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
 * **What other tasks are supported by DocToolsLLM?**
     * Summarize text from any [Supported filetypes](#Supported-filetypes).
     * Ask questions about a large heterogeneous corpus.
@@ -44,9 +46,11 @@
 
 ## Features
 * **Advanced RAG to query lots of diverse documents**:
-    1. the documents are retrieved using embedding
-    2. then a weak LLM model is used to tell which of those document is not relevant
-    3. then the strong LLM is used to answer the question using each individual remaining documents, then all relevant answers are combined into a single short markdown-formatted answer.
+    1. The documents are retrieved using embedding
+    2. Then a weak LLM model ("Evaluator") is used to tell which of those document is not relevant
+    3. Then the strong LLM is used to answer ("Answerer") the question using each individual remaining documents.
+    4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer.
+    Evaluator, Answerer and Combiner are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
@@ -105,6 +109,7 @@
 * **html files**: useful for website dumps
 * **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
 * **video files**: tries to extract the audio then treat it as an audio file
+* **online media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page.
 * **epub files**
 * **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...
 * **Microsoft Word documents**: .doc, .docx, .odt, ...

@@ -6,6 +6,7 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
+from collections import Counter
 import shutil
 import uuid
 import re
@@ -176,7 +177,7 @@ def batch_load_doc(
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
-    # filter out the usuall unexpected
+    # filter out the usual unexpected
     all_unexp_keys = [a for a in all_unexp_keys if a not in [
         "out_file", "file_loader_n_jobs", "loading_failure",
     ]]
@@ -338,7 +339,12 @@ def batch_load_doc(
 
     assert docs, "No documents were succesfully loaded!"
 
-    size = sum([get_tkn_length(d.page_content) for d in docs])
+    size = sum(
+        [
+            get_tkn_length(d.page_content)
+            for d in docs
+        ]
+    )
     if size <= min_token:
         raise Exception(
             f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
@@ -350,42 +356,32 @@ def batch_load_doc(
 
     # check that the hash are unique
     if len(docs) > 1:
+        whi(f"Checking document uniqueness using hash")
         ids = [id(d.metadata) for d in docs]
         assert len(ids) == len(set(ids)), (
             "Same metadata object is used to store information on "
             "multiple documents!")
 
-        hashes = [d.metadata["all_hash"] for d in docs]
-        uniq_hashes = list(set(hashes))
-        removed_paths = []
-        removed_docs = []
-        counter = {h: hashes.count(h) for h in uniq_hashes}
-        if len(hashes) != len(uniq_hashes):
+        counter = dict(Counter(
+            d.metadata["all_hash"]
+            for d in docs
+        ))
+        uniq_hashes = list(counter.keys())
+        removed_docs = 0
+        if len(docs) != len(uniq_hashes):
             red("Found duplicate hashes after loading documents:")
 
             for i, doc in enumerate(tqdm(docs, desc="Looking for duplicates")):
                 h = doc.metadata['all_hash']
                 n = counter[h]
                 if n > 1:
-                    removed_docs.append(docs[i])
+                    removed_docs += 1
                     docs[i] = None
                     counter[h] -= 1
                 assert counter[h] > 0
-            red(f"Removed {len(removed_docs)}/{len(hashes)} documents because they had the same hash")
+            red(f"Removed {removed_docs}/{len(docs)} documents because they had the same hash")
 
-            # check if deduplication likely amputated documents
             docs = [d for d in docs if d is not None]
-            present_path = [d.metadata["path"] for d in docs]
-
-            intersect = set(removed_paths).intersection(set(present_path))
-            if intersect:
-                red(f"Found {len(intersect)} documents that were only partially removed, this results in incomplete documents.")
-                for i, inte in enumerate(intersect):
-                    red(f"  * #{i + 1}: {inte}")
-                raise Exception()
-            else:
-                red(f"Removed {len(removed_paths)}/{len(hashes)} documents because they had the same hash")
-
     return docs
 
 

@@ -9,3 +9,4 @@ pages
 **/__pycache__
 DocToolsLLM.egg-info
 build
+.aider*

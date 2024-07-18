@@ -73,6 +73,7 @@ deepgram = lazy_import.lazy_module("deepgram")
 pydub = lazy_import.lazy_module("pydub")
 ffmpeg = lazy_import.lazy_module("ffmpeg")
 torchaudio = lazy_import.lazy_module("torchaudio")
+sync_playwright = lazy_import.lazy_class("playwright.sync_api.sync_playwright")
 
 
 try:
@@ -118,6 +119,7 @@ emptyline2_regex = re.compile(r"\n\n+", re.MULTILINE)
 linebreak_before_letter = re.compile(
     r"\n([a-záéíóúü])", re.MULTILINE
 )  # match any linebreak that is followed by a lowercase letter
+anki_replacements_regex = re.compile(r'\{([^}]*)\}')
 
 pdf_loaders = {
     "PDFMiner": PDFMinerLoader,  # little metadata
@@ -299,6 +301,12 @@ def load_one_doc(
     elif filetype == "local_video":
         docs = load_local_video(
             file_hash=file_hash,
+            **kwargs,
+        )
+
+    elif filetype == "online_media":
+        docs = load_online_media(
+            loaders_temp_dir=temp_dir,
             **kwargs,
         )
 
@@ -618,11 +626,14 @@ def load_anki(
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
     anki_deck: Optional[str] = None,
-    anki_fields: Optional[List[str]] = None,
     anki_notetype: Optional[str] = None,
+    anki_template: Optional[str] = "{allfields}",
+    anki_tag_filter: Optional[str] = None,
 ) -> List[Document]:
-
     whi(f"Loading anki profile: '{anki_profile}'")
+    if anki_tag_filter:
+        assert "{tags}" in anki_template, "Can't use anki_tag_filter without using {tags} in anki_template"
+        anki_tag_filter = re.compile(anki_tag_filter)
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
@@ -655,47 +666,96 @@ def load_anki(
     # remove suspended
     cards = cards[cards["cqueue"] != "suspended"]
 
+    # merge models and fields for easy handling
     cards["mid"] = col.cards.mid.loc[cards.index]
     mid2fields = akp.raw.get_mid2fields(col.db)
+    # make the model fields lowercase
+    mid2fields = {
+        k: (lambda x: [y.lower() for y in x])(v)
+        for k, v in mid2fields.items()
+    }
     # mod2mid = akp.raw.get_model2mid(col.db)
     cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
-    assert cards.index.tolist(), "empty dataframe!"
-    if anki_fields:
-        anki_fields = [k.lower() for k in anki_fields]
+    assert not cards.empty, "empty dataframe!"
+
+    # check placeholders validity
+    placeholders = [ph.lower() for ph in anki_replacements_regex.findall(anki_template)]
+    assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
+    for ph in placeholders:
+        for ic, c in cards.iterrows():
+            if ph not in c["fields_name"] + ["allfields", "tags"]:
+                raise Exception(
+                    "A placeholder in anki template didn't match fields of "
+                    f"a card.\nCulprit placeholder: {ph}\nTemplate: "
+                    f"{anki_template}\nExample card: {c}"
+                )
+
+    # prepare field values
+    if "{allfields}" in anki_template:
+        useallfields = True
         if debug:
-            tqdm.pandas(desc="Parsing fields")
-        cards["fields_dict"] = cards.progress_apply(
-            lambda x: {
-                k.lower(): html_to_text(cloze_stripper(v)).strip()
+            tqdm.pandas(desc="Parsing allfields value")
+        cards["allfields"] = cards.progress_apply(
+            lambda x: "\n\n".join([
+                f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
                 for k, v in zip(x["fields_name"], x["nflds"])
-                if k.lower() in anki_fields
-            },
+            ]),
             axis=1,
-        )
-        if len(cards[cards["fields_dict"] != {}]) != len(cards):
-            expec_fd = cards["fields_name"].iloc[0]
-            raise Exception(
-                f"Something is wrong with the anki_fields '{anki_fields}' "
-                f"of notetype {anki_notetype} that has fields '{expec_fd}'"
-            )
-        if debug:
-            tqdm.pandas(desc="Joining fields")
-        cards["text"] = cards["fields_dict"].progress_apply(
-            lambda x: "\n".join(
-                f"{k}: {x[k]}" for k in anki_fields if x[k].strip())
         )
     else:
+        useallfields = False
+
+    if "{tags}" in anki_template:
+        usetags = True
         if debug:
-            tqdm.pandas(desc="Parsing text")
-        cards["text"] = cards.progress_apply(
-            lambda x: (lambda d: "\n".join([f"{k}: {v}" for k, v in d.items()]))(
-                {
-                    k: html_to_text(cloze_stripper(v)).strip()
-                    for k, v in zip(x["fields_name"], x["nflds"])
-                }
-            ),
+            tqdm.pandas(desc="Formatting tags")
+        cards["tags_formatted"] = cards.progress_apply(
+            lambda x: "Anki tags:\n'''\n" +  "\n".join([
+                f"* {t}"
+                for t in x["ntags"]
+                if (
+                    anki_tag_filter is None or anki_tag_filter.match(t)
+                )
+            ]).strip() + "\n'''",
             axis=1,
         )
+        if cards["ntags"].notnull().any():
+            assert cards["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
+        # remove the tags formatting if it didn't match anything
+        cards["tags_formatted"] = cards["tags_formatted"].str.replace(
+            "Anki tags:\n'''\n'''",
+            "",
+        )
+    else:
+        usetags = False
+
+
+    def placeholder_replacer(row: pd.Series) -> str:
+        text = anki_template
+
+        if useallfields:
+            text = text.replace("{allfields}", row["allfields"])
+        if usetags:
+            text = text.replace("{tags}", row["tags_formatted"])
+        for ph in placeholders:
+            if ph == "tags" or ph == "allfields":
+                continue
+            field_val = row["nflds"][row["fields_name"].index(ph)]
+            text = text.replace(
+                "{" + ph + "}",
+                html_to_text(
+                    cloze_stripper(
+                        field_val
+                    )
+                )
+            )
+        text = text.replace("\\n", "\n").replace("\\xa0", " ")
+        return text
+
+    if debug:
+        tqdm.pandas(desc="Formatting all cards")
+    cards["text"] = cards.progress_apply(placeholder_replacer, axis=1)
+
     cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
     cards = cards[cards["text"].ne('')]  # remove empty text
 
@@ -739,7 +799,7 @@ def load_anki(
 
     assert docs, "List of loaded anki document is empty!"
 
-    path = f"Anki_profile='{anki_profile}',deck='{anki_deck}'notetype={anki_notetype},fields={','.join(anki_fields)}"
+    path = f"Anki_profile='{anki_profile}',deck='{anki_deck}',notetype='{anki_notetype}'"
     for i in range(len(docs)):
         docs[i].metadata["anki_profile"] = anki_profile
         docs[i].metadata["anki_topdeck"] = anki_deck
@@ -835,6 +895,16 @@ def anki_replace_media(
         # links
         if "://" in content:
             links = re.findall(REG_LINKS, content)
+            links = [
+                link
+                for link in links
+                if not any(
+                    other != link
+                    and
+                    other in link
+                    for other in links
+                )
+            ]
             if strict:
                 assert links
             elif not links:
@@ -1092,9 +1162,38 @@ def load_logseq_markdown(
             continue
         for i, d in enumerate(docs):
             if cont in d.page_content:
-                docs[i].metadata.update(props)
+
+                # merge metadata dictionnaries
+                for k, v in props.items():
+                    if not v:
+                        continue
+                    if k not in docs[i].metadata:
+                        docs[i].metadata[k] = v
+                    elif docs[i].metadata[k] == v:
+                        continue
+                    elif isinstance(docs[i].metadata[k], list):
+                        if isinstance(v, list):
+                            docs[i].metadata[k].extend(v)
+                        else:
+                            docs[i].metadata[k].append(v)
+                    else:
+                        assert k in docs[i].metadata
+                        assert not isinstance(docs[i].metadata[k], list)
+                        assert docs[i].metadata[k] != v
+                        if isinstance(v, list):
+                            docs[i].metadata[k] = [docs[i].metadata[k]] + v
+                        else:
+                            docs[i].metadata[k] = [docs[i].metadata[k], v]
                 found = True
                 break
+
+    # sort and deduplicate metadata
+    for i, d in enumerate(docs):
+        for k, v in d.metadata.items():
+            if isinstance(v, list):
+                d.metadata[k] = list(sorted(list(set(v))))
+            assert d.metadata[k], f"There shouldn't be any empty metadata value but key '{k}' of doc '{d}' is empty."
+
     assert found, "None of the blocks found in document"
     return docs
 
@@ -1135,7 +1234,7 @@ def load_logseq_markdown(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
-    path: str,
+    path: Union[str, PosixPath],
     file_hash: str,
     audio_backend: str,
     loaders_temp_dir: PosixPath,
@@ -1207,12 +1306,12 @@ def load_local_audio(
             Document(
                 page_content=content["text"],
                 metadata={
-                    "source": path,
+                    "source": str(Path(path)),
                 },
             )
         ]
-        if "duration" in content["metadata"]:
-            docs[-1].metadata["duration"] = content["metadata"]["duration"]
+        if "duration" in content:
+            docs[-1].metadata["duration"] = content["duration"]
         if "language" in content:
             docs[-1].metadata["language"] = content["language"]
         elif whisper_lang:
@@ -1300,8 +1399,12 @@ def load_local_video(
     # need the hash from the mp3, not video
     audio_hash = file_hasher({"path": audio_path})
 
+    sub_loaders_temp_dir = loaders_temp_dir / "local_audio"
+    sub_loaders_temp_dir.mkdir()
+
     return load_local_audio(
         path=audio_path,
+        loaders_temp_dir=sub_loaders_temp_dir,
         file_hash=audio_hash,
         audio_backend=audio_backend,
         whisper_lang=whisper_lang,
@@ -1314,7 +1417,7 @@ def load_local_video(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
-    audio_path: str,
+    audio_path: Union[str, PosixPath],
     audio_hash: str,
     deepgram_kwargs: Optional[dict] = None,
 ) -> dict:
@@ -1385,10 +1488,10 @@ def transcribe_audio_deepgram(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
-        audio_path: str,
+        audio_path: Union[PosixPath, str],
         audio_hash: str,
-        language: str,
-        prompt: str) -> dict:
+        language: Optional[str],
+        prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
@@ -1774,3 +1877,269 @@ def load_pdf(
         red(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
+
+
+@optional_typecheck
+def find_onlinemedia(
+    url: str,
+    onlinemedia_url_regex: Optional[str] = None,
+    onlinemedia_resourcetype_regex: Optional[str] = None,
+    headless: bool = True,
+    ) -> dict:
+    @optional_typecheck
+
+    def check_browser_installation(browser_type: str) -> bool:
+        try:
+            with sync_playwright() as p:
+                browser = getattr(p, browser_type).launch()
+                browser.close()
+            return True
+        except Exception as err:
+            red(str(p))
+            red(str(err))
+            return False
+
+    # the media request will be stored in this dict
+    video_urls = {
+        "url_regex": [],
+        "resourcetype_regex": [],
+        "media": [],
+        "mpeg": [],
+        "mp4": [],
+        "mp3": [],
+        "m3u": [],
+    }
+    if onlinemedia_url_regex:
+        onlinemedia_url_regex = re.compile(onlinemedia_url_regex)
+    if onlinemedia_resourcetype_regex:
+        onlinemedia_resourcetype_regex = re.compile(onlinemedia_resourcetype_regex)
+    nonmedia_urls = []
+
+    @optional_typecheck
+    def request_filter(req) -> None:
+        if onlinemedia_url_regex is not None and onlinemedia_url_regex.match(req.url):
+            video_urls["url_regex"].append(req.url)
+        elif onlinemedia_resourcetype_regex is not None and onlinemedia_resourcetype_regex.match(req.resource_type):
+            video_urls["resourcetype_regex"].append(req.url)
+        elif req.resource_type == "media":
+            video_urls["media"].append(req.url)
+        elif "media" in req.resource_type:
+            video_urls["media"].append(req.url)
+        elif "mpeg" in req.resource_type:
+            video_urls["mpeg"].append(req.url)
+        elif "m3u" in req.resource_type or ".m3u" in req.url:
+            video_urls["m3u"].append(req.url)
+        elif "mp3" in req.resource_type or ".mp3" in req.url:
+            video_urls["mp3"].append(req.url)
+        elif "mp4" in req.resource_type or ".mp4" in req.url:
+            video_urls["mp4"].append(req.url)
+        else:
+            nonmedia_urls.append(req.url)
+
+    if check_browser_installation("firefox"):
+        installed = "firefox"
+    elif check_browser_installation("chromium"):
+        installed = "chromium"
+    else:
+        raise Exception("Couldn't launch either firefox or chromium using playwright. Maybe try running 'playwright install'")
+
+    with sync_playwright() as p:
+        browser = getattr(p, installed).launch(headless=headless)
+
+        context = browser.new_context(
+            java_script_enabled=True,
+            geolocation={
+                "latitude": 38.8954381,
+                "longitude": -77.0312812,
+            },
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            ignore_https_errors=True,
+
+        )
+        page = context.new_page()
+
+        # start logging requests
+        page.on("request", lambda request: request_filter(request))
+        browser.on("request", lambda request: request_filter(request))
+        context.on("request", lambda request: request_filter(request))
+
+        # load page
+        page.goto(url)
+        page.wait_for_load_state('networkidle')
+
+        # Scroll the page to trigger lazy-loaded content
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        page.wait_for_timeout(1000)  # Wait for X seconds after scrolling
+        page.evaluate("window.scrollTo(0, 0)")
+
+        # Try to click on video play buttons
+        for trial in [
+            '[class*="play-button"]',
+            '[class*="playback"]',
+            '[class*="play-back"]',
+        ]:
+            playback_elements = page.query_selector_all(trial)
+            for element in playback_elements:
+                try:
+                    element.click(timeout=500)
+                    print(f"Clicked element: {element.evaluate('el => el.outerHTML')}")
+                    page.wait_for_timeout(1000)  # Wait for X seconds after each click
+                except Exception:
+                    pass
+        play_button_selectors = [
+            '[aria-label="Play"]',
+            '.ytp-play-button',
+            '.play-button',
+            '[aria-label="播放"]',
+            'div.avp-icon.avp-icon-playback',
+        ]
+        for selector in play_button_selectors:
+            try:
+                page.click(selector, timeout=500)
+            except Exception:
+                pass
+
+
+        if not any(v for v in video_urls.values()):
+            # Wait a bit more for any video to start loading
+            page.wait_for_timeout(10000)
+
+        browser.close()
+
+    # deduplicate urls
+    for k, v in video_urls.items():
+        video_urls[k] = list(set(v))
+
+    return video_urls
+
+@optional_typecheck
+@doc_loaders_cache.cache(ignore=["path"])
+def load_online_media(
+    path: str,
+    audio_backend: str,
+    loaders_temp_dir: PosixPath,
+
+    audio_unsilence: Optional[bool] = None,
+    whisper_lang: Optional[str] = None,
+    whisper_prompt: Optional[str] = None,
+
+    deepgram_kwargs: Optional[dict] = None,
+
+    onlinemedia_url_regex: Optional[str] = None,
+    onlinemedia_resourcetype_regex: Optional[str] = None,
+    ) -> List[Document]:
+
+    urls_to_try = [path]
+    extra_media = find_onlinemedia(
+        url=path,
+        onlinemedia_url_regex=onlinemedia_url_regex,
+        onlinemedia_resourcetype_regex=onlinemedia_resourcetype_regex,
+    )
+    for k in [
+        "url_regex",
+        "resourcetype_regex",
+        "media",
+        "mpeg",
+        "mp4",
+        "mp3",
+        "m3u",
+    ]:
+        urls_to_try.extend(extra_media[k])
+    urls_to_try = list(set(urls_to_try))
+    whi(f"Found {len(urls_to_try)} urls to try to get the media")
+
+
+    @optional_typecheck
+    def dl_audio_from_url(trial: int, url: str) -> PosixPath:
+        file_name = loaders_temp_dir / \
+            f"onlinemedia_{uuid.uuid4()}"  # without extension!
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            # 'force_generic_extractor': True,
+            # 'default_search': 'auto',
+            # 'match_filter': lambda x: None,
+            'hls_prefer_native': True,
+            'postprocessors': [{ 'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192',
+            }],
+            # with extension
+            'outtmpl': f'{file_name.absolute().resolve()}.%(ext)s',
+            'verbose': is_verbose,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        }
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        candidate = []
+        for f in loaders_temp_dir.iterdir():
+            if file_name.name in f.name:
+                candidate.append(f)
+        assert len(candidate), f"Audio file of {url} failed to download?"
+        assert len(
+            candidate) == 1, f"Multiple audio file found for video: '{candidate}'"
+        audio_file = candidate[0].absolute()
+        return audio_file
+
+
+    audio_file = None
+    good_url = None
+    for iurl, url in enumerate(urls_to_try):
+        try:
+            audio_file = dl_audio_from_url(trial=iurl, url=url)
+            good_url = url
+            break
+        except Exception as err:
+            red(f"Failed #{iurl+1}/{len(urls_to_try)} to download a media from url '{url}': '{err}'")
+
+    assert audio_file is not None, f"Failed to find suitable media for url '{path}'"
+
+    audio_hash = file_hasher({"path": str(Path(audio_file).absolute())})
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    assert not audio_path.exists()
+
+    # extract audio from video
+    try:
+        whi(f"Exporting audio from {audio_file} to {audio_path} (this can take some time)")
+        t = time.time()
+        ffmpeg.input(
+            audio_file,
+        ).output(
+            str(audio_path.resolve().absolute())
+        ).run()
+        whi(f"Done extracting audio in {time.time()-t:.2f}s")
+    except Exception as err:
+        red(
+            f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
+
+        try:
+            Path(audio_path).unlink(missing_ok=True)
+            audio = pydub.AudioSegment.from_file(audio_file)
+            # extract audio from video
+            whi(f"Extracting audio from {audio_file} to {audio_path} (this can take some time)")
+            t = time.time()
+            audio.export(audio_path, format="mp3")
+            whi(f"Done extracting audio in {time.time()-t:.2f}s")
+        except Exception as err:
+            raise Exception(
+                f"Error when getting audio from video using ffmpeg: '{err}'")
+
+    assert Path(audio_path).exists(), f"FileNotFound: {audio_path}"
+
+    # now need the hash from the mp3, not video
+    audio_hash = file_hasher({"path": audio_path})
+
+    sub_loaders_temp_dir = loaders_temp_dir / "local_audio"
+    sub_loaders_temp_dir.mkdir()
+    parsed_audio = load_local_audio(
+        path=audio_path,
+        loaders_temp_dir=sub_loaders_temp_dir,
+        file_hash=audio_hash,
+        audio_backend=audio_backend,
+        whisper_lang=whisper_lang,
+        whisper_prompt=whisper_prompt,
+        deepgram_kwargs=deepgram_kwargs,
+        audio_unsilence=audio_unsilence,
+    )
+
+    for ipa, pa in enumerate(parsed_audio):
+        parsed_audio[ipa].metadata["onlinemedia_url"] = str(good_url)
+
+    return parsed_audio

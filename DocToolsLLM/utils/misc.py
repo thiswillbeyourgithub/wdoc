@@ -17,6 +17,7 @@ import hashlib
 import lazy_import
 import tiktoken
 from functools import partial
+from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 
 from langchain.docstore.document import Document
@@ -88,9 +89,10 @@ printed_unexpected_api_keys = [False]  # to print it only once
 # loader specific arguments
 loader_specific_keys = {
     "anki_deck": str,
-    "anki_fields": str,
     "anki_notetype": str,
     "anki_profile": str,
+    "anki_template": str,
+    "anki_tag_filter": str,
 
     "audio_backend": str,
     "audio_unsilence": bool,
@@ -110,6 +112,9 @@ loader_specific_keys = {
     "doccheck_max_token": int,
     "doccheck_max_lines": int,
     "doccheck_min_lang_prob": float,
+
+    "onlinemedia_url_regex": str,
+    "onlinemedia_resourcetype_regex": str,
 }
 
 # extra arguments supported when instanciating doctools
@@ -164,7 +169,7 @@ def file_hasher(doc: dict) -> str:
 
 @optional_typecheck
 @hashdoc_cache.cache
-def _file_hasher(abs_path: str, stats: List[int]) -> str:
+def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
 
@@ -188,7 +193,7 @@ def html_to_text(html: str) -> str:
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
-        red(inputs.keys())
+        red(str(inputs.keys()))
     breakpoint()
     return inputs
 
@@ -407,9 +412,13 @@ def disable_internet(allowed: dict) -> None:
     red(
         "Disabling outgoing internet because private mode is on. "
         "The only allowed IPs from now on are the ones from the "
-        "argument llm_api_bases")
+        "argument llm_api_bases. Note that this permanently filters "
+        "outgoing python connections so might interfere with other "
+        "python programs is you are importing DocToolsLLM instead "
+        "of calling it from the shell"
+    )
 
-    # unlazy load all modules as otherwise the overloading can happen too late
+    # unlazyload all modules as otherwise the overloading can happen too late
     unlazyload_modules()
 
     # list of certainly allowed IPs
@@ -417,12 +426,11 @@ def disable_internet(allowed: dict) -> None:
         "localhost",
         "127.0.0.1",
     ])
-    vals = list(allowed.values())
     vals = [
         v.split("//")[1].split(":")[0]
         if "//" in v
         else v.split(":")[0]
-        for v in vals
+        for v in list(allowed.values())
     ]
     [allowed_IPs.add(v) for v in vals]
 
@@ -434,8 +442,9 @@ def disable_internet(allowed: dict) -> None:
         ('127.0.0.0', '127.255.255.255')
     ]
 
+    @memoize
     @optional_typecheck
-    def is_private(ip) -> bool:
+    def is_private(ip: str) -> bool:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
             return True
@@ -459,3 +468,26 @@ def disable_internet(allowed: dict) -> None:
     socket.socket = lambda *args, **kwargs: None
     socket._original_create_connection = socket.create_connection
     socket.create_connection = create_connection
+
+    # sanity check
+    assert is_private("localhost")
+    assert is_private("10.0.1.32")
+    assert is_private("192.168.2.35")
+    assert is_private("127.12.13.15")
+
+    # checking allowed ips are okay
+    for v in vals:
+        assert is_private(v), f"An address failed to be set as private: '{v}'"
+    for al in list(allowed.values()):
+        ip = socket.gethostbyname(al)
+        assert is_private(ip), f"An address failed to be set as private: '{al}'"
+    try:
+        ip = socket.gethostbyname("www.google.com")
+        skip = False
+    except Exception as err:
+        red("Failed to get IP address of www.google.com to check if it is "
+            "indeed blocked. You probably did this on purpose so not "
+            f"crashing. Error: '{err}'")
+        skip = True
+    if not skip:
+        assert not is_private(ip), f"Failed to set www.google.com as unreachable: IP is '{ip}'"

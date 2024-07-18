@@ -31,8 +31,8 @@ from .utils.misc import (
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_keys, disable_internet)
-from .utils.prompts import PR_CONDENSE_QUESTION, PR_EVALUATE_DOC, PR_ANSWER_ONE_DOC, PR_COMBINE_INTERMEDIATE_ANSWERS
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache
+from .utils.prompts import prompts
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -44,6 +44,7 @@ from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
+from .utils.flags import is_verbose
 
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
@@ -75,7 +76,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.56"
+    VERSION: str = "0.58.0"
     allowed_extra_keys = extra_args_keys
     md_printer = md_printer
 
@@ -871,7 +872,7 @@ class DocToolsLLM_class:
             if "filter_metadata" in self.cli_kwargs:
                 # get the list of all metadata to see if a filter was not misspelled
                 all_metadata_keys = set()
-                for doc in tqdm(self.loaded_embeddings.docstore._dict.values(), desc="gathering metadata keys", unit="doc"):
+                for doc in tqdm(self.loaded_embeddings.docstore._dict.values(), desc="gathering metadata keys", unit="doc", disable=not is_verbose):
                     for k in doc.metadata.keys():
                         all_metadata_keys.add(k)
                 assert all_metadata_keys, "No metadata keys found in any metadata, something went wrong!"
@@ -1048,8 +1049,9 @@ class DocToolsLLM_class:
             ids_to_del = []
             for doc_id, doc in tqdm(
                 self.loaded_embeddings.docstore._dict.items(),
-                desc="filtering",
+                desc="Filtering",
                 unit="docs",
+                disable=not is_verbose,
             ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
@@ -1209,7 +1211,7 @@ class DocToolsLLM_class:
                 backend=self.query_eval_modelbackend,
                 llm_cache=False,  # disables caching because another caching is used on top
                 verbose=self.llm_verbosity,
-                temperature=1,
+                temperature=0 if self.query_eval_check_number == 1 else 1,
                 api_base=self.llms_api_bases["query_eval_model"],
                 private=self.private,
                 **eval_args,
@@ -1241,7 +1243,7 @@ class DocToolsLLM_class:
             inputs: dict,
             query_nb: int = self.query_eval_check_number,
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
-            eval_prompt: str = str(PR_EVALUATE_DOC.to_json()),
+            eval_prompt: str = str(prompts.evaluate.to_json()),
         ) -> List[str]:
             if isinstance(self.eval_llm, FakeListLLM):
                 outputs = ["1" for i in range(self.query_eval_check_number)]
@@ -1250,7 +1252,7 @@ class DocToolsLLM_class:
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
                 out = self.eval_llm._generate_with_cache(
-                    PR_EVALUATE_DOC.format_messages(**inputs))
+                    prompts.evaluate.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"]
                            for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
@@ -1273,7 +1275,7 @@ class DocToolsLLM_class:
                 new_c = 0
 
                 async def do_eval(inputs):
-                    return await self.eval_llm._agenerate_with_cache(PR_EVALUATE_DOC.format_messages(**inputs))
+                    return await self.eval_llm._agenerate_with_cache(prompts.evaluate.format_messages(**inputs))
                 outs = [
                     do_eval(inputs)
                     for i in range(self.query_eval_check_number)
@@ -1304,6 +1306,8 @@ class DocToolsLLM_class:
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
             self.eval_llm.callbacks[0].total_tokens += new_p + new_c
+            if self.eval_llm.callbacks[0].pbar:
+                self.eval_llm.callbacks[0].pbar[-1].update(1)
             return outputs
 
         # uses in most places to increase concurrency limit
@@ -1421,7 +1425,7 @@ class DocToolsLLM_class:
                         "question_for_embedding": lambda x: x["question_for_embedding"],
                         "chat_history": lambda x: format_chat_history(x["chat_history"]),
                     }
-                    | PR_CONDENSE_QUESTION
+                    | prompts.condense
                     | self.llm
                     | StrOutputParser()
                 }
@@ -1456,12 +1460,12 @@ class DocToolsLLM_class:
                 "question_to_answer": itemgetter("question_to_answer")
             }
             answer_each_doc_chain = (
-                PR_ANSWER_ONE_DOC
+                prompts.answer
                 | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
             combine_answers = (
-                PR_COMBINE_INTERMEDIATE_ANSWERS
+                prompts.combine
                 | self.llm
                 | StrOutputParser()
             )
@@ -1501,14 +1505,42 @@ class DocToolsLLM_class:
                     loaded_memory
                     | standalone_question
                     | retrieve_documents
+                    | pbar_chain(
+                            llm=self.eval_llm,
+                            len_func="len(inputs['unfiltered_docs'])",
+                            desc="LLM evaluation",
+                            unit="doc",
+                        )
                     | refilter_documents
+                    | pbar_closer(llm=self.eval_llm)
+                    | pbar_chain(
+                            llm=self.llm,
+                            len_func="len(inputs['filtered_docs'])",
+                            desc="Answering each",
+                            unit="doc",
+                        )
                     | answer_all_docs
+                    | pbar_closer(llm=self.llm)
                 )
             else:
                 rag_chain = (
                     retrieve_documents
+                    | pbar_chain(
+                            llm=self.eval_llm,
+                            len_func="len(inputs['unfiltered_docs'])",
+                            desc="LLM evaluation",
+                            unit="doc",
+                        )
                     | refilter_documents
+                    | pbar_closer(llm=self.eval_llm)
+                    | pbar_chain(
+                            llm=self.llm,
+                            len_func="len(inputs['filtered_docs'])",
+                            desc="Answering each",
+                            unit="doc",
+                        )
                     | answer_all_docs
+                    | pbar_closer(llm=self.llm)
                 )
 
             if self.debug:
@@ -1533,6 +1565,11 @@ class DocToolsLLM_class:
             batch_size = 5
             intermediate_answers = output["intermediate_answers"]
             all_intermediate_answers = [intermediate_answers]
+            pbar = tqdm(
+                desc="Combibing answers",
+                unit="answer",
+                total=len(intermediate_answers),
+            )
             while len(intermediate_answers) > batch_size:
                 batches = [[]]
                 for ia in intermediate_answers:
@@ -1547,9 +1584,12 @@ class DocToolsLLM_class:
                     for b in batches]
                 intermediate_answers = [a["final_answer"]
                                         for a in final_answer_chain.batch(batch_args)]
+                pbar.n = pbar.total - len(intermediate_answers)
             all_intermediate_answers.append(intermediate_answers)
             final_answer = final_answer_chain.invoke(
                 {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
+            pbar.n = pbar.total
+            pbar.close()
             output["final_answer"] = final_answer
             output["all_intermediate_answeers"] = all_intermediate_answers
             # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that

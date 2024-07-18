@@ -3,10 +3,16 @@ Chain (logic) used to query a document.
 """
 
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Any, Union
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
+from langchain_core.runnables.base import RunnableLambda
 from joblib import Memory
+from tqdm import tqdm
+
+from langchain_community.chat_models.fake import FakeListChatModel
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_openai import ChatOpenAI
 
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
@@ -105,3 +111,48 @@ def parse_eval_output(output: str) -> str:
 
     raise Exception(
         f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")
+
+
+@optional_typecheck
+def pbar_chain(
+    llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
+    len_func: str,
+    **tqdm_kwargs,
+    ) -> RunnableLambda:
+    "create a chain that just sets a tqdm progress bar"
+
+    @chain
+    def actual_pbar_chain(
+        inputs: Union[dict, List],
+        llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
+        ) -> Union[dict, List]:
+
+        llm.callbacks[0].pbar.append(
+            tqdm(
+                total=eval(len_func),
+                **tqdm_kwargs,
+            )
+        )
+        assert llm.callbacks[0].pbar[-1].total
+
+        return inputs
+
+    return actual_pbar_chain
+
+@optional_typecheck
+def pbar_closer(
+    llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
+    ) -> RunnableLambda:
+    "close a pbar created by pbar_chain"
+
+    @chain
+    def actual_pbar_closer(
+        inputs: Union[dict, List],
+        llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
+        ) -> Union[dict, List]:
+        pbar = llm.callbacks[0].pbar[-1]
+        pbar.update(pbar.total - pbar.n)
+        pbar.close()
+
+        return inputs
+    return actual_pbar_closer

@@ -30,7 +30,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="DocToolsLLM",
-    version="0.56",
+    version="0.58.0",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -56,7 +56,7 @@ setup(
         'fire>=0.6.0',
         'ftfy>=6.1.1',
         'joblib>=1.2.0',
-        'langchain>=0.2.1',
+        'langchain>=0.2.1,<0.2.5',
         'langchain-community>=0.2.1',
         'langchain-openai>=0.1.8',
         'langchain-mistralai>=0.1.7',
@@ -82,7 +82,7 @@ setup(
         'docx2txt >= 0.8',  # word documents
         'pandoc >= 2.3',  # epub
         'unstructured[all-docs]>=0.6.2',  # many file formats
-        'ankipandas>=0.3.13',  # anki
+        'ankipandas>=0.3.15',  # anki
         'tldextract>=3.4.1',  # url
         'goose3 >= 3.1.16',  # url
         "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
@@ -94,6 +94,7 @@ setup(
         'pydub >= 0.25.1',  # extracting audio from local video
         'ffmpeg-python >= 0.2.0',  # extracting audio from local video
         'torchaudio >= 2.3.1',  # silence removal from audio
+        'playwright >= 1.45.0',  # for online_media and urls
     ],
     extra_require={
         'optional_feature': [
