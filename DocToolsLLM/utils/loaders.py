@@ -1234,7 +1234,7 @@ def load_logseq_markdown(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
-    path: str,
+    path: Union[str, PosixPath],
     file_hash: str,
     audio_backend: str,
     loaders_temp_dir: PosixPath,
