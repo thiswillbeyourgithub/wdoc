@@ -1306,7 +1306,7 @@ def load_local_audio(
             Document(
                 page_content=content["text"],
                 metadata={
-                    "source": path,
+                    "source": str(Path(path)),
                 },
             )
         ]
@@ -2140,6 +2140,6 @@ def load_online_media(
     )
 
     for ipa, pa in enumerate(parsed_audio):
-        parsed_audio[ipa].metadata["onlinemedia_url"] = good_url
+        parsed_audio[ipa].metadata["onlinemedia_url"] = str(good_url)
 
     return parsed_audio
