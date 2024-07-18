@@ -1413,7 +1413,7 @@ def load_local_video(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
-    audio_path: str,
+    audio_path: Union[str, PosixPath],
     audio_hash: str,
     deepgram_kwargs: Optional[dict] = None,
 ) -> dict:
