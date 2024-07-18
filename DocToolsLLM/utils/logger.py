@@ -91,6 +91,8 @@ def get_coloured_logger(color_asked: str) -> Callable:
                 string = string.__str__()
             except Exception:
                 string = string.__repr__()
+        for k, v in colors.items():
+            string = string.replace(v, "")
         log.info(string)
         tqdm.write(col + string + colors["reset"], **args)
         return inp
