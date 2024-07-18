@@ -27,6 +27,7 @@
         * `string`: no other parameters needed, will provide a field where
         you must type or paste the string
         * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
+        * `local_video`: must be set: `--audio_backend`. Optional: `--audio_unsilence`, `--whisper_lang`, `--whisper_prompt`, `--deepgram_kwargs`.
 
         * `json_entries`: `--path` is path to a txt file that contains a json
         for each line containing at least a filetype and a path key/value
