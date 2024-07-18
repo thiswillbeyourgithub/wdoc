@@ -166,7 +166,7 @@ def file_hasher(doc: dict) -> str:
 
 @optional_typecheck
 @hashdoc_cache.cache
-def _file_hasher(abs_path: str, stats: List[int]) -> str:
+def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
 
