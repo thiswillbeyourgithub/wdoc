@@ -1490,8 +1490,8 @@ def transcribe_audio_deepgram(
 def transcribe_audio_whisper(
         audio_path: Union[PosixPath, str],
         audio_hash: str,
-        language: str,
-        prompt: str) -> dict:
+        language: Optional[str],
+        prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
     assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
