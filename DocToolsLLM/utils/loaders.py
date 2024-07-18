@@ -1399,8 +1399,12 @@ def load_local_video(
     # need the hash from the mp3, not video
     audio_hash = file_hasher({"path": audio_path})
 
+    sub_loaders_temp_dir = loaders_temp_dir / "local_audio"
+    sub_loaders_temp_dir.mkdir()
+
     return load_local_audio(
         path=audio_path,
+        loaders_temp_dir=sub_loaders_temp_dir,
         file_hash=audio_hash,
         audio_backend=audio_backend,
         whisper_lang=whisper_lang,
@@ -2122,8 +2126,11 @@ def load_online_media(
     # now need the hash from the mp3, not video
     audio_hash = file_hasher({"path": audio_path})
 
+    sub_loaders_temp_dir = loaders_temp_dir / "local_audio"
+    sub_loaders_temp_dir.mkdir()
     parsed_audio = load_local_audio(
         path=audio_path,
+        loaders_temp_dir=sub_loaders_temp_dir,
         file_hash=audio_hash,
         audio_backend=audio_backend,
         whisper_lang=whisper_lang,
