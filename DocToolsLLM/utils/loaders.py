@@ -1310,8 +1310,8 @@ def load_local_audio(
                 },
             )
         ]
-        if "duration" in content["metadata"]:
-            docs[-1].metadata["duration"] = content["metadata"]["duration"]
+        if "duration" in content:
+            docs[-1].metadata["duration"] = content["duration"]
         if "language" in content:
             docs[-1].metadata["language"] = content["language"]
         elif whisper_lang:
