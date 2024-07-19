@@ -165,8 +165,11 @@
 * `--debug`: bool, default `False`
     * if True will enable langchain tracing, increase verbosity,
     disable multithreading for summaries and loading files,
-    crash if an error is encountered when loading a file,
+    display warning if an error is encountered when loading a file,
     automatically trigger the debugger on exceptions.
+    Note that the multithreading will not be disabled if you
+    set `--file_loader_n_jobs`, allowing you to debug multithreading
+    issues.
 
 * `--dollar_limit`: int, default `5`
     * If the estimated price is above this limit, stop instead.
@@ -192,7 +195,7 @@
     cache folder for your system. This does not disable caching
     for documents.
 
-* `--file_loader_parallel_backend`: str, default `"loky"`
+* `--file_loader_parallel_backend`: str, default `"threading"`
     * joblib.Parallel backend to use when loading files. loky means
     multiprocessing while `threading` means multithreading.
     The number of jobs can be specified with `file_loader_n_jobs`

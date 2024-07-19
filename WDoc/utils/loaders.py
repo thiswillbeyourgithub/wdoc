@@ -1124,7 +1124,7 @@ def load_logseq_markdown(
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
-        parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+        parsed = LogseqMarkdownParser.parse_file(path, verbose=False)
     except Exception as err:
         raise Exception(
             f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
@@ -1866,7 +1866,7 @@ def load_pdf(
     max_prob = max([v for v in probs.values()])
 
     if debug:
-        red(f"Language probability after parsing {path}: {probs}")
+        yel(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
 

@@ -96,14 +96,13 @@ def batch_load_doc(
     assert loading_failure in [
         "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
 
+    if is_debug:
+        n_jobs = 1
+    else:
+        n_jobs = 10
     if "file_loader_n_jobs" in cli_kwargs:
         n_jobs = cli_kwargs["file_loader_n_jobs"]
         del cli_kwargs["file_loader_n_jobs"]
-    else:
-        if is_debug:
-            n_jobs = 1
-        else:
-            n_jobs = 10
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
@@ -217,7 +216,7 @@ def batch_load_doc(
     doc_hashes = Parallel(
         n_jobs=-1,
         backend="loky",
-    )(delayed(logger.catch(file_hasher))(doc=doc) for doc in tqdm(
+    )(delayed(file_hasher)(doc=doc) for doc in tqdm(
       to_load,
       desc="Hashing files",
       unit="doc",
@@ -270,9 +269,11 @@ def batch_load_doc(
                         tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
-    @logger.catch
     @optional_typecheck
-    def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
+    def load_one_doc_wrapped(
+        loading_failure: str,
+        **doc_kwargs,
+    ) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
             return out
@@ -284,9 +285,9 @@ def batch_load_doc(
                 f"Arguments: {doc_kwargs}"
                 f"\nLine number: {exc_tb.tb_lineno}"
                 f"\nFull traceback:\n{formatted_tb}")
-            if loading_failure == "crash" or is_debug:
+            if loading_failure == "crash":
                 raise
-            elif loading_failure == "warn":
+            elif loading_failure == "warn" or is_debug:
                 return str(err)
             else:
                 raise ValueError(loading_failure)
@@ -315,6 +316,7 @@ def batch_load_doc(
         n_jobs=n_jobs,
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
+        loading_failure=loading_failure,
         task=task,
         temp_dir=temp_dir,
         **d,

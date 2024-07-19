@@ -79,7 +79,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class WDoc:
     "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
 
-    VERSION: str = "1.1.0"
+    VERSION: str = "1.1.4"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
@@ -124,7 +124,7 @@ class WDoc:
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] = None,
         disable_llm_cache: Union[bool, int] = False,
-        file_loader_parallel_backend: str = "loky",
+        file_loader_parallel_backend: str = "threading",
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
@@ -157,7 +157,7 @@ class WDoc:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
-        red(pyfiglet.figlet_format("WDoc"))
+        red(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
         for k in cli_kwargs:
