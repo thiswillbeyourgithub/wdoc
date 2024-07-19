@@ -3,7 +3,7 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_USAGE_as_docstring, log_dir, cache_dir
+from .utils.logger import whi, yel, red, md_printer, logger, set_USAGE_as_docstring, log_dir, cache_dir
 
 import sys
 import faulthandler
@@ -69,6 +69,7 @@ from langchain_core.outputs import ChatGeneration
 import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
+logger.info("Starting DocToolsLLM")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -157,7 +158,6 @@ class DocToolsLLM:
             faulthandler.enable()
 
         red(pyfiglet.figlet_format("DocToolsLLM"))
-        log.info("Starting DocToolsLLM")
 
         # make sure the extra args are valid
         for k in cli_kwargs:

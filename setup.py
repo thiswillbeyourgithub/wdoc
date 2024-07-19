@@ -74,6 +74,7 @@ setup(
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.11.0',
+        'loguru >= 0.7.2',
         'grandalf >= 0.8',  # to print ascii graph
         'lazy-import >= 0.2.2',
         'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case

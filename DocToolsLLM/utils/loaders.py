@@ -50,7 +50,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    min_lang_prob, min_token, max_token, max_lines,
                    )
 from .typechecker import optional_typecheck
-from .logger import whi, yel, red, log
+from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 
 # lazy loading of modules
@@ -1021,7 +1021,7 @@ def load_string() -> List[Document]:
         "Paste your text content here then press esc+enter or meta+enter:\n>",
         multiline=True,
     )
-    log.info(f"Pasted string input:\n{content}")
+    logger.info(f"Pasted string input:\n{content}")
     docs = [
         Document(
             page_content=content,
