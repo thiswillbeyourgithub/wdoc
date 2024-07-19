@@ -94,6 +94,15 @@ def batch_load_doc(
     assert loading_failure in [
         "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
 
+    if "file_loader_n_jobs" in cli_kwargs:
+        n_jobs = cli_kwargs["file_loader_n_jobs"]
+        del cli_kwargs["file_loader_n_jobs"]
+    else:
+        if is_debug:
+            n_jobs = 1
+        else:
+            n_jobs = 10
+
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype.lower()
@@ -117,7 +126,8 @@ def batch_load_doc(
                 assert (
                     load_filetype != "auto"
                 ), f"Could not infer load_filetype of {load_kwargs['path']}. Use the 'load_filetype' argument."
-                to_load[ild]["filetype"] = load_filetype
+                if load_filetype not in recursive_types:
+                    to_load[ild]["filetype"] = load_filetype
 
             if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
@@ -169,15 +179,6 @@ def batch_load_doc(
     to_load = temp
 
     assert to_load, f"empty list of documents to load from filetype '{filetype}'"
-
-    if "file_loader_n_jobs" in cli_kwargs:
-        n_jobs = cli_kwargs["file_loader_n_jobs"]
-        del cli_kwargs["file_loader_n_jobs"]
-    else:
-        if is_debug:
-            n_jobs = 1
-        else:
-            n_jobs = 10
 
     # look for unexpected keys that are not relevant to doc loading, because that would
     # skip the cache
