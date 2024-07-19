@@ -35,15 +35,15 @@ class SettingsCompleter(Completer):
     @optional_typecheck
     def __init__(
             self,
-            winstondocCliSettings,
-            winstondocHistoryPrompts,
-            winstondocHistoryWords,
+            wdocCliSettings,
+            wdocHistoryPrompts,
+            wdocHistoryWords,
             *args,
             **kwargs):
         super().__init__(*args, **kwargs)
-        self.winstondocCliSettings = winstondocCliSettings
-        self.winstondocHistoryPrompts = winstondocHistoryPrompts
-        self.winstondocHistoryWords = winstondocHistoryWords
+        self.wdocCliSettings = wdocCliSettings
+        self.wdocHistoryPrompts = wdocHistoryPrompts
+        self.wdocHistoryWords = wdocHistoryWords
 
     @optional_typecheck
     def get_completions(self, document, complete_event):
@@ -58,11 +58,11 @@ class SettingsCompleter(Completer):
             if "/help".startswith(text):
                 yield Completion("/help", start_position=-len(text))
             if "/settings ".startswith(text) or "/settings " in text:
-                settings = sorted(list(self.winstondocCliSettings.keys()))
+                settings = sorted(list(self.wdocCliSettings.keys()))
                 for setting in settings:
                     if setting == "task":
                         continue
-                    compl = f"/settings {setting}={self.winstondocCliSettings[setting]}"
+                    compl = f"/settings {setting}={self.wdocCliSettings[setting]}"
                     if compl.startswith(text):
                         yield Completion(compl, start_position=-len(text))
         else:
@@ -70,7 +70,7 @@ class SettingsCompleter(Completer):
             if " " in text and not text.endswith(" "):
                 last_word = text.split(" ")[-1]
                 word_cnt = 0
-                for word in self.winstondocHistoryWords:
+                for word in self.wdocHistoryWords:
                     if word_cnt >= 3:
                         break
                     if word.lower().startswith(last_word.lower()):
@@ -78,7 +78,7 @@ class SettingsCompleter(Completer):
                         word_cnt += 1
 
             # entire prompt autocompletion
-            for hist in self.winstondocHistoryPrompts:
+            for hist in self.wdocHistoryPrompts:
                 if hist.lower().startswith(text.lower()):
                     yield Completion(hist, start_position=-len(text))
 
@@ -114,7 +114,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
           The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
         * In multiline mode, use ctrl+D to send the text (sometimes
         multiple times).
-        * For more information: 'python WinstonDoc.py --help'
+        * For more information: 'python WDoc.py --help'
         * History is saved and shared across all runs
         * If you use '>>>>' once in the middle of your text, the left part will be
         used as a query find the documents and the right part will be the
@@ -124,7 +124,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
     """
-    md_printer("# WinstonDoc Prompt")
+    md_printer("# WDoc Prompt")
 
     # loading history from files
     prev_questions = []
@@ -152,9 +152,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     words = [w for w in " ".join(prompts).split(
         " ") if len(w) > 2 and w.isalpha()]
     completer = SettingsCompleter(
-        winstondocCliSettings=settings,
-        winstondocHistoryPrompts=prompts,
-        winstondocHistoryWords=words
+        wdocCliSettings=settings,
+        wdocHistoryPrompts=prompts,
+        wdocHistoryWords=words
     )
 
     while True:
@@ -172,13 +172,13 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 multiline=settings["multiline"],
             )
         except KeyboardInterrupt:
-            red(f"Quitting.")
+            red("Quitting.")
             raise SystemExit()
         except EOFError:
             if settings["multiline"]:
                 pass
             else:
-                red(f"Quitting.")
+                red("Quitting.")
                 raise SystemExit()
         user_input = user_input.strip()
 

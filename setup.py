@@ -34,7 +34,7 @@ setup(
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/thiswillbeyourgithub/WinstonDoc/",
+    url="https://github.com/thiswillbeyourgithub/WDoc/",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -46,8 +46,7 @@ setup(
               "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools", "doctoolsllm", "winston_doc"],
     entry_points={
         'console_scripts': [
-            'wdoc=WinstonDoc.__init__:cli_launcher',
-            'winston_doc=WinstonDoc.__init__:cli_launcher',
+            'wdoc=WDoc.__init__:cli_launcher',
         ],
     },
     python_requires=">=3.10",

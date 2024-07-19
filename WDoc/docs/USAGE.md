@@ -11,7 +11,7 @@
     * the type of input. Depending on the value, different other parameters
     are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_entries file in `WinstonDoc/docs/json_entries_example.txt`
+    an example of json_entries file in `WDoc/docs/json_entries_example.txt`
 
     * Supported values:
         * `auto`: will guess the appropriate filetype based on `--path`.
@@ -184,7 +184,7 @@
     * WARNING: The cache is temporarily ignored in non openaillms
     generations because of an error with langchain's ChatLiteLLM.
     Basically if you don't use `--private` and use llm form openai,
-    WinstonDoc will use ChatOpenAI with regular caching, otherwise
+    WDoc will use ChatOpenAI with regular caching, otherwise
     we use ChatLiteLLM with LLM caching disabled.
     More at https://github.com/langchain-ai/langchain/issues/22389
 
@@ -300,7 +300,7 @@
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
     * If 'youtube': will take the youtube transcripts as text content.
-    * If 'whisper': WinstonDoc will download
+    * If 'whisper': WDoc will download
     the audio from the youtube link, and whisper will be used to turn the audio into text. whisper_prompt and whisper_lang will be used if set.
     * If 'deepgram' will download
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
@@ -318,9 +318,9 @@
 # Other specific arguments
 
 * `--out_file`: str or PosixPath, default `None`
-    * If WinstonDoc must create a summary, if out_file given the summary will
+    * If WDoc must create a summary, if out_file given the summary will
     be written to this file. Note that the file is not erased and
-    WinstonDoc will simply append to it.
+    WDoc will simply append to it.
     * If `--summary_n_recursion` is used, additional files will be
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.

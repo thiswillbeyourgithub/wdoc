@@ -1,5 +1,5 @@
 """
-Entry point used when WinstonDoc is imported or called by 'python -m WinstonDoc'.
+Entry point used when WDoc is imported or called by 'python -m WDoc'.
 Does the same as __init__.py
 """
 

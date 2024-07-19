@@ -69,15 +69,15 @@ from langchain_core.outputs import ChatGeneration
 import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
-logger.info("Starting WinstonDoc")
+logger.info("Starting WDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 @optional_typecheck
 @set_USAGE_as_docstring
-class WinstonDoc:
-    "This docstring is dynamically replaced by the content of WinstonDoc/docs/USAGE.md"
+class WDoc:
+    "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
 
     VERSION: str = "1.0.0"
     allowed_extra_args = extra_args_keys
@@ -133,7 +133,7 @@ class WinstonDoc:
 
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically replaced by the content of WinstonDoc/docs/USAGE.md"
+        "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
@@ -157,7 +157,7 @@ class WinstonDoc:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
-        red(pyfiglet.figlet_format("WinstonDoc"))
+        red(pyfiglet.figlet_format("WDoc"))
 
         # make sure the extra args are valid
         for k in cli_kwargs:
@@ -166,7 +166,7 @@ class WinstonDoc:
                     red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
-            if os.environ["WINSTONDOC_TYPECHECKING"] in ["crash", "warn"]:
+            if os.environ["WDOC_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
@@ -250,12 +250,12 @@ class WinstonDoc:
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
-            os.environ["WINSTONDOC_PRIVATEMODE"] = "true"
+            os.environ["WDOC_PRIVATEMODE"] = "true"
             for k in dict(os.environ):
                 if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
                     red(
                         f"private mode enabled: overwriting '{k}' from environment variables just in case")
-                    os.environ[k] = "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE"
+                    os.environ[k] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
 
             # to be extra safe, let's try to block any remote connection
             disable_internet(
@@ -263,7 +263,7 @@ class WinstonDoc:
             )
 
         else:
-            os.environ["WINSTONDOC_PRIVATEMODE"] = "false"
+            os.environ["WDOC_PRIVATEMODE"] = "false"
 
         if (modelname != TESTING_LLM) and (not llms_api_bases["model"]):
             modelname = model_name_matcher(modelname)
@@ -380,7 +380,7 @@ class WinstonDoc:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
-            ntfy("Starting WinstonDoc")
+            ntfy("Starting WDoc")
         else:
             @optional_typecheck
             def ntfy(text: str) -> str:
@@ -716,7 +716,7 @@ class WinstonDoc:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    WinstonDoc version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
+            header += f"    WDoc version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
