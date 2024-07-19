@@ -79,7 +79,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class DocToolsLLM:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
-    VERSION: str = "0.58.0"
+    VERSION: str = "0.59.0"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
