@@ -79,7 +79,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class WinstonDoc:
     "This docstring is dynamically replaced by the content of WinstonDoc/docs/USAGE.md"
 
-    VERSION: str = "0.60.0"
+    VERSION: str = "1.0.0"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
