@@ -287,7 +287,6 @@ def batch_load_doc(
                 f"\nFull traceback:\n{formatted_tb}")
             if loading_failure == "crash":
                 raise
-            elif loading_failure == "warn":
             elif loading_failure == "warn" or is_debug:
                 return str(err)
             else:
