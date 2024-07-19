@@ -175,7 +175,7 @@ def batch_load_doc(
                 break
 
         if new_doc_to_load:
-            assert to_load[ild]["filetype"] in recursive_types
+            assert load_filetype in recursive_types
             to_load.remove(to_load[ild])
             to_load.extend(new_doc_to_load)
             new_doc_to_load = []
