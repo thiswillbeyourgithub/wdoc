@@ -15,13 +15,14 @@ import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 import random
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
-from pathlib import Path
+from pathlib import Path, PosixPath
 import json
+import rtoml
 import dill
 
 from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
@@ -120,25 +121,34 @@ def batch_load_doc(
 
             if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
-                    parse_recursive_paths(load_kwargs)
+                    parse_recursive_paths(
+                        cli_kwargs=cli_kwargs,
+                        **load_kwargs
+                    )
                 )
                 break
 
             elif load_filetype == "json_entries":
                 new_doc_to_load.extend(
-                    parse_json_entries(load_kwargs)
+                    parse_json_entries(cli_kwargs=cli_kwargs, **load_kwargs)
                 )
                 break
 
             elif load_filetype == "link_file":
                 new_doc_to_load.extend(
-                    parse_link_file(load_kwargs, task=task)
+                    parse_link_file(
+                        cli_kwargs=cli_kwargs,
+                        **load_kwargs,
+                    )
                 )
                 break
 
             elif load_filetype == "youtube_playlist":
                 new_doc_to_load.extend(
-                    parse_youtube_playlist(load_kwargs)
+                    parse_youtube_playlist(
+                        cli_kwargs=cli_kwargs,
+                        **load_kwargs
+                    )
                 )
                 break
 
@@ -387,13 +397,17 @@ def batch_load_doc(
 
 
 @optional_typecheck
-def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
-    load_path = load_kwargs["path"]
-    whi(f"Parsing recursive load_filetype: '{load_path}'")
-    assert "pattern" in load_kwargs, "missing 'pattern' key in args"
-    assert "recursed_filetype" in load_kwargs, "missing 'recursed_filetype' in args"
+def parse_recursive_paths(
+    cli_kwargs: dict,
+    path: Union[str, PosixPath],
+    pattern: str,
+    recursed_filetype: str,
+    include: Optional[str] = None,
+    exclude: Optional[str] = None,
+) -> List[dict]:
+    whi(f"Parsing recursive load_filetype: '{path}'")
     assert (
-        load_kwargs["recursed_filetype"]
+        recursed_filetype
         not in [
             "recursive_paths",
             "json_entries",
@@ -401,66 +415,62 @@ def parse_recursive_paths(load_kwargs: dict) -> List[dict]:
             "anki",
         ]
     ), "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
-    pattern = load_kwargs["pattern"]
 
-    if not Path(load_path).exists() and Path(load_path.replace(r"\ ", " ")).exists():
+    if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
         log.info(r"File was not found so replaced '\ ' by ' '")
-        load_path = load_path.replace(r"\ ", " ")
-    assert Path(load_path).exists, f"not found: {load_path}"
-    doclist = [p for p in Path(load_path).rglob(pattern)]
+        path = path.replace(r"\ ", " ")
+    assert Path(path).exists, f"not found: {path}"
+    doclist = [p for p in Path(path).rglob(pattern)]
     assert doclist, f"No document found by pattern {pattern}"
     doclist = [str(p).strip() for p in doclist if p.is_file()]
-    assert doclist, f"No document after filtering by file"
+    assert doclist, "No document after filtering by file"
     doclist = [p for p in doclist if p]
-    assert doclist, f"No document after removing nonemtpy"
+    assert doclist, "No document after removing nonemtpy"
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
     ]
 
-    if "include" in load_kwargs:
+    if include:
         for i, d in enumerate(doclist):
             keep = True
-            for iinc, inc in enumerate(load_kwargs["include"]):
+            for iinc, inc in enumerate(include):
                 if isinstance(inc, str):
                     if inc == inc.lower():
                         inc = re.compile(inc, flags=re.IGNORECASE)
                     else:
                         inc = re.compile(inc)
-                    load_kwargs["include"][iinc] = inc
+                    include[iinc] = inc
                 if not inc.search(d):
                     keep = False
             if not keep:
                 doclist[i] = None
         doclist = [d for d in doclist if d]
-        del load_kwargs["include"]
 
-    if "exclude" in load_kwargs:
-        for iexc, exc in enumerate(load_kwargs["exclude"]):
+    if exclude:
+        for iexc, exc in enumerate(exclude):
             if isinstance(exc, str):
                 if exc == exc.lower():
                     exc = re.compile(exc, flags=re.IGNORECASE)
                 else:
                     exc = re.compile(exc)
-                load_kwargs["exclude"][iexc] = exc
+                exclude[iexc] = exc
             doclist = [d for d in doclist if not exc.search(d)]
-        del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
-        doc_kwargs = load_kwargs.copy()
+        doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
-        doc_kwargs["filetype"] = doc_kwargs["recursed_filetype"]
-        del doc_kwargs["recursed_filetype"]
-        if "pattern" in doc_kwargs:
-            del doc_kwargs["pattern"]
+        doc_kwargs["filetype"] = recursed_filetype
         doclist[i] = doc_kwargs
     return doclist
 
 
 @optional_typecheck
-def parse_json_entries(load_kwargs: dict) -> List[dict]:
-    load_path = load_kwargs["path"]
-    whi(f"Loading json_entries: '{load_path}'")
-    doclist = str(Path(load_path).read_text()).splitlines()
+def parse_json_entries(
+    cli_kwargs: dict,
+    path: Union[str, PosixPath],
+    ) -> List[dict]:
+    whi(f"Loading json_entries: '{path}'")
+    doclist = str(Path(path).read_text()).splitlines()
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
     ]
@@ -470,28 +480,55 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
         if p.strip() and not p.strip().startswith("#")
     ]
 
-
-
     for i, d in enumerate(doclist):
-        meta = json.loads(d.strip())
+        meta = cli_kwargs.copy()
+        meta.update(json.loads(d.strip()))
         assert isinstance(
             meta, dict
         ), f"meta from line '{d}' is not dict but '{type(meta)}'"
         assert "filetype" in meta, "no key 'filetype' in meta"
-        for k, v in load_kwargs.items():
+        for k, v in cli_kwargs.copy().items():
             if k not in meta:
                 meta[k] = v
-        if meta["path"] == load_path:
+        if meta["path"] == path:
             del meta["path"]
         doclist[i] = meta
     return doclist
 
 
 @optional_typecheck
-def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
-    load_path = load_kwargs["path"]
-    whi(f"Loading link_file: '{load_path}'")
-    doclist = str(Path(load_path).read_text()).splitlines()
+def parse_toml_entries(
+    cli_kwargs: dict,
+    path: Union[str, PosixPath],
+    ) -> List[dict]:
+    whi(f"Loading toml_entries: '{path}'")
+    content = rtoml.load(path)
+    breakpoint()
+
+    for i, d in enumerate(doclist):
+        meta = cli_kwargs.copy()
+        meta.update(rtoml.loads(d.strip()))
+        assert isinstance(
+            meta, dict
+        ), f"meta from line '{d}' is not dict but '{type(meta)}'"
+        assert "filetype" in meta, "no key 'filetype' in meta"
+        for k, v in cli_kwargs.items():
+            if k not in meta:
+                meta[k] = v
+        if meta["path"] == path:
+            del meta["path"]
+        doclist[i] = meta
+    breakpoint()
+    return doclist
+
+
+@optional_typecheck
+def parse_link_file(
+    cli_kwargs: dict,
+    path: Union[str, PosixPath],
+    ) -> List[dict]:
+    whi(f"Loading link_file: '{path}'")
+    doclist = str(Path(path).read_text()).splitlines()
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
     ]
@@ -506,16 +543,9 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         if (matched := markdownlink_regex.search(d).strip())
     ]
 
-    if "done_links" in load_kwargs:
-        # discard any links that are already present in the output
-        doclist = [
-            d.strip() for d in doclist if d.strip() not in load_kwargs["done_links"]
-        ][: load_kwargs["n_summaries_target"]]
-        del load_kwargs["done_links"]
-
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
-        doc_kwargs = load_kwargs.copy()
+        doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "auto"
@@ -524,16 +554,17 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
 
 
 @optional_typecheck
-def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
-    assert "path" in load_kwargs, "missing 'path' key in args"
-    path = load_kwargs["path"]
+def parse_youtube_playlist(
+    cli_kwargs: dict,
+    path: Union[str, PosixPath],
+) -> List[dict]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
     whi(f"Loading youtube playlist: '{path}'")
     video = load_youtube_playlist(path)
 
-    load_kwargs["playlist_title"] = video["title"].strip().replace("\n", "")
+    playlist_title = video["title"].strip().replace("\n", "")
     assert (
         "duration" not in video
     ), f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
@@ -542,13 +573,13 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
 
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
-        doc_kwargs = load_kwargs.copy()
+        doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
         doclist[i] = doc_kwargs
 
-    assert doclist, f"No video found in youtube playlist: {load_kwargs}"
+    assert doclist, f"No video found in youtube playlist: {path}"
     return doclist
 
 
