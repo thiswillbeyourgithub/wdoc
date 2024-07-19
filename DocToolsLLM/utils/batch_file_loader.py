@@ -499,11 +499,8 @@ def parse_json_entries(
 
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
+        meta["filetype"] = "auto"
         meta.update(json.loads(d.strip()))
-        assert isinstance(
-            meta, dict
-        ), f"meta from line '{d}' is not dict but '{type(meta)}'"
-        assert "filetype" in meta, "no key 'filetype' in meta"
         for k, v in cli_kwargs.copy().items():
             if k not in meta:
                 meta[k] = v
