@@ -519,16 +519,17 @@ def parse_toml_entries(
     source_tag: Optional[str] = None,
     ) -> List[dict]:
     whi(f"Loading toml_entries: '{path}'")
-    content = rtoml.load(path)
-    breakpoint()
+    content = rtoml.load(toml=Path(path))
+    assert isinstance(content, dict)
+    doclist = list(content.values())
+    assert all(len(d) == 1 for d in doclist)
+    doclist = [d[0] for d in doclist]
+    assert all(isinstance(d, dict) for d in doclist)
 
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
-        meta.update(rtoml.loads(d.strip()))
-        assert isinstance(
-            meta, dict
-        ), f"meta from line '{d}' is not dict but '{type(meta)}'"
-        assert "filetype" in meta, "no key 'filetype' in meta"
+        meta["filetype"] = "auto"
+        meta.update(d)
         for k, v in cli_kwargs.items():
             if k not in meta:
                 meta[k] = v
@@ -537,7 +538,6 @@ def parse_toml_entries(
         if source_tag:
             meta["source_tag"] = source_tag
         doclist[i] = meta
-    breakpoint()
     return doclist
 
 
