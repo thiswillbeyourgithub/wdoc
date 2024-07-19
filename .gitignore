@@ -11,3 +11,4 @@ pages
 build
 .aider*
 obsolete
+dist
