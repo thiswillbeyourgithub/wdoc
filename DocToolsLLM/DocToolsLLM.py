@@ -143,12 +143,11 @@ class DocToolsLLM:
                             red(message)
                         except Exception as err:
                             print(message)
-                    [p(line) for line in traceback.format_tb(exc_traceback)]
-                    p(str(exc_value))
-                    p(str(exc_type))
                     p("\n--verbose was used so opening debug console at the "
                       "appropriate frame. Press 'c' to continue to the frame "
                       "of this print.")
+                    [p(line) for line in traceback.format_tb(exc_traceback)]
+                    p(str(exc_type) + " : " + str(exc_value))
                     pdb.post_mortem(exc_traceback)
                     p("You are now in the exception handling frame.")
                     breakpoint()
