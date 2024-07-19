@@ -205,6 +205,10 @@ def load_one_doc(
     filetype: str,
     file_hash: str,
     source_tag: Optional[str] = None,
+    doccheck_min_lang_prob: float = min_lang_prob,
+    doccheck_min_token: int = min_token,
+    doccheck_max_token: int = max_token,
+    doccheck_max_lines: int = max_lines,
     **kwargs,
 ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -219,24 +223,6 @@ def load_one_doc(
     assert expected_global_dir.exists(
     ), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
-
-    doccheck_extra_args = {
-        "min_lang_prob": min_lang_prob,
-        "max_lines": max_lines,
-        "min_token": min_token,
-        "max_token": max_token,
-    }
-    for doccheckarg in [
-        "doccheck_min_lang_prob",
-        "doccheck_min_token",
-        "doccheck_max_token",
-        "doccheck_max_lines",
-    ]:
-        if doccheckarg in kwargs:
-            assert doccheckarg.split("doccheck_")[1] in doccheck_extra_args
-            doccheck_extra_args[doccheckarg.split(
-                "doccheck_")[1]] = kwargs[doccheckarg]
-            del kwargs[doccheckarg]
 
     if filetype == "url":
         docs = load_url(**kwargs)
@@ -340,7 +326,10 @@ def load_one_doc(
         check_docs_tkn_length(
             docs=docs,
             identifier=filetype,
-            **doccheck_extra_args,
+            min_lang_prob = doccheck_min_lang_prob,
+            min_token = doccheck_min_token,
+            max_token = doccheck_max_token,
+            max_lines = doccheck_max_lines,
         )
 
     # add and format metadata
