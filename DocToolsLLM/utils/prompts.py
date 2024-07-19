@@ -100,9 +100,9 @@ Detailed instructions:
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Combiner: given some statements and an answer, your task is to:
-1. answer directly the question using markdown bullet points
-2. then combine all additional information as additional bullet points.
+        ("system", """You are a Combiner: given a question and partial answers, your goal is to:
+- combine all partial answers to answer the question as md bullet points,
+- while combining all additional information as additional bullet points.
 
 Detailed instructions:
 ```
@@ -130,7 +130,7 @@ Detailed instructions:
 - If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 ```"""),
         ("human",
-         "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
+         "Question: `{question}`\nCandidate intermediate answers:\n```\n{intermediate_answers}\n```\n\nYour answer:""")
     ]
 )
 
