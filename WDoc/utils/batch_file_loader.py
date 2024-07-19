@@ -216,7 +216,7 @@ def batch_load_doc(
     doc_hashes = Parallel(
         n_jobs=-1,
         backend="loky",
-    )(delayed(logger.catch(file_hasher))(doc=doc) for doc in tqdm(
+    )(delayed(file_hasher)(doc=doc) for doc in tqdm(
       to_load,
       desc="Hashing files",
       unit="doc",
