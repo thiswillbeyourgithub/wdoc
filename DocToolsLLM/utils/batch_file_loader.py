@@ -54,11 +54,13 @@ inference_rules = {
     "local_video": [".mp4", ".avi", ".mkv"],
 
     "json_entries": [".*.json"],
+    "toml_entries": [".*.toml"],
 }
 
 recursive_types = [
     "recursive_paths",
     "json_entries",
+    "toml_entries",
     "link_file",
     "youtube_playlist",
     "auto"
@@ -141,6 +143,12 @@ def batch_load_doc(
             elif load_filetype == "json_entries":
                 new_doc_to_load.extend(
                     parse_json_entries(cli_kwargs=cli_kwargs, **load_kwargs)
+                )
+                break
+
+            elif load_filetype == "toml_entries":
+                new_doc_to_load.extend(
+                    parse_toml_entries(cli_kwargs=cli_kwargs, **load_kwargs)
                 )
                 break
 
