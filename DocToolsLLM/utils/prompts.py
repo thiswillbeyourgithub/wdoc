@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Summarizer, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+        ("system", """You are a Summarizer, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
@@ -52,7 +52,7 @@ RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from las
 # PROMPT FOR QUERY TASKS
 PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
     [
-        ("system", "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
+        ("system", "Given a conversation and an additional follow up question, your goal is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
         ("human",
          "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?")
     ]
@@ -71,7 +71,7 @@ Don't narrate, don't acknowledge those rules, just answer directly the digit wit
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Answerer: given a piece of document and a question, your task is to extract the relevant information while following specific instructions.
+        ("system", """You are a Answerer: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 Detailed instructions:
 ```
