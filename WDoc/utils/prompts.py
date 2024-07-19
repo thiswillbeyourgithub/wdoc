@@ -1,5 +1,5 @@
 """
-Prompts used by WinstonDoc.
+Prompts used by WDoc.
 """
 
 from dataclasses import dataclass

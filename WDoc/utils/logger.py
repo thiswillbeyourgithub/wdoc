@@ -19,12 +19,12 @@ from .flags import disable_md_printing
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
-cache_dir = Path(user_cache_dir(appname="WinstonDoc"))
+cache_dir = Path(user_cache_dir(appname="WDoc"))
 assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(
 ), f"Invalid cache dir location: '{cache_dir}'"
 cache_dir.mkdir(parents=True, exist_ok=True)
 
-log_dir = Path(user_log_dir(appname="WinstonDoc"))
+log_dir = Path(user_log_dir(appname="WDoc"))
 assert log_dir.parent.exists() or log_dir.parent.parent.exists(
 ) or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
 log_dir.mkdir(exist_ok=True, parents=True)
@@ -120,7 +120,7 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 
 @optional_typecheck
 def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
-    "set the docstring of WinstonDoc class to WinstonDoc/docs/USAGE.md's content"
+    "set the docstring of WDoc class to WDoc/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
     assert usage_file.exists()
     usage = usage_file.read_text().strip()
