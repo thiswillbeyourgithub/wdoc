@@ -238,16 +238,12 @@ def load_one_doc(
                 "doccheck_")[1]] = kwargs[doccheckarg]
             del kwargs[doccheckarg]
 
-    if filetype == "youtube":
+    if filetype == "url":
+        docs = load_url(**kwargs)
+
+    elif filetype == "youtube":
         docs = load_youtube_video(
             loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "online_pdf":
-        docs = load_online_pdf(
-            debug=debug,
-            task=task,
             **kwargs,
         )
 
@@ -256,6 +252,13 @@ def load_one_doc(
             debug=debug,
             text_splitter=text_splitter,
             file_hash=file_hash,
+            **kwargs,
+        )
+
+    elif filetype == "online_pdf":
+        docs = load_online_pdf(
+            debug=debug,
+            task=task,
             **kwargs,
         )
 
@@ -271,7 +274,7 @@ def load_one_doc(
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
-    elif filetype == "txt" or filetype == "text":
+    elif filetype == "text":
         docs = load_txt(
             file_hash=file_hash,
             **kwargs,
@@ -327,9 +330,6 @@ def load_one_doc(
             file_hash=file_hash,
             **kwargs,
         )
-
-    elif filetype == "url":
-        docs = load_url(**kwargs)
 
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))

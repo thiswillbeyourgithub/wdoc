@@ -19,7 +19,7 @@
         * `youtube`: `--path` must link to a youtube video
         * `youtube_playlist`: `--path` must link to a youtube playlist
         * `pdf`: `--path` is path to pdf
-        * `txt`: `--path` is path to txt
+        * `text`: `--path` is path to a .txt file
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
         `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.
@@ -35,7 +35,7 @@
         be downloaded. Possible arguments are `--onlinemedia_url_regex`,
         `--onlinemedia_resourcetype_regex`. Then arguments of `local_audio`.
 
-        * `json_entries`: `--path` is path to a txt file that contains a json
+        * `json_entries`: `--path` is path to a text file that contains a json
         for each line containing at least a filetype and a path key/value
         but can contain any parameters described here
         * `recursive_paths`: `--path` is the starting path `--pattern` is the globbing

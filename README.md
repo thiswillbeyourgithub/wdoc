@@ -98,25 +98,26 @@
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
-* **infer** (default, guess the filetype for you)
-* **youtube videos and online videos** (text is then either from the yt subtitles / translation or even better: using whisper / deepgram)
-* **Logseq md files** (thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser))
-* **local PDF** (10 loaders are used, heuristics are used to keep the best one)
-* **remote PDF**: via URL
-* **text files**: .txt, markdown, etc
-* **anki flashcards**: any subset of a anki collection db
-* **string**: just paste your text into the app
-* **html files**: useful for website dumps
-* **audio files**: supports all file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence from audio.
-* **video files**: tries to extract the audio then treat it as an audio file
-* **online media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page.
-* **epub files**
-* **Microsoft Powerpoint files**: .ppt, .pptx, .odp, ...
-* **Microsoft Word documents**: .doc, .docx, .odt, ...
+* **infer**: default, guess the filetype for you
+* **url**: try many ways to load a webpage, with heuristics to find the better parsed one
+* **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram
+* **pdf**: 10 loaders are used, heuristics are used to keep the best one
+* **online_pdf**: via URL then treated at **local_pdf**
+* **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db
 * **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
+* **text**: .txt, markdown, etc
+* **local_html**: useful for website dumps
+* **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
+* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence etc.
+* **local_video**: extract the audio then treat it as **local_audio**
+* **online media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
+* **epub**: barely tested because epub is in general a poorly defined format
+* **powerpoint**: .ppt, .pptx, .odp, ...
+* **word**: .doc, .docx, .odt, ...
+
 * **Recursive types**
-    * **youtube playlists**: turns a youtube_playlist into a list of youtube videos.
-    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely.
+    * **youtube playlists**: get the link for each video then process as **youtube**
+    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
     * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
     * **json_entries**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `docs/json_entries_example.txt`.
 
