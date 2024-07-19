@@ -30,15 +30,6 @@ litellm = lazy_import.lazy_module("litellm")
 TESTING_LLM = "testing/testing"
 
 
-class AnswerConversationBufferMemory(ConversationBufferMemory):
-    """
-    quick fix from https://github.com/hwchase17/langchain/issues/5630
-    """
-    @optional_typecheck
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
-        return super(AnswerConversationBufferMemory, self).save_context(inputs, {'response': outputs['answer']})
-
-
 @optional_typecheck
 def load_llm(
     modelname: str,

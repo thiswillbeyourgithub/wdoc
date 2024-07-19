@@ -40,7 +40,7 @@ from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
-from .utils.llm import load_llm, AnswerConversationBufferMemory, TESTING_LLM
+from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user
 from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
@@ -114,7 +114,6 @@ class DocToolsLLM:
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 4,
         query_relevancy: float = 0.1,
-        query_condense_question: Union[bool, int] = True,
 
         summary_n_recursion: int = 1,
         summary_language: str = "the same language as the document",
@@ -123,7 +122,6 @@ class DocToolsLLM:
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] = None,
-        memoryless: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
@@ -317,9 +315,6 @@ class DocToolsLLM:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.query_condense_question = bool(
-            query_condense_question) if modelname != TESTING_LLM else False
-        self.memoryless = memoryless if modelname != TESTING_LLM else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
@@ -854,11 +849,6 @@ class DocToolsLLM:
             cli_kwargs=self.cli_kwargs,
         )
 
-        # conversational memory
-        self.memory = AnswerConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True)
-
         # set default ask_user argument
         self.interaction_settings = {
             "top_k": self.top_k,
@@ -1089,12 +1079,6 @@ class DocToolsLLM:
         if not query:
             query, self.interaction_settings = ask_user(
                 self.interaction_settings)
-            if "do_reset_memory" in self.interaction_settings:
-                assert self.interaction_settings["do_reset_memory"]
-                del self.interaction_settings["do_reset_memory"]
-                self.memory = AnswerConversationBufferMemory(
-                    memory_key="chat_history",
-                    return_messages=True)
         assert all(
             retriev in ["default", "hyde", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
@@ -1414,25 +1398,6 @@ class DocToolsLLM:
                 md_printer("* " + "\n* ".join(all_filepaths))
 
         else:
-            if self.query_condense_question:
-                loaded_memory = RunnablePassthrough.assign(
-                    chat_history=RunnableLambda(
-                        self.memory.load_memory_variables
-                        if not self.memoryless
-                        else AnswerConversationBufferMemory(memory_key="chat_history", return_messages=True).load_memory_variables
-                    ) | itemgetter("chat_history"),
-                )
-                standalone_question = {
-                    "question_to_answer": RunnablePassthrough(),
-                    "question_for_embedding": {
-                        "question_for_embedding": lambda x: x["question_for_embedding"],
-                        "chat_history": lambda x: format_chat_history(x["chat_history"]),
-                    }
-                    | prompts.condense
-                    | self.llm
-                    | StrOutputParser()
-                }
-
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
             @optional_typecheck
@@ -1484,48 +1449,26 @@ class DocToolsLLM:
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
-            if self.query_condense_question:
-                rag_chain = (
-                    loaded_memory
-                    | standalone_question
-                    | retrieve_documents
-                    | pbar_chain(
-                            llm=self.eval_llm,
-                            len_func="len(inputs['unfiltered_docs'])",
-                            desc="LLM evaluation",
-                            unit="doc",
-                        )
-                    | refilter_documents
-                    | pbar_closer(llm=self.eval_llm)
-                    | pbar_chain(
-                            llm=self.llm,
-                            len_func="len(inputs['filtered_docs'])",
-                            desc="Answering each",
-                            unit="doc",
-                        )
-                    | answer_all_docs
-                    | pbar_closer(llm=self.llm)
-                )
-            else:
-                rag_chain = (
-                    retrieve_documents
-                    | pbar_chain(
-                            llm=self.eval_llm,
-                            len_func="len(inputs['unfiltered_docs'])",
-                            desc="LLM evaluation",
-                            unit="doc",
-                        )
-                    | refilter_documents
-                    | pbar_closer(llm=self.eval_llm)
-                    | pbar_chain(
-                            llm=self.llm,
-                            len_func="len(inputs['filtered_docs'])",
-                            desc="Answering each",
-                            unit="doc",
-                        )
-                    | answer_all_docs
-                    | pbar_closer(llm=self.llm)
-                )
+
+            rag_chain = (
+                retrieve_documents
+                | pbar_chain(
+                        llm=self.eval_llm,
+                        len_func="len(inputs['unfiltered_docs'])",
+                        desc="LLM evaluation",
+                        unit="doc",
+                    )
+                | refilter_documents
+                | pbar_closer(llm=self.eval_llm)
+                | pbar_chain(
+                        llm=self.llm,
+                        len_func="len(inputs['filtered_docs'])",
+                        desc="Answering each",
+                        unit="doc",
+                    )
+                | answer_all_docs
+                | pbar_closer(llm=self.llm)
+            )
 
             if self.debug:
                 rag_chain.get_graph().print_ascii()

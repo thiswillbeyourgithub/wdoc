@@ -137,13 +137,6 @@
     * threshold underwhich a document cannot be considered relevant by
     embeddings alone.
 
-* `--query_condense_question`: bool, default `True`
-    * if True, will not use a special LLM call to reformulate the question
-    when task is `query`. Otherwise, the query will be reformulated as
-    a standalone question. Useful when you have multiple questions in
-    a row.
-    Disabled if using a testing model.
-
 ---
 
 * `--summary_n_recursion`: int, default `1`
@@ -186,10 +179,6 @@
     string. Inside it you can do whatever you want with it. This
     can be used for example to send notification on your phone
     using ntfy.sh to get summaries.
-
-* `--memoryless`: bool, default `False`
-    * if False, will remember the messages across a given chat exchange.
-    Disabled if using a testing model.
 
 * `--disable_llm_cache`: bool, default `False`
     * WARNING: The cache is temporarily ignored in non openaillms
