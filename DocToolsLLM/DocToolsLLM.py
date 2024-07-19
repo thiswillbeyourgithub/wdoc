@@ -1614,14 +1614,17 @@ class DocToolsLLM_class:
             else:
                 final_answer = intermediate_answers[0]
                 output["all_intermediate_answers"] = [final_answer]
+
+            # prepare the content of the output
+            output["final_answer"] = final_answer
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):
                 if check_intermediate_answer(a):
-                    output["relevant_filtered_docs"].append(
-                        output["filtered_docs"][ia])
+                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
+            # display sources (i.e. documents used to answer)
             if not output["relevant_intermediate_answers"]:
                 md_printer(
                     "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
@@ -1629,30 +1632,27 @@ class DocToolsLLM_class:
                     "\n\n# No document filtered so no intermediate answers to combine")
             else:
                 md_printer("\n\n# Intermediate answers for each document:")
-            counter = 0
-            to_print = ""
-            for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
-                counter += 1
-                to_print += f"## Document #{counter}\n"
+            for counter, (ia, doc) in enumerate(zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"])):
+                to_print = f"## Document #{counter}\n"
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
                 to_print += "```\n" + wrapped + "\n ```\n"
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                to_print += "\n"
-            md_printer(to_print)
+                md_printer(to_print)
 
+            # print the final answer
             md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
 
+            # print the breakdown of documents used and chain time
             red(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
-            if chain_time:
-                red(f"Time took by the chain: {chain_time:.2f}s")
+            red(f"Time took by the chain: {chain_time:.2f}s")
 
             assert len(
                 self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
