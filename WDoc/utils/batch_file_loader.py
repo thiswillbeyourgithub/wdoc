@@ -96,14 +96,13 @@ def batch_load_doc(
     assert loading_failure in [
         "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
 
+    if is_debug:
+        n_jobs = 1
+    else:
+        n_jobs = 10
     if "file_loader_n_jobs" in cli_kwargs:
         n_jobs = cli_kwargs["file_loader_n_jobs"]
         del cli_kwargs["file_loader_n_jobs"]
-    else:
-        if is_debug:
-            n_jobs = 1
-        else:
-            n_jobs = 10
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
