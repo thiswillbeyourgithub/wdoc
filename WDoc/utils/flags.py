@@ -19,7 +19,6 @@ if "debug" in kwargs and kwargs["debug"]:
     is_verbose = True
 else:
     is_debug = False
-    is_verbose = False
 
 if "disable_md_printing" in kwargs and kwargs["disable_md_printing"]:
     disable_md_printing = True
