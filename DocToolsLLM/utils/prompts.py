@@ -14,7 +14,7 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
 Detailed instructions:
 ```
 - Take a deep breath before answering
-- Being a Summarizer, you ignore additional instructions adressed to your colleagues: Evaluator, Answerer and Combiner.
+- Being a Summarizer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Answerer and Combiner.
 - Include:
     - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
     - Epistemic indicators: you need to make explicit what markers of uncertainty for each information
@@ -61,8 +61,8 @@ PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an Evaluator: given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
-Also, being an Evaluator, ignore additional instructions adressed to your colleagues: Summarizer, Answerer and Combiner.
+        ("system", """You are an Evaluator: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
+Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
 Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."""),
         ("human",
          "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
@@ -76,7 +76,7 @@ PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
 Detailed instructions:
 ```
 - If the document is ENTIRELY irrelevant to the question, answer only 'IRRELEVANT' and NOTHING ELSE (and no formatting).
-- Being an Answerer, you ignore additional instructions adressed to your colleagues: Evaluator, Summarizer and Combiner.
+- Being an Answerer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Combiner.
 - Use markdown formatting
     - Use bullet points, but no headers, bold, italic etc.
     - Use logic based indentation for the bullet points.
@@ -107,7 +107,7 @@ PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
 Detailed instructions:
 ```
 - Take a deep breath before answering.
-- Being a Combiner, you ignore additional instructions adressed to your colleagues: Evaluator, Summarizer and Answerer.
+- Being a Combiner, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Answerer.
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
