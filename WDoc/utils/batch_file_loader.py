@@ -27,7 +27,7 @@ import dill
 
 from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir, DocDict
 from .typechecker import optional_typecheck
-from .logger import red, whi
+from .logger import red, whi, logger
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug
 
@@ -216,7 +216,7 @@ def batch_load_doc(
     doc_hashes = Parallel(
         n_jobs=-1,
         backend="loky",
-    )(delayed(file_hasher)(doc=doc) for doc in tqdm(
+    )(delayed(logger.catch(file_hasher))(doc=doc) for doc in tqdm(
       to_load,
       desc="Hashing files",
       unit="doc",
@@ -269,6 +269,7 @@ def batch_load_doc(
                         tuple(doc["load_functions"]))
 
     # wrap doc_loader to cach errors cleanly
+    @logger.catch
     @optional_typecheck
     def load_one_doc_wrapped(**doc_kwargs) -> Union[List[Document], str]:
         try:
@@ -430,7 +431,7 @@ def parse_recursive_paths(
     ), "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
 
     if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
-        whi(r"File was not found so replaced '\ ' by ' '")
+        logger.info(r"File was not found so replaced '\ ' by ' '")
         path = path.replace(r"\ ", " ")
     assert Path(path).exists, f"not found: {path}"
     doclist = [p for p in Path(path).rglob(pattern)]
