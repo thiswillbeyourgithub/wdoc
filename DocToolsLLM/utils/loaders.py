@@ -634,6 +634,9 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
+    # remove duplicate, essentially making cards the same thing as notes
+    cards = cards.drop_duplicates(subset='nflds', keep='first')
+
     if debug:
         tqdm.pandas()
     else:
