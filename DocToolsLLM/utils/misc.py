@@ -10,7 +10,7 @@ import os
 import urllib.request
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PosixPath
 from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
@@ -125,8 +125,8 @@ extra_args_keys = {
     "filter_content": Union[List[str], str],
     "filter_metadata": Union[List[str], str],
     "include": str,
-    "out_file": str,
-    "path": str,
+    "out_file": Union[str, PosixPath],
+    "path": Union[str, PosixPath],
     "source_tag": str,
     "loading_failure": str,
 }
