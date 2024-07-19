@@ -1,6 +1,6 @@
 # WinstonDoc
 
-<div style="display: flex; justify-content: center; gap: 10px;">
+<div style="display: flex; justify-content: center; gap: 10px; align: center;">
     <img src="images/icon.png" width="256">
 </div>
 
