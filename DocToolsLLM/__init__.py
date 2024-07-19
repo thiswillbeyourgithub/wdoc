@@ -67,6 +67,8 @@ def fire_wrapper(
 
 def cli_launcher() -> None:
     sys_args = sys.argv
+    if "--version" in sys_args:
+        return __VERSION__
     if "--help" in sys_args:
         print("Showing help")
         DocToolsLLM.md_printer(DocToolsLLM.__doc__)
