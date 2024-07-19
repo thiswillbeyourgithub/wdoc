@@ -157,7 +157,7 @@ class WDoc:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
-        red(pyfiglet.figlet_format("WDoc"))
+        red(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
         for k in cli_kwargs:
