@@ -3,7 +3,7 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Any
+from typing import List, Union, Callable
 from joblib import Memory
 import socket
 import os
@@ -19,6 +19,9 @@ import tiktoken
 from functools import partial
 from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
+from typing import get_type_hints
+import inspect
+from functools import wraps
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -491,3 +494,32 @@ def disable_internet(allowed: dict) -> None:
         skip = True
     if not skip:
         assert not is_private(ip), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+
+@optional_typecheck
+def set_func_signature(func: Callable) -> Callable:
+    """dynamically set the extra args of DocToolsLLM.__init__ so that
+    instead of **cli_kwargs the signature indicates all allowed arguments.
+    Needed to get correct behavior from fire.Fire '--completion' """
+    original_sig = inspect.signature(func)
+    assert list(original_sig.parameters.values())[-1].kind == inspect.Parameter.VAR_KEYWORD
+    new_params = list(original_sig.parameters.values())[:-1]  # Remove **cli_kwargs
+    new_params.extend(
+                [
+                    inspect.Parameter(
+                        name=arg,
+                        kind=inspect.Parameter.KEYWORD_ONLY,
+                        annotation=hint,
+                        default=None,
+                    )
+                    for arg, hint in extra_args_keys.items()
+            ]
+    )
+    new_sig = original_sig.replace(parameters=new_params)
+
+    @wraps(func)
+    def new_func(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+    new_func.__signature__ = new_sig
+    new_func.__annotations__ = get_type_hints(func) | extra_args_keys
+
+    return new_func

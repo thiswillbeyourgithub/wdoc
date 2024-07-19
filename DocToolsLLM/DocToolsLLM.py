@@ -30,7 +30,9 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, disable_internet)
+    extra_args_keys, disable_internet,
+    set_func_signature
+)
 from .utils.prompts import prompts
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
 
@@ -81,6 +83,7 @@ class DocToolsLLM_class:
     md_printer = md_printer
 
     @optional_typecheck
+    @set_func_signature
     def __init__(
         self,
         task: str,
