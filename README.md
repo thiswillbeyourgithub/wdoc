@@ -1,5 +1,9 @@
-<img src="images/icon.png" width="256">
 # WinstonDoc
+
+<div style="display: flex; justify-content: center; gap: 10px;">
+    <img src="images/icon.png" width="256">
+</div>
+
 * **Goal and project specifications** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
 * **Current status**: **still under development**.
     * I use it almost daily and have been for months now.
