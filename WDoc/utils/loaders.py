@@ -636,9 +636,11 @@ def load_anki(
 
     if verbose:
         tqdm.pandas()
+        pbar = lambda *x, **y: tqdm.pandas(*x, **y)
     else:
         pd.DataFrame.progress_apply = pd.DataFrame.apply
         pd.Series.progress_apply = pd.Series.apply
+        pbar = lambda *x, **y: None
 
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
@@ -686,8 +688,7 @@ def load_anki(
     # prepare field values
     if "{allfields}" in anki_template:
         useallfields = True
-        if verbose:
-            tqdm.pandas(desc="Parsing allfields value")
+        pbar(desc="Parsing allfields value")
         notes["allfields"] = notes.progress_apply(
             lambda x: "\n\n".join([
                 f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
@@ -700,8 +701,7 @@ def load_anki(
 
     if "{tags}" in anki_template:
         usetags = True
-        if verbose:
-            tqdm.pandas(desc="Formatting tags")
+        pbar(desc="Formatting tags")
         notes["tags_formatted"] = notes.progress_apply(
             lambda x: "Anki tags:\n'''\n" +  "\n".join([
                 f"* {t}"
@@ -745,16 +745,14 @@ def load_anki(
         text = text.replace("\\n", "\n").replace("\\xa0", " ")
         return text
 
-    if verbose:
-        tqdm.pandas(desc="Formatting all cards")
+    pbar(desc="Formatting all cards")
     notes["text"] = notes.progress_apply(placeholder_replacer, axis=1)
 
     notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
     notes = notes[notes["text"].ne('')]  # remove empty text
 
     # remove all media
-    if verbose:
-        tqdm.pandas(desc="Replacing media in anki")
+    pbar(desc="Replacing media in anki")
     notes["text"] = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
