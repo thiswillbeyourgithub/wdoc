@@ -1866,7 +1866,7 @@ def load_pdf(
     max_prob = max([v for v in probs.values()])
 
     if debug:
-        red(f"Language probability after parsing {path}: {probs}")
+        yel(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
 
