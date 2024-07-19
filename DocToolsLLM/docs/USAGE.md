@@ -118,14 +118,14 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet:beta"`
+* `--query_eval_modelname`: str, default `"openai/gpt4o-mini"`
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
     None to disable.
 
-* `--query_eval_check_number`: int, default `1`
+* `--query_eval_check_number`: int, default `4`
     * number of pass to do with the eval llm to check if the document
     is indeed relevant to the question. The document will not
     be processed if all answers from the eval llm are 0, and will

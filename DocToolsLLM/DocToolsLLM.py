@@ -105,11 +105,11 @@ class DocToolsLLM_class:
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
-        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet:beta",
+        query_eval_modelname: Optional[str] = "openai/gpt-4o-mini",
         # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
-        query_eval_check_number: int = 1,
+        query_eval_check_number: int = 4,
         query_relevancy: float = 0.1,
         query_condense_question: Union[bool, int] = True,
 
