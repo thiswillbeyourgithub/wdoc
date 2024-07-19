@@ -250,7 +250,7 @@ def load_one_doc(
 
     elif filetype == "anki":
         docs = load_anki(
-            debug=debug,
+            verbose=is_verbose,
             text_splitter=text_splitter,
             loaders_temp_dir=temp_dir,
             **kwargs,
@@ -610,7 +610,7 @@ def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Documen
 
 @optional_typecheck
 def load_anki(
-    debug: bool,
+    verbose: bool,
     anki_profile: str,
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
@@ -634,7 +634,7 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
-    if debug:
+    if verbose:
         tqdm.pandas()
     else:
         pd.DataFrame.progress_apply = pd.DataFrame.apply
@@ -686,7 +686,7 @@ def load_anki(
     # prepare field values
     if "{allfields}" in anki_template:
         useallfields = True
-        if debug:
+        if verbose:
             tqdm.pandas(desc="Parsing allfields value")
         notes["allfields"] = notes.progress_apply(
             lambda x: "\n\n".join([
@@ -700,7 +700,7 @@ def load_anki(
 
     if "{tags}" in anki_template:
         usetags = True
-        if debug:
+        if verbose:
             tqdm.pandas(desc="Formatting tags")
         notes["tags_formatted"] = notes.progress_apply(
             lambda x: "Anki tags:\n'''\n" +  "\n".join([
@@ -745,7 +745,7 @@ def load_anki(
         text = text.replace("\\n", "\n").replace("\\xa0", " ")
         return text
 
-    if debug:
+    if verbose:
         tqdm.pandas(desc="Formatting all cards")
     notes["text"] = notes.progress_apply(placeholder_replacer, axis=1)
 
@@ -753,7 +753,7 @@ def load_anki(
     notes = notes[notes["text"].ne('')]  # remove empty text
 
     # remove all media
-    if debug:
+    if verbose:
         tqdm.pandas(desc="Replacing media in anki")
     notes["text"] = notes["text"].apply(
         lambda x: anki_replace_media(

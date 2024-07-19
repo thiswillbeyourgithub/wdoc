@@ -9,6 +9,11 @@ import platform
 kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
 is_linux = platform.system() == "Linux"
 
+if "verbose" in kwargs and kwargs["verbose"]:
+    is_verbose = True
+else:
+    is_verbose = False
+
 if "debug" in kwargs and kwargs["debug"]:
     is_debug = True
     is_verbose = True
