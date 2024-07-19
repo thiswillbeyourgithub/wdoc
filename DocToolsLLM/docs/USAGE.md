@@ -306,8 +306,7 @@
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`: str
-    * Only active if `--filetype` is one of 'json_entries', 'recursive_paths',
-    'link_file', 'youtube_playlist'.
+    * Only active if `--filetype` is 'recursive_paths'
     `--include` can be a list of regex that must be present in the
     document PATH (not content!)
     `--exclude` can be a list of regex that if present in the PATH

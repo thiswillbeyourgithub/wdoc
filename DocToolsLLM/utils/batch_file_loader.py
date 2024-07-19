@@ -177,6 +177,7 @@ def batch_load_doc(
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
+            assert k not in ["include", "exclude"], "Include or exclude arguments should be reomved at this point"
     # filter out the usual unexpected
     all_unexp_keys = [a for a in all_unexp_keys if a not in [
         "out_file", "file_loader_n_jobs", "loading_failure",
@@ -469,33 +470,7 @@ def parse_json_entries(load_kwargs: dict) -> List[dict]:
         if p.strip() and not p.strip().startswith("#")
     ]
 
-    if "include" in load_kwargs:
-        for i, d in enumerate(doclist):
-            keep = True
-            for iinc, inc in enumerate(load_kwargs["include"]):
-                if isinstance(inc, str):
-                    if inc == inc.lower():
-                        inc = re.compile(inc, flags=re.IGNORECASE)
-                    else:
-                        inc = re.compile(inc)
-                    load_kwargs["include"][iinc] = inc
-                if not inc.search(d):
-                    keep = False
-            if not keep:
-                doclist[i] = None
-        doclist = [d for d in doclist if d]
-        del load_kwargs["include"]
 
-    if "exclude" in load_kwargs:
-        for iexc, exc in enumerate(load_kwargs["exclude"]):
-            if isinstance(exc, str):
-                if exc == exc.lower():
-                    exc = re.compile(exc, flags=re.IGNORECASE)
-                else:
-                    exc = re.compile(exc)
-                load_kwargs["exclude"][iexc] = exc
-            doclist = [d for d in doclist if not exc.search(d)]
-        del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
         meta = json.loads(d.strip())
@@ -538,34 +513,6 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         ][: load_kwargs["n_summaries_target"]]
         del load_kwargs["done_links"]
 
-    if "include" in load_kwargs:
-        for i, d in enumerate(doclist):
-            keep = True
-            for iinc, inc in enumerate(load_kwargs["include"]):
-                if isinstance(inc, str):
-                    if inc == inc.lower():
-                        inc = re.compile(inc, flags=re.IGNORECASE)
-                    else:
-                        inc = re.compile(inc)
-                    load_kwargs["include"][iinc] = inc
-                if not inc.search(d):
-                    keep = False
-            if not keep:
-                doclist[i] = None
-        doclist = [d for d in doclist if d]
-        del load_kwargs["include"]
-
-    if "exclude" in load_kwargs:
-        for iexc, exc in enumerate(load_kwargs["exclude"]):
-            if isinstance(exc, str):
-                if exc == exc.lower():
-                    exc = re.compile(exc, flags=re.IGNORECASE)
-                else:
-                    exc = re.compile(exc)
-                load_kwargs["exclude"][iexc] = exc
-            doclist = [d for d in doclist if not exc.search(d)]
-        del load_kwargs["exclude"]
-
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
         doc_kwargs = load_kwargs.copy()
@@ -592,34 +539,6 @@ def parse_youtube_playlist(load_kwargs: dict) -> List[dict]:
     ), f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
     doclist = [ent["webpage_url"] for ent in video["entries"]]
     doclist = [li for li in doclist if yt_link_regex.search(li)]
-
-    if "include" in load_kwargs:
-        for i, d in enumerate(doclist):
-            keep = True
-            for iinc, inc in enumerate(load_kwargs["include"]):
-                if isinstance(inc, str):
-                    if inc == inc.lower():
-                        inc = re.compile(inc, flags=re.IGNORECASE)
-                    else:
-                        inc = re.compile(inc)
-                    load_kwargs["include"][iinc] = inc
-                if not inc.search(d):
-                    keep = False
-            if not keep:
-                doclist[i] = None
-        doclist = [d for d in doclist if d]
-        del load_kwargs["include"]
-
-    if "exclude" in load_kwargs:
-        for iexc, exc in enumerate(load_kwargs["exclude"]):
-            if isinstance(exc, str):
-                if exc == exc.lower():
-                    exc = re.compile(exc, flags=re.IGNORECASE)
-                else:
-                    exc = re.compile(exc)
-                load_kwargs["exclude"][iexc] = exc
-            doclist = [d for d in doclist if not exc.search(d)]
-        del load_kwargs["exclude"]
 
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
