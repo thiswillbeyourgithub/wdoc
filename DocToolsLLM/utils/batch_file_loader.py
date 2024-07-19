@@ -417,6 +417,7 @@ def parse_recursive_paths(
     recursed_filetype: str,
     include: Optional[List[str]] = None,
     exclude: Optional[List[str]] = None,
+    source_tag: Optional[str] = None,
 ) -> List[dict]:
     whi(f"Parsing recursive load_filetype: '{path}'")
     assert (
@@ -473,6 +474,8 @@ def parse_recursive_paths(
         doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = recursed_filetype
+        if source_tag:
+            doc_kwargs["source_tag"] = source_tag
         doclist[i] = doc_kwargs
     return doclist
 
@@ -481,6 +484,7 @@ def parse_recursive_paths(
 def parse_json_entries(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
+    source_tag: Optional[str] = None,
     ) -> List[dict]:
     whi(f"Loading json_entries: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
@@ -505,6 +509,8 @@ def parse_json_entries(
                 meta[k] = v
         if meta["path"] == path:
             del meta["path"]
+        if source_tag:
+            meta["source_tag"] = source_tag
         doclist[i] = meta
     return doclist
 
@@ -513,6 +519,7 @@ def parse_json_entries(
 def parse_toml_entries(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
+    source_tag: Optional[str] = None,
     ) -> List[dict]:
     whi(f"Loading toml_entries: '{path}'")
     content = rtoml.load(path)
@@ -530,6 +537,8 @@ def parse_toml_entries(
                 meta[k] = v
         if meta["path"] == path:
             del meta["path"]
+        if source_tag:
+            meta["source_tag"] = source_tag
         doclist[i] = meta
     breakpoint()
     return doclist
@@ -539,6 +548,7 @@ def parse_toml_entries(
 def parse_link_file(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
+    source_tag: Optional[str] = None,
     ) -> List[dict]:
     whi(f"Loading link_file: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
@@ -562,6 +572,8 @@ def parse_link_file(
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "auto"
+        if source_tag:
+            doc_kwargs["source_tag"] = source_tag
         doclist[i] = doc_kwargs
     return doclist
 
@@ -570,6 +582,7 @@ def parse_link_file(
 def parse_youtube_playlist(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
+    source_tag: Optional[str] = None,
 ) -> List[dict]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
@@ -590,6 +603,8 @@ def parse_youtube_playlist(
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
+        if source_tag:
+            doc_kwargs["source_tag"] = source_tag
         doclist[i] = doc_kwargs
 
     assert doclist, f"No video found in youtube playlist: {path}"
