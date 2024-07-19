@@ -1561,39 +1561,59 @@ class DocToolsLLM_class:
             except NoDocumentsAfterLLMEvalFiltering as err:
                 return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
 
-            # group the intermediate answers by batch, then do a batch reduce mapping
-            batch_size = 5
             intermediate_answers = output["intermediate_answers"]
-            all_intermediate_answers = [intermediate_answers]
-            pbar = tqdm(
-                desc="Combibing answers",
-                unit="answer",
-                total=len(intermediate_answers),
-            )
-            while len(intermediate_answers) > batch_size:
-                batches = [[]]
-                for ia in intermediate_answers:
-                    if not check_intermediate_answer(ia):
-                        continue
-                    if len(batches[-1]) >= batch_size:
-                        batches.append([])
-                    if len(batches[-1]) < batch_size:
-                        batches[-1].append(ia)
-                batch_args = [
-                    {"question_to_answer": query_an, "intermediate_answers": b}
-                    for b in batches]
-                intermediate_answers = [a["final_answer"]
-                                        for a in final_answer_chain.batch(batch_args)]
-                pbar.n = pbar.total - len(intermediate_answers)
-                all_intermediate_answers.append(intermediate_answers)
-            final_answer = final_answer_chain.invoke(
-                {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
-            pbar.n = pbar.total
-            pbar.close()
-            output["final_answer"] = final_answer
-            output["all_intermediate_answeers"] = all_intermediate_answers
-            # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
 
+            if len(intermediate_answers) > 1:
+                all_intermediate_answers = [intermediate_answers]
+                # group the intermediate answers by batch, then do a batch reduce mapping
+                # each batch is at least 2 intermediate answers and maxes at
+                # batch_tkn_size tokens to avoid losing anything because of
+                # the context
+                batch_tkn_size = 1000
+                pbar = tqdm(
+                    desc="Combibing answers",
+                    unit="answer",
+                    total=len(intermediate_answers),
+                )
+                while True:
+                    batches = [[]]
+                    for ia in intermediate_answers:
+                        if not check_intermediate_answer(ia):
+                            # disregard IRRELEVANT answers
+                            continue
+                        if len(batches[-1]) < 2:
+                            # make sure there's at least 2 per batch
+                            batches[-1].append(ia)
+                        elif get_tkn_length(batches[-1]) >= batch_tkn_size:
+                            # cap batch size to the max tkn size
+                            batches.append([ia])
+                        elif get_tkn_length(batches[-1]) < batch_tkn_size:
+                            batches[-1].append(ia)
+                    batch_args = [
+                        {
+                            "question_to_answer": query_an,
+                            "intermediate_answers": b
+                        } for b in batches
+                    ]
+                    intermediate_answers = [
+                        a["final_answer"]
+                        for a in final_answer_chain.batch(batch_args)
+                    ]
+                    all_intermediate_answers.append(intermediate_answers)
+                    pbar.n = pbar.total - len(intermediate_answers)
+                    if len(intermediate_answers) == 1:
+                        pbar.update(1)
+                        break
+
+                assert pbar.n == pbar.total
+                pbar.close()
+                assert len(all_intermediate_answers[-1]) == 1
+
+                final_answer = all_intermediate_answers[-1][0]
+                output["all_intermediate_answers"] = all_intermediate_answers
+            else:
+                final_answer = intermediate_answers[0]
+                output["all_intermediate_answers"] = [final_answer]
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):
