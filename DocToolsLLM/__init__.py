@@ -71,7 +71,7 @@ def cli_launcher() -> None:
         print("Showing help")
         DocToolsLLM.md_printer(DocToolsLLM.__doc__)
         raise SystemExit()
-    if "--completion" in sys_args:
+    if "--" in sys_args and "--completion" in sys_args:
         return fire.Fire(DocToolsLLM)
 
     kwargs = fire.Fire(fire_wrapper)
