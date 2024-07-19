@@ -10,3 +10,5 @@ pages
 *.egg-info
 build
 .aider*
+obsolete
+dist
