@@ -272,7 +272,7 @@ def batch_load_doc(
     @optional_typecheck
     def load_one_doc_wrapped(
         loading_failure: str,
-        **doc_kwargs: Union[DocDict, dict]
+        **doc_kwargs,
     ) -> Union[List[Document], str]:
         try:
             out = load_one_doc(**doc_kwargs)
