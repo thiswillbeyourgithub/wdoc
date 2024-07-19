@@ -3,7 +3,7 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_docstring, log_dir, cache_dir
+from .utils.logger import whi, yel, red, md_printer, log, set_USAGE_as_docstring, log_dir, cache_dir
 
 import sys
 import faulthandler
@@ -72,7 +72,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 @optional_typecheck
-@set_docstring
+@set_USAGE_as_docstring
 class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
