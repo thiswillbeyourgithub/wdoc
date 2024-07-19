@@ -430,7 +430,7 @@ def faiss_loader(
         assert metadata is not None
         temp = FAISS.load_local(fi, cached_embeddings,
                                 allow_dangerous_deserialization=True)
-        temp.docstore._dict[list(temp.docstore._dict.values())[
+        temp.docstore._dict[list(temp.docstore._dict.keys())[
             0]].metadata = metadata
         if not db:
             db = temp
