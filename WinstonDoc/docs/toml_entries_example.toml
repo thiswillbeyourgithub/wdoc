@@ -1,0 +1,16 @@
+[[this_will_fetch_all_the_pdf_recursively_inside_a_dir_according_to_some_parameters]]
+path = '../some/path/to/parent/'
+filetype = 'recursive_paths'
+recursed_filetype = 'pdf'
+pattern = '*pdf'
+exclude = ['regex_to_exclude']
+include = ['regex_that_need_to_be_present']
+
+[[anki_deck_example]]
+filetype = 'anki'
+anki_profile = 'name_of_your_anki_profile_for_ankipandas'
+anki_deck = 'personnal::paintings'
+anki_notetype = 'my_note_type'
+anki_template = '''
+Question:{question_field}
+Answer:{answer_field}'''
