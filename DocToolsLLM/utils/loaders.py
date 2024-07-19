@@ -634,9 +634,6 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
-    # remove duplicate, essentially making cards the same thing as notes
-    cards = cards.drop_duplicates(subset='nflds', keep='first')
-
     if debug:
         tqdm.pandas()
     else:
@@ -670,11 +667,15 @@ def load_anki(
     cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
     assert not cards.empty, "empty dataframe!"
 
+    # remove duplicate, essentially making cards the same thing as notes
+    cards = cards.drop_duplicates(subset='nid', keep='first')
+    notes = cards.reset_index().set_index("nid")
+
     # check placeholders validity
     placeholders = [ph.lower() for ph in anki_replacements_regex.findall(anki_template)]
     assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
     for ph in placeholders:
-        for ic, c in cards.iterrows():
+        for ic, c in notes.iterrows():
             if ph not in c["fields_name"] + ["allfields", "tags"]:
                 raise Exception(
                     "A placeholder in anki template didn't match fields of "
@@ -687,7 +688,7 @@ def load_anki(
         useallfields = True
         if debug:
             tqdm.pandas(desc="Parsing allfields value")
-        cards["allfields"] = cards.progress_apply(
+        notes["allfields"] = notes.progress_apply(
             lambda x: "\n\n".join([
                 f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
                 for k, v in zip(x["fields_name"], x["nflds"])
@@ -701,7 +702,7 @@ def load_anki(
         usetags = True
         if debug:
             tqdm.pandas(desc="Formatting tags")
-        cards["tags_formatted"] = cards.progress_apply(
+        notes["tags_formatted"] = notes.progress_apply(
             lambda x: "Anki tags:\n'''\n" +  "\n".join([
                 f"* {t}"
                 for t in x["ntags"]
@@ -711,10 +712,10 @@ def load_anki(
             ]).strip() + "\n'''",
             axis=1,
         )
-        if cards["ntags"].notnull().any():
-            assert cards["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
+        if notes["ntags"].notnull().any():
+            assert notes["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
         # remove the tags formatting if it didn't match anything
-        cards["tags_formatted"] = cards["tags_formatted"].str.replace(
+        notes["tags_formatted"] = notes["tags_formatted"].str.replace(
             "Anki tags:\n'''\n'''",
             "",
         )
@@ -746,15 +747,15 @@ def load_anki(
 
     if debug:
         tqdm.pandas(desc="Formatting all cards")
-    cards["text"] = cards.progress_apply(placeholder_replacer, axis=1)
+    notes["text"] = notes.progress_apply(placeholder_replacer, axis=1)
 
-    cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
-    cards = cards[cards["text"].ne('')]  # remove empty text
+    notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
+    notes = notes[notes["text"].ne('')]  # remove empty text
 
     # remove all media
     if debug:
         tqdm.pandas(desc="Replacing media in anki")
-    cards["text"] = cards["text"].apply(
+    notes["text"] = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
             media=None,
@@ -762,27 +763,26 @@ def load_anki(
             strict=False,
         )[0]
     )
-    cards = cards[~cards["text"].str.contains("\[IMAGE_")]
-    cards = cards[~cards["text"].str.contains("\[SOUND_")]
-    cards = cards[~cards["text"].str.contains("\[LINK_")]
-    cards["text"] = cards["text"].apply(lambda x: x.strip())
-    cards = cards[cards["text"].ne('')]  # remove empty text
-    cards.drop_duplicates(subset="text", inplace=True)
+    notes = notes[~notes["text"].str.contains("\[IMAGE_")]
+    notes = notes[~notes["text"].str.contains("\[SOUND_")]
+    notes = notes[~notes["text"].str.contains("\[LINK_")]
+    notes["text"] = notes["text"].apply(lambda x: x.strip())
+    notes = notes[notes["text"].ne('')]  # remove empty text
+    notes.drop_duplicates(subset="text", inplace=True)
 
-    cards = cards.sort_index()
+    notes = notes.sort_index()
 
     docs = []
 
     # load each card as a single document
-    for cid in cards.index:
-        c = cards.loc[cid, :]
-        assert c["codeck"], f"empty card_deck for cid {cid}"
+    for nid, c in notes.iterrows():
+        assert c["codeck"], f"empty card_deck for nid {nid}"
         docs.append(
             Document(
                 page_content=c["text"],
                 metadata={
                     "anki_tags": " ".join(c["ntags"]),
-                    "anki_cid": str(cid),
+                    "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
                 },
@@ -800,8 +800,8 @@ def load_anki(
         docs[i].metadata["anki_tags"] = " ".join(
             sorted(list(set(docs[i].metadata["anki_tags"].split(" "))))
         )
-        docs[i].metadata["anki_cid"] = " ".join(
-            sorted(docs[i].metadata["anki_cid"].split(" "))
+        docs[i].metadata["anki_nid"] = " ".join(
+            sorted(docs[i].metadata["anki_nid"].split(" "))
         )
 
     # delete temporary db file
