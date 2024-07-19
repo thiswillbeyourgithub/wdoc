@@ -48,6 +48,7 @@
     * I use it to query my personal documents using the `--private` argument.
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
     * I use it to ask questions about entire youtube playlists.
+* **What's up with the name?** One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 
 ## Features
 * **Advanced RAG to query lots of diverse documents**:
