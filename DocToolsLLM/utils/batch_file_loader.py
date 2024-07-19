@@ -96,10 +96,11 @@ def batch_load_doc(
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
-    to_load[-1]["filetype"] = filetype
+    to_load[-1]["filetype"] = filetype.lower()
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
         for ild, load_kwargs in enumerate(to_load):
+            to_load[ild]["filetype"] = to_load[ild]["filetype"].lower()
             if not ("path" in load_kwargs and load_kwargs["path"]):
                 continue
             load_filetype = load_kwargs["filetype"]
