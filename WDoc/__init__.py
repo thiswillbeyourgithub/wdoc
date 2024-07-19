@@ -68,7 +68,8 @@ def fire_wrapper(
 def cli_launcher() -> None:
     sys_args = sys.argv
     if "--version" in sys_args:
-        return __VERSION__
+        print(f"WDoc version: {__VERSION__}")
+        raise SystemExit()
     if "--help" in sys_args:
         print("Showing help")
         WDoc.md_printer(WDoc.__doc__)
