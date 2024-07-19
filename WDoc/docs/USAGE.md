@@ -170,6 +170,10 @@
     Note that the multithreading will not be disabled if you
     set `--file_loader_n_jobs`, allowing you to debug multithreading
     issues.
+    It implies `--verbose`
+
+* `--verbose`: bool, default `False`
+    Increase verbosity. Implied if `--debug` is set.
 
 * `--dollar_limit`: int, default `5`
     * If the estimated price is above this limit, stop instead.

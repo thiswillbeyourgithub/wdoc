@@ -38,7 +38,7 @@ logger.add(
     rotation="100MB",
     retention=5,
     format='{time} {level} {thread} {process} {function} {line} {message}',
-    level="INFO",
+    level="ERROR",
     enqueue=True,
     colorize=False,
 )

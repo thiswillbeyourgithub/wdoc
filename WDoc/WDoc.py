@@ -79,7 +79,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class WDoc:
     "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
 
-    VERSION: str = "1.1.4"
+    VERSION: str = "1.1.6"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
@@ -121,6 +121,7 @@ class WDoc:
 
         llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
+        verbose: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] = None,
         disable_llm_cache: Union[bool, int] = False,
@@ -285,7 +286,7 @@ class WDoc:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
 
-        if debug:
+        if is_verbose:
             llm_verbosity = True
             whi(f"Cache location: {cache_dir.absolute()}")
             whi(f"Log location: {log_dir.absolute()}")
@@ -309,6 +310,7 @@ class WDoc:
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
+        self.verbose = verbose
         self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
         self.summary_n_recursion = summary_n_recursion
@@ -387,20 +389,26 @@ class WDoc:
                 return text
             self.ntfy = ntfy
 
-        if self.debug:
+        if is_verbose:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
-            set_debug(True)
+            if debug:
+                set_debug(True)
             cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose = True
         else:
             litellm.set_verbose = False
+            set_verbose(False)
+            set_debug(False)
             # fix from https://github.com/BerriAI/litellm/issues/2256
             import logging
             for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
                 logger = logging.getLogger(logger_name)
                 # logger.setLevel(logging.CRITICAL + 1)
                 logger.setLevel(logging.WARNING)
+            for logger_name in ["bs4"]:
+                logger = logging.getLogger(logger_name)
+                logger.setLevel(logging.CRITICAL)
 
         # don't crash if extra arguments are used for a model
         # litellm.drop_params = True  # drops parameters that are not used by some models
@@ -446,7 +454,7 @@ class WDoc:
             self.prepare_query_task()
 
         if self.import_mode:
-            if self.debug:
+            if is_verbose:
                 whi("Ready to query or summarize, call your_instance.query_task(your_question)")
             return
 
@@ -1469,7 +1477,7 @@ class WDoc:
                 | pbar_closer(llm=self.llm)
             )
 
-            if self.debug:
+            if is_verbose:
                 rag_chain.get_graph().print_ascii()
 
             chain_time = 0
