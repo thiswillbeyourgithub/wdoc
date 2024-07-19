@@ -1,6 +1,6 @@
 """
 called at DocToolsLLM instance creation. It parsed the combined filetype
-into an individual list of dict describing each a document (or in some cases
+into an individual list of DocDict describing each a document (or in some cases
 a list of documents for example a whole anki database).
 This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
@@ -25,7 +25,7 @@ import json
 import rtoml
 import dill
 
-from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir
+from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir, DocDict
 from .typechecker import optional_typecheck
 from .logger import red, whi, log
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
@@ -418,7 +418,7 @@ def parse_recursive_paths(
     include: Optional[List[str]] = None,
     exclude: Optional[List[str]] = None,
     **extra_args,
-) -> List[dict]:
+) -> List[Union[DocDict, dict]]:
     whi(f"Parsing recursive load_filetype: '{path}'")
     assert (
         recursed_filetype
@@ -475,7 +475,10 @@ def parse_recursive_paths(
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = recursed_filetype
         doc_kwargs.update(extra_args)
-        doclist[i] = doc_kwargs
+        if doc_kwargs["filetype"] not in recursive_types:
+            doclist[i] = DocDict(doc_kwargs)
+        else:
+            doclist[i] = doc_kwargs
     return doclist
 
 
@@ -484,7 +487,7 @@ def parse_json_entries(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
     **extra_args,
-    ) -> List[dict]:
+    ) -> List[Union[DocDict, dict]]:
     whi(f"Loading json_entries: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
     doclist = [
@@ -506,7 +509,10 @@ def parse_json_entries(
         if meta["path"] == path:
             del meta["path"]
         meta.update(extra_args)
-        doclist[i] = meta
+        if meta["filetype"] not in recursive_types:
+            doclist[i] = DocDict(meta)
+        else:
+            doclist[i] = meta
     return doclist
 
 
@@ -515,7 +521,7 @@ def parse_toml_entries(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
     **extra_args,
-    ) -> List[dict]:
+    ) -> List[Union[DocDict, dict]]:
     whi(f"Loading toml_entries: '{path}'")
     content = rtoml.load(toml=Path(path))
     assert isinstance(content, dict)
@@ -534,7 +540,10 @@ def parse_toml_entries(
         if meta["path"] == path:
             del meta["path"]
         meta.update(extra_args)
-        doclist[i] = meta
+        if meta["filetype"] not in recursive_types:
+            doclist[i] = DocDict(meta)
+        else:
+            doclist[i] = meta
     return doclist
 
 
@@ -543,7 +552,7 @@ def parse_link_file(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
     **extra_args,
-    ) -> List[dict]:
+    ) -> List[DocDict]:
     whi(f"Loading link_file: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
     doclist = [
@@ -567,7 +576,7 @@ def parse_link_file(
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "auto"
         doc_kwargs.update(extra_args)
-        doclist[i] = doc_kwargs
+        doclist[i] = DocDict(doc_kwargs)
     return doclist
 
 
@@ -576,7 +585,7 @@ def parse_youtube_playlist(
     cli_kwargs: dict,
     path: Union[str, PosixPath],
     **extra_args,
-) -> List[dict]:
+    ) -> List[DocDict]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
@@ -597,7 +606,7 @@ def parse_youtube_playlist(
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
         doc_kwargs.update(extra_args)
-        doclist[i] = doc_kwargs
+        doclist[i] = DocDict(doc_kwargs)
 
     assert doclist, f"No video found in youtube playlist: {path}"
     return doclist

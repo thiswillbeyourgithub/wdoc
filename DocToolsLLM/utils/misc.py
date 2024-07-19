@@ -135,13 +135,41 @@ extra_args_keys = {
 }
 extra_args_keys.update(loader_specific_keys)
 
-# keys that can legally be part of a doc_kwarg
+# keys that can legally be part of a docdict
 doc_kwargs_keys = [
     "path",
     "filetype",
     "file_hash",
     "source_tag",
 ] + list(loader_specific_keys.keys())
+
+
+class DocDict(dict):
+    """like dictionnaries but only allows keys that can be used when loading a document. Also checks the value type"""
+    allowed_keys = doc_kwargs_keys
+    allowed_types = loader_specific_keys
+
+    def __init__(self, *args, **kwargs):
+        for arg in args:
+            assert isinstance(arg, dict)
+            for k, v in arg.items():
+                if k not in self.allowed_keys:
+                    raise Exception(f"Cannot set key '{k}' in a DocDict")
+                if k in self.allowed_types and v is not None:
+                    assert isinstance(v, self.allowed_types[k])
+        for k, v in kwargs.items():
+            if k not in self.allowed_keys:
+                raise Exception(f"Cannot set key '{k}' in a DocDict")
+            if k in self.allowed_types and v is not None:
+                assert isinstance(v, self.allowed_types[k])
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        if key not in self.allowed_keys:
+            raise Exception(f"Cannot set key '{key}' in a DocDict")
+        if key in self.allowed_types and value is not None:
+            assert isinstance(value, self.allowed_types[key])
+        super().__setitem__(key, value)
 
 
 @optional_typecheck
