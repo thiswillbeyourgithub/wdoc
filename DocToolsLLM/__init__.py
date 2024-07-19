@@ -5,7 +5,7 @@ Default file, used as entry point.
 import sys
 import fire
 
-from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
+from .DocToolsLLM import DocToolsLLM
 
 __all__ = [
     "DocToolsLLM",
