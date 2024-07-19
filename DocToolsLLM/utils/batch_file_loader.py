@@ -131,6 +131,10 @@ def batch_load_doc(
                 if load_filetype not in recursive_types:
                     to_load[ild]["filetype"] = load_filetype
 
+            if load_filetype not in recursive_types:
+                continue
+            del load_kwargs["filetype"]
+
             if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
                     parse_recursive_paths(
