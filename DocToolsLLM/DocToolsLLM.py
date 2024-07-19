@@ -77,7 +77,7 @@ class DocToolsLLM_class:
     "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
 
     VERSION: str = "0.58.0"
-    allowed_extra_keys = extra_args_keys
+    allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
     @optional_typecheck
@@ -161,7 +161,7 @@ class DocToolsLLM_class:
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in self.allowed_extra_keys:
+            if k not in self.allowed_extra_args:
                 raise Exception(
                     red(f"Found unexpected keyword argument: '{k}'"))
 
@@ -169,7 +169,7 @@ class DocToolsLLM_class:
             if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = self.allowed_extra_keys[k]
+                expected_type = self.allowed_extra_args[k]
                 if expected_type is str:
                     assert val.strip(
                     ), f"Empty string found for cli_kwargs: '{k}'"
