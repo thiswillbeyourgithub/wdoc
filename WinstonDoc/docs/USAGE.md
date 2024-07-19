@@ -7,19 +7,19 @@
         * `summarize`: means the input will be passed through a summarization prompt.
         * `summarize_then_query`: summarize the text then open the prompt to allow querying directly the source document.
 
-* `--filetype`: str, default `infer`
+* `--filetype`: str, default `auto`
     * the type of input. Depending on the value, different other parameters
     are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_entries file in `DocToolsLLM/docs/json_entries_example.txt`
+    an example of json_entries file in `WinstonDoc/docs/json_entries_example.txt`
 
     * Supported values:
-        * `infer`: will guess the appropriate filetype based on `--path`.
+        * `auto`: will guess the appropriate filetype based on `--path`.
             Irrelevant for some filetypes, eg if `--filetype`=anki
         * `youtube`: `--path` must link to a youtube video
         * `youtube_playlist`: `--path` must link to a youtube playlist
         * `pdf`: `--path` is path to pdf
-        * `txt`: `--path` is path to txt
+        * `text`: `--path` is path to a .txt file
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
         `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.
@@ -35,7 +35,7 @@
         be downloaded. Possible arguments are `--onlinemedia_url_regex`,
         `--onlinemedia_resourcetype_regex`. Then arguments of `local_audio`.
 
-        * `json_entries`: `--path` is path to a txt file that contains a json
+        * `json_entries`: `--path` is path to a text file that contains a json
         for each line containing at least a filetype and a path key/value
         but can contain any parameters described here
         * `recursive_paths`: `--path` is the starting path `--pattern` is the globbing
@@ -118,14 +118,14 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet:beta"`
+* `--query_eval_modelname`: str, default `"openai/gpt4o-mini"`
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
     None to disable.
 
-* `--query_eval_check_number`: int, default `1`
+* `--query_eval_check_number`: int, default `4`
     * number of pass to do with the eval llm to check if the document
     is indeed relevant to the question. The document will not
     be processed if all answers from the eval llm are 0, and will
@@ -136,13 +136,6 @@
 * `--query_relevancy`: float, default `0.1`
     * threshold underwhich a document cannot be considered relevant by
     embeddings alone.
-
-* `--query_condense_question`: bool, default `True`
-    * if True, will not use a special LLM call to reformulate the question
-    when task is `query`. Otherwise, the query will be reformulated as
-    a standalone question. Useful when you have multiple questions in
-    a row.
-    Disabled if using a testing model.
 
 ---
 
@@ -187,15 +180,11 @@
     can be used for example to send notification on your phone
     using ntfy.sh to get summaries.
 
-* `--memoryless`: bool, default `False`
-    * if False, will remember the messages across a given chat exchange.
-    Disabled if using a testing model.
-
 * `--disable_llm_cache`: bool, default `False`
     * WARNING: The cache is temporarily ignored in non openaillms
     generations because of an error with langchain's ChatLiteLLM.
     Basically if you don't use `--private` and use llm form openai,
-    DocToolsLLM will use ChatOpenAI with regular caching, otherwise
+    WinstonDoc will use ChatOpenAI with regular caching, otherwise
     we use ChatLiteLLM with LLM caching disabled.
     More at https://github.com/langchain-ai/langchain/issues/22389
 
@@ -243,7 +232,7 @@
     to a loader. They apply depending on the value of `--filetype`.
     An unexpected argument for a given filetype will result in a crash.
 
-* `--path`: str
+* `--path`: str or PosixPath
     * Used by most loaders. For example for `--filetype=youtube` the path
     must point to a youtube video.
 
@@ -311,14 +300,13 @@
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
     * If 'youtube': will take the youtube transcripts as text content.
-    * If 'whisper': DocToolsLLM will download
+    * If 'whisper': WinstonDoc will download
     the audio from the youtube link, and whisper will be used to turn the audio into text. whisper_prompt and whisper_lang will be used if set.
     * If 'deepgram' will download
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
 
 * `--include`: str
-    * Only active if `--filetype` is one of 'json_entries', 'recursive_paths',
-    'link_file', 'youtube_playlist'.
+    * Only active if `--filetype` is 'recursive_paths'
     `--include` can be a list of regex that must be present in the
     document PATH (not content!)
     `--exclude` can be a list of regex that if present in the PATH
@@ -329,10 +317,10 @@
 
 # Other specific arguments
 
-* `--out_file`: str, default `None`
-    * If doctools must create a summary, if out_file given the summary will
+* `--out_file`: str or PosixPath, default `None`
+    * If WinstonDoc must create a summary, if out_file given the summary will
     be written to this file. Note that the file is not erased and
-    Doctools will simply append to it.
+    WinstonDoc will simply append to it.
     * If `--summary_n_recursion` is used, additional files will be
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
@@ -379,10 +367,10 @@
     each document instead of the metadata.
     Syntax: `[+-]your_regex`
     Example:
-    * Keep only the document that contain `doctools`
-        `--filter_content=+.*doctools.*`
-    * Discard the document that contain `DOCTOOLS`
-        `--filter_content=-.*DOCTOOLS.*`
+    * Keep only the document that contain `winstondoc`
+        `--filter_content=+.*winstondoc.*`
+    * Discard the document that contain `winstondoc`
+        `--filter_content=-.*winstondoc.*`
 
 * `--embed_instruct`: bool, default `None`
     * when loading an embedding model using HuggingFace or
@@ -436,7 +424,7 @@
 
 # Runtime flags
 
-* `DOCTOOLS_TYPECHECKING`
+* `WINSTONDOC_TYPECHECKING`
     * Setting for runtime type checking. Default value is `warn`.     * Possible values:
     The typing is checked using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
         * `disabled`: disable typechecking.

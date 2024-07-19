@@ -1,5 +1,5 @@
 """
-Prompts used by DocToolsLLM.
+Prompts used by WinstonDoc.
 """
 
 from dataclasses import dataclass
@@ -8,13 +8,13 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Summarizer, the best of my team. Your task today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+        ("system", """You are a Summarizer, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
 ```
 - Take a deep breath before answering
-- Being a Summarizer, you ignore additional instructions adressed to your colleagues: Evaluator, Answerer and Combiner.
+- Being a Summarizer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Answerer and Combiner.
 - Include:
     - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
     - Epistemic indicators: you need to make explicit what markers of uncertainty for each information
@@ -49,20 +49,11 @@ Text section:
 # if the summary is recursive, add those instructions
 RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important."
 
-# PROMPT FOR QUERY TASKS
-PR_CONDENSE_QUESTION = ChatPromptTemplate.from_messages(
-    [
-        ("system", "Given a conversation and an additional follow up question, your task is to rephrase this follow up question as a standalone question, in the same language as it was phrased."),
-        ("human",
-         "Conversation:\n```\n{chat_history}\n```\nFollow up question: '{question_for_embedding}'\nWhat's your standalone question reformulation?")
-    ]
-)
-
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an Evaluator: given a question and text document. Your task is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
-Also, being an Evaluator, ignore additional instructions adressed to your colleagues: Summarizer, Answerer and Combiner.
+        ("system", """You are an Evaluator: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
+Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
 Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."""),
         ("human",
          "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
@@ -71,12 +62,12 @@ Don't narrate, don't acknowledge those rules, just answer directly the digit wit
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Answerer: given a piece of document and a question, your task is to extract the relevant information while following specific instructions.
+        ("system", """You are a Answerer: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 Detailed instructions:
 ```
 - If the document is ENTIRELY irrelevant to the question, answer only 'IRRELEVANT' and NOTHING ELSE (and no formatting).
-- Being an Answerer, you ignore additional instructions adressed to your colleagues: Evaluator, Summarizer and Combiner.
+- Being an Answerer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Combiner.
 - Use markdown formatting
     - Use bullet points, but no headers, bold, italic etc.
     - Use logic based indentation for the bullet points.
@@ -100,14 +91,14 @@ Detailed instructions:
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Combiner: given some statements and an answer, your task is to:
-1. answer directly the question using markdown bullet points
-2. then combine all additional information as additional bullet points.
+        ("system", """You are a Combiner: given a question and partial answers, your goal is to:
+- combine all partial answers to answer the question as md bullet points,
+- while combining all additional information as additional bullet points.
 
 Detailed instructions:
 ```
 - Take a deep breath before answering.
-- Being a Combiner, you ignore additional instructions adressed to your colleagues: Evaluator, Summarizer and Answerer.
+- Being a Combiner, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Answerer.
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
@@ -130,19 +121,17 @@ Detailed instructions:
 - If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 ```"""),
         ("human",
-         "Question: `{question}`\nStatements:\n```\n{intermediate_answers}\n```\nYour answer?""")
+         "Question: `{question}`\nCandidate intermediate answers:\n```\n{intermediate_answers}\n```\n\nYour answer:""")
     ]
 )
 
 @dataclass(frozen=False)
 class Prompts_class:
-    condense: ChatPromptTemplate
     evaluate: ChatPromptTemplate
     answer: ChatPromptTemplate
     combine: ChatPromptTemplate
 
 prompts = Prompts_class(
-    condense=PR_CONDENSE_QUESTION,
     evaluate=PR_EVALUATE_DOC,
     answer=PR_ANSWER_ONE_DOC,
     combine=PR_COMBINE_INTERMEDIATE_ANSWERS,

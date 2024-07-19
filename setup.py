@@ -29,12 +29,12 @@ with open("README.md", "r") as readme:
     long_description = readme.read()
 
 setup(
-    name="DocToolsLLM",
-    version="0.58.0",
+    name="wdoc",
+    version="1.0.0",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
+    url="https://github.com/thiswillbeyourgithub/WinstonDoc/",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -43,10 +43,11 @@ setup(
     ],
     license="GPLv3",
     keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx",
-              "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
+              "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools", "doctoolsllm", "winston_doc"],
     entry_points={
         'console_scripts': [
-            'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
+            'wdoc=WinstonDoc.__init__:cli_launcher',
+            'winston_doc=WinstonDoc.__init__:cli_launcher',
         ],
     },
     python_requires=">=3.10",
@@ -73,7 +74,8 @@ setup(
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
-        'rtoml >= 0.10.0',
+        'rtoml >= 0.11.0',
+        'loguru >= 0.7.2',
         'grandalf >= 0.8',  # to print ascii graph
         'lazy-import >= 0.2.2',
         'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case

@@ -50,7 +50,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    min_lang_prob, min_token, max_token, max_lines,
                    )
 from .typechecker import optional_typecheck
-from .logger import whi, yel, red, log
+from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 
 # lazy loading of modules
@@ -205,6 +205,10 @@ def load_one_doc(
     filetype: str,
     file_hash: str,
     source_tag: Optional[str] = None,
+    doccheck_min_lang_prob: float = min_lang_prob,
+    doccheck_min_token: int = min_token,
+    doccheck_max_token: int = max_token,
+    doccheck_max_lines: int = max_lines,
     **kwargs,
 ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -220,34 +224,12 @@ def load_one_doc(
     ), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
     assert expected_global_dir == temp_dir, f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
 
-    doccheck_extra_args = {
-        "min_lang_prob": min_lang_prob,
-        "max_lines": max_lines,
-        "min_token": min_token,
-        "max_token": max_token,
-    }
-    for doccheckarg in [
-        "doccheck_min_lang_prob",
-        "doccheck_min_token",
-        "doccheck_max_token",
-        "doccheck_max_lines",
-    ]:
-        if doccheckarg in kwargs:
-            assert doccheckarg.split("doccheck_")[1] in doccheck_extra_args
-            doccheck_extra_args[doccheckarg.split(
-                "doccheck_")[1]] = kwargs[doccheckarg]
-            del kwargs[doccheckarg]
+    if filetype == "url":
+        docs = load_url(**kwargs)
 
-    if filetype == "youtube":
+    elif filetype == "youtube":
         docs = load_youtube_video(
             loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "online_pdf":
-        docs = load_online_pdf(
-            debug=debug,
-            task=task,
             **kwargs,
         )
 
@@ -256,6 +238,13 @@ def load_one_doc(
             debug=debug,
             text_splitter=text_splitter,
             file_hash=file_hash,
+            **kwargs,
+        )
+
+    elif filetype == "online_pdf":
+        docs = load_online_pdf(
+            debug=debug,
+            task=task,
             **kwargs,
         )
 
@@ -271,7 +260,7 @@ def load_one_doc(
         assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
-    elif filetype == "txt" or filetype == "text":
+    elif filetype == "text":
         docs = load_txt(
             file_hash=file_hash,
             **kwargs,
@@ -328,9 +317,6 @@ def load_one_doc(
             **kwargs,
         )
 
-    elif filetype == "url":
-        docs = load_url(**kwargs)
-
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
@@ -340,7 +326,10 @@ def load_one_doc(
         check_docs_tkn_length(
             docs=docs,
             identifier=filetype,
-            **doccheck_extra_args,
+            min_lang_prob = doccheck_min_lang_prob,
+            min_token = doccheck_min_token,
+            max_token = doccheck_max_token,
+            max_lines = doccheck_max_lines,
         )
 
     # add and format metadata
@@ -678,11 +667,15 @@ def load_anki(
     cards["fields_name"] = cards["mid"].progress_apply(lambda x: mid2fields[x])
     assert not cards.empty, "empty dataframe!"
 
+    # remove duplicate, essentially making cards the same thing as notes
+    cards = cards.drop_duplicates(subset='nid', keep='first')
+    notes = cards.reset_index().set_index("nid")
+
     # check placeholders validity
     placeholders = [ph.lower() for ph in anki_replacements_regex.findall(anki_template)]
     assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
     for ph in placeholders:
-        for ic, c in cards.iterrows():
+        for ic, c in notes.iterrows():
             if ph not in c["fields_name"] + ["allfields", "tags"]:
                 raise Exception(
                     "A placeholder in anki template didn't match fields of "
@@ -695,7 +688,7 @@ def load_anki(
         useallfields = True
         if debug:
             tqdm.pandas(desc="Parsing allfields value")
-        cards["allfields"] = cards.progress_apply(
+        notes["allfields"] = notes.progress_apply(
             lambda x: "\n\n".join([
                 f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
                 for k, v in zip(x["fields_name"], x["nflds"])
@@ -709,7 +702,7 @@ def load_anki(
         usetags = True
         if debug:
             tqdm.pandas(desc="Formatting tags")
-        cards["tags_formatted"] = cards.progress_apply(
+        notes["tags_formatted"] = notes.progress_apply(
             lambda x: "Anki tags:\n'''\n" +  "\n".join([
                 f"* {t}"
                 for t in x["ntags"]
@@ -719,10 +712,10 @@ def load_anki(
             ]).strip() + "\n'''",
             axis=1,
         )
-        if cards["ntags"].notnull().any():
-            assert cards["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
+        if notes["ntags"].notnull().any():
+            assert notes["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
         # remove the tags formatting if it didn't match anything
-        cards["tags_formatted"] = cards["tags_formatted"].str.replace(
+        notes["tags_formatted"] = notes["tags_formatted"].str.replace(
             "Anki tags:\n'''\n'''",
             "",
         )
@@ -754,15 +747,15 @@ def load_anki(
 
     if debug:
         tqdm.pandas(desc="Formatting all cards")
-    cards["text"] = cards.progress_apply(placeholder_replacer, axis=1)
+    notes["text"] = notes.progress_apply(placeholder_replacer, axis=1)
 
-    cards["text"] = cards["text"].progress_apply(lambda x: x.strip())
-    cards = cards[cards["text"].ne('')]  # remove empty text
+    notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
+    notes = notes[notes["text"].ne('')]  # remove empty text
 
     # remove all media
     if debug:
         tqdm.pandas(desc="Replacing media in anki")
-    cards["text"] = cards["text"].apply(
+    notes["text"] = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
             media=None,
@@ -770,27 +763,26 @@ def load_anki(
             strict=False,
         )[0]
     )
-    cards = cards[~cards["text"].str.contains("\[IMAGE_")]
-    cards = cards[~cards["text"].str.contains("\[SOUND_")]
-    cards = cards[~cards["text"].str.contains("\[LINK_")]
-    cards["text"] = cards["text"].apply(lambda x: x.strip())
-    cards = cards[cards["text"].ne('')]  # remove empty text
-    cards.drop_duplicates(subset="text", inplace=True)
+    notes = notes[~notes["text"].str.contains("\[IMAGE_")]
+    notes = notes[~notes["text"].str.contains("\[SOUND_")]
+    notes = notes[~notes["text"].str.contains("\[LINK_")]
+    notes["text"] = notes["text"].apply(lambda x: x.strip())
+    notes = notes[notes["text"].ne('')]  # remove empty text
+    notes.drop_duplicates(subset="text", inplace=True)
 
-    cards = cards.sort_index()
+    notes = notes.sort_index()
 
     docs = []
 
     # load each card as a single document
-    for cid in cards.index:
-        c = cards.loc[cid, :]
-        assert c["codeck"], f"empty card_deck for cid {cid}"
+    for nid, c in notes.iterrows():
+        assert c["codeck"], f"empty card_deck for nid {nid}"
         docs.append(
             Document(
                 page_content=c["text"],
                 metadata={
                     "anki_tags": " ".join(c["ntags"]),
-                    "anki_cid": str(cid),
+                    "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
                 },
@@ -808,8 +800,8 @@ def load_anki(
         docs[i].metadata["anki_tags"] = " ".join(
             sorted(list(set(docs[i].metadata["anki_tags"].split(" "))))
         )
-        docs[i].metadata["anki_cid"] = " ".join(
-            sorted(docs[i].metadata["anki_cid"].split(" "))
+        docs[i].metadata["anki_nid"] = " ".join(
+            sorted(docs[i].metadata["anki_nid"].split(" "))
         )
 
     # delete temporary db file
@@ -1029,7 +1021,7 @@ def load_string() -> List[Document]:
         "Paste your text content here then press esc+enter or meta+enter:\n>",
         multiline=True,
     )
-    log.info(f"Pasted string input:\n{content}")
+    logger.info(f"Pasted string input:\n{content}")
     docs = [
         Document(
             page_content=content,
@@ -1423,11 +1415,11 @@ def transcribe_audio_deepgram(
 ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
-    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+    assert os.environ["WINSTONDOC_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use deepgram's API"
     )
     assert "DEEPGRAM_API_KEY" in os.environ and not os.environ[
-        "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
+        "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
 
     # client
     try:
@@ -1494,12 +1486,12 @@ def transcribe_audio_whisper(
         prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
-    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+    assert os.environ["WINSTONDOC_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use openai's whisper"
     )
 
     assert "OPENAI_API_KEY" in os.environ and not os.environ[
-        "OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
+        "OPENAI_API_KEY"] == "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:

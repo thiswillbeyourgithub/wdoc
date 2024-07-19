@@ -3,14 +3,14 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Any
+from typing import List, Union, Callable
 from joblib import Memory
 import socket
 import os
 import urllib.request
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PosixPath
 from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
@@ -19,6 +19,9 @@ import tiktoken
 from functools import partial
 from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
+from typing import get_type_hints
+import inspect
+from functools import wraps
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -117,7 +120,7 @@ loader_specific_keys = {
     "onlinemedia_resourcetype_regex": str,
 }
 
-# extra arguments supported when instanciating doctools
+# extra arguments supported when instanciating winstondoc
 extra_args_keys = {
     "embed_instruct": str,
     "exclude": str,
@@ -125,20 +128,48 @@ extra_args_keys = {
     "filter_content": Union[List[str], str],
     "filter_metadata": Union[List[str], str],
     "include": str,
-    "out_file": str,
-    "path": str,
+    "out_file": Union[str, PosixPath],
+    "path": Union[str, PosixPath],
     "source_tag": str,
     "loading_failure": str,
 }
 extra_args_keys.update(loader_specific_keys)
 
-# keys that can legally be part of a doc_kwarg
+# keys that can legally be part of a docdict
 doc_kwargs_keys = [
     "path",
     "filetype",
     "file_hash",
     "source_tag",
 ] + list(loader_specific_keys.keys())
+
+
+class DocDict(dict):
+    """like dictionnaries but only allows keys that can be used when loading a document. Also checks the value type"""
+    allowed_keys = doc_kwargs_keys
+    allowed_types = loader_specific_keys
+
+    def __init__(self, *args, **kwargs):
+        for arg in args:
+            assert isinstance(arg, dict)
+            for k, v in arg.items():
+                if k not in self.allowed_keys:
+                    raise Exception(f"Cannot set key '{k}' in a DocDict")
+                if k in self.allowed_types and v is not None:
+                    assert isinstance(v, self.allowed_types[k])
+        for k, v in kwargs.items():
+            if k not in self.allowed_keys:
+                raise Exception(f"Cannot set key '{k}' in a DocDict")
+            if k in self.allowed_types and v is not None:
+                assert isinstance(v, self.allowed_types[k])
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        if key not in self.allowed_keys:
+            raise Exception(f"Cannot set key '{key}' in a DocDict")
+        if key in self.allowed_types and value is not None:
+            assert isinstance(value, self.allowed_types[key])
+        super().__setitem__(key, value)
 
 
 @optional_typecheck
@@ -240,7 +271,7 @@ def wrapped_model_name_matcher(model: str) -> str:
         return match[0]
     else:
         red(f"Couldn't match the modelname {model} to any known model. "
-            "Continuing but this will probably crash DocToolsLLM further "
+            "Continuing but this will probably crash WinstonDoc further "
             "down the code.")
         return model
 
@@ -414,7 +445,7 @@ def disable_internet(allowed: dict) -> None:
         "The only allowed IPs from now on are the ones from the "
         "argument llm_api_bases. Note that this permanently filters "
         "outgoing python connections so might interfere with other "
-        "python programs is you are importing DocToolsLLM instead "
+        "python programs is you are importing WinstonDoc instead "
         "of calling it from the shell"
     )
 
@@ -491,3 +522,32 @@ def disable_internet(allowed: dict) -> None:
         skip = True
     if not skip:
         assert not is_private(ip), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+
+@optional_typecheck
+def set_func_signature(func: Callable) -> Callable:
+    """dynamically set the extra args of WinstonDoc.__init__ so that
+    instead of **cli_kwargs the signature indicates all allowed arguments.
+    Needed to get correct behavior from fire.Fire '--completion' """
+    original_sig = inspect.signature(func)
+    assert list(original_sig.parameters.values())[-1].kind == inspect.Parameter.VAR_KEYWORD
+    new_params = list(original_sig.parameters.values())[:-1]  # Remove **cli_kwargs
+    new_params.extend(
+                [
+                    inspect.Parameter(
+                        name=arg,
+                        kind=inspect.Parameter.KEYWORD_ONLY,
+                        annotation=hint,
+                        default=None,
+                    )
+                    for arg, hint in extra_args_keys.items()
+            ]
+    )
+    new_sig = original_sig.replace(parameters=new_params)
+
+    @wraps(func)
+    def new_func(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+    new_func.__signature__ = new_sig
+    new_func.__annotations__ = get_type_hints(func) | extra_args_keys
+
+    return new_func

@@ -3,7 +3,7 @@ Main class.
 """
 
 # import this first because it sets the logging level
-from .utils.logger import whi, yel, red, md_printer, log, set_docstring, log_dir, cache_dir
+from .utils.logger import whi, yel, red, md_printer, logger, set_USAGE_as_docstring, log_dir, cache_dir
 
 import sys
 import faulthandler
@@ -30,7 +30,9 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, disable_internet)
+    extra_args_keys, disable_internet,
+    set_func_signature
+)
 from .utils.prompts import prompts
 from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
 
@@ -38,7 +40,7 @@ from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
-from .utils.llm import load_llm, AnswerConversationBufferMemory, TESTING_LLM
+from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user
 from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
@@ -67,24 +69,26 @@ from langchain_core.outputs import ChatGeneration
 import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
+logger.info("Starting WinstonDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 @optional_typecheck
-@set_docstring
-class DocToolsLLM_class:
-    "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+@set_USAGE_as_docstring
+class WinstonDoc:
+    "This docstring is dynamically replaced by the content of WinstonDoc/docs/USAGE.md"
 
-    VERSION: str = "0.58.0"
-    allowed_extra_keys = extra_args_keys
+    VERSION: str = "1.0.0"
+    allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
     @optional_typecheck
+    @set_func_signature
     def __init__(
         self,
         task: str,
-        filetype: str = "infer",
+        filetype: str = "auto",
 
         modelname: str = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # modelname: str = "openai/gpt-4o",
@@ -105,13 +109,12 @@ class DocToolsLLM_class:
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
-        query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3.5-sonnet:beta",
+        query_eval_modelname: Optional[str] = "openai/gpt-4o-mini",
         # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
-        query_eval_check_number: int = 1,
+        query_eval_check_number: int = 4,
         query_relevancy: float = 0.1,
-        query_condense_question: Union[bool, int] = True,
 
         summary_n_recursion: int = 1,
         summary_language: str = "the same language as the document",
@@ -120,7 +123,6 @@ class DocToolsLLM_class:
         debug: Union[bool, int] = False,
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] = None,
-        memoryless: Union[bool, int] = True,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
         private: Union[bool, int] = False,
@@ -131,7 +133,7 @@ class DocToolsLLM_class:
 
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically replaced by the content of DocToolsLLM/docs/USAGE.md"
+        "This docstring is dynamically replaced by the content of WinstonDoc/docs/USAGE.md"
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
@@ -142,12 +144,11 @@ class DocToolsLLM_class:
                             red(message)
                         except Exception as err:
                             print(message)
-                    [p(line) for line in traceback.format_tb(exc_traceback)]
-                    p(str(exc_value))
-                    p(str(exc_type))
                     p("\n--verbose was used so opening debug console at the "
                       "appropriate frame. Press 'c' to continue to the frame "
                       "of this print.")
+                    [p(line) for line in traceback.format_tb(exc_traceback)]
+                    p(str(exc_type) + " : " + str(exc_value))
                     pdb.post_mortem(exc_traceback)
                     p("You are now in the exception handling frame.")
                     breakpoint()
@@ -156,20 +157,19 @@ class DocToolsLLM_class:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
-        red(pyfiglet.figlet_format("DocToolsLLM"))
-        log.info("Starting DocToolsLLM")
+        red(pyfiglet.figlet_format("WinstonDoc"))
 
         # make sure the extra args are valid
         for k in cli_kwargs:
-            if k not in self.allowed_extra_keys:
+            if k not in self.allowed_extra_args:
                 raise Exception(
                     red(f"Found unexpected keyword argument: '{k}'"))
 
             # type checking of extra args
-            if os.environ["DOCTOOLS_TYPECHECKING"] in ["crash", "warn"]:
+            if os.environ["WINSTONDOC_TYPECHECKING"] in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
-                expected_type = self.allowed_extra_keys[k]
+                expected_type = self.allowed_extra_args[k]
                 if expected_type is str:
                     assert val.strip(
                     ), f"Empty string found for cli_kwargs: '{k}'"
@@ -202,8 +202,8 @@ class DocToolsLLM_class:
             assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
             query_eval_modelname = None
-        if filetype == "infer":
-            assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
+        if filetype == "auto":
+            assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'auto', a --path must be given"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
         if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
             raise Exception(
@@ -250,12 +250,12 @@ class DocToolsLLM_class:
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
-            os.environ["DOCTOOLS_PRIVATEMODE"] = "true"
+            os.environ["WINSTONDOC_PRIVATEMODE"] = "true"
             for k in dict(os.environ):
                 if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
                     red(
                         f"private mode enabled: overwriting '{k}' from environment variables just in case")
-                    os.environ[k] = "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
+                    os.environ[k] = "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE"
 
             # to be extra safe, let's try to block any remote connection
             disable_internet(
@@ -263,7 +263,7 @@ class DocToolsLLM_class:
             )
 
         else:
-            os.environ["DOCTOOLS_PRIVATEMODE"] = "false"
+            os.environ["WINSTONDOC_PRIVATEMODE"] = "false"
 
         if (modelname != TESTING_LLM) and (not llms_api_bases["model"]):
             modelname = model_name_matcher(modelname)
@@ -288,7 +288,7 @@ class DocToolsLLM_class:
         if debug:
             llm_verbosity = True
             whi(f"Cache location: {cache_dir.absolute()}")
-            whi(f"Config location: {log_dir.absolute()}")
+            whi(f"Log location: {log_dir.absolute()}")
 
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()
@@ -314,9 +314,6 @@ class DocToolsLLM_class:
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
-        self.query_condense_question = bool(
-            query_condense_question) if modelname != TESTING_LLM else False
-        self.memoryless = memoryless if modelname != TESTING_LLM else False
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
@@ -383,7 +380,7 @@ class DocToolsLLM_class:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
-            ntfy("Starting DocToolsLLM")
+            ntfy("Starting WinstonDoc")
         else:
             @optional_typecheck
             def ntfy(text: str) -> str:
@@ -719,7 +716,7 @@ class DocToolsLLM_class:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    DocToolsLLM version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
+            header += f"    WinstonDoc version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
@@ -850,11 +847,6 @@ class DocToolsLLM_class:
             use_rolling=self.DIY_rolling_window_embedding,
             cli_kwargs=self.cli_kwargs,
         )
-
-        # conversational memory
-        self.memory = AnswerConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True)
 
         # set default ask_user argument
         self.interaction_settings = {
@@ -1082,16 +1074,10 @@ class DocToolsLLM_class:
                 self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
     @optional_typecheck
-    def query_task(self, query: Optional[str]) -> Optional[str]:
+    def query_task(self, query: Optional[str]) -> dict:
         if not query:
             query, self.interaction_settings = ask_user(
                 self.interaction_settings)
-            if "do_reset_memory" in self.interaction_settings:
-                assert self.interaction_settings["do_reset_memory"]
-                del self.interaction_settings["do_reset_memory"]
-                self.memory = AnswerConversationBufferMemory(
-                    memory_key="chat_history",
-                    return_messages=True)
         assert all(
             retriev in ["default", "hyde", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
@@ -1411,25 +1397,6 @@ class DocToolsLLM_class:
                 md_printer("* " + "\n* ".join(all_filepaths))
 
         else:
-            if self.query_condense_question:
-                loaded_memory = RunnablePassthrough.assign(
-                    chat_history=RunnableLambda(
-                        self.memory.load_memory_variables
-                        if not self.memoryless
-                        else AnswerConversationBufferMemory(memory_key="chat_history", return_messages=True).load_memory_variables
-                    ) | itemgetter("chat_history"),
-                )
-                standalone_question = {
-                    "question_to_answer": RunnablePassthrough(),
-                    "question_for_embedding": {
-                        "question_for_embedding": lambda x: x["question_for_embedding"],
-                        "chat_history": lambda x: format_chat_history(x["chat_history"]),
-                    }
-                    | prompts.condense
-                    | self.llm
-                    | StrOutputParser()
-                }
-
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
             @optional_typecheck
@@ -1464,11 +1431,6 @@ class DocToolsLLM_class:
                 | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
-            combine_answers = (
-                prompts.combine
-                | self.llm
-                | StrOutputParser()
-            )
 
             answer_all_docs = RunnablePassthrough.assign(
                 inputs=lambda inputs: [
@@ -1486,62 +1448,26 @@ class DocToolsLLM_class:
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
-            final_answer_chain = RunnablePassthrough.assign(
-                final_answer=RunnablePassthrough.assign(
-                    question=lambda inputs: inputs["question_to_answer"],
-                    # remove answers deemed irrelevant
-                    intermediate_answers=lambda inputs: "\n".join(
-                        [
-                            inp
-                            for inp in inputs["intermediate_answers"]
-                            if check_intermediate_answer(inp)
-                        ]
+
+            rag_chain = (
+                retrieve_documents
+                | pbar_chain(
+                        llm=self.eval_llm,
+                        len_func="len(inputs['unfiltered_docs'])",
+                        desc="LLM evaluation",
+                        unit="doc",
                     )
-                )
-                | combine_answers,
+                | refilter_documents
+                | pbar_closer(llm=self.eval_llm)
+                | pbar_chain(
+                        llm=self.llm,
+                        len_func="len(inputs['filtered_docs'])",
+                        desc="Answering each",
+                        unit="doc",
+                    )
+                | answer_all_docs
+                | pbar_closer(llm=self.llm)
             )
-            if self.query_condense_question:
-                rag_chain = (
-                    loaded_memory
-                    | standalone_question
-                    | retrieve_documents
-                    | pbar_chain(
-                            llm=self.eval_llm,
-                            len_func="len(inputs['unfiltered_docs'])",
-                            desc="LLM evaluation",
-                            unit="doc",
-                        )
-                    | refilter_documents
-                    | pbar_closer(llm=self.eval_llm)
-                    | pbar_chain(
-                            llm=self.llm,
-                            len_func="len(inputs['filtered_docs'])",
-                            desc="Answering each",
-                            unit="doc",
-                        )
-                    | answer_all_docs
-                    | pbar_closer(llm=self.llm)
-                )
-            else:
-                rag_chain = (
-                    retrieve_documents
-                    | pbar_chain(
-                            llm=self.eval_llm,
-                            len_func="len(inputs['unfiltered_docs'])",
-                            desc="LLM evaluation",
-                            unit="doc",
-                        )
-                    | refilter_documents
-                    | pbar_closer(llm=self.eval_llm)
-                    | pbar_chain(
-                            llm=self.llm,
-                            len_func="len(inputs['filtered_docs'])",
-                            desc="Answering each",
-                            unit="doc",
-                        )
-                    | answer_all_docs
-                    | pbar_closer(llm=self.llm)
-                )
 
             if self.debug:
                 rag_chain.get_graph().print_ascii()
@@ -1561,47 +1487,91 @@ class DocToolsLLM_class:
             except NoDocumentsAfterLLMEvalFiltering as err:
                 return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
 
-            # group the intermediate answers by batch, then do a batch reduce mapping
-            batch_size = 5
             intermediate_answers = output["intermediate_answers"]
-            all_intermediate_answers = [intermediate_answers]
-            pbar = tqdm(
-                desc="Combibing answers",
-                unit="answer",
-                total=len(intermediate_answers),
-            )
-            while len(intermediate_answers) > batch_size:
-                batches = [[]]
-                for ia in intermediate_answers:
-                    if not check_intermediate_answer(ia):
-                        continue
-                    if len(batches[-1]) >= batch_size:
-                        batches.append([])
-                    if len(batches[-1]) < batch_size:
-                        batches[-1].append(ia)
-                batch_args = [
-                    {"question_to_answer": query_an, "intermediate_answers": b}
-                    for b in batches]
-                intermediate_answers = [a["final_answer"]
-                                        for a in final_answer_chain.batch(batch_args)]
-                pbar.n = pbar.total - len(intermediate_answers)
-            all_intermediate_answers.append(intermediate_answers)
-            final_answer = final_answer_chain.invoke(
-                {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
-            pbar.n = pbar.total
-            pbar.close()
-            output["final_answer"] = final_answer
-            output["all_intermediate_answeers"] = all_intermediate_answers
-            # output["intermediate_answers"] = intermediate_answers  # better not to overwrite that
 
+            # next step is to combine the intermediate answers into a single answer
+            combine_answers = (
+                prompts.combine
+                | self.llm
+                | StrOutputParser()
+            )
+            final_answer_chain = RunnablePassthrough.assign(
+                final_answer=RunnablePassthrough.assign(
+                    question=lambda inputs: inputs["question_to_answer"],
+                    # remove answers deemed irrelevant
+                    intermediate_answers=lambda inputs: "\n".join(
+                        [
+                            inp
+                            for inp in inputs["intermediate_answers"]
+                            if check_intermediate_answer(inp)
+                        ]
+                    )
+                )
+                | combine_answers,
+            )
+
+            if len(intermediate_answers) > 1:
+                all_intermediate_answers = [intermediate_answers]
+                # group the intermediate answers by batch, then do a batch reduce mapping
+                # each batch is at least 2 intermediate answers and maxes at
+                # batch_tkn_size tokens to avoid losing anything because of
+                # the context
+                batch_tkn_size = 1000
+                pbar = tqdm(
+                    desc="Combibing answers",
+                    unit="answer",
+                    total=len(intermediate_answers),
+                )
+                while True:
+                    batches = [[]]
+                    for ia in intermediate_answers:
+                        if not check_intermediate_answer(ia):
+                            # disregard IRRELEVANT answers
+                            continue
+                        if len(batches[-1]) < 2:
+                            # make sure there's at least 2 per batch
+                            batches[-1].append(ia)
+                        elif get_tkn_length(batches[-1]) >= batch_tkn_size:
+                            # cap batch size to the max tkn size
+                            batches.append([ia])
+                        elif get_tkn_length(batches[-1]) < batch_tkn_size:
+                            batches[-1].append(ia)
+                    batch_args = [
+                        {
+                            "question_to_answer": query_an,
+                            "intermediate_answers": b
+                        } for b in batches
+                    ]
+                    intermediate_answers = [
+                        a["final_answer"]
+                        for a in final_answer_chain.batch(batch_args)
+                    ]
+                    all_intermediate_answers.append(intermediate_answers)
+                    pbar.n = pbar.total - len(intermediate_answers)
+                    if len(intermediate_answers) == 1:
+                        pbar.update(1)
+                        break
+
+                assert pbar.n == pbar.total
+                pbar.close()
+                assert len(all_intermediate_answers[-1]) == 1
+
+                final_answer = all_intermediate_answers[-1][0]
+                output["all_intermediate_answers"] = all_intermediate_answers
+            else:
+                final_answer = intermediate_answers[0]
+                output["all_intermediate_answers"] = [final_answer]
+
+            # prepare the content of the output
+            output["final_answer"] = final_answer
             output["relevant_filtered_docs"] = []
             output["relevant_intermediate_answers"] = []
             for ia, a in enumerate(output["intermediate_answers"]):
                 if check_intermediate_answer(a):
-                    output["relevant_filtered_docs"].append(
-                        output["filtered_docs"][ia])
+                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
                     output["relevant_intermediate_answers"].append(a)
 
+            # display sources (i.e. documents used to answer)
             if not output["relevant_intermediate_answers"]:
                 md_printer(
                     "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
@@ -1609,33 +1579,27 @@ class DocToolsLLM_class:
                     "\n\n# No document filtered so no intermediate answers to combine")
             else:
                 md_printer("\n\n# Intermediate answers for each document:")
-            counter = 0
-            to_print = ""
-            for ia, doc in zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"]):
-                counter += 1
-                to_print += f"## Document #{counter}\n"
+            for counter, (ia, doc) in enumerate(zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"])):
+                to_print = f"## Document #{counter}\n"
                 content = doc.page_content.strip()
                 wrapped = "\n".join(textwrap.wrap(content, width=240))
                 to_print += "```\n" + wrapped + "\n ```\n"
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                to_print += "\n"
-            md_printer(to_print)
+                md_printer(to_print)
 
+            # print the final answer
             md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
 
+            # print the breakdown of documents used and chain time
             red(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
-            if chain_time:
-                red(f"Time took by the chain: {chain_time:.2f}s")
-
-            if self.import_mode:
-                return output
+            red(f"Time took by the chain: {chain_time:.2f}s")
 
             assert len(
                 self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
@@ -1654,3 +1618,5 @@ class DocToolsLLM_class:
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
+
+            return output

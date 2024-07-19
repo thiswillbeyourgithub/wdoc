@@ -35,15 +35,15 @@ class SettingsCompleter(Completer):
     @optional_typecheck
     def __init__(
             self,
-            doctoolsCliSettings,
-            doctoolsHistoryPrompts,
-            doctoolsHistoryWords,
+            winstondocCliSettings,
+            winstondocHistoryPrompts,
+            winstondocHistoryWords,
             *args,
             **kwargs):
         super().__init__(*args, **kwargs)
-        self.doctoolsCliSettings = doctoolsCliSettings
-        self.doctoolsHistoryPrompts = doctoolsHistoryPrompts
-        self.doctoolsHistoryWords = doctoolsHistoryWords
+        self.winstondocCliSettings = winstondocCliSettings
+        self.winstondocHistoryPrompts = winstondocHistoryPrompts
+        self.winstondocHistoryWords = winstondocHistoryWords
 
     @optional_typecheck
     def get_completions(self, document, complete_event):
@@ -51,21 +51,18 @@ class SettingsCompleter(Completer):
         if not text.strip():
             yield Completion("/debug", start_position=-len(text))
             yield Completion("/settings", start_position=-len(text))
-            yield Completion("/reset_memory", start_position=-len(text))
             yield Completion("/help", start_position=-len(text))
         elif text.startswith("/"):
             if "/debug".startswith(text):
                 yield Completion("/debug", start_position=-len(text))
-            if "/reset_memory".startswith(text):
-                yield Completion("/reset_memory", start_position=-len(text))
             if "/help".startswith(text):
                 yield Completion("/help", start_position=-len(text))
             if "/settings ".startswith(text) or "/settings " in text:
-                settings = sorted(list(self.doctoolsCliSettings.keys()))
+                settings = sorted(list(self.winstondocCliSettings.keys()))
                 for setting in settings:
                     if setting == "task":
                         continue
-                    compl = f"/settings {setting}={self.doctoolsCliSettings[setting]}"
+                    compl = f"/settings {setting}={self.winstondocCliSettings[setting]}"
                     if compl.startswith(text):
                         yield Completion(compl, start_position=-len(text))
         else:
@@ -73,7 +70,7 @@ class SettingsCompleter(Completer):
             if " " in text and not text.endswith(" "):
                 last_word = text.split(" ")[-1]
                 word_cnt = 0
-                for word in self.doctoolsHistoryWords:
+                for word in self.winstondocHistoryWords:
                     if word_cnt >= 3:
                         break
                     if word.lower().startswith(last_word.lower()):
@@ -81,7 +78,7 @@ class SettingsCompleter(Completer):
                         word_cnt += 1
 
             # entire prompt autocompletion
-            for hist in self.doctoolsHistoryPrompts:
+            for hist in self.winstondocHistoryPrompts:
                 if hist.lower().startswith(text.lower()):
                     yield Completion(hist, start_position=-len(text))
 
@@ -100,7 +97,6 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         * /help or ?
         * /debug
         * /settings (syntax: '/settings top_k=5')
-        * /reset_memory  (to reset the conversation)
     * **Settings keys and values:**
         * top_k: int > 0
         * multiline: boolean
@@ -118,7 +114,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
           The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
         * In multiline mode, use ctrl+D to send the text (sometimes
         multiple times).
-        * For more information: 'python DocToolsLLM.py --help'
+        * For more information: 'python WinstonDoc.py --help'
         * History is saved and shared across all runs
         * If you use '>>>>' once in the middle of your text, the left part will be
         used as a query find the documents and the right part will be the
@@ -128,7 +124,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
     """
-    md_printer("# DocToolsLLM Prompt")
+    md_printer("# WinstonDoc Prompt")
 
     # loading history from files
     prev_questions = []
@@ -156,9 +152,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     words = [w for w in " ".join(prompts).split(
         " ") if len(w) > 2 and w.isalpha()]
     completer = SettingsCompleter(
-        doctoolsCliSettings=settings,
-        doctoolsHistoryPrompts=prompts,
-        doctoolsHistoryWords=words
+        winstondocCliSettings=settings,
+        winstondocHistoryPrompts=prompts,
+        winstondocHistoryWords=words
     )
 
     while True:
@@ -194,11 +190,6 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             whi("Entering debug mode.")
             breakpoint()
             whi("Going back to the prompt.")
-            continue
-        elif user_input == "/reset_memory":
-            whi("Reseting memory.")
-            # actually the memory will be reset once we return to the DocToolsLLM instance
-            settings["do_reset_memory"] = True
             continue
         elif user_input in ["/help", "?"]:
             show_help()

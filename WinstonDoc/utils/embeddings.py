@@ -26,7 +26,7 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 from .misc import cache_dir, get_tkn_length
-from .logger import whi, red
+from .logger import whi, red, logger
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
@@ -411,6 +411,7 @@ def load_embeddings(
     return db, cached_embeddings
 
 
+@logger.catch
 @optional_typecheck
 def faiss_loader(
         cached_embeddings: CacheBackedEmbeddings,
@@ -444,6 +445,7 @@ def faiss_loader(
     return
 
 
+@logger.catch
 @optional_typecheck
 def faiss_saver(
         path: Union[str, PosixPath],

@@ -30,15 +30,6 @@ litellm = lazy_import.lazy_module("litellm")
 TESTING_LLM = "testing/testing"
 
 
-class AnswerConversationBufferMemory(ConversationBufferMemory):
-    """
-    quick fix from https://github.com/hwchase17/langchain/issues/5630
-    """
-    @optional_typecheck
-    def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
-        return super(AnswerConversationBufferMemory, self).save_context(inputs, {'response': outputs['answer']})
-
-
 @optional_typecheck
 def load_llm(
     modelname: str,
@@ -95,12 +86,12 @@ def load_llm(
 
     # extra check for private mode
     if private:
-        assert os.environ["DOCTOOLS_PRIVATEMODE"] == "true"
+        assert os.environ["WINSTONDOC_PRIVATEMODE"] == "true"
         red(
             f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
-        assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE"
+        assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE"
     else:
-        assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false"
+        assert os.environ["WINSTONDOC_PRIVATEMODE"] == "false"
 
     if not private and backend == "openai" and api_base is None:
         red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
@@ -115,7 +106,7 @@ def load_llm(
             **extra_model_args,
         )
     else:
-        red("A bug on langchain's side forces DocToolsLLM to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
+        red("A bug on langchain's side forces WinstonDoc to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens

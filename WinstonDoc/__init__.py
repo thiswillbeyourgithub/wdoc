@@ -5,15 +5,15 @@ Default file, used as entry point.
 import sys
 import fire
 
-from .DocToolsLLM import DocToolsLLM_class as DocToolsLLM
+from .WinstonDoc import WinstonDoc
 
 __all__ = [
-    "DocToolsLLM",
+    "WinstonDoc",
     "cli_launcher",
     "utils",
 ]
 
-__VERSION__ = DocToolsLLM.VERSION
+__VERSION__ = WinstonDoc.VERSION
 
 
 def fire_wrapper(
@@ -25,17 +25,17 @@ def fire_wrapper(
     # --help but not catched by sys.argv
     if "help" in kwargs and kwargs["help"]:
         print("Showing help")
-        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
+        WinstonDoc.md_printer(WinstonDoc.__doc__)
         raise SystemExit()
 
     # no args given
     if not any([args, kwargs]):
         print("Empty arguments, showing help")
-        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
+        WinstonDoc.md_printer(WinstonDoc.__doc__)
         raise SystemExit()
 
     # while we're at it, make it so that
-    # "DocToolsLLM summary" is parsed like "DocToolsLLM --task=summary"
+    # "WinstonDoc summary" is parsed like "WinstonDoc --task=summary"
     args = list(args)
     if args and isinstance(args[0], str):
         if args[0].replace("summary", "summarize") in ["query", "search", "summarize", "summarize_then_query"]:
@@ -67,12 +67,14 @@ def fire_wrapper(
 
 def cli_launcher() -> None:
     sys_args = sys.argv
+    if "--version" in sys_args:
+        return __VERSION__
     if "--help" in sys_args:
         print("Showing help")
-        DocToolsLLM.md_printer(DocToolsLLM.__doc__)
+        WinstonDoc.md_printer(WinstonDoc.__doc__)
         raise SystemExit()
-    if "--completion" in sys_args:
-        return fire.Fire(DocToolsLLM)
+    if "--" in sys_args and "--completion" in sys_args:
+        return fire.Fire(WinstonDoc)
 
     kwargs = fire.Fire(fire_wrapper)
-    instance = DocToolsLLM(**kwargs)
+    instance = WinstonDoc(**kwargs)

@@ -4,11 +4,8 @@ Code related to loggings, coloured logs, etc.
 
 import rtoml
 import json
-import requests
-import time
 from tqdm import tqdm
-import logging
-import logging.handlers
+from loguru import logger
 from pathlib import Path
 from typing import Type, Callable, Optional, Union, List, Dict
 from rich.markdown import Markdown
@@ -22,12 +19,12 @@ from .flags import disable_md_printing
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
-cache_dir = Path(user_cache_dir(appname="DocToolsLLM"))
+cache_dir = Path(user_cache_dir(appname="WinstonDoc"))
 assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(
 ), f"Invalid cache dir location: '{cache_dir}'"
 cache_dir.mkdir(parents=True, exist_ok=True)
 
-log_dir = Path(user_log_dir(appname="DocToolsLLM"))
+log_dir = Path(user_log_dir(appname="WinstonDoc"))
 assert log_dir.parent.exists() or log_dir.parent.parent.exists(
 ) or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
 log_dir.mkdir(exist_ok=True, parents=True)
@@ -35,22 +32,16 @@ log_file = (log_dir / "logs.txt")
 log_file.touch(exist_ok=True)
 
 # logger
-log_formatter = logging.Formatter(
-    '%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
-handler = logging.handlers.RotatingFileHandler(
-    filename=log_file,
-    mode="a",
-    encoding=None,
-    delay=0,
-    maxBytes=1024*1024*100,  # max 100mb
-    # backupCount=3,
+logger.remove(0)
+logger.add(
+    log_file,
+    rotation="100MB",
+    retention=5,
+    format='{time} {level} {thread} {process} {function} {line} {message}',
+    level="INFO",
+    enqueue=True,
+    colorize=False,
 )
-handler.setLevel(logging.INFO)
-handler.setFormatter(log_formatter)
-
-log = logging.getLogger()
-log.setLevel(logging.INFO)
-log.addHandler(handler)
 # delete any additional log file
 # (log_dir / "logs.txt.4").unlink(missing_ok=True)
 
@@ -93,7 +84,7 @@ def get_coloured_logger(color_asked: str) -> Callable:
                 string = string.__repr__()
         for k, v in colors.items():
             string = string.replace(v, "")
-        log.info(string)
+        logger.info(string)
         tqdm.write(col + string + colors["reset"], **args)
         return inp
     return printer
@@ -110,7 +101,7 @@ console = Console()
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
     if not disable_md_printing:
-        log.info(message)
+        logger.info(message)
         md = Markdown(message)
         console.print(md, style=color)
     else:
@@ -128,8 +119,8 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 
 
 @optional_typecheck
-def set_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
-    "set the docstring of DocToolsLLM class to DocToolsLLM/docs/USAGE.md's content"
+def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
+    "set the docstring of WinstonDoc class to WinstonDoc/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
     assert usage_file.exists()
     usage = usage_file.read_text().strip()

@@ -1,5 +1,5 @@
 """
-Entry point used when DocToolsLLM is imported or called by 'python -m DocToolsLLM'.
+Entry point used when WinstonDoc is imported or called by 'python -m WinstonDoc'.
 Does the same as __init__.py
 """
 

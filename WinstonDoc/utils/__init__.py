@@ -1,4 +1,4 @@
-from DocToolsLLM.utils import *
+from WinstonDoc.utils import *
 
 __all__ = [
     'batch_file_loader',
