@@ -1082,7 +1082,7 @@ class DocToolsLLM_class:
                 self.loaded_embeddings.index_to_docstore_id), "Something went wrong when deleting filtered out documents"
 
     @optional_typecheck
-    def query_task(self, query: Optional[str]) -> Optional[str]:
+    def query_task(self, query: Optional[str]) -> dict:
         if not query:
             query, self.interaction_settings = ask_user(
                 self.interaction_settings)
@@ -1654,9 +1654,6 @@ class DocToolsLLM_class:
             if chain_time:
                 red(f"Time took by the chain: {chain_time:.2f}s")
 
-            if self.import_mode:
-                return output
-
             assert len(
                 self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
             llmcallback = self.llm.callbacks[0]
@@ -1674,3 +1671,5 @@ class DocToolsLLM_class:
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
+
+            return output
