@@ -60,7 +60,7 @@ recursive_types = [
     "json_entries",
     "link_file",
     "youtube_playlist",
-    "infer"
+    "auto"
 ]
 
 # compile the inference rules as regex
@@ -105,16 +105,16 @@ def batch_load_doc(
             load_filetype = load_kwargs["filetype"]
 
             # auto parse filetype if infer
-            if load_filetype == "infer":
+            if load_filetype == "auto":
                 for k, v in inference_rules.items():
                     for vv in inference_rules[k]:
                         if vv.search(load_kwargs["path"]):
                             load_filetype = k
                             break
-                    if load_filetype != "infer":
+                    if load_filetype != "auto":
                         break
                 assert (
-                    load_filetype != "infer"
+                    load_filetype != "auto"
                 ), f"Could not infer load_filetype of {load_kwargs['path']}. Use the 'load_filetype' argument."
                 to_load[ild]["filetype"] = load_filetype
 
@@ -571,7 +571,7 @@ def parse_link_file(load_kwargs: dict, task: str) -> List[dict]:
         doc_kwargs = load_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
-        doc_kwargs["filetype"] = "infer"
+        doc_kwargs["filetype"] = "auto"
         doclist[i] = doc_kwargs
     return doclist
 

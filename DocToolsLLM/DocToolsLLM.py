@@ -84,7 +84,7 @@ class DocToolsLLM_class:
     def __init__(
         self,
         task: str,
-        filetype: str = "infer",
+        filetype: str = "auto",
 
         modelname: str = "openrouter/anthropic/claude-3.5-sonnet:beta",
         # modelname: str = "openai/gpt-4o",
@@ -202,8 +202,8 @@ class DocToolsLLM_class:
             assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
             query_eval_modelname = None
-        if filetype == "infer":
-            assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'infer', a --path must be given"
+        if filetype == "auto":
+            assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'auto', a --path must be given"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
         if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
             raise Exception(

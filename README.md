@@ -98,7 +98,7 @@
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
-* **infer**: default, guess the filetype for you
+* **auto**: default, guess the filetype for you
 * **url**: try many ways to load a webpage, with heuristics to find the better parsed one
 * **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram
 * **pdf**: 10 loaders are used, heuristics are used to keep the best one
@@ -128,8 +128,8 @@
 * **summarize_then_query** summarize the document then allow you to query directly about it.
 
 ## Walkthrough and examples
-1. Say you want to ask a question about one pdf, that's simple: `DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="infer"` and it would have worked the same.
-2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive_paths" --recursed_filetype "pdf" --query "My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "infer"! Note that you can either directly ask your question with `--query "my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `DocToolsLLM [your kwargs] here is my question`.
+1. Say you want to ask a question about one pdf, that's simple: `DocToolsLLM --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="auto"` and it would have worked the same.
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `DocToolsLLM --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive_paths" --recursed_filetype "pdf" --query "My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that DoctoolsLLM knows what arguments to expect, and specify as recursed_filetype "pdf" so that doctools knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by DoctoolsLLM like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query "my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `DocToolsLLM [your kwargs] here is my question`.
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive_paths", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources.
 4. You can specify a "source_tag" metadata to help distinguish between documents you imported.
 5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
@@ -148,7 +148,7 @@
 * Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
 * Launch using `DocToolsLLM query [ARGS]`
 * *Note: if for some reason this fails, maybe try with `python -m DocToolsLLM`. And if everything fails, clone this repo and try again after `cd` inside it.*
-* To ask questions about a document: `DoctoolsLLM query --path="PATH/TO/YOUR/FILE" --filetype="infer"`
+* To ask questions about a document: `DoctoolsLLM query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `DocToolsLLM --help`
 * For shell autocompletion: `eval $(cat completion.cli.bash)` and `eval $(cat completion.m.bash)`. You can generate your own with `eval "$(DocToolsLLM -- --completion)"` and `eval "$(python -m DocToolsLLM -- --completion)"`.

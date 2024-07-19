@@ -7,14 +7,14 @@
         * `summarize`: means the input will be passed through a summarization prompt.
         * `summarize_then_query`: summarize the text then open the prompt to allow querying directly the source document.
 
-* `--filetype`: str, default `infer`
+* `--filetype`: str, default `auto`
     * the type of input. Depending on the value, different other parameters
     are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
     an example of json_entries file in `DocToolsLLM/docs/json_entries_example.txt`
 
     * Supported values:
-        * `infer`: will guess the appropriate filetype based on `--path`.
+        * `auto`: will guess the appropriate filetype based on `--path`.
             Irrelevant for some filetypes, eg if `--filetype`=anki
         * `youtube`: `--path` must link to a youtube video
         * `youtube_playlist`: `--path` must link to a youtube playlist
