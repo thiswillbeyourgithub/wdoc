@@ -1464,11 +1464,6 @@ class DocToolsLLM_class:
                 | self.llm.bind(max_tokens=1000)
                 | StrOutputParser()
             )
-            combine_answers = (
-                prompts.combine
-                | self.llm
-                | StrOutputParser()
-            )
 
             answer_all_docs = RunnablePassthrough.assign(
                 inputs=lambda inputs: [
@@ -1486,20 +1481,6 @@ class DocToolsLLM_class:
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
-            final_answer_chain = RunnablePassthrough.assign(
-                final_answer=RunnablePassthrough.assign(
-                    question=lambda inputs: inputs["question_to_answer"],
-                    # remove answers deemed irrelevant
-                    intermediate_answers=lambda inputs: "\n".join(
-                        [
-                            inp
-                            for inp in inputs["intermediate_answers"]
-                            if check_intermediate_answer(inp)
-                        ]
-                    )
-                )
-                | combine_answers,
-            )
             if self.query_condense_question:
                 rag_chain = (
                     loaded_memory
@@ -1562,6 +1543,27 @@ class DocToolsLLM_class:
                 return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
 
             intermediate_answers = output["intermediate_answers"]
+
+            # next step is to combine the intermediate answers into a single answer
+            combine_answers = (
+                prompts.combine
+                | self.llm
+                | StrOutputParser()
+            )
+            final_answer_chain = RunnablePassthrough.assign(
+                final_answer=RunnablePassthrough.assign(
+                    question=lambda inputs: inputs["question_to_answer"],
+                    # remove answers deemed irrelevant
+                    intermediate_answers=lambda inputs: "\n".join(
+                        [
+                            inp
+                            for inp in inputs["intermediate_answers"]
+                            if check_intermediate_answer(inp)
+                        ]
+                    )
+                )
+                | combine_answers,
+            )
 
             if len(intermediate_answers) > 1:
                 all_intermediate_answers = [intermediate_answers]
