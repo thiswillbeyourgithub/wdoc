@@ -71,10 +71,10 @@ for k, v in inference_rules.items():
 
 @optional_typecheck
 def batch_load_doc(
-        filetype: str,
-        task: str,
-        backend: str,
-        **cli_kwargs) -> List[Document]:
+    filetype: str,
+    task: str,
+    backend: str,
+    **cli_kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
     # try:
