@@ -1585,7 +1585,7 @@ class DocToolsLLM_class:
                 intermediate_answers = [a["final_answer"]
                                         for a in final_answer_chain.batch(batch_args)]
                 pbar.n = pbar.total - len(intermediate_answers)
-            all_intermediate_answers.append(intermediate_answers)
+                all_intermediate_answers.append(intermediate_answers)
             final_answer = final_answer_chain.invoke(
                 {"question_to_answer": query_an, "intermediate_answers": intermediate_answers})["final_answer"]
             pbar.n = pbar.total
