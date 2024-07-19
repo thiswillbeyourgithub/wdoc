@@ -288,7 +288,7 @@ class DocToolsLLM:
         if debug:
             llm_verbosity = True
             whi(f"Cache location: {cache_dir.absolute()}")
-            whi(f"Config location: {log_dir.absolute()}")
+            whi(f"Log location: {log_dir.absolute()}")
 
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()
