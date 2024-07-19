@@ -151,7 +151,7 @@
 * To ask questions about a document: `DoctoolsLLM query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `DocToolsLLM --help`
-* For shell autocompletion: `eval $(cat completion.cli.bash)` and `eval $(cat completion.m.bash)`. You can generate your own with `eval "$(DocToolsLLM -- --completion)"` and `eval "$(python -m DocToolsLLM -- --completion)"`.
+* For shell autocompletion: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(DocToolsLLM -- --completion)"` and `eval "$(python -m DocToolsLLM -- --completion)"`.
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer usedto count tokens to embed is the OpenAI tokenizer, which is not universal)
