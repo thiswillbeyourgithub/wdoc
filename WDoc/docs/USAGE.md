@@ -165,7 +165,7 @@
 * `--debug`: bool, default `False`
     * if True will enable langchain tracing, increase verbosity,
     disable multithreading for summaries and loading files,
-    crash if an error is encountered when loading a file,
+    display warning if an error is encountered when loading a file,
     automatically trigger the debugger on exceptions.
     Note that the multithreading will not be disabled if you
     set `--file_loader_n_jobs`, allowing you to debug multithreading
