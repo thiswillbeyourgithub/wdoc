@@ -415,8 +415,8 @@ def parse_recursive_paths(
     path: Union[str, PosixPath],
     pattern: str,
     recursed_filetype: str,
-    include: Optional[str] = None,
-    exclude: Optional[str] = None,
+    include: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
 ) -> List[dict]:
     whi(f"Parsing recursive load_filetype: '{path}'")
     assert (
