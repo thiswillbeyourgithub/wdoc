@@ -1,5 +1,5 @@
 """
-called at DocToolsLLM instance creation. It parsed the combined filetype
+called at WinstonDoc instance creation. It parsed the combined filetype
 into an individual list of DocDict describing each a document (or in some cases
 a list of documents for example a whole anki database).
 This list is then processed in loaders.py, multithreading or multiprocessing

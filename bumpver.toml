@@ -11,4 +11,4 @@ push = false
 [bumpver.file_patterns]
 "bumpver.toml" = ['current_version = "{version}"']
 "setup.py" = ['version="{version}"']
-"DocToolsLLM/DocToolsLLM.py" = ['VERSION: str = "{version}"']
+"WinstonDoc/WinstonDoc.py" = ['VERSION: str = "{version}"']

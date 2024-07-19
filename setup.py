@@ -29,12 +29,12 @@ with open("README.md", "r") as readme:
     long_description = readme.read()
 
 setup(
-    name="DocToolsLLM",
+    name="wdoc",
     version="0.59.0",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/thiswillbeyourgithub/DocToolsLLM/",
+    url="https://github.com/thiswillbeyourgithub/WinstonDoc/",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -43,10 +43,11 @@ setup(
     ],
     license="GPLv3",
     keywords=["RAG", "search", "summary", "summarize", "pdf", "documents", "doc", "docx",
-              "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools"],
+              "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools", "doctoolsllm", "winston_doc"],
     entry_points={
         'console_scripts': [
-            'DocToolsLLM=DocToolsLLM.__init__:cli_launcher',
+            'wdoc=WinstonDoc.__init__:cli_launcher',
+            'winston_doc=WinstonDoc.__init__:cli_launcher',
         ],
     },
     python_requires=">=3.10",

@@ -1415,11 +1415,11 @@ def transcribe_audio_deepgram(
 ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
-    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+    assert os.environ["WINSTONDOC_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use deepgram's API"
     )
     assert "DEEPGRAM_API_KEY" in os.environ and not os.environ[
-        "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
+        "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
 
     # client
     try:
@@ -1486,12 +1486,12 @@ def transcribe_audio_whisper(
         prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
-    assert os.environ["DOCTOOLS_PRIVATEMODE"] == "false", (
+    assert os.environ["WINSTONDOC_PRIVATEMODE"] == "false", (
         "Private mode detected, aborting before trying to use openai's whisper"
     )
 
     assert "OPENAI_API_KEY" in os.environ and not os.environ[
-        "OPENAI_API_KEY"] == "REDACTED_BECAUSE_DOCTOOLSLLM_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
+        "OPENAI_API_KEY"] == "REDACTED_BECAUSE_WINSTONDOC_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 
     t = time.time()
     with open(audio_path, "rb") as audio_file:

@@ -1,5 +1,5 @@
 """
-Prompts used by DocToolsLLM.
+Prompts used by WinstonDoc.
 """
 
 from dataclasses import dataclass
