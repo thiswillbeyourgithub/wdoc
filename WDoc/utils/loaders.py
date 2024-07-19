@@ -1124,7 +1124,7 @@ def load_logseq_markdown(
     whi(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
-        parsed = LogseqMarkdownParser.parse_file(path, verbose=debug)
+        parsed = LogseqMarkdownParser.parse_file(path, verbose=False)
     except Exception as err:
         raise Exception(
             f"Error when parsing {path} LogseqMarkdownParser: '{err}'")
