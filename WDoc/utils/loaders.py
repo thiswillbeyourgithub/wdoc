@@ -573,7 +573,16 @@ def load_youtube_video(
 
 @optional_typecheck
 @doc_loaders_cache.cache
-def load_online_pdf(debug: bool, task: str, path: str, **kwargs) -> List[Document]:
+def load_online_pdf(
+    debug: bool,
+    task: str,
+    path: str,
+    doccheck_min_lang_prob: float = min_lang_prob,
+    doccheck_min_token: int = min_token,
+    doccheck_max_token: int = max_token,
+    doccheck_max_lines: int = max_lines,
+    **kwargs,
+    ) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
     try:
@@ -1785,6 +1794,10 @@ def load_pdf(
     text_splitter: TextSplitter,
     debug: bool,
     file_hash: str,
+    doccheck_min_lang_prob: float = min_lang_prob,
+    doccheck_min_token: int = min_token,
+    doccheck_max_token: int = max_token,
+    doccheck_max_lines: int = max_lines,
 ) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -1826,6 +1839,10 @@ def load_pdf(
                 docs=docs,
                 identifier=path,
                 check_language=True,
+                min_lang_prob=doccheck_min_lang_prob,
+                min_token=doccheck_min_token,
+                max_token=doccheck_max_token,
+                max_lines=doccheck_max_lines,
             )
 
             if prob >= 0.5:
