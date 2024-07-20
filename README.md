@@ -1,6 +1,4 @@
-<p align="center">
-    <img src="images/icon.png" width="256">
-</p>
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>
 
 # WDoc
 
@@ -144,7 +142,7 @@
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
 9. Now say you just want to summarize a webpage: `wdoc summary --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
 
-![](images/summary.png)
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true" width="256"></p>
 
 ## Getting started
 *Tested on python 3.10 and 3.11.7*
