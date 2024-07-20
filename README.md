@@ -12,41 +12,15 @@
     * Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
 
 ### Table of contents
-- [What is WDoc in a few questions](#wdoc-in-a-few-questions)
 - [Features](#features)
   - [Planned Features](#planned-features)
   - [Supported filetypes](#supported-filetypes)
   - [Supported tasks](#supported-tasks)
   - [Walkthrough and examples](#walkthrough-and-examples)
 - [Getting started](#getting-started)
+- [FAQ](#faq)
 - [Notes](#notes)
   - [Known issues](#known-issues)
-
-## WDoc in a few questions
-* **Who is this for?**
-    * WDoc is for power users who want document querying on steroid, and in depth AI powered document summaries.
-* **What's RAG?**
-    * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
-* **Why make another RAG system? Can't you use any of the others?**
-    * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
-* **Why is WDoc better than most RAG system to ask questions on documents?**
-    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also WDoc is very customizable.
-* **Why can WDoc also produce summaries?**
-    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
-* **What other tasks are supported by WDoc?**
-    * Summarize text from any [Supported filetypes](#Supported-filetypes).
-    * Ask questions about a large heterogeneous corpus.
-    * Search the relevant documents using embeddings.
-    * Search the relevant documents using embeddings then filtering using a cheap LLM.
-* **Which LLM providers are supported by WDoc?**
-    * WDoc supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
-* **What do you use WDoc for?**
-    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to WDoc I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
-    * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
-    * I use it to query my personal documents using the `--private` argument.
-    * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
-    * I use it to ask questions about entire youtube playlists.
-* **What's up with the name?** One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 
 ## Features
 * **Advanced RAG to query lots of diverse documents**:
@@ -156,6 +130,32 @@
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `wdoc --help`
 * For shell autocompletion: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
+
+## FAQ
+* **Who is this for?**
+    * WDoc is for power users who want document querying on steroid, and in depth AI powered document summaries.
+* **What's RAG?**
+    * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
+* **Why make another RAG system? Can't you use any of the others?**
+    * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
+* **Why is WDoc better than most RAG system to ask questions on documents?**
+    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also WDoc is very customizable.
+* **Why can WDoc also produce summaries?**
+    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
+* **What other tasks are supported by WDoc?**
+    * Summarize text from any [Supported filetypes](#Supported-filetypes).
+    * Ask questions about a large heterogeneous corpus.
+    * Search the relevant documents using embeddings.
+    * Search the relevant documents using embeddings then filtering using a cheap LLM.
+* **Which LLM providers are supported by WDoc?**
+    * WDoc supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
+* **What do you use WDoc for?**
+    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to WDoc I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
+    * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
+    * I use it to query my personal documents using the `--private` argument.
+    * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
+    * I use it to ask questions about entire youtube playlists.
+* **What's up with the name?** One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer used to count tokens to embed is the OpenAI tokenizer, which is not universal)
