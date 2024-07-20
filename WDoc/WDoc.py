@@ -1186,7 +1186,7 @@ class WDoc:
                     failed = True
                     red(
                         f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'")
-            if self.modelbackend != "openrouter" or failed:
+            if self.query_eval_modelbackend != "openrouter" or failed:
                 self.eval_llm_params = litellm.get_supported_openai_params(
                     model=self.query_eval_modelname,
                     custom_llm_provider=self.query_eval_modelbackend,
@@ -1539,10 +1539,10 @@ class WDoc:
                         if len(batches[-1]) < 2:
                             # make sure there's at least 2 per batch
                             batches[-1].append(ia)
-                        elif get_tkn_length(batches[-1]) >= batch_tkn_size:
+                        elif sum([get_tkn_length(b) for b in batches[-1]]) >= batch_tkn_size:
                             # cap batch size to the max tkn size
                             batches.append([ia])
-                        elif get_tkn_length(batches[-1]) < batch_tkn_size:
+                        else:
                             batches[-1].append(ia)
                     batch_args = [
                         {
