@@ -1,4 +1,5 @@
-[[this_will_fetch_all_the_pdf_recursively_inside_a_dir_according_to_some_parameters]]
+# note: don't use a '.' in the dict keys (the line below) otherwise the parsing will fail
+[[this_will_fetch_all_the_pdf_recursively_inside_a_dir_according_to_some_parameters]]  # <- don't put anything other than letters and _ here, especially no '.' because it will  make subdicts that will fail to parse
 path = '../some/path/to/parent/'
 filetype = 'recursive_paths'
 recursed_filetype = 'pdf'
