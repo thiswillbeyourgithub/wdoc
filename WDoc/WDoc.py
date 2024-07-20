@@ -105,7 +105,7 @@ class WDoc:
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[str] = None,
-        top_k: int = 20,
+        top_k: int = 100,
 
         query: Optional[str] = None,
         query_retrievers: str = "default",

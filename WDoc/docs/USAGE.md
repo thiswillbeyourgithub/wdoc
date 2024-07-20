@@ -94,7 +94,7 @@
 * `--load_embeds_from`: str, default `None`
     * path to the file saved using `--save_embeds_as`
 
-* `--top_k`: int, default `20`
+* `--top_k`: int, default `100`
     * number of chunks to look for when querying. It is high because the
     eval model is used to refilter the document after the embeddings
     first pass.
