@@ -171,6 +171,18 @@ class WDoc:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
+        elif notification_callback:
+            def print_exception(exc_type, exc_value, exc_traceback):
+                if not issubclass(exc_type, KeyboardInterrupt):
+                    message = "An error has occured:\n"
+                    message += "\n".join([line for line in traceback.format_tb(exc_traceback)])
+                    message += "\n" + str(exc_type) + " : " + str(exc_value)
+                    self.ntfy(message)
+                    sys.exit(1)
+
+            sys.excepthook = print_exception
+            faulthandler.enable()
+
         red(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
