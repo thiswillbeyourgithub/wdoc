@@ -1,7 +1,7 @@
 <p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>
 
-> `I'm W~~inston Wolf~~. I solve RAG problems.`
-> - Winston "The Wolf" Wolf, if he were this software.
+> *I'm WDoc. I solve RAG problems.*
+> - WDoc, imitating Winston "The Wolf" Wolf
 
 # WDoc
 
