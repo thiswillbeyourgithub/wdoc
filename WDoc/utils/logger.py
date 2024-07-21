@@ -14,7 +14,7 @@ from platformdirs import user_cache_dir, user_log_dir
 import warnings
 
 from .typechecker import optional_typecheck
-from .flags import disable_md_printing, is_silent
+from .flags import md_printing_disabled, is_silent
 
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
@@ -101,7 +101,7 @@ console = Console()
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
-    if not disable_md_printing:
+    if not md_printing_disabled:
         logger.info(message)
         md = Markdown(message)
         console.print(md, style=color)
