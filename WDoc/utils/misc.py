@@ -151,9 +151,15 @@ class DocDict(dict):
 
     def __check_values__(self, key, value):
         if key not in self.allowed_keys:
-            raise Exception(f"Cannot set key '{key}' in a DocDict")
+            raise Exception(
+                f"Cannot set key '{key}' in a DocDict. Allowed keys are "
+                f"'{','.join(self.allowed_keys)}'"
+            )
         if key in self.allowed_types and value is not None:
-            assert isinstance(value, self.allowed_types[key])
+            assert isinstance(value, self.allowed_types[key]), (
+                f"Type of key {key} should be {self.allowed_types[key]},"
+                f"not {type(value)}"
+            )
 
     def __init__(self, *args, **kwargs):
         for arg in args:
