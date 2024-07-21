@@ -222,10 +222,15 @@
     the default langchain SentenceTransformerEmbedding implementation
 
 * `--import_mode`: bool, default `False`
-    * if True, will return the answer from query instead of printing it
+    * if True, will return the answer from query instead of printing it.
+    The idea is to use if when you import WDoc instead of running
+    it from the cli. See `--silent`
 
 * `--disable_md_printing`: bool, default `True`
     * if True, instead of using rich to display some information, default to simpler colored prints.
+
+* `--silent`: bool, default False
+    * disable almost all prints. Can be handy if `--import_mode` is used.
 
 * `--version`: bool, default False
     * display the version and exit

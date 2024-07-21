@@ -17,5 +17,6 @@ def check_kwargs(arg):
 is_debug = check_kwargs("debug")
 is_verbose = is_debug or check_kwargs("verbose")
 
+is_silent = check_kwargs("silent")
 
 disable_md_printing = check_kwargs("disable_md_printing")

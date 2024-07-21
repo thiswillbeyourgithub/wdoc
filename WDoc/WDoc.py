@@ -131,6 +131,7 @@ class WDoc:
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = False,
+        silent: bool = False,
         version: bool = False,
 
         **cli_kwargs,
