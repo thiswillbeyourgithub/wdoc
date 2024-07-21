@@ -31,10 +31,6 @@ with open("README.md", "r") as readme:
         '<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>',
         '![icon](https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true)',
     )
-    long_description = long_description.replace(
-        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true" width="256"></p>',
-        '![example](https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true)',
-    )
     assert 'align="center"' not in long_description
 
 setup(
