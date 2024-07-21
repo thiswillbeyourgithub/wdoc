@@ -161,6 +161,7 @@
 >     - Stay aware of the Instant Gratification Monkey
 >     - Start addressing procrastination soon
 > - *Humorously* suggests not starting today, but 'sometime soon'
+> 
 > Tokens used for https://www.youtube.com/watch?v=arj7oStGLkU: '4365' ($0.00060)
 > Total cost of those summaries: '4365' ($0.00060, estimate was $0.00028)
 > Total time saved by those summaries: 8.4 minutes
