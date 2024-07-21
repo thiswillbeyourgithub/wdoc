@@ -139,7 +139,7 @@
 
 ---
 
-* `--summary_n_recursion`: int, default `1`
+* `--summary_n_recursion`: int, default `0`
     * after summarizing, will go over the summary that many times to fix
     indentation, repetitions etc.
         * 0 means disabled.

@@ -116,7 +116,7 @@ class WDoc:
         query_eval_check_number: int = 4,
         query_relevancy: float = 0.1,
 
-        summary_n_recursion: int = 1,
+        summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",
 
         llm_verbosity: Union[bool, int] = False,
