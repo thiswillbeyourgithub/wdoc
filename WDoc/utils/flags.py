@@ -9,18 +9,13 @@ import platform
 kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
 is_linux = platform.system() == "Linux"
 
-if "verbose" in kwargs and kwargs["verbose"]:
-    is_verbose = True
-else:
-    is_verbose = False
+def check_kwargs(arg):
+    if arg in kwargs and kwargs[arg]:
+        return True
+    return False
 
-if "debug" in kwargs and kwargs["debug"]:
-    is_debug = True
-    is_verbose = True
-else:
-    is_debug = False
+is_debug = check_kwargs("debug")
+is_verbose = is_debug or check_kwargs("verbose")
 
-if "disable_md_printing" in kwargs and kwargs["disable_md_printing"]:
-    disable_md_printing = True
-else:
-    disable_md_printing = False
+
+disable_md_printing = check_kwargs("disable_md_printing")
