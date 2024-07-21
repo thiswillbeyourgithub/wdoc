@@ -387,7 +387,7 @@ class WDoc:
             @optional_typecheck
             def ntfy(text: str) -> str:
                 return text
-            self.ntfy = ntfy
+        self.ntfy = ntfy
 
         if is_verbose:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
