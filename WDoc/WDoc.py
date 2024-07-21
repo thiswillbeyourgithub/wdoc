@@ -194,7 +194,8 @@ class WDoc:
         for k in cli_kwargs:
             if k not in self.allowed_extra_args:
                 raise Exception(
-                    red(f"Found unexpected keyword argument: '{k}'"))
+                    red(f"Found unexpected keyword argument: '{k}'\nThe allowed arguments are {','.join(self.allowed_extra_args)}")
+                        )
 
             # type checking of extra args
             if os.environ["WDOC_TYPECHECKING"] in ["crash", "warn"]:
