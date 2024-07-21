@@ -786,6 +786,7 @@ class WDoc:
         if llmcallback.total_tokens != results['doc_total_tokens']:
             red(
                 f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+        self.summary_results = results
         return results
 
     @optional_typecheck
