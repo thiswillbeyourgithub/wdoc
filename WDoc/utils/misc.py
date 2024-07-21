@@ -149,26 +149,29 @@ class DocDict(dict):
     allowed_keys = doc_kwargs_keys
     allowed_types = loader_specific_keys
 
+    def __check_values__(self, key, value):
+        if key not in self.allowed_keys:
+            raise Exception(
+                f"Cannot set key '{key}' in a DocDict. Allowed keys are "
+                f"'{','.join(self.allowed_keys)}'"
+            )
+        if key in self.allowed_types and value is not None:
+            assert isinstance(value, self.allowed_types[key]), (
+                f"Type of key {key} should be {self.allowed_types[key]},"
+                f"not {type(value)}"
+            )
+
     def __init__(self, *args, **kwargs):
         for arg in args:
             assert isinstance(arg, dict)
             for k, v in arg.items():
-                if k not in self.allowed_keys:
-                    raise Exception(f"Cannot set key '{k}' in a DocDict")
-                if k in self.allowed_types and v is not None:
-                    assert isinstance(v, self.allowed_types[k])
+                self.__check_values__(k, v)
         for k, v in kwargs.items():
-            if k not in self.allowed_keys:
-                raise Exception(f"Cannot set key '{k}' in a DocDict")
-            if k in self.allowed_types and v is not None:
-                assert isinstance(v, self.allowed_types[k])
+            self.__check_values__(k, v)
         super().__init__(*args, **kwargs)
 
     def __setitem__(self, key, value):
-        if key not in self.allowed_keys:
-            raise Exception(f"Cannot set key '{key}' in a DocDict")
-        if key in self.allowed_types and value is not None:
-            assert isinstance(value, self.allowed_types[key])
+        self.__check_values__(key, value)
         super().__setitem__(key, value)
 
 

@@ -79,7 +79,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class WDoc:
     "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
 
-    VERSION: str = "1.1.9"
+    VERSION: str = "1.1.10"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
@@ -116,7 +116,7 @@ class WDoc:
         query_eval_check_number: int = 4,
         query_relevancy: float = 0.1,
 
-        summary_n_recursion: int = 1,
+        summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",
 
         llm_verbosity: Union[bool, int] = False,
@@ -131,10 +131,28 @@ class WDoc:
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = False,
+        silent: bool = False,
+        version: bool = False,
 
         **cli_kwargs,
     ) -> None:
         "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
+        if version:
+            print(self.VERSION)
+            return
+        if notification_callback is not None:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                out = notification_callback(text)
+                assert out == text, "The notification callback must return the same string"
+                return out
+            ntfy("Starting WDoc")
+        else:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                return text
+        self.ntfy = ntfy
+
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
@@ -142,7 +160,7 @@ class WDoc:
                     def p(message: str) -> None:
                         "print error, in red if possible"
                         try:
-                            red(message)
+                            red(self.ntfy(message))
                         except Exception as err:
                             print(message)
                     p("\n--verbose was used so opening debug console at the "
@@ -158,13 +176,26 @@ class WDoc:
             sys.excepthook = handle_exception
             faulthandler.enable()
 
+        elif notification_callback:
+            def print_exception(exc_type, exc_value, exc_traceback):
+                if not issubclass(exc_type, KeyboardInterrupt):
+                    message = "An error has occured:\n"
+                    message += "\n".join([line for line in traceback.format_tb(exc_traceback)])
+                    message += "\n" + str(exc_type) + " : " + str(exc_value)
+                    self.ntfy(message)
+                    sys.exit(1)
+
+            sys.excepthook = print_exception
+            faulthandler.enable()
+
         red(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
         for k in cli_kwargs:
             if k not in self.allowed_extra_args:
                 raise Exception(
-                    red(f"Found unexpected keyword argument: '{k}'"))
+                    red(f"Found unexpected keyword argument: '{k}'\nThe allowed arguments are {','.join(self.allowed_extra_args)}")
+                        )
 
             # type checking of extra args
             if os.environ["WDOC_TYPECHECKING"] in ["crash", "warn"]:
@@ -375,19 +406,6 @@ class WDoc:
             else:
                 raise Exception(
                     red(f"Can't find the price of {query_eval_modelname}"))
-
-        if notification_callback is not None:
-            @optional_typecheck
-            def ntfy(text: str) -> str:
-                out = notification_callback(text)
-                assert out == text, "The notification callback must return the same string"
-                return out
-            ntfy("Starting WDoc")
-        else:
-            @optional_typecheck
-            def ntfy(text: str) -> str:
-                return text
-            self.ntfy = ntfy
 
         if is_verbose:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -786,6 +804,7 @@ class WDoc:
         if llmcallback.total_tokens != results['doc_total_tokens']:
             red(
                 f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+        self.summary_results = results
         return results
 
     @optional_typecheck
@@ -1196,6 +1215,7 @@ class WDoc:
                 eval_args["n"] = self.query_eval_check_number
             else:
                 red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
+                assert self.query_eval_modelbackend != "openai"
             if "max_tokens" in self.eval_llm_params:
                 eval_args["max_tokens"] = 2
             else:
@@ -1607,6 +1627,7 @@ class WDoc:
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
+            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
             assert len(

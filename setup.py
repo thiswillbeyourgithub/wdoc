@@ -31,15 +31,11 @@ with open("README.md", "r") as readme:
         '<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>',
         '![icon](https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true)',
     )
-    long_description = long_description.replace(
-        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true" width="256"></p>',
-        '![example](https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true)',
-    )
     assert 'align="center"' not in long_description
 
 setup(
     name="wdoc",
-    version="1.1.9",
+    version="1.1.10",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",

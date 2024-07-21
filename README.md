@@ -1,5 +1,8 @@
 <p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>
 
+> *I'm WDoc. I solve RAG problems.*
+> - WDoc, imitating Winston "The Wolf" Wolf
+
 # WDoc
 
 * **Goal and project specifications** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
@@ -114,9 +117,56 @@
 6. To know more about each argument supported by each filetype, `wdoc --help`
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by WDoc. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and WDoc automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
-9. Now say you just want to summarize a webpage: `wdoc summary --path="https://arstechnica.com/science/2024/06/to-pee-or-not-to-pee-that-is-a-question-for-the-bladder-and-the-brain/"`.
+9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc summary --path 'https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="english" --disable_md_printing`:
+> # Summary
+> ## https://www.youtube.com/watch?v=arj7oStGLkU
+> - The speaker, Tim Urban, was a government major in college who had to write many papers
+> - *He claims* his typical work pattern for papers was:
+>     - Planning to spread work evenly
+>     - Actually procrastinating until the last minute
+> - For his 90-page senior thesis:
+>     - Planned to work steadily over a year
+>     - *Actually* ended up writing 90 pages in 72 hours before the deadline
+>     - Pulled two all-nighters
+>     - Resulted in a 'very, very bad thesis'
+> - Urban is now a writer-blogger for 'Wait But Why'
+> - He wrote about procrastination to explain it to non-procrastinators
+> - *Humorously claims* to have done brain scans comparing procrastinator and non-procrastinator brains
+> - Introduces concept of 'Instant Gratification Monkey' in procrastinator's brain
+>     - Monkey takes control from the Rational Decision-Maker
+>     - Leads to unproductive activities like reading Wikipedia, checking fridge, YouTube spirals
+> - Monkey characteristics:
+>     - Lives in the present moment
+>     - No memory of past or knowledge of future
+>     - Only cares about 'easy and fun'
+> - Rational Decision-Maker:
+>     - Allows long-term planning and big picture thinking
+>     - Wants to do what makes sense in the moment
+> - 'Dark Playground': where procrastinators spend time on leisure activities when they shouldn't
+>     - Filled with guilt, dread, anxiety, self-hatred
+> - 'Panic Monster': procrastinator's guardian angel
+>     - Wakes up when deadlines are close or there's danger of embarrassment
+>     - Only thing the Monkey fears
+> - Urban relates his own experience procrastinating on preparing this TED talk
+> - *Claims* thousands of people emailed him about having the same procrastination problem
+> - Two types of procrastination:
+>     - 1. Short-term with deadlines (contained by Panic Monster)
+>     - 2. Long-term without deadlines (more damaging)
+>         - Affects self-starter careers, personal life, health, relationships
+>         - Can lead to long-term unhappiness and regrets
+> - *Urban believes* all people are procrastinators to some degree
+> - Presents 'Life Calendar': visual representation of weeks in a 90-year life
+> - Encourages audience to:
+>     - Think about what they're procrastinating on
+>     - Stay aware of the Instant Gratification Monkey
+>     - Start addressing procrastination soon
+> - *Humorously* suggests not starting today, but 'sometime soon'
+> Tokens used for https://www.youtube.com/watch?v=arj7oStGLkU: '4365' ($0.00060)
+> Total cost of those summaries: '4365' ($0.00060, estimate was $0.00028)
+> Total time saved by those summaries: 8.4 minutes
+> Done summarizing.
 
-<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/summary.png?raw=true" width="256"></p>
+
 
 ## Getting started
 *Tested on python 3.10 and 3.11.7*
