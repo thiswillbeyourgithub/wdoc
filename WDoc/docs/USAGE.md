@@ -227,6 +227,9 @@
 * `--disable_md_printing`: bool, default `True`
     * if True, instead of using rich to display some information, default to simpler colored prints.
 
+* `--version`: bool
+    display the version and exit
+
 * `--cli_kwargs`: dict, optional
     * Any remaining keyword argument will be parsed as a loader
     specific argument ((see below)[#loader-specific-arguments]).

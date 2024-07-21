@@ -131,10 +131,14 @@ class WDoc:
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = False,
+        version: bool = False,
 
         **cli_kwargs,
     ) -> None:
         "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
+        if version:
+            print(self.VERSION)
+            return
         if notification_callback is not None:
             @optional_typecheck
             def ntfy(text: str) -> str:
