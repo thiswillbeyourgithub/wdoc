@@ -135,6 +135,19 @@ class WDoc:
         **cli_kwargs,
     ) -> None:
         "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
+        if notification_callback is not None:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                out = notification_callback(text)
+                assert out == text, "The notification callback must return the same string"
+                return out
+            ntfy("Starting WDoc")
+        else:
+            @optional_typecheck
+            def ntfy(text: str) -> str:
+                return text
+        self.ntfy = ntfy
+
         if debug:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
@@ -142,7 +155,7 @@ class WDoc:
                     def p(message: str) -> None:
                         "print error, in red if possible"
                         try:
-                            red(message)
+                            red(self.ntfy(message))
                         except Exception as err:
                             print(message)
                     p("\n--verbose was used so opening debug console at the "
@@ -375,19 +388,6 @@ class WDoc:
             else:
                 raise Exception(
                     red(f"Can't find the price of {query_eval_modelname}"))
-
-        if notification_callback is not None:
-            @optional_typecheck
-            def ntfy(text: str) -> str:
-                out = notification_callback(text)
-                assert out == text, "The notification callback must return the same string"
-                return out
-            ntfy("Starting WDoc")
-        else:
-            @optional_typecheck
-            def ntfy(text: str) -> str:
-                return text
-        self.ntfy = ntfy
 
         if is_verbose:
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
