@@ -796,8 +796,6 @@ class WDoc:
             self.ntfy(
                 f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
 
-        assert len(
-            self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
         total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
             self.llm_price[1] * llmcallback.completion_tokens
@@ -1634,8 +1632,6 @@ class WDoc:
             red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {extra}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
-            assert len(
-                self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
             llmcallback = self.llm.callbacks[0]
             total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
                 self.llm_price[1] * llmcallback.completion_tokens
@@ -1645,9 +1641,6 @@ class WDoc:
                 combine_cost = total_cost - cost_before_combine
                 yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.1f}")
 
-
-            assert len(
-                self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
             evalllmcallback = self.eval_llm.callbacks[0]
             wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
                 self.query_evalllm_price[1] * evalllmcallback.completion_tokens
