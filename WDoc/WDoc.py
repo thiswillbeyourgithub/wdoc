@@ -1539,6 +1539,9 @@ class WDoc:
             )
 
             if len(intermediate_answers) > 1:
+                llmcallback = self.llm.callbacks[0]
+                cost_before_combine = self.llm_price[0] * llmcallback.prompt_tokens + \
+                self.llm_price[1] * llmcallback.completion_tokens
                 all_intermediate_answers = [intermediate_answers]
                 # group the intermediate answers by batch, then do a batch reduce mapping
                 # each batch is at least 2 intermediate answers and maxes at
@@ -1637,6 +1640,10 @@ class WDoc:
                 self.llm_price[1] * llmcallback.completion_tokens
             yel(
                 f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+            if "cost_before_combine" in locals():
+                combine_cost = total_cost - cost_before_combine
+                yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.1f}")
+
 
             assert len(
                 self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
