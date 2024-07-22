@@ -1627,7 +1627,7 @@ class WDoc:
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
-            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1}")
+            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {('(' + '->'.join([len(ia) for ia in all_intermediate_answers]) + ')') if len(all_intermediate_answers) > 1 else ''}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
             assert len(
