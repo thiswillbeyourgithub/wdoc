@@ -34,7 +34,7 @@ from .utils.misc import (
     set_func_signature
 )
 from .utils.prompts import prompts
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer, collate_intermediate_answers
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -1518,24 +1518,14 @@ class WDoc:
             intermediate_answers = output["intermediate_answers"]
 
             # next step is to combine the intermediate answers into a single answer
-            combine_answers = (
-                prompts.combine
-                | self.llm
-                | StrOutputParser()
-            )
             final_answer_chain = RunnablePassthrough.assign(
                 final_answer=RunnablePassthrough.assign(
                     question=lambda inputs: inputs["question_to_answer"],
-                    # remove answers deemed irrelevant
-                    intermediate_answers=lambda inputs: "\n".join(
-                        [
-                            inp
-                            for inp in inputs["intermediate_answers"]
-                            if check_intermediate_answer(inp)
-                        ]
-                    )
+                    intermediate_answers=lambda inputs:  collate_intermediate_answers(inputs["intermediate_answers"]),
                 )
-                | combine_answers,
+                | prompts.combine
+                | self.llm
+                | StrOutputParser()
             )
 
             if len(intermediate_answers) > 1:
@@ -1634,7 +1624,14 @@ class WDoc:
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
-            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {('(' + '->'.join([len(ia) for ia in all_intermediate_answers]) + ')') if len(all_intermediate_answers) > 1 else ''}")
+            if len(all_intermediate_answers) > 1:
+                extra = '->'.join(
+                    [str(len(ia)) for ia in all_intermediate_answers]
+                )
+                extra = f"({extra})"
+            else:
+                extra = ""
+            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {extra}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
             assert len(

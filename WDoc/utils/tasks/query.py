@@ -114,6 +114,19 @@ def parse_eval_output(output: str) -> str:
 
 
 @optional_typecheck
+def collate_intermediate_answers(list_ia: List[str]) -> str:
+    """write the intermediate answers in a single string to be
+    combined by the LLM"""
+    # remove answers deemed irrelevant
+    list_ia = [ia for ia in list_ia if check_intermediate_answer(ia)]
+
+    out = "Intermediate answers:"
+    for iia, ia in enumerate(list_ia):
+        out += f"[{iia + 1}]:\n{ia}\n---\n"
+    return out
+
+
+@optional_typecheck
 def pbar_chain(
     llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
     len_func: str,
