@@ -1548,6 +1548,7 @@ class WDoc:
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
                 batch_tkn_size = 1000
+                max_batch_size = 10
                 pbar = tqdm(
                     desc="Combibing answers",
                     unit="answer",
@@ -1562,6 +1563,9 @@ class WDoc:
                         if len(batches[-1]) < 2:
                             # make sure there's at least 2 per batch
                             batches[-1].append(ia)
+                        elif len(batches[-1]) > max_batch_size:
+                            # make sure there's not too many intermediate answers
+                            batches.append([ia])
                         elif sum([get_tkn_length(b) for b in batches[-1]]) >= batch_tkn_size:
                             # cap batch size to the max tkn size
                             batches.append([ia])
