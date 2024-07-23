@@ -34,7 +34,7 @@ from .utils.misc import (
     set_func_signature
 )
 from .utils.prompts import prompts
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer
+from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer, collate_intermediate_answers
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -796,8 +796,6 @@ class WDoc:
             self.ntfy(
                 f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes")
 
-        assert len(
-            self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
         llmcallback = self.llm.callbacks[0]
         total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
             self.llm_price[1] * llmcallback.completion_tokens
@@ -1518,33 +1516,27 @@ class WDoc:
             intermediate_answers = output["intermediate_answers"]
 
             # next step is to combine the intermediate answers into a single answer
-            combine_answers = (
-                prompts.combine
-                | self.llm
-                | StrOutputParser()
-            )
             final_answer_chain = RunnablePassthrough.assign(
                 final_answer=RunnablePassthrough.assign(
                     question=lambda inputs: inputs["question_to_answer"],
-                    # remove answers deemed irrelevant
-                    intermediate_answers=lambda inputs: "\n".join(
-                        [
-                            inp
-                            for inp in inputs["intermediate_answers"]
-                            if check_intermediate_answer(inp)
-                        ]
-                    )
+                    intermediate_answers=lambda inputs:  collate_intermediate_answers(inputs["intermediate_answers"]),
                 )
-                | combine_answers,
+                | prompts.combine
+                | self.llm
+                | StrOutputParser()
             )
 
             if len(intermediate_answers) > 1:
+                llmcallback = self.llm.callbacks[0]
+                cost_before_combine = self.llm_price[0] * llmcallback.prompt_tokens + \
+                self.llm_price[1] * llmcallback.completion_tokens
                 all_intermediate_answers = [intermediate_answers]
                 # group the intermediate answers by batch, then do a batch reduce mapping
                 # each batch is at least 2 intermediate answers and maxes at
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
                 batch_tkn_size = 1000
+                max_batch_size = 10
                 pbar = tqdm(
                     desc="Combibing answers",
                     unit="answer",
@@ -1559,6 +1551,9 @@ class WDoc:
                         if len(batches[-1]) < 2:
                             # make sure there's at least 2 per batch
                             batches[-1].append(ia)
+                        elif len(batches[-1]) > max_batch_size:
+                            # make sure there's not too many intermediate answers
+                            batches.append([ia])
                         elif sum([get_tkn_length(b) for b in batches[-1]]) >= batch_tkn_size:
                             # cap batch size to the max tkn size
                             batches.append([ia])
@@ -1627,19 +1622,25 @@ class WDoc:
                 f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
             red(
                 f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
-            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1}")
+            if len(all_intermediate_answers) > 1:
+                extra = '->'.join(
+                    [str(len(ia)) for ia in all_intermediate_answers]
+                )
+                extra = f"({extra})"
+            else:
+                extra = ""
+            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {extra}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
-            assert len(
-                self.llm.callbacks) == 1, "Unexpected number of callbacks for llm"
             llmcallback = self.llm.callbacks[0]
             total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
                 self.llm_price[1] * llmcallback.completion_tokens
             yel(
                 f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+            if "cost_before_combine" in locals():
+                combine_cost = total_cost - cost_before_combine
+                yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.1f}")
 
-            assert len(
-                self.eval_llm.callbacks) == 1, "Unexpected number of callbacks for eval_llm"
             evalllmcallback = self.eval_llm.callbacks[0]
             wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
                 self.query_evalllm_price[1] * evalllmcallback.completion_tokens

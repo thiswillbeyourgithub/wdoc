@@ -1,0 +1,5 @@
+# The topic to receive URLs for summarization
+topic_receive="WDoc_summarize"
+
+# The topic to send summarized results
+topic_send="WDoc_summaries"

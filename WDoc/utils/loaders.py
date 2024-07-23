@@ -238,6 +238,10 @@ def load_one_doc(
             debug=debug,
             text_splitter=text_splitter,
             file_hash=file_hash,
+            doccheck_min_lang_prob=doccheck_min_lang_prob,
+            doccheck_min_token=doccheck_min_token,
+            doccheck_max_token=doccheck_max_token,
+            doccheck_max_lines=doccheck_max_lines,
             **kwargs,
         )
 
@@ -770,9 +774,10 @@ def load_anki(
             strict=False,
         )[0]
     )
-    notes = notes[~notes["text"].str.contains("\[IMAGE_")]
-    notes = notes[~notes["text"].str.contains("\[SOUND_")]
-    notes = notes[~notes["text"].str.contains("\[LINK_")]
+    # remove notes that contain an image, sound or link
+    # notes = notes[~notes["text"].str.contains("\[IMAGE_")]
+    # notes = notes[~notes["text"].str.contains("\[SOUND_")]
+    # notes = notes[~notes["text"].str.contains("\[LINK_")]
     notes["text"] = notes["text"].apply(lambda x: x.strip())
     notes = notes[notes["text"].ne('')]  # remove empty text
     notes.drop_duplicates(subset="text", inplace=True)
