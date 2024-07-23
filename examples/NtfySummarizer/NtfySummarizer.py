@@ -1,3 +1,4 @@
+import json
 from typing import Union
 import os
 from pathlib import Path, PosixPath
@@ -7,6 +8,14 @@ from functools import partial
 from WDoc import WDoc
 import fire
 from beartype import beartype
+
+log_file = Path(__file__) / "logs.txt"
+
+@beartype
+def log(text: str) -> None:
+    "minimalist log file"
+    with log_file.open("a") as lf:
+        lf.write(f"\n{int(time.time())}: {text}")
 
 
 @beartype
@@ -83,9 +92,11 @@ def main(
         AssertionError: If NTFY_MESSAGE is not in os.environ, or if the message format is incorrect.
         Exception: For any errors that occur during processing.
     """
+    log(f"Started with topic: {topic}")
     topic = topic.strip()
     assert "NTFY_MESSAGE" in os.environ, "missing NTFY_MESSAGE in os.environ"
     message: str = os.environ["NTFY_MESSAGE"]
+    log(f"Message: {message}")
     sn = partial(
         _send_notif,
         topic=topic,
@@ -99,6 +110,7 @@ def main(
             filetype="auto"
         else:
             filetype, url = message.split(" ", 1)
+        log(f"Filetype: {filetype} ; Url: {url}")
 
         assert topic
         assert message
@@ -109,7 +121,8 @@ def main(
             path=url,
             # notification_callback=sn,
         )
-        results = instance.summary_results
+        results: dict = instance.summary_results
+        log("Summary:\n" + json.dumps(results))
 
         md = results["summary"]
 
@@ -137,8 +150,11 @@ Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
         # except Exception as err:
         #     sn(message=full_message)
         #     raise
+        log("Done\n")
     except Exception as err:
-        sn(message=f"Error for message '{message}':\n{str(err)}")
+        err_mess = f"Error for message '{message}':\n{str(err)}"
+        log(err_mess)
+        sn(message=err_mess)
         raise
 
 if __name__ == "__main__":
