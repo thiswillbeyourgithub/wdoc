@@ -20,6 +20,7 @@
   - [Supported filetypes](#supported-filetypes)
   - [Supported tasks](#supported-tasks)
   - [Walkthrough and examples](#walkthrough-and-examples)
+- [Scripts made with WDoc](#scripts-made-with-wdoc)
 - [Getting started](#getting-started)
 - [FAQ](#faq)
 - [Notes](#notes)
@@ -44,7 +45,7 @@
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
-* **Scriptable / Extensible**: You can use WDoc in other python project using `--import_mode`.
+* **Scriptable / Extensible**: You can use WDoc in other python project using `--import_mode`. Take a look at the examples [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
@@ -181,6 +182,9 @@
 * If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `wdoc --help`
 * For shell autocompletion: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
+
+## Scripts made with WDoc
+* [Ntfy Summarizer](examples/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
 
 ## FAQ
 * **Who is this for?**
