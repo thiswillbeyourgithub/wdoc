@@ -1,6 +1,6 @@
 # TheFiche
 
-TheFiche is a Python module that generates and exports Logseq pages based on WDoc queries. It provides functionality to create structured Logseq pages with content generated from WDoc queries, including metadata and properties.
+TheFiche is a script that generates and exports [Logseq](https://github.com/logseq/logseq) pages based on [WDoc](https://github.com/thiswillbeyourgithub/WDoc/) queries. It provides functionality to create structured Logseq pages with content generated from WDoc queries, including metadata and properties.
 
 ## Features
 
@@ -12,17 +12,15 @@ TheFiche is a Python module that generates and exports Logseq pages based on WDo
 ## Installation
 
 To use TheFiche, you need to have WDoc and its dependencies installed. Make sure you have the following prerequisites:
-
-- Python 3.7+
-- WDoc library
-- LogseqMarkdownParser
+- WDoc
+- [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) (by me also)
 - fire
 - beartype
 
 You can install the required dependencies using pip:
 
 ```
-pip install wdoc logseq-markdown-parser fire beartype
+python -m pip install -U WDoc LogseqMarkdownParser fire beartype
 ```
 
 ## Usage
@@ -66,15 +64,3 @@ TheFiche generates a Logseq page with the following components:
   - Number of documents found, filtered, and used
   - Query details and timestamp
   - TheFiche version and execution date
-
-## License
-
-[Include license information here]
-
-## Contributing
-
-[Include contribution guidelines or link to CONTRIBUTING.md]
-
-## Support
-
-[Include support information or contact details]
