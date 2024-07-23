@@ -9,7 +9,7 @@ from WDoc import WDoc
 import fire
 from beartype import beartype
 
-log_file = Path(__file__) / "logs.txt"
+log_file = Path(__file__).parent / "logs.txt"
 
 @beartype
 def log(text: str) -> None:
