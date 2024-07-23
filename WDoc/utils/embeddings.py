@@ -267,7 +267,7 @@ def load_embeddings(
     timeout = 10
     list_of_files = {f.stem for f in embeddings_cache.iterdir()
                      if "faiss_index" in f.suffix}
-    for doc in tqdm(docs, desc="Loading embeddings from cache"):
+    for doc in tqdm(docs, desc="Loading embeddings from cache", disable=not is_verbose):
         if doc.metadata["content_hash"] in list_of_files:
             fi = embeddings_cache / \
                 str(doc.metadata["content_hash"] + ".faiss_index")
@@ -355,7 +355,7 @@ def load_embeddings(
         assert all([t.is_alive() for t in saver_workers]
                    ), "Saver workers failed to load"
 
-        for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch"):
+        for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch", disable=not is_verbose):
             whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
                 to_embed[batch[0]:batch[1]],

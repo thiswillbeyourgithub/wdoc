@@ -1541,6 +1541,7 @@ class WDoc:
                     desc="Combibing answers",
                     unit="answer",
                     total=len(intermediate_answers),
+                    disable=not is_verbose,
                 )
                 while True:
                     batches = [[]]
