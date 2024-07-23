@@ -1,3 +1,10 @@
+"""
+TheFiche: A module for generating and exporting Logseq pages based on WDoc queries.
+
+This module provides functionality to create structured Logseq pages
+with content generated from WDoc queries, including metadata and properties.
+"""
+
 import json
 import LogseqMarkdownParser
 import time
@@ -16,6 +23,12 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 @beartype
 class TheFiche:
+    """
+    A class for generating and exporting Logseq pages based on WDoc queries.
+
+    This class encapsulates the process of creating a Logseq page with content
+    generated from a WDoc query, including metadata and properties.
+    """
     def __init__(
         self,
         query: str,
@@ -24,6 +37,19 @@ class TheFiche:
         top_k: int = 300,
         **kwargs,
         ):
+        """
+        Initialize a TheFiche instance and generate a Logseq page.
+
+        Args:
+            query (str): The query to be processed by WDoc.
+            logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
+            overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False.
+            top_k (int, optional): The number of top documents to consider. Defaults to 300.
+            **kwargs: Additional keyword arguments to pass to WDoc.
+
+        Raises:
+            AssertionError: If the file exists and overwrite is False, or if the ratio of used/found documents is too high.
+        """
         assert "top_k" not in kwargs
         logseq_page = Path(logseq_page)
         if not overwrite:
