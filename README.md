@@ -44,7 +44,7 @@
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
-* **Scriptable**: You can use WDoc in other python project using `--import_mode`. 
+* **Scriptable / Extensible**: You can use WDoc in other python project using `--import_mode`.
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
