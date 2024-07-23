@@ -96,7 +96,7 @@ class TheFiche:
         content = LogseqMarkdownParser.LogseqPage(
             text,
             check_parsing=False,
-            verbose=True,
+            verbose=False,
         )
         content.page_properties.update(props)
         assert content.page_properties
