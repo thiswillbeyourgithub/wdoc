@@ -5,14 +5,23 @@
 
 # WDoc
 
-* **Goal and project specifications** use [LangChain](https://python.langchain.com/) to summarize, search or query documents. I'm a medical student so I need to be able to query from **tens of thousands** of documents, of different types ([Supported filetypes](#Supported-filetypes)). I also have little free time so I needed a tailor made summary feature to keep up with the news.
-* **Current status**: **still under development**.
-    * I use it almost daily and have been for months now.
-    * Expect some breakage but they can be fixed usually in a few minutes if you open an issue here.
-    * The main branch is usually fine but the dev branch has more features.
-    * I accept feature requests and pull requests.
-    * Issues are extremely appreciated for any reason including typos etc.
-    * Prefer asking me before making a PR because I have many improvements in the pipeline but do this on my spare time. Do tell me if you have specific needs!
+WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources.
+
+* **Goal and project specifications**: WDoc uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes). The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
+
+* **Current status**: **Under active development**
+    * Used daily by the developer for several months
+    * May have some instabilities, but issues can usually be resolved quickly
+    * The main branch is stable, while the dev branch offers more features
+    * Open to feature requests and pull requests
+    * All feedback, including reports of typos, is highly appreciated
+    * Please consult the developer before making a PR, as there may be ongoing improvements in the pipeline
+
+* **Key Features**:
+    * Supports multiple file types for comprehensive document analysis
+    * Utilizes both strong and query evaluation LLMs for accurate results
+    * Customizable summarization capabilities
+    * Efficient handling of large document corpora
 
 ### Table of contents
 - [Features](#features)
