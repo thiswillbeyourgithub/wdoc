@@ -184,6 +184,7 @@
 * For shell autocompletion: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
 
 ## Scripts made with WDoc
+* *More to come in [the examples folder](./examples/)*
 * [Ntfy Summarizer](examples/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
 
 ## FAQ
