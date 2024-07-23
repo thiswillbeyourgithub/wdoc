@@ -770,9 +770,10 @@ def load_anki(
             strict=False,
         )[0]
     )
-    notes = notes[~notes["text"].str.contains("\[IMAGE_")]
-    notes = notes[~notes["text"].str.contains("\[SOUND_")]
-    notes = notes[~notes["text"].str.contains("\[LINK_")]
+    # remove notes that contain an image, sound or link
+    # notes = notes[~notes["text"].str.contains("\[IMAGE_")]
+    # notes = notes[~notes["text"].str.contains("\[SOUND_")]
+    # notes = notes[~notes["text"].str.contains("\[LINK_")]
     notes["text"] = notes["text"].apply(lambda x: x.strip())
     notes = notes[notes["text"].ne('')]  # remove empty text
     notes.drop_duplicates(subset="text", inplace=True)
