@@ -238,6 +238,10 @@ def load_one_doc(
             debug=debug,
             text_splitter=text_splitter,
             file_hash=file_hash,
+            doccheck_min_lang_prob=doccheck_min_lang_prob,
+            doccheck_min_token=doccheck_min_token,
+            doccheck_max_token=doccheck_max_token,
+            doccheck_max_lines=doccheck_max_lines,
             **kwargs,
         )
 
