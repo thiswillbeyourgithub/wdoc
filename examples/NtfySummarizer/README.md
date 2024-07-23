@@ -36,6 +36,14 @@ This tool allows you to:
    ```
    This command sets up the environment variables and starts listening for incoming URLs on the specified topic.
 
+Alternatively, you can use the systemctl by putting this in /etc/ntfy/client.yml:
+```
+subscribe:
+  - topic: [your 'topics_receive']
+    command: /PATH/TO/HERE/script.sh
+```
+Then `sudo systemctl restart ntfy-client.service`.
+
 2. Send a URL to summarize:
    Use ntfy.sh to send a message to the `$topic_receive` topic. The message should be either:
    - A URL starting with "http" or "https"
