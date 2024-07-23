@@ -195,6 +195,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 ## Scripts made with WDoc
 * *More to come in [the examples folder](./examples/)*
 * [Ntfy Summarizer](examples/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
+* [TheFiche](examples/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
 
 ## FAQ
 * **Who is this for?**
