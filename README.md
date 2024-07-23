@@ -26,6 +26,9 @@
   - [Known issues](#known-issues)
 
 ## Features
+* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
+* **100+ LLMs**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
+* **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
     1. The documents are retrieved using embedding
     2. Then a weak LLM model ("Evaluator") is used to tell which of those document is not relevant
@@ -37,26 +40,21 @@
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
     * The summary can be in the same language as the documents or directly translated.
-* **Multiple LLM providers**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
-* **Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
-* **Many filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
+* **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
-* **Documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`.
+* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
+* **Scriptable**: You can use WDoc in other python project using `--import_mode`. 
+* **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Sophisticated faiss saver**: [faiss](https://github.com/facebookresearch/faiss/wiki) is used to quickly find the documents that match an embedding. But instead of storing as a single file, WDoc splits the index into 1 document long index identified by deterministic hashes. When creating a new index, any overlapping document will be automatically reloaded instead of recomputed.
-* **Easy model testing** Include an LLM name matcher that fuzzy finds the most appropriate model given an name.
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 10 (!) different loaders are used, and the best according to a parsing scorer is kept.
-* **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Document filtering**: based on regex for document content or metadata.
-* **Fast**: Parallel document parsing and embedding.
+* **Fast**: Parallel document loading, parsing, embeddings, querying, etc.
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
-* **Static typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
-* **Scriptable**: You can use WDoc in other python project using `--import_mode`
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
-* **Fully documented**: I work hard to maintain an exhaustive documentation at `wdoc --help`
-* Very customizable, with a friendly dev! Just open an issue if you have a feature request or anything else.
+* **Hacker mindset**: I'm a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Planned features
 *(These don't include improvements, bugfixes, refactoring etc.)*
@@ -66,7 +64,6 @@
     * More configurable HyDE.
     * Web search retriever, online information lookup via jina.ai reader and search.
     * LLM powered synonym expansion for embeddings search.
-* Investigate switching to Milvus Lite instead of handling split faiss indexes.
 * A way to specify at indexing time how trusting you are of a given set of document.
 * A way to open the documents automatically, based on the platform used. For ex if okular is installed, open pdfs directly at the appropriate page.
 * Improve the scriptability of WDoc. Add examples for how you use it with Logseq.
@@ -74,7 +71,6 @@
     * Add a gradio GUI.
 * Include the possible whisper/deepgram extra expenses when counting costs.
 * Add support for user defined loaders.
-* Add support for custom user prompt.
 * Automatically caption document images using an LLM, especially nice for anki cards.
 
 ### Supported filetypes
@@ -118,6 +114,7 @@
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by WDoc. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and WDoc automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
 9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc summary --path 'https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="english" --disable_md_printing`:
+
 > # Summary
 > ## https://www.youtube.com/watch?v=arj7oStGLkU
 > - The speaker, Tim Urban, was a government major in college who had to write many papers
