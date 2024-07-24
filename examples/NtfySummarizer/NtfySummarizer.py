@@ -9,6 +9,8 @@ from WDoc import WDoc
 import fire
 from beartype import beartype
 
+VERSION = "0.1"
+
 log_file = Path(__file__).parent / "logs.txt"
 
 @beartype
@@ -92,7 +94,7 @@ def main(
         AssertionError: If NTFY_MESSAGE is not in os.environ, or if the message format is incorrect.
         Exception: For any errors that occur during processing.
     """
-    log(f"Started with topic: {topic}")
+    log(f"Started with topic: '{topic}'. Version: {VERSION}")
     topic = topic.strip()
     assert "NTFY_MESSAGE" in os.environ, "missing NTFY_MESSAGE in os.environ"
     message: str = os.environ["NTFY_MESSAGE"]
