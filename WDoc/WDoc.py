@@ -390,7 +390,7 @@ class WDoc:
         if query_eval_modelname is not None:
             if llms_api_bases["query_eval_model"]:
                 red(f"Disabling price computation for query_eval_model because api_base was modified")
-                self.query_evalllm_price = [0, 0]
+                self.query_evalllm_price = [0.0, 0.0]
             elif query_eval_modelname in litellm.model_cost:
                 self.query_evalllm_price = [
                     litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
