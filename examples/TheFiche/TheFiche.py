@@ -66,6 +66,15 @@ class TheFiche:
 
         all_kwargs = kwargs.copy()
         all_kwargs.update({"top_k": top_k})
+
+        if len(fiche["all_intermediate_answers"]) > 1:
+                extra = '->'.join(
+                    [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
+                )
+                extra = f"({extra})"
+            else:
+                extra = ""
+
         props = {
             "collapsed": "false",
             "block_type": "WDoc_the_fiche",
@@ -76,7 +85,7 @@ class TheFiche:
             "WDoc_n_docs_found": len(fiche["unfiltered_docs"]),
             "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
             "WDoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
-            "WDoc_n_combine_steps": len(fiche["all_intermediate_answers"]),
+            "WDoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
             "WDoc_kwargs": json.dumps(all_kwargs),
             "the_fiche_version": VERSION,
             "the_fiche_date": today,
