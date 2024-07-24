@@ -813,6 +813,7 @@ class WDoc:
             red(
                 f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})")
         self.summary_results = results
+        self.latest_cost = total_cost
         return results
 
     @optional_typecheck
@@ -1432,6 +1433,15 @@ class WDoc:
                 md_printer("### All file paths")
                 md_printer("* " + "\n* ".join(all_filepaths))
 
+            evalllmcallback = self.eval_llm.callbacks[0]
+            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
+                self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+            yel(
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+
+            red(f"Total cost: ${wtotal_cost:.5f}")
+            self.latest_cost = wtotal_cost
+
         else:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @chain
@@ -1658,5 +1668,7 @@ class WDoc:
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
 
             red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
+
+            self.latest_cost = total_cost + wtotal_cost
 
             return output
