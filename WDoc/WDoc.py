@@ -1571,14 +1571,11 @@ class WDoc:
                         for a in final_answer_chain.batch(batch_args)
                     ]
                     all_intermediate_answers.append(intermediate_answers)
-                    pbar.n = pbar.total - len(intermediate_answers)
+                    pbar.n = pbar.total - len(intermediate_answers) + 1
                     if len(intermediate_answers) == 1:
-                        pbar.update(1)
                         break
 
-                # assert pbar.n == pbar.total
-                if pbar.n != pbar.total:
-                    red(f"For some reason pbar.n=={pbar.n} but pbar.total=={pbar.total}")
+                assert pbar.n == pbar.total
                 pbar.close()
                 assert len(all_intermediate_answers[-1]) == 1
 
