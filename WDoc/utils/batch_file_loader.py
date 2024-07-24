@@ -74,6 +74,7 @@ for k, v in inference_rules.items():
 
 @optional_typecheck
 def batch_load_doc(
+    llm_name: str,
     filetype: str,
     task: str,
     backend: str,
@@ -316,6 +317,7 @@ def batch_load_doc(
         n_jobs=n_jobs,
         backend=backend,
     )(delayed(load_one_doc_wrapped)(
+        llm_name=llm_name,
         loading_failure=loading_failure,
         task=task,
         temp_dir=temp_dir,

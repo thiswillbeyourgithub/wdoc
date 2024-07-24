@@ -471,6 +471,7 @@ class WDoc:
         # loading documents
         if not load_embeds_from:
             self.loaded_docs = batch_load_doc(
+                llm_name=f"{self.modelbackend}/{self.modelname}",
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,

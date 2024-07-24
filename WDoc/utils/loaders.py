@@ -201,6 +201,7 @@ sox_effects = [
 @optional_typecheck
 def load_one_doc(
     task: str,
+    llm_name: str,
     temp_dir: PosixPath,
     filetype: str,
     file_hash: str,
@@ -215,7 +216,7 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     debug = is_debug
-    text_splitter = get_splitter(task)
+    text_splitter = get_splitter(task, modelname=llm_name)
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
     assert expected_global_dir, f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
