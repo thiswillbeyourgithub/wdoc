@@ -445,3 +445,7 @@
         * `disabled`: disable typechecking.
         * `warn`: print a red warning if a typechecking fails.
         * `crash`: crash if a typechecking fails in any function.
+
+* `WDOC_NO_MODELNAME_MATCHING`
+    * If "true": will bypass the model name matching. Useful for exotic
+    or models that are fresh out of the oven.

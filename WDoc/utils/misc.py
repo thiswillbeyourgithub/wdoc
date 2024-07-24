@@ -282,9 +282,14 @@ def wrapped_model_name_matcher(model: str) -> str:
 @optional_typecheck
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
-    model has a known cost and print the matched name)"""
+    model has a known cost and print the matched name)
+    Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
+    """
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
+    if "WDOC_NO_MODELNAME_MATCHING" in os.environ and os.environ["WDOC_NO_MODELNAME_MATCHING"] == "true":
+        whi(f"Bypassing model name matching for model '{model}'")
+        return model
 
     out = wrapped_model_name_matcher(model)
     if out != model and is_verbose:
