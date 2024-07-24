@@ -28,6 +28,7 @@ Detailed instructions:
         - Don't use headers
         - Use bold for important concepts, and italic for epistemic markers
             - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
+        - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
     - Stay faithful to the tone of the author
     - You don't always have to use full sentences: you can ignore end of line punctuation etc
         - BUT it is more important to be unambiguous and truthful than concise
@@ -102,6 +103,7 @@ Detailed instructions:
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
+        - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
       - The present instructions are a good example of proper formatting.
     - Don't narrate, just do what I asked without acknowledging those rules.
     - Reuse acronyms without specifying what they mean.
