@@ -19,6 +19,7 @@ from langchain_community.cache import SQLiteCache
 
 from .logger import whi, red, yel
 from .typechecker import optional_typecheck
+from .flags import is_verbose
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -29,7 +30,7 @@ TESTING_LLM = "testing/testing"
 def load_llm(
     modelname: str,
     backend: str,
-    verbose: bool,
+    llm_verbosity: bool,
     llm_cache: Union[None, bool, SQLiteCache],
     api_base: Optional[str],
     private: bool,
@@ -41,7 +42,7 @@ def load_llm(
     assert "cache" not in extra_model_args
     if backend == "testing":
         assert modelname == "testing/testing"
-        if verbose:
+        if llm_verbosity:
             whi("Loading a fake LLM using the testing/ backend")
         lorem_ipsum = (
                 "Lorem ipsum dolor sit amet, consectetur adipiscing "
@@ -55,9 +56,9 @@ def load_llm(
                 "anim id est laborum."
         )
         llm = FakeListChatModel(
-            verbose=verbose,
+            verbose=llm_verbosity,
             responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
-            callbacks=[PriceCountingCallback(verbose=verbose)],
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             cache=False,
             **extra_model_args,
         )
@@ -65,7 +66,7 @@ def load_llm(
     else:
         assert "testing" not in modelname.lower()
 
-    if verbose:
+    if is_verbose:
         whi("Loading model via litellm")
 
     if private:
@@ -96,8 +97,8 @@ def load_llm(
         llm = ChatOpenAI(
             model_name=modelname.split("/", 1)[1],
             cache=llm_cache,
-            verbose=verbose,
-            callbacks=[PriceCountingCallback(verbose=verbose)],
+            verbose=llm_verbosity,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
         )
     else:
@@ -111,8 +112,8 @@ def load_llm(
             model_name=modelname,
             api_base=api_base,
             cache=False,  # llm_cache
-            verbose=verbose,
-            callbacks=[PriceCountingCallback(verbose=verbose)],
+            verbose=llm_verbosity,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
         )
         litellm.drop_params = True

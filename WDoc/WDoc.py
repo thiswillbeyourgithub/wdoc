@@ -463,7 +463,7 @@ class WDoc:
             backend=self.modelbackend,
             llm_cache=self.llm_cache,
             temperature=0,
-            verbose=self.llm_verbosity,
+            llm_verbosity=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
             private=self.private,
         )
