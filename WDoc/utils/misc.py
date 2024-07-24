@@ -27,7 +27,7 @@ from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
-from .logger import red, yel, cache_dir
+from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 
