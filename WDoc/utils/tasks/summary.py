@@ -4,7 +4,7 @@ Chain (logic) used to summarize a document.
 
 from textwrap import indent
 from tqdm import tqdm
-from typing import List, Tuple, Any, Union
+from typing import List, Any, Union, Tuple
 
 from langchain.docstore.document import Document
 
@@ -23,14 +23,14 @@ def do_summarize(
     llm_price: List[float],
     verbose: bool,
     n_recursion: int = 0,
-) -> Tuple[str, int, int, Union[float, int]]:
+) -> Tuple[str, int, Union[float, int], int, int]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
 
     llm.bind(verbose=verbose)
 
-    total_tokens = 0
+    total_tokens = [0, 0]
     total_cost = 0
 
     assert "[PROGRESS]" in metadata
@@ -64,7 +64,8 @@ def do_summarize(
         else:
             new_p = 0
             new_c = 0
-        total_tokens += new_p + new_c
+        total_tokens[0] += new_p
+        total_tokens[1] += new_c
         total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
 
         # the callback need to be updated manually when _generate is called
@@ -145,4 +146,4 @@ def do_summarize(
     else:
         outtext = "\n".join(summaries)
 
-    return outtext.rstrip(), n, total_tokens, total_cost
+    return outtext.rstrip(), n, total_cost, total_tokens[0], total_tokens[1]

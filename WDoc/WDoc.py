@@ -629,7 +629,7 @@ class WDoc:
                 metadata = "- Text metadata:\n    - Section number: [PROGRESS]\n"
 
             # summarize each chunk of the link and return one text
-            summary, n_chunk, doc_total_tokens, doc_total_cost = do_summarize(
+            summary, n_chunk, doc_total_cost, doc_total_tokens_in, doc_total_tokens_out = do_summarize(
                 docs=relevant_docs,
                 metadata=metadata,
                 language=self.summary_language,
@@ -681,7 +681,7 @@ class WDoc:
                         red(
                             f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}")
                         break
-                    summary_text, n_chunk, new_doc_total_tokens, new_doc_total_cost = do_summarize(
+                    summary_text, n_chunk, new_doc_total_cost, new_doc_total_tokens_in, new_doc_total_tokens_out = do_summarize(
                         docs=summary_docs,
                         metadata=metadata,
                         language=self.summary_language,
@@ -691,7 +691,8 @@ class WDoc:
                         verbose=self.llm_verbosity,
                         n_recursion=n_recur,
                     )
-                    doc_total_tokens += new_doc_total_tokens
+                    doc_total_tokens_in += new_doc_total_tokens_in
+                    doc_total_tokens_out += new_doc_total_tokens_out
                     doc_total_cost += new_doc_total_cost
 
                     # clean text again to compute the reading length
@@ -742,7 +743,8 @@ class WDoc:
                 md_printer(f'## {path}')
                 md_printer(recursive_summaries[best_sum_i])
 
-                red(f"Tokens used for {path}: '{doc_total_tokens}' (${doc_total_cost:.5f})")
+                doc_total_tokens = doc_total_tokens_in + doc_total_tokens_out
+                red(f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})")
 
             summary_tkn_length = get_tkn_length(
                 recursive_summaries[best_sum_i])
