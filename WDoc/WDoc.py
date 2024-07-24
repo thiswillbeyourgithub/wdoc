@@ -1232,7 +1232,7 @@ class WDoc:
                 modelname=self.query_eval_modelname,
                 backend=self.query_eval_modelbackend,
                 llm_cache=False,  # disables caching because another caching is used on top
-                verbose=self.llm_verbosity,
+                llm_verbosity=self.llm_verbosity,
                 temperature=0 if self.query_eval_check_number == 1 else 1,
                 api_base=self.llms_api_bases["query_eval_model"],
                 private=self.private,
