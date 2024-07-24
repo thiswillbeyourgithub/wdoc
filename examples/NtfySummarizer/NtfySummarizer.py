@@ -132,10 +132,10 @@ def main(
 Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
 Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
 """
-        message_shortened = message.split("://", 1)[1][:30].replace("/", "_")
 
         sn(message=full_message)
 
+        # message_shortened = message.split("://", 1)[1][:30].replace("/", "_")
         # (Path(__file__).parent / "summaries").mkdir(exist_ok=True)
         # path = Path(__file__).parent / "summaries" / f"{message_shortened}_{int(time.time())}.md"
         # with open(path, "w") as f:
