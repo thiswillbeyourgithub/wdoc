@@ -111,7 +111,8 @@ def load_llm(
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
-            cache=False,  # llm_cache
+            cache=False,
+            # cache=llm_cache,
             verbose=llm_verbosity,
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
