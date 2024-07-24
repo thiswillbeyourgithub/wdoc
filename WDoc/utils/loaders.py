@@ -766,13 +766,14 @@ def load_anki(
 
     # remove all media
     pbar(desc="Replacing media in anki")
-    notes["text"] = notes["text"].apply(
+    notes["medias"] = ""
+    notes["text"], notes["medias"] = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
             media=None,
             mode="remove_media",
             strict=False,
-        )[0]
+        )
     )
     # remove notes that contain an image, sound or link
     # notes = notes[~notes["text"].str.contains("\[IMAGE_")]
@@ -789,6 +790,12 @@ def load_anki(
     # load each card as a single document
     for nid, c in notes.iterrows():
         assert c["codeck"], f"empty card_deck for nid {nid}"
+        # turn the media into absolute paths
+        media = c["media"]
+        for k, v in media.items():
+            v = Path(original_db).parent / "collection.media" / v
+            if v.exists():
+                media[k] = v
         docs.append(
             Document(
                 page_content=c["text"],
@@ -797,6 +804,7 @@ def load_anki(
                     "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
+                    "anki_media": json.dumps(media),
                 },
             )
         )
