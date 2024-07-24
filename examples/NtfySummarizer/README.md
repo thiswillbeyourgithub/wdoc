@@ -56,6 +56,7 @@ Then `sudo systemctl restart ntfy-client.service`.
 
 - If the URL doesn't start with "http", the format `[filetype] [url]` is assumed.
 - The summary will include the original URL, a markdown-formatted summary, the total cost of generating the summary, and the estimated reading time saved.
+- Ntfy.sh ensures that if a message is more than 4096 bytes long it will be sent as a file attachment. We do that automatically here to make sure the file sent is as .md and not .txt
 
 ## Troubleshooting
 

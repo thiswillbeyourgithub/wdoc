@@ -137,23 +137,24 @@ def main(
 - Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
 """
 
-        sn(message=full_message)
-
-        # message_shortened = message.split("://", 1)[1][:30].replace("/", "_")
-        # (Path(__file__).parent / "summaries").mkdir(exist_ok=True)
-        # path = Path(__file__).parent / "summaries" / f"{message_shortened}_{int(time.time())}.md"
-        # with open(path, "w") as f:
-        #     f.write(full_message)
-        # try:
-        #     _send_file(
-        #         title="WDoc Summaries",
-        #         path=path,
-        #         topic=topic,
-        #         message=f"Summary of {url}",
-        #     )
-        # except Exception as err:
-        #     sn(message=full_message)
-        #     raise
+        if len(full_message.encode("utf-8")) <= 4000:
+            sn(message=full_message)
+        else:
+            message_shortened = message.split("://", 1)[1][:30].replace("/", "_")
+            (Path(__file__).parent / "summaries").mkdir(exist_ok=True)
+            path = Path(__file__).parent / "summaries" / f"{message_shortened}_{int(time.time())}.md"
+            with open(path, "w") as f:
+                f.write(full_message)
+            try:
+                _send_file(
+                    title="WDoc Summaries",
+                    path=path,
+                    topic=topic,
+                    message=f"Summary of {url}",
+                )
+            except Exception as err:
+                sn(message=full_message)
+                raise
         log("Done\n")
     except Exception as err:
         err_mess = f"Error for message '{message}':\n{str(err)}"
