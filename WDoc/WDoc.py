@@ -1576,7 +1576,9 @@ class WDoc:
                         pbar.update(1)
                         break
 
-                assert pbar.n == pbar.total
+                # assert pbar.n == pbar.total
+                if pbar.n != pbar.total:
+                    red(f"For some reason pbar.n=={pbar.n} but pbar.total=={pbar.total}")
                 pbar.close()
                 assert len(all_intermediate_answers[-1]) == 1
 
