@@ -449,3 +449,7 @@
 * `WDOC_NO_MODELNAME_MATCHING`
     * If "true": will bypass the model name matching. Useful for exotic
     or models that are fresh out of the oven.
+
+* `WDOC_ALLOW_NO_PRICE`
+    * if "true", won't crash if no price was found for the given
+    model. Useful if litellm has not yet updated its price table.

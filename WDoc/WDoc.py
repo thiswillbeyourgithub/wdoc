@@ -365,7 +365,12 @@ class WDoc:
                     cache_dir / "private_langchain.db").resolve().absolute())
             set_llm_cache(self.llm_cache)
 
-        if llms_api_bases["model"]:
+        if "WDOC_ALLOW_NO_PRICE" in os.environ and os.environ["WDOC_ALLOW_NO_PRICE"] == "true":
+            red(
+                f"Disabling price computation for {modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'")
+            self.llm_price = [0.0, 0.0]
+
+        elif llms_api_bases["model"]:
             red(
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}")
             self.llm_price = [0.0, 0.0]
@@ -387,8 +392,13 @@ class WDoc:
             ]
         else:
             raise Exception(red(f"Can't find the price of {modelname}"))
+
         if query_eval_modelname is not None:
-            if llms_api_bases["query_eval_model"]:
+            if "WDOC_ALLOW_NO_PRICE" in os.environ and os.environ["WDOC_ALLOW_NO_PRICE"] == "true":
+                red(
+                    f"Disabling price computation for {query_eval_modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'")
+                self.query_evalllm_price = [0.0, 0.0]
+            elif llms_api_bases["query_eval_model"]:
                 red(f"Disabling price computation for query_eval_model because api_base was modified")
                 self.query_evalllm_price = [0.0, 0.0]
             elif query_eval_modelname in litellm.model_cost:
