@@ -1649,7 +1649,7 @@ class WDoc:
                 f"Tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
             if "cost_before_combine" in locals():
                 combine_cost = total_cost - cost_before_combine
-                yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.1f}")
+                yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.5f}")
 
             evalllmcallback = self.eval_llm.callbacks[0]
             wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
