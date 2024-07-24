@@ -439,7 +439,7 @@
 
 # Runtime flags
 
-* `WINSTONDOC_TYPECHECKING`
+* `WDOC_TYPECHECKING`
     * Setting for runtime type checking. Default value is `warn`.     * Possible values:
     The typing is checked using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
         * `disabled`: disable typechecking.
