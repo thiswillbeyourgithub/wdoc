@@ -1778,7 +1778,7 @@ def cached_yt_loader(
         path: str,
         add_video_info: bool,
         language: List[str],
-        translation: List[str]) -> List[Document]:
+        translation: Optional[List[str]]) -> List[Document]:
     yel(f"Not using cache for youtube {path}")
     docs = loader(
         path,
