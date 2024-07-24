@@ -81,6 +81,7 @@ class TheFiche:
             "WDoc_version": instance.VERSION,
             "WDoc_model": f"{instance.modelname} of {instance.modelbackend}",
             "WDoc_evalmodel": f"{instance.query_eval_modelname} of {instance.query_eval_modelbackend}",
+            "WDoc_evalmodel_check_nb": instance.query_eval_check_number,
             "WDoc_cost": instance.latest_cost,
             "WDoc_n_docs_found": len(fiche["unfiltered_docs"]),
             "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
