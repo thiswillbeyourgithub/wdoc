@@ -1434,13 +1434,13 @@ class WDoc:
                 md_printer("* " + "\n* ".join(all_filepaths))
 
             evalllmcallback = self.eval_llm.callbacks[0]
-            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
+            etotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
                 self.query_evalllm_price[1] * evalllmcallback.completion_tokens
             yel(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})")
 
-            red(f"Total cost: ${wtotal_cost:.5f}")
-            self.latest_cost = wtotal_cost
+            red(f"Total cost: ${etotal_cost:.5f}")
+            self.latest_cost = etotal_cost
 
         else:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
@@ -1662,13 +1662,13 @@ class WDoc:
                 yel(f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.5f}")
 
             evalllmcallback = self.eval_llm.callbacks[0]
-            wtotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
+            etotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
                 self.query_evalllm_price[1] * evalllmcallback.completion_tokens
             yel(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${wtotal_cost:.5f})")
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})")
 
-            red(f"Total cost: ${total_cost + wtotal_cost:.5f}")
+            red(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
-            self.latest_cost = total_cost + wtotal_cost
+            self.latest_cost = total_cost + etotal_cost
 
             return output
