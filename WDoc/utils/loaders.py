@@ -798,6 +798,7 @@ def load_anki(
             v = Path(original_db).parent / "collection.media" / v
             if v.exists():
                 media[k] = v
+            assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
         # better formatting for tags
         ntags = [
                 nt.replace("_", " ").replace("-", " ").replace("::", " > ")
