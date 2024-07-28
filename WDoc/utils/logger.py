@@ -32,7 +32,11 @@ log_file = (log_dir / "logs.txt")
 log_file.touch(exist_ok=True)
 
 # logger
-logger.remove(0)
+log_error = None
+try:
+    logger.remove(0)
+except Exception as err:
+    log_error = f"Error when removing logger '0': '{err}'"
 logger.add(
     log_file,
     rotation="100MB",
@@ -42,6 +46,8 @@ logger.add(
     enqueue=True,
     colorize=False,
 )
+if log_error:
+    logger.error(log_error)
 # delete any additional log file
 # (log_dir / "logs.txt.4").unlink(missing_ok=True)
 
