@@ -132,7 +132,7 @@ def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     assert usage_file.exists()
     usage = usage_file.read_text().strip()
     assert usage
-    obj.__doc__ = usage
+    obj.__doc__ = obj.__doc__ + "\n\n# Content of WDoc/docs/USAGE.md\n\n" + usage
     if isinstance(obj, type):
         obj.__init__.__doc__ = usage
     return obj

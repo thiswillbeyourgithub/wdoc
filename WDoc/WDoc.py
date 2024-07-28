@@ -77,7 +77,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 @optional_typecheck
 @set_USAGE_as_docstring
 class WDoc:
-    "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
+    "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
 
     VERSION: str = "1.1.12"
     allowed_extra_args = extra_args_keys
@@ -136,7 +136,7 @@ class WDoc:
 
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically replaced by the content of WDoc/docs/USAGE.md"
+        "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
         if version:
             print(self.VERSION)
             return
