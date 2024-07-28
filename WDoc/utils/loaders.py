@@ -797,11 +797,16 @@ def load_anki(
             v = Path(original_db).parent / "collection.media" / v
             if v.exists():
                 media[k] = v
+        # better formatting for tags
+        ntags = [
+                nt.replace("_", " ").replace("-", " ").replace("::", " > ")
+                for nt in c["ntags"]
+        ]
         docs.append(
             Document(
                 page_content=c["text"],
                 metadata={
-                    "anki_tags": " ".join(c["ntags"]),
+                    "anki_tags": " ; ".join(ntags),
                     "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
