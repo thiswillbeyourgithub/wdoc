@@ -773,7 +773,8 @@ def load_anki(
             content=x,
             media=None,
             mode="remove_media",
-            strict=False,
+            strict=True,
+            replace_links=False,
         )
     )
     # remove notes that contain an image, sound or link
@@ -855,6 +856,9 @@ def anki_replace_media(
     media: Union[None, Dict],
     mode: str,
     strict: bool = True,
+    replace_image: bool = True,
+    replace_links: bool = True,
+    replace_sounds: bool = True,
 ) -> Tuple[str, Dict]:
     """
     Else: exclude any note that contains in the content:
@@ -877,17 +881,19 @@ def anki_replace_media(
     if media is None:
         media = {}
     assert isinstance(media, dict)
+    assert any(rule for rule in [replace_sounds, replace_links, replace_image])
 
     if mode == "remove_media":
         assert not media
 
-        # fix common issues
-        content = content.replace(":// ", "://")
-        content = content.replace("http ://", "http://")
-        content = content.replace("https ://", "http://")
+        if replace_links:
+            # fix links common issues
+            content = content.replace(":// ", "://")
+            content = content.replace("http ://", "http://")
+            content = content.replace("https ://", "http://")
 
         # Images
-        if "<img" in content:
+        if replace_image and "<img" in content:
             soup = BeautifulSoup(content, 'html.parser')
             images_bs4 = [str(img) for img in soup.find_all('img')]
             images_reg = re.findall(REG_IMG, content)
@@ -901,7 +907,7 @@ def anki_replace_media(
             images = []
 
         # Sounds
-        if "[sounds:" in content:
+        if replace_sounds and "[sounds:" in content:
             sounds = re.findall(REG_SOUNDS, content)
             assert sounds
             assert all(sound in content for sound in sounds)
@@ -911,7 +917,7 @@ def anki_replace_media(
             sounds = []
 
         # links
-        if "://" in content:
+        if replace_links and "://" in content:
             links = re.findall(REG_LINKS, content)
             links = [
                 link
@@ -940,6 +946,7 @@ def anki_replace_media(
 
         # do the replacing
         for i, img in enumerate(images):
+            assert replace_image
             assert img in content
             assert img in new_content
             assert img not in media.keys() and img not in media.values()
@@ -953,6 +960,7 @@ def anki_replace_media(
             assert replaced in new_content
 
         for i, sound in enumerate(sounds):
+            assert replace_sounds
             assert sound in content
             assert sound in new_content
             assert sound not in media.keys() and sound not in media.values()
@@ -966,6 +974,7 @@ def anki_replace_media(
             assert replaced in new_content
 
         for i, link in enumerate(links):
+            assert replace_links
             assert link in content
             assert link not in media.keys()
             replaced = f"[LINK_{i+1}]"
@@ -987,21 +996,25 @@ def anki_replace_media(
                 assert replaced in new_content
 
         # check no media can be found anymore
-        assert not re.findall(REG_IMG, new_content), new_content
-        assert not BeautifulSoup(
-            new_content, 'html.parser').find_all('img'), new_content
-        assert not re.findall(REG_SOUNDS, new_content), new_content
-        assert not re.findall(REG_LINKS, new_content), new_content
-        if strict:
-            assert "<img" not in new_content, new_content
-            assert "[sound:" not in new_content, new_content
-            assert "://" not in new_content, new_content
-        else:
-            if "<img" in new_content:
+        if replace_image:
+            assert not re.findall(REG_IMG, new_content), new_content
+            assert not BeautifulSoup(
+                new_content, 'html.parser').find_all('img'), new_content
+            if strict:
+                assert "<img" not in new_content, new_content
+            elif "<img" in new_content:
                 red(f"AnkiMediaReplacer: Found '<img' in '{new_content}'")
-            if "[sound:" in new_content:
+        if replace_sounds:
+            assert not re.findall(REG_SOUNDS, new_content), new_content
+            if strict:
+                assert "[sound:" not in new_content, new_content
+            elif "[sound:" in new_content:
                 red(f"AnkiMediaReplacer: Found '[sound:' in '{new_content}'")
-            if "://" in new_content:
+        if replace_links:
+            assert not re.findall(REG_LINKS, new_content), new_content
+            if strict:
+                assert "://" not in new_content, new_content
+            elif "://" in new_content:
                 red(f"AnkiMediaReplacer: Found '://' in '{new_content}'")
 
         # check non empty
@@ -1016,6 +1029,9 @@ def anki_replace_media(
             media=media,
             mode="add_media",
             strict=strict,
+            replace_image=replace_image,
+            replace_links=replace_links,
+            replace_sounds=replace_sounds,
         )[0] == content
 
         return new_content, media
