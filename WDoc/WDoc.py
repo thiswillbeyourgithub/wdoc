@@ -421,7 +421,7 @@ class WDoc:
             set_verbose(True)
             if debug:
                 set_debug(True)
-            cli_kwargs["file_loader_n_jobs"] = 1
+                cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose = True
         else:
             litellm.set_verbose = False
