@@ -1563,7 +1563,7 @@ class WDoc:
                 batch_tkn_size = 1000
                 max_batch_size = 10
                 pbar = tqdm(
-                    desc="Combibing answers",
+                    desc="Combining answers",
                     unit="answer",
                     total=len(intermediate_answers),
                     disable=not is_verbose,
