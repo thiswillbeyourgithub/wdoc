@@ -66,12 +66,12 @@ class TheFiche:
         all_kwargs.update({"top_k": top_k})
 
         if len(fiche["all_intermediate_answers"]) > 1:
-                extra = '->'.join(
-                    [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
-                )
-                extra = f"({extra})"
-            else:
-                extra = ""
+            extra = '->'.join(
+                [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
+            )
+            extra = f"({extra})"
+        else:
+            extra = ""
 
         props = {
             "collapsed": "false",
