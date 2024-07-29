@@ -32,6 +32,10 @@ log_file = (log_dir / "logs.txt")
 log_file.touch(exist_ok=True)
 
 # logger
+try:
+    logger.remove()
+except Exception as err:
+    pass
 logger.add(
     log_file,
     rotation="100MB",
