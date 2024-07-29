@@ -424,9 +424,9 @@ class WDoc:
                 cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose = True
         else:
-            litellm.set_verbose = False
             set_verbose(False)
             set_debug(False)
+            litellm.set_verbose = False
             # fix from https://github.com/BerriAI/litellm/issues/2256
             import logging
             for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
