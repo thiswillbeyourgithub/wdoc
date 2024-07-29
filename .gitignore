@@ -12,3 +12,7 @@ build
 .aider*
 obsolete
 dist
+
+# author files
+examples/NtfySummarizer/TOPICS
+examples/NtfySummarizer/summaries
