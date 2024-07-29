@@ -122,6 +122,7 @@ class TheFiche:
                 check_parsing=False,
                 verbose=False,
             )
+            prev_content.blocks.append(LogseqMarkdownParser.LogseqBlock("---"))
             new_block = LogseqMarkdownParser.LogseqBlock(content=f"# {today}")
             for k, v in props.items():
                 new_block.properties[k] = v
