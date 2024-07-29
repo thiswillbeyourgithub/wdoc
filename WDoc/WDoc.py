@@ -1388,6 +1388,9 @@ class WDoc:
                 if len(docs) < self.interaction_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
+            if self.import_mode:
+                return {"unfiltered_docs": docs}
+
             md_printer("\n\n# Documents")
             anki_cid = []
             to_print = ""
