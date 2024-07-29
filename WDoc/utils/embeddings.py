@@ -403,7 +403,7 @@ def load_embeddings(
                 # disable=not is_verbose,
             )
         )
-        for temp in temp_dbs
+        for temp in temp_dbs:
             if not db:
                 db = temp
             else:
