@@ -110,6 +110,19 @@ class TheFiche:
         content.page_properties.update(props)
         assert content.page_properties
 
+        # add documents source
+        doc_hash = {
+            d.metadata["content_hash"][:5]: d.metadata
+            for d in fiche["filtered_docs"])
+        }
+        content.blocks.append(LogseqBlock("# Sources"))
+        for dh, dm in doc_hash.items():
+            new_block = LogseqBlock(f"{dh}:")
+            for k, v in dm.items():
+                new_block.properties[k] = v
+            content.blocks.append(new_block)
+
+        # save to file
         if not logseq_page.absolute().exists():
             content.export_to(
                 file_path=logseq_page.absolute(),
