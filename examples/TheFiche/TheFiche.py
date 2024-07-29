@@ -6,7 +6,7 @@ with content generated from WDoc queries, including metadata and properties.
 """
 
 import json
-import LogseqMarkdownParser
+from LogseqMarkdownParser import LogseqBlock, LogseqPage
 import time
 from WDoc import WDoc
 import fire
@@ -102,7 +102,7 @@ class TheFiche:
         text = fiche["final_answer"]
         assert text.strip()
 
-        content = LogseqMarkdownParser.LogseqPage(
+        content = LogseqPage(
             text,
             check_parsing=False,
             verbose=False,
@@ -117,13 +117,13 @@ class TheFiche:
                 allow_empty=False,
             )
         else:
-            prev_content = LogseqMarkdownParser.LogseqPage(
+            prev_content = LogseqPage(
                 logseq_page.read_text(),
                 check_parsing=False,
                 verbose=False,
             )
-            prev_content.blocks.append(LogseqMarkdownParser.LogseqBlock("---"))
-            new_block = LogseqMarkdownParser.LogseqBlock(content=f"# {today}")
+            prev_content.blocks.append(LogseqBlock("---"))
+            new_block = LogseqBlock(content=f"# {today}")
             for k, v in props.items():
                 new_block.properties[k] = v
             prev_content.blocks.append(new_block)
