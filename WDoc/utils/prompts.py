@@ -95,6 +95,7 @@ PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
         ("system", """You are a Combiner: given a question and partial answers, your goal is to:
 - combine all partial answers to answer the question as md bullet points,
 - while combining all additional information as additional bullet points.
+- And keeping track of sources.
 
 Detailed instructions:
 ```
@@ -121,6 +122,7 @@ Detailed instructions:
         - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 - If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
+- Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
 ```"""),
         ("human",
          "Question: `{question}`\nCandidate intermediate answers:\n```\n{intermediate_answers}\n```\n\nYour answer:""")

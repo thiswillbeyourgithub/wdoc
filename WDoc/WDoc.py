@@ -1538,39 +1538,58 @@ class WDoc:
             except NoDocumentsAfterLLMEvalFiltering as err:
                 return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
 
-            intermediate_answers = output["intermediate_answers"]
+            assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
 
-            # next step is to combine the intermediate answers into a single answer
-            final_answer_chain = RunnablePassthrough.assign(
-                final_answer=RunnablePassthrough.assign(
-                    question=lambda inputs: inputs["question_to_answer"],
-                    intermediate_answers=lambda inputs:  collate_intermediate_answers(inputs["intermediate_answers"]),
+            if len(output["intermediate_answers"]) > 1:
+                # next step is to combine the intermediate answers into a single answer
+                final_answer_chain = RunnablePassthrough.assign(
+                    final_answer=RunnablePassthrough.assign(
+                        question=lambda inputs: inputs["question_to_answer"],
+                        intermediate_answers=lambda inputs:  collate_intermediate_answers(
+                            inputs["intermediate_answers"],
+                        ),
+                    )
+                    | prompts.combine
+                    | self.llm
+                    | StrOutputParser()
                 )
-                | prompts.combine
-                | self.llm
-                | StrOutputParser()
-            )
 
-            if len(intermediate_answers) > 1:
+                # add the document hash as source to each intermediate answer, they will then be combined together and replaced again last minute by more legible identifiers
+                for ifd, fd in enumerate(output["filtered_docs"]):
+                    ia = output["intermediate_answers"][ifd]
+                    doc_hash = fd.metadata["content_hash"][:5]
+                    output["intermediate_answers"][ifd] = f"Source identifier: [{doc_hash}]\n{ia}"
+                source_hashes = {
+                            d.metadata["content_hash"][:5]: str(idoc + 1)
+                            for idoc, d in enumerate(output["filtered_docs"])
+                        }
+                @optional_typecheck
+                def source_replace(input: str) -> str:
+                    for h, idoc in source_hashes.items():
+                        input = input.replace(h, idoc)
+                    return input
+
                 llmcallback = self.llm.callbacks[0]
                 cost_before_combine = self.llm_price[0] * llmcallback.prompt_tokens + \
                 self.llm_price[1] * llmcallback.completion_tokens
-                all_intermediate_answers = [intermediate_answers]
+
                 # group the intermediate answers by batch, then do a batch reduce mapping
                 # each batch is at least 2 intermediate answers and maxes at
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
+                all_intermediate_answers = [output["intermediate_answers"]]
                 batch_tkn_size = 1000
                 max_batch_size = 10
                 pbar = tqdm(
                     desc="Combining answers",
                     unit="answer",
-                    total=len(intermediate_answers),
+                    total=len(output["intermediate_answers"]),
                     disable=not is_verbose,
                 )
+                temp_interm_answ = output["intermediate_answers"]
                 while True:
                     batches = [[]]
-                    for ia in intermediate_answers:
+                    for ia in temp_interm_answ:
                         if not check_intermediate_answer(ia):
                             # disregard IRRELEVANT answers
                             continue
@@ -1591,13 +1610,13 @@ class WDoc:
                             "intermediate_answers": b
                         } for b in batches
                     ]
-                    intermediate_answers = [
+                    temp_interm_answ = [
                         a["final_answer"]
                         for a in final_answer_chain.batch(batch_args)
                     ]
-                    all_intermediate_answers.append(intermediate_answers)
-                    pbar.n = pbar.total - len(intermediate_answers) + 1
-                    if len(intermediate_answers) == 1:
+                    all_intermediate_answers.append(temp_interm_answ)
+                    pbar.n = pbar.total - len(temp_interm_answ) + 1
+                    if len(temp_interm_answ) == 1:
                         break
 
                 assert pbar.n == pbar.total
@@ -1607,7 +1626,7 @@ class WDoc:
                 final_answer = all_intermediate_answers[-1][0]
                 output["all_intermediate_answers"] = all_intermediate_answers
             else:
-                final_answer = intermediate_answers[0]
+                final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
 
             # prepare the content of the output
@@ -1634,10 +1653,10 @@ class WDoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                md_printer(to_print)
+                md_printer(source_replace(to_print))
 
             # print the final answer
-            md_printer(indent(f"# Answer:\n{output['final_answer']}\n", "> "))
+            md_printer(indent(f"# Answer:\n{source_replace(output['final_answer'])}\n", "> "))
 
             # print the breakdown of documents used and chain time
             red(
