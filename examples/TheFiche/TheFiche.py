@@ -114,8 +114,6 @@ class TheFiche:
                 used_hash.append(d)
             text = text.replace(d, f" [[{d}]] ")
         text = text.replace(" , ", ", ")
-        text = text.replace("[ [[", "[[[")
-        text = text.replace("] ]]", "]]]")
         if not used_hash:
             print("No documents seem to be sourced")
 
