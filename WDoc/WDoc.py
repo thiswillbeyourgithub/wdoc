@@ -316,11 +316,6 @@ class WDoc:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
 
-        if is_verbose:
-            llm_verbosity = True
-            whi(f"Cache location: {cache_dir.absolute()}")
-            whi(f"Log location: {log_dir.absolute()}")
-
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()
         self.modelname = modelname
@@ -418,15 +413,20 @@ class WDoc:
 
         if is_verbose:
             set_verbose(True)
-            if debug:
-                os.environ["LANGCHAIN_TRACING_V2"] = "true"
-                set_debug(True)
-                cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose = True
+
+            llm_verbosity = True
+            whi(f"Cache location: {cache_dir.absolute()}")
+            whi(f"Log location: {log_dir.absolute()}")
         else:
             set_verbose(False)
             set_debug(False)
             litellm.set_verbose = False
+        if debug:
+            assert is_verbose
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            set_debug(True)
+            cli_kwargs["file_loader_n_jobs"] = 1
 
         # don't crash if extra arguments are used for a model
         # litellm.drop_params = True  # drops parameters that are not used by some models
