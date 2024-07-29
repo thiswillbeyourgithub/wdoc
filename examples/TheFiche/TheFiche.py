@@ -43,7 +43,7 @@ class TheFiche:
         Args:
             query (str): The query to be processed by WDoc.
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
-            overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False.
+            overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
             **kwargs: Additional keyword arguments to pass to WDoc.
 
@@ -52,8 +52,6 @@ class TheFiche:
         """
         assert "top_k" not in kwargs
         logseq_page = Path(logseq_page)
-        if not overwrite:
-            assert not (logseq_page).exists()
 
         instance = WDoc(
             task="query",
@@ -112,11 +110,30 @@ class TheFiche:
         content.page_properties.update(props)
         assert content.page_properties
 
-        content.export_to(
-            file_path=logseq_page.absolute(),
-            overwrite=overwrite,
-            allow_empty=False,
-        )
+        if not logseq_page.absolute().exists():
+            content.export_to(
+                file_path=logseq_page.absolute(),
+                overwrite=False,
+                allow_empty=False,
+            )
+        else:
+            prev_content = LogseqMarkdownParser.LogseqPage(
+                logseq_page.read_text(),
+                check_parsing=False,
+                verbose=False,
+            )
+            new_block = LogseqMarkdownParser.LogseqBlock(content=f"# {today}")
+            for k, v in props.items():
+                new_block.properties[k] = v
+            prev_content.blocks.append(new_block)
+            for block in content.blocks:
+                block.indentation_level += 2
+                prev_content.blocks.append(block)
+            prev_content.export_to(
+                file_path=logseq_page.absolute(),
+                overwrite=True,
+                allow_empty=False,
+            )
         logseq_page.write_text(
             logseq_page.read_text().replace("  ", "\t")
         )
