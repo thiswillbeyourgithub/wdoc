@@ -427,6 +427,8 @@ def load_one_doc(
             docs[i].metadata["path"] = str(
                 Path(docs[i].metadata["path"]).resolve().absolute())
 
+        docs[i].metadata["indexing_timestamp"] = int(time.time())
+
         # replace any path to just the filename, to avoid sending privacy
         # revealing information to LLMs
         for k, v in docs[i].metadata.items():
