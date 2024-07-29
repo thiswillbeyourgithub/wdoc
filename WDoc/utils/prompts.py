@@ -55,7 +55,7 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
         ("system", """You are an Evaluator: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
 Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
-Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting."""),
+Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting. If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not."""),
         ("human",
          "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
     ]
