@@ -417,9 +417,9 @@ class WDoc:
                     red(f"Can't find the price of {query_eval_modelname}"))
 
         if is_verbose:
-            # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_verbose(True)
             if debug:
+                os.environ["LANGCHAIN_TRACING_V2"] = "true"
                 set_debug(True)
                 cli_kwargs["file_loader_n_jobs"] = 1
             litellm.set_verbose = True
