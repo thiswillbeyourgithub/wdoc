@@ -126,7 +126,7 @@ class TheFiche:
         assert content.page_properties
 
         # add documents source
-        content.blocks.append(LogseqBlock("- # Sources"))
+        content.blocks.append(LogseqBlock("- # Sources\n  collapsed:: true"))
         for dh, dm in doc_hash.items():
             if dh not in used_hash:
                 continue
