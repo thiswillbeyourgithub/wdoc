@@ -83,7 +83,7 @@ else:
 class WDoc:
     "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
 
-    VERSION: str = "1.2.1"
+    VERSION: str = "1.2.2"
     allowed_extra_args = extra_args_keys
     md_printer = md_printer
 
