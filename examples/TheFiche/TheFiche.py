@@ -159,7 +159,8 @@ class TheFiche:
 
             prev_content.blocks.append(new_block)
             for block in content.blocks:
-                block.indentation_level += 4
+                diff = block.indentation_level % 4
+                block.indentation_level += 4 + diff
                 prev_content.blocks.append(block)
             prev_content.export_to(
                 file_path=logseq_page.absolute(),
