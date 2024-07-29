@@ -141,7 +141,7 @@ class TheFiche:
                 new_block.properties[k] = v
             prev_content.blocks.append(new_block)
             for block in content.blocks:
-                block.indentation_level += 2
+                block.indentation_level += 4
                 prev_content.blocks.append(block)
             prev_content.export_to(
                 file_path=logseq_page.absolute(),
