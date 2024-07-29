@@ -148,9 +148,6 @@ class TheFiche:
                 overwrite=True,
                 allow_empty=False,
             )
-        logseq_page.write_text(
-            logseq_page.read_text().replace("  ", "\t")
-        )
 
 
 if __name__ == "__main__":
