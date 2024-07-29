@@ -422,6 +422,12 @@ def load_one_doc(
             docs[i].metadata["path"] = str(
                 Path(docs[i].metadata["path"]).resolve().absolute())
 
+        # replace any path to just the filename, to avoid sending privacy
+        # revealing information to LLMs
+        for k, v in docs[i].metadata.items():
+            if isinstance(v, PosixPath):
+                docs[i].metadata[k] = v.name
+
     total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
     assert total_reading_length > 0.1, (
         f"Failing doc: total reading length is {total_reading_length:.3f}"
