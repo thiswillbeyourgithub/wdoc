@@ -117,7 +117,7 @@ class WDoc:
         # query_eval_modelname: Optional[str] = "openai/gpt-3.5-turbo",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
-        query_eval_check_number: int = 4,
+        query_eval_check_number: int = 3,
         query_relevancy: float = 0.1,
 
         summary_n_recursion: int = 0,

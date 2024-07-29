@@ -126,7 +126,7 @@
     fuzzy matching to find the best match.
     None to disable.
 
-* `--query_eval_check_number`: int, default `4`
+* `--query_eval_check_number`: int, default `3`
     * number of pass to do with the eval llm to check if the document
     is indeed relevant to the question. The document will not
     be processed if all answers from the eval llm are 0, and will
