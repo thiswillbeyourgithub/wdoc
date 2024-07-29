@@ -113,7 +113,7 @@ class TheFiche:
         # add documents source
         doc_hash = {
             d.metadata["content_hash"][:5]: d.metadata
-            for d in fiche["filtered_docs"])
+            for d in fiche["filtered_docs"]
         }
         content.blocks.append(LogseqBlock("# Sources"))
         for dh, dm in doc_hash.items():
