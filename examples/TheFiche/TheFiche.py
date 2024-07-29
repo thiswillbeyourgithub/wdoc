@@ -136,7 +136,7 @@ class TheFiche:
                 verbose=False,
             )
             prev_content.blocks.append(LogseqBlock("- ---"))
-            new_block = LogseqBlock(content=f"# {today}")
+            new_block = LogseqBlock(f"- # {today}")
             for k, v in props.items():
                 new_block.properties[k] = v
             prev_content.blocks.append(new_block)
