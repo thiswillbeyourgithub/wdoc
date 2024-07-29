@@ -72,6 +72,11 @@ logger.info("Starting WDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+if "WDOC_OPEN_ANKI" in os.environ and os.environ["WDOC_OPEN_ANKI"] == "true":
+    auto_open_anki = True
+else:
+    auto_open_anki = False
+
 
 @optional_typecheck
 @set_USAGE_as_docstring
@@ -1392,8 +1397,9 @@ class WDoc:
                 return output
 
             md_printer("\n\n# Documents")
-            anki_cid = []
-            to_print = ""
+            if auto_open_anki:
+                anki_cid = []
+                to_print = ""
             for id, doc in enumerate(docs):
                 to_print += f"## Document #{id + 1}\n"
                 content = doc.page_content.strip()
@@ -1401,7 +1407,7 @@ class WDoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += "\n"
-                if "anki_cid" in doc.metadata:
+                if auto_open_anki and "anki_cid" in doc.metadata:
                     cid_str = str(doc.metadata["anki_cid"]).split(" ")
                     for cid in cid_str:
                         if cid not in anki_cid:
@@ -1413,7 +1419,7 @@ class WDoc:
                 red(
                     f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
-            if anki_cid:
+            if auto_open_anki and anki_cid:
                 open_answ = input(
                     f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
                 if open_answ == "debug":
@@ -1431,7 +1437,7 @@ class WDoc:
                     path = doc.metadata["path"]
                     try:
                         path = str(Path(path).resolve().absolute())
-                    except Exception as err:
+                    except Exception:
                         pass
                     all_filepaths.append(path)
             if all_filepaths:

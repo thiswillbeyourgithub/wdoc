@@ -456,3 +456,6 @@
 * `WDOC_ALLOW_NO_PRICE`
     * if "true", won't crash if no price was found for the given
     model. Useful if litellm has not yet updated its price table.
+
+* `WDOC_OPEN_ANKI`
+    * if "true", will automatically ask wether to open the anki browser if cards are found in the sources. Only used if task is `query` or `search`.
