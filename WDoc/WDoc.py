@@ -18,7 +18,6 @@ import tldextract
 from pathlib import Path
 import time
 import re
-import textwrap
 import os
 import asyncio
 from tqdm import tqdm
@@ -1397,8 +1396,7 @@ class WDoc:
             for id, doc in enumerate(docs):
                 to_print += f"## Document #{id + 1}\n"
                 content = doc.page_content.strip()
-                wrapped = "\n".join(textwrap.wrap(content, width=240))
-                to_print += "```\n" + wrapped + "\n ```\n"
+                to_print += "```\n" + content + "\n ```\n"
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += "\n"
@@ -1631,8 +1629,7 @@ class WDoc:
             for counter, (ia, doc) in enumerate(zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"])):
                 to_print = f"## Document #{counter}\n"
                 content = doc.page_content.strip()
-                wrapped = "\n".join(textwrap.wrap(content, width=240))
-                to_print += "```\n" + wrapped + "\n ```\n"
+                to_print += "```\n" + content + "\n ```\n"
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
