@@ -82,6 +82,7 @@ Detailed instructions:
 - DON'T interpret the question too strictly:
     - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 - ALWAYS double check that you are not contradicting the original document before answering.
+- If you're unsure but the document refers to an image that has a reasonnable chance to be relevant, treat this document as if it was probably relevant.
 - Take a deep breath before answering.
     - Start writing only when you are sure of your answer.
         - But then reply directly without acknowledging your task.
@@ -111,6 +112,7 @@ Detailed instructions:
     - Be concise but don't omit only irrelevant information from the statements.
     - Answer in the same language as the question.
 - What to include:
+    - If an answer refers to an image that has a reasonnable chance of being relevant, treat that as possibly relevant information.
     - Only use information from the provided statements.
         - IMPORTANT: if the statements are insufficient to answer the question you MUST start your answer by: 'OPINION:' followed by your own answer.
             - This way I know the source is you!
