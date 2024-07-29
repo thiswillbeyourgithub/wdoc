@@ -34,9 +34,9 @@ log_file.touch(exist_ok=True)
 # logger
 log_error = None
 try:
-    logger.remove(0)
+    logger.remove()
 except Exception as err:
-    log_error = f"Error when removing logger '0': '{err}'"
+    log_error = f"Error when removing loggers: '{err}'"
 logger.add(
     log_file,
     rotation="100MB",
