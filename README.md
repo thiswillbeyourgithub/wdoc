@@ -46,12 +46,14 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     3. Then the strong LLM is used to answer ("Answerer") the question using each individual remaining documents.
     4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer.
     Evaluator, Answerer and Combiner are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step.
+    5. Each document is identified by a unique hash and the answers are sourced, meaning you know from which document comes each information of the answer.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
     * The summary can be in the same language as the documents or directly translated.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
+* **Trust but verify**: The answer is sourced: WDoc keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
