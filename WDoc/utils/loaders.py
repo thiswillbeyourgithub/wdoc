@@ -6,7 +6,6 @@ lazily loaded.
 """
 
 import sys
-import signal
 import os
 import time
 from typing import List, Union, Any, Optional, Callable, Dict, Tuple
@@ -1894,10 +1893,7 @@ def load_pdf(
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(pdf_timeout)
             docs = _pdf_loader(loader_name, path, file_hash)
-            signal.alarm(0)
 
             pbar.update(1)
 
@@ -1937,7 +1933,6 @@ def load_pdf(
                 # time on running all the others
                 break
         except Exception as err:
-            signal.alarm(0)
             yel(f"Error when parsing '{path}' with {loader_name}: {err}")
             if "content" not in locals():
                 pbar.update(1)
