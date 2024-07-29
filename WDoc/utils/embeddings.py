@@ -13,6 +13,7 @@ import time
 from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
+from joblib import Parallel, delayed
 
 import numpy as np
 from pydantic import Extra
@@ -355,7 +356,11 @@ def load_embeddings(
         assert all([t.is_alive() for t in saver_workers]
                    ), "Saver workers failed to load"
 
-        for ib, batch in tqdm(enumerate(batches), total=len(batches), desc="Embedding by batch", disable=not is_verbose):
+        def embedandsave_one_batch(
+            batch: List,
+            ib: int,
+            saver_queues: List[Tuple[Queue, Queue]] = saver_queues,
+        ):
             whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
                 to_embed[batch[0]:batch[1]],
@@ -382,6 +387,23 @@ def load_embeddings(
                 sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
                 sq.put((True, docuid, docu, embe.squeeze()))
 
+            return temp
+        temp_dbs = Parallel(
+            backend="threading",
+            n_jobs=3,
+        )(
+            delayed(embedandsave_one_batch)(
+                batch=batch,
+                ib=ib,
+            )
+            for ib, batch in tqdm(
+                enumerate(batches),
+                total=len(batches),
+                desc="Embedding by batch",
+                # disable=not is_verbose,
+            )
+        )
+        for temp in temp_dbs
             if not db:
                 db = temp
             else:
