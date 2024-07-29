@@ -38,7 +38,7 @@ logger.add(
     retention=5,
     format='{time} {level} WDoc {thread} {process} {function} {line} {message}',
     level="ERROR",
-    enqueue=True,
+    enqueue=False,
     colorize=False,
 )
 # delete any additional log file
