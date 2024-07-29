@@ -41,7 +41,7 @@ logger.add(
     rotation="100MB",
     retention=5,
     format='{time} {level} WDoc {thread} {process} {function} {line} {message}',
-    level="ERROR",
+    level="DEBUG",
     enqueue=False,
     colorize=False,
 )
