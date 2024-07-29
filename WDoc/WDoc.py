@@ -1389,7 +1389,7 @@ class WDoc:
                     red(f"Only found {len(docs)} relevant documents")
 
             if self.import_mode:
-                return {"unfiltered_docs": docs}
+                return output
 
             md_printer("\n\n# Documents")
             anki_cid = []
