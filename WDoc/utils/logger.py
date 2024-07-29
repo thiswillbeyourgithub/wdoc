@@ -36,7 +36,7 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format='{time} {level} {thread} {process} {function} {line} {message}',
+    format='{time} {level} WDoc {thread} {process} {function} {line} {message}',
     level="ERROR",
     enqueue=True,
     colorize=False,
