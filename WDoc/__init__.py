@@ -4,6 +4,7 @@ Default file, used as entry point.
 
 import sys
 import fire
+from loguru import logger
 
 from .WDoc import WDoc
 
@@ -66,6 +67,10 @@ def fire_wrapper(
 
 
 def cli_launcher() -> None:
+    try:
+        logger.remove()
+    except Exception as err:
+        pass
     sys_args = sys.argv
     if "--version" in sys_args:
         print(f"WDoc version: {__VERSION__}")
