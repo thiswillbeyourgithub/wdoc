@@ -42,7 +42,7 @@ inference_rules = {
     "youtube_playlist": ["youtube.*playlist"],
     "youtube": ["youtube", "invidi"],
     "logseq_markdown": [".*logseq.*.md"],
-    "text": [".txt$", ".md$"],
+    "txt": [".txt$", ".md$"],
     "online_pdf": ["^http.*pdf.*"],
     "pdf": [".*pdf$"],
     "url": ["^http"],

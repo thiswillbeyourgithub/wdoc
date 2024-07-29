@@ -19,7 +19,7 @@
         * `youtube`: `--path` must link to a youtube video
         * `youtube_playlist`: `--path` must link to a youtube playlist
         * `pdf`: `--path` is path to pdf
-        * `text`: `--path` is path to a .txt file
+        * `txt`: `--path` is path to a .txt file
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
         `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.
