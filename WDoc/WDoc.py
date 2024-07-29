@@ -45,7 +45,7 @@ from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
-from .utils.flags import is_verbose
+from .utils.flags import is_verbose, is_debug
 
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
@@ -424,6 +424,7 @@ class WDoc:
             litellm.set_verbose = False
         if debug:
             assert is_verbose
+            assert is_debug
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_debug(True)
             cli_kwargs["file_loader_n_jobs"] = 1
