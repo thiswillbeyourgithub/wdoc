@@ -1030,6 +1030,10 @@ def anki_replace_media(
             temp = temp.replace(med, "")
         assert temp.strip()
 
+        # ignore warnings from beautiful soup that can happen because anki is not exactly html
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
+
         # recursive check:
         assert anki_replace_media(
             content=new_content,
