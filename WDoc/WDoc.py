@@ -1590,7 +1590,7 @@ class WDoc:
                     desc="Combining answers",
                     unit="answer",
                     total=len(output["intermediate_answers"]),
-                    disable=not is_verbose,
+                    # disable=not is_verbose,
                 )
                 temp_interm_answ = output["intermediate_answers"]
                 while True:
