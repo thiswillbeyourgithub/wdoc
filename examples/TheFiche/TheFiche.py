@@ -15,7 +15,7 @@ from datetime import datetime
 from beartype import beartype
 from typing import Union
 
-VERSION = "0.2"
+VERSION = "0.3"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
