@@ -427,15 +427,6 @@ class WDoc:
             set_verbose(False)
             set_debug(False)
             litellm.set_verbose = False
-            # fix from https://github.com/BerriAI/litellm/issues/2256
-            import logging
-            for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM"]:
-                logger = logging.getLogger(logger_name)
-                # logger.setLevel(logging.CRITICAL + 1)
-                logger.setLevel(logging.WARNING)
-            for logger_name in ["bs4"]:
-                logger = logging.getLogger(logger_name)
-                logger.setLevel(logging.CRITICAL)
 
         # don't crash if extra arguments are used for a model
         # litellm.drop_params = True  # drops parameters that are not used by some models
