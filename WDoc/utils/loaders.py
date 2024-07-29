@@ -271,6 +271,12 @@ def load_one_doc(
             **kwargs,
         )
 
+    elif filetype == "text":
+        docs = load_text_input(
+            file_hash=file_hash,
+            **kwargs,
+        )
+
     elif filetype == "local_html":
         docs = load_local_html(
             file_hash=file_hash,
@@ -1093,6 +1099,25 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     docs = [Document(page_content=content, metadata={})]
     return docs
 
+@optional_typecheck
+def load_text_input(
+        path: str,
+        metadata: Optional[Union[str, dict]],
+        file_hash: str,
+) -> List[Document]:
+    whi(f"Loading text input: '{path}'")
+    text = path.strip()
+    assert text, "Empty text"
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
+
+    docs = [
+        Document(
+            page_content=text,
+            metadata=metadata,
+        )
+    ]
+    return docs
 
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])

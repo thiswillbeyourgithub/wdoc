@@ -20,6 +20,7 @@
         * `youtube_playlist`: `--path` must link to a youtube playlist
         * `pdf`: `--path` is path to pdf
         * `txt`: `--path` is path to a .txt file
+        * `text`: `--path` is directly the text content. You can pass `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
         * `url`: `--path` must be a valid http(s) link
         * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
         `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.

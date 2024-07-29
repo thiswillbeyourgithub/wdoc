@@ -95,6 +95,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db
 * **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
 * **txt**: .txt, markdown, etc
+* **text**: send a text content directly as path
 * **local_html**: useful for website dumps
 * **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
 * **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence etc.
