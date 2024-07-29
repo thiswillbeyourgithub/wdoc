@@ -115,7 +115,7 @@ class TheFiche:
             d.metadata["content_hash"][:5]: d.metadata
             for d in fiche["filtered_docs"]
         }
-        content.blocks.append(LogseqBlock("# Sources"))
+        content.blocks.append(LogseqBlock("- # Sources"))
         for dh, dm in doc_hash.items():
             new_block = LogseqBlock(f"{dh}:")
             for k, v in dm.items():
@@ -135,7 +135,7 @@ class TheFiche:
                 check_parsing=False,
                 verbose=False,
             )
-            prev_content.blocks.append(LogseqBlock("---"))
+            prev_content.blocks.append(LogseqBlock("- ---"))
             new_block = LogseqBlock(content=f"# {today}")
             for k, v in props.items():
                 new_block.properties[k] = v
