@@ -43,6 +43,7 @@ logger.add(
 )
 # delete any additional log file
 # (log_dir / "logs.txt.4").unlink(missing_ok=True)
+logger.disable("httpx")
 
 
 colors = {
