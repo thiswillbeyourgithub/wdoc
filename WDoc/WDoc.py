@@ -422,6 +422,15 @@ class WDoc:
             set_verbose(False)
             set_debug(False)
             litellm.set_verbose = False
+            # fix from https://github.com/BerriAI/litellm/issues/2256
+            import logging
+            for logger_name in ["LiteLLM Proxy", "LiteLLM Router", "LiteLLM", "litellm", "httpx"]:
+                logger = logging.getLogger(logger_name)
+                # logger.setLevel(logging.CRITICAL + 1)
+                logger.setLevel(logging.WARNING)
+            for logger_name in ["bs4"]:
+                logger = logging.getLogger(logger_name)
+                logger.setLevel(logging.CRITICAL)
         if debug:
             assert is_verbose
             assert is_debug
