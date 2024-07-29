@@ -102,6 +102,23 @@ class TheFiche:
         text = fiche["final_answer"]
         assert text.strip()
 
+        # used for sources
+        doc_hash = {
+            d.metadata["content_hash"][:5]: d.metadata
+            for d in fiche["filtered_docs"]
+        }
+        # make sure each source is linked
+        used_hash = []
+        for d in doc_hash.keys():
+            if d in text:
+                used_hash.append(d)
+            text = text.replace(d, f" [[{d}]] ")
+        text = text.replace(" , ", ", ")
+        text = text.replace("[ [[", "[[[")
+        text = text.replace("] ]]", "]]]")
+        if not used_hash:
+            print("No documents seem to be sourced")
+
         content = LogseqPage(
             text,
             check_parsing=False,
@@ -111,15 +128,15 @@ class TheFiche:
         assert content.page_properties
 
         # add documents source
-        doc_hash = {
-            d.metadata["content_hash"][:5]: d.metadata
-            for d in fiche["filtered_docs"]
-        }
         content.blocks.append(LogseqBlock("- # Sources"))
         for dh, dm in doc_hash.items():
-            new_block = LogseqBlock(f"{dh}:")
+            if dh not in used_hash:
+                continue
+            new_block = f"- [[{dh}]]"
             for k, v in dm.items():
-                new_block.properties[k] = v
+                new_block += f"\n  {k}:: {v}"
+            new_block = LogseqBlock(new_block)
+            new_block.indentation_level += 4
             content.blocks.append(new_block)
 
         # save to file
@@ -136,9 +153,12 @@ class TheFiche:
                 verbose=False,
             )
             prev_content.blocks.append(LogseqBlock("- ---"))
-            new_block = LogseqBlock(f"- # {today}")
+
+            new_block = f"- # {today}"
             for k, v in props.items():
-                new_block.properties[k] = v
+                new_block += f"\n  {k}:: {v}"
+            new_block = LogseqBlock(new_block)
+
             prev_content.blocks.append(new_block)
             for block in content.blocks:
                 block.indentation_level += 4
