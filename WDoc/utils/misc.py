@@ -91,7 +91,7 @@ min_lang_prob = 0.50
 printed_unexpected_api_keys = [False]  # to print it only once
 
 # loader specific arguments
-loader_specific_keys = {
+filetype_arg_types = {
     "anki_deck": str,
     "anki_notetype": str,
     "anki_profile": str,
@@ -134,7 +134,7 @@ extra_args_keys = {
     "source_tag": str,
     "loading_failure": str,
 }
-extra_args_keys.update(loader_specific_keys)
+extra_args_keys.update(filetype_arg_types)
 
 # keys that can legally be part of a docdict
 doc_kwargs_keys = set([
@@ -142,7 +142,7 @@ doc_kwargs_keys = set([
     "filetype",
     "file_hash",
     "source_tag",
-] + list(loader_specific_keys.keys()))
+] + list(filetype_arg_types.keys()))
 
 
 class DocDict(dict):
@@ -151,7 +151,7 @@ class DocDict(dict):
     variable 'WDOC_NONSTRICT_DOCDICT' to 'true' then the checking will be
     non strict, meaning it will print in red instead of crashing"""
     allowed_keys: set = doc_kwargs_keys
-    allowed_types = loader_specific_keys
+    allowed_types: dict = filetype_arg_types
     strict = False if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else True
 
     def __check_values__(self, key, value) -> None:
