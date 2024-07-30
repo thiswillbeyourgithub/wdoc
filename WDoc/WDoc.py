@@ -476,7 +476,7 @@ class WDoc:
         # loading documents
         if not load_embeds_from:
             self.loaded_docs = batch_load_doc(
-                llm_name=f"{self.modelbackend}/{self.modelname}",
+                llm_name=self.modelname,
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
@@ -498,7 +498,7 @@ class WDoc:
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
                 if "logit_bias" in litellm.get_supported_openai_params(
-                    model=f"{self.modelbackend}/{self.modelname}",
+                    model=self.modelname,
                 ):
                     del self.llm.model_kwargs["logit_bias"]
             else:
@@ -545,7 +545,8 @@ class WDoc:
                 red(f"Cost estimate > limit but the api_base was modified so not crashing.")
 
         llm_params = litellm.get_supported_openai_params(
-            model=f"{self.modelbackend}/{self.modelname}") if self.modelbackend != "testing" else {}
+            model=self.modelname if self.modelbackend != "testing" else {}
+        )
         if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
@@ -760,7 +761,7 @@ class WDoc:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    WDoc version {self.VERSION} with model {self.modelname} of {self.modelbackend}"
+            header += f"    WDoc version {self.VERSION} with model {self.modelname}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
@@ -828,7 +829,7 @@ class WDoc:
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
         if "logit_bias" in litellm.get_supported_openai_params(
-            model=f"{self.modelbackend}/{self.modelname}",
+            model=self.modelname,
         ):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
@@ -867,15 +868,15 @@ class WDoc:
                 98517: logit_val,    # "                                                                                "
                 }
         if "frequency_penalty" in litellm.get_supported_openai_params(
-            model=f"{self.modelbackend}/{self.modelname}",
+            model=self.modelname,
         ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
         if "presence_penalty" in litellm.get_supported_openai_params(
-            model=f"{self.modelbackend}/{self.modelname}",
+            model=self.modelname,
         ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
         if "temperature" in litellm.get_supported_openai_params(
-            model=f"{self.modelbackend}/{self.modelname}",
+            model=self.modelname,
         ):
             self.llm.model_kwargs["temperature"] = 0.0
 
