@@ -201,10 +201,12 @@
     for documents.
 
 * `--file_loader_parallel_backend`: str, default `"threading"`
-    * joblib.Parallel backend to use when loading files. loky means
-    multiprocessing while `threading` means multithreading.
+    * joblib.Parallel backend to use when loading files. `loky` and
+    `multiprocessing` refer to multiprocessing whereas `threading`
+    refers to multithreading.
     The number of jobs can be specified with `file_loader_n_jobs`
-    but it's a loader specific kwargs.
+    but it's a loader specific kwargs. Any value other than the
+    default is not guaranteed to work.
 
 * `--private`: bool, default `False`
     * add extra check that your data will never be sent to another
