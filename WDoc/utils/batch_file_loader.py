@@ -230,7 +230,7 @@ def batch_load_doc(
 
         @optional_typecheck
         def deterministic_sorter(doc_dict: DocDict) -> int:
-            h = doc_dict["all_hash"]
+            h = doc_dict["content_hash"]
             h2 = ''.join(filter(str.isdigit, h))
             h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
             h_ordered = h_ints * (10 ** (sorted_filetypes.index(doc_dict["filetype"]) + 1))
