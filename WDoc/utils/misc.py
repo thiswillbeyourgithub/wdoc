@@ -30,6 +30,7 @@ from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
+from .errors import UnexpectedDocDictArgument
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -158,7 +159,7 @@ class DocDict(dict):
             mess  = (f"Cannot set key '{key}' in a DocDict. Allowed keys are "
                 f"'{','.join(self.allowed_keys)}'")
             if self.strict:
-                raise Exception(mess)
+                raise UnexpectedDocDictArgument(mess)
             else:
                 red(mess)
                 return
@@ -167,7 +168,7 @@ class DocDict(dict):
                 f"not {type(value)}")
 
             if self.strict:
-                raise Exception(mess)
+                raise UnexpectedDocDictArgument(mess)
             else:
                 red(mess)
                 return
