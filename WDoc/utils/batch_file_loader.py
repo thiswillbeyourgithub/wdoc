@@ -229,12 +229,27 @@ def batch_load_doc(
         to_load[i]["file_hash"] = doc_hashes[i]
 
     if "summar" not in task:
-        # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
+        # shuffle the list of files again to be random but deterministic:
+        # keeping only the digits of each hash, then multiplying by the
+        # index of the filetype by size. This makes sure the doc dicts are
+        # sorted by increasing order of filetype frequency, so if there's
+        # an error with the code of this filetype of its args the user knows
+        # it quickly instead of after waiting a super long time
+        bins = {}
+        for d in to_load:
+            if d["filetype"] not in bins:
+                bins[d["filetype"]] = 1
+            else:
+                bins[d["filetype"]] += 1
+        sorted_filetypes = sorted(bins.keys(), key=lambda x: bins[x])
+
         @optional_typecheck
         def deterministic_sorter(doc_dict: Union[dict, DocDict]) -> int:
-            h = doc_hashes[to_load.index(doc_dict)]
-            h_ints = int(''.join(filter(str.isdigit, h)))
-            return h_ints
+            h = doc_dict["file_hash"]
+            h2 = ''.join(filter(str.isdigit, h))
+            h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
+            h_ordered = h_ints * (10 ** (sorted_filetypes.index(doc_dict["filetype"]) + 1))
+            return h_ordered
 
         to_load = sorted(
             to_load,
