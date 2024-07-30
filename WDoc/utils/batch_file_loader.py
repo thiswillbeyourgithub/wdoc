@@ -102,7 +102,7 @@ def batch_load_doc(
     else:
         n_jobs = 10
     if "file_loader_n_jobs" in cli_kwargs:
-        n_jobs = cli_kwargs["file_loader_n_jobs"]
+        n_jobs = int(cli_kwargs["file_loader_n_jobs"])
         del cli_kwargs["file_loader_n_jobs"]
 
     # expand the list of document to load as long as there are recursive types
