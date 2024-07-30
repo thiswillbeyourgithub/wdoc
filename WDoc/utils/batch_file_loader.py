@@ -367,7 +367,7 @@ def batch_load_doc(
             "multiple documents!")
 
         counter = dict(Counter(
-            d.metadata["all_hash"]
+            d.metadata["content_hash"]
             for d in docs
         ))
         uniq_hashes = list(counter.keys())
