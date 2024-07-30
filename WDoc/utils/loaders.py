@@ -810,8 +810,8 @@ def load_anki(
 
     # remove all media
     pbar(desc="Replacing media in anki")
-    notes["medias"] = ""
-    notes.loc[:, ["text", "medias"]] = notes["text"].apply(
+    notes["medias"] = {}
+    out = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
             media=None,
@@ -820,6 +820,9 @@ def load_anki(
             replace_links=False,
         )
     )
+    notes.loc[:, "text"] = [o[0] for o in out]
+    notes.loc[:, "medias"] = [o[1] for o in out]
+
     # remove notes that contain an image, sound or link
     # notes = notes[~notes["text"].str.contains("\[IMAGE_")]
     # notes = notes[~notes["text"].str.contains("\[SOUND_")]
