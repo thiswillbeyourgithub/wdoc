@@ -457,7 +457,7 @@ def load_one_doc(
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
         if "all_hash" not in docs[i].metadata:
             docs[i].metadata["all_hash"] = hasher(
-                docs[i].page_content + json.dumps(docs[i].metadata)
+                docs[i].metadata["content_hash"] + json.dumps(docs[i].metadata)
             )
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
 
