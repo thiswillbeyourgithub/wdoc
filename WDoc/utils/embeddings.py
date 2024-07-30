@@ -293,7 +293,7 @@ def load_embeddings(
         def embedandsave_one_batch(
             batch: List,
             ib: int,
-            saver_queues: List[Tuple[Queue, Queue]] = saver_queues,
+            saver_queues: List[Tuple[queue.Queue, queue.Queue]] = saver_queues,
         ):
             whi(f"Embedding batch #{ib + 1}")
             temp = FAISS.from_documents(
