@@ -2,7 +2,7 @@
 Simple script to create a filtered deck from a WDoc search
 """
 import os
-from WDoc import WDoc, optionnal_typecheck
+from WDoc import WDoc, optional_typecheck
 import fire
 from loguru import logger
 
@@ -40,7 +40,7 @@ akc = PyAnkiconnect(
     default_port=port,
 )
 
-@optionnal_typecheck
+@optional_typecheck
 class FilteredDeckCreator:
     def __init__(
         self,
