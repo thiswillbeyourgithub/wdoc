@@ -29,7 +29,7 @@ from .utils.misc import (
     ankiconnect, debug_chain, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
-    extra_args_keys, disable_internet,
+    extra_args_types, disable_internet,
     set_func_signature
 )
 from .utils.prompts import prompts
@@ -84,7 +84,7 @@ class WDoc:
     "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
 
     VERSION: str = "1.2.2"
-    allowed_extra_args = extra_args_keys
+    allowed_extra_args = extra_args_types
     md_printer = md_printer
 
     @optional_typecheck

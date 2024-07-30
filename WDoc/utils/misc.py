@@ -122,7 +122,7 @@ filetype_arg_types = {
 }
 
 # extra arguments supported when instanciating wdoc
-extra_args_keys = {
+extra_args_types = {
     "embed_instruct": str,
     "exclude": str,
     "file_loader_n_jobs": int,
@@ -134,7 +134,7 @@ extra_args_keys = {
     "source_tag": str,
     "loading_failure": str,
 }
-extra_args_keys.update(filetype_arg_types)
+extra_args_types.update(filetype_arg_types)
 
 # keys that can legally be part of a docdict
 doc_kwargs_keys = set([
@@ -557,7 +557,7 @@ def set_func_signature(func: Callable) -> Callable:
                         annotation=hint,
                         default=None,
                     )
-                    for arg, hint in extra_args_keys.items()
+                    for arg, hint in extra_args_types.items()
             ]
     )
     new_sig = original_sig.replace(parameters=new_params)
@@ -566,6 +566,6 @@ def set_func_signature(func: Callable) -> Callable:
     def new_func(self, *args, **kwargs):
         return func(self, *args, **kwargs)
     new_func.__signature__ = new_sig
-    new_func.__annotations__ = get_type_hints(func) | extra_args_keys
+    new_func.__annotations__ = get_type_hints(func) | extra_args_types
 
     return new_func
