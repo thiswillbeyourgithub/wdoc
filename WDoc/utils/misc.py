@@ -145,24 +145,32 @@ doc_kwargs_keys = [
 
 
 class DocDict(dict):
-    """like dictionnaries but only allows keys that can be used when loading a document. Also checks the value type"""
+    """like dictionnaries but only allows keys that can be used when loading
+    a document. Also checks the value type. If you set the environnment
+    variable 'WDOC_NONSTRICT_DOCDICT' to 'true' then the checking will be
+    non strict, meaning it will print in red instead of crashing"""
     allowed_keys = doc_kwargs_keys
     allowed_types = loader_specific_keys
-    disable = True if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else False
+    strict = False if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else True
 
     def __check_values__(self, key, value) -> None:
-        if self.disable:
-            return
         if key not in self.allowed_keys:
-            raise Exception(
-                f"Cannot set key '{key}' in a DocDict. Allowed keys are "
-                f"'{','.join(self.allowed_keys)}'"
-            )
-        if key in self.allowed_types and value is not None:
-            assert isinstance(value, self.allowed_types[key]), (
-                f"Type of key {key} should be {self.allowed_types[key]},"
-                f"not {type(value)}"
-            )
+            mess  = (f"Cannot set key '{key}' in a DocDict. Allowed keys are "
+                f"'{','.join(self.allowed_keys)}'")
+            if self.strict:
+                raise Exception(mess)
+            else:
+                red(mess)
+                return
+        if key in self.allowed_types and value is not None and not isinstance(value, self.allowed_types[key]):
+            mess = (f"Type of key {key} should be {self.allowed_types[key]},"
+                f"not {type(value)}")
+
+            if self.strict:
+                raise Exception(mess)
+            else:
+                red(mess)
+                return
 
     def __init__(self, *args, **kwargs) -> None:
         for arg in args:
