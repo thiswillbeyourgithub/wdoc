@@ -11,7 +11,6 @@ import shutil
 import uuid
 import re
 import sys
-import traceback
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
@@ -28,7 +27,7 @@ import dill
 from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, doc_kwargs_keys, cache_dir, DocDict
 from .typechecker import optional_typecheck
 from .logger import red, whi, logger
-from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
+from .loaders import load_one_doc_wrapped, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug, is_verbose
 
 
@@ -285,30 +284,6 @@ def batch_load_doc(
                 if doc["load_functions"]:
                     to_load[idoc]["load_functions"] = parse_load_functions(
                         tuple(doc["load_functions"]))
-
-    # wrap doc_loader to cach errors cleanly
-    @optional_typecheck
-    def load_one_doc_wrapped(
-        loading_failure: str,
-        **doc_kwargs,
-    ) -> Union[List[Document], str]:
-        try:
-            out = load_one_doc(**doc_kwargs)
-            return out
-        except Exception as err:
-            filetype = doc_kwargs["filetype"]
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
-            red(f"Error when loading doc with filetype {filetype}: '{err}'. "
-                f"Arguments: {doc_kwargs}"
-                f"\nLine number: {exc_tb.tb_lineno}"
-                f"\nFull traceback:\n{formatted_tb}")
-            if loading_failure == "crash":
-                raise
-            elif loading_failure == "warn" or is_debug:
-                return str(err)
-            else:
-                raise ValueError(loading_failure)
 
     if len(to_load) > 1:
         for tl in to_load:

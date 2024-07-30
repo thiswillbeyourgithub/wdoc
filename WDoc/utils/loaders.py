@@ -10,6 +10,7 @@ import os
 import time
 from typing import List, Union, Any, Optional, Callable, Dict, Tuple
 from textwrap import dedent
+import traceback
 from functools import partial
 import uuid
 import tempfile
@@ -197,6 +198,30 @@ sox_effects = [
     ["norm"],
 ]
 
+
+@optional_typecheck
+def load_one_doc_wrapped(
+    loading_failure: str,
+    **doc_kwargs,
+) -> Union[List[Document], str]:
+    """wrap doc_loader to cach errors cleanly"""
+    try:
+        out = load_one_doc(**doc_kwargs)
+        return out
+    except Exception as err:
+        filetype = doc_kwargs["filetype"]
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
+        red(f"Error when loading doc with filetype {filetype}: '{err}'. "
+            f"Arguments: {doc_kwargs}"
+            f"\nLine number: {exc_tb.tb_lineno}"
+            f"\nFull traceback:\n{formatted_tb}")
+        if loading_failure == "crash":
+            raise
+        elif loading_failure == "warn" or is_debug:
+            return str(err)
+        else:
+            raise ValueError(loading_failure)
 
 @optional_typecheck
 def load_one_doc(
