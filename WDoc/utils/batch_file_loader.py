@@ -186,7 +186,7 @@ def batch_load_doc(
     # skip the cache
     all_unexp_keys = set()
     for doc in to_load:
-        to_del = [k for k in doc if k not in doc_kwargs_keys]
+        to_del = [k for k in doc if k not in DocDict.allowed_keys]
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
