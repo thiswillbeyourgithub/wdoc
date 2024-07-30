@@ -340,7 +340,7 @@ def batch_load_doc(
             docs.extend(d)
         else:
             assert isinstance(d, str)
-            missing_docargs.append(to_load[idoc])
+            missing_docargs.append(dict(to_load[idoc]))  # must be cast as dict to set error message
             missing_docargs[-1]["error_message"] = d
     assert not any(isinstance(d, str) for d in docs)
 
