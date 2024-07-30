@@ -202,7 +202,7 @@ def load_embeddings(
     timeout = 10
     list_of_files = {f.stem for f in embeddings_cache.iterdir()
                      if "faiss_index" in f.suffix}
-    for doc in tqdm(docs, desc="Loading embeddings from cache", disable=not is_verbose):
+    for doc in tqdm(docs, desc="Loading embeddings from cache"):
         if doc.metadata["content_hash"] in list_of_files:
             fi = embeddings_cache / \
                 str(doc.metadata["content_hash"] + ".faiss_index")

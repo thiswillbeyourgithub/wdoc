@@ -310,7 +310,7 @@ def batch_load_doc(
 
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     missing_docargs = []
-    for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results"):
+    for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results", disable=not is_verbose):
         if isinstance(d, list):
             docs.extend(d)
         else:
