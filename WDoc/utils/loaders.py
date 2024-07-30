@@ -839,11 +839,11 @@ def load_anki(
     for nid, c in notes.iterrows():
         assert c["codeck"], f"empty card_deck for nid {nid}"
         # turn the media into absolute paths
-        media = c["media"]
-        for k, v in media.items():
+        medias = c["medias"]
+        for k, v in medias.items():
             v = Path(original_db).parent / "collection.media" / v
             if v.exists():
-                media[k] = v
+                medias[k] = v
             assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
         # better formatting for tags
         ntags = [
@@ -858,7 +858,7 @@ def load_anki(
                     "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
-                    "anki_media": json.dumps(media),
+                    "anki_media": json.dumps(medias),
                 },
             )
         )
