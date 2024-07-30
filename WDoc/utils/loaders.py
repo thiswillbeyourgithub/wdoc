@@ -434,20 +434,6 @@ def load_one_doc(
             else:
                 docs[i].metadata["source"] = "undocumented"
 
-        if "all_hash" not in docs[i].metadata:
-            docs[i].metadata["all_hash"] = hasher(
-                docs[i].page_content + json.dumps(docs[i].metadata)
-            )
-        if "content_hash" not in docs[i].metadata:
-            docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
-        if "file_hash" not in docs[i].metadata:
-            docs[i].metadata["file_hash"] = file_hash
-
-        assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
-        assert docs[i].metadata[
-            "content_hash"], f"Empty content_hash for document: {docs[i]}"
-        assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
-
         # make sure the filepath are absolute
         if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
             docs[i].metadata["path"] = str(
@@ -460,6 +446,20 @@ def load_one_doc(
         for k, v in docs[i].metadata.items():
             if isinstance(v, PosixPath):
                 docs[i].metadata[k] = v.name
+
+        # set hash
+        if "content_hash" not in docs[i].metadata:
+            docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
+        if "file_hash" not in docs[i].metadata:
+            docs[i].metadata["file_hash"] = file_hash
+        assert docs[i].metadata[
+            "content_hash"], f"Empty content_hash for document: {docs[i]}"
+        assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
+        if "all_hash" not in docs[i].metadata:
+            docs[i].metadata["all_hash"] = hasher(
+                docs[i].page_content + json.dumps(docs[i].metadata)
+            )
+        assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
 
     total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
     assert total_reading_length > 0.1, (
