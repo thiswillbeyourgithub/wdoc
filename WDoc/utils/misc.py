@@ -125,7 +125,6 @@ filetype_arg_types = {
 extra_args_types = {
     "embed_instruct": str,
     "exclude": str,
-    "file_loader_n_jobs": int,
     "filter_content": Union[List[str], str],
     "filter_metadata": Union[List[str], str],
     "include": str,

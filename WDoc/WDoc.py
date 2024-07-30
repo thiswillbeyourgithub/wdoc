@@ -130,6 +130,7 @@ class WDoc:
         notification_callback: Optional[Callable] = None,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: str = "loky",
+        file_loader_n_jobs: int = 10,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
@@ -317,6 +318,7 @@ class WDoc:
             query = query.strip() or None
         assert file_loader_parallel_backend in [
             "loky", "threading", "multiprocessing"], "Invalid value for file_loader_parallel_backend"
+        assert isinstance(file_loader_n_jobs, int), "file_loader_n_jobs mus be an int"
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
@@ -349,6 +351,7 @@ class WDoc:
         self.private = bool(private)
         self.disable_llm_cache = bool(disable_llm_cache)
         self.file_loader_parallel_backend = file_loader_parallel_backend
+        self.file_loader_n_jobs = file_loader_n_jobs
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
@@ -480,6 +483,7 @@ class WDoc:
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
+                n_jobs=self.file_loader_n_jobs if not is_debug else 1,
                 **self.cli_kwargs)
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded

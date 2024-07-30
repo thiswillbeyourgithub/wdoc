@@ -77,6 +77,7 @@ def batch_load_doc(
     filetype: str,
     task: str,
     backend: str,
+    n_jobs: int,
     **cli_kwargs) -> List[Document]:
     """load the input"""
     # # remove cache files older than 90 days
@@ -95,14 +96,6 @@ def batch_load_doc(
     loading_failure = cli_kwargs["loading_failure"] if "loading_failure" in cli_kwargs else "warn"
     assert loading_failure in [
         "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
-
-    if is_debug:
-        n_jobs = 1
-    else:
-        n_jobs = 10
-    if "file_loader_n_jobs" in cli_kwargs:
-        n_jobs = int(cli_kwargs["file_loader_n_jobs"])
-        del cli_kwargs["file_loader_n_jobs"]
 
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]

@@ -207,6 +207,12 @@
     The number of jobs can be specified with `file_loader_n_jobs`
     but it's a loader specific kwargs.
 
+* `--file_loader_n_jobs`: int, default `10`
+    * number of threads to use when loading files. Set to 1 to disable
+    multithreading (as it can result in out of memory error if
+    using threads and overly recursive calls). Automatically set to 1 if
+    `--debug` is set or if there's only one document to load.
+
 * `--private`: bool, default `False`
     * add extra check that your data will never be sent to another
     server: for example check that the api_base was modified and used,
@@ -395,11 +401,6 @@
     * when loading an embedding model using HuggingFace or
     llamacppembeddings backends, wether to wrap the input
     sentence using instruct framework or not.
-
-* `--file_loader_n_jobs`: int, default `5`
-    * number of threads to use when loading files. Set to 1 to disable
-    multithreading (as it can result in out of memory error if
-    using threads and overly recursive calls)
 
 * `--load_functions`: List[str], default `None`
     * list of strings that when evaluated in python result in a list of
