@@ -249,8 +249,9 @@ class WDoc:
                 f"{litellm.model_by_providers.keys()}"
             )
         assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0].lower() in ["openai", "sentencetransformers", "huggingface",]
-                                                        , "Backend of embeddings must be either openai, sentencetransformers or huggingface"
+        assert embed_model.split("/", 1)[0].lower() in [
+            "openai", "sentencetransformers", "huggingface"
+        ] , "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
