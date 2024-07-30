@@ -29,7 +29,7 @@ from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unl
 from .typechecker import optional_typecheck
 from .logger import red, whi, logger
 from .loaders import load_one_doc, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
-from .flags import is_debug
+from .flags import is_debug, is_verbose
 
 
 # rules used to attribute input to proper filetype. For example
@@ -332,6 +332,7 @@ def batch_load_doc(
     doc_lists = Parallel(
         n_jobs=n_jobs,
         backend=backend,
+        verbose=0 if not is_verbose else 51,
     )(delayed(load_one_doc_wrapped)(
         llm_name=llm_name,
         loading_failure=loading_failure,
