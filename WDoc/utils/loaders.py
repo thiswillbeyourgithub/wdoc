@@ -201,7 +201,7 @@ sox_effects = [
 
 @optional_typecheck
 def load_one_doc_wrapped(
-    loading_failure: str,
+    loading_failure: str = "warn",
     **doc_kwargs,
 ) -> Union[List[Document], str]:
     """wrap doc_loader to cach errors cleanly"""
