@@ -458,4 +458,11 @@
     model. Useful if litellm has not yet updated its price table.
 
 * `WDOC_OPEN_ANKI`
-    * if "true", will automatically ask wether to open the anki browser if cards are found in the sources. Only used if task is `query` or `search`.
+    * if "true", will automatically ask wether to open the anki browser if cards are
+    found in the sources. Only used if task is `query` or `search`.
+
+* `WDOC_NONSTRICT_DOCDICT`
+    * if "true", will not crash if trying to set an unexpected argument in a DocDict.
+    Meaning you can specify things like "anki_profile" as argument to filetype "pdf",
+    this makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
+    and you want to continue in the meantime.

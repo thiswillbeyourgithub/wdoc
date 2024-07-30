@@ -148,8 +148,11 @@ class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading a document. Also checks the value type"""
     allowed_keys = doc_kwargs_keys
     allowed_types = loader_specific_keys
+    disable = True if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else False
 
-    def __check_values__(self, key, value):
+    def __check_values__(self, key, value) -> None:
+        if self.disable:
+            return
         if key not in self.allowed_keys:
             raise Exception(
                 f"Cannot set key '{key}' in a DocDict. Allowed keys are "
@@ -161,7 +164,7 @@ class DocDict(dict):
                 f"not {type(value)}"
             )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         for arg in args:
             assert isinstance(arg, dict)
             for k, v in arg.items():
@@ -170,7 +173,7 @@ class DocDict(dict):
             self.__check_values__(k, v)
         super().__init__(*args, **kwargs)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         self.__check_values__(key, value)
         super().__setitem__(key, value)
 
