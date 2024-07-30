@@ -181,6 +181,8 @@ def batch_load_doc(
             new_doc_to_load = []
             continue
 
+    assert all(isinstance(d, DocDict) for d in to_load)
+
     # remove duplicate documents
     temp = []
     for d in to_load:
@@ -244,7 +246,7 @@ def batch_load_doc(
         sorted_filetypes = sorted(bins.keys(), key=lambda x: bins[x])
 
         @optional_typecheck
-        def deterministic_sorter(doc_dict: Union[dict, DocDict]) -> int:
+        def deterministic_sorter(doc_dict: DocDict) -> int:
             h = doc_dict["file_hash"]
             h2 = ''.join(filter(str.isdigit, h))
             h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
