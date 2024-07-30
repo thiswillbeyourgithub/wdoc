@@ -461,8 +461,8 @@
     * if "true", will automatically ask wether to open the anki browser if cards are
     found in the sources. Only used if task is `query` or `search`.
 
-* `WDOC_NONSTRICT_DOCDICT`
-    * if "true", will print instead of crashing if trying to set an unexpected argument in a DocDict.
-    Meaning you can specify things like "anki_profile" as argument to filetype "pdf",
-    this makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
+* `WDOC_STRICT_DOCDICT`
+    * if "true", will crash instead of printing if trying to set an unexpected argument in a DocDict.
+    Otherwise, you can specify things like "anki_profile" as argument to filetype "pdf" without crashing,
+    this also makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
     and you want to continue in the meantime.

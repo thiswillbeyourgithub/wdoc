@@ -148,11 +148,11 @@ doc_kwargs_keys = set([
 class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading
     a document. Also checks the value type. If you set the environnment
-    variable 'WDOC_NONSTRICT_DOCDICT' to 'true' then the checking will be
-    non strict, meaning it will print in red instead of crashing"""
+    variable 'WDOC_STRICT_DOCDICT' to 'true' then the checking will be
+    strict, meaning it will crash instead of printing in red"""
     allowed_keys: set = doc_kwargs_keys
     allowed_types: dict = filetype_arg_types
-    strict = False if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else True
+    strict = True if ("WDOC_STRICT_DOCDICT" in os.environ and os.environ["WDOC_STRICT_DOCDICT"] == "true") else False
 
     def __check_values__(self, key, value) -> None:
         if key not in self.allowed_keys:
@@ -188,10 +188,12 @@ class DocDict(dict):
 
 @optional_typecheck
 def optional_strip_unexp_args(func: Callable) -> Callable:
-    """if the environment variable WDOC_NONSTRICT_DOCDICT is set to 'true'
+    """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
-    if "WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true":
+    if "WDOC_STRICT_DOCDICT" in os.environ and os.environ["WDOC_STRICT_DOCDICT"] == "true":
+        return func
+    else:
         @wraps(func)
         def wrapper(*args, **kwargs):
             sig = inspect.signature(func)
@@ -217,8 +219,6 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
             return func(*bound_args.args, **kwargs2)
 
         return wrapper
-    else:
-        return func
 
 
 
