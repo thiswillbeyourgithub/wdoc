@@ -811,7 +811,7 @@ def load_anki(
     # remove all media
     pbar(desc="Replacing media in anki")
     notes["medias"] = ""
-    notes.loc[: ["text", "medias"]] = notes["text"].apply(
+    notes.loc[:, ["text", "medias"]] = notes["text"].apply(
         lambda x: anki_replace_media(
             content=x,
             media=None,
