@@ -125,13 +125,13 @@ filetype_arg_types = {
 
 # extra arguments supported when instanciating wdoc
 extra_args_types = {
+    "path": Union[str, PosixPath],
     "embed_instruct": str,
+    "out_file": Union[str, PosixPath],
+    "include": str,
     "exclude": str,
     "filter_content": Union[List[str], str],
     "filter_metadata": Union[List[str], str],
-    "include": str,
-    "out_file": Union[str, PosixPath],
-    "path": Union[str, PosixPath],
     "source_tag": str,
 }
 extra_args_types.update(filetype_arg_types)
