@@ -316,7 +316,7 @@ class WDoc:
         if isinstance(query, str):
             query = query.strip() or None
         assert file_loader_parallel_backend in [
-            "loky", "threading"], "Invalid value for file_loader_parallel_backend"
+            "loky", "threading", "multiprocessing"], "Invalid value for file_loader_parallel_backend"
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
