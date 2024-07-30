@@ -754,6 +754,7 @@ def load_anki(
         usetags = False
 
 
+    @optional_typecheck
     def placeholder_replacer(row: pd.Series) -> str:
         text = anki_template
 
@@ -1978,8 +1979,8 @@ def find_onlinemedia(
     onlinemedia_resourcetype_regex: Optional[str] = None,
     headless: bool = True,
     ) -> dict:
-    @optional_typecheck
 
+    @optional_typecheck
     def check_browser_installation(browser_type: str) -> bool:
         try:
             with sync_playwright() as p:
