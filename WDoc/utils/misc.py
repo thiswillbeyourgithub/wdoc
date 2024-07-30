@@ -137,12 +137,12 @@ extra_args_keys = {
 extra_args_keys.update(loader_specific_keys)
 
 # keys that can legally be part of a docdict
-doc_kwargs_keys = [
+doc_kwargs_keys = set([
     "path",
     "filetype",
     "file_hash",
     "source_tag",
-] + list(loader_specific_keys.keys())
+] + list(loader_specific_keys.keys()))
 
 
 class DocDict(dict):
@@ -150,7 +150,7 @@ class DocDict(dict):
     a document. Also checks the value type. If you set the environnment
     variable 'WDOC_NONSTRICT_DOCDICT' to 'true' then the checking will be
     non strict, meaning it will print in red instead of crashing"""
-    allowed_keys = doc_kwargs_keys
+    allowed_keys: set = doc_kwargs_keys
     allowed_types = loader_specific_keys
     strict = False if ("WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true") else True
 
