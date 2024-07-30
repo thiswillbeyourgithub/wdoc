@@ -69,7 +69,7 @@
     Everything before the slash is the backend and everything
     after the / is the model name.
     Available backends: openai, sentencetransformers,
-    huggingface, llamacppembeddings
+    huggingface
 
     * Note:
         * the device used by default for huggingface is 'cpu' and not 'cuda'
@@ -77,8 +77,6 @@
             need to be recomputed with new elements (the hash
             used to check for previous values includes the name of the model
             name)
-        * If the backend if llamacppembeddings, the modelname must be the path to
-            the model. For example: 'llamacppembeddings/my_model_file'
 
 * `--embed_kwargs`: dict, default `None`
     * dictionnary of keyword arguments to pass to the embedding.
@@ -398,9 +396,8 @@
         `--filter_content=-.*winstondoc.*`
 
 * `--embed_instruct`: bool, default `None`
-    * when loading an embedding model using HuggingFace or
-    llamacppembeddings backends, wether to wrap the input
-    sentence using instruct framework or not.
+    * when loading an embedding model using the HuggingFace backend,
+    wether to wrap the input sentence using instruct framework or not.
 
 * `--load_functions`: List[str], default `None`
     * list of strings that when evaluated in python result in a list of

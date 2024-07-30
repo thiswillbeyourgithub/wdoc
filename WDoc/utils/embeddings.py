@@ -17,7 +17,6 @@ from joblib import Parallel, delayed
 
 import numpy as np
 from pydantic import Extra
-from langchain_community.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.storage import LocalFileStore
@@ -40,37 +39,6 @@ litellm = lazy_import.lazy_module("litellm")
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
-
-
-class InstructLlamaCPPEmbeddings(LlamaCppEmbeddings, extra=Extra.allow):
-    """wrapper around the class LlamaCppEmbeddings to add an instruction
-    before the text to embed."""
-    @optional_typecheck
-    def __init__(self, *args, **kwargs):
-        embed_instruction = DEFAULT_EMBED_INSTRUCTION
-        query_instruction = DEFAULT_QUERY_INSTRUCTION
-        if "embed_instruction" in kwargs:
-            embed_instruction = kwargs["embed_instruction"]
-            del kwargs["embed_instruction"]
-        if "query_instruction" in kwargs:
-            query_instruction = kwargs["query_instruction"]
-            del kwargs["query_instruction"]
-
-        super().__init__(*args, **kwargs)
-        self.embed_instruction = embed_instruction
-        self.query_instruction = query_instruction
-
-    @optional_typecheck
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        texts = [self.embed_instruction + t for t in texts]
-        embeddings = [self.client.embed(text) for text in texts]
-        return [list(map(float, e)) for e in embeddings]
-
-    @optional_typecheck
-    def embed_query(self, text: str) -> List[float]:
-        text = self.query_instruction + text
-        embedding = self.client.embed(text)
-        return list(map(float, embedding))
 
 
 @optional_typecheck
@@ -109,7 +77,7 @@ def load_embeddings(
         )
 
     elif backend == "huggingface":
-        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers or llamacppembeddings"
+        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
@@ -166,40 +134,6 @@ def load_embeddings(
                 encode_kwargs=embed_kwargs,
             )
 
-    elif backend == "llamacppembeddings":
-        if private:
-            red(f"Private is set and will use llamacppembeddings backend")
-        llamacppkwargs = {
-            "f16_kv": False,
-            "logits_all": False,
-            "n_batch": 8,
-            "n_ctx": 8192,
-            "n_gpu_layers": 0,
-            "n_parts": -1,
-            "n_threads": 4,
-            "seed": 42,
-            "use_mlock": False,
-            "verbose": False,
-            "vocab_only": False,
-        }
-        llamacppkwargs.update(embed_kwargs)
-        assert Path(embed_model).exists(), f"File not found {embed_model}"
-
-        assert "model_path" not in llamacppkwargs, "llamacppembeddings model_path must be supplied via --embed_model arg"
-
-        red(
-            f"Loading llamacppembeddings at path {embed_model} with arguments {llamacppkwargs}")
-        # method overloading to make it an instruct model
-        if instruct:
-            embeddings = InstructLlamaCPPEmbeddings(
-                model_path=embed_model,
-                **llamacppkwargs,
-            )
-        else:
-            embeddings = LlamaCppEmbeddings(
-                model_path=embed_model,
-                **llamacppkwargs,
-            )
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
