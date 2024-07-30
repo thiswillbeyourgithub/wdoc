@@ -478,13 +478,21 @@ class WDoc:
 
         # loading documents
         if not load_embeds_from:
+            # remove args that are indented only for the instanciation and
+            # not as loading argument
+            filtered_cli_kwargs = self.cli_kwargs.copy()
+            for k in ["embed_instruct" ,"filter_content", "filter_metadata", "out_file"]:
+                if k in filtered_cli_kwargs:
+                    del filtered_cli_kwargs[k]
+
             self.loaded_docs = batch_load_doc(
                 llm_name=self.modelname,
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
                 n_jobs=self.file_loader_n_jobs if not is_debug else 1,
-                **self.cli_kwargs)
+                **filtered_cli_kwargs,
+            )
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
