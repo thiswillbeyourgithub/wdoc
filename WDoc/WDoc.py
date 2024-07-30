@@ -445,7 +445,6 @@ class WDoc:
             assert is_debug
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_debug(True)
-            cli_kwargs["file_loader_n_jobs"] = 1
 
         # don't crash if extra arguments are used for a model
         # litellm.drop_params = True  # drops parameters that are not used by some models
