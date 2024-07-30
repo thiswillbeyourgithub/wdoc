@@ -144,6 +144,21 @@ doc_kwargs_keys = set([
     "source_tag",
 ] + list(filetype_arg_types.keys()))
 
+@memoize
+@optional_typecheck
+def check_env_var(var: str) -> bool:
+    """check if a given variable is set in the env variable. Returns
+    True if 'true', False if 'false' or missing, otherwise crash"""
+    if not var.startswith("WDOC_"):
+        var = "WDOC_" + var
+    if var in os.environ:
+        val = os.environ[var]
+        assert val in ["true", "false"]
+        if val == "true":
+            return True
+        elif val == "false":
+            return False
+    return False
 
 class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading
@@ -152,7 +167,7 @@ class DocDict(dict):
     strict, meaning it will crash instead of printing in red"""
     allowed_keys: set = doc_kwargs_keys
     allowed_types: dict = filetype_arg_types
-    strict = True if ("WDOC_STRICT_DOCDICT" in os.environ and os.environ["WDOC_STRICT_DOCDICT"] == "true") else False
+    strict = True if check_env_var("STRICT_DOCDICT") else False
 
     def __check_values__(self, key, value) -> None:
         if key not in self.allowed_keys:
@@ -191,7 +206,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
-    if "WDOC_STRICT_DOCDICT" in os.environ and os.environ["WDOC_STRICT_DOCDICT"] == "true":
+    if check_env_var("STRICT_DOCDICT"):
         return func
     else:
         @wraps(func)
@@ -334,7 +349,7 @@ def model_name_matcher(model: str) -> str:
     """
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
-    if "WDOC_NO_MODELNAME_MATCHING" in os.environ and os.environ["WDOC_NO_MODELNAME_MATCHING"] == "true":
+    if check_env_var("NO_MODELNAME_MATCHING"):
         whi(f"Bypassing model name matching for model '{model}'")
         return model
 
