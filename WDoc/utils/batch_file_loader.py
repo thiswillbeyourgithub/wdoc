@@ -230,16 +230,15 @@ def batch_load_doc(
 
     if "summar" not in task:
         # shuffle the list of files again to be random but deterministic: keeping only the digits of each hash
+        @optional_typecheck
+        def deterministic_sorter(doc_dict: Union[dict, DocDict]) -> int:
+            h = doc_hashes[to_load.index(doc_dict)]
+            h_ints = int(''.join(filter(str.isdigit, h)))
+            return h_ints
+
         to_load = sorted(
             to_load,
-            key=lambda x: int(
-                ''.join(
-                    filter(
-                        str.isdigit,
-                        doc_hashes[to_load.index(x)],
-                    )
-                )
-            )
+            key=deterministic_sorter,
         )
 
         # deduplicate files based on hash
