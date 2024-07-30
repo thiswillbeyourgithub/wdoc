@@ -871,9 +871,6 @@ def load_anki(
         docs[i].metadata["anki_topdeck"] = anki_deck
         docs[i].metadata["anki_notetype"] = anki_notetype
         docs[i].metadata["path"] = path
-        docs[i].metadata["anki_tags"] = " ".join(
-            sorted(list(set(docs[i].metadata["anki_tags"].split(" "))))
-        )
         docs[i].metadata["anki_nid"] = " ".join(
             sorted(docs[i].metadata["anki_nid"].split(" "))
         )
