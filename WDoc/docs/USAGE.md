@@ -200,13 +200,12 @@
     cache folder for your system. This does not disable caching
     for documents.
 
-* `--file_loader_parallel_backend`: str, default `"threading"`
+* `--file_loader_parallel_backend`: str, default `"loky"`
     * joblib.Parallel backend to use when loading files. `loky` and
     `multiprocessing` refer to multiprocessing whereas `threading`
     refers to multithreading.
     The number of jobs can be specified with `file_loader_n_jobs`
-    but it's a loader specific kwargs. Any value other than the
-    default is not guaranteed to work.
+    but it's a loader specific kwargs.
 
 * `--private`: bool, default `False`
     * add extra check that your data will never be sent to another
