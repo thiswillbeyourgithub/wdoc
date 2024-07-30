@@ -93,10 +93,6 @@ def batch_load_doc(
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
-    loading_failure = cli_kwargs["loading_failure"] if "loading_failure" in cli_kwargs else "warn"
-    assert loading_failure in [
-        "crash", "warn"], f"loading_failure must be either crash or warn. Not {loading_failure}"
-
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype.lower()
@@ -195,12 +191,6 @@ def batch_load_doc(
             all_unexp_keys.add(k)
             del doc[k]
             assert k not in ["include", "exclude"], "Include or exclude arguments should be reomved at this point"
-    # filter out the usual unexpected
-    all_unexp_keys = [a for a in all_unexp_keys if a not in [
-        "out_file", "file_loader_n_jobs", "loading_failure",
-    ]]
-    if all_unexp_keys:
-        red(f"Found unexpected keys in doc_kwargs: '{all_unexp_keys}'")
 
     if "summar" not in task:
         # shuffle the list of files to load to make
@@ -304,7 +294,6 @@ def batch_load_doc(
         verbose=0 if not is_verbose else 51,
     )(delayed(load_one_doc_wrapped)(
         llm_name=llm_name,
-        loading_failure=loading_failure,
         task=task,
         temp_dir=temp_dir,
         **d,

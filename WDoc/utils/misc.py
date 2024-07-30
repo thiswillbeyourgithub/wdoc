@@ -119,6 +119,8 @@ filetype_arg_types = {
 
     "onlinemedia_url_regex": str,
     "onlinemedia_resourcetype_regex": str,
+
+    "loading_failure": str,
 }
 
 # extra arguments supported when instanciating wdoc
@@ -131,7 +133,6 @@ extra_args_types = {
     "out_file": Union[str, PosixPath],
     "path": Union[str, PosixPath],
     "source_tag": str,
-    "loading_failure": str,
 }
 extra_args_types.update(filetype_arg_types)
 
