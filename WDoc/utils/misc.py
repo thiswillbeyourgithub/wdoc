@@ -136,14 +136,6 @@ extra_args_types = {
 }
 extra_args_types.update(filetype_arg_types)
 
-# keys that can legally be part of a docdict
-doc_kwargs_keys = set([
-    "path",
-    "filetype",
-    "file_hash",
-    "source_tag",
-] + list(filetype_arg_types.keys()))
-
 @memoize
 @optional_typecheck
 def check_env_var(var: str) -> bool:
@@ -165,7 +157,10 @@ class DocDict(dict):
     a document. Also checks the value type. If you set the environnment
     variable 'WDOC_STRICT_DOCDICT' to 'true' then the checking will be
     strict, meaning it will crash instead of printing in red"""
-    allowed_keys: set = doc_kwargs_keys
+    allowed_keys: set = set(
+        ["path", "filetype", "file_hash", "source_tag",
+         ] + list(filetype_arg_types.keys())
+    )
     allowed_types: dict = filetype_arg_types
     strict = True if check_env_var("STRICT_DOCDICT") else False
 
