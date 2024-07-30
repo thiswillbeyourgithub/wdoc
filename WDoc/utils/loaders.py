@@ -47,6 +47,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm, loaders_temp_dir_file,
                    min_lang_prob, min_token, max_token, max_lines,
+                   optional_strip_unexp_args,
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
@@ -468,6 +469,7 @@ def cloze_stripper(clozed: str) -> str:
 # loaders #######################################
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 def load_youtube_video(
     path: str,
@@ -589,6 +591,7 @@ def load_youtube_video(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache
 def load_online_pdf(
@@ -635,6 +638,7 @@ def load_online_pdf(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 def load_anki(
     verbose: bool,
@@ -1073,6 +1077,7 @@ def anki_replace_media(
         raise ValueError(mode)
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache
 def load_string() -> List[Document]:
@@ -1091,6 +1096,7 @@ def load_string() -> List[Document]:
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
@@ -1100,6 +1106,7 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     docs = [Document(page_content=content, metadata={})]
     return docs
 
+@optional_strip_unexp_args
 @optional_typecheck
 def load_text_input(
         path: str,
@@ -1120,6 +1127,7 @@ def load_text_input(
     ]
     return docs
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
@@ -1192,6 +1200,7 @@ def eval_load_functions(
         f"Some load_functions are not callable: {load_functions}")
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
@@ -1302,6 +1311,7 @@ def load_logseq_markdown(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
@@ -1420,6 +1430,7 @@ def load_local_audio(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
@@ -1586,6 +1597,7 @@ def transcribe_audio_whisper(
     return transcript
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
@@ -1605,6 +1617,7 @@ def load_epub(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
@@ -1624,6 +1637,7 @@ def load_powerpoint(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
@@ -1646,6 +1660,7 @@ def load_word_document(
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
@@ -1816,6 +1831,7 @@ def load_url(path: str, title=None) -> List[Document]:
     return docs
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
@@ -1860,6 +1876,7 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     return content
 
 
+@optional_strip_unexp_args
 @optional_typecheck
 def load_pdf(
     path: str,
@@ -2087,6 +2104,7 @@ def find_onlinemedia(
 
     return video_urls
 
+@optional_strip_unexp_args
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_online_media(

@@ -186,6 +186,41 @@ class DocDict(dict):
         self.__check_values__(key, value)
         super().__setitem__(key, value)
 
+@optional_typecheck
+def optional_strip_unexp_args(func: Callable) -> Callable:
+    """if the environment variable WDOC_NONSTRICT_DOCDICT is set to 'true'
+    then this automatically removes any unexpected argument before calling a
+    loader function for a specific filetype."""
+    if "WDOC_NONSTRICT_DOCDICT" in os.environ and os.environ["WDOC_NONSTRICT_DOCDICT"] == "true":
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            sig = inspect.signature(func)
+            bound_args = sig.bind_partial(*args, **kwargs)
+
+            # Remove unexpected positional arguments
+            bound_args.arguments = {k: v for k, v in bound_args.arguments.items() if k in sig.parameters}
+            args2 = bound_args.args
+
+            # Remove unexpected keyword arguments
+            kwargs2 = {k: v for k, v in kwargs.items() if k in sig.parameters}
+
+            diffargs = [a for a in args if a not in args2]
+            diffkwargs = {k: v for k, v in kwargs.items() if k not in kwargs2}
+            if diffargs or diffkwargs:
+                mess = f"Unexpected args or kwargs in func {func}:"
+                for arg in diffargs:
+                    mess += f"\n-ARG: {arg}"
+                for kwarg in diffkwargs:
+                    mess += f"\n-KWARG: {kwarg}"
+                red(mess)
+
+            return func(*bound_args.args, **kwargs2)
+
+        return wrapper
+    else:
+        return func
+
+
 
 @optional_typecheck
 def hasher(text: str) -> str:
