@@ -6,8 +6,9 @@ with content generated from WDoc queries, including metadata and properties.
 """
 
 import json
-from LogseqMarkdownParser import LogseqBlock, LogseqPage
+from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
 import time
+from textwrap import indent
 from WDoc import WDoc
 import fire
 from pathlib import Path, PosixPath
@@ -51,6 +52,7 @@ class TheFiche:
         logseq_page: Union[str, PosixPath],
         overwrite: bool = False,
         top_k: int = 300,
+        sources_location: str = "as_pages",
         **kwargs,
         ):
         """
@@ -61,12 +63,15 @@ class TheFiche:
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
+            sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page.
             **kwargs: Additional keyword arguments to pass to WDoc.
 
         Raises:
             AssertionError: If the file exists and overwrite is False, or if the ratio of used/found documents is too high.
         """
+        p(f"Starting TheFiche with args: {query}, {logseq_page}, {overwrite}, {top_k}, {sources_location} and kwargs: {kwargs}")
         assert "top_k" not in kwargs
+        assert sources_location in ["as_pages", "below"]
         logseq_page = Path(logseq_page)
 
         all_kwargs = kwargs.copy()
@@ -107,6 +112,7 @@ class TheFiche:
             "the_fiche_timestamp": int(time.time()),
             "the_fiche_query": query,
         }
+        p(f"Fiche properties: {props}")
 
         n_used = props["WDoc_n_docs_used"]
         n_found = props["WDoc_n_docs_found"]
@@ -118,40 +124,81 @@ class TheFiche:
         text = fiche["final_answer"]
         assert text.strip()
 
-        # used for sources
+        # prepare sources hash dict
         doc_hash = {
             d.metadata["content_hash"][:5]: d.metadata
             for d in fiche["filtered_docs"]
         }
-        # make sure each source is linked
+        # discard sources that are not used
         used_hash = []
-        for d in doc_hash.keys():
+        for d, dm in doc_hash.items():
             if d in text:
                 used_hash.append(d)
-            text = text.replace(d, f" [[{d}]] ")
+            # note: we replace content_hash by all_hash to avoid collisions, as sources are originally refered only by the first 5 letters of content_hash, we now use 8 of all_hash
+            new_h = dm["all_hash"][:8]
+            text = text.replace(d, f" [[{new_h}]] ")
         text = text.replace(" , ", ", ")
         if not used_hash:
-            print("No documents seem to be sourced")
+            p("No documents seem to be sourced")
 
-        content = LogseqPage(
-            text,
-            check_parsing=False,
-            verbose=False,
-        )
+        # create logseq page but don't save it yet
+        content = parse_text(text)
         content.page_properties.update(props)
         assert content.page_properties
 
         # add documents source
-        content.blocks.append(LogseqBlock("- # Sources\n  collapsed:: true"))
-        for dh, dm in doc_hash.items():
-            if dh not in used_hash:
-                continue
-            new_block = f"- [[{dh}]]"
-            for k, v in dm.items():
-                new_block += f"\n  {k}:: {v}"
-            new_block = LogseqBlock(new_block)
-            new_block.indentation_level += 4
-            content.blocks.append(new_block)
+        if sources_location == "below":
+            content.blocks.append(LogseqBlock("- # Sources\n  collapsed:: true"))
+            for dh, dm in doc_hash.items():
+                if dh not in used_hash:
+                    continue
+                cont = [
+                    fd.page_content for fd in fiche["filtered_docs"]
+                    if fd.metadata["all_hash"] == dm["all_hash"]
+                ]
+                assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
+                cont = cont[0].strip()
+                new_block = f"- [[{dh}]]: {indent(cont, '  ').strip()}"
+                for k, v in dm.items():
+                    new_block += f"\n  {k}:: {v}"
+                new_block = LogseqBlock(new_block)
+                new_block.indentation_level += 4
+                content.blocks.append(new_block)
+
+        elif sources_location == "as_pages":
+            logseq_dir = logseq_page.parent
+            for dh, dm in doc_hash.items():
+                if dh not in used_hash:
+                    continue
+                source_path = logseq_dir / ("TheFicheSources___" + dm["all_hash"] + ".md")
+                cont = [
+                    fd.page_content for fd in fiche["filtered_docs"]
+                    if fd.metadata["all_hash"] == dm["all_hash"]
+                ]
+                assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
+                cont = cont[0].strip()
+                new_h = dm["all_hash"][:8]
+
+                if source_path.exists():
+                    p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
+                    prev_source = parse_file(source_path)
+                    if cont in prev_source.content:
+                        if new_h not in str(prev_source.page_properties["alias"]):
+                            raise Exception(f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}")
+                    else:
+                        raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
+                else:
+                    p(f"Creating source page for {dh} ({new_h}) at {source_path}")
+                    source_page = parse_text(cont)
+                    source_page.page_properties.update(dm.copy())
+                    source_page.page_properties["alias"] = new_h
+                    source_page.export_to(
+                        file_path=source_path.absolute(),
+                        overwrite=False,
+                        allow_empty=False,
+                    )
+        else:
+            raise ValueError(sources_location)
 
         # save to file
         if not logseq_page.absolute().exists():
@@ -161,11 +208,7 @@ class TheFiche:
                 allow_empty=False,
             )
         else:
-            prev_content = LogseqPage(
-                logseq_page.read_text(),
-                check_parsing=False,
-                verbose=False,
-            )
+            prev_content = parse_file(logseq_page)
             prev_content.blocks.append(LogseqBlock("- ---"))
 
             new_block = f"- # {today}"
@@ -183,6 +226,7 @@ class TheFiche:
                 overwrite=True,
                 allow_empty=False,
             )
+        p("Done")
 
 
 if __name__ == "__main__":
