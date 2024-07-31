@@ -76,7 +76,7 @@ pydub = lazy_import.lazy_module("pydub")
 ffmpeg = lazy_import.lazy_module("ffmpeg")
 torchaudio = lazy_import.lazy_module("torchaudio")
 sync_playwright = lazy_import.lazy_class("playwright.sync_api.sync_playwright")
-openparse = lazy_import.lazy_class("openparse")
+openparse = lazy_import.lazy_module("openparse")
 
 
 try:
