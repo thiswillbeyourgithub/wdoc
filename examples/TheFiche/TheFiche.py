@@ -248,7 +248,7 @@ class TheFiche:
         if (not logseq_page.absolute().exists()) or overwrite:
             content.export_to(
                 file_path=logseq_page.absolute(),
-                overwrite=False,
+                overwrite=False if not overwrite else True,
                 allow_empty=False,
             )
         else:
