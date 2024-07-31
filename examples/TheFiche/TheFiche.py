@@ -209,6 +209,7 @@ class TheFiche:
                         raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
                 else:
                     p(f"Creating source page for {dh} ({new_h}) at {source_path}")
+                    cont = indent(cont, "  ").strip()
                     if not cont.startswith("- "):
                         cont = "- " + cont
                     source_page = parse_text(cont)
@@ -256,8 +257,7 @@ class TheFiche:
 
             prev_content.blocks.append(new_block)
             for block in content.blocks:
-                diff = block.indentation_level % 4
-                block.indentation_level += 4 + diff
+                block.indentation_level += 4
                 prev_content.blocks.append(block)
             prev_content.export_to(
                 file_path=logseq_page.absolute(),
