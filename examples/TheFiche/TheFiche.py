@@ -100,9 +100,9 @@ class TheFiche:
                 all_kwargs[k] = str(v)
 
         if use_cache:
-            cached = beartype(mem.cache(run_wdoc))
+            cached = mem.cache(run_wdoc)
         else:
-            cached = beartype(run_wdoc)
+            cached = run_wdoc
 
         instance, fiche = cached(query=query, top_k=top_k, kwargs2=kwargs)
 
