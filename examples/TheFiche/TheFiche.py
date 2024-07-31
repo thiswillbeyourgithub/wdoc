@@ -183,7 +183,7 @@ class TheFiche:
                 new_block = LogseqBlock(f"- [[{dh}]]: {indent(cont, '  ').strip()}")
                 for k, v in dm.items():
                     new_block.set_property(k, v)
-                diff = new_block.indentation_level // 4
+                diff = (new_block.indentation_level - new_block.indentation_level // 4) % 4
                 new_block.indentation_level += 4 + diff
                 content.blocks.append(new_block)
 
@@ -259,7 +259,7 @@ class TheFiche:
 
             prev_content.blocks.append(new_block)
             for block in content.blocks:
-                diff = block.indentation_level // 4
+                diff = (block.indentation_level - block.indentation_level // 4) % 4
                 block.indentation_level += 4 + diff
                 prev_content.blocks.append(block)
             prev_content.export_to(
