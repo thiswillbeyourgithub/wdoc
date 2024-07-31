@@ -5,6 +5,7 @@ The imports are taking a substantial amount of time so loaders.py is
 lazily loaded.
 """
 
+import copy
 import sys
 import os
 import time
@@ -1320,16 +1321,23 @@ def load_logseq_markdown(
         )
     ])
 
-    found = False
+    failed_blocks = []
     for b in blocks:
-        cont = b.content.strip()
+        b = copy(b)
         props = b.properties.copy()
         for k, v in props.items():
-            cont = cont.replace(f"{k}:: {v}", "").strip()
+            b.del_property(key=k)
+            b.content = b.content.strip()
+        cont = b.content
         if not cont:
             continue
+        found = False
         for i, d in enumerate(docs):
-            if cont in d.page_content:
+            if i + 1 >= len(docs):
+                next = ""
+            else:
+                next = docs[i+1].page_content
+            if cont in d.page_content or (cont not in next and cont in d.page_content + next):
 
                 # merge metadata dictionnaries
                 for k, v in props.items():
@@ -1354,6 +1362,15 @@ def load_logseq_markdown(
                             docs[i].metadata[k] = [docs[i].metadata[k], v]
                 found = True
                 break
+        if not found:
+            failed_blocks.append(b)
+
+    if failed_blocks:
+        mess = f"Couldn't find {len(failed_blocks)} blocks after splitting the document"
+        if len(failed_blocks) >= 0.5 * len(blocks):
+            raise Exception(mess)
+        else:
+            red(mess)
 
     # sort and deduplicate metadata
     for i, d in enumerate(docs):
@@ -1361,40 +1378,6 @@ def load_logseq_markdown(
             if isinstance(v, list):
                 d.metadata[k] = list(sorted(list(set(v))))
             assert d.metadata[k], f"There shouldn't be any empty metadata value but key '{k}' of doc '{d}' is empty."
-
-    assert found, "None of the blocks found in document"
-    return docs
-
-    # # group blocks by parent block
-    # pblocks = [[blocks[0]]]
-    # for b in blocks[1:]:
-    #     if b.indentation_level == 0:
-    #         pblocks.append([b])
-    #     else:
-    #         pblocks[-1].append(b)
-    # whi(f"Found {len(pblocks)} parent blocks")
-    # assert sum([len(pb) for pb in pblocks]) == len(blocks), "Unexpected number of blocks after grouping by parent"
-    #
-    # docs = []
-    # for grou in pblocks:
-    #     # store in metadata the properties of the blocks inside a given
-    #     # parent block
-    #     meta = page_props.copy()
-    #     content = ""  # and remove the metadata from the page content
-    #     for b in grou:
-    #         cont = b.content
-    #         for k, v in b.properties.items():
-    #             meta[k] = v
-    #             cont = cont.replace(f"{k}:: {v}", "").strip()
-    #         cont = dedent(cont)
-    #         cont = cont.replace("\t", "    ")
-    #         content += "\n" + cont
-    #
-    #     doc = Document(
-    #         page_content=content,
-    #         metadata=meta,
-    #     )
-    #     docs.append(doc)
 
     return docs
 
