@@ -1,6 +1,6 @@
 # TheFiche
 
-TheFiche is a script that generates and exports [Logseq](https://github.com/logseq/logseq) pages based on [WDoc](https://github.com/thiswillbeyourgithub/WDoc/) queries. It provides functionality to create structured Logseq pages with content generated from WDoc queries, including metadata and properties.
+TheFiche is a script that generates and exports [Logseq](https://github.com/logseq/logseq) pages based on [WDoc](https://github.com/thiswillbeyourgithub/WDoc/) queries. It provides functionality to create structured Logseq pages with content generated from WDoc queries, including metadata and properties. The name "TheFiche" is french for "TheCheatsheet" only it's more like a comprehensive sheet and no relations to "cheating".
 
 ## Features
 
