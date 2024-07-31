@@ -146,7 +146,8 @@ def pbar_chain(
                 **tqdm_kwargs,
             )
         )
-        assert llm.callbacks[0].pbar[-1].total
+        if not llm.callbacks[0].pbar[-1].total:
+            red(f"Empty total for pbar: {llm.callbacks[0].pbar[-1]}")
 
         return inputs
 
