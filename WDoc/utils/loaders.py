@@ -164,13 +164,12 @@ pdf_loaders = {
 # pdftotext is kinda weird to install on windows so support it
 # only if it's correctly imported
 if "pdftotext" in sys.modules:
+    @optional_typecheck
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
-        @optional_typecheck
-        def __init__(self, path: Union[str, PosixPath]):
+        def __init__(self, path: Union[str, PosixPath]) -> None:
             self.path = path
 
-        @optional_typecheck
         def load(self) -> List[Document]:
             with open(self.path, "rb") as f:
                 docs = [
