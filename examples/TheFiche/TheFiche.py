@@ -34,7 +34,7 @@ def p(*args):
     print(*args)
     logger.info(*args)
 
-VERSION = "0.4"
+VERSION = "0.5"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
