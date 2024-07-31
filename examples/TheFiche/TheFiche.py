@@ -94,6 +94,11 @@ class TheFiche:
         all_kwargs = kwargs.copy()
         all_kwargs.update({"top_k": top_k})
 
+        # posixpath can't be serialized to json
+        for k, v in all_kwargs.items():
+            if isinstance(v, PosixPath):
+                all_kwargs[k] = str(v)
+
         if use_cache:
             cached = beartype(mem.cache(run_wdoc))
         else:
