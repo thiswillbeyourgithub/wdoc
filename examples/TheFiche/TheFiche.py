@@ -172,10 +172,9 @@ class TheFiche:
                 ]
                 assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
                 cont = cont[0].strip()
-                new_block = f"- [[{dh}]]: {indent(cont, '  ').strip()}"
+                new_block = LogseqBlock(f"- [[{dh}]]: {indent(cont, '  ').strip()}")
                 for k, v in dm.items():
-                    new_block += f"\n  {k}:: {v}"
-                new_block = LogseqBlock(new_block)
+                    new_block.set_property(k, v)
                 new_block.indentation_level += 4
                 content.blocks.append(new_block)
 
@@ -242,10 +241,9 @@ class TheFiche:
             prev_content = parse_file(logseq_page)
             prev_content.blocks.append(LogseqBlock("- ---"))
 
-            new_block = f"- # {today}"
-            for k, v in props.items():
-                new_block += f"\n  {k}:: {v}"
-            new_block = LogseqBlock(new_block)
+            new_block = LogseqBlock(f"- # {today}")
+            for k, v in content.page_properties.items():
+                new_block.set_property(k, v)
 
             prev_content.blocks.append(new_block)
             for block in content.blocks:
