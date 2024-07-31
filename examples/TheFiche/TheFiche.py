@@ -51,7 +51,33 @@ def run_wdoc(query: str, top_k: int, kwargs2: dict) -> Tuple[WDoc, dict]:
         **kwargs2,
     )
     fiche = instance.query_task(query=query)
-    return instance, fiche
+
+    if len(fiche["all_intermediate_answers"]) > 1:
+        extra = '->'.join(
+            [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
+        )
+        extra = f"({extra})"
+    else:
+        extra = ""
+
+    props = {
+        "block_type": "WDoc_the_fiche",
+        "WDoc_version": instance.VERSION,
+        "WDoc_model": f"{instance.modelname} of {instance.modelbackend}",
+        "WDoc_evalmodel": f"{instance.query_eval_modelname} of {instance.query_eval_modelbackend}",
+        "WDoc_evalmodel_check_nb": instance.query_eval_check_number,
+        "WDoc_cost": instance.latest_cost,
+        "WDoc_n_docs_found": len(fiche["unfiltered_docs"]),
+        "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
+        "WDoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
+        "WDoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
+        "WDoc_kwargs": json.dumps(kwargs2),
+        "the_fiche_version": VERSION,
+        "the_fiche_date": today,
+        "the_fiche_timestamp": int(time.time()),
+        "the_fiche_query": query,
+    }
+    return fiche, props
 
 @beartype
 class TheFiche:
@@ -104,33 +130,8 @@ class TheFiche:
         else:
             cached = run_wdoc
 
-        instance, fiche = cached(query=query, top_k=top_k, kwargs2=kwargs)
+        fiche, props = cached(query=query, top_k=top_k, kwargs2=kwargs)
 
-        if len(fiche["all_intermediate_answers"]) > 1:
-            extra = '->'.join(
-                [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
-            )
-            extra = f"({extra})"
-        else:
-            extra = ""
-
-        props = {
-            "block_type": "WDoc_the_fiche",
-            "WDoc_version": instance.VERSION,
-            "WDoc_model": f"{instance.modelname} of {instance.modelbackend}",
-            "WDoc_evalmodel": f"{instance.query_eval_modelname} of {instance.query_eval_modelbackend}",
-            "WDoc_evalmodel_check_nb": instance.query_eval_check_number,
-            "WDoc_cost": instance.latest_cost,
-            "WDoc_n_docs_found": len(fiche["unfiltered_docs"]),
-            "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
-            "WDoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
-            "WDoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
-            "WDoc_kwargs": json.dumps(all_kwargs),
-            "the_fiche_version": VERSION,
-            "the_fiche_date": today,
-            "the_fiche_timestamp": int(time.time()),
-            "the_fiche_query": query,
-        }
         p(f"Fiche properties: {props}")
 
         n_used = props["WDoc_n_docs_used"]
