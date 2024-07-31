@@ -41,13 +41,12 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 mem = Memory(".cache", verbose=False)
 
-def run_wdoc(query: str, top_k: int, kwargs2: dict) -> Tuple[WDoc, dict]:
+def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
     "call to wdoc, optionaly cached"
     instance = WDoc(
         task="query",
         import_mode=True,
         query=query,
-        top_k=top_k,
         **kwargs2,
     )
     fiche = instance.query_task(query=query)
@@ -130,7 +129,7 @@ class TheFiche:
         else:
             cached = run_wdoc
 
-        fiche, props = cached(query=query, top_k=top_k, kwargs2=kwargs)
+        fiche, props = cached(query=query, kwargs2=all_kwargs)
 
         p(f"Fiche properties: {props}")
 
