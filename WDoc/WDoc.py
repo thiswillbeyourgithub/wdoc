@@ -1553,9 +1553,9 @@ class WDoc:
                 )
                 chain_time = time.time() - start_time
             except NoDocumentsRetrieved as err:
-                return md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")
+                return {"error": md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")}
             except NoDocumentsAfterLLMEvalFiltering as err:
-                return md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")
+                return {"error": md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")}
 
             assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
 
