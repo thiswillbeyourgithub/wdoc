@@ -17,6 +17,7 @@ from beartype import beartype
 from typing import Union, Tuple
 from loguru import logger
 from joblib import Memory
+import re
 
 # logger
 logger.add(
@@ -213,6 +214,23 @@ class TheFiche:
                     )
         else:
             raise ValueError(sources_location)
+
+        # make it so that the sources appear as block properties instead of in the content
+        for ib, b in content.blocks:
+            for dh, dm in doc_hash.items():
+                new_h = dm["all_hash"][:5]
+                assert dh not in b.content
+                if new_h in b.content:
+                    assert f"[[{new_h}]]" in b.content
+                    content.blocks[ib].content = re.sub(
+                        f"[, ]*\[\[{new_h}\]\][, ]*",
+                        "",
+                        b.content,
+                    )
+                    assert f"[[{new_h}]]" not in b.content
+                    assert new_h not in content.blocks[ib].content
+                    content.blocks[ib].set_property("source", f"[[{new_h}]]")
+
 
         # save to file
         if not logseq_page.absolute().exists():
