@@ -14,6 +14,22 @@ from pathlib import Path, PosixPath
 from datetime import datetime
 from beartype import beartype
 from typing import Union
+from loguru import logger
+
+# logger
+logger.add(
+    "logs.txt",
+    rotation="100MB",
+    retention=5,
+    format='{time} {level} {thread} TheFiche {process} {function} {line} {message}',
+    level="DEBUG",
+    enqueue=True,
+    colorize=False,
+)
+def p(*args):
+    "simple way to log to logs.txt and to print"
+    print(*args)
+    logger.info(*args)
 
 VERSION = "0.4"
 
