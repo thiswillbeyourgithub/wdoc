@@ -239,6 +239,8 @@ class TheFiche:
                     )
                     assert f"[[{new_h}]]" not in b.content
                     assert new_h not in content.blocks[ib].content
+                    content.blocks[ib].content = content.blocks[ib].content.replace(" []", "")
+                    content.blocks[ib].content = content.blocks[ib].content.replace("[]", "")
                     content.blocks[ib].set_property("source", f"[[{new_h}]]")
 
 
