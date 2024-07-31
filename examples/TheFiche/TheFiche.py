@@ -50,6 +50,7 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
         **kwargs2,
     )
     fiche = instance.query_task(query=query)
+    assert "error" not in fiche
 
     if len(fiche["all_intermediate_answers"]) > 1:
         extra = '->'.join(
