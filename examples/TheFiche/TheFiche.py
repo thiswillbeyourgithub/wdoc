@@ -183,7 +183,7 @@ class TheFiche:
                 new_block = LogseqBlock(f"- [[{dh}]]: {indent(cont, '  ').strip()}")
                 for k, v in dm.items():
                     new_block.set_property(k, v)
-                diff = (new_block.indentation_level - new_block.indentation_level // 4) % 4
+                diff = (4 - new_block.indentation_level % 4)
                 new_block.indentation_level += 4 + diff
                 content.blocks.append(new_block)
 
@@ -243,7 +243,7 @@ class TheFiche:
 
 
         # save to file
-        if not logseq_page.absolute().exists():
+        if (not logseq_page.absolute().exists()) or overwrite:
             content.export_to(
                 file_path=logseq_page.absolute(),
                 overwrite=False,
@@ -259,7 +259,7 @@ class TheFiche:
 
             prev_content.blocks.append(new_block)
             for block in content.blocks:
-                diff = (block.indentation_level - block.indentation_level // 4) % 4
+                diff = (4 - block.indentation_level % 4)
                 block.indentation_level += 4 + diff
                 prev_content.blocks.append(block)
             prev_content.export_to(
