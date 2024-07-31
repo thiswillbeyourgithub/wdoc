@@ -224,7 +224,7 @@ class TheFiche:
             raise ValueError(sources_location)
 
         # make it so that the sources appear as block properties instead of in the content
-        for ib, b in content.blocks:
+        for ib, b in enumerate(content.blocks):
             for dh, dm in doc_hash.items():
                 new_h = dm["all_hash"][:5]
                 assert dh not in b.content
