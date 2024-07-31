@@ -94,6 +94,7 @@ class TheFiche:
         overwrite: bool = False,
         top_k: int = 300,
         sources_location: str = "as_pages",
+        sources_as_properties: bool = False,
         use_cache: bool = True,
         **kwargs,
         ):
@@ -106,6 +107,7 @@ class TheFiche:
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page.
+            sources_as_properties (bool): if True, make sure the sources appear as block properties instead of leaving them as is.
             use_cache (bool): set to False to bypass the cache
             **kwargs: Additional keyword arguments to pass to WDoc.
 
@@ -228,23 +230,24 @@ class TheFiche:
         else:
             raise ValueError(sources_location)
 
-        # make it so that the sources appear as block properties instead of in the content
-        for ib, b in enumerate(content.blocks):
-            for dh, dm in doc_hash.items():
-                new_h = dm["all_hash"][:5]
-                assert dh not in b.content
-                if new_h in b.content:
-                    assert f"[[{new_h}]]" in b.content
-                    content.blocks[ib].content = re.sub(
-                        f"[, ]*\[\[{new_h}\]\][, ]*",
-                        "",
-                        b.content,
-                    )
-                    assert f"[[{new_h}]]" not in b.content
-                    assert new_h not in content.blocks[ib].content
-                    content.blocks[ib].content = content.blocks[ib].content.replace(" []", "")
-                    content.blocks[ib].content = content.blocks[ib].content.replace("[]", "")
-                    content.blocks[ib].set_property("source", f"[[{new_h}]]")
+        if sources_as_properties:
+            # make it so that the sources appear as block properties instead of in the content
+            for ib, b in enumerate(content.blocks):
+                for dh, dm in doc_hash.items():
+                    new_h = dm["all_hash"][:5]
+                    assert dh not in b.content
+                    if new_h in b.content:
+                        assert f"[[{new_h}]]" in b.content
+                        content.blocks[ib].content = re.sub(
+                            f"[, ]*\[\[{new_h}\]\][, ]*",
+                            "",
+                            b.content,
+                        )
+                        assert f"[[{new_h}]]" not in b.content
+                        assert new_h not in content.blocks[ib].content
+                        content.blocks[ib].content = content.blocks[ib].content.replace(" []", "")
+                        content.blocks[ib].content = content.blocks[ib].content.replace("[]", "")
+                        content.blocks[ib].set_property("source", f"[[{new_h}]]")
 
 
         # save to file
