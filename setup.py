@@ -8,7 +8,7 @@ class PostInstallCommand(install):
     def run(self):
         install.run(self)
 
-        # do "playwright install"
+        # do "python -m playwright install"
         try:
             subprocess.check_call(
                 [sys.executable, '-m', 'playwright', 'install']
@@ -16,6 +16,7 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
+        # do "python -m pip install -U git+https://github.com/ytdl-org/youtube-dl.git"
         try:
             subprocess.check_call(
                 [sys.executable, '-m', 'pip', 'install',
@@ -23,6 +24,20 @@ class PostInstallCommand(install):
             )
         except Exception as err:
             print(f"Error when pip updating youtube_dl: '{err}'")
+
+        # do "openparse-download"
+        try:
+            subprocess.check_call(
+                ['openparse-download'],
+            )
+        except Exception as err:
+            print(
+                "Error when trying to run 'openparse-download' to download"
+                f" weights for deep learning based table detection : '{err}'"
+                "\nBy default WDoc still uses pymupdf via openparse so it "
+                "shouldn't matter too much.\n"
+                "For more: see https://github.com/Filimoa/open-parse/"
+            )
 
 
 with open("README.md", "r") as readme:
@@ -101,6 +116,7 @@ setup(
         'ffmpeg-python >= 0.2.0',  # extracting audio from local video
         'torchaudio >= 2.3.1',  # silence removal from audio
         'playwright >= 1.45.0',  # for online_media and urls
+        'openparse[ml] >= 0.5.7',  # pdf with table support
     ],
     extra_require={
         'optional_feature': [

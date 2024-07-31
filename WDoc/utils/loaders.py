@@ -75,6 +75,7 @@ pydub = lazy_import.lazy_module("pydub")
 ffmpeg = lazy_import.lazy_module("ffmpeg")
 torchaudio = lazy_import.lazy_module("torchaudio")
 sync_playwright = lazy_import.lazy_class("playwright.sync_api.sync_playwright")
+openparse = lazy_import.lazy_class("openparse")
 
 
 try:
@@ -122,7 +123,69 @@ linebreak_before_letter = re.compile(
 )  # match any linebreak that is followed by a lowercase letter
 anki_replacements_regex = re.compile(r'\{([^}]*)\}')
 
+@optional_typecheck
+class OpenparseDocumentParser:
+    def __init__(
+        self,
+        path: Union[str, PosixPath],
+        table_args: Optional[dict] = {
+            "parsing_algorithm": "pymupdf",
+            "table_output_format": "markdown",
+        },
+        # table_args: Optional[dict] = None,
+        ) -> None:
+        self.path = path
+        self.table_args = table_args
+
+    def load(self) -> List[Document]:
+        parser = openparse.DocumentParser(table_args=self.table_args)
+        self.parsed = parser.parse(self.path)
+
+        base_metadata = self.parsed.dict()
+        nodes = base_metadata["nodes"]
+        del base_metadata["nodes"]
+
+        docs = []
+        for node in nodes:
+            meta = base_metadata.copy()
+            meta.update(node)
+            meta["page"] = meta["bbox"][0]["page"]
+            text = meta["text"]
+            del meta["text"], meta["bbox"], meta["node_id"], meta["tokens"]
+            if meta["embedding"] is None:
+                del meta["embedding"]
+
+            doc = Document(
+                page_content=text,
+                metadata=meta,
+            )
+
+            if not docs:
+                docs.append(doc)
+            elif docs[-1].metadata["page"] != meta["page"]:
+                docs.append(doc)
+            else:
+                docs[-1].page_content += "\n" + doc.page_content
+                for k, v in doc.metadata.items():
+                    if k not in docs[-1].metadata:
+                        docs[-1].metadata[k] = v
+                    else:
+                        val = docs[-1].metadata[k]
+                        if v == val:
+                            continue
+                        elif isinstance(val, list):
+                            if v not in val:
+                                if isinstance(v, list):
+                                    docs[-1].metadata[k].extend(v)
+                                else:
+                                    docs[-1].metadata[k].append(v)
+                        else:
+                            docs[-1].metadata[k] = [val, v]
+        self.docs = docs
+        return docs
+
 pdf_loaders = {
+    "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
     "PDFMiner": PDFMinerLoader,  # little metadata
     "PyPDFLoader": PyPDFLoader,  # little metadata
     "PyPDFium2": PyPDFium2Loader,  # little metadata
