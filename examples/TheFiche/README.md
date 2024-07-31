@@ -52,6 +52,7 @@ python TheFiche.py --query="Your query here" --logseq_page="path/to/output.md" -
 - `logseq_page` (str or PosixPath): The path to the Logseq page file.
 - `overwrite` (bool, optional): Whether to overwrite an existing file. Defaults to False.
 - `top_k` (int, optional): The number of top documents to consider. Defaults to 300.
+- `sources_location` (str, optional): Wether to store the sources at the bottom of the fiche or as individual pages. Defaults to 'as_pages'.
 - `**kwargs`: Additional keyword arguments to pass to WDoc.
 
 ## Output
