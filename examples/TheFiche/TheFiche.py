@@ -161,6 +161,8 @@ class TheFiche:
             p("No documents seem to be sourced")
 
         # create logseq page but don't save it yet
+        if not text.startswith("- "):
+            text = "- " + text
         content = parse_text(text)
         content.page_properties.update(props)
         assert content.page_properties
@@ -207,6 +209,8 @@ class TheFiche:
                         raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
                 else:
                     p(f"Creating source page for {dh} ({new_h}) at {source_path}")
+                    if not cont.startswith("- "):
+                        cont = "- " + cont
                     source_page = parse_text(cont)
                     source_page.page_properties.update(dm.copy())
                     source_page.page_properties["alias"] = new_h
