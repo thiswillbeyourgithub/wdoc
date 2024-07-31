@@ -45,8 +45,8 @@ DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting do
 def load_embeddings(
     embed_model: str,
     embed_kwargs: dict,
-    load_embeds_from: Optional[str],
-    save_embeds_as: str,
+    load_embeds_from: Optional[Union[str, PosixPath]],
+    save_embeds_as: Union[str, PosixPath],
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
