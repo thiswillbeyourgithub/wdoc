@@ -103,7 +103,7 @@ class TheFiche:
         Args:
             query (str): The query to be processed by WDoc.
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
-            overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting.
+            overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page.
             use_cache (bool): set to False to bypass the cache
@@ -200,6 +200,9 @@ class TheFiche:
                 assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
                 cont = cont[0].strip()
                 new_h = dm["all_hash"][:5]
+
+                if overwrite:
+                    source_path.unlink(missing_ok=True)
 
                 if source_path.exists():
                     p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
