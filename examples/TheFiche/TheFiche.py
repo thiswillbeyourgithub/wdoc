@@ -14,7 +14,7 @@ import fire
 from pathlib import Path, PosixPath
 from datetime import datetime
 from beartype import beartype
-from typing import Union
+from typing import Union, Tuple
 from loguru import logger
 from joblib import Memory
 
@@ -40,6 +40,17 @@ today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 mem = Memory(".cache", verbose=False)
 
+def run_wdoc(query: str, top_k: int, kwargs2: dict) -> Tuple[WDoc, dict]:
+    "call to wdoc, optionaly cached"
+    instance = WDoc(
+        task="query",
+        import_mode=True,
+        query=query,
+        top_k=top_k,
+        **kwargs2,
+    )
+    fiche = instance.query_task(query=query)
+    return instance, fiche
 
 @beartype
 class TheFiche:
@@ -82,21 +93,12 @@ class TheFiche:
         all_kwargs = kwargs.copy()
         all_kwargs.update({"top_k": top_k})
 
-        def run_wdoc(query: str, top_k: int, kwargs2: dict) -> dict:
-            instance = WDoc(
-                task="query",
-                import_mode=True,
-                query=query,
-                top_k=top_k,
-                **kwargs2,
-            )
-            fiche = instance.query_task(query=query)
-            return fiche
         if use_cache:
             cached = beartype(mem.cache(run_wdoc))
         else:
             cached = beartype(run_wdoc)
-        fiche = cached(query=query, top_k=top_k, kwargs2=kwargs)
+
+        instance, fiche = cached(query=query, top_k=top_k, kwargs2=kwargs)
 
         if len(fiche["all_intermediate_answers"]) > 1:
             extra = '->'.join(
