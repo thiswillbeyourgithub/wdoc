@@ -15,7 +15,7 @@ import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable
 import tldextract
-from pathlib import Path
+from pathlib import Path, PosixPath
 import time
 import re
 import os
@@ -107,8 +107,8 @@ class WDoc:
         # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
         # embed_model: str =  "huggingface/google/gemma-2b",
         embed_kwargs: Optional[dict] = None,
-        save_embeds_as: str = "{user_cache}/latest_docs_and_embeddings",
-        load_embeds_from: Optional[str] = None,
+        save_embeds_as: Union[str, PosixPath] = "{user_cache}/latest_docs_and_embeddings",
+        load_embeds_from: Optional[Union[str, PosixPath]] = None,
         top_k: int = 100,
 
         query: Optional[str] = None,
