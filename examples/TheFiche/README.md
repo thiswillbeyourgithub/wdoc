@@ -16,11 +16,12 @@ To use TheFiche, you need to have WDoc and its dependencies installed. Make sure
 - [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) (by me also)
 - fire
 - beartype
+- joblib
 
 You can install the required dependencies using pip:
 
 ```
-python -m pip install -U WDoc LogseqMarkdownParser fire beartype
+python -m pip install -U WDoc LogseqMarkdownParser fire beartype joblib
 ```
 
 ## Usage

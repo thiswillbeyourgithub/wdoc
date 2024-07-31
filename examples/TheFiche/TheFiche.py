@@ -16,6 +16,7 @@ from datetime import datetime
 from beartype import beartype
 from typing import Union
 from loguru import logger
+from joblib import Memory
 
 # logger
 logger.add(
@@ -37,6 +38,8 @@ VERSION = "0.4"
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
+mem = Memory(".cache", verbose=False)
+
 
 @beartype
 class TheFiche:
@@ -53,6 +56,7 @@ class TheFiche:
         overwrite: bool = False,
         top_k: int = 300,
         sources_location: str = "as_pages",
+        use_cache: bool = True,
         **kwargs,
         ):
         """
@@ -64,6 +68,7 @@ class TheFiche:
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page.
+            use_cache (bool): set to False to bypass the cache
             **kwargs: Additional keyword arguments to pass to WDoc.
 
         Raises:
@@ -77,14 +82,21 @@ class TheFiche:
         all_kwargs = kwargs.copy()
         all_kwargs.update({"top_k": top_k})
 
-        instance = WDoc(
-            task="query",
-            import_mode=True,
-            query=query,
-            top_k=top_k,
-            **kwargs,
-        )
-        fiche = instance.query_task(query=query)
+        def run_wdoc(query: str, top_k: int, kwargs2: dict) -> dict:
+            instance = WDoc(
+                task="query",
+                import_mode=True,
+                query=query,
+                top_k=top_k,
+                **kwargs2,
+            )
+            fiche = instance.query_task(query=query)
+            return fiche
+        if use_cache:
+            cached = beartype(mem.cache(run_wdoc))
+        else:
+            cached = beartype(run_wdoc)
+        fiche = cached(query=query, top_k=top_k, kwargs2=kwargs)
 
         if len(fiche["all_intermediate_answers"]) > 1:
             extra = '->'.join(
