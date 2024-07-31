@@ -134,8 +134,8 @@ class TheFiche:
         for d, dm in doc_hash.items():
             if d in text:
                 used_hash.append(d)
-            # note: we replace content_hash by all_hash to avoid collisions, as sources are originally refered only by the first 5 letters of content_hash, we now use 8 of all_hash
-            new_h = dm["all_hash"][:8]
+            # note: we replace content_hash by all_hash to avoid collisions, as sources are originally refered only by the first 5 letters of content_hash, we now use 5 of all_hash
+            new_h = dm["all_hash"][:5]
             text = text.replace(d, f" [[{new_h}]] ")
         text = text.replace(" , ", ", ")
         if not used_hash:
@@ -177,7 +177,7 @@ class TheFiche:
                 ]
                 assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
                 cont = cont[0].strip()
-                new_h = dm["all_hash"][:8]
+                new_h = dm["all_hash"][:5]
 
                 if source_path.exists():
                     p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
