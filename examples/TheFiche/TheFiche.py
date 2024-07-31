@@ -69,6 +69,9 @@ class TheFiche:
         assert "top_k" not in kwargs
         logseq_page = Path(logseq_page)
 
+        all_kwargs = kwargs.copy()
+        all_kwargs.update({"top_k": top_k})
+
         instance = WDoc(
             task="query",
             import_mode=True,
@@ -77,9 +80,6 @@ class TheFiche:
             **kwargs,
         )
         fiche = instance.query_task(query=query)
-
-        all_kwargs = kwargs.copy()
-        all_kwargs.update({"top_k": top_k})
 
         if len(fiche["all_intermediate_answers"]) > 1:
             extra = '->'.join(
