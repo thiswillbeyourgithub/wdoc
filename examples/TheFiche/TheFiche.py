@@ -110,7 +110,6 @@ class TheFiche:
             extra = ""
 
         props = {
-            "collapsed": "false",
             "block_type": "WDoc_the_fiche",
             "WDoc_version": instance.VERSION,
             "WDoc_model": f"{instance.modelname} of {instance.modelbackend}",
