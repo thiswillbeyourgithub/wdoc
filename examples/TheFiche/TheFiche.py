@@ -142,6 +142,7 @@ class TheFiche:
         assert ratio <= 0.9, (
             f"Ratio of number of docs used/found is {ratio:.1f} > 0.9 ({n_used}, {n_found})"
         )
+        assert n_found / top_k <= 0.9, f"Found {n_found} documents but asked {top_k}, you should ask more"
 
         text = fiche["final_answer"]
         assert text.strip()
