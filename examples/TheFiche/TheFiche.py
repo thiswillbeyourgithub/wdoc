@@ -209,8 +209,8 @@ class TheFiche:
                 if source_path.exists():
                     p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
                     prev_source = parse_file(source_path)
-                    if cont in prev_source.content:
-                        if new_h not in str(prev_source.page_properties["alias"]):
+                    if prev_source.page_properties["content_hash"][:5].startswith(dh):
+                        if not prev_source.page_properties["all_hash"].startswith(new_h):
                             raise Exception(f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}")
                     else:
                         raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
