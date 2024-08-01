@@ -201,7 +201,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
-    if check_env_var("STRICT_DOCDICT"):
+    if not check_env_var("STRICT_DOCDICT"):
         return func
     else:
         @wraps(func)
