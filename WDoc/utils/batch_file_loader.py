@@ -169,7 +169,13 @@ def batch_load_doc(
             new_doc_to_load = []
             continue
 
-    assert all(isinstance(d, DocDict) for d in to_load)
+    try:
+        to_load = [
+            d if isinstance(d, DocDict) else DocDict(d)
+            for d in to_load
+        ]
+    except Exception as err:
+        raise Exception(f"Expected to have only DocDict at this point: {err}'")
 
     # remove duplicate documents
     temp = []
