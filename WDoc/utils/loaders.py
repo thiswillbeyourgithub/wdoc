@@ -812,6 +812,7 @@ def load_anki(
             lambda x: "\n\n".join([
                 f"{k.lower()}: '{html_to_text(cloze_stripper(v)).strip()}'"
                 for k, v in zip(x["fields_name"], x["nflds"])
+                if v.strip()
             ]),
             axis=1,
         )
