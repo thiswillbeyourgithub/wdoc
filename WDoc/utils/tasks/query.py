@@ -9,7 +9,9 @@ from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
 from joblib import Memory
 from tqdm import tqdm
+import numpy as np
 
+from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
@@ -18,6 +20,11 @@ from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
 from ..misc import cache_dir
+
+import lazy_import
+pd = lazy_import.lazy_module('pandas')
+metrics = lazy_import.lazy_module("sklearn.metrics")
+scipy = lazy_import.lazy_module("scipy")
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
@@ -114,16 +121,93 @@ def parse_eval_output(output: str) -> str:
 
 
 @optional_typecheck
-def collate_intermediate_answers(list_ia: List[str]) -> str:
+def collate_intermediate_answers(
+    list_ia: List[str],
+    embedding_engine: CacheBackedEmbeddings,
+    ) -> str:
     """write the intermediate answers in a single string to be
     combined by the LLM"""
     # remove answers deemed irrelevant
     list_ia = [ia for ia in list_ia if check_intermediate_answer(ia)]
 
+    try:
+        list_ia = semantic_sorting(
+            texts=list_ia,
+            embedding_engine=embedding_engine,
+        )
+    except Exception as err:
+        red(f"Failed to do semantic sorting of intermediate answers: {err}")
+
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
         out += f"[{iia + 1}]:\n{ia}\n---\n"
     return out
+
+@optional_typecheck
+def semantic_sorting(
+    texts: List[str],
+    embedding_engine: CacheBackedEmbeddings,
+    ) -> List[str]:
+    """
+    Given a list of text, embed them, do a hierarchical clutering then
+    sort the list according to the leaf order. This probably helps the LLM
+    to combine the intermediate answers into one.
+    """
+    assert texts, "No input text received"
+
+    # deduplicate texts
+    temp = []
+    [temp.append(t) for t in texts if t not in temp]
+    texts = temp
+
+    if len(texts) < 3:
+        return texts
+    elif len(texts) > 1000:
+        red(
+            f"Found {len(texts)} (>1000), this can be too much for the "
+            "clustering so returning the list of text as is")
+        return texts
+
+    # get embeddings
+    embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
+    n_dim = [d for d in embeds.shape if d != len(texts)][0]
+    assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
+    embeddings = pd.DataFrame(
+        columns=[f"v_{i}" for i in range(n_dim)],
+        index=[i for i in range(len(texts))],
+        data=embeds,
+    )
+
+    # get the pairwise distance matrix
+    pairwise_distances = metrics.pairwise_distances
+    dist = pd.DataFrame(
+        columns=embeddings.index,
+        index=embeddings.index,
+        data=pairwise_distances(
+            embeddings.values,
+            n_jobs=-1,
+            metric="euclidean",
+            )
+        )
+    # make sure the intersection is 0 and not a very small float
+    for ind in dist.index:
+        dist.at[ind, ind] = 0
+    # make sure it's symetric
+    dist = dist.add(dist.T).div(2)
+
+    # get the hierarchichal semantic sorting order
+    dist = scipy.spatial.distance.squareform(dist.values)  # convert to condensed format
+    Z = scipy.cluster.hierarchy.linkage(dist, method='ward', optimal_ordering=True)
+    order = scipy.cluster.hierarchy.leaves_list(Z)
+    out_texts = [texts[o] for o in order]
+    assert len(set(out_texts)) == len(out_texts), "duplicates"
+    assert len(out_texts) == len(texts), "extra out_texts"
+    assert not any(o for o in out_texts if o not in texts)
+    assert not any(t for t in texts if t not in out_texts)
+    # whi(f"Done in {int(time.time()-start)}s")
+    assert len(texts) == len(out_texts)
+
+    return out_texts
 
 
 @optional_typecheck

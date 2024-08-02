@@ -564,3 +564,4 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             vectors = vectors.tolist()
         assert isinstance(vectors, t), "wrong type?"
         return vectors
+

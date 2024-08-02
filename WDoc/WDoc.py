@@ -1565,7 +1565,8 @@ class WDoc:
                     final_answer=RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question_to_answer"],
                         intermediate_answers=lambda inputs:  collate_intermediate_answers(
-                            inputs["intermediate_answers"],
+                            list_ia=inputs["intermediate_answers"],
+                            embedding_engine=self.embeddings,
                         ),
                     )
                     | prompts.combine
