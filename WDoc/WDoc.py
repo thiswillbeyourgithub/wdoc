@@ -1433,6 +1433,8 @@ class WDoc:
                 )
                 tried_top_k = []
                 while True:
+                    if len(tried_top_k) > 10:
+                        raise Exception(f"Tried more than 10 top_k: {tried_top_k}")
                     try:
                         assert self.top_k not in tried_top_k
                         tried_top_k.append(self.top_k)
@@ -1601,14 +1603,20 @@ class WDoc:
 
             chain_time = 0
             start_time = time.time()
+            tried_top_k = []
             while True:
+                if len(tried_top_k) > 10:
+                    raise Exception(f"Tried more than 10 top_k: {tried_top_k}")
                 try:
+                    assert self.top_k not in tried_top_k
+                    tried_top_k.append(self.top_k)
                     output = rag_chain.invoke(
                         {
                             "question_for_embedding": query_fe,
                             "question_to_answer": query_an,
                         }
                     )
+                    break
                 except ShouldIncreaseTopKAfterLLMEvalFiltering:
                     if self.max_top_k is None:
                         raise
