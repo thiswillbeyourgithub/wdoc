@@ -118,7 +118,7 @@ class WDoc:
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
-        query_relevancy: float = 0.1,
+        query_relevancy: Union[float, int] = 0.1,
 
         summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",
@@ -323,6 +323,10 @@ class WDoc:
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
+
+        if query_relevancy is None:
+            query_relevancy = 0.0
+        query_relevancy = float(query_relevancy)
 
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()

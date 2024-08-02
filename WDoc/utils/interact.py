@@ -108,7 +108,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             * 'hyde' to use Hypothetical Document Embedding search
             * 'parent' to use parent retriever
         To use several '/settings retriever=knn_svm_default'
-        * relevancy: float, from set ]0:1]
+        * relevancy: float, from set [0:1]
     * **Tips:**
         * Each LLM used has a nickname: use it to adress specific instructions.
           The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
