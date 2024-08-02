@@ -216,7 +216,7 @@ class TheFiche:
                     else:
                         raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
                 else:
-                    p(f"Creating source page for {dh} ({new_h}) at {source_path}")
+                    logger.info(f"Creating source page for {dh} ({new_h}) at {source_path}")
                     cont = indent(cont, "  ").strip()
                     if not cont.startswith("- "):
                         cont = "- " + cont
