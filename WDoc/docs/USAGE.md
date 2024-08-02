@@ -93,10 +93,15 @@
 * `--load_embeds_from`: str, default `None`
     * path to the file saved using `--save_embeds_as`
 
-* `--top_k`: int, default `100`
+* `--top_k`: Union[int, str], default `auto_50_300`
     * number of chunks to look for when querying. It is high because the
     eval model is used to refilter the document after the embeddings
     first pass.
+    If top_k is a string, the format assumed is "auto_N_m" where N is the
+    starting top_k and M is the max top_k value. If the number of filtered
+    document is more than 90% of top_k, top_k will gradually increase up to M
+    (with N and M being int, and 0<N<M).
+    This way you are sure not to miss any document.
 
 ---
 

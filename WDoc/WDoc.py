@@ -37,6 +37,7 @@ from .utils.tasks.query import format_chat_history, refilter_docs, check_interme
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
+from .utils.errors import ShouldIncreaseTopKAfterLLMEvalFiltering
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
 from .utils.llm import load_llm, TESTING_LLM
@@ -109,7 +110,7 @@ class WDoc:
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, PosixPath] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, PosixPath]] = None,
-        top_k: int = 100,
+        top_k: Union[str, int] = "auto_50_300",
 
         query: Optional[str] = None,
         query_retrievers: str = "default",
@@ -323,10 +324,29 @@ class WDoc:
         if "{user_cache}" in save_embeds_as:
             save_embeds_as = save_embeds_as.replace(
                 "{user_cache}", str(cache_dir))
-
         if query_relevancy is None:
             query_relevancy = 0.0
         query_relevancy = float(query_relevancy)
+
+        # parsing top_k value
+        if isinstance(top_k, str):
+            try:
+                starting_top_k, max_top_k = top_k.split("_")[1:]
+                starting_top_k = int(starting_top_k)
+                max_top_k = int(max_top_k)
+                assert max_top_k > starting_top_k, "M<=N"
+                assert starting_top_k > 0, "N<=0"
+
+            except Exception as err:
+                raise Exception(
+                    "Failed to parse string top_k value. If top_k "
+                    "is a string, the expected format is 'auto_N_M' with N "
+                    f"and M ints and M>N. Received: {top_k}"
+                )
+            top_k = starting_top_k
+            self.max_top_k = max_top_k
+        else:
+            self.max_top_k = None
 
         # storing as attributes
         self.modelbackend = modelname.split("/", 1)[0].lower()
@@ -1286,6 +1306,18 @@ class WDoc:
 
         @chain
         @optional_typecheck
+        def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
+            ratio = len(filtered_docs) / self.top_k
+            if ratio >= 0.9:
+                raise ShouldIncreaseTopKAfterLLMEvalFiltering(
+                    red(
+                        f"Number of documents found: {len(filtered_docs)}, "
+                        f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
+                        f"top_k should be increased. Max_top_k is {self.max_top_k}"))
+            return filtered_docs
+
+        @chain
+        @optional_typecheck
         @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
@@ -1384,11 +1416,13 @@ class WDoc:
                             | RunnablePassthrough.assign(
                                 inputs=lambda inputs: [
                                     {"doc": d.page_content, "q": q}
-                                    for d, q in zip(inputs["doc"], inputs["q"])])
+                                    for d, q in zip(inputs["doc"], inputs["q"])],
+                                )
                             | itemgetter("inputs")
                             | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                         )
                         | refilter_docs
+                        | autoincrease_top_k
                     ),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     "question_to_answer": itemgetter("question_to_answer")
@@ -1397,12 +1431,30 @@ class WDoc:
                     retrieve_documents
                     | refilter_documents
                 )
-                output = rag_chain.invoke(
-                    {
-                        "question_for_embedding": query_fe,
-                        "question_to_answer": query_an,
-                    }
-                )
+                tried_top_k = []
+                while True:
+                    try:
+                        assert self.top_k not in tried_top_k
+                        tried_top_k.append(self.top_k)
+                        output = rag_chain.invoke(
+                            {
+                                "question_for_embedding": query_fe,
+                                "question_to_answer": query_an,
+                            }
+                        )
+                        break
+                    except ShouldIncreaseTopKAfterLLMEvalFiltering as err:
+                        if self.max_top_k is None:
+                            raise
+                        elif self.max_top_k == self.top_k:
+                            break
+                        assert self.max_top_k > self.top_k
+                        new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
+                        assert new_top_k > self.top_k
+                        assert new_top_k not in tried_top_k
+                        assert new_top_k <= self.max_top_k
+                        self.top_k = new_top_k
+
                 docs = output["filtered_docs"]
             else:
 
@@ -1496,6 +1548,7 @@ class WDoc:
                         | RunnableEach(bound=evaluate_doc_chain.with_config(multi)).with_config(multi)
                     )
                     | refilter_docs
+                    | autoincrease_top_k
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
                 "question_to_answer": itemgetter("question_to_answer")
@@ -1547,19 +1600,31 @@ class WDoc:
                 rag_chain.get_graph().print_ascii()
 
             chain_time = 0
-            try:
-                start_time = time.time()
-                output = rag_chain.invoke(
-                    {
-                        "question_for_embedding": query_fe,
-                        "question_to_answer": query_an,
-                    }
-                )
-                chain_time = time.time() - start_time
-            except NoDocumentsRetrieved as err:
-                return {"error": md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")}
-            except NoDocumentsAfterLLMEvalFiltering as err:
-                return {"error": md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")}
+            start_time = time.time()
+            while True:
+                try:
+                    output = rag_chain.invoke(
+                        {
+                            "question_for_embedding": query_fe,
+                            "question_to_answer": query_an,
+                        }
+                    )
+                except ShouldIncreaseTopKAfterLLMEvalFiltering:
+                    if self.max_top_k is None:
+                        raise
+                    elif self.max_top_k == self.top_k:
+                        break
+                    assert self.max_top_k > self.top_k
+                    new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
+                    assert new_top_k > self.top_k
+                    assert new_top_k not in tried_top_k
+                    assert new_top_k <= self.max_top_k
+                    self.top_k = new_top_k
+                except NoDocumentsRetrieved as err:
+                    return {"error": md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")}
+                except NoDocumentsAfterLLMEvalFiltering as err:
+                    return {"error": md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")}
+            chain_time = time.time() - start_time
 
             assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
 
