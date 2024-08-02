@@ -467,7 +467,7 @@ class WDoc:
         if debug:
             assert is_verbose
             assert is_debug
-            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_debug(True)
 
         # don't crash if extra arguments are used for a model
