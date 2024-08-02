@@ -169,7 +169,9 @@
     Note that the multithreading will not be disabled if you
     set `--file_loader_n_jobs`, allowing you to debug multithreading
     issues.
-    It implies `--verbose`
+    Because in some situation LLM calls are refused because of rate
+    limiting, this can be used to slowly but always get your answer.
+    It implies `--verbose=True`
 
 * `--verbose`: bool, default `False`
     Increase verbosity. Implied if `--debug` is set.
