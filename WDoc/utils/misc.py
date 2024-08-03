@@ -270,8 +270,11 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
+    html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
+    while "\n\n" in text:
+        text = text.replace("\n\n", "\n")
     if remove_image:
         if "<img" in text:
             text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
