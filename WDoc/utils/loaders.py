@@ -932,6 +932,7 @@ def load_anki(
                     medias[k] = v
             except Exception:
                 # it was probably not a file
+                continue
             assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
         # better formatting for tags
         ntags = [
