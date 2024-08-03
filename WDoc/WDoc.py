@@ -1769,7 +1769,7 @@ class WDoc:
                 extra = f"({extra})"
             else:
                 extra = ""
-            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 2} {extra}")
+            red(f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {extra}")
             red(f"Time took by the chain: {chain_time:.2f}s")
 
             llmcallback = self.llm.callbacks[0]
