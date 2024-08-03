@@ -298,7 +298,10 @@
     (not including tags). It will be replaced
     as "fieldA: 'fieldAContent'\n\nfieldB: 'fieldBContent'" etc
     The ' are added.
-    * The default value is '{allfields}'.
+    * The default value is '{allfields}\n{image_ocr_alt}'.
+    * '{image_ocr_alt}' if present will be replaced by any text present
+    in the 'title' or 'alt' field of an html image. This is isually OCR
+    so can be useful for the LLM.
 * `--anki_tag_filter`: str
     Only the tags that match this regex will be put in the template.
 

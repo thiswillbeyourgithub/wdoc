@@ -735,7 +735,7 @@ def load_anki(
     loaders_temp_dir: PosixPath,
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
-    anki_template: Optional[str] = "{allfields}",
+    anki_template: Optional[str] = "{allfields}\n{image_ocr_alt}",
     anki_tag_filter: Optional[str] = None,
 ) -> List[Document]:
     whi(f"Loading anki profile: '{anki_profile}'")
@@ -797,7 +797,7 @@ def load_anki(
     assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
     for ph in placeholders:
         for ic, c in notes.iterrows():
-            if ph not in c["fields_name"] + ["allfields", "tags"]:
+            if ph not in c["fields_name"] + ["allfields", "tags", "image_ocr_alt"]:
                 raise Exception(
                     "A placeholder in anki template didn't match fields of "
                     f"a card.\nCulprit placeholder: {ph}\nTemplate: "
@@ -818,6 +818,11 @@ def load_anki(
         )
     else:
         useallfields = False
+
+    if "{image_ocr_alt}" in anki_template:
+        useimageocr = True
+    else:
+        useimageocr = False
 
     if "{tags}" in anki_template:
         usetags = True
@@ -851,6 +856,7 @@ def load_anki(
             text = text.replace("{allfields}", row["allfields"])
         if usetags:
             text = text.replace("{tags}", row["tags_formatted"])
+
         for ph in placeholders:
             if ph == "tags" or ph == "allfields":
                 continue
@@ -864,33 +870,48 @@ def load_anki(
                 )
             )
         text = text.replace("\\n", "\n").replace("\\xa0", " ")
-        return text
 
-    pbar(desc="Formatting all cards")
-    notes["text"] = notes.progress_apply(placeholder_replacer, axis=1)
-
-    notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
-    notes = notes[notes["text"].ne('')]  # remove empty text
-
-    # remove all media
-    pbar(desc="Replacing media in anki")
-    notes["medias"] = {}
-    out = notes["text"].apply(
-        lambda x: anki_replace_media(
-            content=x,
+        # replace media
+        text, medias = anki_replace_media(
+            content=text,
             media=None,
             mode="remove_media",
             strict=True,
             replace_links=False,
         )
-    )
-    notes.loc[:, "text"] = [o[0] for o in out]
-    notes.loc[:, "medias"] = [o[1] for o in out]
+        if useimageocr:
+            for img in [k for k in medias.keys() if "IMAGE" in k]:
+                img = BeautifulSoup(medias[k], 'html.parser')
+            title = img.get('title').strip() if img.has_attr('title') else ""
+            alt = img.get('alt').strip() if img.has_attr('alt') else ""
+            ocr_alt = ""
+            if title:
+                ocr_alt += f"\nTitle: '{title}'"
+            if alt:
+                ocr_alt += f"\nAlt: '{alt}'"
+            ocr_alt = ocr_alt.strip()
+            if ocr_alt:
+                text = text.replace(
+                        "{image_ocr_alt}",
+                        f"\n----\nOCR or alt text of {k}:\n{ocr_alt}\n''''\n" + "{image_ocr_alt}"
+                )
+        text = text.replace("{image_ocr_alt}", "").strip()
+        return text, medias
+
+    pbar(desc="Formatting all cards")
+    notes["medias"] = {}
+    texts, medias = notes.progress_apply(placeholder_replacer, axis=1)
+    notes["text"] = texts
+    notes["medias"] = medias
+
+    notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
+    notes = notes[notes["text"].ne('')]  # remove empty text
 
     # remove notes that contain an image, sound or link
     # notes = notes[~notes["text"].str.contains("\[IMAGE_")]
     # notes = notes[~notes["text"].str.contains("\[SOUND_")]
     # notes = notes[~notes["text"].str.contains("\[LINK_")]
+
     notes["text"] = notes["text"].apply(lambda x: x.strip())
     notes = notes[notes["text"].ne('')]  # remove empty text
     notes.drop_duplicates(subset="text", inplace=True)
@@ -905,9 +926,12 @@ def load_anki(
         # turn the media into absolute paths
         medias = c["medias"]
         for k, v in medias.items():
-            v = Path(original_db).parent / "collection.media" / v
-            if v.exists():
-                medias[k] = v
+            try:
+                v = Path(original_db).parent / "collection.media" / v
+                if v.exists():
+                    medias[k] = v
+            except Exception:
+                # it was probably not a file
             assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
         # better formatting for tags
         ntags = [
