@@ -1006,7 +1006,7 @@ def anki_replace_media(
             images_bs4 = [str(img) for img in soup.find_all('img')]
             images_reg = re.findall(REG_IMG, content)
             assert len(images_bs4) == len(images_reg)
-            images = images_bs4
+            images = [str(img) for img in images_bs4]
             assert images
             assert all(img in content for img in images)
             assert all(re.search(REG_IMG, img) for img in images)
