@@ -186,16 +186,18 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 
 ## Getting started
 *Tested on python 3.10 and 3.11.7*
-* `pip install -U WDoc`
-* Or from the git `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@dev`
-* Or from the (supposedly more stable) `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@main`
-* Add the API key for the backend you want as an environnement variable: for example `export OPENAI_API_KEY="***my_key***"`
-* Launch using `wdoc query [ARGS]`
-* *Note: if for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.*
-* To ask questions about a document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
-* If you want to reduce the startup time, you can use `--saveas="some/path"` to save the loaded embeddings from last time and `--loadfrom "some/path"` on every subsequent call. (In any case, the embeddings are always cached)
-* For more: read the documentation at `wdoc --help`
-* For shell autocompletion: if you're using zsh: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
+1. To install:
+    * `pip install -U WDoc`
+    * Or to get a specific git branch:
+        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@dev`
+        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@main`
+2. Add the API key for the backend you want as an environement variable: for example `export OPENAI_API_KEY="***my_key***"`
+3. Launch using `wdoc query [ARGS]`
+    * If for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.
+    * To get shell autocompletion: if you're using zsh: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
+4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
+    * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
+5. For more: read the documentation at `wdoc --help`
 
 ## Scripts made with WDoc
 * *More to come in [the examples folder](./examples/)*
