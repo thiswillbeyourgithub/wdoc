@@ -117,8 +117,8 @@ filetype_arg_types = {
     "doccheck_max_lines": int,
     "doccheck_min_lang_prob": float,
 
-    "onlinemedia_url_regex": str,
-    "onlinemedia_resourcetype_regex": str,
+    "online_media_url_regex": str,
+    "online_media_resourcetype_regex": str,
 
     "loading_failure": str,
 }

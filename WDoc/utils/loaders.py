@@ -2044,10 +2044,10 @@ def load_pdf(
 
 
 @optional_typecheck
-def find_onlinemedia(
+def find_online_media(
     url: str,
-    onlinemedia_url_regex: Optional[str] = None,
-    onlinemedia_resourcetype_regex: Optional[str] = None,
+    online_media_url_regex: Optional[str] = None,
+    online_media_resourcetype_regex: Optional[str] = None,
     headless: bool = True,
     ) -> dict:
 
@@ -2073,17 +2073,17 @@ def find_onlinemedia(
         "mp3": [],
         "m3u": [],
     }
-    if onlinemedia_url_regex:
-        onlinemedia_url_regex = re.compile(onlinemedia_url_regex)
-    if onlinemedia_resourcetype_regex:
-        onlinemedia_resourcetype_regex = re.compile(onlinemedia_resourcetype_regex)
+    if online_media_url_regex:
+        online_media_url_regex = re.compile(online_media_url_regex)
+    if online_media_resourcetype_regex:
+        online_media_resourcetype_regex = re.compile(online_media_resourcetype_regex)
     nonmedia_urls = []
 
     @optional_typecheck
     def request_filter(req) -> None:
-        if onlinemedia_url_regex is not None and onlinemedia_url_regex.match(req.url):
+        if online_media_url_regex is not None and online_media_url_regex.match(req.url):
             video_urls["url_regex"].append(req.url)
-        elif onlinemedia_resourcetype_regex is not None and onlinemedia_resourcetype_regex.match(req.resource_type):
+        elif online_media_resourcetype_regex is not None and online_media_resourcetype_regex.match(req.resource_type):
             video_urls["resourcetype_regex"].append(req.url)
         elif req.resource_type == "media":
             video_urls["media"].append(req.url)
@@ -2190,15 +2190,15 @@ def load_online_media(
 
     deepgram_kwargs: Optional[dict] = None,
 
-    onlinemedia_url_regex: Optional[str] = None,
-    onlinemedia_resourcetype_regex: Optional[str] = None,
+    online_media_url_regex: Optional[str] = None,
+    online_media_resourcetype_regex: Optional[str] = None,
     ) -> List[Document]:
 
     urls_to_try = [path]
-    extra_media = find_onlinemedia(
+    extra_media = find_online_media(
         url=path,
-        onlinemedia_url_regex=onlinemedia_url_regex,
-        onlinemedia_resourcetype_regex=onlinemedia_resourcetype_regex,
+        online_media_url_regex=online_media_url_regex,
+        online_media_resourcetype_regex=online_media_resourcetype_regex,
     )
     for k in [
         "url_regex",
@@ -2217,7 +2217,7 @@ def load_online_media(
     @optional_typecheck
     def dl_audio_from_url(trial: int, url: str) -> PosixPath:
         file_name = loaders_temp_dir / \
-            f"onlinemedia_{uuid.uuid4()}"  # without extension!
+            f"online_media_{uuid.uuid4()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             # 'force_generic_extractor': True,
@@ -2305,6 +2305,6 @@ def load_online_media(
     )
 
     for ipa, pa in enumerate(parsed_audio):
-        parsed_audio[ipa].metadata["onlinemedia_url"] = str(good_url)
+        parsed_audio[ipa].metadata["online_media_url"] = str(good_url)
 
     return parsed_audio

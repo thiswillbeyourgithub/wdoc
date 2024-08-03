@@ -101,7 +101,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
 * **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence etc.
 * **local_video**: extract the audio then treat it as **local_audio**
-* **online media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
+* **online_media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
 * **epub**: barely tested because epub is in general a poorly defined format
 * **powerpoint**: .ppt, .pptx, .odp, ...
 * **word**: .doc, .docx, .odt, ...
