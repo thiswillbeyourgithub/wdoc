@@ -125,6 +125,7 @@ Detailed instructions:
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 - If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 - Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
+    - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
 ```"""),
         ("human",
          "Question: `{question}`\nCandidate intermediate answers:\n```\n{intermediate_answers}\n```\n\nYour answer:""")
