@@ -193,7 +193,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * Launch using `wdoc query [ARGS]`
 * *Note: if for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.*
 * To ask questions about a document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
-* If you want to reduce the startup time, you can use --saveas="some/path" to save the loaded embeddings from last time and --loadfrom "some/path" on every subsequent call. (In any case, the embeddings are always cached)
+* If you want to reduce the startup time, you can use `--saveas="some/path"` to save the loaded embeddings from last time and `--loadfrom "some/path"` on every subsequent call. (In any case, the embeddings are always cached)
 * For more: read the documentation at `wdoc --help`
 * For shell autocompletion: if you're using zsh: `eval $(cat completion.cli.zsh)` and `eval $(cat completion.m.zsh)`. You can generate your own with `eval "$(wdoc -- --completion)"` and `eval "$(python -m WDoc -- --completion)"`.
 
