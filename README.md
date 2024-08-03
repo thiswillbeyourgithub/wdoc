@@ -217,10 +217,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **Why can WDoc also produce summaries?**
     * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
 * **What other tasks are supported by WDoc?**
-    * Summarize text from any [Supported filetypes](#Supported-filetypes).
-    * Ask questions about a large heterogeneous corpus.
-    * Search the relevant documents using embeddings.
-    * Search the relevant documents using embeddings then filtering using a cheap LLM.
+    * See [Supported tasks](#Supported-tasks).
 * **Which LLM providers are supported by WDoc?**
     * WDoc supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
 * **What do you use WDoc for?**
