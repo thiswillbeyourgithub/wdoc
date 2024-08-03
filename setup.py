@@ -67,6 +67,7 @@ setup(
     entry_points={
         'console_scripts': [
             'wdoc=WDoc.__init__:cli_launcher',
+            'WDoc=WDoc.__init__:cli_launcher',
         ],
     },
     python_requires=">=3.10",
