@@ -266,16 +266,17 @@ def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
 
 
 @optional_typecheck
-def html_to_text(html: str) -> str:
+def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     soup = BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
-    if "<img" in text:
-        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
+    if remove_image:
         if "<img" in text:
-            red("Failed to remove <img from anki card")
+            text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
+            if "<img" in text:
+                red("Failed to remove <img from anki card")
     return text
 
 
