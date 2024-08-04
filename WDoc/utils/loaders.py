@@ -1341,7 +1341,7 @@ def load_logseq_markdown(
 
     failed_blocks = []
     for b in blocks:
-        b = copy(b)
+        b = copy.copy(b)
         props = b.properties.copy()
         for k, v in props.items():
             b.del_property(key=k)
