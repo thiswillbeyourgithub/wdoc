@@ -525,11 +525,14 @@ def load_one_doc(
         try:
             meta_dump = json.dumps(docs[i].metadata)
         except Exception:
-            for k, v in meta_dump.items():
+            for k, v in docs[i].metadata.items():
+                if isinstance(v, PosixPath):
+                    docs[i].metadata[k] = v.name
+                    continue
                 try:
                     json.dumps(v)
                 except Exception:
-                    meta_dump[k] = str(v)
+                    docs[i].metadata[k] = str(v)
             meta_dump = json.dumps(docs[i].metadata)
 
 
