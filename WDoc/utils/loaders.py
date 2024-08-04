@@ -1358,7 +1358,16 @@ def load_logseq_markdown(
         for k, v in props.items():
             b.del_property(key=k)
             b.content = b.content.strip()
-        cont = b.content
+        cont = b.content.replace("\t", "    ")
+        cont, _ = replace_media(
+            content=cont,
+            media=None,
+            mode="remove_media",
+            strict=False,
+            replace_image=True,
+            replace_links=True,
+            replace_sounds=False,
+        )
         if not cont:
             continue
         found = False
@@ -1367,7 +1376,7 @@ def load_logseq_markdown(
                 next = ""
             else:
                 next = docs[i+1].page_content
-            if cont in d.page_content or (cont not in next and cont in d.page_content + next):
+            if cont.strip() in d.page_content or (cont not in next and cont in d.page_content + next):
 
                 # merge metadata dictionnaries
                 for k, v in props.items():
