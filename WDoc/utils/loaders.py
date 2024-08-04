@@ -445,6 +445,8 @@ def load_one_doc(
             if "source_tag" not in docs[i].metadata:
                 docs[i].metadata["source_tag"] = source_tag
             else:
+                if not isinstance(docs[i].metadata["source_tag"], str):
+                    docs[i].metadata["source_tag"] = str(docs[i].metadata["source_tag"])
                 docs[i].metadata["source_tag"] = docs[i].metadata["source_tag"].replace(
                     "unset", "").strip()
                 docs[i].metadata["source_tag"] += f" {source_tag}"
