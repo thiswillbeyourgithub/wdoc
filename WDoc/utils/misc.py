@@ -206,27 +206,24 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     else:
         @wraps(func)
         def wrapper(*args, **kwargs):
+            assert not args, f"We are not expecting args here, only kwargs. Received {args}"
             sig = inspect.signature(func)
-            bound_args = sig.bind_partial(*args, **kwargs)
+            bound_args = sig.bind_partial(**kwargs)
 
             # Remove unexpected positional arguments
             bound_args.arguments = {k: v for k, v in bound_args.arguments.items() if k in sig.parameters}
-            args2 = bound_args.args
 
             # Remove unexpected keyword arguments
             kwargs2 = {k: v for k, v in kwargs.items() if k in sig.parameters}
 
-            diffargs = [a for a in args if a not in args2]
             diffkwargs = {k: v for k, v in kwargs.items() if k not in kwargs2}
-            if diffargs or diffkwargs:
+            if diffkwargs:
                 mess = f"Unexpected args or kwargs in func {func}:"
-                for arg in diffargs:
-                    mess += f"\n-ARG: {arg}"
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
                 red(mess)
 
-            return func(*bound_args.args, **kwargs2)
+            return func(**kwargs2)
 
         return wrapper
 
