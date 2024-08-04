@@ -5,6 +5,7 @@ Miscellanous functions etc.
 import sys
 from typing import List, Union, Callable
 from joblib import Memory
+from joblib import hash as jhash
 import socket
 import os
 import urllib.request
@@ -163,6 +164,21 @@ class DocDict(dict):
     )
     allowed_types: dict = filetype_arg_types
     strict = True if check_env_var("STRICT_DOCDICT") else False
+
+    def __hash__(self):
+        "make it hashable, to check for duplicates"
+        keys = sorted(self.keys())
+
+        as_string = ""
+        for k in keys:
+            as_string += "\n"
+            as_string += str(k)
+            try:
+                as_string += jhash(self[k])
+            except Exception:
+                as_string += str(self[k])
+        h = hash(as_string)
+        return h
 
     def __check_values__(self, key, value) -> None:
         if key not in self.allowed_keys:
