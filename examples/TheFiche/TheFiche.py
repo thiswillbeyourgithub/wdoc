@@ -106,9 +106,9 @@ class TheFiche:
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
             top_k (int, optional): The number of top documents to consider. Defaults to 300.
-            sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page.
-            sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is.
-            use_cache (bool): set to False to bypass the cache
+            sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page. Default to "as_pages".
+            sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
+            use_cache (bool): set to False to bypass the cache, default True.
             **kwargs: Additional keyword arguments to pass to WDoc.
 
         Raises:
