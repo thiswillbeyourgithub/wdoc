@@ -867,7 +867,7 @@ def load_anki(
 
 
     @optional_typecheck
-    def placeholder_replacer(row: pd.Series) -> str:
+    def placeholder_replacer(row: pd.Series) -> Tuple[str, dict]:
         text = anki_template
 
         if useallfields:
