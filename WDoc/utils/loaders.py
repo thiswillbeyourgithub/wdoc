@@ -868,7 +868,7 @@ def load_anki(
             text = text.replace("{tags}", row["tags_formatted"])
 
         for ph in placeholders:
-            if ph == "tags" or ph == "allfields":
+            if ph == "tags" or ph == "allfields" or ph == "image_ocr_alt":
                 continue
             field_val = row["nflds"][row["fields_name"].index(ph)]
             text = text.replace(
