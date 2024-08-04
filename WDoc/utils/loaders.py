@@ -518,9 +518,22 @@ def load_one_doc(
         assert docs[i].metadata[
             "content_hash"], f"Empty content_hash for document: {docs[i]}"
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
+
+        # check if metadata can be dumped, otherwise stringify the culprit
+        try:
+            meta_dump = json.dumps(docs[i].metadata)
+        except Exception:
+            for k, v in meta_dump.items():
+                try:
+                    json.dumps(v)
+                except Exception:
+                    meta_dump[k] = str(v)
+            meta_dump = json.dumps(docs[i].metadata)
+
+
         if "all_hash" not in docs[i].metadata:
             docs[i].metadata["all_hash"] = hasher(
-                docs[i].metadata["content_hash"] + json.dumps(docs[i].metadata)
+                docs[i].metadata["content_hash"] + meta_dump
             )
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
 
