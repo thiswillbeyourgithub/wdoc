@@ -202,8 +202,9 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
     if not check_env_var("STRICT_DOCDICT"):
-        return func
+        return optional_typecheck(func)
     else:
+        @optional_typecheck
         @wraps(func)
         def wrapper(*args, **kwargs):
             assert not args, f"We are not expecting args here, only kwargs. Received {args}"
@@ -222,6 +223,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
                 red(mess)
+            assert kwargs2, f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
 
             return func(**kwargs2)
 

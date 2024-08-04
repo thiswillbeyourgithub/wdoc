@@ -558,7 +558,6 @@ def cloze_stripper(clozed: str) -> str:
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 def load_youtube_video(
     path: str,
     loaders_temp_dir: PosixPath,
@@ -680,7 +679,6 @@ def load_youtube_video(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache
 def load_online_pdf(
     debug: bool,
@@ -727,7 +725,6 @@ def load_online_pdf(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 def load_anki(
     verbose: bool,
     anki_profile: str,
@@ -1193,7 +1190,6 @@ def anki_replace_media(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache
 def load_string() -> List[Document]:
     whi("Loading string")
@@ -1212,7 +1208,6 @@ def load_string() -> List[Document]:
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -1222,7 +1217,6 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     return docs
 
 @optional_strip_unexp_args
-@optional_typecheck
 def load_text_input(
         path: str,
         metadata: Optional[Union[str, dict]],
@@ -1243,7 +1237,6 @@ def load_text_input(
     return docs
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
     path: str,
@@ -1316,7 +1309,6 @@ def eval_load_functions(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
     debug: bool,
@@ -1409,7 +1401,6 @@ def load_logseq_markdown(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
     path: Union[str, PosixPath],
@@ -1528,7 +1519,6 @@ def load_local_audio(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
     path: str,
@@ -1695,7 +1685,6 @@ def transcribe_audio_whisper(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
     path: str,
@@ -1715,7 +1704,6 @@ def load_epub(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
     path: str,
@@ -1735,7 +1723,6 @@ def load_powerpoint(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
     path: str,
@@ -1758,7 +1745,6 @@ def load_word_document(
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
     whi(f"Loading url: '{path}'")
@@ -1929,7 +1915,6 @@ def load_url(path: str, title=None) -> List[Document]:
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
@@ -1974,7 +1959,6 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
 
 
 @optional_strip_unexp_args
-@optional_typecheck
 def load_pdf(
     path: str,
     text_splitter: TextSplitter,
@@ -2202,7 +2186,6 @@ def find_online_media(
     return video_urls
 
 @optional_strip_unexp_args
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def load_online_media(
     path: str,
