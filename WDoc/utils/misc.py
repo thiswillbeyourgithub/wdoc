@@ -204,11 +204,19 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     if not check_env_var("STRICT_DOCDICT"):
         return optional_typecheck(func)
     else:
+        # find the true function, otherwise func can be a decorated truefunc and might forget the annotations.
+        if hasattr(func, "func"):
+            truefunc = func.func
+        else:
+            truefunc = func
+        while hasattr(truefunc, "func"):
+            truefunc = truefunc.func
+
         @optional_typecheck
-        @wraps(func)
+        @wraps(truefunc)
         def wrapper(*args, **kwargs):
             assert not args, f"We are not expecting args here, only kwargs. Received {args}"
-            sig = inspect.signature(func)
+            sig = inspect.signature(truefunc)
             bound_args = sig.bind_partial(**kwargs)
 
             # Remove unexpected positional arguments
