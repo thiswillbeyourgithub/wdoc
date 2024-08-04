@@ -8,6 +8,7 @@ TheFiche is a script that generates and exports [Logseq](https://github.com/logs
 - Include metadata and properties in the generated pages
 - Customizable query parameters
 - Integration with WDoc for document processing
+- Automatically finds important words in the text to create logseq links directly. (For example turn `cancer` into `[[cancer]]`)
 
 ## Installation
 

@@ -6,10 +6,13 @@ with content generated from WDoc queries, including metadata and properties.
 """
 
 import json
+import inspect
 from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
+from typing import List, Dict
 import time
 from textwrap import indent
 from WDoc import WDoc
+import litellm
 import fire
 from pathlib import Path, PosixPath
 from datetime import datetime
@@ -40,6 +43,24 @@ d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 mem = Memory(".cache", verbose=False)
+
+def chat(
+    model: str,
+    messages: List[Dict],
+    temperature: float,
+    **kwargs: Dict,
+    ) -> Dict:
+    """call to an LLM api. Cached."""
+    answer = litellm.completion(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        stream=False,
+        **kwargs,
+    ).json()
+    assert all(a["finish_reason"] == "stop" for a in answer["choices"]), f"Found bad finish_reason: '{answer}'"
+    return answer
+
 
 def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
     "call to wdoc, optionaly cached"
@@ -96,6 +117,7 @@ class TheFiche:
         sources_location: str = "as_pages",
         sources_ref_as_prop: bool = False,
         use_cache: bool = True,
+        logseq_linkify: bool = True,
         **kwargs,
         ):
         """
@@ -109,6 +131,7 @@ class TheFiche:
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page. Default to "as_pages".
             sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
             use_cache (bool): set to False to bypass the cache, default True.
+            logseq_linkify (bool): If True, will ask WDoc's strong LLM to find the import keywords and automatically replace them in the output file by logseq [[links]], enabling the use of graph properties. Default to True.
             **kwargs: Additional keyword arguments to pass to WDoc.
 
         Raises:
@@ -164,7 +187,131 @@ class TheFiche:
         if not used_hash:
             p("No documents seem to be sourced")
 
-        # create logseq page but don't save it yet
+        if logseq_linkify:
+            if use_cache:
+                cached_chat =  mem.cache(chat)
+            else:
+                cached_chat = chat
+            litellm.drop_params = True
+            # remove the sources from the text
+            text_wo_s = text
+            for dh, dm in doc_hash.items():
+                new_h = dm["all_hash"][:5]
+                assert dh not in text_wo_s
+                if new_h in text_wo_s:
+                    assert f"[[{new_h}]]" in text_wo_s
+                    text_wo_s = re.sub(
+                        f"[, ]*\[\[{new_h}\]\][, ]*",
+                        "",
+                        text_wo_s,
+                    )
+                    assert f"[[{new_h}]]" not in text_wo_s
+                    assert new_h not in text_wo_s
+                    text_wo_s = text_wo_s.replace(" []", "")
+                    text_wo_s = text_wo_s.replace("[]", "")
+            messages = [
+                {
+                    "role": "system",
+                    "content": """Your task is, given a text, to reply a newline separated list of tags while following some rules.
+The purpose of this task is to identify the strings in my text that I could use to create graph like links in my corpus of texts.
+
+Rules:
+'''
+- The tags can contain multiple words.
+- The tags have to be exclusive, for example "recette de cuisine" is bad because you can use instead "cuisine".
+- The tags have to be as atomic as possible, for example instead of "HER2 gene" use "HER2".
+- Use the singular form of the tag, for exampel not "ulcères" but "ulcère".
+- The tags ALWAYS have to exist in the text as is. This is the most important rule. You have to respect the accents, the letters used, etc. Even if it's misspelled!
+- The tags have to be about details and specifics, not really big picture stuff. Think for example which drugs are mentionned in this lesson.
+- Write each keyword in its own line, so newline separated.
+- Take a deep breath before answering.
+- Wrap your tags list in a <tags> banner.
+- Use as many tags as you seem fit. An absolute minimum of 1 every 3 lines seems about right.
+'''
+
+
+Example of an appropriate answer on a text about hemostasis:
+'''
+Okay, I've read the whole text. I'm now taking a deep breath.
+.
+.
+Okay here's my answer.
+
+<tags>
+hemostase
+ADAMTS13
+VWF
+facteur von willebrand
+microangiopathie thrombotique
+PTT
+purpura thrombotique thrombopenique
+purpura
+SHU
+syndrome hemolytique et uremique
+infection
+anticorps
+</tags>
+'''
+"""
+                },
+                {"role": "user", "content": text_wo_s},
+            ]
+            tag_answer = cached_chat(
+                messages=messages,
+                model=inspect.signature(WDoc).parameters["modelname"].default if "modelname" not in kwargs else kwargs["modelname"],
+                temperature=0,
+            )
+            tags_text = tag_answer["choices"][0]["message"]["content"]
+            assert "<tags>" in tags_text and "</tags>" in tags_text, f"missing <tags> or </tags> in new text:\n'''\n{tags_text}\n'''"
+            tags = tags_text.split("<tags>", 1)[1].split("</tags>", 1)[0].splitlines()
+            tags = [t.strip() for t in tags if t.strip()]
+            for t in tags:
+                assert "[[" not in t and "]]" not in t, f"tag contains brackets: {t}"
+            tags = sorted(tags, key=len)
+            assert tags, f"No tags found in tags_text:\n'''\n{tags_text}\n'''"
+            text_wo_tags = text
+
+            # tags can be part of another tag
+            def find_substrings(string_list: List[str]) -> List[str]:
+                result = []
+                for i, s1 in enumerate(string_list):
+                    for j, s2 in enumerate(string_list):
+                        if i != j and s1 in s2:
+                            result.append(s1)
+                            break
+                result = list(set(result))
+                assert len(result) <= len(string_list)
+                return result
+            sub_tags = find_substrings(tags)
+            sup_tags = [t for t in tags if t not in sub_tags]
+            if sup_tags:
+                for t in sup_tags:
+                    if t not in text:
+                        p(f"Couldn't find tag {t} in text")
+                    text = text.replace(t, "[[" + t + "]]")
+            if sub_tags:
+                assert sup_tags
+                lines = text.splitlines(keepends=True)
+                new_text = ""
+                for line in lines:
+                    for t in sub_tags:
+                        if t not in line:
+                            continue
+                        elif line == line.rstrip():
+                            line = line + " [[" + t + "]]"
+                        else:
+                            nonstripped = line.rstrip()
+                            stripped = line[:len(nonstripped)]
+                            assert stripped == stripped.rstrip()
+                            nonstripped = nonstripped + " [[" + t + "]]"
+                            line = nonstripped + stripped
+                            assert line != line.rstrip()
+
+                    new_text += line
+                assert text != new_text
+                text = new_text
+
+        # create logseq page object but don't save it yet
         if not text.startswith("- "):
             text = "- " + text
         content = parse_text(text)
