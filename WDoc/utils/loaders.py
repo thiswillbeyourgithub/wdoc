@@ -869,7 +869,7 @@ def load_anki(
         text = text.replace("\\n", "\n").replace("\\xa0", " ")
 
         # replace media
-        text, medias = anki_replace_media(
+        text, medias = replace_media(
             content=text,
             media=None,
             mode="remove_media",
@@ -981,7 +981,7 @@ REG_LINKS = re.compile(
 
 
 @optional_typecheck
-def anki_replace_media(
+def replace_media(
     content: str,
     media: Union[None, Dict],
     mode: str,
@@ -1158,7 +1158,7 @@ def anki_replace_media(
         warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
         # recursive check:
-        assert anki_replace_media(
+        assert replace_media(
             content=new_content,
             media=media,
             mode="add_media",
