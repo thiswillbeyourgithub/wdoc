@@ -919,9 +919,9 @@ def load_anki(
 
     pbar(desc="Formatting all cards")
     notes["medias"] = {}
-    texts, medias = notes.progress_apply(placeholder_replacer, axis=1)
-    notes["text"] = texts
-    notes["medias"] = medias
+    out = notes.progress_apply(placeholder_replacer, axis=1)
+    notes["text"] = [t[0] for t in out]
+    notes["medias"] = [t[1] for t in out]
 
     notes["text"] = notes["text"].progress_apply(lambda x: x.strip())
     notes = notes[notes["text"].ne('')]  # remove empty text
