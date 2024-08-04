@@ -177,8 +177,7 @@ class DocDict(dict):
                 as_string += jhash(self[k])
             except Exception:
                 as_string += str(self[k])
-        h = hasher(as_string)
-        return h
+        return hash(as_string)
 
     def __check_values__(self, key, value) -> None:
         if key not in self.allowed_keys:
