@@ -274,6 +274,8 @@ def batch_load_doc(
                     to_load[idoc]["load_functions"] = parse_load_functions(
                         tuple(doc["load_functions"]))
 
+    to_load = list(set(to_load))  # remove duplicates docdicts
+
     if len(to_load) > 1:
         for tl in to_load:
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
