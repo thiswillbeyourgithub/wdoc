@@ -177,7 +177,7 @@ class DocDict(dict):
                 as_string += jhash(self[k])
             except Exception:
                 as_string += str(self[k])
-        h = hash(as_string)
+        h = hasher(as_string)
         return h
 
     def __check_values__(self, key, value) -> None:
