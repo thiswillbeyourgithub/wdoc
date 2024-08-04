@@ -500,9 +500,12 @@ def load_one_doc(
                 docs[i].metadata["source"] = "undocumented"
 
         # make sure the filepath are absolute
-        if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
-            docs[i].metadata["path"] = str(
-                Path(docs[i].metadata["path"]).resolve().absolute())
+        try:
+            if "path" in docs[i].metadata and Path(docs[i].metadata["path"]).exists():
+                docs[i].metadata["path"] = str(
+                    Path(docs[i].metadata["path"]).resolve().absolute())
+        except Exception:
+            pass  # was probably not a path
 
         docs[i].metadata["indexing_timestamp"] = int(time.time())
 
