@@ -897,20 +897,21 @@ def load_anki(
         if useimageocr:
             for img in [k for k in medias.keys() if "IMAGE" in k]:
                 img = BeautifulSoup(medias[k], 'html.parser')
-            title = img.get('title').strip() if img.has_attr('title') else ""
-            alt = img.get('alt').strip() if img.has_attr('alt') else ""
-            ocr_alt = ""
-            if title:
-                ocr_alt += f"\nTitle: '{title}'"
-            if alt:
-                ocr_alt += f"\nAlt: '{alt}'"
-            ocr_alt = ocr_alt.strip()
-            if ocr_alt:
-                text = text.replace(
-                        "{image_ocr_alt}",
-                        f"\n----\nOCR or alt text of {k}:\n{ocr_alt}\n''''\n" + "{image_ocr_alt}"
-                )
-        text = text.replace("{image_ocr_alt}", "").strip()
+                title = img.get('title').strip() if img.has_attr('title') else ""
+                alt = img.get('alt').strip() if img.has_attr('alt') else ""
+                ocr_alt = ""
+                if title:
+                    ocr_alt += f"\nTitle: '{title}'"
+                if alt:
+                    ocr_alt += f"\nAlt: '{alt}'"
+                ocr_alt = ocr_alt.strip()
+                if ocr_alt:
+                    text = text.replace(
+                            "{image_ocr_alt}",
+                            f"\n----\nOCR or alt text of {k}:\n{ocr_alt}\n''''\n" + "{image_ocr_alt}"
+                    )
+            text = text.replace("{image_ocr_alt}", "").strip()
+
         return text, medias
 
     pbar(desc="Formatting all cards")
