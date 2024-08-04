@@ -50,12 +50,15 @@ python TheFiche.py --query="Your query here" --logseq_page="path/to/output.md" -
 
 ## Parameters
 
-- `query` (str): The query to be processed by WDoc.
-- `logseq_page` (str or PosixPath): The path to the Logseq page file.
-- `overwrite` (bool, optional): Whether to overwrite an existing file. Defaults to False.
-- `top_k` (int, optional): The number of top documents to consider. Defaults to 300.
-- `sources_location` (str, optional): Wether to store the sources at the bottom of the fiche or as individual pages. Defaults to 'as_pages'.
-- `**kwargs`: Additional keyword arguments to pass to WDoc.
+- query (str): The query to be processed by WDoc.
+- logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
+- overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
+- top_k (int, optional): The number of top documents to consider. Defaults to 300.
+- sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page. Default to "as_pages".
+- sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
+- use_cache (bool): set to False to bypass the cache, default True.
+- logseq_linkify (bool): If True, will ask WDoc's strong LLM to find the import keywords and automatically replace them in the output file by logseq [[links]], enabling the use of graph properties. Default to True.
+- **kwargs: Additional keyword arguments to pass to WDoc.
 
 ## Output
 
