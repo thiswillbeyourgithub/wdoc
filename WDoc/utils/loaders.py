@@ -494,7 +494,7 @@ def load_one_doc(
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["path"]
-            elif "path" in docs[i].metadata:
+            elif "path" in docs[i].metadata:  # was probably not a path
                 docs[i].metadata["source"] = docs[i].metadata["title"]
             else:
                 docs[i].metadata["source"] = "undocumented"
