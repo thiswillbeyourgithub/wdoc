@@ -545,7 +545,7 @@ def load_one_doc(
             )
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
 
-    total_reading_length = sum([d.metadata["doc_reading_time"] for d in docs])
+    total_reading_length = sum([float(d.metadata["doc_reading_time"]) for d in docs])
     assert total_reading_length > 0.1, (
         f"Failing doc: total reading length is {total_reading_length:.3f}"
         "min which is  suspiciously low. Filetype {filetype} with kwargs "
