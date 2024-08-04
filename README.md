@@ -93,7 +93,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram
 * **pdf**: About 10 loaders are implemented, heuristics are used to keep the best one and stop early. Table support via [openparse](https://github.com/Filimoa/open-parse/)
 * **online_pdf**: via URL then treated at **local_pdf**
-* **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db
+* **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db. `alt` and `title` of images can be shown to the LLM, meaning that if you used [the ankiOCR addon](https://github.com/cfculhane/AnkiOCR) this information will help contextualize the note for the LLM.
 * **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
 * **txt**: .txt, markdown, etc
 * **text**: send a text content directly as path
