@@ -206,7 +206,7 @@ def batch_load_doc(
     # store the file hash in the doc kwarg
     doc_hashes = Parallel(
         n_jobs=-1,
-        backend="loky",
+        backend=backend,
         verbose=0 if not is_verbose else 51,
     )(delayed(file_hasher)(doc=doc) for doc in tqdm(
       to_load,
