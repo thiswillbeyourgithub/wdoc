@@ -398,7 +398,7 @@ def faiss_loader(
         else:
             try:
                 db.merge_from(temp)
-            except Exception as err:
+            except ValueError as err:
                 red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
                 [p.unlink() for p in fi.iterdir()]
                 fi.rmdir()
