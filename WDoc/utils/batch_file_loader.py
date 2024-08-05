@@ -24,12 +24,11 @@ import json
 import rtoml
 import dill
 
-from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, cache_dir, DocDict
+from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, cache_dir, DocDict, env_get_value
 from .typechecker import optional_typecheck
 from .logger import red, whi, logger
 from .loaders import load_one_doc_wrapped, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug, is_verbose
-
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -292,6 +291,9 @@ def batch_load_doc(
     temp_dir.mkdir(exist_ok=False)
     loaders_temp_dir_file.write_text(str(temp_dir.absolute().resolve()))
 
+    loader_max_timeout = env_get_value("WDOC_MAX_LOADER_TIMEOUT")
+    loader_max_timeout = int(loader_max_timeout) if loader_max_timeout is not None else 30 * 60
+
     docs = []
     t_load = time.time()
     if len(to_load) == 1:
@@ -300,6 +302,7 @@ def batch_load_doc(
         n_jobs=n_jobs,
         backend=backend,
         verbose=0 if not is_verbose else 51,
+        timeout=loader_max_timeout,
     )(delayed(load_one_doc_wrapped)(
         llm_name=llm_name,
         task=task,

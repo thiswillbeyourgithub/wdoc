@@ -475,3 +475,7 @@
     Otherwise, you can specify things like "anki_profile" as argument to filetype "pdf" without crashing,
     this also makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
     and you want to continue in the meantime.
+
+* `WDOC_MAX_LOADER_TIMEOUT`
+    * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
+    Default is 30 minutes.
