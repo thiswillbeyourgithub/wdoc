@@ -51,12 +51,12 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    average_word_length, wpm, loaders_temp_dir_file,
                    min_lang_prob, min_token, max_token, max_lines,
                    optional_strip_unexp_args,
-                   env_get_value,
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
+from .env import WDOC_MAX_PDF_LOADER_TIMEOUT
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -264,8 +264,7 @@ sox_effects = [
     ["norm"],
 ]
 
-pdf_loader_max_timeout = env_get_value("WDOC_MAX_PDF_LOADER_TIMEOUT")
-pdf_loader_max_timeout = int(pdf_loader_max_timeout) if pdf_loader_max_timeout is not None else 5 * 60
+pdf_loader_max_timeout = WDOC_MAX_PDF_LOADER_TIMEOUT
 
 @contextmanager
 def signal_timeout(timeout: int, exception: Exception):

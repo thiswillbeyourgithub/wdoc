@@ -47,6 +47,7 @@ from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
+from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE
 
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
@@ -72,11 +73,6 @@ litellm = lazy_import.lazy_module("litellm")
 logger.info("Starting WDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-if "WDOC_OPEN_ANKI" in os.environ and os.environ["WDOC_OPEN_ANKI"] == "true":
-    auto_open_anki = True
-else:
-    auto_open_anki = False
 
 
 @optional_typecheck
@@ -204,7 +200,7 @@ class WDoc:
                         )
 
             # type checking of extra args
-            if os.environ["WDOC_TYPECHECKING"] in ["crash", "warn"]:
+            if WDOC_TYPECHECKING in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
@@ -392,7 +388,7 @@ class WDoc:
                     cache_dir / "private_langchain.db").resolve().absolute())
             set_llm_cache(self.llm_cache)
 
-        if "WDOC_ALLOW_NO_PRICE" in os.environ and os.environ["WDOC_ALLOW_NO_PRICE"] == "true":
+        if WDOC_ALLOW_NO_PRICE:
             red(
                 f"Disabling price computation for {modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'")
             self.llm_price = [0.0, 0.0]
@@ -421,7 +417,7 @@ class WDoc:
             raise Exception(red(f"Can't find the price of {modelname}"))
 
         if query_eval_modelname is not None:
-            if "WDOC_ALLOW_NO_PRICE" in os.environ and os.environ["WDOC_ALLOW_NO_PRICE"] == "true":
+            if WDOC_ALLOW_NO_PRICE:
                 red(
                     f"Disabling price computation for {query_eval_modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'")
                 self.query_evalllm_price = [0.0, 0.0]
@@ -1468,7 +1464,7 @@ class WDoc:
                 return output
 
             md_printer("\n\n# Documents")
-            if auto_open_anki:
+            if WDOC_OPEN_ANKI:
                 anki_cid = []
                 to_print = ""
             for id, doc in enumerate(docs):
@@ -1478,7 +1474,7 @@ class WDoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += "\n"
-                if auto_open_anki and "anki_cid" in doc.metadata:
+                if WDOC_OPEN_ANKI and "anki_cid" in doc.metadata:
                     cid_str = str(doc.metadata["anki_cid"]).split(" ")
                     for cid in cid_str:
                         if cid not in anki_cid:
@@ -1490,7 +1486,7 @@ class WDoc:
                 red(
                     f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
-            if auto_open_anki and anki_cid:
+            if WDOC_OPEN_ANKI and anki_cid:
                 open_answ = input(
                     f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
                 if open_answ == "debug":

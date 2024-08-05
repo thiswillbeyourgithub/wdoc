@@ -6,19 +6,17 @@ to "warn" to just print the error.
 
 import os
 from typing import Callable
-
 from beartype import beartype, BeartypeConf
 
+from .env import WDOC_TYPECHECKING
 
-if "WDOC_TYPECHECKING" not in os.environ:
-    os.environ["WDOC_TYPECHECKING"] = "disabled"
 
-if os.environ["WDOC_TYPECHECKING"] == "crash":
+if WDOC_TYPECHECKING == "crash":
     optional_typecheck = beartype
-elif os.environ["WDOC_TYPECHECKING"] == "warn":
+elif WDOC_TYPECHECKING == "warn":
     optional_typecheck = beartype(
         conf=BeartypeConf(violation_type=UserWarning))
-elif os.environ["WDOC_TYPECHECKING"] == "disabled":
+elif WDOC_TYPECHECKING == "disabled":
     def optional_typecheck(func: Callable) -> Callable:
         return func
 else:

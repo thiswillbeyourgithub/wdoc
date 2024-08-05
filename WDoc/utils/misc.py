@@ -31,6 +31,7 @@ from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .errors import UnexpectedDocDictArgument
+from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -136,37 +137,6 @@ extra_args_types = {
 }
 extra_args_types.update(filetype_arg_types)
 
-@memoize
-@optional_typecheck
-def env_get_bool(var: str) -> bool:
-    """check if a given variable is set in the env variable. Returns
-    True if 'true', False if 'false' or missing, otherwise crash.
-    """
-    if not var.startswith("WDOC_"):
-        var = "WDOC_" + var
-    if var in os.environ:
-        val = os.environ[var]
-        assert val in ["true", "false"]
-        if val == "true":
-            return True
-        elif val == "false":
-            return False
-    return False
-
-@memoize
-@optional_typecheck
-def env_get_value(var: str) -> Optional[str]:
-    """check if a given variable is set in the env variable. Returns
-    its value as string. If not declared, return None
-    """
-    if not var.startswith("WDOC_"):
-        var = "WDOC_" + var
-    if var not in os.environ:
-        return None
-    val = os.environ[var]
-    assert isinstance(val, str), f"Environment variable {var} was not a string but {val}"
-    return val
-
 class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading
     a document. Also checks the value type. If you set the environnment
@@ -177,7 +147,7 @@ class DocDict(dict):
          ] + list(filetype_arg_types.keys())
     )
     allowed_types: dict = filetype_arg_types
-    strict = True if env_get_bool("STRICT_DOCDICT") else False
+    strict = WDOC_STRICT_DOCDICT
 
     def __hash__(self):
         "make it hashable, to check for duplicates"
@@ -230,7 +200,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
-    if not env_get_bool("STRICT_DOCDICT"):
+    if not WDOC_STRICT_DOCDICT:
         return optional_typecheck(func)
     else:
         # find the true function, otherwise func can be a decorated truefunc and might forget the annotations.
@@ -384,7 +354,7 @@ def model_name_matcher(model: str) -> str:
     """
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
-    if env_get_bool("NO_MODELNAME_MATCHING"):
+    if WDOC_NO_MODELNAME_MATCHING:
         whi(f"Bypassing model name matching for model '{model}'")
         return model
 
