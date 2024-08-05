@@ -24,6 +24,8 @@ from ..misc import cache_dir
 import lazy_import
 pd = lazy_import.lazy_module('pandas')
 metrics = lazy_import.lazy_module("sklearn.metrics")
+PCA = lazy_import.lazy_class("sklearn.decomposition.PCA")
+StandardScaler = lazy_import.lazy_class("sklearn.preprocessing.StandardScaler")
 scipy = lazy_import.lazy_module("scipy")
 
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
@@ -172,11 +174,27 @@ def semantic_sorting(
     embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
     n_dim = [d for d in embeds.shape if d != len(texts)][0]
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
-    embeddings = pd.DataFrame(
-        columns=[f"v_{i}" for i in range(n_dim)],
-        index=[i for i in range(len(texts))],
-        data=embeds,
-    )
+
+    if n_dim > 100 and len(texts) > 10:
+        scaler = StandardScaler()
+        embed_scaled = scaler.fit_transform(embeds)
+        pca = PCA(n_components=100)
+        embeds_reduced = pca.fit_transform(embed_scaled)
+        assert embeds_reduced.shape[0] == embeds.shape[0]
+        vr = np.cumsum(pca.explained_variance_ratio_)
+        if vr <= 0.95:
+            red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
+        embeddings = pd.DataFrame(
+            columns=[f"v_{i}" for i in range(n_dim)],
+            index=[i for i in range(len(texts))],
+            data=embeds_reduced,
+        )
+    else:
+        embeddings = pd.DataFrame(
+            columns=[f"v_{i}" for i in range(n_dim)],
+            index=[i for i in range(len(texts))],
+            data=embeds,
+        )
 
     # get the pairwise distance matrix
     pairwise_distances = metrics.pairwise_distances
