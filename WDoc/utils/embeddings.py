@@ -200,8 +200,11 @@ def load_embeddings(
         ) for qin, qout in loader_queues]
     [t.start() for t in loader_workers]
     timeout = 10
-    list_of_files = {f.stem for f in embeddings_cache.iterdir()
-                     if "faiss_index" in f.suffix}
+    list_of_files = set((
+        f.stem
+        for f in embeddings_cache.iterdir()
+        if "faiss_index" in f.suffix
+    ))
     for doc in tqdm(docs, desc="Loading embeddings from cache"):
         if doc.metadata["content_hash"] in list_of_files:
             fi = embeddings_cache / \
