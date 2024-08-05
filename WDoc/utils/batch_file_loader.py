@@ -246,22 +246,6 @@ def batch_load_doc(
             key=deterministic_sorter,
         )
 
-        # # deduplicate files based on hash
-        # whi("Deduplicating files")
-        # doc_hash_counts = {h: doc_hashes.count(h) for h in doc_hashes}
-        # assert len(doc_hashes) == len(to_load)
-        # n_dupl = 0
-        # for i, h in enumerate(doc_hashes):
-        #     if doc_hash_counts[h] > 1:
-        #         doc_hash_counts[h] -= 1
-        #         to_load[i] = None
-        #         n_dupl += 1
-        #     else:
-        #         assert doc_hash_counts[h] == 1
-        # to_load = [tl for tl in to_load if tl is not None]
-        # if n_dupl:
-        #     red(f"Ignored '{n_dupl}' duplicate files")
-
     # load_functions are slow to load so loading them here in advance for every file
     if any(
         ("load_functions" in doc and doc["load_functions"])
@@ -369,34 +353,6 @@ def batch_load_doc(
     shutil.rmtree(temp_dir)
     assert not temp_dir.exists()
 
-    # # check that the hash are unique
-    # if len(docs) > 1:
-    #     whi(f"Checking document uniqueness using hash")
-    #     ids = [id(d.metadata) for d in docs]
-    #     assert len(ids) == len(set(ids)), (
-    #         "Same metadata object is used to store information on "
-    #         "multiple documents!")
-
-    #     counter = dict(Counter(
-    #         d.metadata["content_hash"]
-    #         for d in docs
-    #     ))
-    #     uniq_hashes = list(counter.keys())
-    #     removed_docs = 0
-    #     if len(docs) != len(uniq_hashes):
-    #         red("Found duplicate hashes after loading documents:")
-
-    #         for i, doc in enumerate(tqdm(docs, desc="Looking for duplicates")):
-    #             h = doc.metadata['content_hash']
-    #             n = counter[h]
-    #             if n > 1:
-    #                 removed_docs += 1
-    #                 docs[i] = None
-    #                 counter[h] -= 1
-    #             assert counter[h] > 0
-    #         red(f"Removed {removed_docs}/{len(docs)} documents because they had the same hash")
-
-    #         docs = [d for d in docs if d is not None]
     return docs
 
 
