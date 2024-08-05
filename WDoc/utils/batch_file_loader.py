@@ -215,7 +215,7 @@ def batch_load_doc(
       colour="magenta",
       disable=len(to_load) <= 10_000,
       )
-      )
+    )
     for i, h in enumerate(doc_hashes):
         to_load[i]["file_hash"] = doc_hashes[i]
 
