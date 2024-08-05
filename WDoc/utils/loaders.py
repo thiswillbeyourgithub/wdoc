@@ -10,6 +10,8 @@ import sys
 import os
 import time
 from typing import List, Union, Any, Optional, Callable, Dict, Tuple
+import signal
+from contextlib import contextmanager
 import traceback
 from functools import partial
 import uuid
@@ -49,10 +51,12 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    average_word_length, wpm, loaders_temp_dir_file,
                    min_lang_prob, min_token, max_token, max_lines,
                    optional_strip_unexp_args,
+                   env_get_value,
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
+from .errors import TimeoutPdfLoaderError
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -259,6 +263,35 @@ sox_effects = [
     ["silence", "-l", "1", "0", "1%", "-1", "3.0", "1%"],
     ["norm"],
 ]
+
+pdf_loader_max_timeout = env_get_value("WDOC_MAX_PDF_LOADER_TIMEOUT")
+pdf_loader_max_timeout = int(pdf_loader_max_timeout) if pdf_loader_max_timeout is not None else 5 * 60
+
+@contextmanager
+def signal_timeout(timeout: int, exception: Exception):
+    "disabled in some joblib backend"
+    assert timeout > 0
+    def signal_handler(signum, frame):
+        raise exception("Timeout occurred")
+
+
+    # Set the signal handler and an alarm
+    disabled = False
+    try:
+        signal.signal(signal.SIGALRM, signal_handler)
+    except Exception:
+        disabled = True
+
+    if disabled:
+        yield
+    else:
+        signal.alarm(timeout)
+
+        try:
+            yield
+        finally:
+            # Disable the alarm
+            signal.alarm(0)
 
 
 @optional_typecheck
@@ -2027,11 +2060,6 @@ def load_pdf(
     # probability
     probs = {}
 
-    def timeout_handler(signum, frame):
-        "crash if a pdf loader is taking too much time"
-        raise TimeoutError
-    pdf_timeout = 5 * 60  # in seconds
-
     pbar = tqdm(total=len(pdf_loaders),
                 desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
@@ -2040,7 +2068,11 @@ def load_pdf(
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
-            docs = _pdf_loader(loader_name, path, file_hash)
+            with signal_timeout(
+                timeout=pdf_loader_max_timeout,
+                exception=TimeoutPdfLoaderError(),
+                ):
+                docs = _pdf_loader(loader_name, path, file_hash)
 
             pbar.update(1)
 

@@ -479,3 +479,8 @@
 * `WDOC_MAX_LOADER_TIMEOUT`
     * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
     Default is 30 minutes.
+
+* `WDOC_MAX_PDF_LOADER_TIMEOUT`
+    * Number of seconds to wait for each pdf loader before giving up this loader.
+    Default is 5 minutes.
+    Disabled when using threading as python does not allow it.

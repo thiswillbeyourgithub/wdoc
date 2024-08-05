@@ -25,3 +25,7 @@ class UnexpectedDocDictArgument(Exception):
         super().__init__(
             f"You're trying to use an argument for a filetype that does not expect it: {message}"
         )
+
+class TimeoutPdfLoaderError(Exception):
+    def __init__(self) -> None:
+        super().__init__()
