@@ -24,6 +24,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
+from langchain.docstore.document import Document
 
 from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
@@ -39,6 +40,35 @@ litellm = lazy_import.lazy_module("litellm")
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
+
+
+@optional_typecheck
+def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
+    """
+    merge inplace db1 by adding it each document and embeddings of db2.
+    """
+    failed = []
+    doc_ids = list(db2.docstore._dict.keys())
+    # get the embedding of each document
+    vecs = faiss.rev_swig_ptr(
+        db2.index.get_xb(),
+        len(doc_ids) * db2.index.d
+    ).reshape(len(doc_ids), db2.index.d)
+    vecs = np.vsplit(vecs, vecs.shape[0])
+    vecs = [v.squeeze() for v in vecs]
+    for docuid, embe in zip(doc_ids, vecs):
+        docu = db2.docstore._dict[docuid]
+        try:
+            db1.add_embeddings(
+                text_embeddings=[(docu.page_content, embe)],
+                metadatas=[docu.metadata],
+                ids=[docuid],
+            )
+        except ValueError as err:
+            if "Tried to add ids that already exist" not in str(err):
+                raise
+            failed.append(docu)
+    return failed
 
 
 @optional_typecheck
@@ -233,13 +263,20 @@ def load_embeddings(
     if merged_dbs:
         assert db is None
         db = merged_dbs.pop(0)
+    failed_to_merge = []
     if merged_dbs:
         for m in merged_dbs:
-            db.merge_from(m)
+            try:
+                db.merge_from(m)
+            except ValueError as err:
+                if "Tried to add ids that already exist" not in str(err):
+                    raise
+                failed_to_merge.extend(iter_merge(db, m))
+
         in_db = len(db.docstore._dict.keys())
-        assert in_db == len(docs) - len(to_embed), (
+        assert in_db == len(docs) - len(to_embed) - len(failed_to_merge), (
             f"Invalid number of loaded documents: found {in_db} but "
-            f"expected {len(docs)-len(to_embed)}"
+            f"expected {len(docs)-len(to_embed)-len(failed_to_merge)}"
         )
 
     whi(f"Docs left to embed: {len(to_embed)}")
@@ -343,11 +380,18 @@ def load_embeddings(
                 # disable=not is_verbose,
             )
         )
+        failed_to_merge = []
         for temp in temp_dbs:
             if not db:
                 db = temp
             else:
-                db.merge_from(temp)
+                try:
+                    db.merge_from(temp)
+                except ValueError as err:
+                    if "Tried to add ids that already exist" not in str(err):
+                        raise
+                    failed_to_merge.extend(iter_merge(db, temp))
+        assert not failed_to_merge, f"Failed to merge {len(failed_to_merge)} documents after embeddings"
 
         whi("Waiting for saver workers to finish.")
         stop_counter = 0
