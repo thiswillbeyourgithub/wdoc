@@ -207,7 +207,7 @@
     cache folder for your system. This does not disable caching
     for documents.
 
-* `--file_loader_parallel_backend`: str, default `"loky"`
+* `--file_loader_parallel_backend`: str, default `"threading"`
     * joblib.Parallel backend to use when loading files. `loky` and
     `multiprocessing` refer to multiprocessing whereas `threading`
     refers to multithreading.
