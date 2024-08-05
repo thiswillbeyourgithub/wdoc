@@ -47,7 +47,7 @@ from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
-from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE
+from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER
 
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
@@ -155,7 +155,7 @@ class WDoc:
                 return text
         self.ntfy = ntfy
 
-        if debug:
+        if debug or WDOC_DEBUGGER:
             def handle_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
                     @optional_typecheck

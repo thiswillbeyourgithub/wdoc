@@ -177,6 +177,8 @@
     Because in some situation LLM calls are refused because of rate
     limiting, this can be used to slowly but always get your answer.
     It implies `--verbose=True`
+    If you just want to open the debugger in case of issue, see
+    below at `WDOC_DEBUGGER`.
 
 * `--verbose`: bool, default `False`
     Increase verbosity. Implied if `--debug` is set.
@@ -484,3 +486,7 @@
     * Number of seconds to wait for each pdf loader before giving up this loader.
     Default is 5 minutes.
     Disabled when using threading as python does not allow it.
+
+* `WDOC_DEBUGGER`
+    * If True, will open the debugger in case of issue. Implied by `--debug`
+    Default is False
