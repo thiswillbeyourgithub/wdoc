@@ -314,6 +314,7 @@ def load_embeddings(
             vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(
                 doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
             vecs = np.vsplit(vecs, vecs.shape[0])
+            vecs = [v.squeeze() for v in vecs]
             for docuid, embe in zip(doc_ids, vecs):
                 docu = temp.docstore._dict[docuid]
                 assert all([t.is_alive()
@@ -323,7 +324,7 @@ def load_embeddings(
                 queue_candidates = random.sample(saver_queues, k=2)
                 queue_sizes = [q[0].qsize() for q in queue_candidates]
                 sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
-                sq.put((True, docuid, docu, embe.squeeze()))
+                sq.put((True, docuid, docu, embe))
 
             return temp
         temp_dbs = Parallel(
