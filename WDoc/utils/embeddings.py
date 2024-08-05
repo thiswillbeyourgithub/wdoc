@@ -234,7 +234,8 @@ def load_embeddings(
         assert db is None
         db = merged_dbs.pop(0)
     if merged_dbs:
-        [db.merge_from(m) for m in merged_dbs]
+        for m in merged_dbs:
+            db.merge_from(m)
         in_db = len(db.docstore._dict.keys())
         assert in_db == len(docs) - len(to_embed), (
             f"Invalid number of loaded documents: found {in_db} but "

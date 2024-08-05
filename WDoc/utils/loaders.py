@@ -548,10 +548,8 @@ def load_one_doc(
                 docs[i].metadata[k] = v.name
 
         # set hash
-        if "content_hash" not in docs[i].metadata:
-            docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
-        if "file_hash" not in docs[i].metadata:
-            docs[i].metadata["file_hash"] = file_hash
+        docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
+        docs[i].metadata["file_hash"] = file_hash
         assert docs[i].metadata[
             "content_hash"], f"Empty content_hash for document: {docs[i]}"
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
@@ -571,10 +569,9 @@ def load_one_doc(
             meta_dump = json.dumps(docs[i].metadata)
 
 
-        if "all_hash" not in docs[i].metadata:
-            docs[i].metadata["all_hash"] = hasher(
-                docs[i].metadata["content_hash"] + meta_dump
-            )
+        docs[i].metadata["all_hash"] = hasher(
+            docs[i].metadata["content_hash"] + meta_dump
+        )
         assert docs[i].metadata["all_hash"], f"Empty all_hash for document: {docs[i]}"
 
     total_reading_length =  None
