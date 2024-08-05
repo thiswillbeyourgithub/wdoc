@@ -154,6 +154,7 @@ def semantic_sorting(
     Given a list of text, embed them, do a hierarchical clutering then
     sort the list according to the leaf order. This probably helps the LLM
     to combine the intermediate answers into one.
+    Return the text directly if less than 5 texts.
     """
     assert texts, "No input text received"
 
@@ -162,12 +163,7 @@ def semantic_sorting(
     [temp.append(t) for t in texts if t not in temp]
     texts = temp
 
-    if len(texts) < 3:
-        return texts
-    elif len(texts) > 1000:
-        red(
-            f"Found {len(texts)} (>1000), this can be too much for the "
-            "clustering so returning the list of text as is")
+    if len(texts) < 5:
         return texts
 
     # get embeddings
@@ -175,7 +171,7 @@ def semantic_sorting(
     n_dim = [d for d in embeds.shape if d != len(texts)][0]
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
-    if n_dim > 100 and len(texts) > 10:
+    if n_dim > 100:
         scaler = StandardScaler()
         embed_scaled = scaler.fit_transform(embeds)
         pca = PCA(n_components=100)
