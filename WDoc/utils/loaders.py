@@ -10,7 +10,6 @@ import sys
 import os
 import time
 from typing import List, Union, Any, Optional, Callable, Dict, Tuple
-from textwrap import dedent
 import traceback
 from functools import partial
 import uuid
@@ -43,7 +42,7 @@ from langchain_community.document_loaders import SeleniumURLLoader
 from langchain_community.document_loaders import PlaywrightURLLoader
 from langchain_community.document_loaders import WebBaseLoader
 
-from unstructured.cleaners.core import clean_extra_whitespace
+# from unstructured.cleaners.core import clean_extra_whitespace
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
