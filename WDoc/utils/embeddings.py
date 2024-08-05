@@ -286,7 +286,7 @@ def load_embeddings(
     whi(
         f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
     if private:
-        whi(f"Not checking token price because private is set")
+        whi("Not checking token price because private is set")
         price = 0
     elif backend != "openai":
         whi(
