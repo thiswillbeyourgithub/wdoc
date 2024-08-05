@@ -314,7 +314,7 @@ def load_embeddings(
             vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(
                 doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
             vecs = np.vsplit(vecs, vecs.shape[0])
-            for docuid, embe in zip(temp.docstore._dict.keys(), vecs):
+            for docuid, embe in zip(doc_ids, vecs):
                 docu = temp.docstore._dict[docuid]
                 assert all([t.is_alive()
                            for t in saver_workers]), "Some saving thread died"
