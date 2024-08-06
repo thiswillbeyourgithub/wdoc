@@ -1261,7 +1261,6 @@ def load_string() -> List[Document]:
     ]
     return docs
 
-
 @optional_strip_unexp_args
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")

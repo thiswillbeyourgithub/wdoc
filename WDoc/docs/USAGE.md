@@ -13,43 +13,118 @@
     any of those parameters as long as they are as json. You can find
     an example of json_entries file in `WDoc/docs/json_entries_example.txt`
 
-    * Supported values:
+    * Supported values and available arguments:
+        *For the details of each argument, [see below](#loader-specific-arguments)*
         * `auto`: will guess the appropriate filetype based on `--path`.
             Irrelevant for some filetypes, eg if `--filetype`=anki
-        * `youtube`: `--path` must link to a youtube video
-        * `youtube_playlist`: `--path` must link to a youtube playlist
-        * `pdf`: `--path` is path to pdf
-        * `txt`: `--path` is path to a .txt file
-        * `text`: `--path` is directly the text content. You can pass `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
-        * `url`: `--path` must be a valid http(s) link
-        * `anki`: must be set: `--anki_profile`. Optional: `--anki_deck`,
-        `--anki_notetype`, `--anki_template`, `--anki_tag_filter`.
-            See in loader specific arguments below for details.
-        * `string`: no other parameters needed, will provide a field where
-            you must type or paste the string
-        * `local_audio`: must be set: `--whisper_prompt`, `--whisper_lang`. The model used will be `whisper-1`
-        * `local_video`: must be set: `--audio_backend`. Optional: `--audio_unsilence`, `--whisper_lang`, `--whisper_prompt`, `--deepgram_kwargs`.
-        * `online_media`: load the url using youtube_dl to download a media
-        (video or audio) then treat it as `filetype=local_audio`.
-            If youtube_dl failed to find the media, try using playwright browser
-            where any requested element that looks like a possible media will try
-            be downloaded. Possible arguments are `--online_media_url_regex`,
-            `--online_media_resourcetype_regex`. Then arguments of `local_audio`.
 
-        * `json_entries`: `--path` is path to a text file that contains a json
-            for each line containing at least a filetype and a path key/value
-            but can contain any parameters described here
-        * `recursive_paths`: `--path` is the starting path `--pattern` is the globbing
-            patterns to append `--exclude` and `--include` can be a list of regex
-            applying to found paths (include is run first then exclude, if the
-            pattern is only lowercase it will be case insensitive) `--recursed_filetype`
-            is the filetype to use for each of the found path
-        * `link_file`: `--path` must point to a file where each line is a link
-            that will be summarized. The resulting summary will be added to `--out_file`.
-            Links that have already been summarized in out_file will be skipped
-            (the out_file is never overwritten). If a line is a markdown like
-            like [this](link) then it will be parsed as a link.
-            Empty lines and starting with # are ignored.
+        * `url`
+            * `--path` must be a valid http(s) link
+            * Optional:
+                * `--title`, otherwise we try to detect it ourselves.
+
+        * `youtube`
+            * `--path` must link to a youtube video
+            * Optional:
+                * `--youtube_language`
+                * `--youtube_translations`
+                * `--youtube_audio_backend`
+                * `--whisper_prompt`
+                * `--whisper_lang`
+                * `--deepgram_kwargs`
+
+        * `pdf`
+            * `--path` is the filepath to pdf
+            * Optional:
+                * `doccheck_min_lang_prob`
+                * `doccheck_min_token`
+                * `doccheck_max_token`
+                * `doccheck_max_lines`
+
+        * `online_pdf`
+            * Same arguments as for `--filetype=pdf`
+
+        * `anki`
+            * Optional:
+                * `--anki_profile`
+                * `--anki_deck`
+                * `--anki_notetype`
+                * `--anki_template`
+                * `--anki_tag_filter`
+
+        * `string`: no parameters needed, will provide a field where
+            you must type or paste the string
+
+        * `txt`
+            * `--path` is path to a .txt file
+
+        * `text`
+            * `--path` is directly the text content.
+            * Optional:
+                * `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
+
+        * `local_html`
+            * `--path` must points to a .html file
+            * Optional:
+                * `--load_functions`
+
+        * `logseq_markdown`
+            * `--path` path to the markdown file
+
+        * `local_audio`
+            * `--path`
+            * `--audio_backend`
+            * Optional:
+                * `--audio_unsilence`
+                * `--whisper_prompt`
+                * `--whisper_lang`
+                * `--deepgram_kwargs`
+
+        * `local_video`
+            * `--path`
+            * `--audio_backend`
+            * Optional:
+                * `--audio_unsilence`
+                * `--whisper_lang`
+                * `--whisper_prompt`
+                * `--deepgram_kwargs`
+
+        * `online_media`: load the url using youtube_dl to download a media
+            (video or audio) then treat it as `filetype=local_audio`.
+            * If youtube_dl failed to find the media, try using playwright browser
+                where any requested element that looks like a possible media will try
+                be downloaded.
+            * Same arguments as `local_audio` with extra arguments:
+                * `--online_media_url_regex`
+                * `--online_media_resourcetype_regex`
+        * `epub`
+            * `--path` to a .epub file
+
+        * `word`
+            * `--path` to a .doc, .docx etc
+
+    * **Recursive types**:
+        * `json_entries`
+            * `--path` is path to a text file that contains a json
+                for each line containing at least a filetype and a path key/value
+                but can contain any parameters described here
+        * `recursive_paths`
+            * `--path` is the starting path
+            * `--pattern` is the globbing patterns to append
+            * `--exclude` and `--include` can be a list of regex
+                applying to found paths (include is run first then exclude, if the
+                pattern is only lowercase it will be case insensitive)
+            * `--recursed_filetype` is the filetype to use for each of the found path
+        * `youtube_playlist`
+            * `--path` must link to a youtube playlist
+        * `link_file`
+            * `--path` must point to a file where each line is a link
+                that will be summarized.
+            * `--out_file` path to text file where the summary will be added (appended).
+                Links that have already been summarized in out_file will be skipped
+                (the out_file is never overwritten). If a line is a markdown like
+                like [this](link) then it will be parsed as a link.
+                Empty lines and starting with # are ignored.
 
 ---
 
