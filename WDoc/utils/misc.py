@@ -11,6 +11,7 @@ import os
 import urllib.request
 import json
 import re
+from datetime import timedelta
 from pathlib import Path, PosixPath
 from difflib import get_close_matches
 from bs4 import BeautifulSoup
@@ -73,6 +74,11 @@ hashdoc_cache_dir.mkdir(exist_ok=True)
 hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
+
+# remove cache files older than 90 days
+doc_loaders_cache.reduce_size(age_limit=timedelta(90))
+hashdoc_cache.reduce_size(age_limit=timedelta(90))
+query_eval_cache.reduce_size(age_limit=timedelta(90))
 
 # for reading length estimation
 wpm = 250

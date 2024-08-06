@@ -80,12 +80,6 @@ def batch_load_doc(
     n_jobs: int,
     **cli_kwargs) -> List[Document]:
     """load the input"""
-    # # remove cache files older than 90 days
-    # try:
-    #     doc_loaders_cache.reduce_size(age_limit=timedelta(90))
-    # except Exception as err:
-    #     # red(f"Error when reducing cache size: '{err}'")
-    #     pass
 
     # just in case, make sure all modules are loaded
     unlazyload_modules()
