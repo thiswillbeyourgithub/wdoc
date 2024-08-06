@@ -71,6 +71,8 @@ doc_loaders_cache = Memory(doc_loaders_cache_dir, verbose=0)
 hashdoc_cache_dir = (cache_dir / "doc_hashing")
 hashdoc_cache_dir.mkdir(exist_ok=True)
 hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
+(cache_dir / "query_eval_llm").mkdir(exist_ok=True)
+query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 
 # for reading length estimation
 wpm = 250

@@ -19,7 +19,7 @@ from langchain_openai import ChatOpenAI
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
-from ..misc import cache_dir
+from ..misc import query_eval_cache
 
 import lazy_import
 pd = lazy_import.lazy_module('pandas')
@@ -28,8 +28,6 @@ PCA = lazy_import.lazy_class("sklearn.decomposition.PCA")
 StandardScaler = lazy_import.lazy_class("sklearn.preprocessing.StandardScaler")
 scipy = lazy_import.lazy_module("scipy")
 
-(cache_dir / "query_eval_llm").mkdir(exist_ok=True)
-query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
