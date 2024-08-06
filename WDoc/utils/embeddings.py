@@ -19,7 +19,8 @@ import numpy as np
 from pydantic import Extra
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.storage import LocalFileStore
+# from langchain.storage import LocalFileStore
+from .customs.compressed_embeddings_cache import LocalFileStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
@@ -181,7 +182,10 @@ def load_embeddings(
     if private:
         embed_model_str = "private_" + embed_model_str
 
-    lfs = LocalFileStore(cache_dir / "embeddings" / embed_model_str)
+    lfs = LocalFileStore(
+        root_path=cache_dir / "compressed_embeddings" / embed_model_str,
+        compress=True
+    )
     cache_content = list(lfs.yield_keys())
     whi(f"Found {len(cache_content)} embeddings in local cache")
 
