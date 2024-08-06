@@ -1,5 +1,7 @@
 """
 source : https://api.python.langchain.com/en/latest/_modules/langchain/storage/file_system.html#LocalFileStore
+
+This is basically the exact same code but with added compression
 """
 import os
 import re
@@ -10,6 +12,8 @@ from typing import Iterator, List, Optional, Sequence, Tuple, Union
 from langchain_core.stores import ByteStore
 
 from langchain.storage.exceptions import InvalidKeyException
+
+import zlib
 
 
 class LocalFileStore(ByteStore):
@@ -62,6 +66,10 @@ class LocalFileStore(ByteStore):
                 filesystem access time (but not the modified time) when a file is read.
                 This allows MRU/LRU cache policies to be implemented for filesystems
                 where access time updates are disabled.
+            compress: (optional, defaults to `False`) If an int, compress
+                stored data, reducing speed but lowering size. The int given
+                is the level of compression of zlib, so between -1 and 9, both
+                included.
         """
         self.root_path = Path(root_path).absolute()
         self.chmod_file = chmod_file
@@ -129,6 +137,8 @@ class LocalFileStore(ByteStore):
             full_path = self._get_full_path(key)
             if full_path.exists():
                 value = full_path.read_bytes()
+                if self.compress:
+                    value = zlib.decompress(data=value)
                 values.append(value)
                 if self.update_atime:
                     # update access time only; preserve modified time
@@ -150,7 +160,11 @@ class LocalFileStore(ByteStore):
         for key, value in key_value_pairs:
             full_path = self._get_full_path(key)
             self._mkdir_for_store(full_path.parent)
-            full_path.write_bytes(value)
+            if self.compress:
+                com_val = zlib.compress(data=value, level=self.compress)
+                full_path.write_bytes(com_val)
+            else:
+                full_path.write_bytes(value)
             if self.chmod_file is not None:
                 os.chmod(full_path, self.chmod_file)
 
