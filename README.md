@@ -105,6 +105,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **epub**: barely tested because epub is in general a poorly defined format
 * **powerpoint**: .ppt, .pptx, .odp, ...
 * **word**: .doc, .docx, .odt, ...
+* **json_dict**: a text file containing a single json dict.
 
 * **Recursive types**
     * **youtube playlists**: get the link for each video then process as **youtube**

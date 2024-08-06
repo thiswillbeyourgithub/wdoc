@@ -103,6 +103,12 @@
         * `word`
             * `--path` to a .doc, .docx etc
 
+        * `json_dict`
+            * `--path` to a text file containing a single json dict
+            * `--json_dict_template`
+            * Optional:
+                * `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
+
     * **Recursive types**:
         * `json_entries`
             * `--path` is path to a text file that contains a json
@@ -381,6 +387,11 @@
     so can be useful for the LLM.
 * `--anki_tag_filter`: str
     Only the tags that match this regex will be put in the template.
+
+* `--json_dict_template`: str
+    String that must contain `{key} and `{value}`, that will be replaced
+    by the content of the json dict so that each document correspond to
+    a single key/value pair derived from the template.
 
 * `--metadata`: str
     either as a string that will be parsed as a json dict, or as a dict.

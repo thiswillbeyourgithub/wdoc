@@ -447,6 +447,12 @@ def load_one_doc(
             **kwargs,
         )
 
+    elif filetype == "json_dict":
+        docs = load_json_dict(
+            file_hash=file_hash,
+            **kwargs,
+        )
+
     else:
         raise Exception(red(f"Unsupported filetype: '{filetype}'"))
 
@@ -1815,6 +1821,38 @@ def load_word_document(
         loader = UnstructuredWordDocumentLoader(path)
         content = loader.load()
         docs = [Document(page_content=content)]
+
+    return docs
+
+@optional_strip_unexp_args
+@doc_loaders_cache.cache(ignore=["path"])
+def load_json_dict(
+    path: str,
+    json_dict_template: str,
+    file_hash: str,
+    metadata: Optional[str, dict],
+) -> List[Document]:
+    assert Path(path).exists(), f"file not found: '{path}'"
+
+    assert "{key}" in json_dict_template, "json_dict_template must contain '{key}'"
+    assert "{value}" in json_dict_template, "json_dict_template must contain '{value}'"
+
+    with Path(path).open("r") as f:
+        d = json.load(f)
+    assert d, "dict is empty"
+
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
+    if not metadata:
+        metadata = {}
+
+    docs = []
+    for k, v in d.items():
+        doc = Document(
+            page_content=json_dict_template.replace("{key}", k).replace("{value}", v),
+            metadata=metadata,
+        )
+        docs.append(doc)
 
     return docs
 
