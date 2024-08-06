@@ -143,10 +143,12 @@ class LocalFileStore(ByteStore):
                     try:
                         value = zlib.decompress(value)
                     except zlib.error:
-                        pass
                         # trying to decompress data that wasn't compressed
                         # This happens if the user enables 'compress' without
-                        # changing the root_dir.
+                        # changing the root_dir, so overwriting the file to the
+                        # compressed version
+                        full_path.write_bytes(zlib.compress(value, level=self.compress))
+
                 values.append(value)
                 if self.update_atime:
                     # update access time only; preserve modified time
