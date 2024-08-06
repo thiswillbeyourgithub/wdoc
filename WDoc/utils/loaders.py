@@ -787,18 +787,24 @@ def load_online_pdf(
 @optional_strip_unexp_args
 def load_anki(
     verbose: bool,
-    anki_profile: str,
     text_splitter: TextSplitter,
     loaders_temp_dir: PosixPath,
+    anki_profile: Optional[str] = None,
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
     anki_template: Optional[str] = "{allfields}\n{image_ocr_alt}",
     anki_tag_filter: Optional[str] = None,
 ) -> List[Document]:
-    whi(f"Loading anki profile: '{anki_profile}'")
     if anki_tag_filter:
         assert "{tags}" in anki_template, "Can't use anki_tag_filter without using {tags} in anki_template"
         anki_tag_filter = re.compile(anki_tag_filter)
+
+    if not anki_profile:
+        original_db = akp.find_db()
+        anki_profile = original_db.parent.name
+        whi(f"Detected anki profile: '{anki_profile}'")
+
+    whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid.uuid4()).split("-")[-1]
