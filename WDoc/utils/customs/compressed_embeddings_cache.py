@@ -169,7 +169,7 @@ class LocalFileStore(ByteStore):
             full_path = self._get_full_path(key)
             self._mkdir_for_store(full_path.parent)
             if self.compress:
-                com_val = zlib.compress(data=value, level=self.compress)
+                com_val = zlib.compress(value, level=self.compress)
                 full_path.write_bytes(com_val)
             else:
                 full_path.write_bytes(value)
