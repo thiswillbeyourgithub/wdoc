@@ -140,7 +140,13 @@ class LocalFileStore(ByteStore):
             if full_path.exists():
                 value = full_path.read_bytes()
                 if self.compress:
-                    value = zlib.decompress(value)
+                    try:
+                        value = zlib.decompress(value)
+                    except zlib.error:
+                        pass
+                        # trying to decompress data that wasn't compressed
+                        # This happens if the user enables 'compress' without
+                        # changing the root_dir.
                 values.append(value)
                 if self.update_atime:
                     # update access time only; preserve modified time
