@@ -61,7 +61,7 @@
         * `text`
             * `--path` is directly the text content.
             * Optional:
-                * `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
+                * `--metadata`
 
         * `local_html`
             * `--path` must points to a .html file
@@ -382,6 +382,8 @@
 * `--anki_tag_filter`: str
     Only the tags that match this regex will be put in the template.
 
+* `--metadata`: str
+    either as a string that will be parsed as a json dict, or as a dict.
 
 * `--audio_backend`: str
     * either 'whisper' or 'deepgram' to transcribe audio.
