@@ -1830,7 +1830,8 @@ def load_json_dict(
     path: str,
     json_dict_template: str,
     file_hash: str,
-    metadata: Optional[str, dict],
+    metadata: Optional[str, dict] = None,
+    json_dict_exclude_keys: Optional[List[str]] = None,
 ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
@@ -1845,14 +1846,19 @@ def load_json_dict(
         metadata = json.loads(metadata)
     if not metadata:
         metadata = {}
+    if json_dict_exclude_keys is None:
+        json_dict_exclude_keys = []
 
     docs = []
     for k, v in d.items():
+        if k in json_dict_exclude_keys:
+            continue
         doc = Document(
             page_content=json_dict_template.replace("{key}", k).replace("{value}", v),
             metadata=metadata,
         )
         docs.append(doc)
+    assert docs, "No document found in json_dict"
 
     return docs
 

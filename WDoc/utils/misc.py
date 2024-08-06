@@ -109,6 +109,7 @@ filetype_arg_types = {
     "anki_tag_filter": str,
 
     "json_dict_template": str,
+    "json_dict_exclude_keys": str,
 
     "audio_backend": str,
     "audio_unsilence": bool,

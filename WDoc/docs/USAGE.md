@@ -107,7 +107,8 @@
             * `--path` to a text file containing a single json dict
             * `--json_dict_template`
             * Optional:
-                * `--metadata`, either as a string that will be parsed as a json dict, or as a dict.
+                * `--json_dict_exclude_keys`
+                * `--metadata`
 
     * **Recursive types**:
         * `json_entries`
@@ -392,6 +393,8 @@
     String that must contain `{key} and `{value}`, that will be replaced
     by the content of the json dict so that each document correspond to
     a single key/value pair derived from the template.
+* `--json_dict_exclude_keys`: list of strings
+    all those keys will be ignored.
 
 * `--metadata`: str
     either as a string that will be parsed as a json dict, or as a dict.
