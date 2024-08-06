@@ -184,7 +184,7 @@ def load_embeddings(
         embed_model_str = "private_" + embed_model_str
 
     lfs = LocalFileStore(
-        root_path=cache_dir / "embeddings" / embed_model_str,
+        root_path=cache_dir / "CacheEmbeddings" / embed_model_str,
         update_atime=True,
         compress=True
     )
@@ -215,7 +215,7 @@ def load_embeddings(
     if len(docs) >= 50:
         docs = sorted(docs, key=lambda x: random.random())
 
-    embeddings_cache = cache_dir / "faiss_embeddings" / embed_model_str
+    embeddings_cache = cache_dir / "faiss_doc_indexes" / embed_model_str
     embeddings_cache.mkdir(exist_ok=True)
     ti = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
