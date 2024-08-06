@@ -183,7 +183,8 @@ def load_embeddings(
         embed_model_str = "private_" + embed_model_str
 
     lfs = LocalFileStore(
-        root_path=cache_dir / "compressed_embeddings" / embed_model_str,
+        root_path=cache_dir / "embeddings" / embed_model_str,
+        update_atime=True,
         compress=True
     )
     cache_content = list(lfs.yield_keys())
