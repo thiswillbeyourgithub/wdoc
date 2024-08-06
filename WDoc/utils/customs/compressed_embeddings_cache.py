@@ -69,12 +69,14 @@ class LocalFileStore(ByteStore):
             compress: (optional, defaults to `False`) If an int, compress
                 stored data, reducing speed but lowering size. The int given
                 is the level of compression of zlib, so between -1 and 9, both
-                included.
+                included. If `True`, defaults to -1, like in zlib.
         """
         self.root_path = Path(root_path).absolute()
         self.chmod_file = chmod_file
         self.chmod_dir = chmod_dir
         self.update_atime = update_atime
+        if compress is True:
+            compress = -1
         if isinstance(compress, int):
             assert compress >= -1 and compress <= 9, (
                 "compress arg as int must be between -1 and 9, both "
