@@ -490,3 +490,7 @@
 * `WDOC_DEBUGGER`
     * If True, will open the debugger in case of issue. Implied by `--debug`
     Default is False
+
+* `WDOC_EXPIRE_CACHE_DAYS`
+    * If an int, will remove any cached value that is older than that many days.
+    Otherwise keep forever. Default is 0 to disable.

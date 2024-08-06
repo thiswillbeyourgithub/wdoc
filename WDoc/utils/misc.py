@@ -32,7 +32,7 @@ from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .errors import UnexpectedDocDictArgument
-from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT
+from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS
 
 litellm = lazy_import.lazy_module("litellm")
 
@@ -75,10 +75,11 @@ hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
 query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 
-# remove cache files older than 90 days
-doc_loaders_cache.reduce_size(age_limit=timedelta(90))
-hashdoc_cache.reduce_size(age_limit=timedelta(90))
-query_eval_cache.reduce_size(age_limit=timedelta(90))
+# remove cache files older than X days
+if WDOC_EXPIRE_CACHE_DAYS:
+    doc_loaders_cache.reduce_size(age_limit=timedelta(WDOC_EXPIRE_CACHE_DAYS))
+    hashdoc_cache.reduce_size(age_limit=timedelta(WDOC_EXPIRE_CACHE_DAYS))
+    query_eval_cache.reduce_size(age_limit=timedelta(WDOC_EXPIRE_CACHE_DAYS))
 
 # for reading length estimation
 wpm = 250

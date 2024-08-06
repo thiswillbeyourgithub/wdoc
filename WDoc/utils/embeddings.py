@@ -31,6 +31,7 @@ from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
+from .env import WDOC_EXPIRE_CACHE_DAYS
 
 import lazy_import
 litellm = lazy_import.lazy_module("litellm")
@@ -285,6 +286,16 @@ def load_embeddings(
         )
 
     whi(f"Docs left to embed: {len(to_embed)}")
+
+    # remove the cached embeddings that are too old
+    if WDOC_EXPIRE_CACHE_DAYS:
+        cached_path=cache_dir / "embeddings" / embed_model_str
+        current_time = time.time()
+        for file in cached_path.iterdir():
+            last_access_time = path.stat().st_atime
+            days_since_last_access = (current_time - last_access_time) / (24 * 3600)
+            if days_since_last_access > WDOC_EXPIRE_CACHE_DAYS:
+                file.unlink(missing_ok=False)
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
