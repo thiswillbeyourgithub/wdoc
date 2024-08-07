@@ -92,7 +92,7 @@ def fix_db(db: FAISS) -> FAISS:
             diff = k - new_ids.shape[0]
             if diff == 0:
                 assert original_scores.shape == original_ids.shape
-                assert original_ids.shape == new_ids.shape
+                assert original_ids.squeeze().shape == new_ids.shape
                 return original_scores, original_ids
 
             trial = 0
