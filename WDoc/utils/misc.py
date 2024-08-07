@@ -155,8 +155,10 @@ class DocDict(dict):
     variable 'WDOC_STRICT_DOCDICT' to 'true' then the checking will be
     strict, meaning it will crash instead of printing in red"""
     allowed_keys: set = set(
-        ["path", "filetype", "file_hash", "source_tag",
-         ] + list(filetype_arg_types.keys())
+        sorted(
+            ["path", "filetype", "file_hash", "source_tag",
+            ] + list(filetype_arg_types.keys())
+        )
     )
     allowed_types: dict = filetype_arg_types
     strict = WDOC_STRICT_DOCDICT
