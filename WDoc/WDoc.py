@@ -1740,7 +1740,7 @@ class WDoc:
             else:
                 md_printer("\n\n# Intermediate answers for each document:")
             for counter, (ia, doc) in enumerate(zip(output["relevant_intermediate_answers"], output["relevant_filtered_docs"])):
-                to_print = f"## Document #{counter}\n"
+                to_print = f"## Document #{counter + 1}\n"
                 content = doc.page_content.strip()
                 to_print += "```\n" + content + "\n ```\n"
                 for k, v in doc.metadata.items():
