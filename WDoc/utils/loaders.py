@@ -1836,7 +1836,7 @@ def load_json_dict(
     path: str,
     json_dict_template: str,
     file_hash: str,
-    metadata: Optional[str, dict] = None,
+    metadata: Optional[Union[str, dict]] = None,
     json_dict_exclude_keys: Optional[List[str]] = None,
 ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
