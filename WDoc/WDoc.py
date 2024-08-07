@@ -838,7 +838,7 @@ class WDoc:
 
         if not self.import_mode:
             red(self.ntfy(
-                f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"))
+                f"Total cost of those summaries: {results['doc_total_tokens']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"))
             red(self.ntfy(
                 f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"))
         else:
