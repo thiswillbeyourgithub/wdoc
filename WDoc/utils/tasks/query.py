@@ -262,6 +262,7 @@ def pbar_closer(
         ) -> Union[dict, List]:
         pbar = llm.callbacks[0].pbar[-1]
         pbar.update(pbar.total - pbar.n)
+        pbar.n = pbar.total
         pbar.close()
 
         return inputs
