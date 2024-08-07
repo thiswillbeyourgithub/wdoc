@@ -109,7 +109,7 @@ filetype_arg_types = {
     "anki_tag_filter": str,
 
     "json_dict_template": str,
-    "json_dict_exclude_keys": List[str],
+    "json_dict_exclude_keys": List,
 
     "audio_backend": str,
     "audio_unsilence": bool,
@@ -123,7 +123,7 @@ filetype_arg_types = {
     "youtube_translation": str,
     "youtube_audio_backend": str,
 
-    "load_functions": List[str],
+    "load_functions": List,
 
     "doccheck_min_token": int,
     "doccheck_max_token": int,
