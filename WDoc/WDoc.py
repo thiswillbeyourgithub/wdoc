@@ -58,7 +58,7 @@ from langchain_community.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain_community.cache import SQLiteCache
+from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.runnables.base import RunnableEach
@@ -381,10 +381,10 @@ class WDoc:
             self.llm_cache = False
         else:
             if not private:
-                self.llm_cache = SQLiteCache(database_path=(
+                self.llm_cache = SQLiteCacheFixed(database_path=(
                     cache_dir / "langchain.db").resolve().absolute())
             else:
-                self.llm_cache = SQLiteCache(database_path=(
+                self.llm_cache = SQLiteCacheFixed(database_path=(
                     cache_dir / "private_langchain.db").resolve().absolute())
             set_llm_cache(self.llm_cache)
 

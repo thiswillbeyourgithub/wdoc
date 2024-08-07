@@ -15,7 +15,7 @@ from langchain_core.outputs.llm_result import LLMResult
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
-from langchain_community.cache import SQLiteCache
+from langchain_core.caches import BaseCache
 
 from .logger import whi, red, yel
 from .typechecker import optional_typecheck
@@ -31,7 +31,7 @@ def load_llm(
     modelname: str,
     backend: str,
     llm_verbosity: bool,
-    llm_cache: Union[None, bool, SQLiteCache],
+    llm_cache: Union[None, bool, BaseCache],
     api_base: Optional[str],
     private: bool,
     **extra_model_args,
@@ -90,7 +90,6 @@ def load_llm(
         assert os.environ["WDOC_PRIVATEMODE"] == "false"
 
     if not private and backend == "openai" and api_base is None:
-        red("Using ChatOpenAI instead of litellm because calling openai server anyway and the caching has a bug on langchain side :( The caching works on ChatOpenAI though. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
@@ -102,17 +101,13 @@ def load_llm(
             **extra_model_args,
         )
     else:
-        red("A bug on langchain's side forces WDoc to disable the LLM caching. More at https://github.com/langchain-ai/langchain/issues/22389")
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = max_tokens
-        if llm_cache is not None:
-            red("Reminder: caching is disabled for non openai models until langchain approves the fix.")
         llm = ChatLiteLLM(
             model_name=modelname,
             api_base=api_base,
-            cache=False,
-            # cache=llm_cache,
+            cache=llm_cache,
             verbose=llm_verbosity,
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
