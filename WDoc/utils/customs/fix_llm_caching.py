@@ -15,7 +15,6 @@ from typing import Union, Any, Optional
 from threading import Lock
 
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
-from langchain_community.cache import InMemoryCache
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
