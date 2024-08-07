@@ -3,7 +3,7 @@
 * Loads and store embeddings for each document.
 """
 
-from typing import List, Union, Optional, Any, Tuple
+from typing import List, Union, Optional, Any, Tuple, Callable
 import hashlib
 import os
 import queue
@@ -14,6 +14,7 @@ from pathlib import Path, PosixPath
 from tqdm import tqdm
 import threading
 from joblib import Parallel, delayed
+from functools import wraps
 
 import numpy as np
 from pydantic import Extra
@@ -72,6 +73,51 @@ def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
             failed.append(docu)
     return failed
 
+@optional_typecheck
+def fix_db(db: FAISS) -> FAISS:
+    """
+    Wrap around FAISS's vector search to check if the found IDs are indeed
+    in the database. For some reason FAISS in some cases ends up returning ids
+    that do not match its own id index so it crashes.
+    """
+
+    @optional_typecheck
+    def filter_ids(func: Callable, get_mask: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(vector, k):
+            original_scores, original_ids = func(vector, k)
+
+            new_ids = original_ids.squeeze()[get_mask(original_ids.squeeze())]
+
+            diff = k - new_ids.shape[0]
+            if diff == 0:
+                assert original_scores.shape == original_ids.shape
+                assert original_ids.shape == new_ids.shape
+                return original_scores, original_ids
+
+            trial = 0
+            while diff > 0 and trial < 10:
+                trial += 1
+
+                trial_scores, trial_ids = func(vector, k + diff)
+                mask = get_mask(trial_ids.squeeze())
+                trial_ids = trial_ids.squeeze()[mask]
+
+                diff = k - trial_ids.shape[0]
+
+            trial_scores = trial_scores.squeeze()[mask].reshape(1, -1)
+            trial_ids = trial_ids.reshape(1, -1)
+
+            assert trial_scores.shape == trial_ids.shape
+            return trial_scores, trial_ids
+        return wrapper
+
+    ok_ids = np.array(list(db.index_to_docstore_id.keys())).squeeze()
+    db.index.search = filter_ids(
+        func=db.index.search,
+        get_mask=np.vectorize(lambda ar: ar in ok_ids),
+    )
+    return db
 
 @optional_typecheck
 def load_embeddings(
@@ -207,7 +253,7 @@ def load_embeddings(
                               allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
-        return db, cached_embeddings
+        return fix_db(db), cached_embeddings
 
     whi("\nLoading embeddings.")
 
@@ -430,7 +476,7 @@ def load_embeddings(
     # saving embeddings
     db.save_local(save_embeds_as)
 
-    return db, cached_embeddings
+    return fix_db(db), cached_embeddings
 
 
 @optional_typecheck
