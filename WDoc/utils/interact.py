@@ -230,8 +230,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                     assert int(
                         sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
                 elif sett_k == "relevancy":
-                    assert float(sett_v) > 0 and float(
+                    assert float(sett_v) >= 0 and float(
                         sett_v) <= 1, f"Can't set relevancy to <= 0 or >1 ({sett_v})"
+                    sett_v = float(sett_v)
                 elif sett_k == "retriever":
                     assert all(
                         retriev in ["default", "hyde", "knn", "svm", "parent"]
