@@ -325,7 +325,7 @@ def load_embeddings(
                         f"Thread #{ith+1}/{len(loader_workers)} is still "
                         f"running with queue size of {qsize}"
                     )
-    if not any([t.is_alive() for t in loader_workers]):
+    if any([t.is_alive() for t in loader_workers]):
         red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
     out_vals = [q[1].get(timeout=1) for q in loader_queues]
     if not all(val == "Stopped" for val in out_vals):
@@ -501,7 +501,7 @@ def load_embeddings(
                             f"Thread #{ith+1}/{len(saver_workers)} is still "
                             f"running with queue size of {qsize}"
                         )
-        if not any([t.is_alive() for t in saver_workers]):
+        if any([t.is_alive() for t in saver_workers]):
             red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
         out_vals = [q[1].get(timeout=timeout) for q in saver_queues]
         if not all(val == "Stopped" for val in out_vals):
