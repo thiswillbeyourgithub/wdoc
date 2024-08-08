@@ -336,7 +336,7 @@ def load_embeddings(
 
     # remove the cached embeddings that are too old
     if WDOC_EXPIRE_CACHE_DAYS:
-        cached_path=cache_dir / "embeddings" / embed_model_str
+        cached_path=cache_dir / "CacheEmbeddings" / embed_model_str
         current_time = time.time()
         for file in cached_path.iterdir():
             last_access_time = path.stat().st_atime
