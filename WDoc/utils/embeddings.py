@@ -479,7 +479,6 @@ def load_embeddings(
 
         whi("Waiting for saver workers to finish.")
 
-
         [q[0].put((False, None, None, None)) for i, q in enumerate(
                 saver_queues) if saver_workers[i].is_alive()]
         start_stopping_threads = time.time()
