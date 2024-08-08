@@ -11,6 +11,7 @@ from langchain.docstore.document import Document
 from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
 from ..logger import whi, red
 from ..typechecker import optional_typecheck
+from ..misc import thinking_answer_parser
 
 
 @optional_typecheck
@@ -73,7 +74,9 @@ def do_summarize(
         llm.callbacks[0].completion_tokens += new_c
         llm.callbacks[0].total_tokens += new_p + new_c
 
-        output_lines = out.rstrip().splitlines()
+        parsed = thinking_answer_parser(out)
+
+        output_lines = parsed["answer"].rstrip().splitlines()
 
         for il, ll in enumerate(output_lines):
             # remove if contains no alphanumeric character
