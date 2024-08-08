@@ -67,12 +67,12 @@ def refilter_docs(inputs: dict) -> List[Document]:
         answers = [thinking_answer_parser(ev)["answer"] for ev in evals]
         if all(list(map(str.isdigit, answers))):
             answers = list(map(int, answers))
-            if sum(evals) != 0:
+            if sum(answers) != 0:
                 filtered_docs.append(unfiltered_docs[ie])
         else:
             red(
                 "Evals contained strings so keeping the doc:\n* "
-                '\n * '.join(evals) + "\n"
+                '\n * '.join(answers) + "\n"
             )
             filtered_docs.append(unfiltered_docs[ie])
 
