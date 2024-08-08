@@ -8,7 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Summarizer, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+        ("system", """You are a Summarizer working for WDoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
@@ -53,7 +53,7 @@ RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from las
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an Evaluator: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
+        ("system", """You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
 Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
 Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting. If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not."""),
         ("human",
@@ -63,7 +63,7 @@ Don't narrate, don't acknowledge those rules, just answer directly the digit wit
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Answerer: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
+        ("system", """You are an Answerer working for WDoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 Detailed instructions:
 ```
@@ -93,7 +93,7 @@ Detailed instructions:
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Combiner: given a question and partial answers, your goal is to:
+        ("system", """You are a Combiner working for WDoc: given a question and partial answers, your goal is to:
 - combine all partial answers to answer the question as md bullet points,
 - while combining all additional information as additional bullet points.
 - And keeping track of sources.
