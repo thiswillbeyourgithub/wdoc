@@ -1266,10 +1266,6 @@ class WDoc:
             else:
                 red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
                 assert self.query_eval_modelbackend != "openai"
-            if "max_tokens" in self.eval_llm_params:
-                eval_args["max_tokens"] = 2
-            else:
-                red(f"Model {self.query_eval_modelname} does not support parameter 'max_token' so the result might be of less quality.")
             self.eval_llm = load_llm(
                 modelname=self.query_eval_modelname,
                 backend=self.query_eval_modelbackend,
