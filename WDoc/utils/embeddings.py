@@ -512,7 +512,7 @@ def faiss_loader(
             assert metadata is None
             qout.put(db)
             qout.put("Stopped")
-            break
+            return
         assert metadata is not None
 
         temp = FAISS.load_local(
@@ -539,7 +539,6 @@ def faiss_loader(
             red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
             [p.unlink() for p in fi.iterdir()]
             fi.rmdir()
-    return
 
 
 @optional_typecheck
