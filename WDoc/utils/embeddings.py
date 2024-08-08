@@ -271,7 +271,7 @@ def load_embeddings(
     to_embed = []
 
     # load previous faiss index from cache
-    n_loader = 10
+    n_loader = 5
     loader_queues = [(queue.Queue(maxsize=10), queue.Queue())
                      for i in range(n_loader)]
     loader_workers = [
@@ -380,7 +380,7 @@ def load_embeddings(
             [i * batch_size, (i + 1) * batch_size]
             for i in range(len(to_embed) // batch_size + 1)
         ]
-        n_saver = 10
+        n_saver = 5
         saver_queues = [(queue.Queue(maxsize=10), queue.Queue())
                         for i in range(n_saver)]
         saver_workers = [
