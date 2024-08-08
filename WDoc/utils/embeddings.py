@@ -37,6 +37,8 @@ from .env import WDOC_EXPIRE_CACHE_DAYS
 import lazy_import
 litellm = lazy_import.lazy_module("litellm")
 
+NB_LOADER_WORKERS = 10
+NB_SAVER_WORKERS = 10
 
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
@@ -271,9 +273,8 @@ def load_embeddings(
     to_embed = []
 
     # load previous faiss index from cache
-    n_loader = 5
     loader_queues = [(queue.Queue(maxsize=10), queue.Queue())
-                     for i in range(n_loader)]
+                     for i in range(NB_LOADER_WORKERS)]
     loader_workers = [
         threading.Thread(
             target=faiss_loader,
@@ -400,9 +401,8 @@ def load_embeddings(
             [i * batch_size, (i + 1) * batch_size]
             for i in range(len(to_embed) // batch_size + 1)
         ]
-        n_saver = 5
         saver_queues = [(queue.Queue(maxsize=10), queue.Queue())
-                        for i in range(n_saver)]
+                        for i in range(NB_SAVER_WORKERS)]
         saver_workers = [
             threading.Thread(
                 target=faiss_saver,
