@@ -70,7 +70,10 @@ def refilter_docs(inputs: dict) -> List[Document]:
             if sum(evals) != 0:
                 filtered_docs.append(unfiltered_docs[ie])
         else:
-            red(f"Evals contained strings so keeping the doc:\n* {'\n * '.join(evals)}\n")
+            red(
+                "Evals contained strings so keeping the doc:\n* "
+                '\n * '.join(evals) + "\n"
+            )
             filtered_docs.append(unfiltered_docs[ie])
 
     if not filtered_docs:
