@@ -8,7 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Summarizer working for WDoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+        ("system", """
+You are a Summarizer working for WDoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 Detailed instructions:
@@ -38,13 +39,16 @@ Detailed instructions:
     - Write your summary in {language}
     - Avoid repetitions
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
-```"""),
-        ("human", """{recursion_instruction}{metadata}{previous_summary}
+```
+""".strip()),
+        ("human", """
+{recursion_instruction}{metadata}{previous_summary}
 
 Text section:
 ```
 {text}
-```"""),
+```
+""".strip())
     ],
 )
 # if the summary is recursive, add those instructions
@@ -53,9 +57,11 @@ RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from las
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
+        ("system", """
+You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
 Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
-Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting. If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not."""),
+Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting. If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not.
+""".strip(),
         ("human",
          "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
     ]
@@ -63,9 +69,10 @@ Don't narrate, don't acknowledge those rules, just answer directly the digit wit
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are an Answerer working for WDoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
+        ("system", """
+You are an Answerer working for WDoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
-Detailed instructions:
+DETAILED INSTRUCTIONS:
 ```
 - If the document is ENTIRELY irrelevant to the question, answer only 'IRRELEVANT' and NOTHING ELSE (and no formatting).
 - Being an Answerer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Combiner.
@@ -86,19 +93,31 @@ Detailed instructions:
 - Take a deep breath before answering.
     - Start writing only when you are sure of your answer.
         - But then reply directly without acknowledging your task.
-```"""),
-        ("human", "Question: '{question_to_answer}'\nContext:\n```\n{context}\n```Now take a deep breath.\nTake your time.\nAnswer when you're ready.")
+```
+""".strip()),
+        ("human", """
+QUESTION: '{question_to_answer}'
+CONTEXT:
+```
+{context}
+```
+
+Now take a deep breath.
+Take your time.
+Start your reply when you're ready.
+""".strip())
     ]
 )
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """You are a Combiner working for WDoc: given a question and partial answers, your goal is to:
+        ("system", """
+You are a Combiner working for WDoc: given a question and candidate intermediate answers, your goal is to:
 - combine all partial answers to answer the question as md bullet points,
 - while combining all additional information as additional bullet points.
 - And keeping track of sources.
 
-Detailed instructions:
+DETAILED INSTRUCTIONS:
 ```
 - Take a deep breath before answering.
 - Being a Combiner, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Answerer.
@@ -126,9 +145,19 @@ Detailed instructions:
 - If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 - Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
     - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
-```"""),
+```
+""".strip()),
         ("human",
-         "Question: `{question}`\nCandidate intermediate answers:\n```\n{intermediate_answers}\n```\n\nYour answer:""")
+         """
+QUESTION: `{question}`
+CANDIDATE INTERMEDIATE ANSWERS:
+```
+{intermediate_answers}
+```
+Now take a deep breath.
+Take your time.
+Start your reply when you're ready.
+""".strip())
     ]
 )
 
