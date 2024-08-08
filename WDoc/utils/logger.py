@@ -90,7 +90,7 @@ def get_coloured_logger(color_asked: str) -> Callable:
         logger.info(string)
         if not is_silent:
             tqdm.write(col + string + colors["reset"], **args)
-        return inp
+        return string
     return printer
 
 
