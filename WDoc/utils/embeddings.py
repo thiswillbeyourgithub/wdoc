@@ -360,7 +360,7 @@ def load_embeddings(
         cached_path=cache_dir / "CacheEmbeddings" / embed_model_str
         current_time = time.time()
         for file in cached_path.iterdir():
-            last_access_time = path.stat().st_atime
+            last_access_time = file.stat().st_atime
             days_since_last_access = (current_time - last_access_time) / (24 * 3600)
             if days_since_last_access > WDOC_EXPIRE_CACHE_DAYS:
                 file.unlink(missing_ok=False)
