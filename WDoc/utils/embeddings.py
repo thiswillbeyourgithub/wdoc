@@ -395,8 +395,8 @@ def load_embeddings(
             raise SystemExit()
 
     # create a faiss index for batch of documents
-    ts = time.time()
     if to_embed:
+        ts = time.time()
         batch_size = 1000
         batches = [
             [i * batch_size, (i + 1) * batch_size]
@@ -506,10 +506,7 @@ def load_embeddings(
         if not all(val == "Stopped" for val in out_vals):
             red("Unexpected output of some saver queues: \n* " + "\n* ".join(out_vals))
 
-
-
-
-    whi(f"Saving indexes took {time.time()-ts:.2f}s")
+        whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
     whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
