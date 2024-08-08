@@ -301,11 +301,10 @@ def load_embeddings(
             to_embed.append(doc)
 
     # ask workers to stop and return their db then get the merged dbs
+    whi("Asking loader workers to shutdown")
     [q[0].put((False, None)) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
-    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues), "Unexpected output of a loader queue"
-    whi("Asking loader workers to shutdown")
     start_stopping_threads = time.time()
     while not any(t.is_alive() for t in loader_workers):
         if time.time() - start_stopping_threads > 10 * 60:
@@ -326,6 +325,7 @@ def load_embeddings(
                     )
     assert not any([t.is_alive() for t in loader_workers]
                    ), f"Faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}"
+    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues), "Unexpected output of a loader queue"
 
     # merge dbs as one
     db = None
