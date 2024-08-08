@@ -291,7 +291,7 @@ def load_embeddings(
         if doc.metadata["content_hash"] in list_of_files:
             fi = embeddings_cache / \
                 str(doc.metadata["content_hash"] + ".faiss_index")
-            assert fi.exists()
+            assert fi.exists(), f"fi does not exist: {fi}"
             # select 2 workers at random and choose the one with the smallest queue
             queue_candidates = random.sample(loader_queues, k=2)
             queue_sizes = [q[0].qsize() for q in queue_candidates]
@@ -304,7 +304,7 @@ def load_embeddings(
     [q[0].put((False, None)) for q in loader_queues]
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
-    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues)
+    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues), "Unexpected output of a loader queue"
     whi("Asking loader workers to shutdown")
     [t.join(timeout=timeout) for t in loader_workers]
     assert all([not t.is_alive() for t in loader_workers]
