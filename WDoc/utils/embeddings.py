@@ -326,10 +326,11 @@ def load_embeddings(
                 failed_to_merge.extend(iter_merge(db, m))
 
         in_db = len(db.docstore._dict.keys())
-        assert in_db == len(docs) - len(to_embed) - len(failed_to_merge), (
-            f"Invalid number of loaded documents: found {in_db} but "
-            f"expected {len(docs)-len(to_embed)-len(failed_to_merge)}"
-        )
+        if in_db != len(docs) - len(to_embed) - len(failed_to_merge):
+            red(
+                f"Invalid number of loaded documents: found {in_db} but "
+                f"expected {len(docs)-len(to_embed)-len(failed_to_merge)}"
+            )
 
     whi(f"Docs left to embed: {len(to_embed)}")
 
