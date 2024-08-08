@@ -307,13 +307,14 @@ def load_embeddings(
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     start_stopping_threads = time.time()
-    while not any(t.is_alive() for t in loader_workers):
+    while any(t.is_alive() for t in loader_workers):
         if time.time() - start_stopping_threads > 10 * 60:
             red(
                 f"Waited for threads to stop for "
                 f"{time.time()-start_stopping_threads:.4f}s so continuing "
                 "but do report this because something seems to have gone wrong."
             )
+            break
         for ith, t in enumerate(loader_workers):
             if t.is_alive():
                 t.join(timeout=timeout)
@@ -482,13 +483,14 @@ def load_embeddings(
         [q[0].put((False, None, None, None)) for i, q in enumerate(
                 saver_queues) if saver_workers[i].is_alive()]
         start_stopping_threads = time.time()
-        while not any(t.is_alive() for t in saver_workers):
+        while any(t.is_alive() for t in saver_workers):
             if time.time() - start_stopping_threads > 10 * 60:
                 red(
                     f"Waited for threads to stop for "
                     f"{time.time()-start_stopping_threads:.4f}s so continuing "
                     "but do report this because something seems to have gone wrong."
                 )
+                break
             for ith, t in enumerate(saver_workers):
                 if t.is_alive():
                     t.join(timeout=timeout)
