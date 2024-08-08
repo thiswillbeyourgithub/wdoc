@@ -306,9 +306,26 @@ def load_embeddings(
     merged_dbs = [m for m in merged_dbs if m is not None]
     assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues), "Unexpected output of a loader queue"
     whi("Asking loader workers to shutdown")
-    [t.join(timeout=timeout) for t in loader_workers]
-    assert all([not t.is_alive() for t in loader_workers]
-               ), "Faiss loader workers failed to stop"
+    start_stopping_threads = time.time()
+    while not any(t.is_alive() for t in loader_workers):
+        if time.time() - start_stopping_threads > 10 * 60:
+            raise Exception(
+                f"Waited for threads to stop for "
+                f"{time.time()-start_stopping_threads:.4f}s so crashing "
+                "because something seems to have gone wrong."
+            )
+        for ith, t in enumerate(loader_workers):
+            if t.is_alive():
+                t.join(timeout=timeout)
+                if t.is_alive():
+                    q = loader_queues[ith]
+                    qsize = q.qsize()
+                    red(
+                        f"Thread #{ith+1}/{len(loader_workers)} is still "
+                        f"running with queue size of {qsize}"
+                    )
+    assert not any([t.is_alive() for t in loader_workers]
+                   ), f"Faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}"
 
     # merge dbs as one
     db = None
@@ -466,7 +483,7 @@ def load_embeddings(
                 saver_queues) if saver_workers[i].is_alive()]
             if not all(e.startswith("Stopped") for e in exit_code):
                 whi(
-                    f"Not all faiss worker stopped at tr #{stop_counter}: {exit_code}")
+                    f"Not all faiss saver worker stopped at tr #{stop_counter}: {exit_code}")
         [t.join(timeout=timeout) for t in saver_workers]
         assert all([not t.is_alive() for t in saver_workers]
                    ), "Faiss saver workers failed to stop"
