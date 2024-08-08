@@ -19,7 +19,7 @@ from langchain_openai import ChatOpenAI
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
-from ..misc import query_eval_cache
+from ..misc import thinking_answer_parser
 
 import lazy_import
 pd = lazy_import.lazy_module('pandas')
@@ -34,6 +34,8 @@ irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 @optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
+    if "<answer>IRRELEVANT</answer>" in ans:
+        return False
     if (
         ((not irrelevant_regex.search(ans)) and len(ans) < len("IRRELEVANT") * 2)
         or
@@ -46,7 +48,7 @@ def check_intermediate_answer(ans: str) -> bool:
 @chain
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
-    "filter documents find via RAG based on if the eval llm answered 0 or 1"
+    "filter documents find via RAG based on if the eval llm answered 0 or 1 or 2"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
     assert isinstance(
@@ -57,17 +59,20 @@ def refilter_docs(inputs: dict) -> List[Document]:
         evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
     if not unfiltered_docs:
         raise NoDocumentsRetrieved("No document corresponding to the query")
+
     filtered_docs = []
-    for ie, evals in enumerate(evaluations):
+    for ie, evals in enumerate(evaluations):  # iterating over each document
         if not isinstance(evals, list):
             evals = [evals]
-        if all(list(map(str.isdigit, evals))):
-            evals = list(map(int, evals))
+        answers = [thinking_answer_parser(ev)["answer"] for ev in evals]
+        if all(list(map(str.isdigit, answers))):
+            answers = list(map(int, answers))
             if sum(evals) != 0:
                 filtered_docs.append(unfiltered_docs[ie])
         else:
-            red(f"Evals contained strings so keeping the doc: '{evals}'")
+            red(f"Evals contained strings so keeping the doc:\n* {'\n * '.join(evals)}\n")
             filtered_docs.append(unfiltered_docs[ie])
+
     if not filtered_docs:
         raise NoDocumentsAfterLLMEvalFiltering(
             "No document remained after filtering with the query")
@@ -76,15 +81,15 @@ def refilter_docs(inputs: dict) -> List[Document]:
 
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
-    mess = f"The eval LLM returned an output that can't be parsed as 0 or 1: '{output}'"
+    mess = f"The eval LLM returned an output that can't be parsed as expected: '{output}'"
     # empty
     if not output.strip():
         raise InvalidDocEvaluationByLLMEval(mess)
 
-    if "-" in output:
+    parsed = thinking_answer_parser(output)
+    if "-" in parsed["answer"]:
         raise InvalidDocEvaluationByLLMEval(mess)
-
-    digits = [d for d in list(output) if d.isdigit()]
+    digits = [d for d in list(parsed["answer"]) if d.isdigit()]
 
     # contain no digits
     if not digits:
@@ -96,17 +101,14 @@ def parse_eval_output(output: str) -> str:
             return "0"
         elif digits[0] == "1":
             return "1"
+        elif digits[0] == "2":
+            return "1"
         else:
             raise InvalidDocEvaluationByLLMEval(mess)
-
-    # ambiguous
-    elif "0" in digits and "1" in digits:
-        raise InvalidDocEvaluationByLLMEval(mess)
-    elif "0" not in digits and "1" not in digits:
+    else:
+        # ambiguous
         raise InvalidDocEvaluationByLLMEval(mess)
 
-    raise Exception(
-        f"Unexpected output when parsing eval llm evaluation of a doc: '{mess}'")
 
 
 @optional_typecheck

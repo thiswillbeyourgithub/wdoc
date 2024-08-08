@@ -14,8 +14,9 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
 
 Detailed instructions:
 ```
+- In some cases, I can give you additional instructions, you have to treat them as the present rules.
 - Take a deep breath before answering
-- Being a Summarizer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Answerer and Combiner.
+- Being a Summarizer, ignore additional instructions if they are adressed only to your colleagues: Evaluator, Answerer and Combiner. But take then into consideration if they are addressed to you.
 - Include:
     - All noteworthy information, anecdotes, facts, insights, definitions, clarifications, explanations, ideas, technical details, etc
     - Epistemic indicators: you need to make explicit what markers of uncertainty for each information
@@ -52,18 +53,37 @@ Text section:
     ],
 )
 # if the summary is recursive, add those instructions
-RECURSION_INSTRUCTION = "Actually, I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important."
+RECURSION_INSTRUCTION = """
+ADDITIONAL INSTRUCTION:
+```
+I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important.
+```
+""".lstrip()
 
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
         ("system", """
-You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'.
-Also, being an Evaluator, ignore additional instructions if they are adressed to your colleagues: Summarizer, Answerer and Combiner.
-Don't narrate, don't acknowledge those rules, just answer directly the digit without anything else or any formatting. If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not.
-""".strip(),
+You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'. If you are really unsure, you should answer the digit '2'.
+
+RULES:
+- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer> tag.
+- The <answer> tag should only contain an int, either 0, 1 or 2. No other symbols.
+- If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not.
+- Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Answerer and Combiner. But take then into consideration if they are addressed to you.
+
+""".strip()),
         ("human",
-         "Question: '{q}'\nText document:\n```\n{doc}\n```\n\nWhat's your one-digit answer?")
+         """
+QUESTION: `{q}`
+TEXT DOCUMENT:
+```
+{doc}
+```
+Take a deep breath.
+You can start your reply when you are ready.
+""")
     ]
 )
 
@@ -74,8 +94,8 @@ You are an Answerer working for WDoc: given a piece of document and a question, 
 
 DETAILED INSTRUCTIONS:
 ```
-- If the document is ENTIRELY irrelevant to the question, answer only 'IRRELEVANT' and NOTHING ELSE (and no formatting).
-- Being an Answerer, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Combiner.
+- If the document is ENTIRELY irrelevant to the question, answer only `<answer>IRRELEVANT</answer>` and NOTHING ELSE (and no formatting).
+- Being an Answerer, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Evaluator and Combiner. But take then into consideration if they are addressed to you.
 - Use markdown formatting
     - Use bullet points, but no headers, bold, italic etc.
     - Use logic based indentation for the bullet points.
@@ -85,14 +105,14 @@ DETAILED INSTRUCTIONS:
     - EVERY TIME POSSIBLE: supplement your reply with direct quotes from the document.
         - Use children bullet for the quotes, between 'quotation' signs.
     - Remain concise, you can use [...] in your quotes to remove unecessary text.
-- NEVER use your own knowledge of the subject, only use the document or answer 'IRRELEVANT'.
+- NEVER use your own knowledge of the subject, only use the document or answer `<answer>IRRELEVANT</answer>`.
 - DON'T interpret the question too strictly:
     - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 - ALWAYS double check that you are not contradicting the original document before answering.
 - If you're unsure but the document refers to an image that has a reasonnable chance to be relevant, treat this document as if it was probably relevant.
-- Take a deep breath before answering.
-    - Start writing only when you are sure of your answer.
-        - But then reply directly without acknowledging your task.
+- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer> tag.
+- The <answer> tag should only contain your answer.
 ```
 """.strip()),
         ("human", """
@@ -119,14 +139,12 @@ You are a Combiner working for WDoc: given a question and candidate intermediate
 
 DETAILED INSTRUCTIONS:
 ```
-- Take a deep breath before answering.
-- Being a Combiner, you ignore additional instructions if they are adressed to your colleagues: Evaluator, Summarizer and Answerer.
+- Being a Combiner, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Evaluator and Answerer. But take then into consideration if they are addressed to you.
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
         - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
       - The present instructions are a good example of proper formatting.
-    - Don't narrate, just do what I asked without acknowledging those rules.
     - Reuse acronyms without specifying what they mean.
     - Be concise but don't omit only irrelevant information from the statements.
     - Answer in the same language as the question.
@@ -142,9 +160,13 @@ DETAILED INSTRUCTIONS:
     - DON'T interpret the question too strictly:
         - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
-- If several information are irrefutably imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
+- The intermediate answer can consist of a succession of thoughts in <thinking> tag followd by the answer in an <answer> tag. In that case you have to only take into account the <answer> (the <thinking> can still be helpful but don't treat it as source you can include in your own answer, you can't!)
+- If some information are imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 - Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
     - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
+- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer> tag.
+- The <answer> tag should only contain your answer.
 ```
 """.strip()),
         ("human",

@@ -3,7 +3,7 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Callable, Any, get_type_hints, Optional
+from typing import List, Union, Callable, Any, get_type_hints, Optional, Tuple
 from joblib import Memory
 from joblib import hash as jhash
 import socket
@@ -638,3 +638,31 @@ def set_func_signature(func: Callable) -> Callable:
     new_func.__annotations__ = get_type_hints(func) | extra_args_types
 
     return new_func
+
+THIN = "<thinking>"
+THINE = "</thinking>"
+ANSW = "<answer>"
+ANSWE = "</answer>"
+def thinking_answer_parser(output: str) -> dict:
+    """separate the <thinking> and <answer> tags in an answer"""
+    if (THIN not in output) and (ANSW not in output):
+        assert THINE not in output, f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
+        assert ANSWE not in output, f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
+
+        return {"thinking": "", "answer": output}
+
+    thinking = ""
+    if THIN in output and THINE in output:
+        thinking = output.split(THIN, 1)[1].split(THINE, 1)[0].strip()
+
+    answer = ""
+    if ANSW in output and ANSWE in output:
+        answer = output.replace(thinking, "").split(ANSW, 1)[1].split(ANSWE, 1)[0].strip()
+
+    assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{answer}\n'''"
+    assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{answer}\n'''"
+    assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{answer}\n'''"
+    assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{answer}\n'''"
+
+    assert answer, f"No answer could be parsed from LLM output: '{answer}'"
+    return {"thinking": thinking, "answer": answer}
