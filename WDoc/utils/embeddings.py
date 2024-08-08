@@ -308,10 +308,10 @@ def load_embeddings(
     start_stopping_threads = time.time()
     while not any(t.is_alive() for t in loader_workers):
         if time.time() - start_stopping_threads > 10 * 60:
-            raise Exception(
+            red(
                 f"Waited for threads to stop for "
-                f"{time.time()-start_stopping_threads:.4f}s so crashing "
-                "because something seems to have gone wrong."
+                f"{time.time()-start_stopping_threads:.4f}s so continuing "
+                "but do report this because something seems to have gone wrong."
             )
         for ith, t in enumerate(loader_workers):
             if t.is_alive():
@@ -323,9 +323,11 @@ def load_embeddings(
                         f"Thread #{ith+1}/{len(loader_workers)} is still "
                         f"running with queue size of {qsize}"
                     )
-    assert not any([t.is_alive() for t in loader_workers]
-                   ), f"Faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}"
-    assert all(q[1].get(timeout=timeout) == "Stopped" for q in loader_queues), "Unexpected output of a loader queue"
+    if not any([t.is_alive() for t in loader_workers]):
+        red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
+    out_vals = [q[1].get(timeout=timeout) for q in loader_queues]
+    if not all(val == "Stopped" for val in out_vals):
+        red("Unexpected output of some loader queues: \n* " + "\n* ".join(out_vals))
 
     # merge dbs as one
     db = None
@@ -471,22 +473,41 @@ def load_embeddings(
                     if "Tried to add ids that already exist" not in str(err):
                         raise
                     failed_to_merge.extend(iter_merge(db, temp))
-        assert not failed_to_merge, f"Failed to merge {len(failed_to_merge)} documents after embeddings"
+        if failed_to_merge:
+            red(f"Failed to merge {len(failed_to_merge)} documents after embeddings")
 
         whi("Waiting for saver workers to finish.")
-        stop_counter = 0
-        while any(t.is_alive() for t in saver_workers):
-            stop_counter += 1
-            [q[0].put((False, None, None, None)) for i, q in enumerate(
+
+
+        [q[0].put((False, None, None, None)) for i, q in enumerate(
                 saver_queues) if saver_workers[i].is_alive()]
-            exit_code = [q[1].get(timeout=timeout) for i, q in enumerate(
-                saver_queues) if saver_workers[i].is_alive()]
-            if not all(e.startswith("Stopped") for e in exit_code):
-                whi(
-                    f"Not all faiss saver worker stopped at tr #{stop_counter}: {exit_code}")
-        [t.join(timeout=timeout) for t in saver_workers]
-        assert all([not t.is_alive() for t in saver_workers]
-                   ), "Faiss saver workers failed to stop"
+        start_stopping_threads = time.time()
+        while not any(t.is_alive() for t in saver_workers):
+            if time.time() - start_stopping_threads > 10 * 60:
+                red(
+                    f"Waited for threads to stop for "
+                    f"{time.time()-start_stopping_threads:.4f}s so continuing "
+                    "but do report this because something seems to have gone wrong."
+                )
+            for ith, t in enumerate(saver_workers):
+                if t.is_alive():
+                    t.join(timeout=timeout)
+                    if t.is_alive():
+                        q = saver_queues[ith]
+                        qsize = q.qsize()
+                        red(
+                            f"Thread #{ith+1}/{len(saver_workers)} is still "
+                            f"running with queue size of {qsize}"
+                        )
+        if not any([t.is_alive() for t in saver_workers]):
+            red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
+        out_vals = [q[1].get(timeout=timeout) for q in saver_queues]
+        if not all(val == "Stopped" for val in out_vals):
+            red("Unexpected output of some saver queues: \n* " + "\n* ".join(out_vals))
+
+
+
+
     whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
     whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
@@ -553,7 +574,7 @@ def faiss_saver(
         if message is False:
             assert docid is None and document is None and embedding is None
             qout.put("Stopped")
-            break
+            return
 
         file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
         db = FAISS.from_embeddings(
@@ -563,7 +584,6 @@ def faiss_saver(
             ids=[docid],
             normalize_L2=True)
         db.save_local(file)
-    return
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
