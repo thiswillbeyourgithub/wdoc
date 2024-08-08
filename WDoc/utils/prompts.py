@@ -52,6 +52,15 @@ Text section:
 """.strip())
     ],
 )
+
+# if the text to summarize is long, give the end of the previous summary to help with transitions
+PREV_SUMMARY_TEMPLATE = """
+
+END OF SUMMARY OF THE LAST SECTION:
+```
+{previous_summary}
+```"""
+
 # if the summary is recursive, add those instructions
 RECURSION_INSTRUCTION = """
 ADDITIONAL INSTRUCTION:

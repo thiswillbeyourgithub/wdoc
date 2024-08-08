@@ -8,11 +8,10 @@ from typing import List, Any, Union, Tuple
 
 from langchain.docstore.document import Document
 
-from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION
+from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION, PREV_SUMMARY_TEMPLATE
 from ..logger import whi, red
 from ..typechecker import optional_typecheck
 from ..misc import thinking_answer_parser
-
 
 @optional_typecheck
 def do_summarize(
@@ -76,7 +75,7 @@ def do_summarize(
 
         parsed = thinking_answer_parser(out)
 
-        output_lines = parsed["answer"].rstrip().splitlines()
+        output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
         for il, ll in enumerate(output_lines):
             # remove if contains no alphanumeric character
@@ -126,6 +125,11 @@ def do_summarize(
 
         if verbose:
             whi(output_text)
+
+        previous_summary = PREV_SUMMARY_TEMPLATE.replace(
+            "{previous_summary}",
+            "...\n" + "\n".join(output_lines[-5:]),
+        )
 
         summaries.append(output_text)
 
