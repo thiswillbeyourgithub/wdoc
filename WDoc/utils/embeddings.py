@@ -496,22 +496,31 @@ def faiss_loader(
             qout.put("Stopped")
             break
         assert metadata is not None
+
         temp = FAISS.load_local(
             fi,
             cached_embeddings,
             allow_dangerous_deserialization=True,
         )
-        assert len(temp.docstore._dict.keys()) == 1
-        temp.docstore._dict[list(temp.docstore._dict.keys())[0]].metadata = metadata
+
+        ids_list = list(temp.docstore._dict.keys())
+        assert len(ids_list) == 1
+
         if not db:
             db = temp
-        else:
-            try:
-                db.merge_from(temp)
-            except ValueError as err:
-                red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                [p.unlink() for p in fi.iterdir()]
-                fi.rmdir()
+            continue
+
+        did = ids_list[0]
+        if did in db.docstore._dict.keys():
+            red(f"Not thread-loading doc as already present: {did}")
+            continue
+        temp.docstore._dict[did].metadata = metadata
+        try:
+            db.merge_from(temp)
+        except ValueError as err:
+            red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
+            [p.unlink() for p in fi.iterdir()]
+            fi.rmdir()
     return
 
 
