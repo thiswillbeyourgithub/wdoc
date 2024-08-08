@@ -33,7 +33,7 @@ from .utils.misc import (
     set_func_signature
 )
 from .utils.prompts import prompts
-from .utils.tasks.query import format_chat_history, refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer, collate_intermediate_answers
+from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, query_eval_cache, pbar_chain, pbar_closer, collate_intermediate_answers
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering

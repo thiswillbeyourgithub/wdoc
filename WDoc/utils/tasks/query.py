@@ -32,17 +32,6 @@ irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
 @optional_typecheck
-def format_chat_history(chat_history: List[Tuple]) -> str:
-    "to load the chat history into the RAG chain"
-    buffer = ""
-    for dialogue_turn in chat_history:
-        human = "Human: " + dialogue_turn[0]
-        ai = "Assistant: " + dialogue_turn[1]
-        buffer += "\n" + "\n".join([human, ai])
-    return buffer
-
-
-@optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if (
