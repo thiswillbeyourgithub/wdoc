@@ -65,7 +65,6 @@ Answer:"""
         search_type="similarity_score_threshold",
         search_kwargs={
             "k": top_k,
-            "distance_metric": "cos",
             "score_threshold": relevancy,
         }
     )
@@ -92,7 +91,6 @@ def create_parent_retriever(
         search_type="similarity",
         search_kwargs={
             "k": top_k,
-            "distance_metric": "cos",
             "score_threshold": relevancy,
         }
     )

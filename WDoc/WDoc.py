@@ -1212,7 +1212,6 @@ class WDoc:
                     search_type="similarity_score_threshold",
                     search_kwargs={
                         "k": self.interaction_settings["top_k"],
-                        "distance_metric": "cos",
                         "score_threshold": self.interaction_settings["relevancy"],
                     })
             )

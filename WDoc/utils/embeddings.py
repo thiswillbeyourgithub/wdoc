@@ -75,6 +75,14 @@ def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
             failed.append(docu)
     return failed
 
+def score_function(distance: float) -> float:
+    """
+    Scoring function for faiss to make sure it's positive.
+
+    Related issue: https://github.com/langchain-ai/langchain/issues/17333
+    """
+    return (1 - distance) ** 2
+
 @optional_typecheck
 def fix_db(db: FAISS) -> FAISS:
     """
@@ -423,7 +431,8 @@ def load_embeddings(
             temp = FAISS.from_documents(
                 to_embed[batch[0]:batch[1]],
                 cached_embeddings,
-                normalize_L2=True
+                normalize_L2=True,
+                override_relevance_score_fn=score_function,
             )
 
             whi(f"Saving batch #{ib + 1}")
@@ -538,6 +547,7 @@ def faiss_loader(
             fi,
             cached_embeddings,
             allow_dangerous_deserialization=True,
+            relevance_score_fn=score_function,
         )
 
         ids_list = list(temp.docstore._dict.keys())
@@ -580,7 +590,9 @@ def faiss_saver(
             embedding=cached_embeddings,
             metadatas=[document.metadata],
             ids=[docid],
-            normalize_L2=True)
+            normalize_L2=True,
+            override_relevance_score_fn=score_function,
+        )
         db.save_local(file)
 
 
