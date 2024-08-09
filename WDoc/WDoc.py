@@ -30,7 +30,8 @@ from .utils.misc import (
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_types, disable_internet,
-    set_func_signature, query_eval_cache
+    set_func_signature, query_eval_cache,
+    thinking_answer_parser
 )
 from .utils.prompts import prompts
 from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers
@@ -1746,6 +1747,8 @@ class WDoc:
                 to_print += "```\n" + content + "\n ```\n"
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
+                ia = thinking_answer_parser(ia)
+                ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
                 md_printer(source_replace(to_print))
 

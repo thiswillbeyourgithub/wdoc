@@ -665,4 +665,5 @@ def thinking_answer_parser(output: str) -> dict:
     assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{answer}\n'''"
 
     assert answer, f"No answer could be parsed from LLM output: '{answer}'"
+
     return {"thinking": thinking, "answer": answer}
