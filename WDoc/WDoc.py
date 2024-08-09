@@ -1724,6 +1724,8 @@ class WDoc:
             else:
                 final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
+                source_replace = lambda input: input
+                all_intermediate_answers = [final_answer]
 
             # prepare the content of the output
             output["final_answer"] = final_answer
