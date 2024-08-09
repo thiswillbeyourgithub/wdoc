@@ -51,13 +51,13 @@ def fire_wrapper(
             kwargs["query"] = ""
         else:
             kwargs["query"] = str(kwargs["query"])
+
         if "path" not in kwargs:
             kwargs["path"] = None
         if kwargs["path"] in [True, None, False]:
             kwargs["path"] = ""
         else:
             kwargs["path"] = str(kwargs["path"])
-
 
     # any remaining args is put in --query (or --path if first)
     if args:
@@ -68,11 +68,12 @@ def fire_wrapper(
             kwargs["query"] = " ".join(map(str, args))
         else:
             kwargs["query"] += " " + " ".join(map(str, args))
-        args = tuple()
+        args = []
+    assert not args
+
 
     kwargs["query"] = kwargs["query"].replace("summary", "summarize")
 
-    assert not args
     return kwargs
 
 
