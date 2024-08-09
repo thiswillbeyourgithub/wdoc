@@ -169,35 +169,41 @@ class PriceCountingCallback(BaseCallbackHandler):
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> Any:
         """Run when LLM starts running."""
-        if self.verbose:
-            print("Callback method: on_llm_start")
-            print(serialized)
-            print(prompts)
-            print(kwargs)
-            print("Callback method end: on_llm_start")
         self.methods_called.append("on_llm_start")
+        if self.verbose:
+            yel("Callback method: on_llm_start")
+            yel(serialized)
+            yel(prompts)
+            yel(kwargs)
+            yel("Callback method end: on_llm_start")
         self._check_methods_called()
 
     def on_chat_model_start(
         self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], **kwargs: Any
     ) -> Any:
         """Run when Chat Model starts running."""
-        if self.verbose:
-            print("Callback method: on_chat_model_start")
-            print(serialized)
-            print(messages)
-            print(kwargs)
-            print("Callback method end: on_chat_model_start")
         self.methods_called.append("on_chat_model_start")
+        if self.verbose:
+            yel("Callback method: on_chat_model_start")
+            yel(serialized)
+            yel(messages)
+            yel(kwargs)
+            yel("Callback method end: on_chat_model_start")
         self._check_methods_called()
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
         """Run when LLM ends running."""
+        self.methods_called.append("on_llm_end")
         if self.verbose:
-            print("Callback method: on_llm_end")
-            print(response)
-            print(kwargs)
-            print("Callback method end: on_llm_end")
+            yel("Callback method: on_llm_end")
+            yel(response)
+            yel(kwargs)
+            yel("Callback method end: on_llm_end")
+
+        if response.llm_output is None or response.llm_output["token_usage"] is None:
+            if self.verbose:
+                yel("None llm_output, returning.")
+            return
 
         new_p = response.llm_output["token_usage"]["prompt_tokens"]
         new_c = response.llm_output["token_usage"]["completion_tokens"]
@@ -205,19 +211,18 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.completion_tokens += new_c
         self.total_tokens += new_p + new_c
         assert self.total_tokens == self.prompt_tokens + self.completion_tokens
-        self.methods_called.append("on_llm_end")
         self._check_methods_called()
 
     def on_llm_error(
         self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
     ) -> Any:
         """Run when LLM errors."""
-        if self.verbose:
-            print("Callback method: on_llm_error")
-            print(error)
-            print(kwargs)
-            print("Callback method end: on_llm_error")
         self.methods_called.append("on_llm_error")
+        if self.verbose:
+            yel("Callback method: on_llm_error")
+            yel(error)
+            yel(kwargs)
+            yel("Callback method end: on_llm_error")
         self._check_methods_called()
 
     def on_chain_start(
@@ -225,21 +230,21 @@ class PriceCountingCallback(BaseCallbackHandler):
     ) -> Any:
         """Run when chain starts running."""
         if self.verbose:
-            print("Callback method: on_chain_start")
-            print(serialized)
-            print(inputs)
-            print(kwargs)
-            print("Callback method end: on_chain_start")
+            yel("Callback method: on_chain_start")
+            yel(serialized)
+            yel(inputs)
+            yel(kwargs)
+            yel("Callback method end: on_chain_start")
         self.methods_called.append("on_chain_start")
         self._check_methods_called()
 
     def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
         """Run when chain ends running."""
         if self.verbose:
-            print("Callback method: on_chain_end")
-            print(outputs)
-            print(kwargs)
-            print("Callback method end: on_chain_end")
+            yel("Callback method: on_chain_end")
+            yel(outputs)
+            yel(kwargs)
+            yel("Callback method end: on_chain_end")
         self.methods_called.append("on_chain_end")
         self._check_methods_called()
         if self.pbar:
@@ -250,10 +255,10 @@ class PriceCountingCallback(BaseCallbackHandler):
     ) -> Any:
         """Run when chain errors."""
         if self.verbose:
-            print("Callback method: on_chain_error")
-            print(error)
-            print(kwargs)
-            print("Callback method end: on_chain_error")
+            yel("Callback method: on_chain_error")
+            yel(error)
+            yel(kwargs)
+            yel("Callback method end: on_chain_error")
         self.methods_called.append("on_chain_error")
         self._check_methods_called()
 
