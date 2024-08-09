@@ -45,20 +45,31 @@ def fire_wrapper(
             kwargs["task"] = args.pop(0).replace("summary", "summarize")
 
     # prepare the parsing of --query
-    if "query" not in kwargs:
-        kwargs["query"] = None
-    if kwargs["query"] in [True, None, False]:
-        kwargs["query"] = ""
-    else:
-        kwargs["query"] = str(kwargs["query"])
+    if "task" in kwargs:
+        if "query" not in kwargs:
+            kwargs["query"] = None
+        if kwargs["query"] in [True, None, False]:
+            kwargs["query"] = ""
+        else:
+            kwargs["query"] = str(kwargs["query"])
+        if "path" not in kwargs:
+            kwargs["path"] = None
+        if kwargs["path"] in [True, None, False]:
+            kwargs["path"] = ""
+        else:
+            kwargs["path"] = str(kwargs["path"])
 
-    # any remaining args is put in --query
+
+    # any remaining args is put in --query (or --path if first)
     if args:
+        if not kwargs["path"]:
+            kwargs["path"] = str(args.pop(0))
+
         if not kwargs["query"]:
             kwargs["query"] = " ".join(map(str, args))
         else:
             kwargs["query"] += " " + " ".join(map(str, args))
-        args = []
+        args = tuple()
 
     kwargs["query"] = kwargs["query"].replace("summary", "summarize")
 

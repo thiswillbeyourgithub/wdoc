@@ -122,6 +122,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 
 ## Walkthrough and examples
 1. Say you want to ask a question about one pdf, that's simple: `wdoc --task "query" --path "my_file.pdf" --filetype="pdf"`. Note that you could have just let `--filetype="auto"` and it would have worked the same.
+* *Note: By default WDoc tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries.*
 2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `wdoc --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive_paths" --recursed_filetype "pdf" --query "My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that WDoc knows what arguments to expect, and specify as recursed_filetype "pdf" so that WDoc knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by WDoc like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query "my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive_paths", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources. `.toml` files are also supported.
 4. You can specify a "source_tag" metadata to help distinguish between documents you imported.
@@ -193,7 +194,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@dev`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@main`
 2. Add the API key for the backend you want as an environement variable: for example `export OPENAI_API_KEY="***my_key***"`
-3. Launch using `wdoc query [ARGS]` (you can use `WDoc` instead of `wdoc`)
+3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]` and `wdoc --task=summary --path=MYDOC [ARGS]` (you can use `WDoc` instead of `wdoc`)
     * If for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.
     * To get shell autocompletion: if you're using zsh: `eval $(cat wdoc_completion.cli.zsh)` and `eval $(cat WDoc_completion.m.zsh)`. You can generate your own with `wdoc -- --completion > my_completion_file"` and `WDoc -- --completion > my_completion_file.2"`.
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
