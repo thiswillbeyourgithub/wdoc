@@ -84,7 +84,7 @@ def score_function(distance: float) -> float:
     return (1 - distance) ** 2
 
 @optional_typecheck
-def fix_db(db: FAISS) -> FAISS:
+def faiss_hotfix(vectorstore: FAISS) -> FAISS:
     """
     Wrap around FAISS's vector search to hot fix things:
 
@@ -125,12 +125,12 @@ def fix_db(db: FAISS) -> FAISS:
             return trial_scores, trial_ids
         return wrapper
 
-    ok_ids = np.array(list(db.index_to_docstore_id.keys())).squeeze()
-    db.index.search = filter_ids(
-        func=db.index.search,
+    ok_ids = np.array(list(vectorstore.index_to_docstore_id.keys())).squeeze()
+    vectorstore.index.search = filter_ids(
+        func=vectorstore.index.search,
         get_mask=np.vectorize(lambda ar: ar in ok_ids),
     )
-    return db
+    return vectorstore
 
 @optional_typecheck
 def load_embeddings(
@@ -266,7 +266,7 @@ def load_embeddings(
                               allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
-        return fix_db(db), cached_embeddings
+        return faiss_hotfix(db), cached_embeddings
 
     whi("\nLoading embeddings.")
 
@@ -525,7 +525,7 @@ def load_embeddings(
     # saving embeddings
     db.save_local(save_embeds_as)
 
-    return fix_db(db), cached_embeddings
+    return faiss_hotfix(db), cached_embeddings
 
 
 @optional_typecheck
