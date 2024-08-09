@@ -44,7 +44,7 @@ from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user
 from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
-from .utils.embeddings import load_embeddings
+from .utils.embeddings import load_embeddings, fix_db
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
 from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER
@@ -1215,6 +1215,11 @@ class WDoc:
             )
 
         assert retrievers, "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
+
+        # dynamically patch the retrievers to catch keyerrors
+        for ir, r in enumerate(retrievers):
+            retrievers[ir].vectorstore = fix_db(r.vectorstore)
+
         if len(retrievers) == 1:
             retriever = retrievers[0]
         else:
