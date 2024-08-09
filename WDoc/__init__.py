@@ -4,7 +4,6 @@ Default file, used as entry point.
 
 import sys
 import fire
-from loguru import logger
 
 from .WDoc import WDoc
 
