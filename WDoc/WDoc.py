@@ -710,7 +710,9 @@ class WDoc:
                     assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
                     splitter = get_splitter(
-                        "recursive_summary", modelname=self.modelname)
+                        "recursive_summary",
+                        modelname=self.modelname,
+                    )
                     summary_docs = [Document(page_content=summary_text)]
                     summary_docs = splitter.transform_documents(summary_docs)
                     assert summary_docs != relevant_docs
