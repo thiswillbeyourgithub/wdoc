@@ -86,9 +86,12 @@ def score_function(distance: float) -> float:
 @optional_typecheck
 def fix_db(db: FAISS) -> FAISS:
     """
-    Wrap around FAISS's vector search to check if the found IDs are indeed
-    in the database. For some reason FAISS in some cases ends up returning ids
-    that do not match its own id index so it crashes.
+    Wrap around FAISS's vector search to hot fix things:
+
+    - check if the found IDs are indeed in the database. For some reason
+    FAISS in some cases ends up returning ids that do not match its own
+    id index so it crashes.
+
     """
 
     @optional_typecheck
