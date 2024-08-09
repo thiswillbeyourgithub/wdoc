@@ -121,14 +121,15 @@ def do_summarize(
 
             output_lines[il] = ll
 
-        output_text = "\n".join([s for s in output_lines if s])
+        good_lines = [l for l in output_lines if l]
+        output_text = "\n".join(good_lines)
 
         if verbose:
             whi(output_text)
 
         previous_summary = PREV_SUMMARY_TEMPLATE.replace(
             "{previous_summary}",
-            "...\n" + "\n".join(output_lines[-5:]),
+            "...\n" + "\n".join(good_lines[-5:]),
         )
 
         summaries.append(output_text)
