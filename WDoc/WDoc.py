@@ -1753,7 +1753,10 @@ class WDoc:
                 md_printer(source_replace(to_print))
 
             # print the final answer
-            md_printer(indent(f"# Answer:\n{source_replace(output['final_answer'])}\n", "> "))
+            fa = thinking_answer_parser(output["final_answer"])
+            fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
+            fa = source_replace(fa)
+            md_printer(indent(f"# Answer:\n{fa}\n", "> "))
 
             # print the breakdown of documents used and chain time
             red(
