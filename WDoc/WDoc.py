@@ -81,7 +81,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"
 class WDoc:
     "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
 
-    VERSION: str = "1.6.1"
+    VERSION: str = "1.6.2"
     allowed_extra_args = extra_args_types
     md_printer = md_printer
 
