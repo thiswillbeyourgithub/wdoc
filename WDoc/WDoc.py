@@ -1674,8 +1674,8 @@ class WDoc:
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
                 all_intermediate_answers = [output["intermediate_answers"]]
-                batch_tkn_size = 1000
-                max_batch_size = 10
+                batch_tkn_size = 500
+                max_batch_size = 5
                 pbar = tqdm(
                     desc="Combining answers",
                     unit="answer",
