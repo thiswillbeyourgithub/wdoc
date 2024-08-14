@@ -370,6 +370,40 @@ def batch_load_doc(
     else:
         red("No document failed to load!")
 
+    # smart deduplication before embedding:
+    # find the document with the same content_hash, merge their metadata and keep only one
+    if "summar" not in task:
+        content_hash = [d.metadata["content_hash"] for d in docs]
+        dupes = set()
+        deduped = {}
+        [dupes.add(ch) for ch in content_hash if content_hash.count(ch) > 1]
+        for idoc, doc in enumerate(docs):
+            ch = doc.metadata["content_hash"]
+            if not dupes:
+                break
+            if ch in deduped:
+                assert doc.page_content == deduped[ch].page_content
+                for k, v in doc.metadata.items():
+                    if "hash" in k:
+                        continue
+                    if k not in deduped[ch].metadata:
+                        deduped[ch].metadata[k] = v
+                    elif isinstance(v, list) and isinstance(deduped[ch].metadata[k], list):
+                        deduped[ch].metadata[k] += deduped[ch].metadata[k]
+                    else:
+                        breakpoint()
+
+            if ch in dupes:
+                deduped[ch] = doc
+                docs[idoc] = None
+                dupes.remove(ch)
+        if deduped:
+            assert None in docs
+        assert not dupes
+        docs = [d for d in docs if d is not None]
+        if deduped:
+            docs  += list(deduped.values())
+
     assert docs, "No documents were succesfully loaded!"
 
     size = sum(
