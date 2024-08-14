@@ -24,6 +24,7 @@ from tqdm import tqdm
 import json
 import dill
 import httpx
+import magic
 
 import lazy_import
 
@@ -2105,6 +2106,10 @@ def load_pdf(
     # probability
     probs = {}
 
+    info = magic.from_file(path)
+    if "pdf" not in info.lower():
+        yel(f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}")
+
     pbar = tqdm(total=len(pdf_loaders),
                 desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_loaders:
@@ -2157,7 +2162,7 @@ def load_pdf(
                 # time on running all the others
                 break
         except Exception as err:
-            yel(f"Error when parsing '{path}' with {loader_name}: {err}")
+            yel(f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}")
             if "content" not in locals():
                 pbar.update(1)
 

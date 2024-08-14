@@ -101,6 +101,7 @@ setup(
         'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case
         'scikit-learn >= 1.5.1',  # for semantic reordering
         'scipy >= 1.13.1',  # for semantic reordering
+        'python-magic >= 0.4.27',  # for detecting file type
 
         # Loaders:
         'docx2txt >= 0.8',  # word documents
