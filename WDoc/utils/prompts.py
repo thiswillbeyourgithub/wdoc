@@ -173,6 +173,7 @@ DETAILED INSTRUCTIONS:
 - If some information are imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 - Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
     - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
+    - It is extremely important that you do not forget to include a source.
 - Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer> tag.
 - The <answer> tag should only contain your answer.
