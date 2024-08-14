@@ -74,6 +74,7 @@ def do_summarize(
         llm.callbacks[0].total_tokens += new_p + new_c
 
         parsed = thinking_answer_parser(out)
+        whi("Thinking: " + parsed["thinking"])
 
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
