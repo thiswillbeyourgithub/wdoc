@@ -13,7 +13,7 @@ from typing import List, Union, Any, Optional, Callable, Dict, Tuple
 import signal
 from contextlib import contextmanager
 import traceback
-from functools import partial
+from functools import partial, wraps
 import uuid
 import tempfile
 import requests
@@ -55,9 +55,9 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
-from .flags import is_verbose, is_linux, is_debug
+from .flags import is_verbose, is_linux, is_debug, is_return_empty
 from .errors import TimeoutPdfLoaderError
-from .env import WDOC_MAX_PDF_LOADER_TIMEOUT
+from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
 
 # lazy loading of modules
 Document = lazy_import.lazy_class('langchain.docstore.document.Document')
@@ -264,6 +264,15 @@ sox_effects = [
     ["silence", "-l", "1", "0", "1%", "-1", "3.0", "1%"],
     ["norm"],
 ]
+
+def debug_return_empty(func: Callable) -> Callable:
+    if WDOC_EMPTY_LOADER:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return ""
+        return wrapper
+    else:
+        return func
 
 pdf_loader_max_timeout = WDOC_MAX_PDF_LOADER_TIMEOUT
 
@@ -618,6 +627,7 @@ def cloze_stripper(clozed: str) -> str:
 # loaders #######################################
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 def load_youtube_video(
     path: str,
@@ -739,6 +749,7 @@ def load_youtube_video(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_online_pdf(
@@ -785,6 +796,7 @@ def load_online_pdf(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 def load_anki(
     verbose: bool,
@@ -1257,6 +1269,7 @@ def replace_media(
         raise ValueError(mode)
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_string() -> List[Document]:
@@ -1274,6 +1287,7 @@ def load_string() -> List[Document]:
     ]
     return docs
 
+@debug_return_empty
 @optional_strip_unexp_args
 def load_txt(path: str, file_hash: str) -> List[Document]:
     whi(f"Loading txt: '{path}'")
@@ -1283,6 +1297,7 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
     docs = [Document(page_content=content, metadata={})]
     return docs
 
+@debug_return_empty
 @optional_strip_unexp_args
 def load_text_input(
         path: str,
@@ -1303,6 +1318,7 @@ def load_text_input(
     ]
     return docs
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
@@ -1375,6 +1391,7 @@ def eval_load_functions(
         f"Some load_functions are not callable: {load_functions}")
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
@@ -1488,6 +1505,7 @@ def load_logseq_markdown(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
@@ -1606,6 +1624,7 @@ def load_local_audio(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
@@ -1772,6 +1791,7 @@ def transcribe_audio_whisper(
     return transcript
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
@@ -1791,6 +1811,7 @@ def load_epub(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
@@ -1810,6 +1831,7 @@ def load_powerpoint(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
@@ -1831,6 +1853,7 @@ def load_word_document(
 
     return docs
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_json_dict(
@@ -1870,6 +1893,7 @@ def load_json_dict(
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
@@ -2040,6 +2064,7 @@ def load_url(path: str, title=None) -> List[Document]:
     return docs
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_youtube_playlist(playlist_url: str) -> Any:
@@ -2084,6 +2109,7 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     return content
 
 
+@debug_return_empty
 @optional_strip_unexp_args
 def load_pdf(
     path: str,
@@ -2314,6 +2340,7 @@ def find_online_media(
 
     return video_urls
 
+@debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_online_media(

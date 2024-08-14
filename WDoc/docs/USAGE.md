@@ -587,3 +587,6 @@
 * `WDOC_EXPIRE_CACHE_DAYS`
     * If an int, will remove any cached value that is older than that many days.
     Otherwise keep forever. Default is 0 to disable.
+
+* `WDOC_EMPTY_LOADER`
+    * If True, loading any kind of document will return an empty string. Used for debugging.
