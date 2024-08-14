@@ -2120,7 +2120,7 @@ def load_pdf(
 
             with signal_timeout(
                 timeout=pdf_loader_max_timeout,
-                exception=TimeoutPdfLoaderError(),
+                exception=TimeoutPdfLoaderError,
                 ):
                 docs = _pdf_loader(loader_name, path, file_hash)
 
