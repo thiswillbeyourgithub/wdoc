@@ -81,6 +81,7 @@ def score_function(distance: float) -> float:
 
     Related issue: https://github.com/langchain-ai/langchain/issues/17333
     """
+    assert distance >= 0 and distance <= 1, f"Invalid distance value: {distance}"
     return (1 - distance) ** 2
 
 @optional_typecheck
