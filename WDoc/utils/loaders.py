@@ -269,7 +269,19 @@ def debug_return_empty(func: Callable) -> Callable:
     if WDOC_EMPTY_LOADER:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            return ""
+            metadata = {
+                "debug_empty": True,
+                "content_hash": str(uuid.uuid4()),
+                "all_hash": str(uuid.uuid4()),
+            }
+            metadata.update(kwargs)
+            out = [
+                Document(
+                    page_content="Lorem Ipsum",
+                    metadata=metadata,
+                )
+            ]
+            return out
         return wrapper
     else:
         return func
