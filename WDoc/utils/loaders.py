@@ -55,7 +55,7 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
-from .flags import is_verbose, is_linux, is_debug, is_return_empty
+from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
 
