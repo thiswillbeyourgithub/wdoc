@@ -191,6 +191,27 @@ def batch_load_doc(
     except Exception as err:
         raise Exception(f"Expected to have only DocDict at this point: {err}'")
 
+    # if is not a file, check if it's not just because spaces are not escaped or something dumb like that
+    for idoc, doc in enumerate(to_load):
+        if "path" not in doc:
+            continue
+
+        p = Path(doc["path"])
+        if p.exists():
+            continue
+        alternatives = [
+            Path(p.expanduser()),
+        ]
+        for ialt, alt in enumerate(alternatives):
+            if Path(alt).exists():
+                if isinstance(doc["path"], PosixPath):
+                    doc["path"] = alt
+                elif isinstance(doc["path"], str):
+                    doc["path"] = str(alt.absolute())
+                else:
+                    raise ValueError(f"At this point path should only be str or PosixPath: {doc['path']}")
+                break
+
     # remove duplicate documents
     temp = []
     for d in to_load:
