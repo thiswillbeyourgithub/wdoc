@@ -17,11 +17,10 @@ from bs4 import BeautifulSoup
 import hashlib
 import lazy_import
 import tiktoken
-from functools import partial
+from functools import partial, wraps
 from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
-from functools import wraps
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
