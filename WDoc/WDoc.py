@@ -39,7 +39,6 @@ from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_e
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.errors import ShouldIncreaseTopKAfterLLMEvalFiltering
-from .utils.errors import UnexpectedDocDictArgument
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
 from .utils.llm import load_llm, TESTING_LLM
@@ -62,12 +61,9 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 from operator import itemgetter
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.output_parsers import BaseGenerationOutputParser
-from langchain_core.outputs import Generation
-from langchain_core.outputs import ChatGeneration
 
 
 import lazy_import
