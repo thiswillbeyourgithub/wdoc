@@ -71,7 +71,6 @@ for k, v in inference_rules.items():
     for i, vv in enumerate(v):
         inference_rules[k][i] = re.compile(vv)
 
-
 @optional_typecheck
 def batch_load_doc(
     llm_name: str,

@@ -23,6 +23,7 @@ from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
 from functools import wraps
+from dataclasses import MISSING
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -151,9 +152,15 @@ extra_args_types.update(filetype_arg_types)
 
 class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading
-    a document. Also checks the value type. If you set the environnment
-    variable 'WDOC_STRICT_DOCDICT' to 'true' then the checking will be
-    strict, meaning it will crash instead of printing in red"""
+    a document. Also checks the value type.
+
+    The environnment variable 'WDOC_STRICT_DOCDICT' is a default value
+    at instanciation time.
+    Depending on WDOC_STRICT_DOCDICT (if not passed manually):
+        if True: crash if unexpected arg
+        if False: print in red if unexpected arg but add anyway
+        if "strip": print in red but don't add
+    """
     allowed_keys: set = set(
         sorted(
             ["path", "filetype", "file_hash", "source_tag",
@@ -161,7 +168,6 @@ class DocDict(dict):
         )
     )
     allowed_types: dict = filetype_arg_types
-    strict = WDOC_STRICT_DOCDICT
 
     def __hash__(self):
         "make it hashable, to check for duplicates"
@@ -177,36 +183,61 @@ class DocDict(dict):
                 as_string += str(self[k])
         return hash(as_string)
 
-    def __check_values__(self, key, value) -> None:
+    def __check_values__(self, key, value, strict) -> bool:
         if key not in self.allowed_keys:
             mess  = (f"Cannot set key '{key}' in a DocDict. Allowed keys are "
-                f"'{','.join(self.allowed_keys)}'")
-            if self.strict:
+                f"'{','.join(self.allowed_keys)}'\nYou can use the env "
+                "variable WDOC_STRICT_DOCDICT to avoid this issue.")
+            if strict is True:
                 raise UnexpectedDocDictArgument(mess)
-            else:
+            elif strict is False:
                 red(mess)
-                return
-        if key in self.allowed_types and value is not None and not isinstance(value, self.allowed_types[key]):
+                return True
+            elif strict == "strip":
+                red(mess)
+                return False
+            else:
+                raise ValueError(strict)
+
+        elif key in self.allowed_types and value is not None and not isinstance(value, self.allowed_types[key]):
             mess = (f"Type of key {key} should be {self.allowed_types[key]},"
-                f"not {type(value)}")
+                f"not {type(value)}."
+                "\nYou can use the env "
+                "variable WDOC_STRICT_DOCDICT to avoid this issue.")
 
-            if self.strict:
+            if strict is True:
                 raise UnexpectedDocDictArgument(mess)
-            else:
+            elif strict is False:
                 red(mess)
-                return
+                return True
+            elif strict == "strip":
+                red(mess)
+                return False
+            else:
+                raise ValueError(strict)
+        return True
 
-    def __init__(self, *args, **kwargs) -> None:
-        for arg in args:
-            assert isinstance(arg, dict)
-            for k, v in arg.items():
-                self.__check_values__(k, v)
-        for k, v in kwargs.items():
-            self.__check_values__(k, v)
-        super().__init__(*args, **kwargs)
+    def __init__(self, docdict: dict, strict=WDOC_STRICT_DOCDICT) -> None:
+        assert docdict, "Can't give an empty docdict as argument"
+        assert strict in [True, False, "strip"], "Unexpected strict value"
+        ignore_kwargs = []
+        for k, v in docdict.items():
+            if not self.__check_values__(k, v, strict):
+                ignore_kwargs.append(k)
+
+        for ik in ignore_kwargs:
+            if ik in docdict:
+                del docdict[ik]
+
+        if strict != "strip":
+            assert docdict, "Can't create DocDict: no args nor kwargs after filtering!"
+        super().__init__(docdict)
+
+        self.__strict__ = strict
 
     def __setitem__(self, key, value) -> None:
-        self.__check_values__(key, value)
+        assert self.__strict__ in [True, False, "strip"], "Unexpected strict value"
+        self.__check_values__(key, value, self.__strict__)
         super().__setitem__(key, value)
 
 @optional_typecheck

@@ -564,10 +564,12 @@
     found in the sources. Only used if task is `query` or `search`.
 
 * `WDOC_STRICT_DOCDICT`
-    * if "true", will crash instead of printing if trying to set an unexpected argument in a DocDict.
-    Otherwise, you can specify things like "anki_profile" as argument to filetype "pdf" without crashing,
-    this also makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
+    * if "True", will crash instead of printing if trying to set an unexpected argument in a DocDict.
+        Otherwise, you can specify things like "anki_profile" as argument to filetype "pdf" without crashing,
+        this also makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
     and you want to continue in the meantime.
+    * If set to "False": we print in red unexpected arguments but add them anyway.
+    * If set to "strip": we print in red unexpected arguments and ignore them.
 
 * `WDOC_MAX_LOADER_TIMEOUT`
     * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
