@@ -31,7 +31,7 @@ from .utils.misc import (
     check_docs_tkn_length, get_tkn_length,
     extra_args_types, disable_internet,
     set_func_signature, query_eval_cache,
-    thinking_answer_parser
+    thinking_answer_parser, DocDict
 )
 from .utils.prompts import prompts
 from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers
@@ -39,6 +39,7 @@ from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_e
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.errors import ShouldIncreaseTopKAfterLLMEvalFiltering
+from .utils.errors import UnexpectedDocDictArgument
 from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
 from .utils.llm import load_llm, TESTING_LLM
@@ -74,7 +75,6 @@ litellm = lazy_import.lazy_module("litellm")
 logger.info("Starting WDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
 
 @optional_typecheck
 @set_USAGE_as_docstring
@@ -1798,3 +1798,49 @@ class WDoc:
             self.latest_cost = total_cost + etotal_cost
 
             return output
+
+    @staticmethod
+    @optional_typecheck
+    def parse_file(
+        path: Union[str, PosixPath],
+        filetype: str = "auto",
+        just_text: bool = False,
+        cli_kwargs: Optional[dict] = None,
+        **kwargs,
+        ) -> Union[List[Document], str]:
+        """
+        Simple function to load a document given at least  path arg. Used for cli
+        and convenience in python scripts.
+
+        - filetype: same argument as for WDoc
+
+        - just_text: only return the text instead of a List of langchain Documents
+
+        - **kwargs: supposed to be any argument supported by DocDict ( the full
+            list is at WDoc.utils.misc.filetype_arg_types)
+
+        - cli_kwargs: a dict containing arguments that are destined to
+            batch_load_doc and not about the document per say. For example things
+            like "n_jobs", "backend" etc.
+        """
+        default_cli_kwargs = {
+            "llm_name": "testing/testing",
+            "task": "query",
+            "backend": "threading",
+            "n_jobs": 1,
+        }
+        if cli_kwargs is not None:
+            default_cli_kwargs.update(cli_kwargs)
+        if kwargs:
+            kwargs = DocDict(kwargs)
+
+        out = batch_load_doc(
+            filetype=filetype,
+            path=path,
+            **default_cli_kwargs,
+            **kwargs,
+        )
+        if not just_text:
+            return out
+        else:
+            return "\n".join([d.page_content for d in out])

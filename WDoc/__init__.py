@@ -4,6 +4,7 @@ Default file, used as entry point.
 
 import sys
 import fire
+import json
 
 from .WDoc import WDoc
 
@@ -91,3 +92,33 @@ def cli_launcher() -> None:
 
     kwargs = fire.Fire(fire_wrapper)
     instance = WDoc(**kwargs)
+
+def cli_parse_file() -> None:
+    sys_args = sys.argv
+    if "--help" in sys_args:
+        print("Showing help")
+        fire.Fire(WDoc.parse_file)
+        raise SystemExit()
+
+    args, kwargs = fire.Fire(lambda *args, **kwargs: (args, kwargs))
+    parsed = WDoc.parse_file(*args, **kwargs)
+    if isinstance(parsed, list):
+        d = {
+            "documents": {
+                "content": d.page_content,
+                "metadata": d.metadata
+            } for d in parsed
+        }
+        try:
+            out = json.dumps(d, indent=2)
+        except Exception as err:
+            out = str(d)
+    else:
+        assert isinstance(parsed, str)
+        out = parsed
+
+    sys.stdout.write(out)
+    try:
+        sys.stdout.flush()
+    except Exception:
+        pass
