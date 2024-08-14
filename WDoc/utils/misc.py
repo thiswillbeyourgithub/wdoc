@@ -3,12 +3,11 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Callable, Any, get_type_hints, Optional, Tuple
+from typing import List, Union, Callable, get_type_hints
 from joblib import Memory
 from joblib import hash as jhash
 import socket
 import os
-import urllib.request
 import json
 import re
 from datetime import timedelta
@@ -23,7 +22,6 @@ from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
 from functools import wraps
-from dataclasses import MISSING
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
