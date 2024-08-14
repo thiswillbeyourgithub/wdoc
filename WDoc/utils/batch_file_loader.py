@@ -426,20 +426,16 @@ def parse_recursive_paths(
     ]
 
     if include:
-        for i, d in enumerate(doclist):
-            keep = True
-            for iinc, inc in enumerate(include):
-                if isinstance(inc, str):
-                    if inc == inc.lower():
-                        inc = re.compile(inc, flags=re.IGNORECASE)
-                    else:
-                        inc = re.compile(inc)
-                    include[iinc] = inc
-                if not inc.search(d):
-                    keep = False
-            if not keep:
-                doclist[i] = None
-        doclist = [d for d in doclist if d]
+        for iinc, inc in enumerate(include):
+            if isinstance(inc, str):
+                if inc == inc.lower():
+                    inc = re.compile(inc, flags=re.IGNORECASE)
+                else:
+                    inc = re.compile(inc)
+                include[iinc] = inc
+        ndoclist = len(doclist)
+        doclist = [d for d in doclist if any(inc.search(d) for inc in include]
+        assert len(doclist) < ndoclist, f"Include rules were useless and didn't filter out anything."
 
     if exclude:
         for iexc, exc in enumerate(exclude):
