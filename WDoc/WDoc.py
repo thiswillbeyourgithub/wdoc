@@ -1804,7 +1804,7 @@ class WDoc:
     def parse_file(
         path: Union[str, PosixPath],
         filetype: str = "auto",
-        just_text: bool = False,
+        only_text: bool = False,
         cli_kwargs: Optional[dict] = None,
         **kwargs,
         ) -> Union[List[Document], str]:
@@ -1814,7 +1814,7 @@ class WDoc:
 
         - filetype: same argument as for WDoc
 
-        - just_text: only return the text instead of a List of langchain Documents
+        - only_text: only return the text instead of a List of langchain Documents
 
         - **kwargs: supposed to be any argument supported by DocDict ( the full
             list is at WDoc.utils.misc.filetype_arg_types)
@@ -1840,7 +1840,7 @@ class WDoc:
             **default_cli_kwargs,
             **kwargs,
         )
-        if not just_text:
+        if not only_text:
             return out
         else:
             return "\n".join([d.page_content for d in out])
