@@ -16,6 +16,7 @@ from functools import cache as memoizer
 import time
 from typing import List, Tuple, Union, Optional
 import random
+import magic
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
@@ -107,6 +108,25 @@ def batch_load_doc(
                             break
                     if load_filetype != "auto":
                         break
+                if load_filetype == "auto":
+                    try:
+                        fp = Path(load_kwargs["path"])
+                        if fp.exists():
+                            info = magic.from_file(fp).lower()
+                            if "pdf" in info:
+                                load_filetype = "pdf"
+                                break
+                            elif "mpeg" in info:
+                                load_filetype = "local_audio"
+                                break
+                            elif "epub" in info:
+                                load_filetype = "epub"
+                                break
+                            else:
+                                raise Exception("No more python magic heuristics to try")
+                    except Exception as err:
+                        red(f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic")
+
                 assert (
                     load_filetype != "auto"
                 ), f"Could not infer load_filetype of {load_kwargs['path']}. Use the 'load_filetype' argument."
