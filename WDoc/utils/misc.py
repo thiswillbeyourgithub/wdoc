@@ -16,7 +16,6 @@ from difflib import get_close_matches
 from bs4 import BeautifulSoup
 import hashlib
 import lazy_import
-import tiktoken
 from functools import partial, wraps
 from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
@@ -409,17 +408,11 @@ def model_name_matcher(model: str) -> str:
 
 
 @optional_typecheck
-def get_tkn_length(tosplit: str, modelname: str = "gpt-3.5-turbo") -> int:
-    if modelname in tokenizers:
-        return len(tokenizers[modelname](tosplit))
-    else:
-        try:
-            tokenizers[modelname] = tiktoken.encoding_for_model(
-                modelname.split("/")[-1]).encode
-        except Exception:
-            modelname = "gpt-3.5-turbo"
-        return get_tkn_length(tosplit=tosplit, modelname=modelname)
-
+def get_tkn_length(
+    tosplit: str,
+    modelname: str = "gpt-3.5-turbo",
+    ) -> int:
+    return litellm.token_counter(model=modelname, text=tosplit)
 
 @optional_typecheck
 def get_splitter(

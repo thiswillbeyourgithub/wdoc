@@ -88,7 +88,6 @@ setup(
         'nltk>=3.8.1',
         'prompt-toolkit>=3.0.43',
         'requests>=2.25.1',
-        'tiktoken>=0.6.0',
         'tqdm>=4.66.4',
         'faiss-cpu>=1.8.0',
         'llama-cpp-python>=0.2.76',
