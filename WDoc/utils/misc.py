@@ -85,11 +85,6 @@ average_word_length = 6
 # separators used for the text splitter
 recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
-# used to get token length estimation
-tokenizers = {
-    "gpt-3.5-turbo": tiktoken.encoding_for_model("gpt-3.5-turbo").encode,
-}
-
 min_token = 20
 max_token = 1_000_000
 max_lines = 100_000
