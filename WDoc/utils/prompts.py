@@ -154,6 +154,7 @@ DETAILED INSTRUCTIONS:
       - IMPORTANT: use logical indentation to organize information hierarchically.
         - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
       - The present instructions are a good example of proper formatting.
+    - You are allowed to use markdown tables if appropriate.
     - Reuse acronyms without specifying what they mean.
     - Be concise but don't omit only irrelevant information from the statements.
     - Answer in the same language as the question.
