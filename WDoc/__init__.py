@@ -7,41 +7,65 @@ import fire
 import json
 
 import lazy_import
-lazy_import.lazy_module("litellm")
-lazy_import.lazy_module('numpy')
-lazy_import.lazy_module('faiss')
-lazy_import.lazy_module('zlib')
-lazy_import.lazy_module('dill')
-lazy_import.lazy_module('sqlite3')
-lazy_import.lazy_module('tldextract')
-lazy_import.lazy_module('pyfiglet')
-lazy_import.lazy_module('youtube_dl')
-lazy_import.lazy_module('ankipandas')
-lazy_import.lazy_module('pandas')
-lazy_import.lazy_module('ftfy')
-lazy_import.lazy_module('bs4')
-lazy_import.lazy_module('goose3')
-lazy_import.lazy_module('LogseqMarkdownParser')
-lazy_import.lazy_module("deepgram")
-lazy_import.lazy_module("pydub")
-lazy_import.lazy_module("ffmpeg")
-lazy_import.lazy_module("torchaudio")
-lazy_import.lazy_module("playwright")
-lazy_import.lazy_module("openparse")
-lazy_import.lazy_module('youtube_dl')
-lazy_import.lazy_module('ankipandas')
-lazy_import.lazy_module('pandas')
-lazy_import.lazy_module('ftfy')
-lazy_import.lazy_module("deepgram")
-lazy_import.lazy_module("pydub")
-lazy_import.lazy_module("ffmpeg")
-lazy_import.lazy_module("openparse")
-lazy_import.lazy_module("scipy")
-lazy_import.lazy_module('youtube_dl.utils')
-lazy_import.lazy_module('LogseqMarkdownParser')
-lazy_import.lazy_module("sklearn.metrics")
-lazy_import.lazy_module("sklearn.decomposition")
-lazy_import.lazy_module("sklearn.preprocessing")
+from queue import Queue
+import threading
+
+def import_worker(q: Queue):
+    while True:
+        module = q.get()
+        if module is None:
+            return
+        if "." in module:
+            first = ".".join(module.split(".")[:-1])
+            last = module.split(".")[-1]
+            exec(f"from {first} import {last}")
+        else:
+            exec(f"import {module}")
+
+q = Queue()
+thread = threading.Thread(target=import_worker, args=(q,), daemon=False)
+thread.start()
+def background_loading(module: str) -> None:
+    q.put(module)
+    if module is not None:
+        lazy_import.lazy_module(module)
+
+background_loading("litellm")
+background_loading('numpy')
+background_loading('faiss')
+background_loading('zlib')
+background_loading('dill')
+background_loading('sqlite3')
+background_loading('tldextract')
+background_loading('pyfiglet')
+background_loading('youtube_dl')
+background_loading('ankipandas')
+background_loading('pandas')
+background_loading('ftfy')
+background_loading('bs4')
+background_loading('goose3')
+background_loading('LogseqMarkdownParser')
+background_loading("deepgram")
+background_loading("pydub")
+background_loading("ffmpeg")
+background_loading("torchaudio")
+background_loading("playwright")
+background_loading("openparse")
+background_loading('youtube_dl')
+background_loading('ankipandas')
+background_loading('pandas')
+background_loading('ftfy')
+background_loading("deepgram")
+background_loading("pydub")
+background_loading("ffmpeg")
+background_loading("openparse")
+background_loading("scipy")
+background_loading('youtube_dl.utils')
+background_loading('LogseqMarkdownParser')
+background_loading("sklearn.metrics")
+background_loading("sklearn.decomposition")
+background_loading("sklearn.preprocessing")
+background_loading(None)
 
 
 from .WDoc import WDoc
