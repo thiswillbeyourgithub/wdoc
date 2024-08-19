@@ -13,13 +13,13 @@ import re
 from datetime import timedelta
 from pathlib import Path, PosixPath
 from difflib import get_close_matches
-from bs4 import BeautifulSoup
+import bs4
 import hashlib
-import lazy_import
 from functools import partial, wraps
 from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
+import litellm
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -30,8 +30,6 @@ from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .errors import UnexpectedDocDictArgument
 from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS
-
-litellm = lazy_import.lazy_module("litellm")
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
 
@@ -313,7 +311,7 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, 'html.parser')
     text = soup.get_text()
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")

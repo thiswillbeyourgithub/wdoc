@@ -3,11 +3,10 @@ Chain (logic) used to query a document.
 """
 
 import re
-from typing import Tuple, List, Any, Union
+from typing import Tuple, List, Union
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
-from joblib import Memory
 from tqdm import tqdm
 import numpy as np
 
@@ -15,18 +14,17 @@ from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
+import pandas as pd
+import sklearn.metrics as metrics
+import sklearn.decomposition as decomposition
+import sklearn.preprocessing as preprocessing
+import scipy
 
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red
 from ..misc import thinking_answer_parser
 
-import lazy_import
-pd = lazy_import.lazy_module('pandas')
-metrics = lazy_import.lazy_module("sklearn.metrics")
-PCA = lazy_import.lazy_class("sklearn.decomposition.PCA")
-StandardScaler = lazy_import.lazy_class("sklearn.preprocessing.StandardScaler")
-scipy = lazy_import.lazy_module("scipy")
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
@@ -164,9 +162,9 @@ def semantic_sorting(
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
     if n_dim > 100:
-        scaler = StandardScaler()
+        scaler = preprocessing.StandardScaler()
         embed_scaled = scaler.fit_transform(embeds)
-        pca = PCA(n_components=100)
+        pca = decomposition.PCA(n_components=100)
         embeds_reduced = pca.fit_transform(embed_scaled)
         assert embeds_reduced.shape[0] == embeds.shape[0]
         vr = np.cumsum(pca.explained_variance_ratio_)
