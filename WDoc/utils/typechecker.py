@@ -10,7 +10,6 @@ from beartype import beartype, BeartypeConf
 
 from .env import WDOC_TYPECHECKING
 
-
 if WDOC_TYPECHECKING == "crash":
     optional_typecheck = beartype
 elif WDOC_TYPECHECKING == "warn":
