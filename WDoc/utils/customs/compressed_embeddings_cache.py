@@ -6,6 +6,7 @@ This is basically the exact same code but with added compression
 import os
 import re
 import time
+import zlib
 from pathlib import Path
 from typing import Iterator, List, Optional, Sequence, Tuple, Union
 
@@ -13,7 +14,6 @@ from langchain_core.stores import ByteStore
 
 from langchain.storage.exceptions import InvalidKeyException
 
-import zlib
 
 
 class LocalFileStore(ByteStore):

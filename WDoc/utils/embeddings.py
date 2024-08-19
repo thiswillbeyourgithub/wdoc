@@ -27,15 +27,13 @@ from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain.docstore.document import Document
+import litellm
 
 from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .env import WDOC_EXPIRE_CACHE_DAYS
-
-import lazy_import
-litellm = lazy_import.lazy_module("litellm")
 
 NB_LOADER_WORKERS = 10
 NB_SAVER_WORKERS = 10

@@ -26,15 +26,14 @@ import dill
 import httpx
 import magic
 
-import lazy_import
-
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
-from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
+# from unstructured.cleaners.core import clean_extra_whitespace
+from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.document_loaders import PDFMinerLoader
@@ -44,8 +43,28 @@ from langchain_community.document_loaders import YoutubeLoader
 from langchain_community.document_loaders import SeleniumURLLoader
 from langchain_community.document_loaders import PlaywrightURLLoader
 from langchain_community.document_loaders import WebBaseLoader
+from langchain.docstore.document import Document
 
-# from unstructured.cleaners.core import clean_extra_whitespace
+import lazy_import
+# from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
+TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
+RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+import youtube_dl
+import youtube_dl.utils
+import ankipandas as akp
+import pandas as pd
+import ftfy
+import bs4
+import goose3
+from prompt_toolkit import prompt
+import LogseqMarkdownParser
+import litellm
+import deepgram
+import pydub
+import ffmpeg
+import torchaudio
+import playwright
+import openparse
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
@@ -58,30 +77,6 @@ from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
-
-# lazy loading of modules
-Document = lazy_import.lazy_class('langchain.docstore.document.Document')
-TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class(
-    'langchain.text_splitter.RecursiveCharacterTextSplitter')
-youtube_dl = lazy_import.lazy_module('youtube_dl')
-DownloadError = lazy_import.lazy_class('youtube_dl.utils.DownloadError')
-ExtractorError = lazy_import.lazy_class('youtube_dl.utils.ExtractorError')
-akp = lazy_import.lazy_module('ankipandas')
-pd = lazy_import.lazy_module('pandas')
-ftfy = lazy_import.lazy_module('ftfy')
-BeautifulSoup = lazy_import.lazy_class('bs4.BeautifulSoup')
-Goose = lazy_import.lazy_class('goose3.Goose')
-prompt = lazy_import.lazy_function('prompt_toolkit.prompt')
-LogseqMarkdownParser = lazy_import.lazy_module('LogseqMarkdownParser')
-litellm = lazy_import.lazy_module("litellm")
-deepgram = lazy_import.lazy_module("deepgram")
-pydub = lazy_import.lazy_module("pydub")
-ffmpeg = lazy_import.lazy_module("ffmpeg")
-torchaudio = lazy_import.lazy_module("torchaudio")
-sync_playwright = lazy_import.lazy_class("playwright.sync_api.sync_playwright")
-openparse = lazy_import.lazy_module("openparse")
-
 
 try:
     import pdftotext
@@ -493,7 +488,7 @@ def load_one_doc(
     # add and format metadata
     for i in range(len(docs)):
         # if html, parse it
-        soup = BeautifulSoup(docs[i].page_content, "html.parser")
+        soup = bs4.BeautifulSoup(docs[i].page_content, "html.parser")
         if bool(soup.find()):
             docs[i].page_content = soup.get_text()
 
@@ -969,7 +964,7 @@ def load_anki(
         )
         if useimageocr:
             for img in [k for k in medias.keys() if "IMAGE" in k]:
-                img = BeautifulSoup(medias[k], 'html.parser')
+                img = bs4.BeautifulSoup(medias[k], 'html.parser')
                 title = img.get('title').strip() if img.has_attr('title') else ""
                 alt = img.get('alt').strip() if img.has_attr('alt') else ""
                 ocr_alt = ""
@@ -1116,7 +1111,7 @@ def replace_media(
 
         # Images
         if replace_image and "<img" in content:
-            soup = BeautifulSoup(content, 'html.parser')
+            soup = bs4.BeautifulSoup(content, 'html.parser')
             images_bs4 = [str(img) for img in soup.find_all('img')]
             images_reg = re.findall(REG_IMG, content)
             assert len(images_bs4) == len(images_reg)
@@ -1220,7 +1215,7 @@ def replace_media(
         # check no media can be found anymore
         if replace_image:
             assert not re.findall(REG_IMG, new_content), new_content
-            assert not BeautifulSoup(
+            assert not bs4.BeautifulSoup(
                 new_content, 'html.parser').find_all('img'), new_content
             if strict:
                 assert "<img" not in new_content, new_content
@@ -1368,7 +1363,7 @@ def load_local_html(
             f"output of function #{ifunc}: '{func}' is not a "
             f"string: {content}")
     try:
-        soup = BeautifulSoup(content, "html.parser")
+        soup = bs4.BeautifulSoup(content, "html.parser")
     except Exception as err:
         raise Exception(f"Error when parsing html: {err}")
 
@@ -2004,7 +1999,7 @@ def load_url(path: str, title=None) -> List[Document]:
 
     if not loaded_success:
         try:
-            g = Goose()
+            g = goose3.Goose()
             article = g.extract(url=path)
             text = article.cleaned_text
             docs = [Document(page_content=text)]
@@ -2083,7 +2078,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
     with youtube_dl.YoutubeDL({"quiet": False}) as ydl:
         try:
             loaded = ydl.extract_info(playlist_url, download=False)
-        except (KeyError, DownloadError, ExtractorError) as e:
+        except (KeyError, youtube_dl.utils.DownloadError, youtube_dl.utils.ExtractorError) as e:
             raise Exception(
                 red(f"ERROR: Youtube playlist link skipped because : error during information \
         extraction from {playlist_url} : {e}")
@@ -2230,7 +2225,7 @@ def find_online_media(
     @optional_typecheck
     def check_browser_installation(browser_type: str) -> bool:
         try:
-            with sync_playwright() as p:
+            with playwright.sync_api.sync_playwright() as p:
                 browser = getattr(p, browser_type).launch()
                 browser.close()
             return True
@@ -2283,7 +2278,7 @@ def find_online_media(
     else:
         raise Exception("Couldn't launch either firefox or chromium using playwright. Maybe try running 'playwright install'")
 
-    with sync_playwright() as p:
+    with playwright.sync_api.sync_playwright() as p:
         browser = getattr(p, installed).launch(headless=headless)
 
         context = browser.new_context(

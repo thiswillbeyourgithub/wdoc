@@ -7,7 +7,6 @@ from typing import Union, List, Any, Optional
 import os
 from typing import Dict
 
-import lazy_import
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.messages.base import BaseMessage
@@ -16,12 +15,11 @@ from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 from langchain_core.caches import BaseCache
+import litellm
 
 from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 from .flags import is_verbose
-
-litellm = lazy_import.lazy_module("litellm")
 
 TESTING_LLM = "testing/testing"
 
