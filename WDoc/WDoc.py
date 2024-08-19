@@ -21,8 +21,6 @@ import re
 import os
 import asyncio
 from tqdm import tqdm
-from langchain_community.llms import FakeListLLM
-from langchain_core.runnables import chain
 from beartype.door import die_if_unbearable
 
 from .utils.misc import (
@@ -49,7 +47,13 @@ from .utils.embeddings import load_embeddings, faiss_hotfix
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
 from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER
+from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 
+import litellm
+
+from operator import itemgetter
+from langchain_community.llms import FakeListLLM
+from langchain_core.runnables import chain
 from langchain.globals import set_verbose
 from langchain.globals import set_debug
 from langchain.globals import set_llm_cache
@@ -59,15 +63,9 @@ from langchain_community.document_transformers import EmbeddingsRedundantFilter
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from .utils.customs.fix_llm_caching import SQLiteCacheFixed
-from operator import itemgetter
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
-
-
-import lazy_import
-litellm = lazy_import.lazy_module("litellm")
 
 logger.info("Starting WDoc")
 
