@@ -63,7 +63,7 @@ import deepgram
 import pydub
 import ffmpeg
 import torchaudio
-import playwright
+import playwright.sync_api
 import openparse
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
