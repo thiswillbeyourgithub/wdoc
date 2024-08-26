@@ -2230,7 +2230,8 @@ def find_online_media(
                 browser.close()
             return True
         except Exception as err:
-            red(str(p))
+            if "p" in locals():
+                red(str(p))
             red(str(err))
             return False
 
