@@ -8,7 +8,7 @@ is used.
 
 from collections import Counter
 import shutil
-import uuid
+import uuid6
 import re
 import sys
 from tqdm import tqdm
@@ -299,7 +299,7 @@ def batch_load_doc(
             assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
     # dir name where to store temporary files
-    load_temp_name = "file_load_" + str(uuid.uuid4())
+    load_temp_name = "file_load_" + str(uuid6.uuid6())
     # delete previous temp dir if it's several days old
     for f in cache_dir.iterdir():
         f = f.resolve()

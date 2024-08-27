@@ -14,7 +14,7 @@ import signal
 from contextlib import contextmanager
 import traceback
 from functools import partial, wraps
-import uuid
+import uuid6
 import tempfile
 import requests
 import shutil
@@ -266,8 +266,8 @@ def debug_return_empty(func: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             metadata = {
                 "debug_empty": True,
-                "content_hash": str(uuid.uuid4()),
-                "all_hash": str(uuid.uuid4()),
+                "content_hash": str(uuid6.uuid6()),
+                "all_hash": str(uuid6.uuid6()),
             }
             metadata.update(kwargs)
             out = [
@@ -673,7 +673,7 @@ def load_youtube_video(
     else:
         whi(f"Downloading audio from url: '{path}'")
         file_name = loaders_temp_dir / \
-            f"youtube_audio_{uuid.uuid4()}"  # without extension!
+            f"youtube_audio_{uuid6.uuid6()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -827,7 +827,7 @@ def load_anki(
     whi(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
-    random_val = str(uuid.uuid4()).split("-")[-1]
+    random_val = str(uuid6.uuid6())
     new_db_path = loaders_temp_dir / \
         f"anki_collection_{name.replace('/', '_')}_{random_val}"
     assert not Path(new_db_path).exists(
@@ -1555,9 +1555,9 @@ def load_local_audio(
         red(f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s")
 
         unsilenced_path_wav = loaders_temp_dir / \
-            f"unsilenced_audio_{uuid.uuid4()}.wav"
+            f"unsilenced_audio_{uuid6.uuid6()}.wav"
         unsilenced_path_ogg = loaders_temp_dir / \
-            f"unsilenced_audio_{uuid.uuid4()}.ogg"
+            f"unsilenced_audio_{uuid6.uuid6()}.ogg"
         assert not unsilenced_path_wav.exists()
         assert not unsilenced_path_ogg.exists()
         torchaudio.save(
@@ -1648,7 +1648,7 @@ def load_local_video(
 ) -> List[Document]:
     assert Path(path).exists(), f"file not found: '{path}'"
 
-    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid6.uuid6()}.mp3"
     assert not audio_path.exists()
 
     # extract audio from video
@@ -2389,7 +2389,7 @@ def load_online_media(
     @optional_typecheck
     def dl_audio_from_url(trial: int, url: str) -> PosixPath:
         file_name = loaders_temp_dir / \
-            f"online_media_{uuid.uuid4()}"  # without extension!
+            f"online_media_{uuid6.uuid6()}"  # without extension!
         ydl_opts = {
             'format': 'bestaudio/best',
             # 'force_generic_extractor': True,
@@ -2429,7 +2429,7 @@ def load_online_media(
     assert audio_file is not None, f"Failed to find suitable media for url '{path}'"
 
     audio_hash = file_hasher({"path": str(Path(audio_file).absolute())})
-    audio_path = loaders_temp_dir / f"audio_from_video_{uuid.uuid4()}.mp3"
+    audio_path = loaders_temp_dir / f"audio_from_video_{uuid6.uuid6()}.mp3"
     assert not audio_path.exists()
 
     # extract audio from video
