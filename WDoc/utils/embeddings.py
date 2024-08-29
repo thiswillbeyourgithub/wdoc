@@ -102,26 +102,28 @@ def faiss_hotfix(vectorstore: FAISS) -> FAISS:
             new_ids = original_ids.squeeze()[get_mask(original_ids.squeeze())]
 
             diff = k - new_ids.shape[0]
+            assert diff >= 0, f"Asked for {k} vectors but go more: {new_ids.shape}"
             if diff == 0:
                 assert original_scores.shape == original_ids.shape
                 assert original_ids.squeeze().shape == new_ids.shape
                 return original_scores, original_ids
+            else:
+                trial = 0
+                while diff > 0 and trial < 10:
+                    trial += 1
 
-            trial = 0
-            while diff > 0 and trial < 10:
-                trial += 1
+                    trial_scores, trial_ids = func(vector, k + diff)
+                    mask = get_mask(trial_ids.squeeze())
+                    trial_ids = trial_ids.squeeze()[mask]
 
-                trial_scores, trial_ids = func(vector, k + diff)
-                mask = get_mask(trial_ids.squeeze())
-                trial_ids = trial_ids.squeeze()[mask]
+                    diff = k - trial_ids.shape[0]
+                    assert diff >= 0, f"Asked at trial {trial} for {k} vectors but go more: {new_ids.shape}"
 
-                diff = k - trial_ids.shape[0]
+                trial_scores = trial_scores.squeeze()[mask].reshape(1, -1)
+                trial_ids = trial_ids.reshape(1, -1)
 
-            trial_scores = trial_scores.squeeze()[mask].reshape(1, -1)
-            trial_ids = trial_ids.reshape(1, -1)
-
-            assert trial_scores.shape == trial_ids.shape
-            return trial_scores, trial_ids
+                assert trial_scores.shape == trial_ids.shape
+                return trial_scores, trial_ids
         return wrapper
 
     ok_ids = np.array(list(vectorstore.index_to_docstore_id.keys())).squeeze()
