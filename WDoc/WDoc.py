@@ -87,7 +87,7 @@ class WDoc:
         task: str,
         filetype: str = "auto",
 
-        modelname: str = "openrouter/anthropic/claude-3.5-sonnet:beta",
+        modelname: str = "openrouter/anthropic/claude-3.5-sonnet",
         # modelname: str = "openai/gpt-4o",
         # modelname: str = "openai/gpt-3.5-turbo-0125",
         # modelname: str = "mistral/mistral-large-latest",

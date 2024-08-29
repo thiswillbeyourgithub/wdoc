@@ -135,7 +135,7 @@
 
 ---
 
-* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet:beta"`
+* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
     * Keep in mind that given that the default backend used is litellm
     the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then it will be parsed as 'testing/testing' and
