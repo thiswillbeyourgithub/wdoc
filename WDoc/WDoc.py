@@ -159,7 +159,7 @@ class WDoc:
                         "print error, in red if possible"
                         try:
                             red(self.ntfy(message))
-                        except Exception as err:
+                        except Exception:
                             print(message)
                     p("\n--verbose was used so opening debug console at the "
                       "appropriate frame. Press 'c' to continue to the frame "
