@@ -1746,7 +1746,9 @@ class WDoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 ia = thinking_answer_parser(ia)
-                ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
+                # print either both thinking and answer or just answer
+                # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
+                ia = ia["answer"]
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
                 md_printer(source_replace(to_print))
 
