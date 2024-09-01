@@ -1678,6 +1678,7 @@ class WDoc:
                     # disable=not is_verbose,
                 )
                 temp_interm_answ = output["intermediate_answers"]
+                temp_interm_answ = thinking_answer_parser(temp_interm_answ)["answer"]
                 while True:
                     batches = [[]]
                     for ia in temp_interm_answ:
@@ -1702,7 +1703,7 @@ class WDoc:
                         } for b in batches
                     ]
                     temp_interm_answ = [
-                        a["final_answer"]
+                        thinking_answer_parser(a["final_answer"])["answer"]
                         for a in final_answer_chain.batch(batch_args)
                     ]
                     all_intermediate_answers.append(temp_interm_answ)
