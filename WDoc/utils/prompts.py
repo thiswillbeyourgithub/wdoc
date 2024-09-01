@@ -45,10 +45,9 @@ Detailed instructions:
         ("human", """
 {recursion_instruction}{metadata}{previous_summary}
 
-Text section:
-```
+<text_section>
 {text}
-```
+</text_section>
 """.strip())
     ],
 )
@@ -56,17 +55,16 @@ Text section:
 # if the text to summarize is long, give the end of the previous summary to help with transitions
 PREV_SUMMARY_TEMPLATE = """
 
-END OF SUMMARY OF THE LAST SECTION:
-```
+<end_of_summary_of_prev_section>
 {previous_summary}
-```"""
+</end_of_summary_of_prev_section>
+"""
 
 # if the summary is recursive, add those instructions
 RECURSION_INSTRUCTION = """
-ADDITIONAL INSTRUCTION:
-```
+<additional_instructions>
 I'm giving you back your own summary from last time because it was too long and contained repetitions. I want you to rewrite it as closely as possible while removing repetitions and fixing the logical indentation. Of course you have to remove the 'Chunk' indicator if present, to curate the logical indentation. You can reorganize the text freely as long as you don't lose relevant information and follow the instructions I gave you before and right now. This is important.
-```
+</additional_instructions>
 """.lstrip()
 
 # RAG
@@ -85,11 +83,14 @@ RULES:
 """.strip()),
         ("human",
          """
-QUESTION: `{q}`
-TEXT DOCUMENT:
-```
+<text_document>
 {doc}
-```
+</text_document>
+
+<question>
+{q}
+</question>
+
 Take a deep breath.
 You can start your reply when you are ready.
 """)
@@ -125,11 +126,13 @@ DETAILED INSTRUCTIONS:
 ```
 """.strip()),
         ("human", """
-QUESTION: '{question_to_answer}'
-CONTEXT:
-```
+<context>
 {context}
-```
+</context>
+
+<question>
+{question_to_answer}
+</question>
 
 Now take a deep breath.
 Take your time.
@@ -182,11 +185,14 @@ DETAILED INSTRUCTIONS:
 """.strip()),
         ("human",
          """
-QUESTION: `{question}`
-CANDIDATE INTERMEDIATE ANSWERS:
-```
+<question>
+{question}
+</question>
+
+<candidate intermediate answers>
 {intermediate_answers}
-```
+</candidate intermediate answers>
+
 Now take a deep breath.
 Take your time.
 Start your reply when you're ready.
