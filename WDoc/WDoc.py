@@ -1754,7 +1754,8 @@ class WDoc:
 
             # print the final answer
             fa = thinking_answer_parser(output["final_answer"])
-            fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
+            # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
+            fa = fa["answer"]
             fa = source_replace(fa)
             md_printer(indent(f"# Answer:\n{fa}\n", "> "))
 
