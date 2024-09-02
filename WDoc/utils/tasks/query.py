@@ -169,7 +169,7 @@ def semantic_sorting(
         pca = decomposition.PCA(n_components=max_n_dim)
         embeds_reduced = pca.fit_transform(embed_scaled)
         assert embeds_reduced.shape[0] == embeds.shape[0]
-        vr = np.cumsum(pca.explained_variance_ratio_)
+        vr = np.cumsum(pca.explained_variance_ratio_)[-1]
         if vr <= 0.95:
             red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
         embeddings = pd.DataFrame(
