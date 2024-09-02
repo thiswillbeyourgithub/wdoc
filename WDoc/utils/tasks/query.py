@@ -173,13 +173,13 @@ def semantic_sorting(
         if vr <= 0.95:
             red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
         embeddings = pd.DataFrame(
-            columns=[f"v_{i}" for i in range(n_dim)],
+            columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
             index=[i for i in range(len(texts))],
             data=embeds_reduced,
         )
     else:
         embeddings = pd.DataFrame(
-            columns=[f"v_{i}" for i in range(n_dim)],
+            columns=[f"v_{i}" for i in range(embeds.shape[1])],
             index=[i for i in range(len(texts))],
             data=embeds,
         )
