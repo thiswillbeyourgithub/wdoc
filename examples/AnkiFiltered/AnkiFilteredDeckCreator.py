@@ -5,6 +5,8 @@ import os
 from WDoc import WDoc, optional_typecheck
 import fire
 from loguru import logger
+from typing import List
+from langchain.docstore.document import Document
 
 from py_ankiconnect import PyAnkiconnect
 
@@ -68,30 +70,9 @@ class FilteredDeckCreator:
         )
         found = instance.query_task(query=query)
 
-        anki_docs = []
-        for doc in found["filtered_docs"]:
-            if any("anki_" in k for k in doc.metadata.keys()):
-                anki_docs.append(doc)
-                continue
-        assert anki_docs, "No anki notes found in documents"
-
-        present_anki_docs = []
-        cids = []
-        for idoc, doc in enumerate(anki_docs):
-            if "anki_cid" in doc.metadata:
-                cid = doc.metadata["anki_cid"]
-                if akc("findCards", query=f"cid:{cid}"):
-                    present_anki_docs.append(doc)
-                    cids.append(cid)
-            elif "anki_nid" in doc.metadata:
-                nid = doc.metadata["anki_nid"]
-                temp_cids =  akc("findCards", query=f"nid:{cid}")
-                if temp_cids:
-                    present_anki_docs.append(doc)
-                    cids.extend(temp_cids)
-        assert present_anki_docs, "No anki notes after filtering"
-        assert cids, "No cids found"
-        p(f"Found cids:{cids}")
+        cids = self.find_anki_docs(
+            docs=found["filtered_docs"]
+        )
 
         query = filtered_deck_query
         query += " (cid:" + ",".join([str(c) for c in cids]) + ")"
@@ -113,6 +94,40 @@ class FilteredDeckCreator:
         )
         p(f"Done, created filtered deck {deckname}")
         akc("sync")
+
+    @classmethod
+    def find_anki_docs(self, docs: List[Document]) -> List[str]:
+        """
+        goes through the metadata of each langchain Document to find which
+        correspond to anki cards
+        """
+        anki_docs = []
+        for doc in docs:
+            if any("anki_" in k for k in doc.metadata.keys()):
+                anki_docs.append(doc)
+                continue
+        assert anki_docs, "No anki notes found in documents"
+
+        present_anki_docs = []
+        cids = []
+        for idoc, doc in enumerate(anki_docs):
+            if "anki_cid" in doc.metadata:
+                cid = doc.metadata["anki_cid"]
+                if akc("findCards", query=f"cid:{cid}"):
+                    present_anki_docs.append(doc)
+                    cids.append(cid)
+            elif "anki_nid" in doc.metadata:
+                # nid = doc.metadata["anki_nid"]
+                temp_cids =  akc("findCards", query=f"nid:{cid}")
+                if temp_cids:
+                    present_anki_docs.append(doc)
+                    cids.extend(temp_cids)
+
+        assert present_anki_docs, "No anki notes after filtering"
+        assert cids, "No cids found"
+        p(f"Found cids:{cids}")
+
+        return cids
 
     @classmethod
     def create_filtered_deck(
