@@ -276,7 +276,7 @@ def load_embeddings(
         docs = sorted(docs, key=lambda x: random.random())
 
     embeddings_cache = cache_dir / "faiss_doc_indexes" / embed_model_str
-    embeddings_cache.mkdir(exist_ok=True)
+    embeddings_cache.mkdir(exist_ok=True, parents=True)
     ti = time.time()
     whi(f"Creating FAISS index for {len(docs)} documents")
 
