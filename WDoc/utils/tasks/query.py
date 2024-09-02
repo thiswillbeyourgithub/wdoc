@@ -158,13 +158,15 @@ def semantic_sorting(
 
     # get embeddings
     embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
-    n_dim = [d for d in embeds.shape if d != len(texts)][0]
+    n_dim = embeds.shape[1]
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
-    if n_dim > 100:
+    max_n_dim = min(100, len(texts))
+
+    if n_dim > max_n_dim:
         scaler = preprocessing.StandardScaler()
         embed_scaled = scaler.fit_transform(embeds)
-        pca = decomposition.PCA(n_components=100)
+        pca = decomposition.PCA(n_components=max_n_dim)
         embeds_reduced = pca.fit_transform(embed_scaled)
         assert embeds_reduced.shape[0] == embeds.shape[0]
         vr = np.cumsum(pca.explained_variance_ratio_)
