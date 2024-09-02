@@ -133,7 +133,7 @@ class TheFiche:
             sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
             use_cache (bool): set to False to bypass the cache, default True.
             logseq_linkify (bool): If True, will ask WDoc's strong LLM to find the import keywords and automatically replace them in the output file by logseq [[links]], enabling the use of graph properties. Default to True.
-            the_fiche_callback (callable): will be called at the end of the run with as argument all what's in globals(). Use only if you know what you're doing.
+            the_fiche_callback (callable): will be called at the end of the run with as argument all what's in locals(). Use only if you know what you're doing.
             **kwargs: Additional keyword arguments to pass to WDoc.
 
         Raises:
@@ -428,7 +428,7 @@ anticorps
 
         if the_fiche_callback:
             p(f"Using callback '{the_fiche_callback}'")
-            the_fiche_callback(**globals())
+            the_fiche_callback(**locals())
 
         p("Done")
 
