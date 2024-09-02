@@ -2,7 +2,8 @@
 Simple script to create a filtered deck from a WDoc search
 """
 import os
-from WDoc import WDoc, optional_typecheck
+from WDoc import WDoc
+from WDoc.utils.typechecker import optional_typecheck
 import fire
 from loguru import logger
 from typing import List
