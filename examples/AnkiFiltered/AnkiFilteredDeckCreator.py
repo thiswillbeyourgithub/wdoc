@@ -97,7 +97,7 @@ class FilteredDeckCreator:
         akc("sync")
 
     @classmethod
-    def find_anki_docs(self, docs: List[Document]) -> List[str]:
+    def find_anki_docs(self, docs: List[Document]) -> List[int]:
         """
         goes through the metadata of each langchain Document to find which
         correspond to anki cards
