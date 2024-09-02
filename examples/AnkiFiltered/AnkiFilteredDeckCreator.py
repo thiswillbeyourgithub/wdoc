@@ -118,8 +118,8 @@ class FilteredDeckCreator:
                     present_anki_docs.append(doc)
                     cids.append(cid)
             elif "anki_nid" in doc.metadata:
-                # nid = doc.metadata["anki_nid"]
-                temp_cids =  akc("findCards", query=f"nid:{cid}")
+                nid = doc.metadata["anki_nid"]
+                temp_cids =  akc("findCards", query=f"nid:{nid}")
                 if temp_cids:
                     present_anki_docs.append(doc)
                     cids.extend(temp_cids)
