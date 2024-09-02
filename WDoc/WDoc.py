@@ -232,7 +232,7 @@ class WDoc:
             assert query_eval_modelname is not None, "query_eval_modelname can't be None if doing RAG"
         else:
             query_eval_modelname = None
-        if filetype == "auto":
+        if filetype == "auto" and not import_mode:
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'auto', a --path must be given"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
         if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
