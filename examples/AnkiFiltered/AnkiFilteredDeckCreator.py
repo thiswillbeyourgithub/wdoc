@@ -151,4 +151,5 @@ class FilteredDeckCreator:
             createEmpty=create_empty,
         )
 
-fire.Fire(FilteredDeckCreator)
+if __name__ == "__main__":
+    fire.Fire(FilteredDeckCreator)
