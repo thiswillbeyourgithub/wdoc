@@ -553,15 +553,17 @@
 
 * `WDOC_NO_MODELNAME_MATCHING`
     * If "true": will bypass the model name matching. Useful for exotic
-    or models that are fresh out of the oven.
+    or models that are fresh out of the oven. Default is `False`.
 
 * `WDOC_ALLOW_NO_PRICE`
     * if "true", won't crash if no price was found for the given
     model. Useful if litellm has not yet updated its price table.
+    Default is `False`.
 
 * `WDOC_OPEN_ANKI`
     * if "true", will automatically ask wether to open the anki browser if cards are
     found in the sources. Only used if task is `query` or `search`.
+    Default is `False`
 
 * `WDOC_STRICT_DOCDICT`
     * if "True", will crash instead of printing if trying to set an unexpected argument in a DocDict.
@@ -570,27 +572,28 @@
     and you want to continue in the meantime.
     * If set to "False": we print in red unexpected arguments but add them anyway.
     * If set to "strip": we print in red unexpected arguments and ignore them.
+    Default is `False`.
 
 * `WDOC_MAX_LOADER_TIMEOUT`
     * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
-    Default is 30 minutes.
+    Default is `30` minutes.
 
 * `WDOC_MAX_PDF_LOADER_TIMEOUT`
     * Number of seconds to wait for each pdf loader before giving up this loader.
-    Default is 5 minutes.
+    Default is `5` minutes.
     Disabled when using threading as python does not allow it.
 
 * `WDOC_DEBUGGER`
     * If True, will open the debugger in case of issue. Implied by `--debug`
-    Default is False
+    Default is `False`
 
 * `WDOC_EXPIRE_CACHE_DAYS`
     * If an int, will remove any cached value that is older than that many days.
-    Otherwise keep forever. Default is 0 to disable.
+    Otherwise keep forever. Default is `0` to disable.
 
 * `WDOC_EMPTY_LOADER`
-    * If True, loading any kind of document will return an empty string. Used for debugging.
+    * If True, loading any kind of document will return an empty string. Used for debugging. Default is `False`.
 
 * `WDOC_BEHAVIOR_EXCL_INCL_USELESS`
     * If an "include" or "exclude" key is found in a loader but does not actually change anything, if "warn" then just print in red but
-    if "crash" then raise an error. Default is 'warn'.
+    if "crash" then raise an error. Default is `warn`.
