@@ -1765,9 +1765,9 @@ class WDoc:
             red(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
             red(
-                f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
+                f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}")
             red(
-                f"Number of documents found relevant by eval llm: {len(output['relevant_filtered_docs'])}")
+                f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}")
             if len(all_intermediate_answers) > 1:
                 extra = '->'.join(
                     [str(len(ia)) for ia in all_intermediate_answers]
