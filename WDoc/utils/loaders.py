@@ -1114,9 +1114,10 @@ def replace_media(
             soup = bs4.BeautifulSoup(content, 'html.parser')
             images_bs4 = [str(img) for img in soup.find_all('img')]
             images_reg = re.findall(REG_IMG, content)
-            assert len(images_bs4) == len(images_reg)
+            if len(images_bs4) != len(images_reg):
+                red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
             images = [str(img) for img in images_bs4]
-            assert images
+            assert images, f"no image found but should have. Text is '{content}'"
             assert all(img in content for img in images)
             assert all(re.search(REG_IMG, img) for img in images)
             assert not any(re.search(REG_SOUNDS, img) for img in images)
@@ -1126,7 +1127,7 @@ def replace_media(
         # Sounds
         if replace_sounds and "[sounds:" in content:
             sounds = re.findall(REG_SOUNDS, content)
-            assert sounds
+            assert sounds, f"No sounds found but should have. Content: {content}"
             assert all(sound in content for sound in sounds)
             assert not any(re.search(REG_IMG, sound) for sound in sounds)
             assert all(re.search(REG_SOUNDS, sound) for sound in sounds)
