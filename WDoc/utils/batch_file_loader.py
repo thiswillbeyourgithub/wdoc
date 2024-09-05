@@ -469,7 +469,7 @@ def parse_recursive_paths(
                 include[iinc] = inc
         ndoclist = len(doclist)
         doclist = [d for d in doclist if any(inc.search(d) for inc in include)]
-        assert len(doclist) < ndoclist, f"Include rules were useless and didn't filter out anything."
+        assert len(doclist) < ndoclist, f"Include rules were useless and didn't filter out anything.\nInclude rules: '{include}'"
 
     if exclude:
         for iexc, exc in enumerate(exclude):
