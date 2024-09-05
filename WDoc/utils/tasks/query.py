@@ -22,9 +22,9 @@ import scipy
 
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
-from ..logger import red
+from ..logger import red, whi
 from ..misc import thinking_answer_parser
-
+from ..flags import is_verbose
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
@@ -88,6 +88,10 @@ def parse_eval_output(output: str) -> str:
         raise InvalidDocEvaluationByLLMEval(mess)
 
     parsed = thinking_answer_parser(output)
+
+    if is_verbose:
+        whi(f"Eval LLM output: '{output}'")
+
     if "-" in parsed["answer"]:
         raise InvalidDocEvaluationByLLMEval(mess)
     digits = [d for d in list(parsed["answer"]) if d.isdigit()]
