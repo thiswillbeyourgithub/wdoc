@@ -196,8 +196,6 @@ def batch_load_doc(
     for idoc, doc in enumerate(to_load):
         if "path" not in doc:
             continue
-        if not doc["path"]:
-            continue
 
         p = Path(doc["path"])
         if p.exists():
@@ -256,6 +254,7 @@ def batch_load_doc(
     )
     for i, h in enumerate(doc_hashes):
         to_load[i]["file_hash"] = doc_hashes[i]
+
 
     if "summar" not in task:
         # shuffle the list of files again to be random but deterministic:

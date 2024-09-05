@@ -118,7 +118,7 @@ def fire_wrapper(
         if "path" not in kwargs:
             kwargs["path"] = None
         if kwargs["path"] in [True, None, False]:
-            kwargs["path"] = ""
+            del kwargs["path"]
         else:
             kwargs["path"] = str(kwargs["path"])
 
