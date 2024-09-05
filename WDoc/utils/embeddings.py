@@ -436,7 +436,7 @@ def load_embeddings(
                 to_embed[batch[0]:batch[1]],
                 cached_embeddings,
                 normalize_L2=True,
-                override_relevance_score_fn=score_function,
+                relevance_score_fn=score_function,
             )
 
             whi(f"Saving batch #{ib + 1}")
@@ -595,7 +595,7 @@ def faiss_saver(
             metadatas=[document.metadata],
             ids=[docid],
             normalize_L2=True,
-            override_relevance_score_fn=score_function,
+            relevance_score_fn=score_function,
         )
         db.save_local(file)
 
