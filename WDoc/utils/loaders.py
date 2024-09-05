@@ -959,7 +959,7 @@ def load_anki(
             content=text,
             media=None,
             mode="remove_media",
-            strict=True,
+            strict=False,
             replace_links=False,
         )
         if useimageocr:
