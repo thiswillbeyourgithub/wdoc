@@ -481,7 +481,7 @@ def parse_recursive_paths(
                 exclude[iexc] = exc
             ndoclist = len(doclist)
             doclist = [d for d in doclist if not exc.search(d)]
-            assert len(doclist) < ndoclist, f"Exclude rule '{exc}' was useless and didn't filter out anything."
+            assert len(doclist) < ndoclist, f"Exclude rule '{exc}' was useless and didn't filter out anything.\nExclude rules: '{exclude}'"
 
     for i, d in enumerate(doclist):
         doc_kwargs = cli_kwargs.copy()
