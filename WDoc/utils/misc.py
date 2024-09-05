@@ -287,8 +287,10 @@ def file_hasher(doc: dict) -> str:
     If the doc dict does not contain a path, the hash of the dict will be
     returned.
     """
+    if "path" not in doc:
+        return hasher(json.dumps(doc))
     hashable = False
-    if "path" in doc and Path(doc["path"]).exists():
+    if "path" in doc and doc["path"] and Path(doc["path"]).exists():
         hashable = True
     if isinstance(doc["path"], str):
         if doc["path"] == "":
