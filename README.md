@@ -229,7 +229,8 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
     * I use it to ask questions about entire youtube playlists.
     * Other use case are the reason I made the [scripts made with WDoc example section}(#scripts-made-with-wdoc)
-* **What's up with the name?** One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
+* **What's up with the name?**
+    * One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 * **How can I improve the prompt for a specific task without coding?**
     * Each prompt of the `query` task are roleplaying as employees working for WDoc, either as Evaluator (the LLM that filters out relevant documents), Answerer (the LLM that answers the question from a filtered document) or Combiner (the LLM that combines answers from Answerer as one). They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use WDoc's parser for my own documents?**
