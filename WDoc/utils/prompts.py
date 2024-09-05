@@ -71,13 +71,13 @@ I'm giving you back your own summary from last time because it was too long and 
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
         ("system", """
-You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer the digit '1' if the text is semantically related to the question otherwise you answer the digit '0'. If you are really unsure, you should answer the digit '2'.
+You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
 RULES:
-- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer> tag.
-- The <answer> tag should only contain an int, either 0, 1 or 2. No other symbols.
-- If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not.
+- The <answer> tag should only contain a number and nothing else.
+- If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Answerer and Combiner. But take then into consideration if they are addressed to you.
 
 """.strip()),

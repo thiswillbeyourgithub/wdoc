@@ -46,7 +46,7 @@ def check_intermediate_answer(ans: str) -> bool:
 @chain
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
-    "filter documents find via RAG based on if the eval llm answered 0 or 1 or 2"
+    "filter documents find via RAG based on the digit answered by the eval llm"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
     assert isinstance(
@@ -63,15 +63,15 @@ def refilter_docs(inputs: dict) -> List[Document]:
         if not isinstance(evals, list):
             evals = [evals]
         answers = [thinking_answer_parser(ev)["answer"] for ev in evals]
-        if all(list(map(str.isdigit, answers))):
-            answers = list(map(int, answers))
-            if sum(answers) != 0:
-                filtered_docs.append(unfiltered_docs[ie])
-        else:
-            red(
-                "Evals contained strings so keeping the doc:\n* "
-                '\n * '.join(answers) + "\n"
-            )
+        for ia, a in enumerate(answers):
+            try:
+                a = int(a)
+            except Exception as err:
+                red(f"Document was not evaluated with a number: '{err}' for answer '{a}'\nKeeping the document anyway.")
+                a = 5
+            answers[ia] = a
+
+        if sum(answers) != 0:
             filtered_docs.append(unfiltered_docs[ie])
 
     if not filtered_docs:
@@ -91,6 +91,14 @@ def parse_eval_output(output: str) -> str:
 
     if is_verbose:
         whi(f"Eval LLM output: '{output}'")
+
+    answer = parsed["answer"]
+    try:
+        answer = int(answer)
+        return str(answer)
+    except Exception as err:
+        red(f"Document was not evaluated with a number: '{err}' for answer '{answer}'\nKeeping the document anyway.")
+        return str(5)
 
     if "-" in parsed["answer"]:
         raise InvalidDocEvaluationByLLMEval(mess)
