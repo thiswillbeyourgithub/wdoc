@@ -290,7 +290,14 @@ def file_hasher(doc: dict) -> str:
     hashable = False
     if "path" in doc and Path(doc["path"]).exists():
         hashable = True
-    if doc["path"] == "":
+    if isinstance(doc["path"], str):
+        if doc["path"] == "":
+            hashable = False
+        if not doc["path"].strip():
+            hashable = False
+    if not doc["path"]:
+        hashable = False
+    if not isinstance(doc["path"], (str, PosixPath)):
         hashable = False
 
     if hashable:
