@@ -196,6 +196,8 @@ def batch_load_doc(
     for idoc, doc in enumerate(to_load):
         if "path" not in doc:
             continue
+        if not doc["path"]:
+            continue
 
         p = Path(doc["path"])
         if p.exists():
