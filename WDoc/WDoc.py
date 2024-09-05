@@ -102,7 +102,7 @@ class WDoc:
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, PosixPath] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, PosixPath]] = None,
-        top_k: Union[str, int] = "auto_50_300",
+        top_k: Union[str, int] = "auto_200_500",
 
         query: Optional[str] = None,
         query_retrievers: str = "default",

@@ -175,7 +175,7 @@
 * `--load_embeds_from`: str, default `None`
     * path to the file saved using `--save_embeds_as`
 
-* `--top_k`: Union[int, str], default `auto_50_300`
+* `--top_k`: Union[int, str], default `auto_200_500`
     * number of chunks to look for when querying. It is high because the
     eval model is used to refilter the document after the embeddings
     first pass.
