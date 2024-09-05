@@ -287,7 +287,13 @@ def file_hasher(doc: dict) -> str:
     If the doc dict does not contain a path, the hash of the dict will be
     returned.
     """
+    hashable = False
     if "path" in doc and Path(doc["path"]).exists():
+        hashable = True
+    if doc["path"] == "":
+        hashable = False
+
+    if hashable:
         file = Path(doc["path"])
         stats = file.stat()
         return _file_hasher(
