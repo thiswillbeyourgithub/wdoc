@@ -118,7 +118,7 @@ def fire_wrapper(
         if "path" not in kwargs:
             kwargs["path"] = None
         if kwargs["path"] in [True, None, False]:
-            del kwargs["path"]
+            kwargs["path"] = ""
         else:
             kwargs["path"] = str(kwargs["path"])
 
@@ -136,6 +136,9 @@ def fire_wrapper(
 
 
     kwargs["query"] = kwargs["query"].replace("summary", "summarize")
+
+    if "path" in kwargs and kwargs["path"] in ["", None, True, False]:
+        del kwargs["path"]
 
     return kwargs
 
