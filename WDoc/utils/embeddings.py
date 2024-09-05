@@ -79,6 +79,12 @@ def score_function(distance: float) -> float:
 
     Related issue: https://github.com/langchain-ai/langchain/issues/17333
     """
+    if distance < 0:
+        red(f"Distance was under 0: {distance}")
+        distance = 0
+    elif distance > 1:
+        red(f"Distance was above 1: {distance}")
+        distance = 1
     assert distance >= 0 and distance <= 1, f"Invalid distance value: {distance}"
     return (1 - distance) ** 2
 
