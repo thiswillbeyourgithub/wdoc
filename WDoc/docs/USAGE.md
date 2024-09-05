@@ -590,3 +590,7 @@
 
 * `WDOC_EMPTY_LOADER`
     * If True, loading any kind of document will return an empty string. Used for debugging.
+
+* `WDOC_BEHAVIOR_EXCL_INCL_USELESS`
+    * If an "include" or "exclude" key is found in a loader but does not actually change anything, if "warn" then just print in red but
+    if "crash" then raise an error. Default is 'warn'.

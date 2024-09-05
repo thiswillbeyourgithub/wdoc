@@ -30,7 +30,9 @@ from .typechecker import optional_typecheck
 from .logger import red, whi, logger
 from .loaders import load_one_doc_wrapped, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
 from .flags import is_debug, is_verbose
-from .env import WDOC_MAX_LOADER_TIMEOUT
+from .env import WDOC_MAX_LOADER_TIMEOUT, WDOC_BEHAVIOR_EXCL_INCL_USELESS
+
+assert WDOC_BEHAVIOR_EXCL_INCL_USELESS in ["warn", "crash"], "Unexpected value of WDOC_BEHAVIOR_EXCL_INCL_USELESS"
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -469,7 +471,12 @@ def parse_recursive_paths(
                 include[iinc] = inc
         ndoclist = len(doclist)
         doclist = [d for d in doclist if any(inc.search(d) for inc in include)]
-        assert len(doclist) < ndoclist, f"Include rules were useless and didn't filter out anything.\nInclude rules: '{include}'"
+        if not len(doclist) < ndoclist:
+            mess = f"Include rules were useless and didn't filter out anything.\nInclude rules: '{include}'"
+            if WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
+                red(mess)
+            elif WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
+                raise Exception(red(mess))
 
     if exclude:
         for iexc, exc in enumerate(exclude):
@@ -481,7 +488,12 @@ def parse_recursive_paths(
                 exclude[iexc] = exc
             ndoclist = len(doclist)
             doclist = [d for d in doclist if not exc.search(d)]
-            assert len(doclist) < ndoclist, f"Exclude rule '{exc}' was useless and didn't filter out anything.\nExclude rules: '{exclude}'"
+            if not len(doclist) < ndoclist:
+                mess = f"Exclude rule '{exc}' was useless and didn't filter out anything.\nExclude rules: '{exclude}'"
+                if WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
+                    red(mess)
+                elif WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
+                    raise Exception(red(mess))
 
     for i, d in enumerate(doclist):
         doc_kwargs = cli_kwargs.copy()

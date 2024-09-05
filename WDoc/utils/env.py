@@ -23,6 +23,7 @@ WDOC_PRIVATE_MODE = False
 WDOC_DEBUGGER = False
 WDOC_EXPIRE_CACHE_DAYS = 0
 WDOC_EMPTY_LOADER = False
+WDOC_BEHAVIOR_EXCL_INCL_USELESS = "warn"
 
 for k in os.environ.keys():
     if not k.startswith("WDOC_"):
