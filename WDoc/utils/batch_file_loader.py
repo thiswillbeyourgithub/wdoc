@@ -450,7 +450,7 @@ def parse_recursive_paths(
     if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
         logger.info(r"File was not found so replaced '\ ' by ' '")
         path = path.replace(r"\ ", " ")
-    assert Path(path).exists, f"not found: {path}"
+    assert Path(path).exists(), f"not found: {path}"
     doclist = [p for p in Path(path).rglob(pattern)]
     assert doclist, f"No document found by pattern {pattern}"
     doclist = [str(p).strip() for p in doclist if p.is_file()]
