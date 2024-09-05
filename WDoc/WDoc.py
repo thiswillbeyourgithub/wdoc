@@ -1734,6 +1734,7 @@ class WDoc:
                     output["relevant_intermediate_answers"].append(a)
 
             # display sources (i.e. documents used to answer)
+            md_printer("---")
             if not output["relevant_intermediate_answers"]:
                 md_printer(
                     "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.", color="red")
@@ -1759,6 +1760,7 @@ class WDoc:
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
             fa = source_replace(fa)
+            md_printer("---")
             md_printer(indent(f"# Answer:\n{fa}\n", "> "))
 
             # print the breakdown of documents used and chain time
