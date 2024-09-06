@@ -5,6 +5,7 @@ Default file, used as entry point.
 import sys
 import fire
 import json
+import copy
 
 import lazy_import
 from queue import Queue
@@ -144,7 +145,7 @@ def fire_wrapper(
 
 
 def cli_launcher() -> None:
-    sys_args = sys.argv
+    sys_args = copy.deepcopy(sys.argv)
     if "--version" in sys_args:
         print(f"WDoc version: {__VERSION__}")
         raise SystemExit()
@@ -159,7 +160,7 @@ def cli_launcher() -> None:
     instance = WDoc(**kwargs)
 
 def cli_parse_file() -> None:
-    sys_args = sys.argv
+    sys_args = copy.deepcopy(sys.argv)
     if "--help" in sys_args:
         print("Showing help")
         fire.Fire(WDoc.parse_file)
