@@ -865,13 +865,16 @@ def load_anki(
     cards["nmodel"] = cards["nmodel"].progress_apply(lambda x: x.lower())
     if anki_notetype:
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
+        assert not cards.empty, f"No cards found after filtering by notetype {anki_notetype}"
     if anki_tag_filter:
+        pbar(desc="Filtering by tags")
         cards = cards[
-            cards["ntags"].apply(
-                lambda tag_list: any(anki_tag_filter.match(t) for t in tag_list),
+            cards.progress_apply(
+                (lambda x: any(anki_tag_filter.match(t) for t in x["ntags"])),
                 axis=1
             )
         ]
+        assert not cards.empty, f"No cards found after filtering by tags: {anki_tag_filter}"
 
     # remove suspended
     cards = cards[cards["cqueue"] != "suspended"]
