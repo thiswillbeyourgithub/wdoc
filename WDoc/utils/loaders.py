@@ -817,7 +817,10 @@ def load_anki(
 ) -> List[Document]:
     if anki_tag_render_filter:
         assert "{tags}" in anki_template, "Can't use anki_tag_render_filter without using {tags} in anki_template"
-        anki_tag_render_filter = re.compile(anki_tag_render_filter)
+        try:
+            anki_tag_render_filter = re.compile(anki_tag_render_filter)
+        except Exception as err:
+            raise Exception(f"Failed to compile anki_tag_render_filter: '{err}'")
 
     if not anki_profile:
         original_db = akp.find_db()
