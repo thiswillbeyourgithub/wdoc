@@ -420,6 +420,7 @@ def get_tkn_length(
     tosplit: str,
     modelname: str = "gpt-3.5-turbo",
     ) -> int:
+    modelname = modelname.replace("openrouter/", "")
     return litellm.token_counter(model=modelname, text=tosplit)
 
 @optional_typecheck
