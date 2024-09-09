@@ -813,6 +813,7 @@ def load_anki(
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
     anki_template: Optional[str] = "{allfields}\n{image_ocr_alt}",
+    anki_tag_filter: Optional[str] = None,
     anki_tag_render_filter: Optional[str] = None,
 ) -> List[Document]:
     if anki_tag_render_filter:
@@ -821,6 +822,12 @@ def load_anki(
             anki_tag_render_filter = re.compile(anki_tag_render_filter)
         except Exception as err:
             raise Exception(f"Failed to compile anki_tag_render_filter: '{err}'")
+
+    if anki_tag_filter:
+        try:
+            anki_tag_filter = re.compile(anki_tag_filter)
+        except Exception as err:
+            raise Exception(f"Failed to compile anki_tag_filter: '{err}'")
 
     if not anki_profile:
         original_db = akp.find_db()
@@ -858,6 +865,13 @@ def load_anki(
     cards["nmodel"] = cards["nmodel"].progress_apply(lambda x: x.lower())
     if anki_notetype:
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
+    if anki_tag_filter:
+        cards = cards[
+            cards["ntags"].apply(
+                lambda tag_list: any(anki_tag_filter.match(t) for t in tag_list),
+                axis=1
+            )
+        ]
 
     # remove suspended
     cards = cards[cards["cqueue"] != "suspended"]

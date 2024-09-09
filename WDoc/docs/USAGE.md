@@ -50,6 +50,7 @@
                 * `--anki_deck`
                 * `--anki_notetype`
                 * `--anki_template`
+                * `--anki_tag_filter`
                 * `--anki_tag_render_filter`
 
         * `string`: no parameters needed, will provide a field where
@@ -386,6 +387,10 @@
     * '{image_ocr_alt}' if present will be replaced by any text present
     in the 'title' or 'alt' field of an html image. This is isually OCR
     so can be useful for the LLM.
+
+* `--anki_tag_filter`: str
+    Only keep the cards that have tags matchign this regex.
+
 * `--anki_tag_render_filter`: str
     Only the tags that match this regex will be put in the template.
     Careful, this does not mean "only keep cards that have tags matching
