@@ -982,8 +982,9 @@ def load_anki(
         if medias:
             assert text != new_text
         if useimageocr:
-            for img in [k for k in medias.keys() if "IMAGE" in k]:
-                img = bs4.BeautifulSoup(medias[k], 'html.parser')
+            image_keys = [k for k in medias.keys() if "IMAGE" in k]
+            for img_k in image_keys:
+                img = bs4.BeautifulSoup(medias[img_k], 'html.parser')
                 title = img.get('title').strip() if img.has_attr('title') else ""
                 alt = img.get('alt').strip() if img.has_attr('alt') else ""
                 ocr_alt = ""
