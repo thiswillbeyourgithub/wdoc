@@ -1102,6 +1102,9 @@ def replace_media(
 
     if mode == "remove_media":
         assert not media
+        images = []
+        sounds = []
+        links = []
 
         if replace_links:
             # fix links common issues
@@ -1118,21 +1121,35 @@ def replace_media(
                 red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
             images = [str(img) for img in images_bs4]
             assert images, f"no image found but should have. Text is '{content}'"
-            assert all(img in content for img in images)
-            assert all(re.search(REG_IMG, img) for img in images)
-            assert not any(re.search(REG_SOUNDS, img) for img in images)
-        else:
-            images = []
+            for iimg, img in enumerate(images):
+                try:
+                    assert img in content, f"missing img from content:\nimg: {img}\ncontent: {content}"
+                    assert re.search(REG_IMG, img), f"Regex couldn't identify img: {img}"
+                    assert not re.search(REG_SOUNDS, img), f"Sound regex identifier img: {img}"
+                except AssertionError as err:
+                    if strict:
+                        raise
+                    else:
+                        red(err)
+                    images[iimg] = None
+            images = [i for i in images if i is not None]
 
         # Sounds
         if replace_sounds and "[sounds:" in content:
             sounds = re.findall(REG_SOUNDS, content)
             assert sounds, f"No sounds found but should have. Content: {content}"
-            assert all(sound in content for sound in sounds)
-            assert not any(re.search(REG_IMG, sound) for sound in sounds)
-            assert all(re.search(REG_SOUNDS, sound) for sound in sounds)
-        else:
-            sounds = []
+            for isound, sound in enumerate(sounds):
+                try:
+                    assert sound in content, f"Sound is not in content: {sound}"
+                    assert not re.search(REG_IMG, sound), f"Image regex identified this sound: {sound}"
+                    assert re.search(REG_SOUNDS, sound), f"Regex didn't identify this sound: {sound}"
+                except AssertionError as err:
+                    if strict:
+                        raise
+                    else:
+                        red(err)
+                    sounds[isound] = None
+            sounds = [s for s in sounds if s is not None]
 
         # links
         if replace_links and "://" in content:
@@ -1148,14 +1165,18 @@ def replace_media(
                 )
             ]
             if strict:
-                assert links
-            elif not links:
-                red(
-                    f"AnkiMediaReplacer: Expected to found linke because '://' in '{content}'")
-            assert all(link in content for link in links)
-            assert all(re.search(REG_LINKS, link) for link in links)
-        else:
-            links = []
+                assert links, "No links found"
+            for ilink, link in enumerate(links):
+                try:
+                    assert link in content, f"Link not in content:\nlink: {link}\ncontent: {content}"
+                    assert re.search(REG_LINKS, link), f"Regex couldn't identify link: {link}"
+                except AssertionError as err:
+                    if strict:
+                        raise
+                    else:
+                        red(err)
+                    links[ilink] = None
+            links = [li for li in links if li is not None]
 
         if not images + sounds + links:
             return content, {}
