@@ -96,7 +96,7 @@ filetype_arg_types = {
     "anki_notetype": str,
     "anki_profile": str,
     "anki_template": str,
-    "anki_tag_filter": str,
+    "anki_tag_render_filter": str,
 
     "json_dict_template": str,
     "json_dict_exclude_keys": List,

@@ -813,11 +813,11 @@ def load_anki(
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
     anki_template: Optional[str] = "{allfields}\n{image_ocr_alt}",
-    anki_tag_filter: Optional[str] = None,
+    anki_tag_render_filter: Optional[str] = None,
 ) -> List[Document]:
-    if anki_tag_filter:
-        assert "{tags}" in anki_template, "Can't use anki_tag_filter without using {tags} in anki_template"
-        anki_tag_filter = re.compile(anki_tag_filter)
+    if anki_tag_render_filter:
+        assert "{tags}" in anki_template, "Can't use anki_tag_render_filter without using {tags} in anki_template"
+        anki_tag_render_filter = re.compile(anki_tag_render_filter)
 
     if not anki_profile:
         original_db = akp.find_db()
@@ -915,7 +915,7 @@ def load_anki(
                 f"{t}"
                 for t in x["ntags"]
                 if (
-                    anki_tag_filter is None or anki_tag_filter.match(t)
+                    anki_tag_render_filter is None or anki_tag_render_filter.match(t)
                 )
             ]).strip() + "\n'''") if x["ntags"] else "",
             axis=1,
