@@ -25,6 +25,7 @@ import json
 import dill
 import httpx
 import magic
+import warnings
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
@@ -1115,6 +1116,9 @@ def replace_media(
 
     It uses both bs4 and regex to be sure of itself
     """
+    # ignore warnings from beautiful soup that can happen because anki is not exactly html
+    warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
+
     assert mode in ["add_media", "remove_media"]
     assert content.strip()
     if media is None:
@@ -1288,10 +1292,6 @@ def replace_media(
         for med, val in media.items():
             temp = temp.replace(med, "")
         assert temp.strip()
-
-        # ignore warnings from beautiful soup that can happen because anki is not exactly html
-        import warnings
-        warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
         # recursive check:
         assert replace_media(
