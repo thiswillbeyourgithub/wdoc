@@ -327,15 +327,15 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
-    soup = bs4.BeautifulSoup(html, 'html.parser')
-    text = soup.get_text()
+    if remove_image:
+        soup = bs4.BeautifulSoup(html, 'html.parser')
+        text = soup.get_text()
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")
-    if remove_image:
+    if remove_image and "<img" in text:
+        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
         if "<img" in text:
-            text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
-            if "<img" in text:
-                red("Failed to remove <img from anki card")
+            red("Failed to remove <img from anki card")
     return text
 
 
