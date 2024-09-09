@@ -933,22 +933,17 @@ def load_anki(
         usetags = True
         pbar(desc="Formatting tags")
         notes["tags_formatted"] = notes.progress_apply(
-            lambda x: ("Anki tags:\n'''\n" +  "\n".join([
-                f"{t}"
+            lambda x: ("<anki_tags>\n" +  "\n".join([
+                t
                 for t in x["ntags"]
                 if (
                     anki_tag_render_filter is None or anki_tag_render_filter.match(t)
                 )
-            ]).strip() + "\n'''") if x["ntags"] else "",
+            ]).strip() + "\n</anki_tags>") if x["ntags"] else "<anki_tags>\n</anki_tags>",
             axis=1,
         )
         if notes["ntags"].notnull().any():
             assert notes["tags_formatted"].notnull().any(), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
-        # remove the tags formatting if it didn't match anything
-        notes["tags_formatted"] = notes["tags_formatted"].str.replace(
-            "Anki tags:\n'''\n\n'''",
-            "",
-        )
     else:
         usetags = False
 
