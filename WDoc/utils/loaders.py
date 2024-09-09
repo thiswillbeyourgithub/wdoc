@@ -1050,7 +1050,7 @@ def load_anki(
             Document(
                 page_content=c["text"],
                 metadata={
-                    "anki_tags": " ; ".join(ntags),
+                    "anki_tags": " ".join(ntags),
                     "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
