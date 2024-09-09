@@ -327,15 +327,19 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
-    if remove_image:
-        soup = bs4.BeautifulSoup(html, 'html.parser')
-        text = soup.get_text()
+
+    soup = bs4.BeautifulSoup(html, 'html.parser')
+    content = []
+    for element in soup.descendants:
+        if element.name == 'img':
+            content.append(f"[Image: {element.get('alt', 'No alt text')}]")
+        elif isinstance(element, bs4.NavigableString) and (not remove_image):
+            content.append(str(element).strip())
+    text = ' '.join(filter(None, content))
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")
-    if remove_image and "<img" in text:
-        text = re.sub("<img src=.*?>", "[IMAGE]", text, flags=re.M | re.DOTALL)
-        if "<img" in text:
-            red("Failed to remove <img from anki card")
+    if "<img" in text and remove_image:
+        red(f"Failed to remove <img from anki card: {text}")
     return text
 
 
