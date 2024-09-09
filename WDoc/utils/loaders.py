@@ -1020,7 +1020,9 @@ def load_anki(
             assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
         # better formatting for tags
         ntags = [
-                nt.replace("_", " ").replace("-", " ").replace("::", " > ")
+                nt
+                # bettter for the tokenizer I guess
+                # nt.replace("_", " ").replace("-", " ").replace("::", " > ")
                 for nt in c["ntags"]
         ]
         docs.append(
