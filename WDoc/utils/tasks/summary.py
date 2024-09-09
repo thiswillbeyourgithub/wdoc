@@ -5,6 +5,7 @@ Chain (logic) used to summarize a document.
 from textwrap import indent
 from tqdm import tqdm
 from typing import List, Any, Union, Tuple
+from pathlib import Path
 
 from langchain.docstore.document import Document
 
@@ -12,6 +13,8 @@ from ..prompts import BASE_SUMMARY_PROMPT, RECURSION_INSTRUCTION, PREV_SUMMARY_T
 from ..logger import whi, red
 from ..typechecker import optional_typecheck
 from ..misc import thinking_answer_parser
+
+HOME = str(Path.home())
 
 @optional_typecheck
 def do_summarize(
@@ -32,6 +35,8 @@ def do_summarize(
 
     total_tokens = [0, 0]
     total_cost = 0
+
+    metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
 
     assert "[PROGRESS]" in metadata
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
