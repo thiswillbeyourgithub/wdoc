@@ -95,6 +95,7 @@ except Exception as err:
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
+STR_IMAGE_OCR = "{image_ocr_alt}"
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
@@ -813,7 +814,7 @@ def load_anki(
     anki_profile: Optional[str] = None,
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
-    anki_template: Optional[str] = "{allfields}\n{image_ocr_alt}",
+    anki_template: Optional[str] = "{allfields}\n" + STR_IMAGE_OCR,
     anki_tag_filter: Optional[str] = None,
     anki_tag_render_filter: Optional[str] = None,
 ) -> List[Document]:
@@ -901,7 +902,7 @@ def load_anki(
     assert placeholders, f"No placeholder found in anki_template '{anki_template}'"
     for ph in placeholders:
         for ic, c in notes.iterrows():
-            if ph not in c["fields_name"] + ["allfields", "tags", "image_ocr_alt"]:
+            if ph not in c["fields_name"] + ["allfields", "tags", STR_IMAGE_OCR[1:-1]]:
                 raise Exception(
                     "A placeholder in anki template didn't match fields of "
                     f"a card.\nCulprit placeholder: {ph}\nTemplate: "
@@ -923,7 +924,7 @@ def load_anki(
     else:
         useallfields = False
 
-    if "{image_ocr_alt}" in anki_template:
+    if STR_IMAGE_OCR in anki_template:
         useimageocr = True
     else:
         useimageocr = False
@@ -962,7 +963,7 @@ def load_anki(
             text = text.replace("{tags}", row["tags_formatted"])
 
         for ph in placeholders:
-            if ph == "tags" or ph == "allfields" or ph == "image_ocr_alt":
+            if ph == "tags" or ph == "allfields" or ph == STR_IMAGE_OCR[1:-1]:
                 continue
             field_val = row["nflds"][row["fields_name"].index(ph)]
             text = text.replace(
@@ -996,10 +997,10 @@ def load_anki(
                 ocr_alt = ocr_alt.strip()
                 if ocr_alt:
                     text = text.replace(
-                            "{image_ocr_alt}",
-                            f"\n<OCR of '{k}'>\n{ocr_alt}\n</OCR of '{k}'>" + "{image_ocr_alt}"
+                            STR_IMAGE_OCR,
+                            f"\n<OCR of '{k}'>\n{ocr_alt}\n</OCR of '{k}'>" + STR_IMAGE_OCR
                     )
-            text = text.replace("{image_ocr_alt}", "").strip()
+            text = text.replace(STR_IMAGE_OCR, "").strip()
 
         return text, medias
 
