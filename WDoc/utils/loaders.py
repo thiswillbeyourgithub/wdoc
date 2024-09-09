@@ -1032,9 +1032,12 @@ def load_anki(
         medias = c["medias"]
         for k, v in medias.items():
             try:
-                v = Path(original_db).parent / "collection.media" / v
+                src = bs4.BeautifulSoup(v, 'html.parser').find("img")["src"]
+                assert src
+                v = Path(original_db).parent / "collection.media" / src
+                v = v.resolve()
                 if v.exists():
-                    medias[k] = v
+                    medias[k] = str(v.absolute())
             except Exception:
                 # it was probably not a file
                 continue
