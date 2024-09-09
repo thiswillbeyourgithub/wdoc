@@ -1079,7 +1079,7 @@ def load_anki(
 
 
 REG_IMG = re.compile(
-    r'<img src="[^"]+"(?:[^>]*?)?>',
+    r'<img src=["\'][^"]+["\'](?:[^>]*?)?>',
     flags=re.MULTILINE | re.DOTALL)
 
 REG_SOUNDS = re.compile(
@@ -1142,6 +1142,11 @@ def replace_media(
         if replace_image and "<img" in content:
             soup = bs4.BeautifulSoup(content, 'html.parser')
             images_bs4 = [str(img) for img in soup.find_all('img')]
+            # fix bs4 parsing as ending with /> instead of >
+            images_bs4 = [
+                img[:-2] + ">" if ((img not in content) and img[:-2] + ">" in content) else img
+                for img in images_bs4
+            ]
             images_reg = re.findall(REG_IMG, content)
             if len(images_bs4) != len(images_reg):
                 red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
