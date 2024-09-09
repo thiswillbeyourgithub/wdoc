@@ -66,8 +66,9 @@ def get_coloured_logger(color_asked: str) -> Callable:
     # all logs are considered "errors" otherwise the datascience libs just
     # overwhelm the logs
     @optional_typecheck
-    def printer(string: Union[str, Dict, List], **args) -> str:
-        inp = string
+    def printer(string: Union[str, Dict, List, Exception], **args) -> str:
+        if isinstance(string, Exception):
+            string = str(string)
         if isinstance(string, dict):
             try:
                 string = rtoml.dumps(string, pretty=True)
