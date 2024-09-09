@@ -1030,18 +1030,30 @@ def load_anki(
         assert c["codeck"], f"empty card_deck for nid {nid}"
         # turn the media into absolute paths
         medias = c["medias"]
+        to_add = {}
         for k, v in medias.items():
+            assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
             try:
                 src = bs4.BeautifulSoup(v, 'html.parser').find("img")["src"]
                 assert src
                 v = Path(original_db).parent / "collection.media" / src
                 v = v.resolve()
                 if v.exists():
-                    medias[k] = str(v.absolute())
+                    if k in c["text"]:
+                        h = file_hasher({"path": str(v.absolute())})[:6]
+                        placeholder = f"IMAGE_{h}"
+                        medias[k] = None
+                        to_add[placeholder] = str(v.absolute())
+                        c["text"] = c["text"].replace(k, placeholder)
+                    else:
+                        medias[k] = str(v.absolute())
             except Exception:
                 # it was probably not a file
                 continue
-            assert k in c["text"], f"missing media '{k}' in text '{c['text']}' of card '{c}'"
+        medias = {k: v for k, v in medias.items() if v is not None}
+        if to_add:
+            medias.update(to_add)
+            assert all(k in c["text"] for k in to_add.keys())
         # better formatting for tags
         ntags = [
                 nt
