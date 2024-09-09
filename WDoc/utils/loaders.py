@@ -1119,7 +1119,12 @@ def replace_media(
             images_reg = re.findall(REG_IMG, content)
             if len(images_bs4) != len(images_reg):
                 red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
-            images = [str(img) for img in images_bs4]
+                if images_bs4 and not images_reg:
+                    images = [str(img) for img in images_bs4]
+                elif (not images_bs4) and images_reg:
+                    images = [str(img) for img in images_reg]
+            else:
+                images = [str(img) for img in images_bs4]
             assert images, f"no image found but should have. Text is '{content}'"
             for iimg, img in enumerate(images):
                 try:
