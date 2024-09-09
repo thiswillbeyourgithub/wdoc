@@ -997,7 +997,7 @@ def load_anki(
                 if ocr_alt:
                     text = text.replace(
                             "{image_ocr_alt}",
-                            f"\n----\nOCR or alt text of {k}:\n{ocr_alt}\n''''\n" + "{image_ocr_alt}"
+                            f"\n<OCR of '{k}'>\n{ocr_alt}\n</OCR of '{k}'>" + "{image_ocr_alt}"
                     )
             text = text.replace("{image_ocr_alt}", "").strip()
 
