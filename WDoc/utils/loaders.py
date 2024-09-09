@@ -966,19 +966,21 @@ def load_anki(
                 html_to_text(
                     cloze_stripper(
                         field_val
-                    )
+                    ),
                 )
             )
         text = text.replace("\\n", "\n").replace("\\xa0", " ")
 
         # replace media
-        text, medias = replace_media(
+        new_text, medias = replace_media(
             content=text,
             media=None,
             mode="remove_media",
             strict=False,
             replace_links=False,
         )
+        if medias:
+            assert text != new_text
         if useimageocr:
             for img in [k for k in medias.keys() if "IMAGE" in k]:
                 img = bs4.BeautifulSoup(medias[k], 'html.parser')
