@@ -981,6 +981,7 @@ def load_anki(
         )
         if medias:
             assert text != new_text
+        text = new_text
         if useimageocr:
             image_keys = [k for k in medias.keys() if "IMAGE" in k]
             for img_k in image_keys:
