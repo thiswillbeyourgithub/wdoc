@@ -331,9 +331,15 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     soup = bs4.BeautifulSoup(html, 'html.parser')
     content = []
     for element in soup.descendants:
-        if element.name == 'img':
-            content.append(f"[Image: {element.get('alt', 'No alt text')}]")
-        elif isinstance(element, bs4.NavigableString) and (not remove_image):
+        if element.name == 'img' and (not remove_image):
+            element = str(element)
+            if element in html:
+                content.append(element)
+            elif element[:-2] + ">" in html:
+                content.append(element[:-2] + ">")
+            else:
+                raise Exception(f"Image not properly parsed from bs4:\n{element}\n{text}")
+        elif isinstance(element, bs4.NavigableString):
             content.append(str(element).strip())
     text = ' '.join(filter(None, content))
     while "\n\n" in text:
