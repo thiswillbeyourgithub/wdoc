@@ -544,7 +544,7 @@ def load_one_doc(
         if "doc_reading_time" not in docs[i].metadata:
             reading_length = len(docs[i].page_content) / \
                 average_word_length / wpm
-            docs[i].metadata["doc_reading_time"] = reading_length
+            docs[i].metadata["doc_reading_time"] = round(reading_length, 3)
         if "source" not in docs[i].metadata:
             if "path" in docs[i].metadata:
                 docs[i].metadata["source"] = docs[i].metadata["path"]
