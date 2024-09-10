@@ -93,7 +93,7 @@ class WDoc:
         # modelname: str = "mistral/mistral-large-latest",
 
         embed_model: str = "openai/text-embedding-3-small",
-        # embed_model: str =  "sentencetransformers/BAAI/bge-m3",
+        # embed_model: str =  "sentencetransformers/jinaai/jina-colbert-v2",
         # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
         # embed_model: str =  "sentencetransformers/distiluse-base-multilingual-cased-v1",
         # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
