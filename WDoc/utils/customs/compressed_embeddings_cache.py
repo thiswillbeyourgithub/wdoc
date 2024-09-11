@@ -95,7 +95,7 @@ class LocalFileStore(ByteStore):
             Path: The full path for the given key.
         """
         if not re.match(r"^[a-zA-Z0-9_.\-/]+$", key):
-            raise InvalidKeyException(f"Invalid characters in key: {key}")
+            raise InvalidKeyException(f"Invalid characters in key (the key should be a hash): {key}")
         full_path = os.path.abspath(self.root_path / key)
         common_path = os.path.commonpath([str(self.root_path), full_path])
         if common_path != str(self.root_path):
