@@ -325,16 +325,18 @@ def load_one_doc_wrapped(
         filetype = doc_kwargs["filetype"]
         exc_type, exc_obj, exc_tb = sys.exc_info()
         formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
-        red(f"Error when loading doc with filetype {filetype}: '{err}'. "
+        mess = (f"Error when loading doc with filetype {filetype}: '{err}'. "
             f"Arguments: {doc_kwargs}"
             f"\nLine number: {exc_tb.tb_lineno}"
             f"\nFull traceback:\n{formatted_tb}")
         if loading_failure == "crash":
-            raise
+            raise Exception(red(mess)) from err
         elif loading_failure == "warn" or is_debug:
+            red(mess)
             return str(err)
         else:
-            raise ValueError(loading_failure)
+            red(mess)
+            raise ValueError(loading_failure) from err
 
 @optional_typecheck
 def load_one_doc(
