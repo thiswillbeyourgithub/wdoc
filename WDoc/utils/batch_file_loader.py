@@ -332,11 +332,11 @@ def batch_load_doc(
         temp_dir=temp_dir,
         **d,
     ) for d in tqdm(
-        to_load,
-        desc="Loading",
-        unit="doc",
-        colour="magenta",
-    )
+            to_load,
+            desc="Loading",
+            unit="doc",
+            colour="magenta",
+        )
     )
 
     # erases content that links to the loaders temporary files at startup
