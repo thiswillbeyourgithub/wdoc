@@ -530,15 +530,17 @@ def check_docs_tkn_length(
             return 1.0
         prob = sum(probs) / len(probs)
         if prob <= min_lang_prob:
-            red(
-                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
-            )
             raise Exception(
-                f"Low language probability for {identifier}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
+                red(
+                    f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+                )
             )
     except Exception as err:
-        red(f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document.")
-        return 1.0
+        if str(err).startswith("Low language probability"):
+            raise
+        else:
+            red(f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document.")
+            return 1.0
     return prob
 
 
