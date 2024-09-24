@@ -194,13 +194,13 @@ pdf_loaders = {
     "PyMuPDF": PyMuPDFLoader,  # good for metadata
     "PdfPlumber": PDFPlumberLoader,  # good for metadata
     "pdftotext": None,  # optional support, see below
-    "Unstructured_fast": partial(
-        UnstructuredPDFLoader,
-        strategy="fast",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    # "Unstructured_fast": partial(
+    #     UnstructuredPDFLoader,
+    #     strategy="fast",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
     # "Unstructured_elements_fast": partial(
     #     UnstructuredPDFLoader,
     #     mode="elements",
@@ -209,13 +209,13 @@ pdf_loaders = {
     #     # infer_table_structure=True,
     #     # languages=["fr"],
     # ),
-    "Unstructured_hires": partial(
-        UnstructuredPDFLoader,
-        strategy="hi_res",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
-    ),
+    # "Unstructured_hires": partial(
+    #     UnstructuredPDFLoader,
+    #     strategy="hi_res",
+    #     # post_processors=[clean_extra_whitespace],
+    #     # infer_table_structure=True,
+    #     # languages=["fr"],
+    # ),
     # "Unstructured_elements_hires": partial(
     #     UnstructuredPDFLoader,
     #     mode="elements",
