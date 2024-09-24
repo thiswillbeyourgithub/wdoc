@@ -20,7 +20,7 @@ class PostInstallCommand(install):
         try:
             subprocess.check_call(
                 [sys.executable, '-m', 'pip', 'install',
-                    '-U", "git+https://github.com/ytdl-org/youtube-dl.git'],
+                    '-U', 'git+https://github.com/ytdl-org/youtube-dl.git'],
             )
         except Exception as err:
             print(f"Error when pip updating youtube_dl: '{err}'")
