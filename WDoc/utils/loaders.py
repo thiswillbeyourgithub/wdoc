@@ -145,12 +145,14 @@ class OpenparseDocumentParser:
 
         base_metadata = self.parsed.dict()
         nodes = base_metadata["nodes"]
+        assert nodes, f"No nodes found"
         del base_metadata["nodes"]
 
         docs = []
         for node in nodes:
             meta = base_metadata.copy()
             meta.update(node)
+            assert meta["bbox"], "No bbox found"
             meta["page"] = meta["bbox"][0]["page"]
             text = meta["text"]
             del meta["text"], meta["bbox"], meta["node_id"], meta["tokens"]
