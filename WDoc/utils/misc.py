@@ -41,7 +41,7 @@ try:
 
     @optional_typecheck
     def language_detector(text: str) -> float:
-        return ftlangdetect.detect(text)["score"]
+        return ftlangdetect.detect(text.lower())["score"]
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
     red(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
@@ -53,7 +53,7 @@ except Exception as err:
 
         @optional_typecheck
         def language_detector(text: str) -> float:
-            return langdetect.detect_langs(text)[0].prob
+            return langdetect.detect_langs(text.lower())[0].prob
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
         red(f"Couldn't import optional package 'langdetect': '{err}'")
@@ -522,7 +522,7 @@ def check_docs_tkn_length(
     # check if language check is above a threshold and cast as lowercase as it's apparently what it was trained on
     try:
         probs = [
-            language_detector(d.page_content.replace("\n", "<br>").lower())
+            language_detector(d.page_content.replace("\n", "<br>"))
             for d in docs
         ]
         if probs[0] is None or not probs:
