@@ -1567,11 +1567,11 @@ def load_logseq_markdown(
             failed_blocks.append(b)
 
     if failed_blocks:
-        mess = f"Couldn't find {len(failed_blocks)} blocks after splitting the document"
+        mess = f"Couldn't find {len(failed_blocks)} block(s) out of {len(blocks)} after splitting the logseq page."
         if len(failed_blocks) >= 0.5 * len(blocks):
             raise Exception(mess)
         else:
-            red(mess)
+            red(mess + " But continuing nonetheless")
 
     # sort and deduplicate metadata
     for i, d in enumerate(docs):
