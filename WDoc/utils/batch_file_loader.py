@@ -17,7 +17,7 @@ import time
 from typing import List, Tuple, Union, Optional
 import random
 import magic
-import multiprocessing.context as TimeoutError as MultiprocessTimeoutError
+from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
