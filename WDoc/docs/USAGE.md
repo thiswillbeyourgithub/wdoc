@@ -297,7 +297,7 @@
     The number of jobs can be specified with `file_loader_n_jobs`
     but it's a loader specific kwargs.
 
-* `--file_loader_n_jobs`: int, default `10`
+* `--file_loader_n_jobs`: int, default `4`
     * number of threads to use when loading files. Set to 1 to disable
     multithreading (as it can result in out of memory error if
     using threads and overly recursive calls). Automatically set to 1 if
