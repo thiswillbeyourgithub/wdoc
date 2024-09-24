@@ -2235,7 +2235,15 @@ def load_pdf(
             pbar.update(1)
 
             for i, d in enumerate(docs):
-                docs[i].page_content = ftfy.fix_text(d.page_content)
+                try:
+                    pc = ftfy.fix_text(d.page_content)
+                    docs[i].page_content = pc
+                    # stupid pydantic error
+                except Exception as err:
+                    if "'dict' object has no attribute 'add'" in str(err):
+                        pass
+                    else:
+                        raise
                 if "pdf_loader_name" not in docs[i].metadata:
                     docs[i].metadata["pdf_loader_name"] = loader_name
 
