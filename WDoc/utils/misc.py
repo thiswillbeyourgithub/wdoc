@@ -38,28 +38,28 @@ loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
 
 try:
     import ftlangdetect
-except Exception as err:
-    if is_verbose:
-        print(
-            f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
-    try:
-        import langdetect
-    except Exception as err:
-        if is_verbose:
-            print(f"Couldn't import optional package 'langdetect': '{err}'")
 
-if "ftlangdetect" in sys.modules:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text)["score"]
-elif "language_detect" in sys.modules:
-    @optional_typecheck
-    def language_detector(text: str) -> float:
-        return langdetect.detect_langs(text)[0].prob
-else:
-    @optional_typecheck
-    def language_detector(text: str) -> None:
-        return None
+    assert isinstance(language_detector("This is a test"), float)
+except Exception as err:
+    red(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+    if "ftlangdetect" in sys.modules:
+        del sys.modules["ftlangdetect"]
+
+    try:
+        import langdetect
+
+        @optional_typecheck
+        def language_detector(text: str) -> float:
+            return langdetect.detect_langs(text)[0].prob
+        assert isinstance(language_detector("This is a test"), float)
+    except Exception as err:
+        red(f"Couldn't import optional package 'langdetect': '{err}'")
+        @optional_typecheck
+        def language_detector(text: str) -> None:
+            return None
 
 doc_loaders_cache_dir = (cache_dir / "doc_loaders")
 doc_loaders_cache_dir.mkdir(exist_ok=True)
