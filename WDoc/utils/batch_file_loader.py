@@ -17,6 +17,7 @@ import time
 from typing import List, Tuple, Union, Optional
 import random
 import magic
+import multiprocessing.context as TimeoutError as MultiprocessTimeoutError
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
@@ -321,23 +322,26 @@ def batch_load_doc(
     t_load = time.time()
     if len(to_load) == 1:
         n_jobs = 1
-    doc_lists = Parallel(
-        n_jobs=n_jobs,
-        backend=backend,
-        verbose=0 if not is_verbose else 51,
-        timeout=loader_max_timeout,
-    )(delayed(load_one_doc_wrapped)(
-        llm_name=llm_name,
-        task=task,
-        temp_dir=temp_dir,
-        **d,
-    ) for d in tqdm(
-            to_load,
-            desc="Loading",
-            unit="doc",
-            colour="magenta",
+    try:
+        doc_lists = Parallel(
+            n_jobs=n_jobs,
+            backend=backend,
+            verbose=0 if not is_verbose else 51,
+            timeout=loader_max_timeout,
+        )(delayed(load_one_doc_wrapped)(
+            llm_name=llm_name,
+            task=task,
+            temp_dir=temp_dir,
+            **d,
+        ) for d in tqdm(
+                to_load,
+                desc="Loading",
+                unit="doc",
+                colour="magenta",
+            )
         )
-    )
+    except MultiprocessTimeoutError as e:
+        raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
     # erases content that links to the loaders temporary files at startup
     loaders_temp_dir_file.write_text("")
