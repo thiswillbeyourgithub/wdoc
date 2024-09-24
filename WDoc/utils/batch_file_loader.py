@@ -314,6 +314,8 @@ def batch_load_doc(
     loaders_temp_dir_file.write_text(str(temp_dir.absolute().resolve()))
 
     loader_max_timeout = WDOC_MAX_LOADER_TIMEOUT
+    if loader_max_timeout <= 0:
+        loader_max_timeout = None
 
     docs = []
     t_load = time.time()
