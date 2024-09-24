@@ -2211,6 +2211,7 @@ def load_pdf(
     # using language detection to keep the parsing with the highest lang
     # probability
     probs = {}
+    passed_errs = []
 
     info = magic.from_file(path)
     if "pdf" not in info.lower():
@@ -2268,9 +2269,15 @@ def load_pdf(
                 # time on running all the others
                 break
         except Exception as err:
-            yel(f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}")
             if "content" not in locals():
                 pbar.update(1)
+            yel(f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}")
+
+            if str(err) in passed_errs:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
+                red(f"The same error happens to multiple pdf loader, something is fishy.\nFull traceback:\n{formatted_tb}")
+            passed_errs.append(str(err))
 
     pbar.close()
     assert probs.keys(), f"No pdf parser succedded to parse {path}"
