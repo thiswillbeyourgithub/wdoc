@@ -5,4 +5,6 @@ __all__ = [
     'loaders',
     'misc',
     'prompts',
+    'tasks',
+    'customs',
 ]
