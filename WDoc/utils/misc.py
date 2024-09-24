@@ -520,21 +520,25 @@ def check_docs_tkn_length(
         return 1.0
 
     # check if language check is above a threshold and cast as lowercase as it's apparently what it was trained on
-    probs = [
-        language_detector(d.page_content.replace("\n", "<br>").lower())
-        for d in docs
-    ]
-    if probs[0] is None or not probs:
-        # bypass if language_detector not defined
+    try:
+        probs = [
+            language_detector(d.page_content.replace("\n", "<br>").lower())
+            for d in docs
+        ]
+        if probs[0] is None or not probs:
+            # bypass if language_detector not defined
+            return 1.0
+        prob = sum(probs) / len(probs)
+        if prob <= min_lang_prob:
+            red(
+                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+            )
+            raise Exception(
+                f"Low language probability for {identifier}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
+            )
+    except Exception as err:
+        red(f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document.")
         return 1.0
-    prob = sum(probs) / len(probs)
-    if prob <= min_lang_prob:
-        red(
-            f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
-        )
-        raise Exception(
-            f"Low language probability for {identifier}: prob={prob:.3f}.\nExample page: {docs[len(docs)//2]}"
-        )
     return prob
 
 
