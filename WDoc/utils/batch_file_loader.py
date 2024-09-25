@@ -318,6 +318,11 @@ def batch_load_doc(
     if loader_max_timeout <= 0:
         loader_max_timeout = None
 
+    sharedmem = True
+    if backend == "loky":
+        sharedmem = None
+        red("Using loky backend so disabling 'sharedmem'")
+
     docs = []
     t_load = time.time()
     if len(to_load) == 1:
@@ -329,6 +334,7 @@ def batch_load_doc(
             verbose=0 if not is_verbose else 51,
             timeout=loader_max_timeout,
             return_as="generator",  # reduce memory footprint
+            require=sharedmem,
         )(delayed(load_one_doc_wrapped)(
                 llm_name=llm_name,
                 task=task,
