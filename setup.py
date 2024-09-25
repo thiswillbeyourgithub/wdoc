@@ -91,7 +91,6 @@ setup(
         'requests>=2.25.1',
         'tqdm>=4.66.4',
         'faiss-cpu>=1.8.0',
-        'llama-cpp-python>=0.2.76',
         'rich>=13.7.1',
         'beartype >= 0.19.0rc2',
         'platformdirs >= 4.2.2',
