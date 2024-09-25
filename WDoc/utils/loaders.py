@@ -2284,7 +2284,7 @@ def load_pdf(
 
             if str(err) in passed_errs and str(err) not in warned_errs and "token" not in str(err):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
-                formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
+                formatted_tb = '\n'.join([str(l).strip() for l in traceback.format_tb(exc_tb)])
                 red(f"The same error happens to multiple pdf loader, something is fishy.\nFull traceback:\n{formatted_tb}")
                 warned_errs.append(str(err))
             passed_errs.append(str(err))
