@@ -543,8 +543,8 @@ def parse_recursive_paths(
         doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = recursed_filetype
-        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         if doc_kwargs["filetype"] not in recursive_types:
             doclist[i] = DocDict(doc_kwargs)
         else:
@@ -573,7 +573,6 @@ def parse_json_entries(
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
         meta["filetype"] = "auto"
-        meta["recur_parent_id"] = recur_parent_id
         meta.update(json.loads(d.strip()))
         for k, v in cli_kwargs.copy().items():
             if k not in meta:
@@ -581,6 +580,7 @@ def parse_json_entries(
         if meta["path"] == path:
             del meta["path"]
         meta.update(extra_args)
+        meta["recur_parent_id"] = recur_parent_id
         if meta["filetype"] not in recursive_types:
             doclist[i] = DocDict(meta)
         else:
@@ -606,7 +606,6 @@ def parse_toml_entries(
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
         meta["filetype"] = "auto"
-        meta["recur_parent_id"] = recur_parent_id
         meta.update(d)
         for k, v in cli_kwargs.items():
             if k not in meta:
@@ -614,6 +613,7 @@ def parse_toml_entries(
         if meta["path"] == path:
             del meta["path"]
         meta.update(extra_args)
+        meta["recur_parent_id"] = recur_parent_id
         if meta["filetype"] not in recursive_types:
             doclist[i] = DocDict(meta)
         else:
@@ -650,8 +650,8 @@ def parse_link_file(
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "auto"
-        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         doclist[i] = DocDict(doc_kwargs)
     return doclist
 
@@ -682,8 +682,8 @@ def parse_youtube_playlist(
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
-        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         doclist[i] = DocDict(doc_kwargs)
 
     assert doclist, f"No video found in youtube playlist: {path}"
