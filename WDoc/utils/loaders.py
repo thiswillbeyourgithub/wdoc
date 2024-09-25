@@ -194,7 +194,7 @@ pdf_loaders = {
     "PyPDFLoader": PyPDFLoader,  # little metadata
     "PyPDFium2": PyPDFium2Loader,  # little metadata
     "pdftotext": None,  # optional support, see below
-    "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
+    # "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
     # "Unstructured_fast": partial(
     #     UnstructuredPDFLoader,
     #     strategy="fast",
