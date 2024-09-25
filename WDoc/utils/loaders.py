@@ -360,6 +360,7 @@ def load_one_doc(
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
     doccheck_max_lines: int = max_lines,
+    recur_parent_id: str = None,  # just used to keep track of which document comes from which recursive filetype
     **kwargs,
 ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,

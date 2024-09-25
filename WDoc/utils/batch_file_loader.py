@@ -8,6 +8,7 @@ is used.
 
 from collections import Counter
 import shutil
+import uuid
 import uuid6
 import re
 import sys
@@ -323,6 +324,15 @@ def batch_load_doc(
         sharedmem = None
         red("Using loky backend so disabling 'sharedmem'")
 
+    # early stopping if all the documents of a recursive filetype failed
+    expected_recur_nb = {}
+    for d in to_load:
+        if d["recur_parent_id"] not in expected_recur_nb:
+            expected_recur_nb[d["recur_parent_id"]] = 1
+        else:
+            expected_recur_nb[d["recur_parent_id"]] += 1
+    found_recur_nb = {k: 0 for k in expected_recur_nb.keys()}
+
     docs = []
     t_load = time.time()
     if len(to_load) == 1:
@@ -348,7 +358,24 @@ def batch_load_doc(
                     colour="magenta",
                 )
         )
-        doc_lists = [d for d in generator_doc_lists]
+        doc_lists = []
+        for idoc, o in enumerate(generator_doc_lists):
+            # detect errors, used for early stopping if all the doc from the same recursive parent failed:
+            if isinstance(o, str):
+                d = to_load[idoc]
+                if "recur_parent_id" in d:
+                    assert d["recur_parent_id"] in expected_recur_nb, expected_recur_nb
+                    found_recur_nb[d["recur_parent_id"]] -= 1
+                    if found_recur_nb[d["recur_parent_id"]] <= 0:
+                        mess = f"All document from a recursive file with parent id {d['recur_parent_id']} failed so crashing."
+                        failed_from_parent = [df for df in to_load if df['recur_parent_id'] == d["recur_parent_id"]]
+                        assert failed_from_parent, d
+                        mess += "\nFailed documents:"
+                        for df in failed_from_parent:
+                            mess += f"\n{df}"
+                        mess += f"\nLatest error was: '{o}'"
+                        raise Exception(mess)
+            doc_lists.append(o)
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
@@ -476,6 +503,7 @@ def parse_recursive_paths(
     doclist = [
         p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
     ]
+    recur_parent_id = str(uuid.uuid4())
 
     if include:
         for iinc, inc in enumerate(include):
@@ -515,6 +543,7 @@ def parse_recursive_paths(
         doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = recursed_filetype
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
         if doc_kwargs["filetype"] not in recursive_types:
             doclist[i] = DocDict(doc_kwargs)
@@ -539,10 +568,12 @@ def parse_json_entries(
         for p in doclist
         if p.strip() and not p.strip().startswith("#")
     ]
+    recur_parent_id = str(uuid.uuid4())
 
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
         meta["filetype"] = "auto"
+        meta["recur_parent_id"] = recur_parent_id
         meta.update(json.loads(d.strip()))
         for k, v in cli_kwargs.copy().items():
             if k not in meta:
@@ -570,10 +601,12 @@ def parse_toml_entries(
     assert all(len(d) == 1 for d in doclist)
     doclist = [d[0] for d in doclist]
     assert all(isinstance(d, dict) for d in doclist)
+    recur_parent_id = str(uuid.uuid4())
 
     for i, d in enumerate(doclist):
         meta = cli_kwargs.copy()
         meta["filetype"] = "auto"
+        meta["recur_parent_id"] = recur_parent_id
         meta.update(d)
         for k, v in cli_kwargs.items():
             if k not in meta:
@@ -610,12 +643,14 @@ def parse_link_file(
         if (matched := markdownlink_regex.search(d).strip())
     ]
 
+    recur_parent_id = str(uuid.uuid4())
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
         doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["subitem_link"] = d
         doc_kwargs["filetype"] = "auto"
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
         doclist[i] = DocDict(doc_kwargs)
     return doclist
@@ -640,12 +675,14 @@ def parse_youtube_playlist(
     doclist = [ent["webpage_url"] for ent in video["entries"]]
     doclist = [li for li in doclist if yt_link_regex.search(li)]
 
+    recur_parent_id = str(uuid.uuid4())
     for i, d in enumerate(doclist):
         assert "http" in d, f"Link does not appear to be a link: '{d}'"
         doc_kwargs = cli_kwargs.copy()
         doc_kwargs["path"] = d
         doc_kwargs["filetype"] = "youtube"
         doc_kwargs["subitem_link"] = d
+        doc_kwargs["recur_parent_id"] = recur_parent_id
         doc_kwargs.update(extra_args)
         doclist[i] = DocDict(doc_kwargs)
 

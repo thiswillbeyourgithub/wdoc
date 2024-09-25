@@ -152,7 +152,7 @@ class DocDict(dict):
     """
     allowed_keys: set = set(
         sorted(
-            ["path", "filetype", "file_hash", "source_tag",
+            ["path", "filetype", "file_hash", "source_tag", "recur_parent_id",
             ] + list(filetype_arg_types.keys())
         )
     )
