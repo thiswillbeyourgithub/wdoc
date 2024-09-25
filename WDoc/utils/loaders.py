@@ -24,7 +24,6 @@ from tqdm import tqdm
 import json
 import dill
 import httpx
-import magic
 import warnings
 
 from langchain_community.document_loaders import PyPDFLoader
@@ -2235,6 +2234,7 @@ def load_pdf(
     warned_errs = []
 
     try:
+        import magic
         info = magic.from_file(path)
     except Exception as err:
         info = red(f"Failed to run python-magic: '{err}'")

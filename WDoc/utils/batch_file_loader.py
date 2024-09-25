@@ -17,7 +17,6 @@ from functools import cache as memoizer
 import time
 from typing import List, Tuple, Union, Optional
 import random
-import magic
 from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
 
 from langchain.docstore.document import Document
@@ -116,6 +115,7 @@ def batch_load_doc(
                         fp = Path(load_kwargs["path"])
                         if fp.exists():
                             try:
+                                import magic
                                 info = magic.from_file(fp).lower()
                             except Exception as err:
                                 raise Exception(f"Failed to run python-magic as a last resort heuristic: '{err}'") from err
