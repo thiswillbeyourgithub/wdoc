@@ -282,7 +282,7 @@ class WDoc:
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
-            os.environ["WDOC_PRIVATEMODE"] = "true"
+            os.environ["WDOC_PRIVATE_MODE"] = "true"
             for k in dict(os.environ):
                 if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
                     red(
@@ -295,7 +295,7 @@ class WDoc:
             )
 
         else:
-            os.environ["WDOC_PRIVATEMODE"] = "false"
+            os.environ["WDOC_PRIVATE_MODE"] = "false"
 
         if (modelname != TESTING_LLM) and (not llms_api_bases["model"]):
             modelname = model_name_matcher(modelname)
