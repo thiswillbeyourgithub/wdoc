@@ -1578,11 +1578,10 @@ def load_logseq_markdown(
             failed_blocks.append(b)
 
     if failed_blocks:
-
         mess = f"Couldn't find {len(failed_blocks)} block(s) out of {len(blocks)} after splitting the logseq page."
-        mess +- "\nBlocks were:"
+        mess += "\nBlocks were:"
         for b in failed_blocks:
-            mess += "\n" + b
+            mess += "\n" + str(b)
         if len(failed_blocks) >= 0.5 * len(blocks):
             mess += "\nMissing more than 50% of blocks so crashing"
             raise Exception(mess)
