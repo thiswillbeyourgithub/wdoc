@@ -327,14 +327,14 @@ def batch_load_doc(
         sharedmem = None
         red("Using loky backend so not using 'require=sharedmem'")
 
-    # early stopping if all the documents of a recursive filetype failed
-    expected_recur_nb = {}
-    for d in to_load:
-        if d["recur_parent_id"] not in expected_recur_nb:
-            expected_recur_nb[d["recur_parent_id"]] = 1
-        else:
-            expected_recur_nb[d["recur_parent_id"]] += 1
-    found_recur_nb = {k: 0 for k in expected_recur_nb.keys()}
+    # # early stopping if all the documents of a recursive filetype failed
+    # expected_recur_nb = {}
+    # for d in to_load:
+    #     if d["recur_parent_id"] not in expected_recur_nb:
+    #         expected_recur_nb[d["recur_parent_id"]] = 1
+    #     else:
+    #         expected_recur_nb[d["recur_parent_id"]] += 1
+    # found_recur_nb = {k: 0 for k in expected_recur_nb.keys()}
 
     docs = []
     t_load = time.time()
@@ -364,24 +364,24 @@ def batch_load_doc(
         doc_lists = []
         for idoc, o in enumerate(generator_doc_lists):
             doc_lists.append(o)
-            # detect errors, used for early stopping if all the doc from the same recursive parent failed:
-            if isinstance(o, str):
-                d = to_load[idoc]
-                if "recur_parent_id" in d:
-                    assert d["recur_parent_id"] in expected_recur_nb, expected_recur_nb
-                    found_recur_nb[d["recur_parent_id"]] -= 1
-                    if found_recur_nb[d["recur_parent_id"]] <= 0 and expected_recur_nb[d['recur_parent_id']] > 1:
-                        mess = f"All document from a recursive file with parent id {d['recur_parent_id']} failed so crashing."
-                        mess += "\nFailed documents:"
-                        cnt = 0
-                        for ifd, fd in enumerate(to_load):
-                            if fd['recur_parent_id'] == d["recur_parent_id"]:
-                                cnt += 1
-                                er = doc_lists[ifd]
-                                assert isinstance(er, str), er
-                                mess += f"\n- #{cnt}: {fd}: '{er}'"
-                        mess += f"\nLatest error was: '{o}'"
-                        raise Exception(red(mess))
+            # # detect errors, used for early stopping if all the doc from the same recursive parent failed:
+            # if isinstance(o, str):
+            #     d = to_load[idoc]
+            #     if "recur_parent_id" in d:
+            #         assert d["recur_parent_id"] in expected_recur_nb, expected_recur_nb
+            #         found_recur_nb[d["recur_parent_id"]] -= 1
+            #         if found_recur_nb[d["recur_parent_id"]] <= 0 and expected_recur_nb[d['recur_parent_id']] > 1:
+            #             mess = f"All document from a recursive file with parent id {d['recur_parent_id']} failed so crashing."
+            #             mess += "\nFailed documents:"
+            #             cnt = 0
+            #             for ifd, fd in enumerate(to_load):
+            #                 if fd['recur_parent_id'] == d["recur_parent_id"]:
+            #                     cnt += 1
+            #                     er = doc_lists[ifd]
+            #                     assert isinstance(er, str), er
+            #                     mess += f"\n- #{cnt}: {fd}: '{er}'"
+            #             mess += f"\nLatest error was: '{o}'"
+            #             raise Exception(red(mess))
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
