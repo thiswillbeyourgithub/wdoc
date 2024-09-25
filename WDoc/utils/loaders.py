@@ -1184,7 +1184,13 @@ def replace_media(
                     images = [str(img) for img in images_reg]
             else:
                 images = [str(img) for img in images_bs4]
-            assert images, f"no image found but should have. Text is '{content}'"
+            try:
+                assert images, f"no image found but should have. Text is '{content}'"
+            except AssertionError as err:
+                if strict:
+                    raise
+                else:
+                    red(err)
             for iimg, img in enumerate(images):
                 try:
                     assert img in content, f"missing img from content:\nimg: {img}\ncontent: {content}"
@@ -1201,7 +1207,13 @@ def replace_media(
         # Sounds
         if replace_sounds and "[sounds:" in content:
             sounds = re.findall(REG_SOUNDS, content)
-            assert sounds, f"No sounds found but should have. Content: {content}"
+            try:
+                assert sounds, f"No sounds found but should have. Content: {content}"
+            except AssertionError as err:
+                if strict:
+                    raise
+                else:
+                    red(err)
             for isound, sound in enumerate(sounds):
                 try:
                     assert sound in content, f"Sound is not in content: {sound}"
