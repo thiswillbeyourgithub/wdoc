@@ -327,10 +327,18 @@ def load_one_doc_wrapped(
         filetype = doc_kwargs["filetype"]
         exc_type, exc_obj, exc_tb = sys.exc_info()
         formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
-        mess = (f"Error when loading doc with filetype {filetype}: '{err}'. "
-            f"Arguments: {doc_kwargs}"
-            f"\nLine number: {exc_tb.tb_lineno}"
-            f"\nFull traceback:\n{formatted_tb}")
+        if "No pdf parser succeeded to parse " in str(err):
+            mess = (
+                f"Error when loading doc with filetype {filetype}: '{err}'. "
+                f"Arguments: {doc_kwargs}"
+            )
+        else:
+            mess = (
+                f"Error when loading doc with filetype {filetype}: '{err}'. "
+                f"Arguments: {doc_kwargs}"
+                f"\nLine number: {exc_tb.tb_lineno}"
+                f"\nFull traceback:\n{formatted_tb}"
+            )
         if loading_failure == "crash":
             raise Exception(red(mess)) from err
         elif loading_failure == "warn" or is_debug:
