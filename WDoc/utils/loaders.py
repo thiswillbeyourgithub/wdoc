@@ -188,11 +188,11 @@ class OpenparseDocumentParser:
         return docs
 
 pdf_loaders = {
+    "PyMuPDF": PyMuPDFLoader,  # good for metadata
+    "PdfPlumber": PDFPlumberLoader,  # good for metadata
     "PDFMiner": PDFMinerLoader,  # little metadata
     "PyPDFLoader": PyPDFLoader,  # little metadata
     "PyPDFium2": PyPDFium2Loader,  # little metadata
-    "PyMuPDF": PyMuPDFLoader,  # good for metadata
-    "PdfPlumber": PDFPlumberLoader,  # good for metadata
     "pdftotext": None,  # optional support, see below
     "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
     # "Unstructured_fast": partial(
