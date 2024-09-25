@@ -227,7 +227,7 @@ class DocDict(dict):
         self.__strict__ = strict
 
     def __setitem__(self, key, value) -> None:
-        assert self.__strict__ is not MISSING, "This class has never been instantiated!"
+        assert self.__strict__ is not MISSING, f"This class has never been instantiated! Key: '{key}' and value: '{value}'"
         assert self.__strict__ in [True, False, "strip"], "Unexpected strict value"
         self.__check_values__(key, value, self.__strict__)
         super().__setitem__(key, value)
