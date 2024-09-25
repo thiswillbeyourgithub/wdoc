@@ -1546,7 +1546,7 @@ def load_logseq_markdown(
             mode="remove_media",
             strict=False,
             replace_image=True,
-            replace_links=True,
+            replace_links=False,
             replace_sounds=False,
         )
         if not cont:
