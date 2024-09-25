@@ -43,7 +43,8 @@ try:
         return ftlangdetect.detect(text.lower())["score"]
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
-    red(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+    if is_verbose:
+        red(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
     if "ftlangdetect" in sys.modules:
         del sys.modules["ftlangdetect"]
 
@@ -55,7 +56,8 @@ except Exception as err:
             return langdetect.detect_langs(text.lower())[0].prob
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
-        red(f"Couldn't import optional package 'langdetect': '{err}'")
+        if is_verbose:
+            red(f"Couldn't import optional package 'langdetect' either: '{err}'")
         @optional_typecheck
         def language_detector(text: str) -> None:
             return None
