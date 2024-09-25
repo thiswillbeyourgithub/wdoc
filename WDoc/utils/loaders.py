@@ -1526,15 +1526,16 @@ def load_logseq_markdown(
 
     content = parsed.content
     content = content.replace("\t", "    ")
-    content, medias = replace_media(
-        content=content,
-        media=None,
-        mode="remove_media",
-        strict=False,
-        replace_image=True,
-        replace_links=True,
-        replace_sounds=False,
-    )
+    content = markdownimage_regex.sub("[IMAGE]", content)
+    # content, _ = replace_media(
+    #     content=content,
+    #     media=None,
+    #     mode="remove_media",
+    #     strict=False,
+    #     replace_image=True,
+    #     replace_links=True,
+    #     replace_sounds=False,
+    # )
 
     # create a single document then for each document add the properties of each block found in the doc
     docs = text_splitter.transform_documents([
@@ -1552,15 +1553,16 @@ def load_logseq_markdown(
             b.del_property(key=k)
             b.content = b.content.strip()
         cont = b.content.replace("\t", "    ")
-        cont, _ = replace_media(
-            content=cont,
-            media=None,
-            mode="remove_media",
-            strict=False,
-            replace_image=True,
-            replace_links=False,
-            replace_sounds=False,
-        )
+        cont = markdownimage_regex.sub("[IMAGE]", cont)
+        # cont, _ = replace_media(
+        #     content=cont,
+        #     media=None,
+        #     mode="remove_media",
+        #     strict=False,
+        #     replace_image=True,
+        #     replace_links=True,
+        #     replace_sounds=False,
+        # )
         if not cont:
             continue
         found = False
