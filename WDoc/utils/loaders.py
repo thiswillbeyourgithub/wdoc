@@ -46,10 +46,6 @@ from langchain_community.document_loaders import PlaywrightURLLoader
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.docstore.document import Document
 
-import lazy_import
-# from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
-TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 import youtube_dl
 import youtube_dl.utils
 import ankipandas as akp
@@ -79,6 +75,11 @@ from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
 
+import lazy_import
+# from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
+TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
+RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
+
 try:
     import pdftotext
 except Exception as err:
@@ -90,7 +91,6 @@ except Exception as err:
                 "apt install build-essential libpoppler-cpp-dev pkg-config "
                 "python3-dev\nThen:\npython -m pip install pdftotext"
             )
-
 
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
