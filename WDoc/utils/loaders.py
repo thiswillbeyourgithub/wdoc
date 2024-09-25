@@ -2227,7 +2227,10 @@ def load_pdf(
     passed_errs = []
     warned_errs = []
 
-    info = magic.from_file(path)
+    try:
+        info = magic.from_file(path)
+    except Exception as err:
+        info = red(f"Failed to run python-magic: '{err}'")
     if "pdf" not in info.lower():
         yel(f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}")
 

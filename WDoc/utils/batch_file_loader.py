@@ -115,7 +115,10 @@ def batch_load_doc(
                     try:
                         fp = Path(load_kwargs["path"])
                         if fp.exists():
-                            info = magic.from_file(fp).lower()
+                            try:
+                                info = magic.from_file(fp).lower()
+                            except Exception as err:
+                                raise Exception(f"Failed to run python-magic as a last resort heuristic: '{err}'") from err
                             if "pdf" in info:
                                 load_filetype = "pdf"
                                 break
