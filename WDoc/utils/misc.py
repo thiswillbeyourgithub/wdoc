@@ -9,7 +9,6 @@ from joblib import hash as jhash
 import socket
 import os
 import json
-import re
 from datetime import timedelta
 from pathlib import Path, PosixPath
 from difflib import get_close_matches
