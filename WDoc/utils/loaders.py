@@ -1184,8 +1184,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                else:
-                    red(err)
+                red(err)
             for iimg, img in enumerate(images):
                 try:
                     assert img in content, f"missing img from content:\nimg: {img}\ncontent: {content}"
@@ -1194,8 +1193,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     images[iimg] = None
             images = [i for i in images if i is not None]
 
@@ -1207,8 +1205,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                else:
-                    red(err)
+                red(err)
             for isound, sound in enumerate(sounds):
                 try:
                     assert sound in content, f"Sound is not in content: {sound}"
@@ -1217,8 +1214,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     sounds[isound] = None
             sounds = [s for s in sounds if s is not None]
 
@@ -1244,8 +1240,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     links[ilink] = None
             links = [li for li in links if li is not None]
 
