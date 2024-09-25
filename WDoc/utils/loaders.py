@@ -1184,8 +1184,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                else:
-                    red(err)
+                red(err)
             for iimg, img in enumerate(images):
                 try:
                     assert img in content, f"missing img from content:\nimg: {img}\ncontent: {content}"
@@ -1194,8 +1193,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     images[iimg] = None
             images = [i for i in images if i is not None]
 
@@ -1207,8 +1205,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                else:
-                    red(err)
+                red(err)
             for isound, sound in enumerate(sounds):
                 try:
                     assert sound in content, f"Sound is not in content: {sound}"
@@ -1217,8 +1214,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     sounds[isound] = None
             sounds = [s for s in sounds if s is not None]
 
@@ -1244,8 +1240,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    else:
-                        red(err)
+                    red(err)
                     links[ilink] = None
             links = [li for li in links if li is not None]
 
@@ -1256,54 +1251,72 @@ def replace_media(
 
         # do the replacing
         for i, img in enumerate(images):
-            assert replace_image
-            assert img in content
-            assert img in new_content
-            assert img not in media.keys() and img not in media.values()
-            replaced = f"[IMAGE_{i+1}]"
-            assert replaced not in media.keys() and replaced not in media.values()
-            assert replaced not in content
-            assert replaced not in new_content
-            new_content = new_content.replace(img, replaced)
-            media[replaced] = img
-            assert img not in new_content
-            assert replaced in new_content
+            assert replace_image, replace_image
+            try:
+                assert img in content, f"img '{img}' not in content '{content}'"
+                assert img in new_content, f"img '{img}' not in new_content '{new_content}'"
+                assert img not in media.keys() and img not in media.values()
+                replaced = f"[IMAGE_{i+1}]"
+                assert replaced not in media.keys() and replaced not in media.values()
+                assert replaced not in content, f"Replaced '{replaced}' already in content '{content}'"
+                assert replaced not in new_content, f"Replaced '{replaced}' already in new_content '{new_content}'"
+                new_content = new_content.replace(img, replaced)
+                media[replaced] = img
+                assert img not in new_content
+                assert replaced in new_content
+            except AssertionError as err:
+                if strict:
+                    raise
+                red(f"Failed assert when replacing image: '{err}'")
+                continue
 
         for i, sound in enumerate(sounds):
-            assert replace_sounds
-            assert sound in content
-            assert sound in new_content
-            assert sound not in media.keys() and sound not in media.values()
-            replaced = f"[SOUND_{i+1}]"
-            assert replaced not in media.keys() and replaced not in media.values()
-            assert replaced not in content
-            assert replaced not in new_content
-            new_content = new_content.replace(sound, replaced)
-            media[replaced] = sound
-            assert sound not in new_content
-            assert replaced in new_content
+            try:
+                assert replace_sounds
+                assert sound in content
+                assert sound in new_content
+                assert sound not in media.keys() and sound not in media.values()
+                replaced = f"[SOUND_{i+1}]"
+                assert replaced not in media.keys() and replaced not in media.values()
+                assert replaced not in content
+                assert replaced not in new_content
+                new_content = new_content.replace(sound, replaced)
+                media[replaced] = sound
+                assert sound not in new_content
+                assert replaced in new_content
+            except AssertionError as err:
+                if strict:
+                    raise
+                red(f"Failed assert when replacing sounds: '{err}'")
+                continue
 
         for i, link in enumerate(links):
-            assert replace_links
-            assert link in content
-            assert link not in media.keys()
-            replaced = f"[LINK_{i+1}]"
-            assert replaced not in media.keys() and replaced not in media.values()
-            assert replaced not in content
-            assert replaced not in new_content
-            assert link in new_content or len(
-                [
-                    val for val in media.values()
-                    if link in val
-                ]
-            )
-            if link not in new_content:
+            try:
+                assert replace_links
+                assert link in content
+                assert link not in media.keys()
+                replaced = f"[LINK_{i+1}]"
+                assert replaced not in media.keys() and replaced not in media.values()
+                assert replaced not in content
+                assert replaced not in new_content
+                assert link in new_content or len(
+                    [
+                        val for val in media.values()
+                        if link in val
+                    ]
+                )
+                if link not in new_content:
+                    continue
+                else:
+                    new_content = new_content.replace(link, replaced)
+                    media[replaced] = link
+                    assert link not in new_content
+                    assert replaced in new_content
+            except AssertionError as err:
+                if strict:
+                    raise
+                red(f"Failed assert when replacing links: '{err}'")
                 continue
-            else:
-                new_content = new_content.replace(link, replaced)
-                media[replaced] = link
-                assert link not in new_content
-                assert replaced in new_content
 
         # check no media can be found anymore
         if replace_image:
@@ -1513,15 +1526,16 @@ def load_logseq_markdown(
 
     content = parsed.content
     content = content.replace("\t", "    ")
-    content, medias = replace_media(
-        content=content,
-        media=None,
-        mode="remove_media",
-        strict=False,
-        replace_image=True,
-        replace_links=True,
-        replace_sounds=False,
-    )
+    content = markdownimage_regex.sub("[IMAGE]", content)
+    # content, _ = replace_media(
+    #     content=content,
+    #     media=None,
+    #     mode="remove_media",
+    #     strict=False,
+    #     replace_image=True,
+    #     replace_links=True,
+    #     replace_sounds=False,
+    # )
 
     # create a single document then for each document add the properties of each block found in the doc
     docs = text_splitter.transform_documents([
@@ -1539,15 +1553,16 @@ def load_logseq_markdown(
             b.del_property(key=k)
             b.content = b.content.strip()
         cont = b.content.replace("\t", "    ")
-        cont, _ = replace_media(
-            content=cont,
-            media=None,
-            mode="remove_media",
-            strict=False,
-            replace_image=True,
-            replace_links=False,
-            replace_sounds=False,
-        )
+        cont = markdownimage_regex.sub("[IMAGE]", cont)
+        # cont, _ = replace_media(
+        #     content=cont,
+        #     media=None,
+        #     mode="remove_media",
+        #     strict=False,
+        #     replace_image=True,
+        #     replace_links=True,
+        #     replace_sounds=False,
+        # )
         if not cont:
             continue
         found = False
