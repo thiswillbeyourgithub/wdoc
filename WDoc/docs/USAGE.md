@@ -261,9 +261,9 @@
     disable multithreading for summaries and loading files,
     display warning if an error is encountered when loading a file,
     automatically trigger the debugger on exceptions.
-    Note that the multithreading will not be disabled if you
-    set `--file_loader_n_jobs`, allowing you to debug multithreading
-    issues.
+    Note that the parallel processing will not be disabled if you manually
+    set `--file_loader_n_jobs`, allowing you to debug parallel
+    processing issues.
     Because in some situation LLM calls are refused because of rate
     limiting, this can be used to slowly but always get your answer.
     It implies `--verbose=True`
@@ -301,12 +301,13 @@
     * joblib.Parallel backend to use when loading files. `loky` and
     `multiprocessing` refer to multiprocessing whereas `threading`
     refers to multithreading.
-    The number of jobs can be specified with `file_loader_n_jobs`
+    The number of jobs can be specified with `--file_loader_n_jobs`
     but it's a loader specific kwargs.
 
 * `--file_loader_n_jobs`: int, default `3`
-    * number of threads to use when loading files. Set to 1 to disable
-    multithreading (as it can result in out of memory error if
+    * number of jobs to use when loading files in parallel (threads or process,
+    depending on `--file_loader_parallel_backend`). Set to 1 to disable
+    parallel processing (as it can result in out of memory error if
     using threads and overly recursive calls). Automatically set to 1 if
     `--debug` is set or if there's only one document to load.
 
@@ -596,7 +597,7 @@
 * `WDOC_MAX_PDF_LOADER_TIMEOUT`
     * Number of seconds to wait for each pdf loader before giving up this loader.
     Default is `5` minutes.
-    Disabled when using threading as python does not allow it.
+    Disabled when using `--file_loader_parallel_backend=threading` as python does not allow it.
 
 * `WDOC_DEBUGGER`
     * If True, will open the debugger in case of issue. Implied by `--debug`
