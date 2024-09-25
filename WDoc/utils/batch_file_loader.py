@@ -366,7 +366,7 @@ def batch_load_doc(
                 if "recur_parent_id" in d:
                     assert d["recur_parent_id"] in expected_recur_nb, expected_recur_nb
                     found_recur_nb[d["recur_parent_id"]] -= 1
-                    if found_recur_nb[d["recur_parent_id"]] <= 0:
+                    if found_recur_nb[d["recur_parent_id"]] <= 0 and expected_recur_nb[d['recur_parent_id']] > 1:
                         mess = f"All document from a recursive file with parent id {d['recur_parent_id']} failed so crashing."
                         failed_from_parent = [df for df in to_load if df['recur_parent_id'] == d["recur_parent_id"]]
                         assert failed_from_parent, d
