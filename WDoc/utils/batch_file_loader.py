@@ -323,23 +323,29 @@ def batch_load_doc(
     if len(to_load) == 1:
         n_jobs = 1
     try:
-        doc_lists = Parallel(
+        generator_doc_lists = Parallel(
             n_jobs=n_jobs,
             backend=backend,
             verbose=0 if not is_verbose else 51,
             timeout=loader_max_timeout,
+            return_as="generator",  # reduce memory footprint
         )(delayed(load_one_doc_wrapped)(
-            llm_name=llm_name,
-            task=task,
-            temp_dir=temp_dir,
-            **d,
-        ) for d in tqdm(
-                to_load,
-                desc="Loading",
-                unit="doc",
-                colour="magenta",
+                llm_name=llm_name,
+                task=task,
+                temp_dir=temp_dir,
+                **d,
             )
+            for d in to_load
         )
+        doc_lists = [
+            d
+            for d in tqdm(
+                    generator_doc_lists,
+                    desc="Loading",
+                    unit="doc",
+                    colour="magenta",
+                )
+        ]
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
