@@ -363,6 +363,7 @@ def batch_load_doc(
         )
         doc_lists = []
         for idoc, o in enumerate(generator_doc_lists):
+            doc_lists.append(o)
             # detect errors, used for early stopping if all the doc from the same recursive parent failed:
             if isinstance(o, str):
                 d = to_load[idoc]
@@ -371,14 +372,16 @@ def batch_load_doc(
                     found_recur_nb[d["recur_parent_id"]] -= 1
                     if found_recur_nb[d["recur_parent_id"]] <= 0 and expected_recur_nb[d['recur_parent_id']] > 1:
                         mess = f"All document from a recursive file with parent id {d['recur_parent_id']} failed so crashing."
-                        failed_from_parent = [df for df in to_load if df['recur_parent_id'] == d["recur_parent_id"]]
-                        assert failed_from_parent, d
                         mess += "\nFailed documents:"
-                        for df in failed_from_parent:
-                            mess += f"\n{df}"
+                        cnt = 0
+                        for ifd, fd in enumerate(to_load):
+                            if fd['recur_parent_id'] == d["recur_parent_id"]:
+                                cnt += 1
+                                er = doc_lists[ifd]
+                                assert isinstance(er, str), er
+                                mess += f"\n- #{cnt}: {fd}: '{er}'"
                         mess += f"\nLatest error was: '{o}'"
                         raise Exception(red(mess))
-            doc_lists.append(o)
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
