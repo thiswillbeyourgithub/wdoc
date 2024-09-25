@@ -19,6 +19,7 @@ from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
 import litellm
+from dataclasses import MISSING
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -157,6 +158,7 @@ class DocDict(dict):
         )
     )
     allowed_types: dict = filetype_arg_types
+    __strict__ = MISSING
 
     def __hash__(self):
         "make it hashable, to check for duplicates"
@@ -225,6 +227,7 @@ class DocDict(dict):
         self.__strict__ = strict
 
     def __setitem__(self, key, value) -> None:
+        assert self.__strict__ is not MISSING, "This class has never been instantiated!"
         assert self.__strict__ in [True, False, "strip"], "Unexpected strict value"
         self.__check_values__(key, value, self.__strict__)
         super().__setitem__(key, value)
