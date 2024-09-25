@@ -127,7 +127,7 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of WDoc class to WDoc/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
-    assert usage_file.exists()
+    assert usage_file.exists(), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/WDoc/blob/main/WDoc/docs/USAGE.md"
     usage = usage_file.read_text().strip()
     assert usage
     obj.__doc__ = obj.__doc__ + "\n\n# Content of WDoc/docs/USAGE.md\n\n" + usage
