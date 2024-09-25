@@ -46,7 +46,6 @@
                 * `doccheck_min_lang_prob`
                 * `doccheck_min_token`
                 * `doccheck_max_token`
-                * `doccheck_max_lines`
 
         * `online_pdf`
             * Same arguments as for `--filetype=pdf`
@@ -539,8 +538,6 @@
     * if we find less that that many token in a document, crash.
 * `--doccheck_max_token`: int, default `1_000_000`
     * if we find more that that many token in a document, crash.
-* `--doccheck_max_lines`: int, default `100_000`
-    * if we find more that that many lines in a document, crash.
 
 * `--online_media_url_regex`: str
     * a regex that if matching a request's url, will consider the

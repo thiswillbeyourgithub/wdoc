@@ -84,7 +84,6 @@ recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
 min_token = 20
 max_token = 1_000_000
-max_lines = 100_000
 min_lang_prob = 0.50
 
 printed_unexpected_api_keys = [False]  # to print it only once
@@ -117,7 +116,6 @@ filetype_arg_types = {
 
     "doccheck_min_token": int,
     "doccheck_max_token": int,
-    "doccheck_max_lines": int,
     "doccheck_min_lang_prob": float,
 
     "online_media_url_regex": str,
@@ -485,7 +483,6 @@ def get_splitter(
 def check_docs_tkn_length(
     docs: List[Document],
     identifier: str,
-    max_lines: int = max_lines,
     min_token: int = min_token,
     max_token: int = max_token,
     min_lang_prob: float = min_lang_prob,
@@ -496,13 +493,6 @@ def check_docs_tkn_length(
     otherwise something probably went wrong."""
     size = sum([get_tkn_length(d.page_content) for d in docs])
     nline = len("\n".join([d.page_content for d in docs]).splitlines())
-    if nline > max_lines:
-        red(
-            f"Example of page from document with too many lines : {docs[len(docs)//2].page_content}"
-        )
-        raise Exception(
-            f"The number of lines from '{identifier}' is {nline} > {max_lines}, probably something went wrong?"
-        )
     if size <= min_token:
         red(
             f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"

@@ -66,7 +66,7 @@ import openparse
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
                    average_word_length, wpm, loaders_temp_dir_file,
-                   min_lang_prob, min_token, max_token, max_lines,
+                   min_lang_prob, min_token, max_token,
                    optional_strip_unexp_args,
                    )
 from .typechecker import optional_typecheck
@@ -359,7 +359,6 @@ def load_one_doc(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
-    doccheck_max_lines: int = max_lines,
     recur_parent_id: str = None,  # just used to keep track of which document comes from which recursive filetype
     **kwargs,
 ) -> List[Document]:
@@ -393,7 +392,6 @@ def load_one_doc(
             doccheck_min_lang_prob=doccheck_min_lang_prob,
             doccheck_min_token=doccheck_min_token,
             doccheck_max_token=doccheck_max_token,
-            doccheck_max_lines=doccheck_max_lines,
             **kwargs,
         )
 
@@ -497,7 +495,6 @@ def load_one_doc(
             min_lang_prob = doccheck_min_lang_prob,
             min_token = doccheck_min_token,
             max_token = doccheck_max_token,
-            max_lines = doccheck_max_lines,
         )
 
     # add and format metadata
@@ -781,7 +778,6 @@ def load_online_pdf(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
-    doccheck_max_lines: int = max_lines,
     **kwargs,
     ) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
@@ -2224,7 +2220,6 @@ def load_pdf(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
-    doccheck_max_lines: int = max_lines,
 ) -> List[Document]:
     whi(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
@@ -2282,7 +2277,6 @@ def load_pdf(
                 min_lang_prob=doccheck_min_lang_prob,
                 min_token=doccheck_min_token,
                 max_token=doccheck_max_token,
-                max_lines=doccheck_max_lines,
             )
 
             if prob >= 0.5:
