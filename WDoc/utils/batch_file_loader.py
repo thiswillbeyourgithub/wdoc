@@ -318,7 +318,7 @@ def batch_load_doc(
     if loader_max_timeout <= 0:
         loader_max_timeout = None
 
-    sharedmem = True
+    sharedmem = "sharedmem"
     if backend == "loky":
         sharedmem = None
         red("Using loky backend so disabling 'sharedmem'")
