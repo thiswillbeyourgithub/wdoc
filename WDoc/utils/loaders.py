@@ -2290,7 +2290,7 @@ def load_pdf(
             passed_errs.append(str(err))
 
     pbar.close()
-    assert probs.keys(), f"No pdf parser succedded to parse {path}"
+    assert probs.keys(), f"No pdf parser succeeded to parse {path}"
 
     # no loader worked, exiting
     if not loaded_docs:
