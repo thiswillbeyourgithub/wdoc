@@ -374,7 +374,7 @@ def batch_load_doc(
                         for df in failed_from_parent:
                             mess += f"\n{df}"
                         mess += f"\nLatest error was: '{o}'"
-                        raise Exception(mess)
+                        raise Exception(red(mess))
             doc_lists.append(o)
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
