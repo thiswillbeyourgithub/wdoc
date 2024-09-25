@@ -189,10 +189,13 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 ## Getting started
 *Tested on python 3.10 and 3.11.7*
 1. To install:
-    * `pip install -U WDoc`
+    * Using pip: `pip install -U WDoc`
     * Or to get a specific git branch:
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@dev`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/WDoc.git@main`
+    * You can also use pipx or uvx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
+        * Using pipx: `pipx run wdoc --help`
+        * Using uvx: `uvx --prerelease=allow wdoc --help` (`prerelease=allow` is needed to include [beartype's latest release candidates](https://pypi.org/project/beartype/))
 2. Add the API key for the backend you want as an environement variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]` and `wdoc --task=summary --path=MYDOC [ARGS]` (you can use `WDoc` instead of `wdoc`)
     * If for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.
