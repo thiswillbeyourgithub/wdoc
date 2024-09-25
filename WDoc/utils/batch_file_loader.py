@@ -333,7 +333,7 @@ def batch_load_doc(
             backend=backend,
             verbose=0 if not is_verbose else 51,
             timeout=loader_max_timeout,
-            return_as="generator",  # reduce memory footprint
+            return_as="generator",  # try to reduce memory footprint
             require=sharedmem,
         )(delayed(load_one_doc_wrapped)(
                 llm_name=llm_name,
@@ -341,17 +341,14 @@ def batch_load_doc(
                 temp_dir=temp_dir,
                 **d,
             )
-            for d in to_load
-        )
-        doc_lists = [
-            d
             for d in tqdm(
-                    generator_doc_lists,
+                    to_load,
                     desc="Loading",
                     unit="doc",
                     colour="magenta",
                 )
-        ]
+        )
+        doc_lists = [d for d in generator_doc_lists]
     except MultiprocessTimeoutError as e:
         raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
 
