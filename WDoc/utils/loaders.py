@@ -2282,7 +2282,7 @@ def load_pdf(
                 pbar.update(1)
             yel(f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}")
 
-            if str(err) in passed_errs and str(err) not in warned_errs:
+            if str(err) in passed_errs and str(err) not in warned_errs and "token" not in str(err):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 formatted_tb = '\n'.join(traceback.format_tb(exc_tb))
                 red(f"The same error happens to multiple pdf loader, something is fishy.\nFull traceback:\n{formatted_tb}")
