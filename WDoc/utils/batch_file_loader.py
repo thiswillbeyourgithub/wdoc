@@ -415,7 +415,7 @@ def batch_load_doc(
         whi("Counting them")
         counts = Counter(content_hash)
         dupes = set()
-        [dupes.add(d) for h, c in counts.items() if c > 1 and h not in dupes]
+        [dupes.add(h) for h, c in counts.items() if c > 1]
         deduped = {}
         lenbefore = len(docs)
         for idoc, doc in enumerate(tqdm(docs, desc="Deduplicating", unit="doc")):
