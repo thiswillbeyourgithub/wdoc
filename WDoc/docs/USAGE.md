@@ -590,6 +590,7 @@
 * `WDOC_MAX_LOADER_TIMEOUT`
     * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
     Default is `-1` to disable.
+    Disabled if <= 0.
 
 * `WDOC_MAX_PDF_LOADER_TIMEOUT`
     * Number of seconds to wait for each pdf loader before giving up this loader.
