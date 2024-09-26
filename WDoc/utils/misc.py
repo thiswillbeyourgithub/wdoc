@@ -86,7 +86,7 @@ average_word_length = 6
 recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 
 min_token = 20
-max_token = 1_000_000
+max_token = 10_000_000
 min_lang_prob = 0.50
 
 printed_unexpected_api_keys = [False]  # to print it only once

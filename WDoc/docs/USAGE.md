@@ -559,7 +559,7 @@
     language are valid.
 * `--doccheck_min_token`: int, default `50`
     * if we find less that that many token in a document, crash.
-* `--doccheck_max_token`: int, default `1_000_000`
+* `--doccheck_max_token`: int, default `10_000_000`
     * if we find more that that many token in a document, crash.
 
 * `--online_media_url_regex`: str
