@@ -413,9 +413,11 @@ def batch_load_doc(
         whi("Getting all hash")
         content_hash = [d.metadata["content_hash"] for d in docs]
         whi("Counting them")
+        counts = Counter(content_hash)
         dupes = set()
+        [dupes.add(d) for h, c in counts.items() if c > 1 and h not in dupes]
         deduped = {}
-        [dupes.add(ch) for ch in content_hash if content_hash.count(ch) > 1]
+        lenbefore = len(docs)
         for idoc, doc in enumerate(tqdm(docs, desc="Deduplicating", unit="doc")):
             ch = doc.metadata["content_hash"]
             if not dupes:
@@ -432,17 +434,22 @@ def batch_load_doc(
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
                     else:
                         red(f"UNEXPECTED METADATA TYPE: '{k}:{v}' for doc: '{doc}'")
+                docs[idoc] = None
 
             if ch in dupes:
                 deduped[ch] = doc
                 docs[idoc] = None
-                dupes.remove(ch)
+                assert counts[ch] > 1, doc
+                counts[ch] -= 1
+                if counts[ch] == 1:
+                    dupes.remove(ch)
         if deduped:
             assert None in docs
         assert not dupes, dupes
         docs = [d for d in docs if d is not None]
         if deduped:
             docs  += list(deduped.values())
+        assert len(docs) <= lenbefore, f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
 
     assert docs, "No documents were succesfully loaded!"
 
