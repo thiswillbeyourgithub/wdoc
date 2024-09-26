@@ -413,7 +413,7 @@ def batch_load_doc(
         dupes = set()
         deduped = {}
         [dupes.add(ch) for ch in content_hash if content_hash.count(ch) > 1]
-        for idoc, doc in enumerate(docs):
+        for idoc, doc in enumerate(tqdm(docs, desc="Deduplicating", unit="doc")):
             ch = doc.metadata["content_hash"]
             if not dupes:
                 break
