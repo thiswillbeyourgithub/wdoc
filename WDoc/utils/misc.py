@@ -19,6 +19,7 @@ from functools import cache as memoize
 from py_ankiconnect import PyAnkiconnect
 import inspect
 import litellm
+from beartype.door import is_bearable
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -189,7 +190,7 @@ class DocDict(dict):
             else:
                 raise ValueError(strict)
 
-        elif key in self.allowed_types and value is not None and not isinstance(value, self.allowed_types[key]):
+        elif (key in self.allowed_types) and (value is not None) and (not is_bearable(value, self.allowed_types[key])):
             mess = (f"Type of key {key} should be {self.allowed_types[key]},"
                 f"not {type(value)}."
                 "\nYou can use the env "

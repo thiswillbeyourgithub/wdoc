@@ -21,7 +21,7 @@ import re
 import os
 import asyncio
 from tqdm import tqdm
-from beartype.door import die_if_unbearable
+from beartype.door import is_bearable
 from dataclasses import MISSING
 
 from .utils.misc import (
@@ -209,7 +209,8 @@ class WDoc:
                     ), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
                     assert val, f"Empty list found for cli_kwargs: '{k}'"
-                die_if_unbearable(val, expected_type)
+                if not is_bearable(val, expected_type):
+                    raise Exception(f"Cli_kwargs '{k}' is of type '{type(val)}' instead of '{expected_type}'")
 
         if modelname == TESTING_LLM:
             if modelname != TESTING_LLM:
