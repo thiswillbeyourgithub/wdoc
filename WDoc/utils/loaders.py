@@ -2222,12 +2222,14 @@ def cached_yt_loader(
 @doc_loaders_cache.cache(ignore=["path"])
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
-    content = loader.load()
+    docs = loader.load()
     assert isinstance(
-        content, list), f"Output of {loader_name} is of type {type(content)}"
-    assert all(isinstance(d, Document)
-               for d in content), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
-    return content
+        docs, list), f"Output of {loader_name} is of type {type(docs)}"
+    assert all(
+        isinstance(d, Document)
+        for d in docs
+    ), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    return docs
 
 
 @debug_return_empty
