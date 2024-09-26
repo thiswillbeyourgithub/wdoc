@@ -428,7 +428,9 @@ def batch_load_doc(
                 for k, v in doc.metadata.items():
                     if "hash" in k:
                         continue
-                    if k not in deduped[ch].metadata:
+                    if k in deduped[ch].metadata and v == deduped[ch].metadata[k]:
+                        continue
+                    elif k not in deduped[ch].metadata:
                         deduped[ch].metadata[k] = v
                     elif isinstance(v, list) and isinstance(deduped[ch].metadata[k], list):
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
