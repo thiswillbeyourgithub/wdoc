@@ -248,6 +248,11 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **What should I do if my PDF are encrypted?**
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
+* **How can I add my own pdf parser?**
+    * Write a python class and add it there: `WDoc.utils.loaders.pdf_loaders['parser_name']=parser_object` then call WDoc with `--pdf_parsers=parser_name`.
+        * The class has to take a `path` argument in `__init__`, have a `load` method taking
+        no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
+        class for an example.
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer used to count tokens to embed is the OpenAI tokenizer, which is not universal)
