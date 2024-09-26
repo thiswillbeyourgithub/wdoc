@@ -7,7 +7,7 @@
 
 WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources.
 
-* **Goal and project specifications**: WDoc uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes). The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
+* **Goal and project specifications**: WDoc uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
 * **Current status**: **Under active development**
     * Used daily by the developer for several months
@@ -92,7 +92,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **url**: try many ways to load a webpage, with heuristics to find the better parsed one
 * **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram
 * **pdf**: 15 default loaders are implemented, heuristics are used to keep the best one and stop early. Table support via [openparse](https://github.com/Filimoa/open-parse/) or [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/). Easy to add more.
-* **online_pdf**: via URL then treated at **local_pdf**
+* **online_pdf**: via URL then treated as a **pdf** (see above)
 * **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db. `alt` and `title` of images can be shown to the LLM, meaning that if you used [the ankiOCR addon](https://github.com/cfculhane/AnkiOCR) this information will help contextualize the note for the LLM.
 * **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
 * **txt**: .txt, markdown, etc
@@ -187,7 +187,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 
 
 ## Getting started
-*Tested on python 3.10 and 3.11.7*
+*Tested on python 3.11.7, which is therefore recommended*
 1. To install:
     * Using pip: `pip install -U WDoc`
     * Or to get a specific git branch:
