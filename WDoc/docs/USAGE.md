@@ -359,7 +359,7 @@
     * Used by most loaders. For example for `--filetype=youtube` the path
     must point to a youtube video.
 
-* `--pdf_parsers`: str or List[str], default: `pymupdf,pdfplumber,pdfminer,pypdfloader,pypdfium2`
+* `--pdf_parsers`: str or List[str], default: `pymupdf`
     * list of string or comma separated list of strings where each string
     is a key of the dict `pdf_loaders` in `./utils/loaders.py`.
     The case is insensitive.

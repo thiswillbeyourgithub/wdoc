@@ -2240,7 +2240,7 @@ def load_pdf(
     text_splitter: TextSplitter,
     debug: bool,
     file_hash: str,
-    pdf_parsers: Union[str, List[str]] = 'pymupdf,pdfplumber,pdfminer,pypdfloader,pypdfium2',
+    pdf_parsers: Union[str, List[str]] = 'pymupdf',
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
