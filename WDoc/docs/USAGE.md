@@ -364,6 +364,9 @@
     is a key of the dict `pdf_loaders` in `./utils/loaders.py`.
     The case is insensitive.
     The parsers are used in the order of this list.
+    Not all parsers are tried. Instead, after each parsing we check using
+    fasttext and heuristics based on doccheck_* args to rank the quality of the parsing.
+    When stop if 1 parsing is high enough or take the best if 3 parsing worked.
     Currently implemented:
     - Okayish metadata:
         - pymupdf
