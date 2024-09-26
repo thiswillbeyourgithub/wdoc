@@ -409,13 +409,17 @@ def batch_load_doc(
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
     if "summar" not in task:
+        red("Deduplicating...")
+        whi("Getting all hash")
         content_hash = [d.metadata["content_hash"] for d in docs]
+        whi("Counting them")
         dupes = set()
         deduped = {}
         [dupes.add(ch) for ch in content_hash if content_hash.count(ch) > 1]
         for idoc, doc in enumerate(tqdm(docs, desc="Deduplicating", unit="doc")):
             ch = doc.metadata["content_hash"]
             if not dupes:
+                whi("No duplicates!")
                 break
             if ch in deduped:
                 assert doc.page_content == deduped[ch].page_content
@@ -427,7 +431,7 @@ def batch_load_doc(
                     elif isinstance(v, list) and isinstance(deduped[ch].metadata[k], list):
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
                     else:
-                        breakpoint()
+                        red(f"UNEXPECTED METADATA TYPE: '{k}:{v}' for doc: '{doc}'")
 
             if ch in dupes:
                 deduped[ch] = doc
@@ -435,7 +439,7 @@ def batch_load_doc(
                 dupes.remove(ch)
         if deduped:
             assert None in docs
-        assert not dupes
+        assert not dupes, dupes
         docs = [d for d in docs if d is not None]
         if deduped:
             docs  += list(deduped.values())
