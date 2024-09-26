@@ -32,7 +32,7 @@ from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
-# from unstructured.cleaners.core import clean_extra_whitespace
+from unstructured.cleaners.core import clean_extra_whitespace
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -198,32 +198,51 @@ pdf_loaders = {
     "unstructured_fast": partial(
         UnstructuredPDFLoader,
         strategy="fast",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
     ),
     "unstructured_elements_fast": partial(
         UnstructuredPDFLoader,
         mode="elements",
         strategy="fast",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
     ),
     "unstructured_hires": partial(
         UnstructuredPDFLoader,
         strategy="hi_res",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
     ),
     "unstructured_elements_hires": partial(
         UnstructuredPDFLoader,
         mode="elements",
         strategy="hi_res",
-        # post_processors=[clean_extra_whitespace],
-        # infer_table_structure=True,
-        # languages=["fr"],
+    ),
+
+    "unstructured_fast_clean_table": partial(
+        UnstructuredPDFLoader,
+        strategy="fast",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["en"],
+    ),
+    "unstructured_elements_fast_clean_table": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="fast",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["en"],
+    ),
+    "unstructured_hires_clean_table": partial(
+        UnstructuredPDFLoader,
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["en"],
+    ),
+    "unstructured_elements_hires_clean_table": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="hi_res",
+        post_processors=[clean_extra_whitespace],
+        infer_table_structure=True,
+        # languages=["en"],
     ),
 }
 

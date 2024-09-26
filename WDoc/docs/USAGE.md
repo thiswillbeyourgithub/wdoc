@@ -375,14 +375,22 @@
         - pdfminer
         - pypdfloader
         - pypdfium2
-        - openparse (also has table support but quiteslow)
-        - pdftotext  (fastest and most basic but can be unavailable depending on your install)
-    - Quite slow:
+        - openparse (also has table support but quite slow)
+    - pdftotext  (fastest and most basic but can be unavailable depending on your install)
+    - Very slow but theoretically the best are from unstructured:
         - unstructured_fast
         - unstructured_elements_fast
-        - AI based I think:
-            - unstructured_hires
-            - unstructured_elements_hires
+        - unstructured_hires
+        - unstructured_elements_hires
+        - unstructured_fast_clean_table
+        - unstructured_elements_fast_clean_table
+        - unstructured_hires_clean_table
+        - unstructured_elements_hires_clean_table
+        Notes: to the best of my knowledge:
+            'fast' means not AI based, as opposed to 'hires'
+            'elements' means the parser returns each element of the pdf instead of collating them in the rendering
+            'clean' means it tries to remove the extra whitespace
+            'table' means it will try to infer table structure (AI based)
 
 * `--anki_profile`: str
     * The name of the profile
