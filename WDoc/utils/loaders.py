@@ -1222,6 +1222,7 @@ def replace_media(
                     red(err)
                     images[iimg] = None
             images = [i for i in images if i is not None]
+            images = list(set(images))
 
         # Sounds
         if replace_sounds and "[sounds:" in content:
@@ -1243,6 +1244,7 @@ def replace_media(
                     red(err)
                     sounds[isound] = None
             sounds = [s for s in sounds if s is not None]
+            sounds = list(set(sounds))
 
         # links
         if replace_links and "://" in content:
@@ -1269,6 +1271,7 @@ def replace_media(
                     red(err)
                     links[ilink] = None
             links = [li for li in links if li is not None]
+            links = list(set(links))
 
         if not images + sounds + links:
             return content, {}
