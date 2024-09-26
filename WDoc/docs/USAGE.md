@@ -43,6 +43,7 @@
         * `pdf`
             * `--path` is the filepath to pdf
             * Optional:
+                * `--pdf_parsers`
                 * `--doccheck_min_lang_prob`
                 * `--doccheck_min_token`
                 * `--doccheck_max_token`
@@ -357,6 +358,28 @@
 * `--path`: str or PosixPath
     * Used by most loaders. For example for `--filetype=youtube` the path
     must point to a youtube video.
+
+* `--pdf_parsers`: str or List[str], default: `pymupdf,pdfplumber,pdfminer,pypdfloader,pypdfium2`
+    * list of string or comma separated list of strings where each string
+    is a key of the dict `pdf_loaders` in `./utils/loaders.py`.
+    The case is insensitive.
+    The parsers are used in the order of this list.
+    Currently implemented:
+    - Okayish metadata:
+        - pymupdf
+        - pdfplumber
+    - Few metadata:
+        - pdfminer
+        - pypdfloader
+        - pypdfium2
+        - openparse (also has table support but quiteslow)
+        - pdftotext  (fastest and most basic but can be unavailable depending on your install)
+    - Quite slow:
+        - unstructured_fast
+        - unstructured_elements_fast
+        - AI based I think:
+            - unstructured_hires
+            - unstructured_elements_hires
 
 * `--anki_profile`: str
     * The name of the profile

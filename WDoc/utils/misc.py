@@ -93,6 +93,7 @@ printed_unexpected_api_keys = [False]  # to print it only once
 
 # loader specific arguments
 filetype_arg_types = {
+    "pdf_parsers": Union[str, List[str]],
     "anki_deck": str,
     "anki_notetype": str,
     "anki_profile": str,

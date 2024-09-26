@@ -27,7 +27,7 @@ import httpx
 import warnings
 
 from langchain_community.document_loaders import PyPDFLoader
-# from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
@@ -188,43 +188,43 @@ class OpenparseDocumentParser:
         return docs
 
 pdf_loaders = {
-    "PyMuPDF": PyMuPDFLoader,  # good for metadata
-    "PdfPlumber": PDFPlumberLoader,  # good for metadata
-    "PDFMiner": PDFMinerLoader,  # little metadata
-    "PyPDFLoader": PyPDFLoader,  # little metadata
-    "PyPDFium2": PyPDFium2Loader,  # little metadata
-    "pdftotext": None,  # optional support, see below
-    # "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
-    # "Unstructured_fast": partial(
-    #     UnstructuredPDFLoader,
-    #     strategy="fast",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
-    # "Unstructured_elements_fast": partial(
-    #     UnstructuredPDFLoader,
-    #     mode="elements",
-    #     strategy="fast",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
-    # "Unstructured_hires": partial(
-    #     UnstructuredPDFLoader,
-    #     strategy="hi_res",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
-    # "Unstructured_elements_hires": partial(
-    #     UnstructuredPDFLoader,
-    #     mode="elements",
-    #     strategy="hi_res",
-    #     # post_processors=[clean_extra_whitespace],
-    #     # infer_table_structure=True,
-    #     # languages=["fr"],
-    # ),
+    "pymupdf": PyMuPDFLoader,  # good for metadata
+    "pdfplumber": PDFPlumberLoader,  # good for metadata
+    "pdfminer": PDFMinerLoader,  # little metadata
+    "pypdfloader": PyPDFLoader,  # little metadata
+    "pypdfium2": PyPDFium2Loader,  # little metadata
+    # "pdftotext": None,  # optional support, see below
+    "openparse": OpenparseDocumentParser,  # gets page number too, finds individual elements, kinda slow but good, optional table support
+    "unstructured_fast": partial(
+        UnstructuredPDFLoader,
+        strategy="fast",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "unstructured_elements_fast": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="fast",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "unstructured_hires": partial(
+        UnstructuredPDFLoader,
+        strategy="hi_res",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
+    "unstructured_elements_hires": partial(
+        UnstructuredPDFLoader,
+        mode="elements",
+        strategy="hi_res",
+        # post_processors=[clean_extra_whitespace],
+        # infer_table_structure=True,
+        # languages=["fr"],
+    ),
 }
 
 # pdftotext is kinda weird to install on windows so support it
@@ -2239,6 +2239,7 @@ def load_pdf(
     text_splitter: TextSplitter,
     debug: bool,
     file_hash: str,
+    pdf_parsers: Union[str, List[str]] = 'pymupdf,pdfplumber,pdfminer,pypdfloader,pypdfium2',
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
@@ -2248,6 +2249,13 @@ def load_pdf(
     name = Path(path).name
     if len(name) > 30:
         name = name[:15] + "..." + name[-15:]
+
+    if isinstance(pdf_parsers, str):
+        pdf_parsers = pdf_parsers.strip().split(",")
+    assert pdf_parsers, "No pdf_parsers found"
+    assert len(pdf_parsers) == len(set(pdf_parsers)), f"You pdf_parsers list contains non unique elements. List: {pdf_parsers}"
+    for pdfp in pdf_parsers:
+        assert pdfp in pdf_loaders, f"The PDF loader '{pdfp}' was not present in the pdf_loaders keys. Your 'pdf_parsers' argument seems wrong."
 
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang
@@ -2266,7 +2274,7 @@ def load_pdf(
 
     pbar = tqdm(total=len(pdf_loaders),
                 desc=f"Parsing PDF {name}", unit="loader")
-    for loader_name in pdf_loaders:
+    for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:
             if debug:
