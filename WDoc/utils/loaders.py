@@ -285,14 +285,18 @@ def debug_return_empty(func: Callable) -> Callable:
         return func
 
 pdf_loader_max_timeout = WDOC_MAX_PDF_LOADER_TIMEOUT
+if is_verbose:
+    if pdf_loader_max_timeout > 0:
+        red(f"Will use a PDF loader timeout of {pdf_loader_max_timeout}s")
+    else:
+        red("Not using a pdf loader timeout")
 
 @contextmanager
 def signal_timeout(timeout: int, exception: Exception):
     "disabled in some joblib backend"
-    assert timeout > 0
+    assert timeout > 0, f"Invalid timeout: {timeout}"
     def signal_handler(signum, frame):
         raise exception("Timeout occurred")
-
 
     # Set the signal handler and an alarm
     disabled = False
@@ -2264,10 +2268,13 @@ def load_pdf(
             if debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
-            with signal_timeout(
-                timeout=pdf_loader_max_timeout,
-                exception=TimeoutPdfLoaderError,
-                ):
+            if pdf_loader_max_timeout > 0:
+                with signal_timeout(
+                    timeout=pdf_loader_max_timeout,
+                    exception=TimeoutPdfLoaderError,
+                    ):
+                    docs = _pdf_loader(loader_name, path, file_hash)
+            else:
                 docs = _pdf_loader(loader_name, path, file_hash)
 
             pbar.update(1)
