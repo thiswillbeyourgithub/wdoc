@@ -2272,7 +2272,7 @@ def load_pdf(
     if "pdf" not in info.lower():
         yel(f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}")
 
-    pbar = tqdm(total=len(pdf_loaders),
+    pbar = tqdm(total=len(pdf_parsers),
                 desc=f"Parsing PDF {name}", unit="loader")
     for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
