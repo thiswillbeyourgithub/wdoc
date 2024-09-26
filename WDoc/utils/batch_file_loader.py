@@ -325,7 +325,8 @@ def batch_load_doc(
     sharedmem = "sharedmem"
     if backend == "loky":
         sharedmem = None
-        red("Using loky backend so not using 'require=sharedmem'")
+        if is_verbose:
+            red("Using loky backend so not using 'require=sharedmem'")
 
     # # early stopping if all the documents of a recursive filetype failed
     # expected_recur_nb = {}
