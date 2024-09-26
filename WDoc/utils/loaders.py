@@ -27,7 +27,7 @@ import httpx
 import warnings
 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.document_loaders import UnstructuredPDFLoader
+# from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain_community.document_loaders import UnstructuredEPubLoader
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
@@ -144,7 +144,7 @@ class OpenparseDocumentParser:
 
         base_metadata = self.parsed.dict()
         nodes = base_metadata["nodes"]
-        assert nodes, f"No nodes found"
+        assert nodes, "No nodes found"
         del base_metadata["nodes"]
 
         docs = []
@@ -862,11 +862,13 @@ def load_anki(
 
     if verbose:
         tqdm.pandas()
-        pbar = lambda *x, **y: tqdm.pandas(*x, **y)
+        def pbar(*x, **y):
+            tqdm.pandas(*x, **y)
     else:
         pd.DataFrame.progress_apply = pd.DataFrame.apply
         pd.Series.progress_apply = pd.Series.apply
-        pbar = lambda *x, **y: None
+        def pbar(*x, **y):
+            pass
 
     cards.loc[cards["codeck"] == "", "codeck"] = cards["cdeck"][
         cards["codeck"] == ""
@@ -1683,8 +1685,8 @@ def load_local_audio(
             str(unsilenced_path_ogg.resolve().absolute())).run()
         unsilenced_hash = file_hasher({"path": unsilenced_path_ogg})
 
-        old_path = path
-        old_hash = file_hash
+        # old_path = path
+        # old_hash = file_hash
         path = unsilenced_path_ogg
         file_hash = unsilenced_hash
 
@@ -2337,7 +2339,7 @@ def load_pdf(
 
             if str(err) in passed_errs and str(err) not in warned_errs and "token" not in str(err):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
-                formatted_tb = '\n'.join([str(l).strip() for l in traceback.format_tb(exc_tb)])
+                formatted_tb = '\n'.join([str(li).strip() for li in traceback.format_tb(exc_tb)])
                 red(f"The same error happens to multiple pdf loader, something is fishy.\nFull traceback:\n{formatted_tb}")
                 warned_errs.append(str(err))
             passed_errs.append(str(err))
