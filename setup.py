@@ -123,6 +123,13 @@ setup(
         'ffmpeg-python >= 0.2.0',  # extracting audio from local video
         'torchaudio >= 2.3.1',  # silence removal from audio
         'playwright >= 1.45.0',  # for online_media and urls
+        # pdf
+        'pdfminer.six >= 20231228',
+        "pillow_heif >= 0.16.0",
+        "pypdfium2 >= 4.30.0",
+        "pymupdf >= 1.24.5",
+        "pdfplumber >= 0.11.1",
+        "pdf2image >= 1.17.0",
         'openparse[ml] >= 0.5.7',  # pdf with table support
     ],
     extra_require={
@@ -132,14 +139,6 @@ setup(
             'langdetect >= 1.0.9',
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             'pdftotext >= 2.2.2',
-
-            # pdf
-            'pdfminer.six >= 20231228',
-            "pillow_heif >= 0.16.0",
-            "pypdfium2 >= 4.30.0",
-            "pymupdf >= 1.24.5",
-            "pdfplumber >= 0.11.1",
-            "pdf2image >= 1.17.0",
         ]
     },
     cmdclass={
