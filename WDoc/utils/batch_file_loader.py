@@ -434,8 +434,8 @@ def batch_load_doc(
                         deduped[ch].metadata[k] = v
                     elif isinstance(v, list) and isinstance(deduped[ch].metadata[k], list):
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
-                    else:
-                        red(f"UNEXPECTED METADATA TYPE: '{k}:{v}' for doc: '{doc}'")
+                    elif is_verbose:
+                        red(f"UNEXPECTED METADATA TYPE: '{k}:{v}'")
                 docs[idoc] = None
 
             if ch in dupes:
