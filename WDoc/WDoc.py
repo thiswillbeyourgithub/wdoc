@@ -22,6 +22,7 @@ import os
 import asyncio
 from tqdm import tqdm
 from beartype.door import die_if_unbearable
+from dataclasses import MISSING
 
 from .utils.misc import (
     # debug_chain,
@@ -683,6 +684,7 @@ class WDoc:
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
             recursive_summaries = {0: summary}
+            prev_real_text = MISSING
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(
@@ -753,7 +755,7 @@ class WDoc:
                     sum_reading_length = len(
                         real_text) / average_word_length / wpm
                     whi(f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}")
-                    if "prev_real_text" in locals():
+                    if prev_real_text is not MISSING:
                         if real_text == prev_real_text:
                             if not self.import_mode:
                                 red(f"Identical summary after {n_recur} "
