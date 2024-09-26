@@ -199,7 +199,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]` and `wdoc --task=summary --path=MYDOC [ARGS]` (you can use `WDoc` instead of `wdoc`)
     * If for some reason this fails, maybe try with `python -m WDoc`. And if everything fails, clone this repo and try again after `cd` inside it.
-    * To get shell autocompletion: if you're using zsh: `eval $(cat wdoc_completion.cli.zsh)` and `eval $(cat WDoc_completion.m.zsh)`. You can generate your own with `wdoc -- --completion > my_completion_file"` and `WDoc -- --completion > my_completion_file.2"`.
+    * To get shell autocompletion: if you're using zsh: `eval $(cat wdoc_completion_lowercase.cli.zsh)` and `eval $(cat WDoc_completion.m.zsh)`. You can generate your own with `wdoc -- --completion > my_completion_file"` and `WDoc -- --completion > my_completion_file.2"`.
     * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
