@@ -2274,6 +2274,10 @@ def load_pdf(
                     exception=TimeoutPdfLoaderError,
                     ):
                     docs = _pdf_loader(loader_name, path, file_hash)
+                try:
+                    signal.alarm(0)  # disable alarm again just in case
+                except Exception:
+                    pass
             else:
                 docs = _pdf_loader(loader_name, path, file_hash)
 
@@ -2322,6 +2326,11 @@ def load_pdf(
                 # time on running all the others
                 break
         except Exception as err:
+            if pdf_loader_max_timeout > 0:
+                try:
+                    signal.alarm(0)  # disable alarm again just in case
+                except Exception:
+                    pass
             if "content" not in locals():
                 pbar.update(1)
             yel(f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}")
