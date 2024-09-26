@@ -1178,7 +1178,8 @@ def replace_media(
             ]
             images_reg = re.findall(REG_IMG, content)
             if len(images_bs4) != len(images_reg):
-                red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
+                if is_verbose:
+                    red(f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}")
                 if images_bs4 and not images_reg:
                     images = [str(img) for img in images_bs4]
                 elif (not images_bs4) and images_reg:
