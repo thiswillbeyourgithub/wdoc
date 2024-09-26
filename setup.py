@@ -133,10 +133,12 @@ setup(
         'openparse[ml] >= 0.5.7',  # pdf with table support
     ],
     extra_require={
-        'optional_feature': [
+        'fasttext': [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
             'fasttext-langdetect >= 1.0.5',
             'langdetect >= 1.0.9',
+        ],
+        'pdftotext': [
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             'pdftotext >= 2.2.2',
         ]
