@@ -340,8 +340,9 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
             elif element[:-2] + ">" in html:
                 content.append(element[:-2] + ">")
             else:
-                temptext = ' '.join(filter(None, content))
-                red(f"Image not properly parsed from bs4:\n{element}\n{temptext}")
+                if is_verbose:
+                    temptext = ' '.join(filter(None, content))
+                    red(f"Image not properly parsed from bs4:\n{element}\n{temptext}")
         elif isinstance(element, bs4.NavigableString):
             content.append(str(element).strip())
     text = ' '.join(filter(None, content))
