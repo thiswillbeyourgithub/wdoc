@@ -24,7 +24,8 @@ from tqdm import tqdm
 from beartype.door import die_if_unbearable
 
 from .utils.misc import (
-    ankiconnect, debug_chain, model_name_matcher,
+    # debug_chain,
+    ankiconnect, model_name_matcher,
     average_word_length, wpm, get_splitter,
     check_docs_tkn_length, get_tkn_length,
     extra_args_types, disable_internet,
@@ -70,6 +71,7 @@ from langchain_core.output_parsers.string import StrOutputParser
 logger.info("Starting WDoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 
 @optional_typecheck
 @set_USAGE_as_docstring
@@ -199,7 +201,7 @@ class WDoc:
             # type checking of extra args
             if WDOC_TYPECHECKING in ["crash", "warn"]:
                 val = cli_kwargs[k]
-                curr_type = type(val)
+                # curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
                 if expected_type is str:
                     assert val.strip(
@@ -245,7 +247,7 @@ class WDoc:
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0].lower() in [
             "openai", "sentencetransformers", "huggingface"
-        ] , "Backend of embeddings must be either openai, sentencetransformers or huggingface"
+        ], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
@@ -253,7 +255,7 @@ class WDoc:
                 embed_kwargs = json.loads(embed_kwargs)
             except Exception as err:
                 raise Exception(
-                    f"Failed to parse embed_kwargs: '{embed_kwargs}'")
+                    f"Failed to parse embed_kwargs: '{embed_kwargs}'") from err
         assert isinstance(
             embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
@@ -335,7 +337,7 @@ class WDoc:
                     "Failed to parse string top_k value. If top_k "
                     "is a string, the expected format is 'auto_N_M' with N "
                     f"and M ints and M>N. Received: {top_k}"
-                )
+                ) from err
             top_k = starting_top_k
             self.max_top_k = max_top_k
         else:
@@ -419,7 +421,7 @@ class WDoc:
                     f"Disabling price computation for {query_eval_modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'")
                 self.query_evalllm_price = [0.0, 0.0]
             elif llms_api_bases["query_eval_model"]:
-                red(f"Disabling price computation for query_eval_model because api_base was modified")
+                red("Disabling price computation for query_eval_model because api_base was modified")
                 self.query_evalllm_price = [0.0, 0.0]
             elif query_eval_modelname in litellm.model_cost:
                 self.query_evalllm_price = [
@@ -498,7 +500,7 @@ class WDoc:
             # remove args that are indented only for the instanciation and
             # not as loading argument
             filtered_cli_kwargs = self.cli_kwargs.copy()
-            for k in ["embed_instruct" ,"filter_content", "filter_metadata", "out_file"]:
+            for k in ["embed_instruct", "filter_content", "filter_metadata", "out_file"]:
                 if k in filtered_cli_kwargs:
                     del filtered_cli_kwargs[k]
 
@@ -571,7 +573,7 @@ class WDoc:
                 raise Exception(red(self.ntfy(
                     f"Cost estimate ${estimate_dol:.5f} > ${self.dollar_limit} which is absurdly high. Has something gone wrong? Quitting.")))
             else:
-                red(f"Cost estimate > limit but the api_base was modified so not crashing.")
+                red("Cost estimate > limit but the api_base was modified so not crashing.")
 
         llm_params = litellm.get_supported_openai_params(
             model=self.modelname if self.modelbackend != "testing" else {}
@@ -680,7 +682,6 @@ class WDoc:
             sum_reading_length = len(real_text) / average_word_length / wpm
             whi(f"{item_name} reading length is {sum_reading_length:.1f}")
 
-            n_recursion_done = 0
             recursive_summaries = {0: summary}
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
@@ -1440,7 +1441,7 @@ class WDoc:
                             }
                         )
                         break
-                    except ShouldIncreaseTopKAfterLLMEvalFiltering as err:
+                    except ShouldIncreaseTopKAfterLLMEvalFiltering:
                         if self.max_top_k is None:
                             raise
                         elif self.max_top_k == self.top_k:
@@ -1572,7 +1573,6 @@ class WDoc:
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
-
             rag_chain = (
                 retrieve_documents
                 | pbar_chain(
@@ -1623,9 +1623,9 @@ class WDoc:
                     assert new_top_k not in tried_top_k
                     assert new_top_k <= self.max_top_k
                     self.top_k = new_top_k
-                except NoDocumentsRetrieved as err:
+                except NoDocumentsRetrieved:
                     return {"error": md_printer(f"## No documents were retrieved with query '{query_fe}'", color="red")}
-                except NoDocumentsAfterLLMEvalFiltering as err:
+                except NoDocumentsAfterLLMEvalFiltering:
                     return {"error": md_printer(f"## No documents remained after query eval LLM filtering using question '{query_an}'", color="red")}
             chain_time = time.time() - start_time
 
@@ -1655,6 +1655,7 @@ class WDoc:
                             d.metadata["content_hash"][:5]: str(idoc + 1)
                             for idoc, d in enumerate(output["filtered_docs"])
                         }
+
                 @optional_typecheck
                 def source_replace(input: str) -> str:
                     for h, idoc in source_hashes.items():
@@ -1663,7 +1664,7 @@ class WDoc:
 
                 llmcallback = self.llm.callbacks[0]
                 cost_before_combine = self.llm_price[0] * llmcallback.prompt_tokens + \
-                self.llm_price[1] * llmcallback.completion_tokens
+                    self.llm_price[1] * llmcallback.completion_tokens
 
                 # group the intermediate answers by batch, then do a batch reduce mapping
                 # each batch is at least 2 intermediate answers and maxes at
@@ -1721,7 +1722,9 @@ class WDoc:
             else:
                 final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
-                source_replace = lambda input: input
+
+                def source_replace(input):
+                    return input
                 all_intermediate_answers = [final_answer]
 
             # prepare the content of the output
@@ -1808,7 +1811,7 @@ class WDoc:
         filetype: str = "auto",
         only_text: bool = False,
         cli_kwargs: Optional[dict] = None,
-        **kwargs,
+        **kwargs
         ) -> Union[List[Document], str]:
         """
         Simple function to load a document given at least  path arg. Used for cli

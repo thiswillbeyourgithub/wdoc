@@ -11,6 +11,7 @@ import lazy_import
 from queue import Queue
 import threading
 
+
 def import_worker(q: Queue):
     while True:
         module = q.get()
@@ -23,13 +24,17 @@ def import_worker(q: Queue):
         else:
             exec(f"import {module}")
 
+
 q = Queue()
 thread = threading.Thread(target=import_worker, args=(q,), daemon=False)
 thread.start()
+
+
 def background_loading(module: str) -> None:
     q.put(module)
     if module is not None:
         lazy_import.lazy_module(module)
+
 
 background_loading("litellm")
 background_loading('numpy')
@@ -67,7 +72,6 @@ background_loading("sklearn.metrics")
 background_loading("sklearn.decomposition")
 background_loading("sklearn.preprocessing")
 background_loading(None)
-
 
 from .WDoc import WDoc
 
@@ -135,7 +139,6 @@ def fire_wrapper(
         args = []
     assert not args
 
-
     kwargs["query"] = kwargs["query"].replace("summary", "summarize")
 
     if "path" in kwargs and kwargs["path"] in ["", None, True, False]:
@@ -157,7 +160,8 @@ def cli_launcher() -> None:
         return fire.Fire(WDoc)
 
     kwargs = fire.Fire(fire_wrapper)
-    instance = WDoc(**kwargs)
+    _ = WDoc(**kwargs)
+
 
 def cli_parse_file() -> None:
     sys_args = copy.deepcopy(sys.argv)
@@ -206,7 +210,7 @@ def cli_parse_file() -> None:
         }
         try:
             out = json.dumps(d, indent=2)
-        except Exception as err:
+        except Exception:
             out = str(d)
     else:
         assert isinstance(parsed, str)
