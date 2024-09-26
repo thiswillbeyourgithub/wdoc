@@ -43,9 +43,9 @@
         * `pdf`
             * `--path` is the filepath to pdf
             * Optional:
-                * `doccheck_min_lang_prob`
-                * `doccheck_min_token`
-                * `doccheck_max_token`
+                * `--doccheck_min_lang_prob`
+                * `--doccheck_min_token`
+                * `--doccheck_max_token`
 
         * `online_pdf`
             * Same arguments as for `--filetype=pdf`
