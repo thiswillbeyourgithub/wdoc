@@ -92,7 +92,7 @@ setup(
         'tqdm>=4.66.4',
         'faiss-cpu>=1.8.0',
         'rich>=13.7.1',
-        'beartype >= 0.19.0rc2',
+        'beartype >= 0.19.0',
         'platformdirs >= 4.2.2',
         'dill >= 0.3.7',
         'pyfiglet >= 1.0.2',   # banner
