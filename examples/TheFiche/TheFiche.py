@@ -291,6 +291,8 @@ anticorps
                 for t in sup_tags:
                     if t not in text:
                         p(f"Couldn't find tag {t} in text")
+                    else:
+                        p(f"Found tag {t} in text")
                     text = text.replace(t, "[[" + t + "]]")
             if sub_tags:
                 assert sup_tags
