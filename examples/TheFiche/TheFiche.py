@@ -297,16 +297,19 @@ anticorps
                 new_text = ""
                 for line in lines:
                     for t in sub_tags:
+                        t = t.strip()
+                        assert t
+                        assert "[" not in t and "]" not in t
                         if t not in line:
                             continue
                         elif line == line.rstrip():
                             line = line + " [[" + t + "]]"
                         else:
-                            nonstripped = line.rstrip()
-                            stripped = line[:len(nonstripped)]
-                            assert stripped == stripped.rstrip()
-                            nonstripped = nonstripped + " [[" + t + "]]"
-                            line = nonstripped + stripped
+                            head = line.rstrip()
+                            tail = line[len(head):]
+                            assert head == head.rstrip()
+                            assert tail != tail.rstrip(), tail
+                            line = head + " [[" + t + "]]" + tail
                             assert line != line.rstrip()
 
                     new_text += line
