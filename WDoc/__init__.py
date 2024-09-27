@@ -35,12 +35,12 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
                 try:
                     dir(sys.modules[first])
                 except Exception as e:
-                    raise Exception(
+                    print(
                         f"Error when unlazyloading module '{first}'. Error: '{e}'"
                         "\nYou can try setting the env variable "
                         "WDOC_DISABLE_LAZYLOADING to 'true'"
                         "Don't hesitate to open an issue!"
-                    ) from e
+                    )
                 # print(f"Unlazyloaded module: {first}")
 
 
