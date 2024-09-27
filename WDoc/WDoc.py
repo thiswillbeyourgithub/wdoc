@@ -34,7 +34,7 @@ from .utils.misc import (
     thinking_answer_parser, DocDict
 )
 from .utils.prompts import prompts
-from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers
+from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers, semantic_batching
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -1674,8 +1674,6 @@ class WDoc:
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
                 all_intermediate_answers = [output["intermediate_answers"]]
-                batch_tkn_size = 500
-                max_batch_size = 5
                 pbar = tqdm(
                     desc="Combining answers",
                     unit="answer",
@@ -1686,21 +1684,9 @@ class WDoc:
                 temp_interm_answ = thinking_answer_parser(temp_interm_answ)["answer"]
                 while True:
                     batches = [[]]
-                    for ia in temp_interm_answ:
-                        if not check_intermediate_answer(ia):
-                            # disregard IRRELEVANT answers
-                            continue
-                        if len(batches[-1]) < 2:
-                            # make sure there's at least 2 per batch
-                            batches[-1].append(ia)
-                        elif len(batches[-1]) > max_batch_size:
-                            # make sure there's not too many intermediate answers
-                            batches.append([ia])
-                        elif sum([get_tkn_length(b) for b in batches[-1]]) >= batch_tkn_size:
-                            # cap batch size to the max tkn size
-                            batches.append([ia])
-                        else:
-                            batches[-1].append(ia)
+                    # disregard IRRELEVANT answers
+                    temp_interm_answ = [ia for ia in temp_interm_answ if check_intermediate_answer(ia)]
+                    batches = semantic_batching(temp_interm_answ, self.embeddings)
                     batch_args = [
                         {
                             "question_to_answer": query_an,
