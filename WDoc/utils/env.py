@@ -1,7 +1,7 @@
 import os
-from typing import Any
+from typing import Any, Optional, Union
 
-def parse(val: str) -> Any:
+def parse(val: str) -> Optional[Union[bool, int, str]]:
     if val == "true":
         return True
     elif val == "false":
