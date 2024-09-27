@@ -694,6 +694,12 @@ ANSW = "<answer>"
 ANSWE = "</answer>"
 def thinking_answer_parser(output: str) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
+    # fix </answer> instead of <answer>
+    if ANSW not in output and output.count(ANSWE) == 2:
+        output = output.replace(ANSWE, ANSW, 1)
+    if THIN not in output and output.count(THINE) == 2:
+        output = output.replace(THINE, THIN, 1)
+
     if (THIN not in output) and (ANSW not in output):
         assert THINE not in output, f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
         assert ANSWE not in output, f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
