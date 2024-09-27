@@ -74,9 +74,9 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
 You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
 RULES:
-- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
-- wrap your answer in an <answer> tag.
-- The <answer> tag should only contain a number and nothing else.
+- Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer></answer> XML tag.
+- The <answer> XML tag should only contain a number and nothing else.
 - If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Answerer and Combiner. But take then into consideration if they are addressed to you.
 
@@ -120,9 +120,9 @@ DETAILED INSTRUCTIONS:
     - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
 - ALWAYS double check that you are not contradicting the original document before answering.
 - If you're unsure but the document refers to an image that has a reasonnable chance to be relevant, treat this document as if it was probably relevant.
-- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
-- wrap your answer in an <answer> tag.
-- The <answer> tag should only contain your answer.
+- Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer> XML tag.
+- The <answer> XML tag should only contain your answer.
 ```
 """.strip()),
         ("human", """
@@ -173,14 +173,14 @@ DETAILED INSTRUCTIONS:
     - DON'T interpret the question too strictly:
         - eg: if the question makes reference to "documents" consider that it's what I call here "statements" for example.
         - eg: if the question is phrased as an instruction like "give me all information about such and such", use common sense and satisfy the instruction!
-- The intermediate answer can consist of a succession of thoughts in <thinking> tag followd by the answer in an <answer> tag. In that case you have to only take into account the <answer> (the <thinking> can still be helpful but don't treat it as source you can include in your own answer, you can't!)
+- The intermediate answer can consist of a succession of thoughts in <thinking> XML tag followd by the answer in an <answer> XML tag. In that case you have to only take into account the <answer> (the <thinking> can still be helpful but don't treat it as source you can include in your own answer, you can't!)
 - If some information are imcompatible, don't make a judgement call: just include both and add short clarification between parentheses and I'll take a look.
 - Sources are designated by unique identifiers. Use the format [id1, id2], to keep track of each source so that we can find the original source of each information in your final answer.
     - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
     - It is extremely important that you do not forget to include a source.
-- Before answering, you have to think for as long as you want inside a <thinking> tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
-- wrap your answer in an <answer> tag.
-- The <answer> tag should only contain your answer.
+- Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
+- wrap your answer in an <answer> XML tag.
+- The <answer> XML tag should only contain your answer.
 ```
 """.strip()),
         ("human",
