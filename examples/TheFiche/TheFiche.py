@@ -228,7 +228,8 @@ Rules:
 - Write each keyword in its own line, so newline separated.
 - Take a deep breath before answering.
 - Wrap your tags list in a <tags> banner.
-- Use as many tags as you seem fit. An absolute minimum of 1 every 3 lines seems about right.
+- Use as many tags as you deem fit. An absolute minimum of 1 every 3 lines seems about right.
+- I won't accept a tag that is not a substring of the whole text. IT HAS TO APPEAR IN THE TEXT AS IS.
 '''
 
 
