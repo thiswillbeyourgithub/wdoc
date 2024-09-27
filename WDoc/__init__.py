@@ -36,6 +36,7 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
         q.put(module)
         lazy_import.lazy_module(module)
 
+    threaded_loading("langchain.text_splitter")
     threaded_loading("litellm")
     threaded_loading('numpy')
     threaded_loading('faiss')
