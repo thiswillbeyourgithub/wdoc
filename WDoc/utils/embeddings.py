@@ -377,11 +377,25 @@ def load_embeddings(
     if WDOC_EXPIRE_CACHE_DAYS:
         cached_path=cache_dir / "CacheEmbeddings" / embed_model_str
         current_time = time.time()
-        for file in cached_path.iterdir():
-            last_access_time = file.stat().st_atime
-            days_since_last_access = (current_time - last_access_time) / (24 * 3600)
-            if days_since_last_access > WDOC_EXPIRE_CACHE_DAYS:
-                file.unlink(missing_ok=False)
+        for dir_to_expire in [cached_path, embeddings_cache]:
+            n_total = 0
+            n_cleaned = 0
+            space_retrieved = 0
+            for file in dir_to_expire.iterdir():
+                last_access_time = file.stat().st_atime
+                days_since_last_access = (current_time - last_access_time) / (24 * 3600)
+                n_total += 1
+                if days_since_last_access >= WDOC_EXPIRE_CACHE_DAYS:
+                    n_cleaned += 1
+                    if file.is_dir():
+                        space_retrieved += sum(f.stat().st_size for f in file.rglob('*') if f.is_file())
+                    elif file.is_file():
+                        space_retrieved += file.stat().st_size
+                    file.unlink(missing_ok=False)
+            whi(
+                f"Number of files removed from {dir_to_expire.name} cache: "
+                f"{n_cleaned}/{n_total} ({space_retrieved / 1024 / 1024:.f3}Mb)"
+            )
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
