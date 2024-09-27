@@ -118,7 +118,7 @@ class WDoc:
         query_relevancy: Union[float, int] = 0.1,
 
         summary_n_recursion: int = 0,
-        summary_language: str = "the same language as the document",
+        summary_language: str = "the same language as the document",  # <- the LLM will understand
 
         llm_verbosity: Union[bool, int] = False,
         debug: Union[bool, int] = False,
