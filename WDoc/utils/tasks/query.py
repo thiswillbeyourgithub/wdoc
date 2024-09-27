@@ -143,6 +143,7 @@ def collate_intermediate_answers(
         )
     except Exception as err:
         red(f"Failed to do semantic sorting of intermediate answers: {err}")
+    assert len(list_ia) >= 2, f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
 
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
