@@ -13,7 +13,7 @@ import json
 import pyfiglet
 import copy
 from textwrap import indent
-from typing import List, Union, Any, Optional, Callable
+from typing import List, Union, Any, Optional, Callable, Literal
 import tldextract
 from pathlib import Path, PosixPath
 import time
@@ -126,7 +126,7 @@ class WDoc:
         dollar_limit: int = 5,
         notification_callback: Optional[Callable] = None,
         disable_llm_cache: Union[bool, int] = False,
-        file_loader_parallel_backend: str = "loky",
+        file_loader_parallel_backend: Literal["loky", "threading", "multiprocessing"] = "loky",
         file_loader_n_jobs: int = 3,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,

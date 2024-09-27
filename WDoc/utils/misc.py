@@ -3,7 +3,7 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Callable, get_type_hints
+from typing import List, Union, Callable, get_type_hints, Literal
 from joblib import Memory
 from joblib import hash as jhash
 import socket
@@ -104,7 +104,7 @@ filetype_arg_types = {
     "json_dict_template": str,
     "json_dict_exclude_keys": List,
 
-    "audio_backend": str,
+    "audio_backend": Literal["whisper", "deepgram"],
     "audio_unsilence": bool,
 
     "whisper_lang": str,
@@ -114,7 +114,7 @@ filetype_arg_types = {
 
     "youtube_language": str,
     "youtube_translation": str,
-    "youtube_audio_backend": str,
+    "youtube_audio_backend": Literal["youtube", "whisper", "deepgram"],
 
     "load_functions": List,
 
