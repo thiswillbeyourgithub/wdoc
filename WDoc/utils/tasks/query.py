@@ -25,7 +25,7 @@ import scipy
 from ..typechecker import optional_typecheck
 from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
 from ..logger import red, whi
-from ..misc import thinking_answer_parser
+from ..misc import thinking_answer_parser, get_tkn_length
 from ..flags import is_verbose
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
@@ -135,14 +135,6 @@ def collate_intermediate_answers(
     combined by the LLM"""
     # remove answers deemed irrelevant
     list_ia = [ia for ia in list_ia if check_intermediate_answer(ia)]
-
-    try:
-        list_ia = semantic_sorting(
-            texts=list_ia,
-            embedding_engine=embedding_engine,
-        )
-    except Exception as err:
-        red(f"Failed to do semantic sorting of intermediate answers: {err}")
     assert len(list_ia) >= 2, f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
 
     out = "Intermediate answers:"
@@ -157,15 +149,17 @@ def collate_intermediate_answers(
     return out
 
 @optional_typecheck
-def semantic_sorting(
+def semantic_batching(
     texts: List[str],
     embedding_engine: CacheBackedEmbeddings,
-    ) -> List[str]:
+    ) -> List[List[str]]:
     """
     Given a list of text, embed them, do a hierarchical clutering then
-    sort the list according to the leaf order. This probably helps the LLM
-    to combine the intermediate answers into one.
-    Return the text directly if less than 5 texts.
+    sort the list according to the leaf order, then create buckets that best
+    contain each subtopic while keeping a reasonnable number of tokens.
+    This probably helps the LLM to combine the intermediate answers
+    into one.
+    Returns directly if less than 5 texts.
     """
     assert texts, "No input text received"
 
@@ -175,7 +169,7 @@ def semantic_sorting(
     texts = temp
 
     if len(texts) < 5:
-        return texts
+        return [texts]
 
     # get embeddings
     embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
@@ -184,6 +178,7 @@ def semantic_sorting(
 
     max_n_dim = min(100, len(texts))
 
+    # optional dimension reduction to gain time
     if n_dim > max_n_dim:
         scaler = preprocessing.StandardScaler()
         embed_scaled = scaler.fit_transform(embeds)
@@ -207,7 +202,7 @@ def semantic_sorting(
 
     # get the pairwise distance matrix
     pairwise_distances = metrics.pairwise_distances
-    dist = pd.DataFrame(
+    pd_dist = pd.DataFrame(
         columns=embeddings.index,
         index=embeddings.index,
         data=pairwise_distances(
@@ -217,28 +212,115 @@ def semantic_sorting(
             )
         )
     # make sure the intersection is 0 and not a very small float
-    for ind in dist.index:
-        dist.at[ind, ind] = 0
+    for ind in pd_dist.index:
+        pd_dist.at[ind, ind] = 0
     # make sure it's symetric
-    dist = dist.add(dist.T).div(2)
+    pd_dist = pd_dist.add(pd_dist.T).div(2)
 
     # get the hierarchichal semantic sorting order
-    dist: NDArray[int] = scipy.spatial.distance.squareform(dist.values)  # convert to condensed format
+    dist: NDArray[int] = scipy.spatial.distance.squareform(pd_dist.values)  # convert to condensed format
     Z: NDArray[Tuple[int, Literal[4]]] = scipy.cluster.hierarchy.linkage(
         dist,
         method='ward',
         optimal_ordering=True
     )
-    order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
-    out_texts = [texts[o] for o in order]
-    assert len(set(out_texts)) == len(out_texts), "duplicates"
-    assert len(out_texts) == len(texts), "extra out_texts"
-    assert not any(o for o in out_texts if o not in texts)
-    assert not any(t for t in texts if t not in out_texts)
-    # whi(f"Done in {int(time.time()-start)}s")
-    assert len(texts) == len(out_texts)
 
-    return out_texts
+    order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
+
+    # # this would just return the list of strings in the best order
+    # out_texts = [texts[o] for o in order]
+    # assert len(set(out_texts)) == len(out_texts), "duplicates"
+    # assert len(out_texts) == len(texts), "extra out_texts"
+    # assert not any(o for o in out_texts if o not in texts)
+    # assert not any(t for t in texts if t not in out_texts)
+    # # whi(f"Done in {int(time.time()-start)}s")
+    # assert len(texts) == len(out_texts)
+
+    # get each bucket if we were only looking at the number of texts
+    cluster_labels = scipy.cluster.hierarchy.fcluster(
+        Z,
+        len(pd_dist.index)//2,
+        criterion='maxclust'
+    )
+
+    # Create buckets
+    buckets = []
+    current_bucket = []
+    current_tokens = 0
+    max_token = 500
+
+    # fill each bucket until reaching max_token
+    labels = np.unique(cluster_labels)
+    labels.sort()
+    text_sizes = {t:get_tkn_length(t) for t in texts}
+    for lab in labels:
+        lab_mask = np.argwhere(cluster_labels==lab)
+        assert len(lab_mask) > 1, cluster_labels
+        for clustid in lab_mask:
+            text = texts[clustid]
+            size = text_sizes[text]
+            if current_tokens + size > max_token:
+                buckets.append(current_bucket)
+                current_bucket = [text]
+                current_tokens = 0
+            else:
+                current_bucket.append(text)
+                current_tokens += size
+
+        buckets.append(current_bucket)
+        current_bucket = []
+        current_tokens = 0
+    assert all(bucket for bucket in buckets), "Empty buckets"
+    for bucket in buckets:
+        assert sum(text_sizes[t] for t in bucket) <= max_token, bucket
+
+    # sort each bucket based on the optimal order
+    for ib, b in enumerate(buckets):
+        buckets[ib] = sorted(b, key=lambda t: order[texts.index(t)])
+
+    # now if any bucket contains only one text, that means it has too many
+    # tokens itself, so we reequilibrate from the previous buckets
+    for ib, b in enumerate(buckets):
+        assert b
+        if len(b) == 1:
+            assert text_sizes[b[0]] > max_token, b[0]
+            # figure out which bucket to merge with
+            if ib == 0:  # first , merge with next
+                next_id = ib + 1
+            elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
+                t_cur = b[0]
+                prev = min([pd_dist.loc[t_cur, t] for t in buckets[ib-1]])
+                next = min([pd_dist.loc[t_cur, t] for t in buckets[ib+1]])
+                if prev < next:
+                    next_id = ib - 1
+                else:
+                    next_id = ib + 1
+            elif ib == len(buckets):  # last, take the penultimate
+                next_id = ib - 1
+            assert buckets[next_id], buckets[next_id]
+
+            if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
+                if next_id > ib:
+                    buckets[next_id].insert(0, b.pop())
+                else:
+                    buckets[next_id].append(b.pop())
+                assert not b, b
+            else:
+                # send text to the next bucket, at the correct position
+                if next_id > ib:
+                    b.append(buckets[next_id].pop(0))
+                else:
+                    b.append(buckets[next_id].pop(-1))
+            assert id(b) == id(buckets[ib])
+
+    buckets = [b for b in buckets if b]
+    assert all(len(b) >= 2 for b in buckets), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
+    unchained = []
+    [unchained.extend(b) for b in buckets]
+    assert len(unchained) == len(set(unchained)), "There were duplicate texts in buckets!"
+    assert all(t in texts for t in unchained), "Some text of buckets were added!"
+
+    return buckets
 
 
 @optional_typecheck
