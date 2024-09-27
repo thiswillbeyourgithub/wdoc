@@ -71,7 +71,7 @@ background_loading('LogseqMarkdownParser')
 background_loading("sklearn.metrics")
 background_loading("sklearn.decomposition")
 background_loading("sklearn.preprocessing")
-background_loading(None)
+background_loading(None)  # kill the import worker
 
 from .WDoc import WDoc
 
