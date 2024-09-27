@@ -1,6 +1,11 @@
 import os
 from typing import Any, Optional, Union
+from beartype import beartype, BeartypeConf
 
+# must create it because we can't import it from typechecker.py
+warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
+
+@warn_typecheck
 def parse(val: str) -> Optional[Union[bool, int, str]]:
     if val == "true":
         return True
