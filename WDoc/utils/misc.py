@@ -555,12 +555,12 @@ def unlazyload_modules():
                     dir(v)  # this is enough to trigger the loading
                     found_one = True
                 except Exception as err:
-                    red(
+                    raise Exception(
                         f"Error when unlazyloading module '{k}'. Error: '{err}'"
                         "\nThis can be caused by beartype's typechecking"
                         "\nYou can also try setting the env variable "
                         "WDOC_DISABLE_LAZYLOADING to 'true'"
-                    )
+                    ) from err
                 break  # otherwise dict size change during iteration
             assert "Lazily-loaded" not in str(v)
         if found_one:
