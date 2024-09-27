@@ -2,6 +2,7 @@
 Default file, used as entry point.
 """
 
+import os
 import sys
 import fire
 import json
@@ -12,66 +13,68 @@ from queue import Queue
 import threading
 
 
-def import_worker(q: Queue):
-    while True:
-        module = q.get()
-        if module is None:
-            return
-        if "." in module:
-            first = ".".join(module.split(".")[:-1])
-            last = module.split(".")[-1]
-            exec(f"from {first} import {last}")
-        else:
-            exec(f"import {module}")
+if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
+
+    def import_worker(q: Queue):
+        while True:
+            module = q.get()
+            if module is None:
+                return
+            if "." in module:
+                first = ".".join(module.split(".")[:-1])
+                last = module.split(".")[-1]
+                exec(f"from {first} import {last}")
+            else:
+                exec(f"import {module}")
 
 
-q = Queue()
-thread = threading.Thread(target=import_worker, args=(q,), daemon=False)
-thread.start()
+    q = Queue()
+    thread = threading.Thread(target=import_worker, args=(q,), daemon=False)
+    thread.start()
 
-
-def background_loading(module: str) -> None:
-    q.put(module)
-    if module is not None:
+    def threaded_loading(module: str) -> None:
+        q.put(module)
         lazy_import.lazy_module(module)
 
+    threaded_loading("litellm")
+    threaded_loading('numpy')
+    threaded_loading('faiss')
+    threaded_loading('zlib')
+    threaded_loading('dill')
+    threaded_loading('sqlite3')
+    threaded_loading('tldextract')
+    threaded_loading('pyfiglet')
+    threaded_loading('youtube_dl')
+    threaded_loading('ankipandas')
+    threaded_loading('pandas')
+    threaded_loading('ftfy')
+    threaded_loading('bs4')
+    threaded_loading('goose3')
+    threaded_loading('LogseqMarkdownParser')
+    threaded_loading("deepgram")
+    threaded_loading("pydub")
+    threaded_loading("ffmpeg")
+    threaded_loading("torchaudio")
+    threaded_loading("playwright.sync_api")
+    threaded_loading("openparse")
+    threaded_loading('youtube_dl')
+    threaded_loading('ankipandas')
+    threaded_loading('pandas')
+    threaded_loading('ftfy')
+    threaded_loading("deepgram")
+    threaded_loading("pydub")
+    threaded_loading("ffmpeg")
+    threaded_loading("openparse")
+    threaded_loading("scipy")
+    threaded_loading('youtube_dl.utils')
+    threaded_loading('LogseqMarkdownParser')
+    threaded_loading("sklearn.metrics")
+    threaded_loading("sklearn.decomposition")
+    threaded_loading("sklearn.preprocessing")
 
-background_loading("litellm")
-background_loading('numpy')
-background_loading('faiss')
-background_loading('zlib')
-background_loading('dill')
-background_loading('sqlite3')
-background_loading('tldextract')
-background_loading('pyfiglet')
-background_loading('youtube_dl')
-background_loading('ankipandas')
-background_loading('pandas')
-background_loading('ftfy')
-background_loading('bs4')
-background_loading('goose3')
-background_loading('LogseqMarkdownParser')
-background_loading("deepgram")
-background_loading("pydub")
-background_loading("ffmpeg")
-background_loading("torchaudio")
-background_loading("playwright.sync_api")
-background_loading("openparse")
-background_loading('youtube_dl')
-background_loading('ankipandas')
-background_loading('pandas')
-background_loading('ftfy')
-background_loading("deepgram")
-background_loading("pydub")
-background_loading("ffmpeg")
-background_loading("openparse")
-background_loading("scipy")
-background_loading('youtube_dl.utils')
-background_loading('LogseqMarkdownParser')
-background_loading("sklearn.metrics")
-background_loading("sklearn.decomposition")
-background_loading("sklearn.preprocessing")
-background_loading(None)  # kill the import worker
+    q.put(None)  # kill the import worker
+else:
+    print("WDoc: disabled lazy loading")
 
 from .WDoc import WDoc
 
