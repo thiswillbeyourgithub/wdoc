@@ -1,8 +1,6 @@
 """
 Called by batch_file_loader.py's threads. Contains many cached function to
 load each document.
-The imports are taking a substantial amount of time so loaders.py is
-lazily loaded.
 """
 
 import copy
@@ -61,6 +59,7 @@ import ffmpeg
 import torchaudio
 import playwright.sync_api
 import openparse
+from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
@@ -73,11 +72,6 @@ from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
-
-import lazy_import
-# from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
-TextSplitter = lazy_import.lazy_class('langchain.text_splitter.TextSplitter')
-RecursiveCharacterTextSplitter = lazy_import.lazy_class('langchain.text_splitter.RecursiveCharacterTextSplitter')
 
 try:
     import pdftotext

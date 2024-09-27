@@ -650,3 +650,7 @@
 
 * `WDOC_PRIVATE_MODE`
     * You should never set it yourself. It is set automatically if the `--private` argument is used, and used throughout to triple check that it's indeed fully private.
+
+* `WDOC_DISABLE_LAZYLOADING`
+    * If any non empty string, then lazyloading will be disabled.
+    This is expected to avoid some bugs.
