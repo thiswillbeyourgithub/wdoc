@@ -15,7 +15,7 @@ import threading
 
 if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
 
-    def import_worker(q: Queue):
+    def import_worker(q: Queue, import_lock: threading.Lock):
         while True:
             module = q.get()
             if module is None:
@@ -32,25 +32,34 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
             assert first in sys.modules, f"Error when importing '{first}'"
             if "Lazily-loaded" in str(sys.modules[first]):
                 # print(f"Module is lazy loaded so far: {first}")
-                try:
-                    dir(sys.modules[first])
-                except Exception as e:
-                    print(
-                        f"Error when unlazyloading module '{first}'. Error: '{e}'"
-                        "\nYou can try setting the env variable "
-                        "WDOC_DISABLE_LAZYLOADING to 'true'"
-                        "Don't hesitate to open an issue!"
-                    )
+                with import_lock:
+                    try:
+                        dir(sys.modules[first])
+                    except Exception as e:
+                        print(
+                            f"Error when unlazyloading module '{first}'. Error: '{e}'"
+                            "\nYou can try setting the env variable "
+                            "WDOC_DISABLE_LAZYLOADING to 'true'"
+                            "Don't hesitate to open an issue!"
+                        )
                 # print(f"Unlazyloaded module: {first}")
 
 
     q = Queue()
-    thread = threading.Thread(target=import_worker, args=(q,), daemon=False)
+    import_lock = threading.Lock()
+    thread = threading.Thread(
+        target=import_worker,
+        args=(q,import_lock),
+        daemon=False,
+    )
     thread.start()
 
     def threaded_loading(module: str) -> None:
         q.put(module)
-        lazy_import.lazy_module(module)
+        # for some reason enabling lazy import this way makes python hang,
+        # except if a breakpoint is used?! Disabling for now
+        # with import_lock:
+        #     lazy_import.lazy_module(module)
 
     threaded_loading("langchain.text_splitter")
     threaded_loading("litellm")
