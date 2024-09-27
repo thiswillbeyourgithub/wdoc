@@ -20,6 +20,7 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
             module = q.get()
             if module is None:
                 return
+            # print(f"Importing {module}")
             if "." in module:
                 first = ".".join(module.split(".")[:-1])
                 last = module.split(".")[-1]
@@ -30,6 +31,7 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
 
             assert first in sys.modules, f"Error when importing '{first}'"
             if "Lazily-loaded" in str(sys.modules[first]):
+                # print(f"Module is lazy loaded so far: {first}")
                 try:
                     dir(sys.modules[first])
                 except Exception as e:
@@ -39,6 +41,7 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
                         "WDOC_DISABLE_LAZYLOADING to 'true'"
                         "Don't hesitate to open an issue!"
                     ) from e
+                # print(f"Unlazyloaded module: {first}")
 
 
     q = Queue()
