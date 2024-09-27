@@ -147,7 +147,13 @@ def collate_intermediate_answers(
 
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
-        out += f"[{iia + 1}]:\n{ia}\n---\n"
+        out += f"""
+<source_id>
+{iia + 1}
+</source_id>
+<ia>
+{ia}
+</ia>\n""".lstrip()
     return out
 
 @optional_typecheck
