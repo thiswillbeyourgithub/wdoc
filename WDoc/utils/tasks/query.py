@@ -3,7 +3,9 @@ Chain (logic) used to query a document.
 """
 
 import re
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Literal
+from numpy.typing import NDArray
+
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
@@ -214,9 +216,13 @@ def semantic_sorting(
     dist = dist.add(dist.T).div(2)
 
     # get the hierarchichal semantic sorting order
-    dist = scipy.spatial.distance.squareform(dist.values)  # convert to condensed format
-    Z = scipy.cluster.hierarchy.linkage(dist, method='ward', optimal_ordering=True)
-    order = scipy.cluster.hierarchy.leaves_list(Z)
+    dist: NDArray[int] = scipy.spatial.distance.squareform(dist.values)  # convert to condensed format
+    Z: NDArray[Tuple[int, Literal[4]]] = scipy.cluster.hierarchy.linkage(
+        dist,
+        method='ward',
+        optimal_ordering=True
+    )
+    order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
     out_texts = [texts[o] for o in order]
     assert len(set(out_texts)) == len(out_texts), "duplicates"
     assert len(out_texts) == len(texts), "extra out_texts"
