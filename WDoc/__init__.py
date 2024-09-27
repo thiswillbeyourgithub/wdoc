@@ -25,7 +25,20 @@ if "WDOC_DISABLE_LAZYLOADING" not in os.environ:
                 last = module.split(".")[-1]
                 exec(f"from {first} import {last}")
             else:
+                first = module
                 exec(f"import {module}")
+
+            assert first in sys.modules, f"Error when importing '{first}'"
+            if "Lazily-loaded" in str(sys.modules[first]):
+                try:
+                    dir(sys.modules[first])
+                except Exception as e:
+                    raise Exception(
+                        f"Error when unlazyloading module '{first}'. Error: '{e}'"
+                        "\nYou can try setting the env variable "
+                        "WDOC_DISABLE_LAZYLOADING to 'true'"
+                        "Don't hesitate to open an issue!"
+                    ) from e
 
 
     q = Queue()
