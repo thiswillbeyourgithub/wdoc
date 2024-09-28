@@ -390,6 +390,9 @@ def load_embeddings(
                 f"expected {len(docs)-len(to_embed)-len(failed_to_merge)}"
             )
 
+    # TODO: handle case where a thread failed to return a merged db
+    # TODO the document that failed to merge need to be embedded again
+
     whi(f"Docs left to embed: {len(to_embed)}")
 
     # remove the cached embeddings that are too old
