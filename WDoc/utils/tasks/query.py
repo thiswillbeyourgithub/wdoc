@@ -323,8 +323,8 @@ def semantic_batching(
                 next_id = ib + 1
             elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
                 t_cur = b[0]
-                prev = min([pd_dist.loc[t_cur, t] for t in buckets[ib-1]])
-                next = min([pd_dist.loc[t_cur, t] for t in buckets[ib+1]])
+                prev = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib-1]])
+                next = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib+1]])
                 assert prev > 0 and next > 0
                 if prev < next:
                     next_id = ib - 1
