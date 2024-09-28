@@ -253,21 +253,30 @@ def semantic_batching(
     # at the average of average and median number of token in each clusters
 
     # make sure no cluster contains only one text
-    for lab in labels:
-        if (cluster_labels == lab).sum() == 1:
-            t = texts[np.argmax(cluster_labels==lab)]
-            t_closest = np.argmin(pd_dist.loc[texts.index(t), :])
-            l_closest = cluster_labels[t_closest]
-            if (cluster_labels == l_closest).sum() + 1 == len(texts):
-                # merging small to big would result in only one cluster:
-                # better to even them out
-                assert len(labels) == 2, labels
-                cluster_labels[texts.index(t_closest)] = lab
-            else:  # good to go
-                cluster_labels[cluster_labels==lab] = l_closest
-    labels = np.unique(cluster_labels)
-    labels.sort()
+    while not all((cluster_labels==lab).sum() > 1 for lab in labels):
+        if is_verbose:
+            whi("Remapping clusters.")
+        for lab in labels:
+            if (cluster_labels == lab).sum() == 1:
+                t = texts[np.argmax(cluster_labels==lab)]
+                t_closest = np.argmin(pd_dist.loc[texts.index(t), :])
+                l_closest = cluster_labels[t_closest]
+                if (cluster_labels == l_closest).sum() + 1 == len(texts):
+                    # merging small to big would result in only one cluster:
+                    # better to even them out
+                    assert len(labels) == 2, labels
+                    cluster_labels[texts.index(t_closest)] = lab
+                    if is_verbose:
+                        whi(f"Remapped one item from cluster {l_closest} to {lab}")
+                else:  # good to go
+                    cluster_labels[cluster_labels==lab] = l_closest
+                    if is_verbose:
+                        whi(f"Remapped single item of cluster {lab} to {l_closest}")
+                break
+        labels = np.unique(cluster_labels)
+        labels.sort()
     assert len(labels) > 1, cluster_labels
+    assert all((cluster_labels==lab).sum() > 1 for lab in labels), cluster_labels
 
     # Create buckets
     buckets = []
