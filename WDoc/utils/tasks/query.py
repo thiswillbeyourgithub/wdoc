@@ -295,7 +295,7 @@ def semantic_batching(
         for clustid in lab_mask:
             text = texts[int(clustid)]
             size = text_sizes[text]
-            if current_tokens + size > max_token:
+            if current_tokens + size > max_token and current_bucket:
                 buckets.append(current_bucket)
                 current_bucket = [text]
                 current_tokens = 0
@@ -303,6 +303,7 @@ def semantic_batching(
                 current_bucket.append(text)
                 current_tokens += size
 
+        assert current_bucket
         buckets.append(current_bucket)
         current_bucket = []
         current_tokens = 0
