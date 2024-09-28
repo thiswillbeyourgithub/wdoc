@@ -286,14 +286,14 @@ anticorps
                 assert len(result) <= len(string_list)
                 return result
             sub_tags = find_substrings(tags)
-            sup_tags = [t for t in tags if t not in sub_tags]
+            sup_tags = [t for t in tags if t not in sub_tags and re.search(t, text, re.IGNORECASE)]
             if sup_tags:
-                for t in sup_tags:
-                    if t not in text:
+                for it, t in enumerate(sup_tags):
+                    if not re.search(t, text, re.IGNORECASE):
                         p(f"Couldn't find tag {t} in text")
                     else:
                         p(f"Found tag {t} in text")
-                    text = text.replace(t, "[[" + t + "]]")
+                        text = re.sub(t, "[[" + t + "]]", text, re.IGNORECASE)
             if sub_tags:
                 assert sup_tags
                 lines = text.splitlines(keepends=True)
@@ -303,9 +303,7 @@ anticorps
                         t = t.strip()
                         assert t
                         assert "[" not in t and "]" not in t
-                        if t not in line:
-                            continue
-                        elif line == line.rstrip():
+                        if line == line.rstrip():
                             line = line + " [[" + t + "]]"
                         else:
                             head = line.rstrip()
