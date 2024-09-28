@@ -416,6 +416,46 @@ def batch_load_doc(
     else:
         red("No document failed to load!")
 
+    if asked_source_tags:
+        no_st = 0
+        st = {t: 0 for t in asked_source_tags}
+        extra = {}
+        for doc in docs:
+            if "source_tag" in doc.metadata:
+                s = doc.metadata["source_tag"]
+                if s not in st:
+                    if s in extra:
+                        extra[s] += 1
+                    else:
+                        extra[s] = 1
+                else:
+                    st[s] += 1
+            else:
+                no_st += 1
+        should_crash = False
+        red("Found the following source_tag after loading all documents:")
+        for n, s in st.items():
+            red(f"- {s}: {n}")
+            if n == 0:
+                should_crash = True
+        if extra:
+            red("Found the following EXTRA source_tag after loading all documents:")
+            red("(This can happen after merging identical documents though)")
+            should_crash = True
+            for n, s in extra.items():
+                red(f"- {s}: {n}")
+        red(f"Found {no_st} documents with no source_tag")
+
+        if should_crash:
+            red("Something might have gone wrong given those source tags.\nAnswer 'y' or 'c' to continue, 'd' to debug, anything else to crash.")
+            ans = input(">")
+            if ans == "d":
+                breakpoint()
+            elif ans == "y" or ans == "c":
+                pass
+            else:
+                raise Exception("Probable error given the source tags")
+
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
     if "summar" not in task:
@@ -469,37 +509,6 @@ def batch_load_doc(
         if deduped:
             docs  += list(deduped.values())
         assert len(docs) <= lenbefore, f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
-
-    if asked_source_tags:
-        no_st = 0
-        st = {t: 0 for t in asked_source_tags}
-        extra = {}
-        for doc in docs:
-            if "source_tag" in doc.metadata:
-                s = doc.metadata["source_tag"]
-                if s not in st:
-                    if s in extra:
-                        extra[s] += 1
-                    else:
-                        extra[s] = 1
-                else:
-                    st[s] += 1
-            else:
-                no_st += 1
-        should_crash = False
-        red("Found the following source_tag after loading all documents:")
-        for n, s in st.items():
-            red(f"- {s}: {n}")
-            if n == 0:
-                should_crash = True
-        if extra:
-            red("Found the following EXTRA source_tag after loading all documents:")
-            should_crash = True
-            for n, s in extra.items():
-                red(f"- {s}: {n}")
-        red(f"Found {no_st} documents with no source_tag")
-        if should_crash:
-            raise Exception("Something obviously went wrong given those source tags")
 
     assert docs, "No documents were succesfully loaded!"
 
