@@ -28,6 +28,7 @@ Detailed instructions:
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc
         - You can use markdown headers
+        - DON'T: use a single bullet point for the whole answer. Eg if the question is about cancer, instead of 1 top level 'cancer' bullet, prefer several top level bullets for each aspect of the answer.
         - Use bold for important concepts, and italic for epistemic markers
             - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
         - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
