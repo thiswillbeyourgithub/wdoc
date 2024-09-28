@@ -249,7 +249,7 @@ def semantic_batching(
             break
     assert len(labels) > 1, cluster_labels
 
-    # make sure no cluster contains onlybone text
+    # make sure no cluster contains only one text
     for lab in labels:
         if (cluster_labels == lab).sum() == 1:
             t = texts[np.argmax(cluster_labels==lab)]
