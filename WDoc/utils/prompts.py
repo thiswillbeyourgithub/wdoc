@@ -27,7 +27,7 @@ Detailed instructions:
     - When in doubt about wether to include an information, include it
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc
-        - Don't use headers
+        - You can use markdown headers
         - Use bold for important concepts, and italic for epistemic markers
             - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
         - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
