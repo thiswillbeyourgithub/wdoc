@@ -532,7 +532,7 @@ def load_embeddings(
             return temp
         temp_dbs = Parallel(
             backend="threading",
-            n_jobs=5,
+            n_jobs=10,
             verbose=0 if not is_verbose else 51,
         )(
             delayed(embedandsave_one_batch)(
