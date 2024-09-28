@@ -242,6 +242,20 @@ def semantic_batching(
         len(pd_dist.index)//2,
         criterion='maxclust'
     )
+    labels = np.unique(cluster_labels)
+    labels.sort()
+    assert len(labels) > 1, cluster_labels
+    # todo: edge case
+
+    # make sure no cluster contains onlybone text
+    for lab in labels:
+        if (cluster_labels == lab).sum() == 1:
+            t = texts[np.argmax(cluster_labels==lab)]
+            t_closest = np.argmin(pd_dist.loc[texts.index(t), :])
+            l_closest = cluster_labels[t_closest]
+            cluster_labels[cluster_labels==lab] = l_closest
+    assert len(labels) > 1, cluster_labels
+    # todo: edge case
 
     # Create buckets
     buckets = []
@@ -250,14 +264,12 @@ def semantic_batching(
     max_token = 500
 
     # fill each bucket until reaching max_token
-    labels = np.unique(cluster_labels)
-    labels.sort()
     text_sizes = {t:get_tkn_length(t) for t in texts}
     for lab in labels:
         lab_mask = np.argwhere(cluster_labels==lab)
-        assert len(lab_mask) > 1, cluster_labels
+        assert len(lab_mask) > 1, f"{lab_mask}\n{cluster_labels}"
         for clustid in lab_mask:
-            text = texts[clustid]
+            text = texts[int(clustid)]
             size = text_sizes[text]
             if current_tokens + size > max_token:
                 buckets.append(current_bucket)
