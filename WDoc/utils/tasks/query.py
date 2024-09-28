@@ -161,6 +161,7 @@ def semantic_batching(
     into one.
     """
     assert texts, "No input text received"
+    assert len(texts) > 1, f"received only one text: {texts}"
 
     # deduplicate texts
     temp = []
