@@ -385,7 +385,7 @@ anticorps
                 source_page.page_properties["alias"] = new_h
                 source_page.export_to(
                     file_path=sp.absolute(),
-                    overwrite=False,
+                    overwrite=True,
                     allow_empty=False,
                 )
         else:
