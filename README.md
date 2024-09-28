@@ -44,8 +44,8 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     1. The documents are retrieved using embedding
     2. Then a weak LLM model ("Evaluator") is used to tell which of those document is not relevant
     3. Then the strong LLM is used to answer ("Answerer") the question using each individual remaining documents.
-    4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer. Before being combined, they are sorted by aggregation
-    order as devised by scipy's hierarchical clustering technique, this makes it easier for the LLM to combine the answers.
+    4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer. Before being combined, they are batched by semantic clusters
+    and semantic order using scipy's hierarchical clustering and leaf ordering, this makes it easier for the LLM to combine the answers in a manner that makes bottom up sense.
     Evaluator, Answerer and Combiner are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step.
     5. Each document is identified by a unique hash and the answers are sourced, meaning you know from which document comes each information of the answer.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
