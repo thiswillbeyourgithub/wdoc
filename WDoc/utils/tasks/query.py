@@ -237,7 +237,7 @@ def semantic_batching(
     # assert len(texts) == len(out_texts)
 
     # get each bucket if we were only looking at the number of texts
-    for divider in [2, 3, 4, 5]:
+    for divider in [3, 4, 5]:
         cluster_labels = scipy.cluster.hierarchy.fcluster(
             Z,
             len(pd_dist.index)//divider,
