@@ -512,17 +512,6 @@ def batch_load_doc(
 
     assert docs, "No documents were succesfully loaded!"
 
-    size = sum(
-        [
-            get_tkn_length(d.page_content)
-            for d in docs
-        ]
-    )
-    if size <= min_token:
-        raise Exception(
-            f"The number of token is {size} <= {min_token} tokens, probably something went wrong?"
-        )
-
     # delete temp dir
     shutil.rmtree(temp_dir)
     assert not temp_dir.exists()
