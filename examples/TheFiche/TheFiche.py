@@ -37,7 +37,7 @@ def p(*args):
     print(*args)
     logger.info(*args)
 
-VERSION = "1.0"
+VERSION = "1.1"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
@@ -360,27 +360,34 @@ anticorps
                 if overwrite:
                     source_path.unlink(missing_ok=True)
 
+                conflict = False
                 if source_path.exists():
                     p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
                     prev_source = parse_file(source_path)
                     if prev_source.page_properties["content_hash"][:5].startswith(dh):
                         if not prev_source.page_properties["all_hash"].startswith(new_h):
-                            raise Exception(f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}")
+                            p(f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file")
+                            conflict = True
                     else:
-                        raise Exception(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}")
+                        p(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file")
+                        conflict = True
+
+                if conflict:
+                    sp = source_path.parent / (source_path.name + "_conflict")
                 else:
-                    logger.info(f"Creating source page for {dh} ({new_h}) at {source_path}")
-                    cont = indent(cont, "  ").strip()
-                    if not cont.startswith("- "):
-                        cont = "- " + cont
-                    source_page = parse_text(cont)
-                    source_page.page_properties.update(dm.copy())
-                    source_page.page_properties["alias"] = new_h
-                    source_page.export_to(
-                        file_path=source_path.absolute(),
-                        overwrite=False,
-                        allow_empty=False,
-                    )
+                    sp = source_path
+                logger.info(f"Creating source page for {dh} ({new_h}) at {sp}")
+                cont = indent(cont, "  ").strip()
+                if not cont.startswith("- "):
+                    cont = "- " + cont
+                source_page = parse_text(cont)
+                source_page.page_properties.update(dm.copy())
+                source_page.page_properties["alias"] = new_h
+                source_page.export_to(
+                    file_path=sp.absolute(),
+                    overwrite=False,
+                    allow_empty=False,
+                )
         else:
             raise ValueError(sources_location)
 
