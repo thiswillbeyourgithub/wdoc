@@ -159,7 +159,6 @@ def semantic_batching(
     contain each subtopic while keeping a reasonnable number of tokens.
     This probably helps the LLM to combine the intermediate answers
     into one.
-    Returns directly if less than 5 texts.
     """
     assert texts, "No input text received"
 
@@ -168,7 +167,7 @@ def semantic_batching(
     [temp.append(t) for t in texts if t not in temp]
     texts = temp
 
-    if len(texts) < 5:
+    if len(texts) <= 3:
         return [texts]
 
     # get embeddings
@@ -226,6 +225,8 @@ def semantic_batching(
     )
 
     order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
+
+    # TODO:; if <= 6 texts we should make 2 or 3 batch just using the order
 
     # # this would just return the list of strings in the best order
     # out_texts = [texts[o] for o in order]
