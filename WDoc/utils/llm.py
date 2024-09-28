@@ -57,6 +57,7 @@ def load_llm(
             verbose=llm_verbosity,
             responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
+            disable_streaming=True,  # Not needed and might break cache
             cache=False,
             **extra_model_args,
         )
@@ -94,6 +95,7 @@ def load_llm(
         llm = ChatOpenAI(
             model_name=modelname.split("/", 1)[1],
             cache=llm_cache,
+            disable_streaming=True,  # Not needed and might break cache
             verbose=llm_verbosity,
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
@@ -104,6 +106,7 @@ def load_llm(
             extra_model_args["max_tokens"] = max_tokens
         llm = ChatLiteLLM(
             model_name=modelname,
+            disable_streaming=True,  # Not needed and might break cache
             api_base=api_base,
             cache=llm_cache,
             verbose=llm_verbosity,
