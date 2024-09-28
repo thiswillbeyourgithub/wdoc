@@ -584,40 +584,46 @@ def faiss_loader(
     merged index. This makes it way fast to load a very large number of index
     """
     db = None
-    while True:
-        fi, metadata = qin.get()
-        if fi is False:
-            assert metadata is None
-            qout.put(db)
-            qout.put("Stopped")
-            return
-        assert metadata is not None
+    try:
+        while True:
+            fi, metadata = qin.get()
+            if fi is False:
+                assert metadata is None
+                qout.put(db)
+                qout.put("Stopped")
+                return
+            assert metadata is not None
 
-        temp = FAISS.load_local(
-            fi,
-            cached_embeddings,
-            allow_dangerous_deserialization=True,
-            relevance_score_fn=score_function,
-        )
+            temp = FAISS.load_local(
+                fi,
+                cached_embeddings,
+                allow_dangerous_deserialization=True,
+                relevance_score_fn=score_function,
+            )
 
-        ids_list = list(temp.docstore._dict.keys())
-        assert len(ids_list) == 1
+            ids_list = list(temp.docstore._dict.keys())
+            assert len(ids_list) == 1
 
-        if not db:
-            db = temp
-            continue
+            if not db:
+                db = temp
+                continue
 
-        did = ids_list[0]
-        if did in db.docstore._dict.keys():
-            red(f"Not thread-loading doc as already present: {did}")
-            continue
-        temp.docstore._dict[did].metadata = metadata
-        try:
-            db.merge_from(temp)
-        except ValueError as err:
-            red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-            [p.unlink() for p in fi.iterdir()]
-            fi.rmdir()
+            did = ids_list[0]
+            if did in db.docstore._dict.keys():
+                red(f"Not thread-loading doc as already present: {did}")
+                continue
+            temp.docstore._dict[did].metadata = metadata
+            try:
+                db.merge_from(temp)
+            except ValueError as err:
+                red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
+                [p.unlink() for p in fi.iterdir()]
+                fi.rmdir()
+    except Exception as e:
+        mess = f"Fatal error in faiss_loader: {e}\nValues:\n"
+        for k, v in locals().items():
+            mess += f"{k}: {v}"
+        raise Exception(red(mess)) from e
 
 
 @optional_typecheck
@@ -627,23 +633,29 @@ def faiss_saver(
         qin: queue.Queue,
         qout: queue.Queue) -> None:
     """create a faiss index containing only a single document then save it"""
-    while True:
-        message, docid, document, embedding = qin.get()
-        if message is False:
-            assert docid is None and document is None and embedding is None
-            qout.put("Stopped")
-            return
+    try:
+        while True:
+            message, docid, document, embedding = qin.get()
+            if message is False:
+                assert docid is None and document is None and embedding is None
+                qout.put("Stopped")
+                return
 
-        file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
-        db = FAISS.from_embeddings(
-            text_embeddings=[[document.page_content, embedding]],
-            embedding=cached_embeddings,
-            metadatas=[document.metadata],
-            ids=[docid],
-            normalize_L2=True,
-            relevance_score_fn=score_function,
-        )
-        db.save_local(file)
+            file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
+            db = FAISS.from_embeddings(
+                text_embeddings=[[document.page_content, embedding]],
+                embedding=cached_embeddings,
+                metadatas=[document.metadata],
+                ids=[docid],
+                normalize_L2=True,
+                relevance_score_fn=score_function,
+            )
+            db.save_local(file)
+    except Exception as e:
+        mess = f"Fatal error in faiss_saver: {e}\nValues:\n"
+        for k, v in locals().items():
+            mess += f"{k}: {v}"
+        raise Exception(red(mess)) from e
 
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
