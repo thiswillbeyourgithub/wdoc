@@ -1121,7 +1121,7 @@ def load_anki(
 
 
 REG_IMG = re.compile(
-    r'<img .*?src=["\'][^"]+["\'](?:[^>]*?)?/?>',
+    r'<img .*?src=.*?/?>',
     flags=re.MULTILINE | re.DOTALL)
 
 REG_SOUNDS = re.compile(
