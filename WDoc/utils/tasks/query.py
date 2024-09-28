@@ -356,6 +356,8 @@ def semantic_batching(
                 # figure out which bucket to merge with
                 if ib == 0:  # first , merge with next
                     next_id = ib + 1
+                elif ib + 1 == len(buckets):  # last, take the penultimate
+                    next_id = ib - 1
                 elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
                     t_cur = b[0]
                     prev = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib-1]])
@@ -365,8 +367,6 @@ def semantic_batching(
                         next_id = ib - 1
                     else:
                         next_id = ib + 1
-                elif ib == len(buckets):  # last, take the penultimate
-                    next_id = ib - 1
                 assert buckets[next_id], buckets[next_id]
                 if is_verbose:
                     whi(f"Next_id is {next_id}")
