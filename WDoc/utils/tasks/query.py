@@ -171,6 +171,9 @@ def semantic_batching(
     if len(texts) <= 3:
         return [texts]
 
+    text_sizes = {t:get_tkn_length(t) for t in texts}
+    max_token = 500
+
     # get embeddings
     embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
     n_dim = embeds.shape[1]
@@ -239,7 +242,9 @@ def semantic_batching(
     # assert len(texts) == len(out_texts)
 
     # get each bucket if we were only looking at the number of texts
-    for divider in [3, 4, 5]:
+    cluster_trials = {}
+    cluster_mean_tkn = {}
+    for divider in [3, 4, 5, 6]:
         cluster_labels = scipy.cluster.hierarchy.fcluster(
             Z,
             len(pd_dist.index)//divider,
@@ -247,12 +252,39 @@ def semantic_batching(
         )
         labels = np.unique(cluster_labels)
         labels.sort()
-        if len(labels) != 1:  # re cluster if only one label found
-            break
-    assert len(labels) > 1, cluster_labels
+        if len(labels) == 1:  # re cluster if only one label found
+            continue
 
-    # TODO: use heuristics to find the best number of dividers by looking
-    # at the average of average and median number of token in each clusters
+        # use heuristics to find the best number of dividers by looking
+        # at the average number of token in each clusters
+        total_mean = 0
+        for lab in labels:
+            lt = [texts[int(ind)] for ind in np.argwhere(cluster_labels==lab)]
+            lsize = sum([text_sizes[t] for t in lt])
+            lmean = lsize / len(lt)
+            total_mean += lmean
+        total_mean /= len(labels)
+        cluster_mean_tkn[divider] = total_mean
+        cluster_trials[divider] = cluster_labels
+
+    best_clusters = None
+    for d, ct in cluster_mean_tkn.items():
+        if ct < max_token and ct >= max_token / 2:
+            best_clusters = cluster_trials[d]
+            break
+    if best_clusters is None:
+        best_tkns = min(list(cluster_mean_tkn.values()))
+        for d, ct in cluster_mean_tkn.items():
+            if ct == best_tkns:
+                best_clusters = cluster_trials[d]
+                break
+    assert best_clusters
+    cluster_labels = best_clusters
+
+    labels = np.unique(cluster_labels)
+    labels.sort()
+
+    assert len(labels) > 1, cluster_labels
 
     # make sure no cluster contains only one text
     while not all((cluster_labels==lab).sum() > 1 for lab in labels):
@@ -287,10 +319,8 @@ def semantic_batching(
     buckets = []
     current_bucket = []
     current_tokens = 0
-    max_token = 500
 
     # fill each bucket until reaching max_token
-    text_sizes = {t:get_tkn_length(t) for t in texts}
     for lab in labels:
         lab_mask = np.argwhere(cluster_labels==lab)
         assert lab_mask.sum() > 1, f"{lab_mask}\n{cluster_labels}"
