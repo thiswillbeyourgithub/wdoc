@@ -337,7 +337,8 @@ def load_embeddings(
                 whi(f"Waiting for partial db from loader worker #{iq}")
                 val = q[1].get(timeout=timeout)
                 whi("Got it")
-                merged_dbs.append(val)
+                if val is not None:
+                    merged_dbs.append(val)
                 break
             except queue.Empty:
                 assert loader_workers[iq].is_alive(), f"Loader worker #{iq} is dead"
