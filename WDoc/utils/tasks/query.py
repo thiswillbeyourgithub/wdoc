@@ -237,15 +237,17 @@ def semantic_batching(
     # assert len(texts) == len(out_texts)
 
     # get each bucket if we were only looking at the number of texts
-    cluster_labels = scipy.cluster.hierarchy.fcluster(
-        Z,
-        len(pd_dist.index)//2,
-        criterion='maxclust'
-    )
-    labels = np.unique(cluster_labels)
-    labels.sort()
+    for divider in [2, 3, 4, 5]:
+        cluster_labels = scipy.cluster.hierarchy.fcluster(
+            Z,
+            len(pd_dist.index)//divider,
+            criterion='maxclust'
+        )
+        labels = np.unique(cluster_labels)
+        labels.sort()
+        if len(labels) != 1:  # re cluster if only one label found
+            break
     assert len(labels) > 1, cluster_labels
-    # todo: edge case
 
     # make sure no cluster contains onlybone text
     for lab in labels:
