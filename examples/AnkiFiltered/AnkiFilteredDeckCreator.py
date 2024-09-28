@@ -72,7 +72,7 @@ class FilteredDeckCreator:
         found = instance.query_task(query=query)
 
         cids = self.find_anki_docs(
-            docs=found["filtered_docs"]
+            docs=found["relevant_filtered_docs"]
         )
 
         query = filtered_deck_query
