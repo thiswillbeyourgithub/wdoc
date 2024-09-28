@@ -249,6 +249,9 @@ def semantic_batching(
             break
     assert len(labels) > 1, cluster_labels
 
+    # TODO: use heuristics to find the best number of dividers by looking
+    # at the average of average and median number of token in each clusters
+
     # make sure no cluster contains only one text
     for lab in labels:
         if (cluster_labels == lab).sum() == 1:
