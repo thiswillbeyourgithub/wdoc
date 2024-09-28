@@ -304,12 +304,13 @@
     The number of jobs can be specified with `--file_loader_n_jobs`
     but it's a loader specific kwargs.
 
-* `--file_loader_n_jobs`: int, default `5`
+* `--file_loader_n_jobs`: int, default `-1`
     * number of jobs to use when loading files in parallel (threads or process,
     depending on `--file_loader_parallel_backend`). Set to 1 to disable
     parallel processing (as it can result in out of memory error if
     using threads and overly recursive calls). Automatically set to 1 if
     `--debug` is set or if there's only one document to load.
+    If -1, means use as many as possible (this is joblib's default).
 
 * `--private`: bool, default `False`
     * add extra check that your data will never be sent to another
