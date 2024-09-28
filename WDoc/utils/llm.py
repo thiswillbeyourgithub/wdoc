@@ -110,6 +110,7 @@ def load_llm(
             api_base=api_base,
             cache=llm_cache,
             verbose=llm_verbosity,
+            tags="wdoc",
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
         )
