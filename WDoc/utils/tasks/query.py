@@ -315,41 +315,44 @@ def semantic_batching(
 
     # now if any bucket contains only one text, that means it has too many
     # tokens itself, so we reequilibrate from the previous buckets
-    for ib, b in enumerate(buckets):
-        assert b
-        if len(b) == 1:
-            # figure out which bucket to merge with
-            if ib == 0:  # first , merge with next
-                next_id = ib + 1
-            elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
-                t_cur = b[0]
-                prev = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib-1]])
-                next = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib+1]])
-                assert prev > 0 and next > 0
-                if prev < next:
-                    next_id = ib - 1
-                else:
+    while not all(len(b) >= 2 for b in buckets):
+        if is_verbose:
+            whi(f"Merging sub buckets. Current len: {len(buckets)}")
+        for ib, b in enumerate(buckets):
+            assert b
+            if len(b) == 1:
+                # figure out which bucket to merge with
+                if ib == 0:  # first , merge with next
                     next_id = ib + 1
-            elif ib == len(buckets):  # last, take the penultimate
-                next_id = ib - 1
-            assert buckets[next_id], buckets[next_id]
+                elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
+                    t_cur = b[0]
+                    prev = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib-1]])
+                    next = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib+1]])
+                    assert prev > 0 and next > 0
+                    if prev < next:
+                        next_id = ib - 1
+                    else:
+                        next_id = ib + 1
+                elif ib == len(buckets):  # last, take the penultimate
+                    next_id = ib - 1
+                assert buckets[next_id], buckets[next_id]
 
-            if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
-                if next_id > ib:
-                    buckets[next_id].insert(0, b.pop())
+                if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
+                    if next_id > ib:
+                        buckets[next_id].insert(0, b.pop())
+                    else:
+                        buckets[next_id].append(b.pop())
+                    assert not b, b
                 else:
-                    buckets[next_id].append(b.pop())
-                assert not b, b
-            else:
-                # send text to the next bucket, at the correct position
-                if next_id > ib:
-                    b.append(buckets[next_id].pop(0))
-                else:
-                    b.append(buckets[next_id].pop(-1))
-            assert id(b) == id(buckets[ib])
-
-    buckets = [b for b in buckets if b]
+                    # send text to the next bucket, at the correct position
+                    if next_id > ib:
+                        b.append(buckets[next_id].pop(0))
+                    else:
+                        b.append(buckets[next_id].pop(-1))
+                assert id(b) == id(buckets[ib])
+        buckets = [b for b in buckets if b]
     assert all(len(b) >= 2 for b in buckets), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
+
     unchained = []
     [unchained.extend(b) for b in buckets]
     assert len(unchained) == len(set(unchained)), "There were duplicate texts in buckets!"
