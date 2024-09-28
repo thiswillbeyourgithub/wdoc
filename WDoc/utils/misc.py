@@ -20,6 +20,7 @@ from py_ankiconnect import PyAnkiconnect
 import inspect
 import litellm
 from beartype.door import is_bearable
+import warnings
 
 from langchain.docstore.document import Document
 from langchain_core.runnables import chain
@@ -326,6 +327,8 @@ def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
 @optional_typecheck
 def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
+    # ignore warnings from beautiful soup that can happen because anki is not exactly html
+    warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
