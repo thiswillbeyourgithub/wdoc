@@ -318,7 +318,9 @@ def load_embeddings(
             # select 2 workers at random and choose the one with the smallest queue
             queue_candidates = random.sample(loader_queues, k=2)
             queue_sizes = [q[0].qsize() for q in queue_candidates]
-            lq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+            ind = queue_sizes.index(min(queue_sizes))
+            lq = queue_candidates[ind][0]
+            assert loader_workers[ind].is_alive(), f"Loader worker #{ind} is dead"
             lq.put((fi, doc.metadata))
         else:
             to_embed.append(doc)
@@ -484,7 +486,9 @@ def load_embeddings(
                 # select 2 workers at random and choose the one with the smallest queue
                 queue_candidates = random.sample(saver_queues, k=2)
                 queue_sizes = [q[0].qsize() for q in queue_candidates]
-                sq = queue_candidates[queue_sizes.index(min(queue_sizes))][0]
+                ind = queue_sizes.index(min(queue_sizes))
+                sq = queue_candidates[ind][0]
+                assert saver_workers[ind].is_alive(), f"Worker #{ind} is dead"
                 sq.put((True, docuid, docu, embe))
 
             return temp
