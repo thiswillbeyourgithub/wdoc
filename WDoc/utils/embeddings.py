@@ -35,6 +35,10 @@ from .typechecker import optional_typecheck
 from .flags import is_verbose
 from .env import WDOC_EXPIRE_CACHE_DAYS
 
+def status(message: str):
+    if is_verbose:
+        whi(f"STATUS: {message}")
+
 NB_LOADER_WORKERS = 10
 NB_SAVER_WORKERS = 10
 
@@ -321,7 +325,9 @@ def load_embeddings(
 
     # ask workers to stop and return their db then get the merged dbs
     whi("Asking loader workers to shutdown")
+    status("Putting stop order in the queue")
     [q[0].put((False, None)) for q in loader_queues]
+    status("Waiting for answer")
     merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
     merged_dbs = [m for m in merged_dbs if m is not None]
     start_stopping_threads = time.time()
