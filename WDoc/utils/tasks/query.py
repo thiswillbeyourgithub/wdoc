@@ -302,7 +302,7 @@ def semantic_batching(
                     # merging small to big would result in only one cluster:
                     # better to even them out
                     assert len(labels) == 2, labels
-                    cluster_labels[texts.index(t_closest)] = lab
+                    cluster_labels[t_closest] = lab
                     if is_verbose:
                         whi(f"Remapped one item from cluster {l_closest} to {lab}")
                 else:  # good to go

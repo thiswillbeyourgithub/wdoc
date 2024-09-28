@@ -1699,6 +1699,7 @@ class WDoc:
                     ]
                     all_intermediate_answers.append(temp_interm_answ)
                     pbar.n = pbar.total - len(temp_interm_answ) + 1
+                    pbar.update(0)
                     if len(temp_interm_answ) == 1:
                         break
 
