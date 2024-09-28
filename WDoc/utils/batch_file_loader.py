@@ -90,12 +90,22 @@ def batch_load_doc(
     if "path" in cli_kwargs and isinstance(cli_kwargs["path"], str):
         cli_kwargs["path"] = cli_kwargs["path"].strip()
 
+    # used to make sure all source tags were indeed parsed
+    asked_source_tags = []
+    if "source_tag" in cli_kwargs:
+        asked_source_tags.append(cli_kwargs["source_tag"])
+
     # expand the list of document to load as long as there are recursive types
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype.lower()
     new_doc_to_load = []
     while any(d["filetype"] in recursive_types for d in to_load):
         for ild, load_kwargs in enumerate(to_load):
+
+            if "source_tag" in load_kwargs:
+                if load_kwargs["source_tag"] not in asked_source_tags:
+                    asked_source_tags.append(load_kwargs["source_tag"])
+
             to_load[ild]["filetype"] = to_load[ild]["filetype"].lower()
             if not ("path" in load_kwargs and load_kwargs["path"]):
                 continue
@@ -459,6 +469,33 @@ def batch_load_doc(
         if deduped:
             docs  += list(deduped.values())
         assert len(docs) <= lenbefore, f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
+
+    if asked_source_tags:
+        st = {t: 0 for t in asked_source_tags}
+        extra = {}
+        for doc in docs:
+            if "source_tag" in doc.metadata:
+                s = doc.metadata["source_tag"]
+                if s not in st:
+                    if s in extra:
+                        extra[s] += 1
+                    else:
+                        extra[s] = 1
+                else:
+                    st[s] += 1
+        should_crash = False
+        red("Found the following source_tag after loading all documents:")
+        for n, s in st.items():
+            red(f"- {s}: {n}")
+            if n == 0:
+                should_crash = True
+        if extra:
+            red("Found the following EXTRA source_tag after loading all documents:")
+            should_crash = True
+            for n, s in extra.items():
+                red(f"- {s}: {n}")
+        if should_crash:
+            raise Exception("Something obviously went wrong given those source tags")
 
     assert docs, "No documents were succesfully loaded!"
 
