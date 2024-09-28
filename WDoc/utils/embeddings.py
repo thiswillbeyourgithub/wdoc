@@ -464,7 +464,7 @@ def load_embeddings(
             threading.Thread(
                 target=faiss_saver,
                 args=(embeddings_cache, cached_embeddings, qin, qout),
-                daemon=False,
+                daemon=True,  # contrary to the load workers, we want those to survive
             ) for qin, qout in saver_queues]
         [t.start() for t in saver_workers]
         assert all([t.is_alive() for t in saver_workers]
