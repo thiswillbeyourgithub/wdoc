@@ -259,7 +259,10 @@ def semantic_batching(
         for lab in labels:
             if (cluster_labels == lab).sum() == 1:
                 t = texts[np.argmax(cluster_labels==lab)]
-                t_closest = np.argmin(pd_dist.loc[texts.index(t), :])
+                # the closest is always itself so checking the 2nd closest
+                t_close = (pd_dist.loc[texts.index(t), :]).smallest(2).index.tolist()
+                assert texts.index(t) == t_close[0]
+                t_closest = t_close[1]
                 l_closest = cluster_labels[t_closest]
                 if (cluster_labels == l_closest).sum() + 1 == len(texts):
                     # merging small to big would result in only one cluster:
