@@ -279,7 +279,7 @@ def semantic_batching(
     text_sizes = {t:get_tkn_length(t) for t in texts}
     for lab in labels:
         lab_mask = np.argwhere(cluster_labels==lab)
-        assert len(lab_mask) > 1, f"{lab_mask}\n{cluster_labels}"
+        assert lab_mask.sum() > 1, f"{lab_mask}\n{cluster_labels}"
         for clustid in lab_mask:
             text = texts[int(clustid)]
             size = text_sizes[text]
