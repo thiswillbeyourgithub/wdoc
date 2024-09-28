@@ -396,7 +396,7 @@ def load_embeddings(
                     file.unlink(missing_ok=False)
             whi(
                 f"Number of files removed from {dir_to_expire.name} cache: "
-                f"{n_cleaned}/{n_total} ({space_retrieved / 1024 / 1024:.f3}Mb)"
+                f"{n_cleaned}/{n_total} ({space_retrieved / 1024 / 1024:.3f}Mb)"
             )
 
     # check price of embedding
