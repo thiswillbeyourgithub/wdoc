@@ -308,8 +308,6 @@ def semantic_batching(
         current_bucket = []
         current_tokens = 0
     assert all(bucket for bucket in buckets), "Empty buckets"
-    for bucket in buckets:
-        assert sum(text_sizes[t] for t in bucket) <= max_token, bucket
 
     # sort each bucket based on the optimal order
     for ib, b in enumerate(buckets):
@@ -320,7 +318,6 @@ def semantic_batching(
     for ib, b in enumerate(buckets):
         assert b
         if len(b) == 1:
-            assert text_sizes[b[0]] > max_token, b[0]
             # figure out which bucket to merge with
             if ib == 0:  # first , merge with next
                 next_id = ib + 1
@@ -328,6 +325,7 @@ def semantic_batching(
                 t_cur = b[0]
                 prev = min([pd_dist.loc[t_cur, t] for t in buckets[ib-1]])
                 next = min([pd_dist.loc[t_cur, t] for t in buckets[ib+1]])
+                assert prev > 0 and next > 0
                 if prev < next:
                     next_id = ib - 1
                 else:
