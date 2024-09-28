@@ -327,11 +327,22 @@ def load_embeddings(
 
     # ask workers to stop and return their db then get the merged dbs
     whi("Asking loader workers to shutdown")
-    status("Putting stop order in the queue")
+    whi("Putting stop order in the queue")
     [q[0].put((False, None)) for q in loader_queues]
-    status("Waiting for answer")
-    merged_dbs = [q[1].get(timeout=timeout) for q in loader_queues]
-    merged_dbs = [m for m in merged_dbs if m is not None]
+    whi("Waiting for answers")
+    merged_dbs = []
+    for iq, q in enumerate(loader_queues):
+        assert loader_workers[iq].is_alive(), f"Loader worker #{ind} is dead"
+        while True:
+            try:
+                whi(f"Waiting for partial db from loader worker #{iq}")
+                val = q[1].get(timeout=timeout)
+                whi("Got it")
+                merged_dbs.append(val)
+                break
+            except queue.Empty:
+                red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
+
     start_stopping_threads = time.time()
     while any(t.is_alive() for t in loader_workers):
         if time.time() - start_stopping_threads > 10 * 60:
