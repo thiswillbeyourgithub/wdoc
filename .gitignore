@@ -16,3 +16,5 @@ dist
 # author files
 examples/NtfySummarizer/TOPICS
 examples/NtfySummarizer/summaries
+examples/notfinished_*
+examples/**/perso.py
