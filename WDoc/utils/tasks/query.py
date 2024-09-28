@@ -338,6 +338,8 @@ def semantic_batching(
                 elif ib == len(buckets):  # last, take the penultimate
                     next_id = ib - 1
                 assert buckets[next_id], buckets[next_id]
+                if is_verbose:
+                    whi(f"Next_id is {next_id}")
 
                 if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
                     if next_id > ib:
@@ -352,6 +354,7 @@ def semantic_batching(
                     else:
                         b.append(buckets[next_id].pop(-1))
                 assert id(b) == id(buckets[ib])
+                break
         buckets = [b for b in buckets if b]
     assert all(len(b) >= 2 for b in buckets), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
 
