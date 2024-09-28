@@ -960,13 +960,13 @@ def load_anki(
         usetags = True
         pbar(desc="Formatting tags")
         notes["tags_formatted"] = notes.progress_apply(
-            lambda x: ("<anki_tags>\n" +  "\n".join([
+            lambda x: ("\n" +  "\n".join([
                 t
                 for t in x["ntags"]
                 if (
                     anki_tag_render_filter is None or anki_tag_render_filter.match(t)
                 )
-            ]).strip() + "\n</anki_tags>") if x["ntags"] else "<anki_tags>\n</anki_tags>",
+            ]).strip() + "\n") if x["ntags"] else "",
             axis=1,
         )
         if notes["ntags"].notnull().any():
