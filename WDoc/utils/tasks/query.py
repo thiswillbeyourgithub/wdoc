@@ -278,7 +278,7 @@ def semantic_batching(
             if ct == best_tkns:
                 best_clusters = cluster_trials[d]
                 break
-    assert best_clusters
+    assert best_clusters is not None
     cluster_labels = best_clusters
 
     labels = np.unique(cluster_labels)
