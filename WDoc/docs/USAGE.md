@@ -304,7 +304,7 @@
     The number of jobs can be specified with `--file_loader_n_jobs`
     but it's a loader specific kwargs.
 
-* `--file_loader_n_jobs`: int, default `3`
+* `--file_loader_n_jobs`: int, default `5`
     * number of jobs to use when loading files in parallel (threads or process,
     depending on `--file_loader_parallel_backend`). Set to 1 to disable
     parallel processing (as it can result in out of memory error if
