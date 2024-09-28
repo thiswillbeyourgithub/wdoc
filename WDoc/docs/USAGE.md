@@ -583,6 +583,12 @@
 * `--source_tag`: str, default `None`
     * a string that will be added to the document metadata at the
     key `source_tag`. Useful when using filetype combination.
+    It is EXTREMELY recommended to include a source_tag to any document
+    you want to save: especially if using recursive filetypes. This
+    is because after loading all documents WDoc use the source_tag
+    to see if it should continue or crash. If you want to load 10_000 pdf
+    in one go as I do, then it makes sense to continue if some failed to
+    crash but not if a whole source_tag is missing.
 
 * `--loading_failure`: str, default `warn`
     * either `crash` or `warn`. Determines what to do with
