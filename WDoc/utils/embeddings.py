@@ -365,7 +365,10 @@ def load_embeddings(
                     )
     if any([t.is_alive() for t in loader_workers]):
         red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
-    out_vals = [q[1].get(timeout=1) for q in loader_queues]
+    try:
+        out_vals = [q[1].get(timeout=1) for q in loader_queues]
+    except queue.Empty:
+        raise Exception("Failed to get second output from loader_queues")
     if not all(val == "Stopped" for val in out_vals):
         red("Unexpected output of some loader queues: \n* " + "\n* ".join(out_vals))
 
