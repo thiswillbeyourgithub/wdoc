@@ -537,7 +537,7 @@ def load_embeddings(
             red(f"Failed to merge {len(failed_to_merge)} documents after embeddings")
 
         whi("Waiting for saver workers to finish.")
-
+        whi("Putting the stop order in the queue")
         [q[0].put((False, None, None, None)) for i, q in enumerate(
                 saver_queues) if saver_workers[i].is_alive()]
         start_stopping_threads = time.time()
