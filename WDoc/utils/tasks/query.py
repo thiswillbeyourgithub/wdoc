@@ -347,6 +347,12 @@ def semantic_batching(
                     else:
                         buckets[next_id].append(b.pop())
                     assert not b, b
+                elif len(buckets[next_id]) == 2:  # merging 2:1 -> 1:2 would create a loop
+                    if next_id > ib:
+                        buckets[next_id].insert(0, b.pop())
+                    else:
+                        buckets[next_id].append(b.pop())
+                    assert not b, b
                 else:
                     # send text to the next bucket, at the correct position
                     if next_id > ib:
