@@ -127,7 +127,7 @@ class WDoc:
         notification_callback: Optional[Callable] = None,
         disable_llm_cache: Union[bool, int] = False,
         file_loader_parallel_backend: Literal["loky", "threading", "multiprocessing"] = "loky",
-        file_loader_n_jobs: int = 3,
+        file_loader_n_jobs: int = 5,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         DIY_rolling_window_embedding: Union[bool, int] = False,
