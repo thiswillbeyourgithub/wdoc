@@ -346,6 +346,7 @@ def load_embeddings(
 
     start_stopping_threads = time.time()
     while any(t.is_alive() for t in loader_workers):
+        status("Start of loader loop")
         if time.time() - start_stopping_threads > 10 * 60:
             red(
                 f"Waited for threads to stop for "
@@ -355,6 +356,7 @@ def load_embeddings(
             break
         for ith, t in enumerate(loader_workers):
             if t.is_alive():
+                status(f"Asking thread #{ith} to join")
                 t.join(timeout=timeout)
                 if t.is_alive():
                     q = loader_queues[ith]
@@ -366,6 +368,7 @@ def load_embeddings(
     if any([t.is_alive() for t in loader_workers]):
         red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
     try:
+        status("Getting last output")
         out_vals = [q[1].get(timeout=1) for q in loader_queues]
     except queue.Empty:
         raise Exception("Failed to get second output from loader_queues")
