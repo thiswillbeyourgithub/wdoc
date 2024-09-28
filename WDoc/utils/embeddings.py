@@ -332,7 +332,6 @@ def load_embeddings(
     whi("Waiting for answers")
     merged_dbs = []
     for iq, q in enumerate(loader_queues):
-        assert loader_workers[iq].is_alive(), f"Loader worker #{iq} is dead"
         while True:
             try:
                 whi(f"Waiting for partial db from loader worker #{iq}")
@@ -341,6 +340,7 @@ def load_embeddings(
                 merged_dbs.append(val)
                 break
             except queue.Empty:
+                assert loader_workers[iq].is_alive(), f"Loader worker #{iq} is dead"
                 red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
 
     start_stopping_threads = time.time()
@@ -563,7 +563,6 @@ def load_embeddings(
             red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
         out_vals = []
         for iq, q in enumerate(saver_queues):
-            assert saver_queues[iq].is_alive(), f"Saver worker #{iq} is dead"
             while True:
                 try:
                     whi(f"Waiting for confirmation from saver worker #{iq}")
@@ -573,6 +572,7 @@ def load_embeddings(
                     break
                 except queue.Empty:
                     red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
+                    assert saver_queues[iq].is_alive(), f"Saver worker #{iq} is dead"
         if not all(val == "Stopped" for val in out_vals):
             red("Unexpected output of some saver queues: \n* " + "\n* ".join(out_vals))
 
