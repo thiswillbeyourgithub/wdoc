@@ -471,6 +471,7 @@ def batch_load_doc(
         assert len(docs) <= lenbefore, f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
 
     if asked_source_tags:
+        no_st = 0
         st = {t: 0 for t in asked_source_tags}
         extra = {}
         for doc in docs:
@@ -483,6 +484,8 @@ def batch_load_doc(
                         extra[s] = 1
                 else:
                     st[s] += 1
+            else:
+                no_st += 1
         should_crash = False
         red("Found the following source_tag after loading all documents:")
         for n, s in st.items():
@@ -494,6 +497,7 @@ def batch_load_doc(
             should_crash = True
             for n, s in extra.items():
                 red(f"- {s}: {n}")
+        red(f"Found {no_st} documents with no source_tag")
         if should_crash:
             raise Exception("Something obviously went wrong given those source tags")
 
