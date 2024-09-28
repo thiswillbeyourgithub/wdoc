@@ -322,9 +322,10 @@ def semantic_batching(
 
     # fill each bucket until reaching max_token
     for lab in labels:
-        lab_mask = np.argwhere(cluster_labels==lab)
-        assert lab_mask.sum() > 1, f"{lab_mask}\n{cluster_labels}"
-        for clustid in lab_mask:
+        lab_ind = np.argwhere(cluster_labels==lab)
+        assert len(lab_ind) > 1, f"{lab_ind}\n{cluster_labels}"
+        assert len(lab_ind) < len(texts), f"{lab_ind}\n{cluster_labels}"
+        for clustid in lab_ind:
             text = texts[int(clustid)]
             size = text_sizes[text]
             if (current_tokens + size > max_token) and current_bucket:
