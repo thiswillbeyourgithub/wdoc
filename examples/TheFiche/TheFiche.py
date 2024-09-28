@@ -303,6 +303,9 @@ anticorps
                         t = t.strip()
                         assert t
                         assert "[" not in t and "]" not in t
+                        if not re.search(t, line, re.IGNORECASE):
+                            continue
+
                         if line == line.rstrip():
                             line = line + " [[" + t + "]]"
                         else:
