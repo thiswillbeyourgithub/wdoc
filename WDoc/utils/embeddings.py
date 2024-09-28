@@ -39,7 +39,7 @@ def status(message: str):
     if is_verbose:
         whi(f"STATUS: {message}")
 
-NB_LOADER_WORKERS = 10
+NB_LOADER_WORKERS = 20
 NB_SAVER_WORKERS = 10
 
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
