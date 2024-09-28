@@ -21,7 +21,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     * Aims to support *any* filetypes query from all of them at the same time (15+ are already implemented!)
     * Supports virtually any LLM, including local ones, and even with extra layers of security for super secret stuff.
     * Use both an expensive and cheap LLM to make recall as high as possible because we can afford fetching a lot of documents per query (via embeddings)
-    * Finally a usable text summary: get the thought process of the author instead of nebulous takeaways.
+    * At last a usable text summary: get the thought process of the author instead of nebulous takeaways.
     * Extensible, this is both a tool and a library.
 
 ### Table of contents
