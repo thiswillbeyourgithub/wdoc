@@ -255,9 +255,16 @@ def semantic_batching(
             t = texts[np.argmax(cluster_labels==lab)]
             t_closest = np.argmin(pd_dist.loc[texts.index(t), :])
             l_closest = cluster_labels[t_closest]
-            cluster_labels[cluster_labels==lab] = l_closest
+            if (cluster_labels == l_closest).sum() + 1 == len(texts):
+                # merging small to big would result in only one cluster:
+                # better to even them out
+                assert len(labels) == 2, labels
+                cluster_labels[texts.index(t_closest)] = lab
+            else:  # good to go
+                cluster_labels[cluster_labels==lab] = l_closest
+    labels = np.unique(cluster_labels)
+    labels.sort()
     assert len(labels) > 1, cluster_labels
-    # todo: edge case
 
     # Create buckets
     buckets = []
