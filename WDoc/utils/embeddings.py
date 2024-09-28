@@ -476,7 +476,7 @@ def load_embeddings(
             ib: int,
             saver_queues: List[Tuple[queue.Queue, queue.Queue]] = saver_queues,
         ):
-            n_trial = 5
+            n_trial = 3
             for trial in range(n_trial):
                 whi(f"Embedding batch #{ib + 1}")
                 try:
@@ -488,10 +488,18 @@ def load_embeddings(
                     )
                     break
                 except Exception as e:
+                    red(f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
                     if trial + 1 >= n_trial:
-                        raise
-                    red(f"Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
-                    time.sleep(5)
+                        red("Too many errors: bypassing the cache:")
+                        temp = FAISS.from_documents(
+                            to_embed[batch[0]:batch[1]],
+                            cached_embeddings.underlying_embeddings,
+                            normalize_L2=True,
+                            relevance_score_fn=score_function,
+                        )
+                        break
+                    else:
+                        time.sleep(1)
 
             whi(f"Saving batch #{ib + 1}")
             # save the faiss index as 1 embedding for 1 document
