@@ -476,7 +476,7 @@ def load_embeddings(
             ib: int,
             saver_queues: List[Tuple[queue.Queue, queue.Queue]] = saver_queues,
         ):
-            n_trial = 3
+            n_trial = 5
             for trial in range(n_trial):
                 whi(f"Embedding batch #{ib + 1}")
                 try:
@@ -488,9 +488,10 @@ def load_embeddings(
                     )
                     break
                 except Exception as e:
-                    if trial >= 3:
+                    if trial + 1 >= n_trial:
                         raise
                     red(f"Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
+                    time.sleep(5)
 
             whi(f"Saving batch #{ib + 1}")
             # save the faiss index as 1 embedding for 1 document
