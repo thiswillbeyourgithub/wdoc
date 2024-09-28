@@ -561,7 +561,18 @@ def load_embeddings(
                         )
         if any([t.is_alive() for t in saver_workers]):
             red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
-        out_vals = [q[1].get(timeout=timeout) for q in saver_queues]
+        out_vals = []
+        for iq, q in enumerate(saver_queues):
+            assert saver_queues[iq].is_alive(), f"Saver worker #{ind} is dead"
+            while True:
+                try:
+                    whi(f"Waiting for confirmation from saver worker #{iq}")
+                    val = q[1].get(timeout=timeout)
+                    whi("Got it")
+                    out_vals.append(val)
+                    break
+                except queue.Empty:
+                    red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
         if not all(val == "Stopped" for val in out_vals):
             red("Unexpected output of some saver queues: \n* " + "\n* ".join(out_vals))
 
