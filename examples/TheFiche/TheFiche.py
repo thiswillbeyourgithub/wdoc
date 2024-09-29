@@ -113,7 +113,6 @@ class TheFiche:
         query: str,
         logseq_page: Union[str, PosixPath],
         overwrite: bool = False,
-        top_k: int = 300,
         sources_location: str = "as_pages",
         sources_ref_as_prop: bool = False,
         use_cache: bool = True,
@@ -128,7 +127,6 @@ class TheFiche:
             query (str): The query to be processed by WDoc.
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
-            top_k (int, optional): The number of top documents to consider. Defaults to 300.
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page. Default to "as_pages".
             sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
             use_cache (bool): set to False to bypass the cache, default True.
@@ -139,13 +137,11 @@ class TheFiche:
         Raises:
             AssertionError: If the file exists and overwrite is False, or if the ratio of used/found documents is too high.
         """
-        p(f"Starting TheFiche with args: {query}, {logseq_page}, {overwrite}, {top_k}, {sources_location} and kwargs: {kwargs}")
-        assert "top_k" not in kwargs
+        p(f"Starting TheFiche with args: {query}, {logseq_page}, {overwrite}, {sources_location} and kwargs: {kwargs}")
         assert sources_location in ["as_pages", "below"]
         logseq_page = Path(logseq_page)
 
         all_kwargs = kwargs.copy()
-        all_kwargs.update({"top_k": top_k})
 
         # posixpath can't be serialized to json
         for k, v in all_kwargs.items():
@@ -163,11 +159,6 @@ class TheFiche:
 
         n_used = props["WDoc_n_docs_used"]
         n_found = props["WDoc_n_docs_found"]
-        ratio = n_used / n_found
-        assert ratio <= 0.9, (
-            f"Ratio of number of docs used/found is {ratio:.1f} > 0.9 ({n_used}, {n_found})"
-        )
-        assert n_used / top_k <= 0.9, f"Used {n_used} documents but asked {top_k}, you should ask more"
 
         text = fiche["final_answer"]
         assert text.strip()
