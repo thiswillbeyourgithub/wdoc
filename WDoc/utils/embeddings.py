@@ -367,13 +367,6 @@ def load_embeddings(
                     )
     if any([t.is_alive() for t in loader_workers]):
         red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
-    # try:
-    #     status("Getting last output")
-    #     out_vals = [q[1].get(timeout=1) for q in loader_queues]
-    # except queue.Empty:
-    #     raise Exception("Failed to get second output from loader_queues")
-    # if not all(val == "Stopped" for val in out_vals):
-    #     red("Unexpected output of some loader queues: \n* " + "\n* ".join(out_vals))
 
     # merge dbs as one
     db = None
@@ -585,20 +578,6 @@ def load_embeddings(
                         )
         if any([t.is_alive() for t in saver_workers]):
             red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
-        # out_vals = []
-        # for iq, q in enumerate(saver_queues):
-        #     while True:
-        #         try:
-        #             whi(f"Waiting for confirmation from saver worker #{iq}")
-        #             val = q[1].get(timeout=timeout)
-        #             whi("Got it")
-        #             out_vals.append(val)
-        #             break
-        #         except queue.Empty:
-        #             red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
-        #             assert saver_queues[iq].is_alive(), f"Saver worker #{iq} is dead"
-        # if not all(val == "Stopped" for val in out_vals):
-        #     red("Unexpected output of some saver queues: \n* " + "\n* ".join(out_vals))
 
         whi(f"Saving indexes took {time.time()-ts:.2f}s")
 
@@ -625,7 +604,6 @@ def faiss_loader(
             if fi is False:
                 assert metadata is None
                 qout.put(db)
-                qout.put("Stopped")
                 return
             assert metadata is not None
 
@@ -673,7 +651,6 @@ def faiss_saver(
             message, docid, document, embedding = qin.get()
             if message is False:
                 assert docid is None and document is None and embedding is None
-                qout.put("Stopped")
                 return
 
             file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
