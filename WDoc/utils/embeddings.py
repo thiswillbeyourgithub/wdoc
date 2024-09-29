@@ -30,7 +30,7 @@ from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
-from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_HOTFIX_FAISS, WDOC_MOD_FAISS_SCORE_FN
+from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN
 
 def status(message: str):
     if is_verbose:
@@ -63,56 +63,6 @@ if WDOC_MOD_FAISS_SCORE_FN:
 else:
     score_function = None
 
-@optional_typecheck
-def faiss_hotfix(vectorstore: FAISS) -> FAISS:
-    """
-    Wrap around FAISS's vector search to hot fix things:
-
-    - check if the found IDs are indeed in the database. For some reason
-    FAISS in some cases ends up returning ids that do not match its own
-    id index so it crashes.
-
-    """
-
-    @optional_typecheck
-    def filter_ids(func: Callable, get_mask: Callable) -> Callable:
-        @wraps(func)
-        def wrapper(vector, k):
-            original_scores, original_ids = func(vector, k)
-
-            new_ids = original_ids.squeeze()[get_mask(original_ids.squeeze())]
-
-            diff = k - new_ids.shape[0]
-            assert diff >= 0, f"Asked for {k} vectors but go more: {new_ids.shape}"
-            if diff == 0:
-                assert original_scores.shape == original_ids.shape
-                assert original_ids.squeeze().shape == new_ids.shape
-                return original_scores, original_ids
-            else:
-                trial = 0
-                while diff > 0 and trial < 10:
-                    trial += 1
-
-                    trial_scores, trial_ids = func(vector, k + diff)
-                    mask = get_mask(trial_ids.squeeze())
-                    trial_ids = trial_ids.squeeze()[mask]
-
-                    diff = k - trial_ids.shape[0]
-                    assert diff >= 0, f"Asked at trial {trial} for {k} vectors but go more: {new_ids.shape}"
-
-                trial_scores = trial_scores.squeeze()[mask].reshape(1, -1)
-                trial_ids = trial_ids.reshape(1, -1)
-
-                assert trial_scores.shape == trial_ids.shape
-                return trial_scores, trial_ids
-        return wrapper
-
-    ok_ids = np.array(list(vectorstore.index_to_docstore_id.keys())).squeeze()
-    vectorstore.index.search = filter_ids(
-        func=vectorstore.index.search,
-        get_mask=np.vectorize(lambda ar: ar in ok_ids),
-    )
-    return vectorstore
 
 @optional_typecheck
 def load_embeddings(
@@ -251,10 +201,7 @@ def load_embeddings(
             allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
-        if WDOC_HOTFIX_FAISS:
-            return faiss_hotfix(db), cached_embeddings
-        else:
-            return db, cached_embeddings
+        return db, cached_embeddings
 
     whi("\nLoading embeddings.")
 
@@ -356,10 +303,7 @@ def load_embeddings(
     # saving embeddings
     db.save_local(save_embeds_as)
 
-    if WDOC_HOTFIX_FAISS:
-        return faiss_hotfix(db), cached_embeddings
-    else:
-        return db, cached_embeddings
+    return db, cached_embeddings
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     @optional_typecheck
