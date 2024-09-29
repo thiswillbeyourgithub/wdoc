@@ -108,7 +108,7 @@ class WDoc:
         top_k: Union[str, int] = "auto_200_500",
 
         query: Optional[str] = None,
-        query_retrievers: str = "default",
+        query_retrievers: str = "default_hyde",
         query_eval_modelname: Optional[str] = "openai/gpt-4o-mini",
         # query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3-haiku",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
