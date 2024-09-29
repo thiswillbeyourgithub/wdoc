@@ -198,13 +198,13 @@
 * `--query`: str, default `None`
     * if str, will be directly used for the first query if task in `["query", "search", "summarize_then_query"]`
 
-* `--query_retrievers`: str, default `"default_hyde"`
+* `--query_retrievers`: str, default `"default_multiquery"`
     * must be a string that specifies which retriever will be used for
     queries depending on which keyword is inside this string.
 
     * Possible values (can be combined if separated by _):
         * `default`: cosine similarity retriever
-        * `hyde`: hyde retriever
+        * `multiquery`: retriever that uses the LLM to reformulate your query to get different perspectives
         * `knn`: knn
         * `svm`: svm
         * `parent`: parent chunk

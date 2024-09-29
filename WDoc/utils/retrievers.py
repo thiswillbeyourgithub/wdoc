@@ -2,78 +2,26 @@
 Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
-from shutil import rmtree
-from typing import Optional, Any, Callable, List
-
+from typing import Any, List
 from langchain.docstore.document import Document
-from langchain.prompts import PromptTemplate
-from langchain_community.vectorstores import FAISS
-from langchain.chains import LLMChain, HypotheticalDocumentEmbedder
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
+from langchain_core.retrievers import BaseRetriever
+from langchain.retrievers.multi_query import MultiQueryRetriever
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
-from .embeddings import score_function
-
 
 @optional_typecheck
-def create_hyde_retriever(
-    query: str,
-
-    llm: Any,
-    top_k: int,
-    relevancy: float,
-
-    embeddings: Any,
-    loaded_embeddings: Any,
-) -> Any:
-    """
-    create a retriever only for the subset of documents from the
-    loaded_embeddings that were found using HyDE technique (i.e. asking
-    the llm to create a hypothetical answer and use the embedding of this
-    answer to search similar content)
-
-    The code is a little strange because it actually reloads only a portion
-    of the embeddings from cache if possible.
-
-    https://python.langchain.com/docs/use_cases/question_answering/how_to/hyde
-    """
-
-    HyDE_template = """Please imagine the answer to the user's question about a document:
-User question: {question}
-Answer:"""
-    hyde_prompt = PromptTemplate(
-        input_variables=["question"],
-        template=HyDE_template,
-    )
-
-    hyde_chain = LLMChain(
+def create_multiquery_retriever(
+    llm,
+    retriever: BaseRetriever,
+    ) -> MultiQueryRetriever:
+    retriever_from_llm = MultiQueryRetriever.from_llm(
+        retriever=retriever,
         llm=llm,
-        prompt=hyde_prompt,
     )
-
-    hyde_embeddings = HypotheticalDocumentEmbedder(
-        llm_chain=hyde_chain,
-        base_embeddings=embeddings,
-    )
-    loaded_embeddings.save_local("temp")
-    db = FAISS.load_local(
-        "temp",
-        hyde_embeddings,
-        relevance_score_fn=score_function,
-        allow_dangerous_deserialization=True)
-    rmtree("temp")
-
-    retriever = db.as_retriever(
-        search_type="similarity_score_threshold",
-        search_kwargs={
-            "k": top_k,
-            "score_threshold": relevancy,
-        }
-    )
-    return retriever
-
+    return retriever_from_llm
 
 @optional_typecheck
 def create_parent_retriever(

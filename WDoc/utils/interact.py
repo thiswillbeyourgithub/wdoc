@@ -105,7 +105,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             * 'default' to use regular embedding search
             * 'knn' to use KNN
             * 'svm' to use SVM
-            * 'hyde' to use Hypothetical Document Embedding search
+            * 'multiquery' to use Hypothetical Document Embedding search
             * 'parent' to use parent retriever
         To use several '/settings retriever=knn_svm_default'
         * relevancy: float, from set [0:1]
@@ -235,7 +235,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                     sett_v = float(sett_v)
                 elif sett_k == "retriever":
                     assert all(
-                        retriev in ["default", "hyde", "knn", "svm", "parent"]
+                        retriev in ["default", "multiquery", "knn", "svm", "parent"]
                         for retriev in sett_v.split("_")
                     ), f"Invalid retriever value: {sett_v}"
                 elif sett_k == "multiline":
