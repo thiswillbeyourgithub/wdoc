@@ -33,7 +33,7 @@ from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
-from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_HOTFIX_FAISS
+from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_HOTFIX_FAISS, WDOC_MOD_FAISS_SCORE_FN
 
 def status(message: str):
     if is_verbose:
@@ -77,20 +77,25 @@ def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
             failed.append(docu)
     return failed
 
-def score_function(distance: float) -> float:
-    """
-    Scoring function for faiss to make sure it's positive.
+if WDOC_MOD_FAISS_SCORE_FN:
+    def score_function(distance: float) -> float:
+        """
+        Scoring function for faiss to make sure it's positive.
 
-    Related issue: https://github.com/langchain-ai/langchain/issues/17333
-    """
-    # if distance < 0:
-    #     red(f"Distance was under 0: {distance}")
-    #     distance = 0
-    # elif distance > 1:
-    #     red(f"Distance was above 1: {distance}")
-    #     distance = 1
-    # assert distance >= 0 and distance <= 1, f"Invalid distance value: {distance}"
-    return (1 - distance) ** 2
+        Related issue: https://github.com/langchain-ai/langchain/issues/17333
+        """
+        # if distance < 0:
+        #     red(f"Distance was under 0: {distance}")
+        #     distance = 0
+        # elif distance > 1:
+        #     red(f"Distance was above 1: {distance}")
+        #     distance = 1
+        # assert distance >= 0 and distance <= 1, f"Invalid distance value: {distance}"
+        # return (1 - distance) ** 2
+        return 1 - ((1 + distance) / 2)
+        # return ((1 + distance) / 2)
+else:
+    score_function = None
 
 @optional_typecheck
 def faiss_hotfix(vectorstore: FAISS) -> FAISS:
