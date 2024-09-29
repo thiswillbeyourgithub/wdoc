@@ -306,7 +306,7 @@ def load_embeddings(
     ):
         n_trial = 3
         for trial in range(n_trial):
-            whi(f"Embedding batch #{ib + 1}")
+            # whi(f"Embedding batch #{ib + 1}")
             try:
                 temp = FAISS.from_documents(
                     docs[batch[0]:batch[1]],
