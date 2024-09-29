@@ -273,8 +273,11 @@ def load_embeddings(
         red("Reloading documents and embeddings from file")
         path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
-        db = FAISS.load_local(str(path), cached_embeddings,
-                              allow_dangerous_deserialization=True)
+        db = FAISS.load_local(
+            str(path),
+            cached_embeddings,
+            relevance_score_fn=score_function,
+            allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return faiss_hotfix(db), cached_embeddings

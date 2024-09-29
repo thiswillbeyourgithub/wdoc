@@ -14,6 +14,7 @@ from langchain.storage import LocalFileStore
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
+from .embeddings import score_function
 
 
 @optional_typecheck
@@ -57,8 +58,11 @@ Answer:"""
         base_embeddings=embeddings,
     )
     loaded_embeddings.save_local("temp")
-    db = FAISS.load_local("temp", hyde_embeddings,
-                          allow_dangerous_deserialization=True)
+    db = FAISS.load_local(
+        "temp",
+        hyde_embeddings,
+        relevance_score_fn=score_function,
+        allow_dangerous_deserialization=True)
     rmtree("temp")
 
     retriever = db.as_retriever(
