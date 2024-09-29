@@ -33,7 +33,7 @@ from .misc import cache_dir, get_tkn_length
 from .logger import whi, red
 from .typechecker import optional_typecheck
 from .flags import is_verbose
-from .env import WDOC_EXPIRE_CACHE_DAYS
+from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_HOTFIX_FAISS
 
 def status(message: str):
     if is_verbose:
@@ -280,7 +280,10 @@ def load_embeddings(
             allow_dangerous_deserialization=True)
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
-        return faiss_hotfix(db), cached_embeddings
+        if WDOC_HOTFIX_FAISS:
+            return faiss_hotfix(db), cached_embeddings
+        else:
+            return db, cached_embeddings
 
     whi("\nLoading embeddings.")
 
@@ -589,7 +592,10 @@ def load_embeddings(
     # saving embeddings
     db.save_local(save_embeds_as)
 
-    return faiss_hotfix(db), cached_embeddings
+    if WDOC_HOTFIX_FAISS:
+        return faiss_hotfix(db), cached_embeddings
+    else:
+        return db, cached_embeddings
 
 
 @optional_typecheck

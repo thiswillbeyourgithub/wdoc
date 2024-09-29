@@ -30,6 +30,7 @@ WDOC_EXPIRE_CACHE_DAYS = 0
 WDOC_EMPTY_LOADER = False
 WDOC_BEHAVIOR_EXCL_INCL_USELESS = "warn"
 WDOC_DISABLE_LAZYLOADING = False
+WDOC_HOTFIX_FAISS = False
 
 valid_types = {
     'WDOC_TYPECHECKING': str,
@@ -45,6 +46,7 @@ valid_types = {
     'WDOC_EMPTY_LOADER': bool,
     'WDOC_BEHAVIOR_EXCL_INCL_USELESS': str,
     'WDOC_DISABLE_LAZYLOADING': Any,
+    'WDOC_HOTFIX_FAISS': bool,
 }
 
 for k in os.environ.keys():
