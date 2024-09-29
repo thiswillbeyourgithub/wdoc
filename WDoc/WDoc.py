@@ -1269,7 +1269,7 @@ class WDoc:
             eval_args = {}
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
-            else:
+            elif self.query_eval_check_number > 1:
                 red(f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more.")
                 assert self.query_eval_modelbackend != "openai"
             self.eval_llm = load_llm(
