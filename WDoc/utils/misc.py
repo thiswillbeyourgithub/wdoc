@@ -13,6 +13,7 @@ from datetime import timedelta
 from pathlib import Path, PosixPath
 from difflib import get_close_matches
 import bs4
+from bs4 import GuessedAtParserWarning
 import hashlib
 from functools import partial, wraps
 from functools import cache as memoize
@@ -36,6 +37,9 @@ ankiconnect = optional_typecheck(PyAnkiconnect())
 
 # will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
 loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
+
+# ignore warnings from beautiful soup that can happen because anki is not exactly html
+warnings.filterwarnings('ignore', category=GuessedAtParserWarning)
 
 try:
     import ftlangdetect
@@ -327,8 +331,6 @@ def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
 @optional_typecheck
 def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
-    # ignore warnings from beautiful soup that can happen because anki is not exactly html
-    warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
