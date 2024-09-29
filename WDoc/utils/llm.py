@@ -91,7 +91,7 @@ def load_llm(
     if not private and backend == "openai" and api_base is None:
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
-            extra_model_args["max_tokens"] = max_tokens
+            extra_model_args["max_tokens"] = int(max_tokens * 0.9)
         llm = ChatOpenAI(
             model_name=modelname.split("/", 1)[1],
             cache=llm_cache,
@@ -103,7 +103,7 @@ def load_llm(
     else:
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
-            extra_model_args["max_tokens"] = max_tokens
+            extra_model_args["max_tokens"] = int(max_tokens * 0.9)  # intentionaly limiting max tokens because it can cause bugs
         llm = ChatLiteLLM(
             model_name=modelname,
             disable_streaming=True,  # Not needed and might break cache
