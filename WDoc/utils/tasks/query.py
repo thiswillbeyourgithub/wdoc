@@ -129,7 +129,6 @@ def parse_eval_output(output: str) -> str:
 @optional_typecheck
 def collate_intermediate_answers(
     list_ia: List[str],
-    embedding_engine: CacheBackedEmbeddings,
     ) -> str:
     """write the intermediate answers in a single string to be
     combined by the LLM"""
