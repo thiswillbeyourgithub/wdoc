@@ -632,7 +632,7 @@ def faiss_loader(
             ids_list = list(temp.docstore._dict.keys())
             assert len(ids_list) == 1
 
-            if not db:
+            if db is None:
                 db = temp
                 continue
 
