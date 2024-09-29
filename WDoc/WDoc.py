@@ -114,7 +114,7 @@ class WDoc:
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
         # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
-        query_relevancy: Union[float, int] = 0.1,
+        query_relevancy: Union[float, int] = 0.4,
 
         summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",  # <- the LLM will understand
