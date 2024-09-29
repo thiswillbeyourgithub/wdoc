@@ -4,6 +4,7 @@
 """
 
 from typing import List, Union, Optional, Any, Tuple, Callable
+# import math
 import hashlib
 import os
 import queue
@@ -81,19 +82,19 @@ if WDOC_MOD_FAISS_SCORE_FN:
     def score_function(distance: float) -> float:
         """
         Scoring function for faiss to make sure it's positive.
-
         Related issue: https://github.com/langchain-ai/langchain/issues/17333
+
+        In langchain the default value is the euclidean relevance score:
+        return 1.0 - distance / math.sqrt(2)
+
+        The output is a similarity score: it must be [0,1] such that
+        0 is the most dissimilar, 1 is the most similar document.
         """
-        # if distance < 0:
-        #     red(f"Distance was under 0: {distance}")
-        #     distance = 0
-        # elif distance > 1:
-        #     red(f"Distance was above 1: {distance}")
-        #     distance = 1
-        # assert distance >= 0 and distance <= 1, f"Invalid distance value: {distance}"
-        # return (1 - distance) ** 2
-        return 1 - ((1 + distance) / 2)
-        # return ((1 + distance) / 2)
+        # To disable it but simply check: uncomment this and add "import math"
+        # assert distance >= 0, distance
+        # return 1.0 - distance / math.sqrt(2)
+        new = 1 - ((1 + distance) / 2)
+        return new
 else:
     score_function = None
 
