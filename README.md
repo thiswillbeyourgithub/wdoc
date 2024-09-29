@@ -62,7 +62,6 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
-* **Sophisticated faiss saver**: [faiss](https://github.com/facebookresearch/faiss/wiki) is used to quickly find the documents that match an embedding. But instead of storing as a single file, WDoc splits the index into 1 document long index identified by deterministic hashes. When creating a new index, any overlapping document will be automatically reloaded instead of recomputed.
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document loading, parsing, embeddings, querying, etc.
