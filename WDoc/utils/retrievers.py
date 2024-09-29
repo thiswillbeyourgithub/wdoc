@@ -14,8 +14,7 @@ from langchain.storage import LocalFileStore
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
-from .embeddings import score_function, faiss_hotfix
-from .env import WDOC_HOTFIX_FAISS
+from .embeddings import score_function
 
 
 @optional_typecheck
@@ -64,8 +63,6 @@ Answer:"""
         hyde_embeddings,
         relevance_score_fn=score_function,
         allow_dangerous_deserialization=True)
-    if WDOC_HOTFIX_FAISS:
-        db = faiss_hotfix(db)
     rmtree("temp")
 
     retriever = db.as_retriever(

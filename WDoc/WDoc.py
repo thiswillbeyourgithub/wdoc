@@ -45,10 +45,10 @@ from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user
 from .utils.retrievers import create_hyde_retriever
 from .utils.retrievers import create_parent_retriever
-from .utils.embeddings import load_embeddings, faiss_hotfix
+from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
-from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER, WDOC_HOTFIX_FAISS
+from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 
 import litellm
@@ -1216,11 +1216,6 @@ class WDoc:
             )
 
         assert retrievers, "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
-
-        # dynamically patch the retrievers to catch keyerrors
-        if WDOC_HOTFIX_FAISS:
-            for ir, r in enumerate(retrievers):
-                retrievers[ir].vectorstore = faiss_hotfix(r.vectorstore)
 
         if len(retrievers) == 1:
             retriever = retrievers[0]
