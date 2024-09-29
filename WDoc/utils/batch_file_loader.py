@@ -447,14 +447,14 @@ def batch_load_doc(
         red(f"Found {no_st} documents with no source_tag")
 
         if should_crash:
-            red("Something might have gone wrong given those source tags.\nAnswer 'y' or 'c' to continue, 'd' to debug, anything else to crash.")
+            red("Something might have gone wrong given those source tags.\nAnswer 'crash' to crash, 'd' to debug, anything else to continue.")
             ans = input(">")
             if ans == "d":
                 breakpoint()
-            elif ans == "y" or ans == "c":
-                pass
-            else:
+            elif ans == "crash":
                 raise Exception("Probable error given the source tags")
+            else:
+                pass
 
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
