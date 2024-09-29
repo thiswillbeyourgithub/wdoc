@@ -1138,7 +1138,7 @@ class WDoc:
             # directly remove the filtered documents from the docstore
             # but first store the docstore before altering it to allow
             # unfiltering in the prompt
-            self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
+            # self.unfiltered_docstore = self.loaded_embeddings.serialize_to_bytes()
             status = self.loaded_embeddings.delete(ids_to_del)
 
             # checking deletions went well
