@@ -665,3 +665,7 @@
 * `WDOC_HOTFIX_FAISS`
     * If True, modify on the fly the FAISS vectorstores to avoid it crashing because it tries to return document that don't exist in its own db anymore.
     Default is False.
+
+* `WDOC_MOD_FAISS_SCORE_FN`
+    * If True, modify on the fly the FAISS vectorstores to change their scoring function. This was  inspired by [this langchain issue where users claim the default scoring function is wrong](https://github.com/langchain-ai/langchain/issues/17333)
+    Default is False.
