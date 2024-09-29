@@ -7,13 +7,10 @@ from typing import List, Union, Optional, Any, Tuple, Callable
 # import math
 import hashlib
 import os
-import queue
-import faiss
 import random
 import time
 from pathlib import Path, PosixPath
 from tqdm import tqdm
-import threading
 from joblib import Parallel, delayed
 from functools import wraps
 
@@ -27,7 +24,6 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from langchain.docstore.document import Document
 import litellm
 
 from .misc import cache_dir, get_tkn_length
@@ -40,43 +36,12 @@ def status(message: str):
     if is_verbose:
         whi(f"STATUS: {message}")
 
-NB_LOADER_WORKERS = 20
-NB_SAVER_WORKERS = 10
-
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
 
-
-# @optional_typecheck
-# def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
-#     """
-#     merge inplace db1 by adding to it each document and embeddings of db2.
-#     """
-#     failed = []
-#     doc_ids = list(db2.docstore._dict.keys())
-#     # get the embedding of each document
-#     vecs = faiss.rev_swig_ptr(
-#         db2.index.get_xb(),
-#         len(doc_ids) * db2.index.d
-#     ).reshape(len(doc_ids), db2.index.d)
-#     vecs = np.vsplit(vecs, vecs.shape[0])
-#     vecs = [v.squeeze() for v in vecs]
-#     for docuid, embe in zip(doc_ids, vecs):
-#         docu = db2.docstore._dict[docuid]
-#         try:
-#             db1.add_embeddings(
-#                 text_embeddings=[(docu.page_content, embe)],
-#                 metadatas=[docu.metadata],
-#                 ids=[docuid],
-#             )
-#         except ValueError as err:
-#             if "Tried to add ids that already exist" not in str(err):
-#                 raise
-#             failed.append(docu)
-#     return failed
 
 if WDOC_MOD_FAISS_SCORE_FN:
     def score_function(distance: float) -> float:
@@ -293,151 +258,15 @@ def load_embeddings(
 
     whi("\nLoading embeddings.")
 
-    docs = loaded_docs
-    if len(docs) >= 50:
-        docs = sorted(docs, key=lambda x: random.random())
-
-    embeddings_cache = cache_dir / "faiss_doc_indexes" / embed_model_str
-    embeddings_cache.mkdir(exist_ok=True, parents=True)
-    ti = time.time()
-    whi(f"Creating FAISS index for {len(docs)} documents")
-
-    in_cache = [p for p in embeddings_cache.iterdir()]
-    whi(f"Found {len(in_cache)} embeddings in cache")
-    to_embed = []
-
-    # load previous faiss index from cache
-    loader_queues = [(queue.Queue(maxsize=10), queue.Queue(maxsize=1))
-                     for i in range(NB_LOADER_WORKERS)]
-    loader_workers = [
-        threading.Thread(
-            target=faiss_loader,
-            args=(cached_embeddings, qin, qout),
-            daemon=False,
-        ) for qin, qout in loader_queues]
-    [t.start() for t in loader_workers]
-    timeout = 10
-    list_of_files = set((
-        f.stem
-        for f in embeddings_cache.iterdir()
-        if "faiss_index" in f.suffix
-    ))
-    for doc in tqdm(docs, desc="Loading embeddings from cache"):
-        if doc.metadata["content_hash"] in list_of_files:
-            fi = embeddings_cache / \
-                str(doc.metadata["content_hash"] + ".faiss_index")
-            assert fi.exists(), f"fi does not exist: {fi}"
-            # select 2 workers at random and choose the one with the smallest queue
-            queue_candidates = random.sample(loader_queues, k=2)
-            queue_sizes = [q[0].qsize() for q in queue_candidates]
-            ind = queue_sizes.index(min(queue_sizes))
-            lq = queue_candidates[ind][0]
-            assert loader_workers[ind].is_alive(), f"Loader worker #{ind} is dead"
-            lq.put((fi, doc.metadata))
-        else:
-            to_embed.append(doc)
-
-    # ask workers to stop and return their db then get the merged dbs
-    whi("Asking loader workers to shutdown")
-    whi("Putting stop order in the queue")
-    [q[0].put((False, None)) for q in loader_queues]
-    whi("Waiting for answers")
-    merged_dbs = []
-    for iq, q in enumerate(loader_queues):
-        while True:
-            try:
-                whi(f"Waiting for partial db from loader worker #{iq}")
-                val = q[1].get(timeout=timeout)
-                whi("Got it")
-                if val is not None:
-                    merged_dbs.append(val)
-                break
-            except queue.Empty:
-                assert loader_workers[iq].is_alive(), f"Loader worker #{iq} is dead"
-                red(f"Thread #{iq} failed to reply. Retrying. Its input queue size is {q[0].qsize()}")
-
-    start_stopping_threads = time.time()
-    while any(t.is_alive() for t in loader_workers):
-        status("Start of loader loop")
-        if time.time() - start_stopping_threads > 10 * 60:
-            red(
-                f"Waited for threads to stop for "
-                f"{time.time()-start_stopping_threads:.4f}s so continuing "
-                "but do report this because something seems to have gone wrong."
-            )
-            break
-        for ith, t in enumerate(loader_workers):
-            if t.is_alive():
-                status(f"Asking thread #{ith} to join")
-                t.join(timeout=timeout)
-                if t.is_alive():
-                    q = loader_queues[ith]
-                    qsize = q.qsize()
-                    red(
-                        f"Thread #{ith+1}/{len(loader_workers)} is still "
-                        f"running with queue size of {qsize}"
-                    )
-    if any([t.is_alive() for t in loader_workers]):
-        red(f"Some faiss loader workers failed to stop: {len([t for t in loader_workers if t.is_alive()])}/{len(loader_workers)}")
-
-    # merge dbs as one
     db = None
-    if merged_dbs:
-        assert db is None
-        db = merged_dbs.pop(0)
-    failed_to_merge = []
-    if merged_dbs:
-        for m in merged_dbs:
-            db.merge_from(m)
-            # try:
-            #     db.merge_from(m)
-            # except ValueError as err:
-            #     if "Tried to add ids that already exist" not in str(err):
-            #         raise
-            #     failed_to_merge.extend(iter_merge(db, m))
-
-        in_db = len(db.docstore._dict.keys())
-        if in_db != len(docs) - len(to_embed) - len(failed_to_merge):
-            red(
-                f"Invalid number of loaded documents: found {in_db} but "
-                f"expected {len(docs)-len(to_embed)-len(failed_to_merge)}"
-            )
-
-    # TODO: handle case where a thread failed to return a merged db
-    # TODO the document that failed to merge need to be embedded again
-
-    whi(f"Docs left to embed: {len(to_embed)}")
-
-    # remove the cached embeddings that are too old
-    if WDOC_EXPIRE_CACHE_DAYS:
-        cached_path=cache_dir / "CacheEmbeddings" / embed_model_str
-        if not cached_path.exists():
-            cached_path.mkdir(parents=True)
-        current_time = time.time()
-        for dir_to_expire in [cached_path, embeddings_cache]:
-            n_total = 0
-            n_cleaned = 0
-            space_retrieved = 0
-            for file in dir_to_expire.iterdir():
-                last_access_time = file.stat().st_atime
-                days_since_last_access = (current_time - last_access_time) / (24 * 3600)
-                n_total += 1
-                if days_since_last_access >= WDOC_EXPIRE_CACHE_DAYS:
-                    n_cleaned += 1
-                    if file.is_dir():
-                        space_retrieved += sum(f.stat().st_size for f in file.rglob('*') if f.is_file())
-                    elif file.is_file():
-                        space_retrieved += file.stat().st_size
-                    file.unlink(missing_ok=False)
-            whi(
-                f"Number of files removed from {dir_to_expire.name} cache: "
-                f"{n_cleaned}/{n_total} ({space_retrieved / 1024 / 1024:.3f}Mb)"
-            )
+    ti = time.time()
+    docs = loaded_docs
+    whi(f"Docs to embed: {len(docs)}")
 
     # check price of embedding
-    full_tkn = sum([get_tkn_length(doc.page_content) for doc in to_embed])
+    full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
     whi(
-        f"Total number of tokens in documents (not checking if already present in cache): '{full_tkn}'")
+        f"Total number of tokens in documents: '{full_tkn}'")
     if private:
         whi("Not checking token price because private is set")
         price = 0
@@ -464,136 +293,63 @@ def load_embeddings(
             raise SystemExit()
 
     # create a faiss index for batch of documents
-    if to_embed:
-        ts = time.time()
-        batch_size = 1000
-        batches = [
-            [i * batch_size, (i + 1) * batch_size]
-            for i in range(len(to_embed) // batch_size + 1)
-        ]
-        saver_queues = [(queue.Queue(maxsize=10), queue.Queue(maxsize=1))
-                        for i in range(NB_SAVER_WORKERS)]
-        saver_workers = [
-            threading.Thread(
-                target=faiss_saver,
-                args=(embeddings_cache, cached_embeddings, qin, qout),
-                daemon=True,  # contrary to the load workers, we want those to survive
-            ) for qin, qout in saver_queues]
-        [t.start() for t in saver_workers]
-        assert all([t.is_alive() for t in saver_workers]
-                   ), "Saver workers failed to load"
+    ts = time.time()
+    batch_size = 1000
+    batches = [
+        [i * batch_size, (i + 1) * batch_size]
+        for i in range(len(docs) // batch_size + 1)
+    ]
 
-        def embedandsave_one_batch(
-            batch: List,
-            ib: int,
-            saver_queues: List[Tuple[queue.Queue, queue.Queue]] = saver_queues,
-        ):
-            n_trial = 3
-            for trial in range(n_trial):
-                whi(f"Embedding batch #{ib + 1}")
-                try:
+    def embedand_one_batch(
+        batch: List,
+        ib: int,
+    ):
+        n_trial = 3
+        for trial in range(n_trial):
+            whi(f"Embedding batch #{ib + 1}")
+            try:
+                temp = FAISS.from_documents(
+                    docs[batch[0]:batch[1]],
+                    cached_embeddings,
+                    normalize_L2=True,
+                    relevance_score_fn=score_function,
+                )
+                break
+            except Exception as e:
+                red(f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
+                if trial + 1 >= n_trial:
+                    red("Too many errors: bypassing the cache:")
                     temp = FAISS.from_documents(
-                        to_embed[batch[0]:batch[1]],
-                        cached_embeddings,
+                        docs[batch[0]:batch[1]],
+                        cached_embeddings.underlying_embeddings,
                         normalize_L2=True,
                         relevance_score_fn=score_function,
                     )
                     break
-                except Exception as e:
-                    red(f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
-                    if trial + 1 >= n_trial:
-                        red("Too many errors: bypassing the cache:")
-                        temp = FAISS.from_documents(
-                            to_embed[batch[0]:batch[1]],
-                            cached_embeddings.underlying_embeddings,
-                            normalize_L2=True,
-                            relevance_score_fn=score_function,
-                        )
-                        break
-                    else:
-                        time.sleep(1)
-
-            whi(f"Saving batch #{ib + 1}")
-            # save the faiss index as 1 embedding for 1 document
-            # get the id of each document
-            doc_ids = list(temp.docstore._dict.keys())
-            # get the embedding of each document
-            vecs = faiss.rev_swig_ptr(temp.index.get_xb(), len(
-                doc_ids) * temp.index.d).reshape(len(doc_ids), temp.index.d)
-            vecs = np.vsplit(vecs, vecs.shape[0])
-            vecs = [v.squeeze() for v in vecs]
-            for docuid, embe in zip(doc_ids, vecs):
-                docu = temp.docstore._dict[docuid]
-                assert all([t.is_alive()
-                           for t in saver_workers]), "Some saving thread died"
-
-                # select 2 workers at random and choose the one with the smallest queue
-                queue_candidates = random.sample(saver_queues, k=2)
-                queue_sizes = [q[0].qsize() for q in queue_candidates]
-                ind = queue_sizes.index(min(queue_sizes))
-                sq = queue_candidates[ind][0]
-                assert saver_workers[ind].is_alive(), f"Worker #{ind} is dead"
-                sq.put((True, docuid, docu, embe))
-
-            return temp
-        temp_dbs = Parallel(
-            backend="threading",
-            n_jobs=10,
-            verbose=0 if not is_verbose else 51,
-        )(
-            delayed(embedandsave_one_batch)(
-                batch=batch,
-                ib=ib,
-            )
-            for ib, batch in tqdm(
-                enumerate(batches),
-                total=len(batches),
-                desc="Embedding by batch",
-                # disable=not is_verbose,
-            )
+                else:
+                    time.sleep(1)
+        return temp
+    temp_dbs = Parallel(
+        backend="threading",
+        n_jobs=10,
+        verbose=0 if not is_verbose else 51,
+    )(
+        delayed(embedand_one_batch)(
+            batch=batch,
+            ib=ib,
         )
-        # failed_to_merge = []
-        for temp in temp_dbs:
-            if not db:
-                db = temp
-            else:
-                db.merge_from(temp)
-                # try:
-                #     db.merge_from(temp)
-                # except ValueError as err:
-                #     if "Tried to add ids that already exist" not in str(err):
-                #         raise
-                #     failed_to_merge.extend(iter_merge(db, temp))
-        # if failed_to_merge:
-        #     red(f"Failed to merge {len(failed_to_merge)} documents after embeddings")
-
-        whi("Waiting for saver workers to finish.")
-        whi("Putting the stop order in the queue")
-        [q[0].put((False, None, None, None)) for i, q in enumerate(
-                saver_queues) if saver_workers[i].is_alive()]
-        start_stopping_threads = time.time()
-        while any(t.is_alive() for t in saver_workers):
-            if time.time() - start_stopping_threads > 10 * 60:
-                red(
-                    f"Waited for threads to stop for "
-                    f"{time.time()-start_stopping_threads:.4f}s so continuing "
-                    "but do report this because something seems to have gone wrong."
-                )
-                break
-            for ith, t in enumerate(saver_workers):
-                if t.is_alive():
-                    t.join(timeout=timeout)
-                    if t.is_alive():
-                        q = saver_queues[ith]
-                        qsize = q.qsize()
-                        red(
-                            f"Thread #{ith+1}/{len(saver_workers)} is still "
-                            f"running with queue size of {qsize}"
-                        )
-        if any([t.is_alive() for t in saver_workers]):
-            red(f"Some faiss saver workers failed to stop: {len([t for t in saver_workers if t.is_alive()])}/{len(saver_workers)}")
-
-        whi(f"Saving indexes took {time.time()-ts:.2f}s")
+        for ib, batch in tqdm(
+            enumerate(batches),
+            total=len(batches),
+            desc="Embedding by batch",
+            # disable=not is_verbose,
+        )
+    )
+    for temp in temp_dbs:
+        if not db:
+            db = temp
+        else:
+            db.merge_from(temp)
 
     whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
@@ -604,88 +360,6 @@ def load_embeddings(
         return faiss_hotfix(db), cached_embeddings
     else:
         return db, cached_embeddings
-
-
-@optional_typecheck
-def faiss_loader(
-        cached_embeddings: CacheBackedEmbeddings,
-        qin: queue.Queue,
-        qout: queue.Queue) -> None:
-    """load a faiss index. Merge many other index to it. Then return the
-    merged index. This makes it way fast to load a very large number of index
-    """
-    db = None
-    try:
-        while True:
-            fi, metadata = qin.get()
-            if fi is False:
-                assert metadata is None
-                qout.put(db)
-                return
-            assert metadata is not None
-
-            temp = FAISS.load_local(
-                fi,
-                cached_embeddings,
-                allow_dangerous_deserialization=True,
-                relevance_score_fn=score_function,
-            )
-
-            ids_list = list(temp.docstore._dict.keys())
-            assert len(ids_list) == 1
-
-            if db is None:
-                db = temp
-                continue
-
-            did = ids_list[0]
-            if did in db.docstore._dict.keys():
-                red(f"Not thread-loading doc as already present: {did}")
-                continue
-            temp.docstore._dict[did].metadata = metadata
-            try:
-                db.merge_from(temp)
-            except ValueError as err:
-                red(f"Error when loading cache from {fi}: {err}\nDeleting {fi}")
-                [p.unlink() for p in fi.iterdir()]
-                fi.rmdir()
-    except Exception as e:
-        mess = f"Fatal error in faiss_loader: {e}\nValues:\n"
-        for k, v in locals().items():
-            mess += f"{k}: {v}"
-        raise Exception(red(mess)) from e
-
-
-@optional_typecheck
-def faiss_saver(
-        path: Union[str, PosixPath],
-        cached_embeddings: CacheBackedEmbeddings,
-        qin: queue.Queue,
-        qout: queue.Queue) -> None:
-    """create a faiss index containing only a single document then save it"""
-    try:
-        while True:
-            message, docid, document, embedding = qin.get()
-            if message is False:
-                assert docid is None and document is None and embedding is None
-                return
-
-            file = (path / str(document.metadata["content_hash"] + ".faiss_index"))
-            db = FAISS.from_embeddings(
-                text_embeddings=[[document.page_content, embedding]],
-                embedding=cached_embeddings,
-                metadatas=[document.metadata],
-                ids=[docid],
-                normalize_L2=True,
-                relevance_score_fn=score_function,
-            )
-            db.save_local(file)
-    except Exception as e:
-        mess = f"Fatal error in faiss_saver: {e}\nValues:\n"
-        for k, v in locals().items():
-            mess += f"{k}: {v}"
-        raise Exception(red(mess)) from e
-
 
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     @optional_typecheck
