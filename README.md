@@ -56,7 +56,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
 * **Trust but verify**: The answer is sourced: WDoc keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
-* **Sane embeddings**: By default use sophisticated embeddings like HyDE, parent retriever etc. Customizable.
+* **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
 * **Scriptable / Extensible**: You can use WDoc in other python project using `--import_mode`. Take a look at the examples [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
@@ -74,7 +74,6 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * Accept input from stdin, to for example query directly from a manpage
 * Much faster startup time
 * Much improved retriever:
-    * More configurable HyDE.
     * Web search retriever, online information lookup via jina.ai reader and search.
     * LLM powered synonym expansion for embeddings search.
 * A way to specify at indexing time how trusting you are of a given set of document.

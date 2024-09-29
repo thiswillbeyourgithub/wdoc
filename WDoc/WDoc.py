@@ -43,7 +43,7 @@ from .utils.tasks.summary import do_summarize
 from .utils.typechecker import optional_typecheck
 from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user
-from .utils.retrievers import create_hyde_retriever
+from .utils.retrievers import create_multiquery_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
@@ -108,7 +108,7 @@ class WDoc:
         top_k: Union[str, int] = "auto_200_500",
 
         query: Optional[str] = None,
-        query_retrievers: str = "default_hyde",
+        query_retrievers: str = "default_multiquery",
         query_eval_modelname: Optional[str] = "openai/gpt-4o-mini",
         # query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3-haiku",
         # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
@@ -359,7 +359,7 @@ class WDoc:
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
         self.query_retrievers = query_retrievers if modelname != TESTING_LLM else query_retrievers.replace(
-            "hyde", "")
+            "multiquery", "")
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
@@ -1158,21 +1158,20 @@ class WDoc:
             query, self.interaction_settings = ask_user(
                 self.interaction_settings)
         assert all(
-            retriev in ["default", "hyde", "knn", "svm", "parent"]
+            retriev in ["default", "multiquery", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
         ), f"Invalid retriever value: {self.interaction_settings['retriever']}"
         retrievers = []
-        if "hyde" in self.interaction_settings["retriever"].lower():
+        if "multiquery" in self.interaction_settings["retriever"].lower():
             retrievers.append(
-                create_hyde_retriever(
-                    query=query,
-
+                create_multiquery_retriever(
                     llm=self.llm,
-                    top_k=self.interaction_settings["top_k"],
-                    relevancy=self.interaction_settings["relevancy"],
-
-                    embeddings=self.embeddings,
-                    loaded_embeddings=self.loaded_embeddings,
+                    retriever = self.loaded_embeddings.as_retriever(
+                        search_type="similarity_score_threshold",
+                        search_kwargs={
+                            "k": self.interaction_settings["top_k"],
+                            "score_threshold": self.interaction_settings["relevancy"],
+                        })
                 )
             )
 
