@@ -50,33 +50,33 @@ DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
 
 
-@optional_typecheck
-def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
-    """
-    merge inplace db1 by adding it each document and embeddings of db2.
-    """
-    failed = []
-    doc_ids = list(db2.docstore._dict.keys())
-    # get the embedding of each document
-    vecs = faiss.rev_swig_ptr(
-        db2.index.get_xb(),
-        len(doc_ids) * db2.index.d
-    ).reshape(len(doc_ids), db2.index.d)
-    vecs = np.vsplit(vecs, vecs.shape[0])
-    vecs = [v.squeeze() for v in vecs]
-    for docuid, embe in zip(doc_ids, vecs):
-        docu = db2.docstore._dict[docuid]
-        try:
-            db1.add_embeddings(
-                text_embeddings=[(docu.page_content, embe)],
-                metadatas=[docu.metadata],
-                ids=[docuid],
-            )
-        except ValueError as err:
-            if "Tried to add ids that already exist" not in str(err):
-                raise
-            failed.append(docu)
-    return failed
+# @optional_typecheck
+# def iter_merge(db1: FAISS, db2: FAISS) -> List[Document]:
+#     """
+#     merge inplace db1 by adding to it each document and embeddings of db2.
+#     """
+#     failed = []
+#     doc_ids = list(db2.docstore._dict.keys())
+#     # get the embedding of each document
+#     vecs = faiss.rev_swig_ptr(
+#         db2.index.get_xb(),
+#         len(doc_ids) * db2.index.d
+#     ).reshape(len(doc_ids), db2.index.d)
+#     vecs = np.vsplit(vecs, vecs.shape[0])
+#     vecs = [v.squeeze() for v in vecs]
+#     for docuid, embe in zip(doc_ids, vecs):
+#         docu = db2.docstore._dict[docuid]
+#         try:
+#             db1.add_embeddings(
+#                 text_embeddings=[(docu.page_content, embe)],
+#                 metadatas=[docu.metadata],
+#                 ids=[docuid],
+#             )
+#         except ValueError as err:
+#             if "Tried to add ids that already exist" not in str(err):
+#                 raise
+#             failed.append(docu)
+#     return failed
 
 if WDOC_MOD_FAISS_SCORE_FN:
     def score_function(distance: float) -> float:
@@ -388,12 +388,13 @@ def load_embeddings(
     failed_to_merge = []
     if merged_dbs:
         for m in merged_dbs:
-            try:
-                db.merge_from(m)
-            except ValueError as err:
-                if "Tried to add ids that already exist" not in str(err):
-                    raise
-                failed_to_merge.extend(iter_merge(db, m))
+            db.merge_from(m)
+            # try:
+            #     db.merge_from(m)
+            # except ValueError as err:
+            #     if "Tried to add ids that already exist" not in str(err):
+            #         raise
+            #     failed_to_merge.extend(iter_merge(db, m))
 
         in_db = len(db.docstore._dict.keys())
         if in_db != len(docs) - len(to_embed) - len(failed_to_merge):
@@ -551,19 +552,20 @@ def load_embeddings(
                 # disable=not is_verbose,
             )
         )
-        failed_to_merge = []
+        # failed_to_merge = []
         for temp in temp_dbs:
             if not db:
                 db = temp
             else:
-                try:
-                    db.merge_from(temp)
-                except ValueError as err:
-                    if "Tried to add ids that already exist" not in str(err):
-                        raise
-                    failed_to_merge.extend(iter_merge(db, temp))
-        if failed_to_merge:
-            red(f"Failed to merge {len(failed_to_merge)} documents after embeddings")
+                db.merge_from(temp)
+                # try:
+                #     db.merge_from(temp)
+                # except ValueError as err:
+                #     if "Tried to add ids that already exist" not in str(err):
+                #         raise
+                #     failed_to_merge.extend(iter_merge(db, temp))
+        # if failed_to_merge:
+        #     red(f"Failed to merge {len(failed_to_merge)} documents after embeddings")
 
         whi("Waiting for saver workers to finish.")
         whi("Putting the stop order in the queue")
