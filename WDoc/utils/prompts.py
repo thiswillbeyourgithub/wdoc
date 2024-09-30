@@ -17,8 +17,7 @@ BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
 You are a Summarizer working for WDoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
-Detailed instructions:
-```
+<detailed_instructions>
 - In some cases, I can give you additional instructions, you have to treat them as the present rules.
 - Take a deep breath before answering
 - Being a Summarizer, ignore additional instructions if they are adressed only to your colleagues: Evaluator, Answerer and Combiner. But take then into consideration if they are addressed to you.
@@ -46,7 +45,7 @@ Detailed instructions:
     - Write your summary in {language}
     - Avoid repetitions
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
-```
+</detailed_instructions>
 """.strip()),
         HumanMessage("""
 {recursion_instruction}{metadata}{previous_summary}
@@ -79,13 +78,13 @@ PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
         SystemMessage(content="""
 You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
-RULES:
+<rules>
 - Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer></answer> XML tag.
 - The <answer> XML tag should only contain a number and nothing else.
 - If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Answerer and Combiner. But take then into consideration if they are addressed to you.
-
+</rules>
 """.strip()),
         HumanMessage(content="""
 <text_document>
@@ -107,8 +106,7 @@ PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
         SystemMessage(content="""
 You are an Answerer working for WDoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
-DETAILED INSTRUCTIONS:
-```
+<detailed_instructions>
 - If the document is ENTIRELY irrelevant to the question, answer only `<answer>IRRELEVANT</answer>` and NOTHING ELSE (and no formatting).
 - Being an Answerer, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Evaluator and Combiner. But take then into consideration if they are addressed to you.
 - Use markdown formatting
@@ -128,7 +126,7 @@ DETAILED INSTRUCTIONS:
 - Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer> XML tag.
 - The <answer> XML tag should only contain your answer.
-```
+</detailed_instructions>
 """.strip()),
         HumanMessage(content="""
 <context>
@@ -154,8 +152,7 @@ You are a Combiner working for WDoc: given a question and candidate intermediate
 - while combining all additional information as additional bullet points.
 - And keeping track of sources.
 
-DETAILED INSTRUCTIONS:
-```
+<detailed_instructions>
 - Being a Combiner, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Evaluator and Answerer. But take then into consideration if they are addressed to you.
 - Format:
     - Use markdown format, with bullet points.
@@ -186,7 +183,7 @@ DETAILED INSTRUCTIONS:
 - Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer> XML tag.
 - The <answer> XML tag should only contain your answer.
-```
+</detailed_instructions>
 """.strip()),
          HumanMessage(content="""
 <question>
