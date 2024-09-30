@@ -10,6 +10,7 @@ from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
+from langchain_core.runnables.base import Runnable
 
 
 from .misc import cache_dir, get_splitter
@@ -21,7 +22,7 @@ from .prompts import prompts, multiquery_parser
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM, ChatOpenAI],
     retriever: BaseRetriever,
-    ) -> MultiQueryRetriever:
+    ) -> Runnable:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
     mqr = MultiQueryRetriever(
