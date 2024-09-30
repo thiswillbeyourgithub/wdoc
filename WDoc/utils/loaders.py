@@ -71,7 +71,7 @@ from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
-from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER
+from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER, WDOC_PRIVATE_MODE
 
 try:
     import pdftotext
@@ -1837,10 +1837,7 @@ def transcribe_audio_deepgram(
 ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
-    if "WDOC_PRIVATE_MODE" in os.environ:
-        assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
-            "Private mode detected, aborting before trying to use deepgram's API"
-        )
+    assert not WDOC_PRIVATE_MODE, "Private mode detected, aborting before trying to use deepgram's API"
     assert "DEEPGRAM_API_KEY" in os.environ and not os.environ[
         "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
 
@@ -1909,11 +1906,7 @@ def transcribe_audio_whisper(
         prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
-    if "WDOC_PRIVATE_MODE" in os.environ:
-        assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
-            "Private mode detected, aborting before trying to use openai's whisper"
-        )
-
+    assert not WDOC_PRIVATE_MODE, "Private mode detected, aborting before trying to use openai's whisper"
     assert "OPENAI_API_KEY" in os.environ and not os.environ[
         "OPENAI_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 

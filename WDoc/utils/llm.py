@@ -20,6 +20,7 @@ import litellm
 from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 from .flags import is_verbose
+from .env import WDOC_PRIVATE_MODE
 
 TESTING_LLM = "testing/testing"
 
@@ -70,6 +71,9 @@ def load_llm(
 
     if private:
         assert api_base, "If private is set, api_base must be set too"
+        assert WDOC_PRIVATE_MODE
+        assert "WDOC_PRIVATE_MODE" in os.environ, "Missing env variable WDOC_PRIVATE_MODE"
+        assert os.environ["WDOC_PRIVATE_MODE"] == "true", "Wrong value for env variable WDOC_PRIVATE_MODE"
     if api_base:
         red(f"Will use custom api_base {api_base}")
     if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
@@ -86,6 +90,7 @@ def load_llm(
             f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
     else:
+        assert not WDOC_PRIVATE_MODE
         assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
 
     if not private and backend == "openai" and api_base is None:
