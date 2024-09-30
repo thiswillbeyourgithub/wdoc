@@ -229,7 +229,7 @@ def cli_parse_file() -> None:
             } for d in parsed
         }
         try:
-            out = json.dumps(d, indent=2)
+            out = json.dumps(d, indent=2, ensure_ascii=False)
         except Exception:
             out = str(d)
     else:
