@@ -426,12 +426,13 @@ anticorps
                 new_block.set_property(k, v)
 
             prev_content.blocks.append(new_block)
-            for block in content.blocks:
-                diff = (4 - block.indentation_level % 4)
-                if diff != 0:
-                    diff += 4
-                block.indentation_level += 4 + diff
-                prev_content.blocks.append(block)
+            # to over indent the new blocks
+            # for block in content.blocks:
+            #     diff = (4 - block.indentation_level % 4)
+            #     if diff != 0:
+            #         diff += 4
+            #     block.indentation_level += 4 + diff
+            #     prev_content.blocks.append(block)
             prev_content.export_to(
                 file_path=logseq_page.absolute(),
                 overwrite=True,
