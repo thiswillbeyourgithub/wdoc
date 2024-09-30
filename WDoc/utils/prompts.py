@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from textwrap import dedent
+from langchain_core.messages import HumanMessage, SystemMessage
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
-        ("system", """
+        SystemMessage(content="""
 You are a Summarizer working for WDoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
@@ -45,7 +46,7 @@ Detailed instructions:
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
 ```
 """.strip()),
-        ("human", """
+        HumanMessage("""
 {recursion_instruction}{metadata}{previous_summary}
 
 <text_section>
@@ -73,7 +74,7 @@ I'm giving you back your own summary from last time because it was too long and 
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """
+        SystemMessage(content="""
 You are an Evaluator working for WDoc: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
 RULES:
@@ -84,8 +85,7 @@ RULES:
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Summarizer, Answerer and Combiner. But take then into consideration if they are addressed to you.
 
 """.strip()),
-        ("human",
-         """
+        HumanMessage(content="""
 <text_document>
 {doc}
 </text_document>
@@ -96,13 +96,13 @@ RULES:
 
 Take a deep breath.
 You can start your reply when you are ready.
-""")
+""".strip())
     ]
 )
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate.from_messages(
     [
-        ("system", """
+        SystemMessage(content="""
 You are an Answerer working for WDoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 DETAILED INSTRUCTIONS:
@@ -128,7 +128,7 @@ DETAILED INSTRUCTIONS:
 - The <answer> XML tag should only contain your answer.
 ```
 """.strip()),
-        ("human", """
+        HumanMessage(content="""
 <context>
 {context}
 </context>
@@ -146,7 +146,7 @@ Start your reply when you're ready.
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate.from_messages(
     [
-        ("system", """
+        SystemMessage(content="""
 You are a Combiner working for WDoc: given a question and candidate intermediate answers, your goal is to:
 - combine all partial answers to answer the question as md bullet points,
 - while combining all additional information as additional bullet points.
@@ -186,8 +186,7 @@ DETAILED INSTRUCTIONS:
 - The <answer> XML tag should only contain your answer.
 ```
 """.strip()),
-        ("human",
-         """
+         HumanMessage(content="""
 <question>
 {question}
 </question>
