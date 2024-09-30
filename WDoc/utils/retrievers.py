@@ -27,7 +27,6 @@ def create_multiquery_retriever(
     mqr = MultiQueryRetriever(
         retriever=retriever,
         llm_chain=llm_chain,
-        parser_key="output_queries",
     )
 
     # TODO: fix the fallback: the llm_chain has to have a callback instead
