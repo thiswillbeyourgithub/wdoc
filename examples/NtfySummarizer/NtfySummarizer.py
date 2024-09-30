@@ -9,7 +9,11 @@ from WDoc import WDoc
 import fire
 from beartype import beartype
 
-VERSION = "0.1"
+from rich.markdown import Markdown
+from io import StringIO
+from rich.console import Console
+
+VERSION = "0.2"
 
 log_file = Path(__file__).parent / "logs.txt"
 
@@ -129,13 +133,20 @@ def main(
         md = results["summary"]
 
         full_message = f"""
-# Url: {url}
+# Summary
+{url}
 
 {md}
 
 - Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
 - Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
-"""
+""".strip()
+
+        # markdown rendering
+        output = StringIO()
+        console = Console(file=output, width=80, color_system=None)
+        console.print(Markdown(full_message))
+        full_message = output.getvalue()
 
         if len(full_message.encode("utf-8")) <= 4000:
             sn(message=full_message)
