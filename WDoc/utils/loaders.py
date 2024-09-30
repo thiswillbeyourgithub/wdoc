@@ -606,17 +606,17 @@ def load_one_doc(
 
         # check if metadata can be dumped, otherwise stringify the culprit
         try:
-            meta_dump = json.dumps(docs[i].metadata)
+            meta_dump = json.dumps(docs[i].metadata, ensure_ascii=False)
         except Exception:
             for k, v in docs[i].metadata.items():
                 if isinstance(v, PosixPath):
                     docs[i].metadata[k] = v.name
                     continue
                 try:
-                    json.dumps(v)
+                    json.dumps(v, ensure_ascii=False)
                 except Exception:
                     docs[i].metadata[k] = str(v)
-            meta_dump = json.dumps(docs[i].metadata)
+            meta_dump = json.dumps(docs[i].metadata, ensure_ascii=False)
 
 
         docs[i].metadata["all_hash"] = hasher(
@@ -1096,7 +1096,7 @@ def load_anki(
                     "anki_nid": str(nid),
                     "anki_deck": c["codeck"],
                     "anki_modtime": int(c["cmod"]),
-                    "anki_media": json.dumps(medias),
+                    "anki_media": json.dumps(medias, ensure_ascii=False),
                 },
             )
         )

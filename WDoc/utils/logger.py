@@ -73,7 +73,7 @@ def get_coloured_logger(color_asked: str) -> Callable:
             try:
                 string = rtoml.dumps(string, pretty=True)
             except Exception:
-                string = json.dumps(string, indent=2)
+                string = json.dumps(string, indent=2, ensure_ascii=False)
         if isinstance(string, list):
             try:
                 string = ",".join(string)

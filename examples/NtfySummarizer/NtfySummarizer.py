@@ -124,7 +124,7 @@ def main(
             # notification_callback=sn,
         )
         results: dict = instance.summary_results
-        log("Summary:\n" + json.dumps(results))
+        log("Summary:\n" + json.dumps(results, ensure_ascii=False))
 
         md = results["summary"]
 

@@ -92,7 +92,7 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
         "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
         "WDoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
         "WDoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
-        "WDoc_kwargs": json.dumps(kwargs2),
+        "WDoc_kwargs": json.dumps(kwargs2, ensure_ascii=False),
         "the_fiche_version": VERSION,
         "the_fiche_date": today,
         "the_fiche_timestamp": int(time.time()),

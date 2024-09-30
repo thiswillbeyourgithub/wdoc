@@ -411,7 +411,7 @@ def batch_load_doc(
     assert not any(isinstance(d, str) for d in docs)
 
     if missing_docargs:
-        missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x))
+        missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x, ensure_ascii=False))
         red(f"Number of failed documents: {len(missing_docargs)}:")
     else:
         red("No document failed to load!")

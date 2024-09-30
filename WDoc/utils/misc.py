@@ -297,7 +297,7 @@ def file_hasher(doc: dict) -> str:
     returned.
     """
     if "path" not in doc:
-        return hasher(json.dumps(doc))
+        return hasher(json.dumps(doc, ensure_ascii=False))
     hashable = False
     if "path" in doc and doc["path"] and Path(doc["path"]).exists():
         hashable = True
@@ -319,7 +319,7 @@ def file_hasher(doc: dict) -> str:
             stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
         )
     else:
-        return hasher(json.dumps(doc))
+        return hasher(json.dumps(doc, ensure_ascii=False))
 
 
 @optional_typecheck
