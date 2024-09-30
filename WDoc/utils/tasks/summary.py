@@ -100,6 +100,8 @@ def do_summarize(
 
             stripped = ll.lstrip()
 
+            ll = ll.replace("- • ", "- ").replace("• ", "- ")  # occasional bad md
+
             # if a line starts with * instead of -, fix it
             if stripped.startswith("* "):
                 ll = ll.replace("*", "-", 1)
