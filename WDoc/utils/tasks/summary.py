@@ -54,7 +54,11 @@ def do_summarize(
                 "Found llm._get_llm_string() value that potentially "
                 f"invalidates the cache: '{llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'")
-        output = llm._generate_with_cache(messages)
+        try:
+            output = llm._generate_with_cache(messages)
+        except Exception as e:
+            red(f"Error when generating with cache, trying without cache: '{e}'")
+            output = llm._generate(messages)
         if output.generations[0].generation_info is None:
             assert "fake-list-chat-model" in llm._get_llm_string()
             finish = "stop"
