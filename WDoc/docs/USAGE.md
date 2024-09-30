@@ -204,7 +204,10 @@
 
     * Possible values (can be combined if separated by _):
         * `default`: cosine similarity retriever
-        * `multiquery`: retriever that uses the LLM to reformulate your query to get different perspectives
+        * `multiquery`: retriever that uses the LLM to reformulate your
+        query to get different perspectives. This uses the strong LLM
+        and, as it requires complex output parsing for now it is
+        recommended to not use that retriever for average models.
         * `knn`: knn
         * `svm`: svm
         * `parent`: parent chunk
