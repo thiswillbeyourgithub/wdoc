@@ -334,6 +334,8 @@ anticorps
                 for k, v in dm.items():
                     new_block.set_property(k, v)
                 diff = (4 - new_block.indentation_level % 4)
+                if diff != 0:
+                    diff += 4
                 new_block.indentation_level += 4 + diff
                 content.blocks.append(new_block)
 
@@ -423,6 +425,8 @@ anticorps
             prev_content.blocks.append(new_block)
             for block in content.blocks:
                 diff = (4 - block.indentation_level % 4)
+                if diff != 0:
+                    diff += 4
                 block.indentation_level += 4 + diff
                 prev_content.blocks.append(block)
             prev_content.export_to(
