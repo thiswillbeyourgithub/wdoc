@@ -267,6 +267,9 @@ the query to a list of 10 similar query like "breast cancer treatment",
 presentation of breast cancers", "classification of breast cancer", etc.
 You can also anticipate the answer like "the most used chemotherapies
 for breast cancers are anthracyclines, taxanes and cyclophosphamide".
+
+DO NOT reply anything that is not either a thought or the queries. You
+have to do your thinking INSIDE the thought json.
 """.strip()+ "\n" + multiquery_parser.get_format_instructions()),
         HumanMessagePromptTemplate.from_template(
             template="Here's the query to expand: '''{question}'''"""),
