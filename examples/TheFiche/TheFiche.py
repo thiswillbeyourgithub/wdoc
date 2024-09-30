@@ -22,6 +22,8 @@ from loguru import logger
 from joblib import Memory
 import re
 
+VERSION = "1.2"
+
 # logger
 logger.add(
     "logs.txt",
@@ -36,8 +38,6 @@ def p(*args):
     "simple way to log to logs.txt and to print"
     print(*args)
     logger.info(*args)
-
-VERSION = "1.1"
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
