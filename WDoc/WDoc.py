@@ -1750,9 +1750,8 @@ class WDoc:
             fa = thinking_answer_parser(output["final_answer"])
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
-            fa = source_replace(fa)
             md_printer("---")
-            md_printer(indent(f"# Answer:\n{fa}\n", "> "))
+            md_printer(indent(f"# Answer:\n{source_replace(fa)}\n", "> "))
 
             # print the breakdown of documents used and chain time
             red(
