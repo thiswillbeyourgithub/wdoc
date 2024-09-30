@@ -303,8 +303,9 @@ class Prompts_class:
         # anthropic caching works only above 1024 tokens but doesn't count
         # exactly like openai
         tkl = get_tkn_length(content)
-        if tkl < 700:
-            red(f"System prompt is only {tkl} openai tokens so caching will probably not work.")
+        if tkl < 750:
+            red(f"System prompt is only {tkl} openai tokens so caching will won't work, not using it.")
+            return
 
         new_content = [
             {
