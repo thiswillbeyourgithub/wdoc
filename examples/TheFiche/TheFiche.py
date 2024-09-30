@@ -314,6 +314,9 @@ anticorps
         # create logseq page object but don't save it yet
         if not text.startswith("- "):
             text = "- " + text
+        # fix logseq indentation
+        if text.count("    ") % text.count("  ") != 0:
+            text = text.replace("  ", "    ")
         content = parse_text(text)
         content.page_properties.update(props)
         assert content.page_properties
