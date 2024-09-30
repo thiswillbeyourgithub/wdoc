@@ -2,26 +2,91 @@
 Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
-from typing import Any, List
+from typing import Any, List, Union
+from textwrap import dedent
 from langchain.docstore.document import Document
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field, model_validator
+
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
 
+
+# https://python.langchain.com/docs/how_to/output_parser_structured/
+MULTI_QUERY_PROMPT = PromptTemplate(
+    input_variables=["question"],
+    template=dedent("""You are an AI language model assistant. Your are given a user
+    RAG query. Your task is to expand the query, meaning you have to
+    generate 10 different versions of the query to increase the chances of
+    retrieving the most relevant documents using a vector embedding search.
+    You can generate multiple perspectives as well as anticipate the actual
+    answer (like HyDE style search).
+    You will be given specific formatting your for your answer in due time.
+    I know this is a complex task so you are encouraged to express your
+    thinking process BEFORE answering (as long as you respect the format).
+
+    For instance, if you are given a short query "breast cancer", you should expand
+    the query to a list of 10 similar query like "breast cancer treatment",
+    "diagnostics of breast cancer", "epidemiology of breast cancer", "clinical
+    presentation of breast cancers", "classification of breast cancer", etc.
+    You can also anticipate the answer like "the most used chemotherapies
+    for breast cancers are anthracyclines, taxanes and cyclophosphamide".
+
+    Here's the user query: '''{question}'''
+    """),
+)
+class ExpandedQuery(BaseModel):
+    thoughts: str = Field(description="Reasonning to expand the query")
+    output_queries: List[str] = Field(description="List containing each output query")
+
+    @model_validator(mode="before")
+    @classmethod
+    def nonempty_queries(cls, values: dict) -> dict:
+        oq = values["output_queries"]
+        if not isinstance(oq, list):
+            raise ValueError("output_queries has to be a list")
+        if not oq:
+            raise ValueError("output_queries can't be empty")
+        if not all(isinstance(q, str) for q in oq):
+            raise ValueError("output_queries has to be a list of str")
+        oq = [q.strip() for q in oq if q.strip()]
+        if not oq:
+            raise ValueError("output_queries can't be empty after removing empty strings")
+        return values
+
+parser = PydanticOutputParser(pydantic_object=ExpandedQuery)
+
 @optional_typecheck
 def create_multiquery_retriever(
-    llm,
+    llm: Union[ChatLiteLLM, ChatOpenAI],
     retriever: BaseRetriever,
     ) -> MultiQueryRetriever:
-    retriever_from_llm = MultiQueryRetriever.from_llm(
+    # advanced mode using pydantic parsers
+    llm_chain = MULTI_QUERY_PROMPT | llm | parser
+    output = MultiQueryRetriever(
+        retriever=retriever,
+        llm_chain=llm_chain,
+        parser_key="output_queries",
+    )
+
+    # as pydantic parsing can be complicated for some model
+    # we keep the default multi query retriever as a fallback
+    default = MultiQueryRetriever.from_llm(
         retriever=retriever,
         llm=llm,
     )
-    return retriever_from_llm
+    resilient = output.with_fallbacks(fallbacks=[default])
+
+    return resilient
+
 
 @optional_typecheck
 def create_parent_retriever(
@@ -30,7 +95,7 @@ def create_parent_retriever(
     loaded_docs: List[Document],
     top_k: int,
     relevancy: float,
-) -> Any:
+) -> BaseRetriever:
     "https://python.langchain.com/docs/modules/data_connection/retrievers/parent_document_retriever"
     csp = get_splitter(task)
     psp = get_splitter(task)
