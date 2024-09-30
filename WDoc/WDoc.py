@@ -1399,7 +1399,7 @@ class WDoc:
                 @optional_typecheck
                 def retrieve_documents(inputs):
                     return {
-                        "unfiltered_docs": retriever.get_relevant_documents(inputs["question_for_embedding"]),
+                        "unfiltered_docs": retriever.invoke({"question_for_embedding": inputs["question_for_embedding"]}),
                         "question_to_answer": inputs["question_to_answer"],
                     }
                     return inputs
@@ -1458,8 +1458,7 @@ class WDoc:
 
                 docs = output["filtered_docs"]
             else:
-
-                docs = retriever.get_relevant_documents(query)
+                docs = retriever.invoke({"question_for_embedding": query})
                 if len(docs) < self.interaction_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
