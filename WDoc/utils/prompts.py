@@ -215,7 +215,7 @@ You will be given specific formatting your for your answer in due time.
 I know this is a complex task so you are encouraged to express your
 thinking process BEFORE answering (as long as you respect the format).
 
-For instance, if you are given a short query "breast cancer", you should expand
+Example: if you are given a short query "breast cancer", you should expand
 the query to a list of 10 similar query like "breast cancer treatment",
 "diagnostics of breast cancer", "epidemiology of breast cancer", "clinical
 presentation of breast cancers", "classification of breast cancer", etc.
