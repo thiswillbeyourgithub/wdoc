@@ -495,6 +495,10 @@ class WDoc:
             api_base=self.llms_api_bases["model"],
             private=self.private,
         )
+        if "anthropic" in self.modelname.lower() or "anthropic" in self.backend.lower():
+            prompts.enable_prompt_caching("answer")
+            prompts.enable_prompt_caching("combine")
+            prompts.enable_prompt_caching("multiquery")
 
         # loading documents
         if not load_embeds_from:
@@ -1277,6 +1281,8 @@ class WDoc:
                 private=self.private,
                 **eval_args,
             )
+            if "anthropic" in self.query_eval_modelname.lower() or "anthropic" in self.query_eval_modelbackend.lower():
+                prompts.enable_prompt_caching("evaluate")
 
         # the eval doc chain needs its own caching
         if self.llm_cache:
