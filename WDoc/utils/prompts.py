@@ -6,9 +6,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
+from typing import List
 from pydantic import BaseModel, Field, model_validator
 
-from .logger import red
+from .logger import red, whi
 from .misc import get_tkn_length
 
 
@@ -266,7 +267,7 @@ class Prompts_class:
     def enable_prompt_caching(self, prompt_key: str) -> None:
         assert prompt_key in ["evaluate", "answer", "combine", "multiquery"], "Unexpected prompt_key"
 
-        red(f"Enabling anthropic prompt_caching for {prompt_key} prompt")
+        whi(f"Detected anthropic in llm name so enabling anthropic prompt_caching for {prompt_key} prompt")
         prompt = getattr(self, prompt_key)
         sys = prompt.messages[0]
         assert isinstance(sys, SystemMessage), sys
