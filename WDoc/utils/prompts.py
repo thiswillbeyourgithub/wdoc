@@ -6,6 +6,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from .logger import red
+from .misc import get_tkn_length
+
+
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -230,6 +234,39 @@ class Prompts_class:
     answer: ChatPromptTemplate
     combine: ChatPromptTemplate
     multiquery: PromptTemplate
+
+    def __init__(
+        self,
+        **prompts: dict[str, ChatPromptTemplate],
+    ) -> None:
+        for key, pr in prompts.items():
+            setattr(self, key, pr)
+
+    def enable_prompt_caching(self, prompt_key: str) -> None:
+        assert prompt_key in ["evaluate", "answer", "combine", "multiquery"], "Unexpected prompt_key"
+
+        red(f"Enabling anthropic prompt_caching for {prompt_key} prompt")
+        prompt = getattr(self, prompt_key)
+        sys = prompt.messages[0]
+        assert isinstance(sys, SystemMessage), sys
+        content = sys.content
+        #
+        # anthropic caching works only above 1024 tokens but doesn't count
+        # exactly like openai
+        tkl = get_tkn_length(content)
+        if tkl < 700:
+            red(f"System prompt is only {tkl} openai tokens so caching will probably not work.")
+
+        new_content = [
+            {
+                "type": "text",
+                "text": content,
+                "cache_control": {
+                    "type": "ephemeral"
+                }
+            }
+        ]
+        prompt.messages[0].content = new_content
 
 prompts = Prompts_class(
     evaluate=PR_EVALUATE_DOC,
