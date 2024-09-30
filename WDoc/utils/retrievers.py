@@ -10,7 +10,6 @@ from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
-from langchain_core.runnables.base import Runnable
 
 
 from .misc import cache_dir, get_splitter
@@ -22,7 +21,7 @@ from .prompts import prompts, multiquery_parser
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM, ChatOpenAI],
     retriever: BaseRetriever,
-    ) -> Runnable:
+    ) -> MultiQueryRetriever:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
     mqr = MultiQueryRetriever(
@@ -31,15 +30,16 @@ def create_multiquery_retriever(
         parser_key="output_queries",
     )
 
-    # as pydantic parsing can be complicated for some model
-    # we keep the default multi query retriever as a fallback
-    default = MultiQueryRetriever.from_llm(
-        retriever=retriever,
-        llm=llm,
-    )
-    resilient = mqr.with_fallbacks(fallbacks=[default])
-
-    return resilient
+    # TODO: fix the fallback: the llm_chain has to have a callback instead
+    # # as pydantic parsing can be complicated for some model
+    # # we keep the default multi query retriever as a fallback
+    # default = MultiQueryRetriever.from_llm(
+    #     retriever=retriever,
+    #     llm=llm,
+    # )
+    # resilient = mqr.with_fallbacks(fallbacks=[default])
+    # return resilient
+    return mqr
 
 
 @optional_typecheck
