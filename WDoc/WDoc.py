@@ -646,7 +646,7 @@ class WDoc:
             if "title" in relevant_docs[0].metadata:
                 item_name = f"{relevant_docs[0].metadata['title'].strip()} - {item_name}"
             else:
-                metadata.append(f"Title: '{item_name.strip()}'")
+                metadata.append(f"<title>\n{item_name.strip()}\n</title>")
 
             # replace # in title as it would be parsed as a tag
             item_name = item_name.replace("#", r"\#")
@@ -654,21 +654,21 @@ class WDoc:
             if "doc_reading_time" in relevant_docs[0].metadata:
                 doc_reading_length = relevant_docs[0].metadata["doc_reading_time"]
                 metadata.append(
-                    f"Reading length: {doc_reading_length:.1f} minutes")
+                    f"<reading_length>\n{doc_reading_length:.1f} minutes\n</reading_length>")
             else:
                 doc_reading_length = 0
             if "author" in relevant_docs[0].metadata:
                 author = relevant_docs[0].metadata["author"].strip()
-                metadata.append(f"Author: '{author}'")
+                metadata.append(f"<author>\n{author}\n</author>")
             else:
                 author = None
 
             if metadata:
-                metadata = "- Text metadata:\n    - " + \
-                    "\n    - ".join(metadata) + "\n"
-                metadata += "    - Section number: [PROGRESS]\n"
+                metadata = "<text_metadata>\n" + "\n".join(metadata) + "\n"
+                metadata += "<section_number>\n[PROGRESS]\n</section_number>\n"
+                metadata += "</text_metadata>"
             else:
-                metadata = "- Text metadata:\n    - Section number: [PROGRESS]\n"
+                metadata = "<text_metadata><section_number>[PROGRESS]</section_number></text_metadata>"
 
             # summarize each chunk of the link and return one text
             summary, n_chunk, doc_total_cost, doc_total_tokens_in, doc_total_tokens_out = do_summarize(
