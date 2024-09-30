@@ -2,7 +2,6 @@
 Chain (logic) used to summarize a document.
 """
 
-from textwrap import indent
 from tqdm import tqdm
 from typing import List, Any, Union, Tuple
 from pathlib import Path
@@ -131,7 +130,7 @@ def do_summarize(
 
             output_lines[il] = ll
 
-        good_lines = [l for l in output_lines if l]
+        good_lines = [li for li in output_lines if li]
         output_text = "\n".join(good_lines)
 
         if verbose:

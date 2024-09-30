@@ -435,7 +435,6 @@ def model_name_matcher(model: str) -> str:
         "/", 1)[1] in litellm.model_cost, f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
     return out
 
-
 @optional_typecheck
 def get_tkn_length(
     tosplit: str,

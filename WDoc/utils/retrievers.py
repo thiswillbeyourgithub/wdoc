@@ -48,7 +48,7 @@ def create_multiquery_retriever(
     ) -> MultiQueryRetriever:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | parser
-    output = MultiQueryRetriever(
+    mqr = MultiQueryRetriever(
         retriever=retriever,
         llm_chain=llm_chain,
         parser_key="output_queries",
@@ -60,7 +60,7 @@ def create_multiquery_retriever(
         retriever=retriever,
         llm=llm,
     )
-    resilient = output.with_fallbacks(fallbacks=[default])
+    resilient = mqr.with_fallbacks(fallbacks=[default])
 
     return resilient
 
