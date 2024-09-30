@@ -5,6 +5,8 @@ Prompts used by WDoc.
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from pydantic import BaseModel, Field, model_validator
 
 from .logger import red
 from .misc import get_tkn_length
@@ -202,6 +204,28 @@ Start your reply when you're ready.
 )
 
 # embedding queries
+
+# https://python.langchain.com/docs/how_to/output_parser_structured/
+class ExpandedQuery(BaseModel):
+    thoughts: str = Field(description="Reasonning to expand the query")
+    output_queries: List[str] = Field(description="List containing each output query")
+
+    @model_validator(mode="before")
+    @classmethod
+    def nonempty_queries(cls, values: dict) -> dict:
+        oq = values["output_queries"]
+        if not isinstance(oq, list):
+            raise ValueError("output_queries has to be a list")
+        if not oq:
+            raise ValueError("output_queries can't be empty")
+        if not all(isinstance(q, str) for q in oq):
+            raise ValueError("output_queries has to be a list of str")
+        oq = [q.strip() for q in oq if q.strip()]
+        if not oq:
+            raise ValueError("output_queries can't be empty after removing empty strings")
+        return values
+
+multiquery_parser = PydanticOutputParser(pydantic_object=ExpandedQuery)
 PR_MULTI_QUERY_PROMPT = ChatPromptTemplate.from_messages(
     [
         SystemMessage(content="""
@@ -221,7 +245,7 @@ the query to a list of 10 similar query like "breast cancer treatment",
 presentation of breast cancers", "classification of breast cancer", etc.
 You can also anticipate the answer like "the most used chemotherapies
 for breast cancers are anthracyclines, taxanes and cyclophosphamide".
-""".strip()),
+""".strip() + "\n" + multiquery_parser.get_format_instructions()),
         HumanMessage(content="Here's the query to expand: '''{question}'''"""),
     ]
 )

@@ -8,38 +8,14 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field, model_validator
 
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
-from .prompts import prompts
+from .prompts import prompts, multiquery_parser
 
-
-# https://python.langchain.com/docs/how_to/output_parser_structured/
-class ExpandedQuery(BaseModel):
-    thoughts: str = Field(description="Reasonning to expand the query")
-    output_queries: List[str] = Field(description="List containing each output query")
-
-    @model_validator(mode="before")
-    @classmethod
-    def nonempty_queries(cls, values: dict) -> dict:
-        oq = values["output_queries"]
-        if not isinstance(oq, list):
-            raise ValueError("output_queries has to be a list")
-        if not oq:
-            raise ValueError("output_queries can't be empty")
-        if not all(isinstance(q, str) for q in oq):
-            raise ValueError("output_queries has to be a list of str")
-        oq = [q.strip() for q in oq if q.strip()]
-        if not oq:
-            raise ValueError("output_queries can't be empty after removing empty strings")
-        return values
-
-parser = PydanticOutputParser(pydantic_object=ExpandedQuery)
 
 @optional_typecheck
 def create_multiquery_retriever(
@@ -47,7 +23,7 @@ def create_multiquery_retriever(
     retriever: BaseRetriever,
     ) -> MultiQueryRetriever:
     # advanced mode using pydantic parsers
-    llm_chain = prompts.multiquery | llm | parser
+    llm_chain = prompts.multiquery | llm | multiquery_parser
     mqr = MultiQueryRetriever(
         retriever=retriever,
         llm_chain=llm_chain,
