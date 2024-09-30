@@ -41,12 +41,13 @@ def do_summarize(
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
 
-        messages = BASE_SUMMARY_PROMPT.messages.copy()
-        messages[0].content = messages[0].content.replace("{language}", language)
-        messages[1].content = messages[1].content.replace("{metadata}", metadata.replace("[PROGRESS]", fixed_index))
-        messages[1].content = messages[1].content.replace("{previous_summary}", previous_summary)
-        messages[1].content = messages[1].content.replace("{recursion_instruction}", "" if not n_recursion else RECURSION_INSTRUCTION)
-        messages[1].content = messages[1].content.replace("{text}", rd.page_content)
+        messages = BASE_SUMMARY_PROMPT.format_messages(
+            language=language,
+            metadata=metadata.replace("[PROGRESS]", fixed_index),
+            previous_summary=previous_summary,
+            recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION,
+            text=rd.page_content,
+        )
         if " object at " in llm._get_llm_string():
             red(
                 "Found llm._get_llm_string() value that potentially "
