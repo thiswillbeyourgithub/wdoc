@@ -35,7 +35,7 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
     - When in doubt about wether to include an information, include it
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc
-        - You can use markdown headers
+        - DON'T use markdown headers, only bullet points.
         - DON'T: use a single bullet point for the whole answer. Eg if the question is about cancer, instead of 1 top level 'cancer' bullet, prefer several top level bullets for each aspect of the answer.
         - Use bold for important concepts, and italic for epistemic markers
             - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
