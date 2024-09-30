@@ -4,6 +4,8 @@ Prompts used by WDoc.
 
 from dataclasses import dataclass
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import PromptTemplate
+from textwrap import dedent
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages(
@@ -201,14 +203,40 @@ Start your reply when you're ready.
     ]
 )
 
+# embedding queries
+PR_MULTI_QUERY_PROMPT = PromptTemplate(
+    input_variables=["question"],
+    template=dedent("""You are an AI language model assistant. Your are given a user
+    RAG query. Your task is to expand the query, meaning you have to
+    generate 10 different versions of the query to increase the chances of
+    retrieving the most relevant documents using a vector embedding search.
+    You can generate multiple perspectives as well as anticipate the actual
+    answer (like HyDE style search).
+    You will be given specific formatting your for your answer in due time.
+    I know this is a complex task so you are encouraged to express your
+    thinking process BEFORE answering (as long as you respect the format).
+
+    For instance, if you are given a short query "breast cancer", you should expand
+    the query to a list of 10 similar query like "breast cancer treatment",
+    "diagnostics of breast cancer", "epidemiology of breast cancer", "clinical
+    presentation of breast cancers", "classification of breast cancer", etc.
+    You can also anticipate the answer like "the most used chemotherapies
+    for breast cancers are anthracyclines, taxanes and cyclophosphamide".
+
+    Here's the user query: '''{question}'''
+    """),
+)
+
 @dataclass(frozen=False)
 class Prompts_class:
     evaluate: ChatPromptTemplate
     answer: ChatPromptTemplate
     combine: ChatPromptTemplate
+    multiquery: PromptTemplate
 
 prompts = Prompts_class(
     evaluate=PR_EVALUATE_DOC,
     answer=PR_ANSWER_ONE_DOC,
     combine=PR_COMBINE_INTERMEDIATE_ANSWERS,
+    multiquery=PR_MULTI_QUERY_PROMPT
 )

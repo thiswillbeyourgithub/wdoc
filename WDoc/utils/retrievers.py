@@ -3,13 +3,11 @@ Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
 from typing import Any, List, Union
-from textwrap import dedent
 from langchain.docstore.document import Document
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore
 from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
@@ -18,31 +16,10 @@ from pydantic import BaseModel, Field, model_validator
 
 from .misc import cache_dir, get_splitter
 from .typechecker import optional_typecheck
+from .prompts import prompts
 
 
 # https://python.langchain.com/docs/how_to/output_parser_structured/
-MULTI_QUERY_PROMPT = PromptTemplate(
-    input_variables=["question"],
-    template=dedent("""You are an AI language model assistant. Your are given a user
-    RAG query. Your task is to expand the query, meaning you have to
-    generate 10 different versions of the query to increase the chances of
-    retrieving the most relevant documents using a vector embedding search.
-    You can generate multiple perspectives as well as anticipate the actual
-    answer (like HyDE style search).
-    You will be given specific formatting your for your answer in due time.
-    I know this is a complex task so you are encouraged to express your
-    thinking process BEFORE answering (as long as you respect the format).
-
-    For instance, if you are given a short query "breast cancer", you should expand
-    the query to a list of 10 similar query like "breast cancer treatment",
-    "diagnostics of breast cancer", "epidemiology of breast cancer", "clinical
-    presentation of breast cancers", "classification of breast cancer", etc.
-    You can also anticipate the answer like "the most used chemotherapies
-    for breast cancers are anthracyclines, taxanes and cyclophosphamide".
-
-    Here's the user query: '''{question}'''
-    """),
-)
 class ExpandedQuery(BaseModel):
     thoughts: str = Field(description="Reasonning to expand the query")
     output_queries: List[str] = Field(description="List containing each output query")
@@ -70,7 +47,7 @@ def create_multiquery_retriever(
     retriever: BaseRetriever,
     ) -> MultiQueryRetriever:
     # advanced mode using pydantic parsers
-    llm_chain = MULTI_QUERY_PROMPT | llm | parser
+    llm_chain = prompts.multiquery | llm | parser
     output = MultiQueryRetriever(
         retriever=retriever,
         llm_chain=llm_chain,
