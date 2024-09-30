@@ -87,12 +87,14 @@ def _send_file(
 @beartype
 def main(
     topic: str,
+    render_md: bool = False,
     ) -> None:
     """
     Main function to process a URL or file type and URL, generate a summary, and send it as a notification.
 
     Args:
         topic (str): The ntfy.sh topic to send the notification to.
+        render_md (bool, False by default): True to pass the md string into rich for rendering before sending to ntfy
 
     Raises:
         AssertionError: If NTFY_MESSAGE is not in os.environ, or if the message format is incorrect.
@@ -142,11 +144,13 @@ def main(
 - Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
 """.strip()
 
-        # markdown rendering
-        output = StringIO()
-        console = Console(file=output, width=80, color_system=None)
-        console.print(Markdown(full_message))
-        full_message = output.getvalue()
+        if render_md:
+            log("Using markdown rendering")
+            # markdown rendering
+            output = StringIO()
+            console = Console(file=output, width=80, color_system=None)
+            console.print(Markdown(full_message))
+            full_message = output.getvalue()
 
         if len(full_message.encode("utf-8")) <= 4000:
             sn(message=full_message)
