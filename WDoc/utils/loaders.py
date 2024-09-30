@@ -1837,9 +1837,10 @@ def transcribe_audio_deepgram(
 ) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
-    assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
-        "Private mode detected, aborting before trying to use deepgram's API"
-    )
+    if "WDOC_PRIVATE_MODE" in os.environ:
+        assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
+            "Private mode detected, aborting before trying to use deepgram's API"
+        )
     assert "DEEPGRAM_API_KEY" in os.environ and not os.environ[
         "DEEPGRAM_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", "No environment variable DEEPGRAM_API_KEY found"
 
@@ -1908,9 +1909,10 @@ def transcribe_audio_whisper(
         prompt: Optional[str]) -> dict:
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
-    assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
-        "Private mode detected, aborting before trying to use openai's whisper"
-    )
+    if "WDOC_PRIVATE_MODE" in os.environ:
+        assert os.environ["WDOC_PRIVATE_MODE"] == "false", (
+            "Private mode detected, aborting before trying to use openai's whisper"
+        )
 
     assert "OPENAI_API_KEY" in os.environ and not os.environ[
         "OPENAI_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"

@@ -86,7 +86,7 @@ def load_llm(
             f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
     else:
-        assert os.environ["WDOC_PRIVATE_MODE"] == "false"
+        assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
 
     if not private and backend == "openai" and api_base is None:
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
