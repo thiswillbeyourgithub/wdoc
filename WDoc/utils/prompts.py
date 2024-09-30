@@ -247,7 +247,7 @@ presentation of breast cancers", "classification of breast cancer", etc.
 You can also anticipate the answer like "the most used chemotherapies
 for breast cancers are anthracyclines, taxanes and cyclophosphamide".
 """.strip() + "\n" + multiquery_parser.get_format_instructions()),
-        HumanMessage(content="Here's the query to expand: '''{question}'''"""),
+        HumanMessage(content="Here's the query to expand: '''{question_for_embedding}'''"""),
     ]
 )
 
