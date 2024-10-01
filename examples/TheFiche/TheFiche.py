@@ -317,7 +317,7 @@ anticorps
         if not text.startswith("- "):
             text = "- " + text
         # fix logseq indentation
-        if text.count("    ") % text.count("  ") != 0:
+        if True:  # or text.count("    ") % text.count("  ") != 0:
             text = text.replace("  ", "    ")
         content = parse_text(text)
         content.page_properties.update(props)
