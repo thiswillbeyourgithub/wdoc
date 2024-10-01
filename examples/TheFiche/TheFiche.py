@@ -310,7 +310,10 @@ anticorps
                             assert line != line.rstrip()
 
                     new_text += line
-                assert text != new_text
+                # assert text != new_text
+                if text == new_text:
+                    p(f"Text was not different after checking for subtags, which are: '{sub_tags}'")
+
                 text = new_text
 
         # create logseq page object but don't save it yet
