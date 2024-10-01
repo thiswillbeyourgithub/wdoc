@@ -48,7 +48,7 @@ from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
-from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER
+from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER, WDOC_LLM_MAX_CONCURRENCY
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 
 import litellm
@@ -1390,7 +1390,7 @@ class WDoc:
             return outputs
 
         # uses in most places to increase concurrency limit
-        multi = {"max_concurrency": 10 if not self.debug else 1}
+        multi = {"max_concurrency": WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1}
 
         if self.task == "search":
             if self.query_eval_modelname:
