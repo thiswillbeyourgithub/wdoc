@@ -280,11 +280,12 @@ anticorps
             sup_tags = [t for t in tags if t not in sub_tags and re.search(t, text, re.IGNORECASE)]
             if sup_tags:
                 for it, t in enumerate(sup_tags):
-                    if not re.search(t, text, re.IGNORECASE):
-                        p(f"Couldn't find tag {t} in text")
+                    tb = "\b" + t + "\b"
+                    if not re.search(tb, text, re.IGNORECASE):
+                        p(f"Couldn't find tag {tb} in text")
                     else:
-                        p(f"Found tag {t} in text")
-                        text = re.sub(t, "[[" + t + "]]", text, re.IGNORECASE)
+                        p(f"Found tag {tb} in text")
+                        text = re.sub(tb, "[[" + t + "]]", text, re.IGNORECASE)
             if sub_tags:
                 assert sup_tags
                 lines = text.splitlines(keepends=True)
@@ -294,7 +295,8 @@ anticorps
                         t = t.strip()
                         assert t
                         assert "[" not in t and "]" not in t
-                        if not re.search(t, line, re.IGNORECASE):
+                        tb = "\b" + t + "\b"
+                        if not re.search(tb, line, re.IGNORECASE):
                             continue
 
                         if line == line.rstrip():
