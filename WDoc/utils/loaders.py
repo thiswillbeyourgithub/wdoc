@@ -806,7 +806,18 @@ def load_online_pdf(
 
     try:
         loader = OnlinePDFLoader(path)
-        docs = loader.load()
+        if pdf_loader_max_timeout > 0:
+            with signal_timeout(
+                timeout=pdf_loader_max_timeout,
+                exception=TimeoutPdfLoaderError,
+                ):
+                docs = loader.load()
+            try:
+                signal.alarm(0)  # disable alarm again just in case
+            except Exception:
+                pass
+        else:
+            docs = loader.load()
         return docs
 
     except Exception as err:
