@@ -684,7 +684,7 @@
     * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
-    Default is `750`.
+    Default is `500`.
 
 
 * `WDOC_DEFAULT_MODELNAME`, default: `"openai/gpt-4o"`
