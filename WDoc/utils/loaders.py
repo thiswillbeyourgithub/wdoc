@@ -414,31 +414,13 @@ def load_one_doc(
     elif filetype == "online_pdf":
         docs = load_online_pdf(
             debug=debug,
-            task=task,
+            text_splitter=text_splitter,
+            file_hash=file_hash,
+            doccheck_min_lang_prob=doccheck_min_lang_prob,
+            doccheck_min_token=doccheck_min_token,
+            doccheck_max_token=doccheck_max_token,
             **kwargs,
         )
-        if isinstance(docs, list):
-            assert all(isinstance(d, Document) for d in docs)
-            docs = docs
-        else:
-            # it's not the document but another docdict to load as pdf
-            if not Path(docs["path"]).exists():
-                docs = load_online_pdf(
-                    debug=debug,
-                    task=task,
-                    bypass_cache=str(uuid6.uuid6()),
-                    **kwargs,
-                )
-            assert Path(docs["path"]).exists(), docs
-            docs = load_pdf(
-                debug=debug,
-                text_splitter=text_splitter,
-                source_tag=source_tag,
-                doccheck_min_lang_prob=doccheck_min_lang_prob,
-                doccheck_min_token=doccheck_min_token,
-                doccheck_max_token=doccheck_max_token,
-                **docs,
-            )
 
     elif filetype == "anki":
         docs = load_anki(
@@ -810,18 +792,15 @@ def load_youtube_video(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_online_pdf(
-    debug: bool,
-    task: str,
     path: str,
+    text_splitter: TextSplitter,
+    debug: bool,
+    file_hash: str,
     pdf_parsers: Union[str, List[str]] = 'pymupdf',  # used only if online loading fails
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
-    bypass_cache: str = "",  # if we set to a
-    # random value it will bypass the cache, useful as otherwise failing
-    # to use OnlinePDFLoader will return a local path that is no longer valid
-    **kwargs,
-    ) -> Union[List[Document], dict]:
+    ) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
     try:
@@ -831,7 +810,7 @@ def load_online_pdf(
 
     except Exception as err:
         red(
-            f"Failed parsing online PDF {path} using only OnlinePDFLoader. Will try downloading it directly. Error message: '{err}'"
+            f"Failed parsing online PDF {path} using only OnlinePDFLoader be cause '{err}'.\nWill try downloading it directly."
         )
 
         response = requests.get(path)
@@ -839,12 +818,17 @@ def load_online_pdf(
             temp_file.write(response.content)
             temp_file.flush()
 
-        meta = kwargs.copy()
-        meta["filetype"] = "pdf"
-        meta["path"] = temp_file.name
-        assert Path(temp_file.name).exists()
-        meta["file_hash"] = file_hasher({"path": temp_file.name})
-        return meta
+        docs = load_pdf(
+            path=temp_file.name,
+            text_splitter=text_splitter,
+            debug=debug,
+            file_hash=file_hasher({"path": temp_file.name}),
+            pdf_parsers=pdf_parsers,
+            doccheck_min_lang_prob=doccheck_min_lang_prob,
+            doccheck_min_token=doccheck_min_token,
+            doccheck_max_token=doccheck_max_token,
+        )
+        return docs
 
 
 @debug_return_empty
