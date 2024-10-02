@@ -61,6 +61,14 @@ valid_types = {
     'WDOC_DEFAULT_QUERY_EVAL_MODELNAME': str,
 }
 
+# sanity check for the default values
+for k, v in locals().copy().items():
+    if not k.startswith("WDOC_"):
+        continue
+    assert k in valid_types, k
+    assert is_bearable(v, valid_types[k]), v
+
+# store the env variable instead of the default values but check their types
 for k in os.environ.keys():
     if not k.startswith("WDOC_"):
         continue
