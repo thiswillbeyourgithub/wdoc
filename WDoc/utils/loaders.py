@@ -815,7 +815,7 @@ def load_online_pdf(
         meta = kwargs.copy()
         meta["filetype"] = "pdf"
         meta["path"] = temp_file.name
-        meta["file_hash"] = file_hasher(temp_file.name)
+        meta["file_hash"] = file_hasher({"path": temp_file.name})
         try:
             return load_one_doc(
                 task=task,
