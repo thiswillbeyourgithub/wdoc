@@ -209,6 +209,7 @@ def semantic_batching(
             vr = np.cumsum(pca.explained_variance_ratio_)[-1]
             if vr <= 0.90:
                 red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
+            assert vr >= 0.75, f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
             embeddings = pd.DataFrame(
                 columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
                 index=[i for i in range(len(texts))],
