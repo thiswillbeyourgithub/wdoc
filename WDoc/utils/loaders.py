@@ -23,6 +23,7 @@ import json
 import dill
 import httpx
 import warnings
+from functools import cache as memoize
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import UnstructuredPDFLoader
@@ -647,6 +648,7 @@ def load_one_doc(
 # Convenience functions #########################
 
 
+@memoize
 @optional_typecheck
 def get_url_title(url: str) -> Union[str, type(None)]:
     """if the title of the url is not loaded from the loader, trying as last
