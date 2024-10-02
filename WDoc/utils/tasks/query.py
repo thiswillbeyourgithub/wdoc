@@ -27,6 +27,7 @@ from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, Inv
 from ..logger import red, whi
 from ..misc import thinking_answer_parser, get_tkn_length
 from ..flags import is_verbose
+from ..env import WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
@@ -160,6 +161,8 @@ def semantic_batching(
     This probably helps the LLM to combine the intermediate answers
     into one.
     """
+    max_token = WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+
     assert texts, "No input text received"
     assert len(texts) > 1, f"received only one text: {texts}"
 
@@ -172,7 +175,6 @@ def semantic_batching(
         return [texts]
 
     text_sizes = {t:get_tkn_length(t) for t in texts}
-    max_token = 500
 
     # get embeddings
     embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()

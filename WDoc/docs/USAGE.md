@@ -679,3 +679,9 @@
 * `WDOC_LLM_MAX_CONCURRENCY`
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
     Must be an int. By default is 10.
+
+* `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`
+    * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
+    Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
+    reduce the cost of the "combine intermediate answers" step when querying.
+    Default is `750`.
