@@ -1220,16 +1220,17 @@ class WDoc:
         if len(retrievers) == 1:
             retriever = retrievers[0]
         else:
-            retriever = MergerRetriever(retrievers=retrievers)
+            merge_retriever = MergerRetriever(retrievers=retrievers)
 
             # remove redundant results from the merged retrievers:
             filtered = EmbeddingsRedundantFilter(
                 embeddings=self.embeddings,
                 similarity_threshold=0.999,
             )
-            pipeline = DocumentCompressorPipeline(transformers=[filtered])
+            filter_pipeline = DocumentCompressorPipeline(transformers=[filtered])
             retriever = ContextualCompressionRetriever(
-                base_compressor=pipeline, base_retriever=retriever
+                base_compressor=filter_pipeline,
+                base_retriever=merge_retriever
             )
 
         if ">>>>" in query:
