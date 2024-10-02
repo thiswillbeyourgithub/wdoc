@@ -645,7 +645,7 @@
 
 * `WDOC_MAX_PDF_LOADER_TIMEOUT`
     * Number of seconds to wait for each pdf loader before giving up this loader.
-    Note that it probably makes PDF parsing substantially SLOWER.
+    Note that it probably makes PDF parsing substantially.
     Default is `-1` to disable.
     Disabled when using `--file_loader_parallel_backend=threading` as python does not allow it.
     Also disabled if <= 0.
