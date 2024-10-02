@@ -1426,7 +1426,7 @@ class WDoc:
                 }
                 rag_chain = (
                     retrieve_documents
-                    | sieve_documents(top_k=self.top_k, max_top_k=self.max_top_k)
+                    | sieve_documents(instance=self)
                     | refilter_documents
                 )
                 tried_top_k = []
@@ -1576,7 +1576,7 @@ class WDoc:
 
             rag_chain = (
                 retrieve_documents
-                | sieve_documents(top_k=self.top_k, max_top_k=self.max_top_k)
+                | sieve_documents(instance=self)
                 | pbar_chain(
                         llm=self.eval_llm,
                         len_func="len(inputs['unfiltered_docs'])",
