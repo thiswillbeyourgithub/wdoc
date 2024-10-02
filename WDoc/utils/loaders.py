@@ -801,7 +801,6 @@ def load_online_pdf(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
-    **kwargs,
     ) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
@@ -829,7 +828,6 @@ def load_online_pdf(
             doccheck_min_lang_prob=doccheck_min_lang_prob,
             doccheck_min_token=doccheck_min_token,
             doccheck_max_token=doccheck_max_token,
-            **kwargs,
         )
         return docs
 
