@@ -160,6 +160,8 @@ def semantic_batching(
     contain each subtopic while keeping a reasonnable number of tokens.
     This probably helps the LLM to combine the intermediate answers
     into one.
+    Note that the documents are also sorted inside each batch, so that iterating
+    over each document of each batch in order will follow the optimal leaf order.
     """
     max_token = WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
 
