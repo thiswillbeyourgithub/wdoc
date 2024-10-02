@@ -383,6 +383,7 @@ def load_one_doc(
     The loader is cached"""
     debug = is_debug
     text_splitter = get_splitter(task, modelname=llm_name)
+    assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
     assert expected_global_dir, f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
