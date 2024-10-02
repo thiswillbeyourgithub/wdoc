@@ -815,6 +815,7 @@ def load_online_pdf(
     debug: bool,
     task: str,
     path: str,
+    pdf_parsers: Union[str, List[str]] = 'pymupdf',  # used only if online loading fails
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
