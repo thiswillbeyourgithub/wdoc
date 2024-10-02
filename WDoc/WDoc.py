@@ -1172,7 +1172,7 @@ class WDoc:
                         search_kwargs={
                             "k": self.interaction_settings["top_k"],
                             "score_threshold": self.interaction_settings["relevancy"],
-                        })
+                        }),
                 )
             )
 
