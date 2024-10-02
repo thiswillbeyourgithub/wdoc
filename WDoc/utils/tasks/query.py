@@ -199,21 +199,25 @@ def semantic_batching(
     max_n_dim = min(100, len(texts))
 
     # optional dimension reduction to gain time
-    if n_dim > max_n_dim:
-        scaler = preprocessing.StandardScaler()
-        embed_scaled = scaler.fit_transform(embeds)
-        pca = decomposition.PCA(n_components=max_n_dim)
-        embeds_reduced = pca.fit_transform(embed_scaled)
-        assert embeds_reduced.shape[0] == embeds.shape[0]
-        vr = np.cumsum(pca.explained_variance_ratio_)[-1]
-        if vr <= 0.90:
-            red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
-        embeddings = pd.DataFrame(
-            columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
-            index=[i for i in range(len(texts))],
-            data=embeds_reduced,
-        )
-    else:
+    try:
+        if n_dim > max_n_dim:
+            scaler = preprocessing.StandardScaler()
+            embed_scaled = scaler.fit_transform(embeds)
+            pca = decomposition.PCA(n_components=max_n_dim)
+            embeds_reduced = pca.fit_transform(embed_scaled)
+            assert embeds_reduced.shape[0] == embeds.shape[0]
+            vr = np.cumsum(pca.explained_variance_ratio_)[-1]
+            if vr <= 0.90:
+                red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
+            embeddings = pd.DataFrame(
+                columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
+                index=[i for i in range(len(texts))],
+                data=embeds_reduced,
+            )
+    except Exception as err:
+        red(f"Error when doing dimension reduction for semantic batching. Original shape: {embeds.shape}. Error: '{err}'\nContinuing anyway.")
+
+    if "embeddings" not in locals():
         embeddings = pd.DataFrame(
             columns=[f"v_{i}" for i in range(embeds.shape[1])],
             index=[i for i in range(len(texts))],
