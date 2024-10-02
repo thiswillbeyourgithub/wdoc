@@ -45,7 +45,7 @@ LINK="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawa
 
 wdoc --path $link --task query --filetype "online_pdf" --query "What are all the information about the author?" --query_retrievers='default_multiquery' --top_k=auto_200_500
 # this will:
-# 1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage)
+# 1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
 # 2. cut the text into chunks and create embeddings for each
 # 3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
 # 4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
