@@ -131,6 +131,9 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
 9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc summary --path 'https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="english" --disable_md_printing`:
 
+<details><summary>Click to see the output</summary>
+
+
 > # Summary
 > ## https://www.youtube.com/watch?v=arj7oStGLkU
 > - The speaker, Tim Urban, was a government major in college who had to write many papers
@@ -183,6 +186,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 > 
 > Done summarizing.
 
+</details>
 
 
 ## Getting started
