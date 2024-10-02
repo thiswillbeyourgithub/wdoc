@@ -47,6 +47,27 @@ def check_intermediate_answer(ans: str) -> bool:
     return False
 
 
+@optional_typecheck
+def sieve_documents(top_k: int, max_top_k: int) -> RunnableLambda:
+    """cap the number of retrieved documents as if multiple retrievers are used
+    we can end up with a lot more document!
+    """
+    assert max_top_k >= top_k
+    @chain
+    @optional_typecheck
+    def _sieve(inputs: dict) -> dict:
+        assert "question_to_answer" in inputs, inputs.keys()
+        assert "unfiltered_docs" in inputs, inputs.keys()
+        if len(inputs) > top_k:
+            red(
+                "Number of documents found via embeddings was "
+                f"'{inputs['unfiltered_docs']}' which is > top_k ({top_k}) "
+                "so we crop")
+        inputs["unfiltered_docs"] = inputs["unfiltered_docs"][:top_k]
+        return inputs
+    return _sieve
+
+
 @chain
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:

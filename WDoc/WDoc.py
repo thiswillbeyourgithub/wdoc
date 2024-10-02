@@ -34,7 +34,7 @@ from .utils.misc import (
     thinking_answer_parser, DocDict
 )
 from .utils.prompts import prompts
-from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers, semantic_batching
+from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers, semantic_batching, sieve_documents
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -1426,6 +1426,7 @@ class WDoc:
                 }
                 rag_chain = (
                     retrieve_documents
+                    | sieve_documents(top_k=self.top_k, max_top_k=self.max_top_k)
                     | refilter_documents
                 )
                 tried_top_k = []
@@ -1575,6 +1576,7 @@ class WDoc:
 
             rag_chain = (
                 retrieve_documents
+                | sieve_documents(top_k=self.top_k, max_top_k=self.max_top_k)
                 | pbar_chain(
                         llm=self.eval_llm,
                         len_func="len(inputs['unfiltered_docs'])",
