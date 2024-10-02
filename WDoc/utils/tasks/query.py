@@ -4,6 +4,7 @@ Chain (logic) used to query a document.
 
 import re
 from typing import Tuple, List, Union, Literal
+import time
 from numpy.typing import NDArray
 
 from langchain.docstore.document import Document
@@ -179,7 +180,19 @@ def semantic_batching(
     text_sizes = {t:get_tkn_length(t) for t in texts}
 
     # get embeddings
-    embeds = np.array(embedding_engine.embed_documents(texts)).squeeze()
+    n_trial = 3
+    for trial in range(n_trial):
+        try:
+            embeds = np.array(embedding_engine.embed_documents(texts)).squeeze()
+            break
+        except Exception as e:
+            red(f"Error at trial {trial+1}/{n_trial} when trying to embed texts for semantic batching: '{e}'")
+            if trial + 1 >= n_trial:
+                red("Too many errors so crashing")
+                raise
+            else:
+                time.sleep(2)
+
     n_dim = embeds.shape[1]
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
