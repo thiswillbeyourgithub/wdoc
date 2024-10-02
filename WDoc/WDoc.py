@@ -1691,10 +1691,34 @@ class WDoc:
                             "intermediate_answers": b
                         } for b in batches
                     ]
-                    temp_interm_answ = [
-                        thinking_answer_parser(a["final_answer"])["answer"]
-                        for a in final_answer_chain.batch(batch_args)
-                    ]
+                    temp_interm_answ = []
+                    batch_result = final_answer_chain.batch(batch_args)
+                    n_trial = 3
+                    for ia, a in enumerate(batch_result):
+                        trial = 0
+                        for trial in range(n_trial):
+                            try:
+                                o = thinking_answer_parser(
+                                    a["final_answer"],
+                                    strict=True,
+                                )["answer"]
+                                temp_interm_answ.append(o)
+                                break
+                            except Exception as e:
+                                red(
+                                    f"Error at trial {trial} when separating "
+                                    "thinking from answer from LLM output.\n\n"
+                                    f"The full answer is: '{a}'\n\n"
+                                    f"The error was: '{e}'\n\n"
+                                    "Retrying "
+                                    "this specific batch to make sure we don't"
+                                    " loose intermediate answers")
+                                # modify the batch slightly to bypass the cache
+                                altered_batch = batch_args[ia]
+                                altered_batch["question_to_answer"] += "."
+                                altered_batch["intermediate_answers"] += "."
+                                a = final_answer_chain.batch([altered_batch])[0]
+
                     all_intermediate_answers.append(temp_interm_answ)
                     pbar.n = pbar.total - len(temp_interm_answ) + 1
                     pbar.update(0)

@@ -707,7 +707,7 @@ THIN = "<thinking>"
 THINE = "</thinking>"
 ANSW = "<answer>"
 ANSWE = "</answer>"
-def thinking_answer_parser(output: str) -> dict:
+def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
     try:
         # fix </answer> instead of <answer>
@@ -739,6 +739,8 @@ def thinking_answer_parser(output: str) -> dict:
 
         return {"thinking": thinking, "answer": answer}
     except Exception as err:
+        if strict:  # otherwise combining answers could snowball into losing lots of text
+            raise
         red(f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{output}'\nWill continue if not using --debug")
         if is_debug:
             raise
