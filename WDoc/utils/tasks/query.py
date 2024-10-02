@@ -179,7 +179,7 @@ def semantic_batching(
     text_sizes = {t:get_tkn_length(t) for t in texts}
 
     # get embeddings
-    embeds = np.array([embedding_engine.embed_query(t) for t in texts]).squeeze()
+    embeds = np.array(embedding_engine.embed_documents(texts)).squeeze()
     n_dim = embeds.shape[1]
     assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
