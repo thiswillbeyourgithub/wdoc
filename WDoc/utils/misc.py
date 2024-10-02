@@ -41,6 +41,8 @@ loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4', message=".*The input looks more like a filename than markup.*")
 
+# additional warnings to ignore
+warnings.filterwarnings("ignore", module='litellm', message=".*Counting tokens for OpenAI model=.*")
 
 try:
     import ftlangdetect
