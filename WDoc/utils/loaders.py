@@ -417,6 +417,30 @@ def load_one_doc(
             task=task,
             **kwargs,
         )
+        if isinstance(docs, list):
+            assert all(isinstance(d, Document) for d in docs)
+            docs = docs
+        else:
+            # it's not the document but another docdict to load as pdf
+            if not Path(docs["path"]).exists():
+                docs = load_online_pdf(
+                    debug=debug,
+                    task=task,
+                    bypass_cache=str(uuid6.uuid6()),
+                    **kwargs,
+                )
+            assert Path(docs["path"]).exists(), docs
+            docs = load_one_doc(
+                task=task,
+                llm_name=llm_name,
+                temp_dir=temp_dir,
+                debug=debug,
+                source_tag=source_tag,
+                doccheck_min_lang_prob=doccheck_min_lang_prob,
+                doccheck_min_token=doccheck_min_token,
+                doccheck_max_token=doccheck_max_token,
+                **docs,
+            )
 
     elif filetype == "anki":
         docs = load_anki(
@@ -794,13 +818,17 @@ def load_online_pdf(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
+    bypass_cache: str = "",  # if we set to a
+    # random value it will bypass the cache, useful as otherwise failing
+    # to use OnlinePDFLoader will return a local path that is no longer valid
     **kwargs,
-    ) -> List[Document]:
+    ) -> Union[List[Document], dict]:
     whi(f"Loading online pdf: '{path}'")
 
     try:
         loader = OnlinePDFLoader(path)
         docs = loader.load()
+        return docs
 
     except Exception as err:
         red(
@@ -815,19 +843,9 @@ def load_online_pdf(
         meta = kwargs.copy()
         meta["filetype"] = "pdf"
         meta["path"] = temp_file.name
+        assert Path(temp_file.name).exists()
         meta["file_hash"] = file_hasher({"path": temp_file.name})
-        try:
-            return load_one_doc(
-                task=task,
-                debug=debug,
-                **meta,
-            )
-        except Exception as err:
-            red(
-                f"Error when parsing online pdf from {path} downloaded to {temp_file.name}: '{err}'"
-            )
-            raise
-    return docs
+        return meta
 
 
 @debug_return_empty
