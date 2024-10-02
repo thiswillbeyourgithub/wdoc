@@ -50,6 +50,9 @@
 
         * `online_pdf`
             * Same arguments as for `--filetype=pdf`
+                Note that the way `online_pdf` are handled is a bit different than `pdf`: we
+                first try using langchain's integrated OnlinePDFLoader and if it fails,
+                we download the file and parse it like if `--filetype==pdf`.
 
         * `anki`
             * Optional:
@@ -371,6 +374,10 @@
     Not all parsers are tried. Instead, after each parsing we check using
     fasttext and heuristics based on doccheck_* args to rank the quality of the parsing.
     When stop if 1 parsing is high enough or take the best if 3 parsing worked.
+    Note that the way `online_pdf` are handled is a bit different: we
+    first try using langchain's integrated OnlinePDFLoader and if it fails,
+    we download the file and parse it like if `--filetype==pdf`.
+
     Currently implemented:
     - Okayish metadata:
         - pymupdf
