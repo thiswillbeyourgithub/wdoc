@@ -29,7 +29,7 @@ from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
 from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
-from .flags import is_verbose
+from .flags import is_verbose, is_debug
 from .errors import UnexpectedDocDictArgument
 from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_DISABLE_LAZYLOADING
 
@@ -709,31 +709,49 @@ ANSW = "<answer>"
 ANSWE = "</answer>"
 def thinking_answer_parser(output: str) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
-    # fix </answer> instead of <answer>
-    if ANSW not in output and output.count(ANSWE) == 2:
-        output = output.replace(ANSWE, ANSW, 1)
-    if THIN not in output and output.count(THINE) == 2:
-        output = output.replace(THINE, THIN, 1)
+    try:
+        # fix </answer> instead of <answer>
+        if ANSW not in output and output.count(ANSWE) == 2:
+            output = output.replace(ANSWE, ANSW, 1)
+        if THIN not in output and output.count(THINE) == 2:
+            output = output.replace(THINE, THIN, 1)
 
-    if (THIN not in output) and (ANSW not in output):
-        assert THINE not in output, f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
-        assert ANSWE not in output, f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
+        if (THIN not in output) and (ANSW not in output):
+            assert THINE not in output, f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
+            assert ANSWE not in output, f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
 
-        return {"thinking": "", "answer": output}
+            return {"thinking": "", "answer": output}
 
-    thinking = ""
-    if THIN in output and THINE in output:
-        thinking = output.split(THIN, 1)[1].split(THINE, 1)[0].strip()
+        thinking = ""
+        if THIN in output and THINE in output:
+            thinking = output.split(THIN, 1)[1].split(THINE, 1)[0].strip()
 
-    answer = ""
-    if ANSW in output and ANSWE in output:
-        answer = output.replace(thinking, "").split(ANSW, 1)[1].split(ANSWE, 1)[0].strip()
+        answer = ""
+        if ANSW in output and ANSWE in output:
+            answer = output.replace(thinking, "").split(ANSW, 1)[1].split(ANSWE, 1)[0].strip()
 
-    assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-    assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-    assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
-    assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
 
-    assert answer, f"No answer could be parsed from LLM output: '{output}'"
+        assert answer, f"No answer could be parsed from LLM output: '{output}'"
 
-    return {"thinking": thinking, "answer": answer}
+        return {"thinking": thinking, "answer": answer}
+    except Exception as err:
+        red(f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{output}'\nWill continue if not using --debug")
+        if is_debug:
+            raise
+        else:
+            assert output.strip(), "LLM output was empty"
+            return {
+                "thinking": "",
+                "answer": f"""
+<note>
+The following LLM answer might have had a problem during parsing
+</note>
+<output>
+{output}
+</output>
+""".strip(),
+            }
