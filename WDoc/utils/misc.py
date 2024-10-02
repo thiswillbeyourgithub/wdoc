@@ -729,11 +729,11 @@ def thinking_answer_parser(output: str) -> dict:
     if ANSW in output and ANSWE in output:
         answer = output.replace(thinking, "").split(ANSW, 1)[1].split(ANSWE, 1)[0].strip()
 
-    assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{answer}\n'''"
-    assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{answer}\n'''"
-    assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{answer}\n'''"
-    assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{answer}\n'''"
+    assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+    assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+    assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+    assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
 
-    assert answer, f"No answer could be parsed from LLM output: '{answer}'"
+    assert answer, f"No answer could be parsed from LLM output: '{output}'"
 
     return {"thinking": thinking, "answer": answer}
