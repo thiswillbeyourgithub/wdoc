@@ -443,14 +443,22 @@ def get_tkn_length(
     modelname = modelname.replace("openrouter/", "")
     return litellm.token_counter(model=modelname, text=tosplit)
 
+text_splitters = {}
+
 @optional_typecheck
 def get_splitter(
     task: str,
     modelname="gpt-3.5-turbo",
 ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
+    # avoid creating many times this object
+    if task not in text_splitters:
+        text_splitters[task] = {}
+    if modelname in text_splitters[task]:
+        return text_splitters[task]
+
     if modelname == "testing/testing":
-        modelname = "gpt-3.5-turbo"
+        return get_splitter(task=task, modelname="gpt-3.5-turbo")
 
     try:
         max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
@@ -486,6 +494,8 @@ def get_splitter(
         )
     else:
         raise Exception(task)
+
+    text_splitters[task][modelname] = text_splitter
     return text_splitter
 
 
