@@ -18,4 +18,4 @@ examples/NtfySummarizer/TOPICS
 examples/NtfySummarizer/summaries
 examples/notfinished_*
 examples/**/perso.py
-release_notes.md
+latest_release_notes.md
