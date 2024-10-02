@@ -1351,8 +1351,8 @@ class WDoc:
                 new_p = 0
                 new_c = 0
 
-                async def do_eval(inputs):
-                    return await self.eval_llm._agenerate(prompts.evaluate.format_messages(**inputs))
+                async def do_eval(subinputs):
+                    return await self.eval_llm._agenerate(prompts.evaluate.format_messages(**subinputs))
                 outs = [
                     do_eval(inputs)
                     for i in range(self.query_eval_check_number)
