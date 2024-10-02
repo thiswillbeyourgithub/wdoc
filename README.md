@@ -26,6 +26,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     * Extensible, this is both a tool and a library.
 
 ### Table of contents
+- [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
   - [Planned Features](#planned-features)
   - [Supported filetypes](#supported-filetypes)
@@ -36,6 +37,34 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 - [FAQ](#faq)
 - [Notes](#notes)
   - [Known issues](#known-issues)
+
+## Ultra short guide for people in a hurry
+Here's a very short introduction to the cli workflow if you're in a hurry:
+``` zsh
+LINK="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
+
+wdoc --path $link --task query --filetype "online_pdf" --query "What are all the information about the author?" --query_retrievers='default_multiquery' --top_k=auto_200_500
+# this will:
+# 1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage)
+# 2. cut the text into chunks and create embeddings for each
+# 3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
+# 4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
+# 5. Pass each of those documents to the smaller LLM (default: gpt-4o-mini) to tell us if the document seems appropriate given the user query
+# 6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
+# 7. Then each relevant doc is sent to the strong LLM (by default, openrouter's claude-sonnet-3.5) to extract relevant info and give one answer.
+# 8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
+# 9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
+
+wdoc --path $link --task summarize --filetype "online_pdf"
+# this will:
+# 1. Split the text into chunks
+# 2. pass each chunk into the strong LLM (by default openrouter's sonnet 3.5) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+# 3. When creating each new chunk, the LLM has access to the previous chunk for context.
+# 4. All summary are then concatenated and returned to the user
+# For extra large documents like books for example, this summary can be recusively fed to WDoc using argument --summary_n_recursion=2 for example.
+
+# Those two tasks can be combined with --task summarize_then_query which will summarize the document but give you a prompt at the end to ask question in case you want to clarify things.
+```
 
 ## Features
 * **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
