@@ -84,7 +84,6 @@ setup(
         'langchain>=0.2.16',
         'langchain-community>=0.2.16',
         'langchain-openai>=0.1.23',
-        'langchain-mistralai>=0.1.7',
         'litellm>=1.38.10',
         'nltk>=3.8.1',
         'prompt-toolkit>=3.0.43',
