@@ -34,6 +34,10 @@ WDOC_MOD_FAISS_SCORE_FN = False
 WDOC_LLM_MAX_CONCURRENCY = 10
 WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE = 750
 
+WDOC_DEFAULT_MODELNAME = "openai/gpt-4o"
+WDOC_DEFAULT_EMBED_MODEL = "openai/text-embedding-3-small"
+WDOC_DEFAULT_QUERY_EVAL_MODELNAME = "openai/gpt-4o-mini"
+
 valid_types = {
     'WDOC_TYPECHECKING': str,
     'WDOC_NO_MODELNAME_MATCHING': bool,
@@ -51,6 +55,9 @@ valid_types = {
     'WDOC_MOD_FAISS_SCORE_FN': bool,
     'WDOC_LLM_MAX_CONCURRENCY': int,
     'WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE': int,
+    'WDOC_DEFAULT_MODELNAME': str,
+    'WDOC_DEFAULT_EMBED_MODEL': str,
+    'WDOC_DEFAULT_QUERY_EVAL_MODELNAME': str,
 }
 
 for k in os.environ.keys():

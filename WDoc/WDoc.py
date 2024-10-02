@@ -48,7 +48,16 @@ from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
 from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
-from .utils.env import WDOC_OPEN_ANKI, WDOC_TYPECHECKING, WDOC_ALLOW_NO_PRICE, WDOC_DEBUGGER, WDOC_LLM_MAX_CONCURRENCY
+from .utils.env import (
+        WDOC_OPEN_ANKI,
+        WDOC_TYPECHECKING,
+        WDOC_ALLOW_NO_PRICE,
+        WDOC_DEBUGGER,
+        WDOC_LLM_MAX_CONCURRENCY,
+        WDOC_DEFAULT_MODELNAME,
+        WDOC_DEFAULT_EMBED_MODEL,
+        WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
+)
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 
 import litellm
@@ -90,18 +99,10 @@ class WDoc:
         task: str,
         filetype: str = "auto",
 
-        modelname: str = "openrouter/anthropic/claude-3.5-sonnet",
-        # modelname: str = "openai/gpt-4o",
-        # modelname: str = "openai/gpt-3.5-turbo-0125",
-        # modelname: str = "mistral/mistral-large-latest",
+        modelname: str = WDOC_DEFAULT_MODELNAME,
+        embed_model: str = WDOC_DEFAULT_EMBED_MODEL,
+        query_eval_modelname: Optional[str] = WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
 
-        embed_model: str = "openai/text-embedding-3-small",
-        # embed_model: str =  "sentencetransformers/jinaai/jina-colbert-v2",
-        # embed_model: str =  "sentencetransformers/paraphrase-multilingual-mpnet-base-v2",
-        # embed_model: str =  "sentencetransformers/distiluse-base-multilingual-cased-v1",
-        # embed_model: str =  "sentencetransformers/msmarco-distilbert-cos-v5",
-        # embed_model: str =  "sentencetransformers/all-mpnet-base-v2",
-        # embed_model: str =  "huggingface/google/gemma-2b",
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, PosixPath] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, PosixPath]] = None,
@@ -109,10 +110,6 @@ class WDoc:
 
         query: Optional[str] = None,
         query_retrievers: str = "default_multiquery",
-        query_eval_modelname: Optional[str] = "openai/gpt-4o-mini",
-        # query_eval_modelname: Optional[str] = "openrouter/anthropic/claude-3-haiku",
-        # query_eval_modelname: str = "mistral/open-mixtral-8x7b",
-        # query_eval_modelname: str = "mistral/open-small",
         query_eval_check_number: int = 3,
         query_relevancy: Union[float, int] = 0.4,
 

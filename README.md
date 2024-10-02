@@ -49,16 +49,16 @@ wdoc --path $link --task query --filetype "online_pdf" --query "What are all the
 # 2. cut the text into chunks and create embeddings for each
 # 3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
 # 4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
-# 5. Pass each of those documents to the smaller LLM (default: gpt-4o-mini) to tell us if the document seems appropriate given the user query
+# 5. Pass each of those documents to the smaller LLM (default: openai/gpt-4o-mini) to tell us if the document seems appropriate given the user query
 # 6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-# 7. Then each relevant doc is sent to the strong LLM (by default, openrouter's claude-sonnet-3.5) to extract relevant info and give one answer.
+# 7. Then each relevant doc is sent to the strong LLM (by default, openai/gpt-4o) to extract relevant info and give one answer.
 # 8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
 # 9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
 
 wdoc --path $link --task summarize --filetype "online_pdf"
 # this will:
 # 1. Split the text into chunks
-# 2. pass each chunk into the strong LLM (by default openrouter's sonnet 3.5) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+# 2. pass each chunk into the strong LLM (by default openai/gpt-4o) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
 # 3. When creating each new chunk, the LLM has access to the previous chunk for context.
 # 4. All summary are then concatenated and returned to the user
 # For extra large documents like books for example, this summary can be recusively fed to WDoc using argument --summary_n_recursion=2 for example.
@@ -68,7 +68,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 
 ## Features
 * **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
-* **100+ LLMs**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/).
+* **100+ LLMs**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/). Personnaly I'm using openrouter's Sonnet 3.5 as strong LLM and openai's gpt-4o-mini as query_eval LLM, with openai embeddings.
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
     1. The documents are retrieved using embedding

@@ -146,7 +146,7 @@
 
 ---
 
-* `--modelname`: str, default `"openrouter/anthropic/claude-3.5-sonnet"`
+* `--modelname`: str, default to value of WDOC_DEFAULT_MODELNAME
     * Keep in mind that given that the default backend used is litellm
     the part of modelname before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then it will be parsed as 'testing/testing' and
@@ -157,7 +157,7 @@
 
 ---
 
-* `--embed_model`: str, default `"openai/text-embedding-3-small"`
+* `--embed_model`: str, default to value of WDOC_DEFAULT_EMBED_MODEL
     * Name of the model to use for embeddings. Must contain a '/'
     Everything before the slash is the backend and everything
     after the / is the model name.
@@ -218,7 +218,7 @@
     if contains `hyde` but modelname contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default `"openai/gpt4o-mini"`
+* `--query_eval_modelname`: str, default to value of WDOC_DEFAULT_QUERY_EVAL_MODELNAME
     * Cheaper and quicker model than modelname. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
@@ -685,3 +685,14 @@
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
     Default is `750`.
+
+
+* `WDOC_DEFAULT_MODELNAME`, default: `"openai/gpt-4o"`
+    * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
+    combine those answers. It can also be used by some retrievers etc.
+
+* `WDOC_DEFAULT_QUERY_EVAL_MODELNAME`, default: `"openai/gpt-4o-mini"`
+    * Default small LLM to use. It will be used to evaluate wether each document is relevant to the query or not.
+
+* `WDOC_DEFAULT_EMBED_MODEL`, default: `"openai/text-embedding-3-small"`
+    * Default model to use for embeddings.
