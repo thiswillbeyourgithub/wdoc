@@ -41,7 +41,7 @@ WDoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 ## Ultra short guide for people in a hurry
 Here's a very short introduction to the cli workflow if you're in a hurry:
 ``` zsh
-LINK="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
+link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
 wdoc --path $link --task query --filetype "online_pdf" --query "What are all the information about the author?" --query_retrievers='default_multiquery' --top_k=auto_200_500
 # this will:
