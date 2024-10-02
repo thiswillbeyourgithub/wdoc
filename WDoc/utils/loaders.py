@@ -382,7 +382,6 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
-    debug = is_debug
     text_splitter = get_splitter(task, modelname=llm_name)
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
 
@@ -404,7 +403,6 @@ def load_one_doc(
 
     elif filetype == "pdf":
         docs = load_pdf(
-            debug=debug,
             text_splitter=text_splitter,
             file_hash=file_hash,
             doccheck_min_lang_prob=doccheck_min_lang_prob,
@@ -416,7 +414,6 @@ def load_one_doc(
     elif filetype == "online_pdf":
         docs = load_online_pdf(
             text_splitter=text_splitter,
-            debug=debug,
             file_hash=file_hash,
             doccheck_min_lang_prob=doccheck_min_lang_prob,
             doccheck_min_token=doccheck_min_token,
@@ -456,7 +453,6 @@ def load_one_doc(
 
     elif filetype == "logseq_markdown":
         docs = load_logseq_markdown(
-            debug=debug,
             file_hash=file_hash,
             text_splitter=text_splitter,
             **kwargs,
@@ -797,7 +793,6 @@ def load_youtube_video(
 def load_online_pdf(
     path: str,
     text_splitter: TextSplitter,
-    debug: bool,
     file_hash: str,
     pdf_parsers: Union[str, List[str]] = 'pymupdf',  # used only if online loading fails
     doccheck_min_lang_prob: float = min_lang_prob,
@@ -835,7 +830,6 @@ def load_online_pdf(
         docs = load_pdf(
             path=temp_file.name,
             text_splitter=text_splitter,
-            debug=debug,
             file_hash=file_hasher({"path": temp_file.name}),
             pdf_parsers=pdf_parsers,
             doccheck_min_lang_prob=doccheck_min_lang_prob,
@@ -1542,7 +1536,6 @@ def eval_load_functions(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
-    debug: bool,
     path: str,
     file_hash: str,
     text_splitter: TextSplitter,
@@ -2264,7 +2257,6 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
 def load_pdf(
     path: str,
     text_splitter: TextSplitter,
-    debug: bool,
     file_hash: str,
     pdf_parsers: Union[str, List[str]] = 'pymupdf',
     doccheck_min_lang_prob: float = min_lang_prob,
@@ -2304,7 +2296,7 @@ def load_pdf(
     for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:
-            if debug:
+            if is_debug:
                 red(f"Trying to parse {path} using {loader_name}")
 
             if pdf_loader_max_timeout > 0:
@@ -2390,7 +2382,7 @@ def load_pdf(
 
     max_prob = max([v for v in probs.values()])
 
-    if debug:
+    if is_debug:
         yel(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
