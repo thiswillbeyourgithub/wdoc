@@ -1,6 +1,7 @@
 import os
 from typing import Any, Optional, Union
 from beartype import beartype, BeartypeConf
+from beartype.door import is_bearable
 
 # must create it because we can't import it from typechecker.py
 warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
@@ -65,5 +66,5 @@ for k in os.environ.keys():
         continue
     v = parse(os.environ[k])
     assert k in locals().keys(), f"Unexpected key for WDOC env variable: {k}"
-    assert isinstance(v, valid_types[k]), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{valid_types['k']}'"
+    assert is_bearable(v, valid_types[k]), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{valid_types['k']}'"
     locals()[k] = v
