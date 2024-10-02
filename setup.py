@@ -76,28 +76,28 @@ setup(
     },
     python_requires=">=3.10",
     install_requires=[
-        'sqlalchemy>=2.0.29',
-        'beautifulsoup4>=4.10.0',
+        'sqlalchemy>=2.0.32',
+        'beautifulsoup4>=4.12.3',
         'fire>=0.6.0',
-        'ftfy>=6.1.1',
-        'joblib>=1.2.0',
-        'langchain>=0.2.16',
-        'langchain-community>=0.2.16',
-        'langchain-openai>=0.1.23',
-        'litellm>=1.38.10',
-        'prompt-toolkit>=3.0.43',
+        'ftfy>=6.2.0',
+        'joblib>=1.4.2',
+        'langchain>=0.3.1',
+        'langchain-community>=0.3.1',
+        'langchain-openai>=0.2.1',
+        'litellm>=1.47.0',
+        'prompt-toolkit>=3.0.47',
         'tqdm>=4.66.4',
         'faiss-cpu>=1.8.0',
-        'rich>=13.7.1',
+        'rich>=13.8.1',
         'beartype >= 0.19.0',
         'platformdirs >= 4.2.2',
-        'dill >= 0.3.7',
+        'dill >= 0.3.8',
         'pyfiglet >= 1.0.2',   # banner
         'rtoml >= 0.11.0',
         'loguru >= 0.7.2',
         'grandalf >= 0.8',  # to print ascii graph
         'lazy-import >= 0.2.2',
-        'py_ankiconnect >= 0.1.0',  # DIY wrapper to tell anki to sync just in case
+        'py_ankiconnect >= 1.1.0',  # DIY wrapper to tell anki to sync just in case
         'scikit-learn >= 1.5.1',  # for semantic reordering
         'scipy >= 1.13.1',  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optionnal as it can help infer the filetype
@@ -106,10 +106,10 @@ setup(
         # Loaders:
         'docx2txt >= 0.8',  # word documents
         'pandoc >= 2.3',  # epub
-        'unstructured[all-docs]>=0.6.2',  # many file formats
+        'unstructured[all-docs]>=0.14.6',  # many file formats
         'ankipandas>=0.3.15',  # anki
-        'tldextract>=3.4.1',  # url
-        'goose3 >= 3.1.16',  # url
+        'tldextract>=5.1.2',  # url
+        'goose3 >= 3.1.19',  # url
         "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
         "youtube-transcript-api >= 0.6.2",  # youtube
         "pytube >= 15.0.0",  # youtube
