@@ -111,7 +111,7 @@ class WDoc:
         query: Optional[str] = None,
         query_retrievers: str = "default_multiquery",
         query_eval_check_number: int = 3,
-        query_relevancy: Union[float, int] = 0.4,
+        query_relevancy: Union[float, int] = 0.1,
 
         summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",  # <- the LLM will understand
