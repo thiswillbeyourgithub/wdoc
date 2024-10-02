@@ -193,6 +193,9 @@ def batch_load_doc(
                 break
 
         if new_doc_to_load:
+            for indtl, ndtl in enumerate(new_doc_to_load):
+                assert ndtl, f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
+
             assert load_filetype in recursive_types
             to_load.remove(to_load[ild])
             to_load.extend(new_doc_to_load)
@@ -206,6 +209,9 @@ def batch_load_doc(
         ]
     except Exception as err:
         raise Exception(f"Expected to have only DocDict at this point: {err}'")
+
+    for d in to_load:
+        assert d, "One document to load has no arguments, double check your inputs"
 
     # if is not a file, check if it's not just because spaces are not escaped or something dumb like that
     for idoc, doc in enumerate(to_load):
