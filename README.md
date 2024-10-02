@@ -43,7 +43,7 @@ Here's a very short introduction to the cli workflow if you're in a hurry:
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
-wdoc --path $link --task query --filetype "online_pdf" --query "What are all the information about the author?" --query_retrievers='default_multiquery' --top_k=auto_200_500
+wdoc --path $link --task query --filetype "online_pdf" --query "What does it say about alphago?" --query_retrievers='default_multiquery' --top_k=auto_200_500
 # this will:
 # 1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
 # 2. cut the text into chunks and create embeddings for each
