@@ -413,8 +413,8 @@ def load_one_doc(
 
     elif filetype == "online_pdf":
         docs = load_online_pdf(
-            debug=debug,
             text_splitter=text_splitter,
+            debug=debug,
             file_hash=file_hash,
             doccheck_min_lang_prob=doccheck_min_lang_prob,
             doccheck_min_token=doccheck_min_token,
@@ -800,6 +800,7 @@ def load_online_pdf(
     doccheck_min_lang_prob: float = min_lang_prob,
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
+    **kwargs,
     ) -> List[Document]:
     whi(f"Loading online pdf: '{path}'")
 
@@ -827,6 +828,7 @@ def load_online_pdf(
             doccheck_min_lang_prob=doccheck_min_lang_prob,
             doccheck_min_token=doccheck_min_token,
             doccheck_max_token=doccheck_max_token,
+            **kwargs,
         )
         return docs
 
