@@ -563,7 +563,7 @@ def load_one_doc(
                     docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
                     docs[i].metadata["title"] = "Untitled"
-                    yel(f"Could not get title from doc '{kwargs}'")
+                    yel(f"Could not get title from url of doc '{kwargs}'")
         if (
             "title" in kwargs
             and kwargs["title"] != docs[i].metadata["title"]
