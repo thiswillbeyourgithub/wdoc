@@ -430,11 +430,9 @@ def load_one_doc(
                     **kwargs,
                 )
             assert Path(docs["path"]).exists(), docs
-            docs = load_one_doc(
-                task=task,
-                llm_name=llm_name,
-                temp_dir=temp_dir,
+            docs = load_pdf(
                 debug=debug,
+                text_splitter=text_splitter,
                 source_tag=source_tag,
                 doccheck_min_lang_prob=doccheck_min_lang_prob,
                 doccheck_min_token=doccheck_min_token,
