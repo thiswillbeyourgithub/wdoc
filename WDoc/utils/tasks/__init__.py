@@ -1,5 +1,4 @@
-from . import query
-from . import summary
+from . import query, summary
 
 __all__ = ["query", "summary"]
 
