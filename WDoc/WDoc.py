@@ -1832,7 +1832,7 @@ class WDoc:
         default_cli_kwargs = {
             "llm_name": "testing/testing",
             "task": "query",
-            "backend": "threading",
+            "backend": "loky",  # doesn't matter because n_jobs is 1 anyway
             "n_jobs": 1,
         }
         if cli_kwargs is not None:
