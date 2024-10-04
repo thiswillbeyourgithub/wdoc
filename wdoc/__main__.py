@@ -35,10 +35,11 @@ def cli_launcher() -> None:
     if " --task" not in sysline:
         arg_replacement_rules = {
             "query": "--task=query",
-            "summary": "--task=summarize",
-            "summarize_then_query": "--task=summarize_then_query",
-            "summary_then_query": "--task=summarize_then_query",
             "search": "--task=search",
+            "summarize": "--task=summarize",
+            "summarize_then_query": "--task=summarize_then_query",
+            "summary": "--task=summarize",
+            "summary_then_query": "--task=summarize_then_query",
         }
         if sys.argv[1] in arg_replacement_rules:
             bef = sys.argv[1]
@@ -47,13 +48,13 @@ def cli_launcher() -> None:
                 whi(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
-        # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
-        if "--path" not in sysline:
-            path = sys.argv[2]
-            newarg = f"--path={path}"
-            sys.argv[2]= newarg
-            if is_verbose:
-                whi(f"Replaced '{path}' to '{newarg}'")
+    # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
+    if "--path" not in sysline:
+        path = sys.argv[2]
+        newarg = f"--path={path}"
+        sys.argv[2]= newarg
+        if is_verbose:
+            whi(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
 
