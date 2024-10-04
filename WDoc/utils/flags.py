@@ -1,22 +1,23 @@
 """
-easy access for all other files wether we are in verbose mode or not
+easy access for all other files wether we are in verbose mode or not etc
 """
 
-import fire
+import sys
 import platform
-
-# parse args again to know globally if we're in verbose mode
-kwargs = fire.Fire(lambda *args, **kwargs: kwargs)
 is_linux = platform.system() == "Linux"
 
-def check_kwargs(arg):
-    if arg in kwargs and kwargs[arg]:
+cmdline = " ".join(sys.argv[1:])
+
+def check_kwargs(arg: str, abbrv: str = None) -> bool:
+    if f" {arg}" in cmdline or f" --{arg}" in cmdline:
+        return True
+    if abbrv and f" -{abbrv}" in cmdline:
         return True
     return False
 
-is_debug = check_kwargs("debug")
-is_verbose = is_debug or check_kwargs("verbose")
+is_debug = check_kwargs("debug", "d")
+is_verbose = is_debug or check_kwargs("verbose", "v")
 
-is_silent = check_kwargs("silent")
+is_silent = check_kwargs("silent", "s")
 
 md_printing_disabled = check_kwargs("disable_md_printing")
