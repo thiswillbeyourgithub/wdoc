@@ -2397,13 +2397,15 @@ def find_online_media(
     ) -> dict:
 
     @optional_typecheck
-    def check_browser_installation(browser_type: str) -> bool:
+    def check_browser_installation(browser_type: str, crash: bool = False) -> bool:
         try:
             with playwright.sync_api.sync_playwright() as p:
                 browser = getattr(p, browser_type).launch()
                 browser.close()
             return True
         except Exception as err:
+            if crash:
+                raise
             if "p" in locals():
                 red(str(p))
             red(str(err))
@@ -2451,7 +2453,12 @@ def find_online_media(
     elif check_browser_installation("chromium"):
         installed = "chromium"
     else:
-        raise Exception("Couldn't launch either firefox or chromium using playwright. Maybe try running 'playwright install'")
+        red("Couldn't launch either firefox or chromium using playwright. "
+            "Maybe try running 'playwright install'? Retrying to load them on "
+            "purpose to make us crash and display the actual error.")
+        check_browser_installation("firefox", crash=True)
+        check_browser_installation("chromium", crash=True)
+        raise Exception("We should have crashed earlier?!")
 
     with playwright.sync_api.sync_playwright() as p:
         browser = getattr(p, installed).launch(headless=headless)
