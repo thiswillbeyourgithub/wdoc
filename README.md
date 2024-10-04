@@ -224,8 +224,8 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 1. To install:
     * Using pip: `pip install -U wdoc`
     * Or to get a specific git branch:
-        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc.git@dev`
-        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc.git@main`
+        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev`
+        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main`
     * You can also use pipx or uvx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
         * Using pipx: `pipx run wdoc --help`
         * Using uvx: `uvx wdoc --help`
