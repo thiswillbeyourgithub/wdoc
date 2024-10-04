@@ -99,7 +99,7 @@ def refilter_docs(inputs: dict) -> List[Document]:
                 a = 5
             answers[ia] = a
 
-        if sum(answers) != 0:
+        if sum(answers) / len(answers) >= 3:
             filtered_docs.append(unfiltered_docs[ie])
 
     if not filtered_docs:
