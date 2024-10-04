@@ -1873,6 +1873,10 @@ def debug_exceptions(instance: Optional[WDoc] = None) -> None:
                 "of this print.")
             [p(line) for line in traceback.format_tb(exc_traceback)]
             p(str(exc_type) + " : " + str(exc_value))
+            if hasattr(exc_value, "__cause__") and hasattr(exc_value.__cause__, "__traceback__"):
+                p("Detected a cause to the exception, opening the cause first")
+                pdb.post_mortem(exc_value.__cause__.__traceback__)
+                p("Out of the __cause__, now debugging the higher traceback:")
             pdb.post_mortem(exc_traceback)
             p("You are now in the exception handling frame.")
             breakpoint()
