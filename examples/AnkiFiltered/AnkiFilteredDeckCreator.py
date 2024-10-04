@@ -49,7 +49,6 @@ class FilteredDeckCreator:
         self,
         deckname: str,
         query: str,
-        top_k: int,
         filtered_deck_query: str = "",
         new_tag: str = "",
         reschedule: bool = False,
@@ -66,7 +65,6 @@ class FilteredDeckCreator:
             task="search",
             import_mode=True,
             query=query,
-            top_k=top_k,
             **kwargs,
         )
         found = instance.query_task(query=query)
