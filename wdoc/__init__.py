@@ -1,7 +1,7 @@
-from . import wdoc
+from .wdoc import wdoc
 from . import utils
 
-__VERSION__ = wdoc.wdoc.VERSION
+__VERSION__ = wdoc.VERSION
 
 
 __all__ = [
