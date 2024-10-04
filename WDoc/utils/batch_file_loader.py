@@ -422,6 +422,9 @@ def batch_load_doc(
     else:
         red("No document failed to load!")
 
+    if len(missing_docargs) == len(doc_lists):
+        raise Exception("All documents failed to load. The errors appear above.")
+
     if asked_source_tags:
         no_st = 0
         st = {t: 0 for t in asked_source_tags}
