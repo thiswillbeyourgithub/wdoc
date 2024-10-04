@@ -35,6 +35,7 @@ from .utils.misc import (
 )
 from .utils.prompts import prompts
 from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers, semantic_batching, sieve_documents
+# from .utils.batch_file_loader import batch_load_doc  # lazy loaded instead
 
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
@@ -46,7 +47,6 @@ from .utils.interact import ask_user
 from .utils.retrievers import create_multiquery_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
-from .utils.batch_file_loader import batch_load_doc
 from .utils.flags import is_verbose, is_debug
 from .utils.env import (
         WDOC_OPEN_ANKI,
@@ -77,6 +77,9 @@ from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
+
+import lazy_import
+batch_load_doc = lazy_import.lazy_callable(".utils.batch_file_loader")
 
 logger.info("Starting wdoc")
 
