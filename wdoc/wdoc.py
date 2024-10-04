@@ -1286,11 +1286,18 @@ class wdoc:
         def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
             ratio = len(filtered_docs) / self.top_k
             if ratio >= 0.9:
-                raise ShouldIncreaseTopKAfterLLMEvalFiltering(
-                    red(
-                        f"Number of documents found: {len(filtered_docs)}, "
-                        f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
-                        f"top_k should be increased. Max_top_k is {self.max_top_k}"))
+                if self.top_k < self.max_top_k:
+                    raise ShouldIncreaseTopKAfterLLMEvalFiltering(
+                        red(
+                            f"Number of documents found: {len(filtered_docs)}, "
+                            f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
+                            f"top_k should be increased. Max_top_k is {self.max_top_k}"))
+                else:
+                        red(
+                            f"Number of documents found: {len(filtered_docs)}, "
+                            f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
+                            f"top_k should be increased but we eached "
+                            f"max_top_k ({self.max_top_k}) so continuing.")
             return filtered_docs
 
         @chain
@@ -1426,9 +1433,8 @@ class wdoc:
                     except ShouldIncreaseTopKAfterLLMEvalFiltering:
                         if self.max_top_k is None:
                             raise
-                        elif self.max_top_k == self.top_k:
-                            break
-                        assert self.max_top_k > self.top_k
+                        assert self.max_top_k != self.top_k, f"Something went wrong: top_k: {self.top_k} ; max_top_k: {self.max_top_k}"
+                        assert self.max_top_k > self.top_k  # if it's equal, it should have returned normally
                         new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
                         assert new_top_k > self.top_k
                         assert new_top_k not in tried_top_k
