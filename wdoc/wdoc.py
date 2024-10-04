@@ -40,7 +40,7 @@ from .utils.batch_file_loader import batch_load_doc
 from .utils.errors import NoDocumentsRetrieved
 from .utils.errors import NoDocumentsAfterLLMEvalFiltering
 from .utils.errors import ShouldIncreaseTopKAfterLLMEvalFiltering
-from .utils.tasks.summary import do_summarize
+from .utils.tasks.summarize import do_summarize
 from .utils.typechecker import optional_typecheck
 from .utils.llm import load_llm, TESTING_LLM
 from .utils.interact import ask_user

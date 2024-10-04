@@ -1,3 +1,3 @@
-from . import query, summary
+from . import query, summarize
 
-__all__ = ["query", "summary"]
+__all__ = ["query", "summarize"]
