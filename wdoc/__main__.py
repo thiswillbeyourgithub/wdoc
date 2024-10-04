@@ -6,7 +6,7 @@ import json
 import sys
 import fire
 
-from .wdoc import wdoc, whi
+from .wdoc import wdoc, whi, is_verbose
 
 def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier
@@ -43,7 +43,7 @@ def cli_launcher() -> None:
         if sys.argv[1] in arg_replacement_rules:
             bef = sys.argv[1]
             aft = arg_replacement_rules[bef]
-            if wdoc.flags.is_verbose:
+            if is_verbose:
                 whi(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
@@ -52,7 +52,7 @@ def cli_launcher() -> None:
             path = sys.argv[2]
             newarg = f"--path={path}"
             sys.argv[2]= newarg
-            if wdoc.flags.is_verbose:
+            if is_verbose:
                 whi(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
