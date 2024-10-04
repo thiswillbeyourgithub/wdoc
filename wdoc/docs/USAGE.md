@@ -691,7 +691,6 @@
     reduce the cost of the "combine intermediate answers" step when querying.
     Default is `500`.
 
-
 * `WDOC_DEFAULT_MODELNAME`, default: `"openai/gpt-4o"`
     * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
     combine those answers. It can also be used by some retrievers etc.
