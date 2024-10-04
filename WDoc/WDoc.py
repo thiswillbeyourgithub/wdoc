@@ -1864,7 +1864,10 @@ def debug_exceptions(instance: Optional[WDoc] = None) -> None:
                 if instance:
                     red(instance.ntfy(message))
                 else:
-                    print(message)
+                    try:
+                        red(message)
+                    except Exception:
+                        print(message)
             p("\n--verbose was used so opening debug console at the "
                 "appropriate frame. Press 'c' to continue to the frame "
                 "of this print.")
