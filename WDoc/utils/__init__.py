@@ -1,4 +1,5 @@
-# first load the env variables
+# Using a __init__.py to force the order of initialization:
+# 1. load the env variables
 from . import env
-# then maybe do impot tricks
+# 2. Enable (or not) import tricks for faster startup time
 from . import import_tricks
