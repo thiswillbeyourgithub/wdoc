@@ -114,7 +114,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
           The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
         * In multiline mode, use ctrl+D to send the text (sometimes
         multiple times).
-        * For more information: 'python WDoc.py --help'
+        * For more information run 'wdoc --help'
         * History is saved and shared across all runs
         * If you use '>>>>' once in the middle of your text, the left part will be
         used as a query find the documents and the right part will be the
