@@ -2606,7 +2606,7 @@ def load_online_media(
     audio_path = loaders_temp_dir / f"audio_from_video_{uuid6.uuid6()}.mp3"
     assert not audio_path.exists()
 
-    # extract audio from video
+    # extract audio from video (sometimes instead of just the audio the whole video is downloaded)
     try:
         whi(f"Exporting audio from {audio_file} to {audio_path} (this can take some time)")
         t = time.time()
