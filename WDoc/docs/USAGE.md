@@ -663,8 +663,8 @@
     * If True, loading any kind of document will return an empty string. Used for debugging. Default is `False`.
 
 * `WDOC_BEHAVIOR_EXCL_INCL_USELESS`
-    * If an "include" or "exclude" key is found in a loader but does not actually change anything, if "warn" then just print in red but
-    if "crash" then raise an error. Default is `warn`.
+    * If an "include" or "exclude" key is found in a loader but does not actually change anything, if `warn` then just print in red but
+    if `crash` then raise an error. Default is `warn`.
 
 * `WDOC_PRIVATE_MODE`
     * You should never set it yourself. It is set automatically if the `--private` argument is used, and used throughout to triple check that it's indeed fully private.
