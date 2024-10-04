@@ -605,6 +605,7 @@
     * either `crash` or `warn`. Determines what to do with
     exceptions happening when loading a document. This can be set
     per document if a recursive_paths filetype is used.
+    If using `wdoc_parse_file` it is by default set to `crash`.
 
 # Runtime flags
 

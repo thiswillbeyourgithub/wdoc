@@ -1834,6 +1834,7 @@ class WDoc:
             "task": "query",
             "backend": "loky",  # doesn't matter because n_jobs is 1 anyway
             "n_jobs": 1,
+            "loading_failure": "crash",
         }
         if cli_kwargs is not None:
             default_cli_kwargs.update(cli_kwargs)
