@@ -1315,8 +1315,10 @@ class wdoc:
                 new_c = 0
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-                out = self.eval_llm._generate_with_cache(
-                    prompts.evaluate.format_messages(**inputs))
+                try:
+                    out = self.eval_llm._generate_with_cache(prompts.evaluate.format_messages(**inputs))
+                except Exception:  # retry without cache
+                    out = self.eval_llm._generate(prompts.evaluate.format_messages(**inputs))
                 reasons = [gen.generation_info["finish_reason"]
                            for gen in out.generations]
                 outputs = [gen.text for gen in out.generations]
@@ -1339,7 +1341,11 @@ class wdoc:
                 new_c = 0
 
                 async def do_eval(subinputs):
-                    return await self.eval_llm._agenerate_with_cache(prompts.evaluate.format_messages(**subinputs))
+                    try:
+                        val = await self.eval_llm._agenerate_with_cache(prompts.evaluate.format_messages(**subinputs))
+                    except Exception:  # retrywithout cache
+                        val = await self.eval_llm._agenerate(prompts.evaluate.format_messages(**subinputs))
+                    return val
                 outs = [
                     do_eval(inputs)
                     for i in range(self.query_eval_check_number)
