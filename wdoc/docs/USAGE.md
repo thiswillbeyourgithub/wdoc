@@ -233,9 +233,10 @@
     For eval llm that don't support setting `n`, multiple
     completions will be called, which costs more.
 
-* `--query_relevancy`: float, default `0.1`
+* `--query_relevancy`: float, default `0.0`
     * threshold underwhich a document cannot be considered relevant by
-    embeddings alone.
+    embeddings alone. Keep in mind that the score is a similarity, so
+    it goes from -1 (most different) to +1 (most similar).
 
 ---
 

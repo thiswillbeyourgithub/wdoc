@@ -108,7 +108,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             * 'multiquery' to use Hypothetical Document Embedding search
             * 'parent' to use parent retriever
         To use several '/settings retriever=knn_svm_default'
-        * relevancy: float, from set [0:1]
+        * relevancy: float, from set [-1:+1]
     * **Tips:**
         * Each LLM used has a nickname: use it to adress specific instructions.
           The nicknames are "Summarizer", "Evaluator", "Answerer" and "Combiner".
@@ -230,8 +230,8 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                     assert int(
                         sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
                 elif sett_k == "relevancy":
-                    assert float(sett_v) >= 0 and float(
-                        sett_v) <= 1, f"Can't set relevancy to <= 0 or >1 ({sett_v})"
+                    assert float(sett_v) >= -1 and float(
+                        sett_v) <= 1, f"Can't set relevancy to < -1 or > +1 ({sett_v})"
                     sett_v = float(sett_v)
                 elif sett_k == "retriever":
                     assert all(
