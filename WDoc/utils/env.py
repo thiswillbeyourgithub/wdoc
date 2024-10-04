@@ -5,7 +5,7 @@ WDoc.
 """
 
 import os
-from typing import Any, Optional, Union, Literal
+from typing import Optional, Union, Literal
 from beartype import beartype, BeartypeConf
 from beartype.door import is_bearable
 
@@ -36,7 +36,7 @@ WDOC_DEBUGGER = False
 WDOC_EXPIRE_CACHE_DAYS = 0
 WDOC_EMPTY_LOADER = False
 WDOC_BEHAVIOR_EXCL_INCL_USELESS = "warn"
-WDOC_DISABLE_LAZYLOADING = False
+WDOC_IMPORT_TYPE = "lazy"
 WDOC_MOD_FAISS_SCORE_FN = False
 WDOC_LLM_MAX_CONCURRENCY = 10
 WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE = 500
@@ -57,8 +57,8 @@ valid_types = {
     'WDOC_DEBUGGER': bool,
     'WDOC_EXPIRE_CACHE_DAYS': int,
     'WDOC_EMPTY_LOADER': bool,
-    'WDOC_DISABLE_LAZYLOADING': Any,
     'WDOC_BEHAVIOR_EXCL_INCL_USELESS': Literal["warn", "crash"],
+    'WDOC_IMPORT_TYPE': Literal["native", "lazy", "thread", "both"],
     'WDOC_MOD_FAISS_SCORE_FN': bool,
     'WDOC_LLM_MAX_CONCURRENCY': int,
     'WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE': int,

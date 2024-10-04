@@ -31,7 +31,7 @@ from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose, is_debug
 from .errors import UnexpectedDocDictArgument
-from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_DISABLE_LAZYLOADING
+from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_IMPORT_TYPE
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
 
@@ -558,7 +558,7 @@ def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
     who knows what happens when multiprocessing with lazy loaded modules."""
-    if WDOC_DISABLE_LAZYLOADING:
+    if WDOC_IMPORT_TYPE not in ["both", "lazy"]:
         red("Lazyloading is disabled so not unlazyloading modules.")
         return
 
