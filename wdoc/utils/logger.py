@@ -20,12 +20,12 @@ from .flags import md_printing_disabled, is_silent
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
-cache_dir = Path(user_cache_dir(appname="WDoc"))
+cache_dir = Path(user_cache_dir(appname="wdoc"))
 assert cache_dir.parent.exists() or cache_dir.parent.parent.exists(
 ), f"Invalid cache dir location: '{cache_dir}'"
 cache_dir.mkdir(parents=True, exist_ok=True)
 
-log_dir = Path(user_log_dir(appname="WDoc"))
+log_dir = Path(user_log_dir(appname="wdoc"))
 assert log_dir.parent.exists() or log_dir.parent.parent.exists(
 ) or log_dir.parent.parent.parent.exists(), f"Invalid log_dir location: '{log_dir}'"
 log_dir.mkdir(exist_ok=True, parents=True)
