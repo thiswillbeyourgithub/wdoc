@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="256 !important"></p>
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512"></p>
 
 > *I'm wdoc. I solve RAG problems.*
 > - wdoc, imitating Winston "The Wolf" Wolf

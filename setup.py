@@ -42,9 +42,9 @@ class PostInstallCommand(install):
 
 with open("README.md", "r") as readme:
     long_description = readme.read()
-    assert '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="256 !important"></p>' in long_description, "Unexpected HTML for the icon"
+    assert '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512"></p>' in long_description, "Unexpected HTML for the icon"
     long_description = long_description.replace(
-        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="256 !important"></p>',
+        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512"></p>',
         '![icon](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true)',
     )
     assert 'align="center"' not in long_description
