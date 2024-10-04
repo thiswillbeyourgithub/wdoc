@@ -152,27 +152,7 @@ class WDoc:
         self.ntfy = ntfy
 
         if debug or WDOC_DEBUGGER:
-            def handle_exception(exc_type, exc_value, exc_traceback):
-                if not issubclass(exc_type, KeyboardInterrupt):
-                    @optional_typecheck
-                    def p(message: str) -> None:
-                        "print error, in red if possible"
-                        try:
-                            red(self.ntfy(message))
-                        except Exception:
-                            print(message)
-                    p("\n--verbose was used so opening debug console at the "
-                      "appropriate frame. Press 'c' to continue to the frame "
-                      "of this print.")
-                    [p(line) for line in traceback.format_tb(exc_traceback)]
-                    p(str(exc_type) + " : " + str(exc_value))
-                    pdb.post_mortem(exc_traceback)
-                    p("You are now in the exception handling frame.")
-                    breakpoint()
-                    sys.exit(1)
-
-            sys.excepthook = handle_exception
-            faulthandler.enable()
+            debug_exceptions(instance=self)
 
         elif notification_callback:
             def print_exception(exc_type, exc_value, exc_traceback):
@@ -1847,6 +1827,8 @@ class WDoc:
         - verbose: bool, default False
             like in WDoc
         """
+        if debug:
+            debug_exceptions()
         default_cli_kwargs = {
             "llm_name": "testing/testing",
             "task": "query",
@@ -1868,3 +1850,29 @@ class WDoc:
             return out
         else:
             return "\n".join([d.page_content for d in out])
+
+
+
+def debug_exceptions(instance: Optional[WDoc] = None) -> None:
+    "open a debugger is --debug is set"
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if not issubclass(exc_type, KeyboardInterrupt):
+            @optional_typecheck
+            def p(message: str) -> None:
+                "print error, in red if possible"
+                if instance:
+                    red(instance.ntfy(message))
+                else:
+                    print(message)
+            p("\n--verbose was used so opening debug console at the "
+                "appropriate frame. Press 'c' to continue to the frame "
+                "of this print.")
+            [p(line) for line in traceback.format_tb(exc_traceback)]
+            p(str(exc_type) + " : " + str(exc_value))
+            pdb.post_mortem(exc_traceback)
+            p("You are now in the exception handling frame.")
+            breakpoint()
+            sys.exit(1)
+
+    sys.excepthook = handle_exception
+    faulthandler.enable()
