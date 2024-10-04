@@ -23,6 +23,7 @@ def cli_launcher() -> None:
     elif " --completion" in sysline:
         if " -- --completion" in sysline:
             fire.Fire(wdoc)
+            raise SystemExit(0)
         else:
             raise Exception("To create completion scripts, use '-- --completion' as arguments.")
     elif len(sys.argv) == 1:
