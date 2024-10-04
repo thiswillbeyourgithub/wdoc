@@ -236,7 +236,9 @@
 * `--query_relevancy`: float, default `0.0`
     * threshold underwhich a document cannot be considered relevant by
     embeddings alone. Keep in mind that the score is a similarity, so
-    it goes from -1 (most different) to +1 (most similar).
+    it goes from -1 (most different) to +1 (most similar), althrough
+    if you set `WDOC_MOD_FAISS_SCORE_FN` to `True` it will then
+    go from 0 to 1.
 
 ---
 
