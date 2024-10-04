@@ -1810,22 +1810,22 @@ class WDoc:
         Simple function to load a document given at least  path arg. Used for cli
         and convenience in python scripts.
 
+        Arguments are as follows:
+        - path: same argument as for WDoc
         - filetype: same argument as for WDoc
-
         - only_text: only return the text instead of a List of langchain Documents
-
-        - **kwargs: supposed to be any argument supported by DocDict ( the full
-            list is at WDoc.utils.misc.filetype_arg_types)
-
         - cli_kwargs: a dict containing arguments that are destined to
             batch_load_doc and not about the document per say. For example things
             like "n_jobs", "backend" etc.
-
         - debug: bool, default False
-            like in WDoc
-
+            same as when calling WDoc directly
         - verbose: bool, default False
-            like in WDoc
+            same as when calling WDoc directly
+        - **kwargs: supposed to be any argument supported by DocDict ( the full
+            list is at WDoc.utils.misc.filetype_arg_types)
+
+        Returns either the document's page_content as a string, or a list of
+        langchain Document (so with attributes `page_content` and `metadata`).
         """
         if debug:
             debug_exceptions()
