@@ -82,9 +82,9 @@ for k, v in locals().copy().items():
 
 # store the env variable instead of the default values but check their types
 for k in os.environ.keys():
-    if not k.startswith("WDOC_"):
+    if not k.lower().startswith("wdoc_"):
         continue
     v = parse(os.environ[k])
-    assert k in locals().keys(), f"Unexpected key for WDOC env variable: {k}"
+    assert k in locals().keys(), f"Unexpected key env variable starting by 'wdoc_': {k}"
     assert is_bearable(v, valid_types[k]), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{valid_types['k']}'"
     locals()[k] = v
