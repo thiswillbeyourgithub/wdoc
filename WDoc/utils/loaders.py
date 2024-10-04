@@ -2557,7 +2557,9 @@ def load_online_media(
     ]:
         urls_to_try.extend(extra_media[k])
     urls_to_try = list(set(urls_to_try))
-    whi(f"Found {len(urls_to_try)} urls to try to get the media")
+    whi(f"Found {len(urls_to_try)} urls to try to get the media:")
+    for u in urls_to_try:
+        whi(f"  - {u}")
 
 
     @optional_typecheck
