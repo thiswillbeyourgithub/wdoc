@@ -102,6 +102,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 ### Planned features
 *(These don't include improvements, bugfixes, refactoring etc.)*
 * **THIS LIST IS NOT UP TO DATE AND THERE ARE MANY MORE THINGS PLANNED**
+* Start using unit tests
 * Accept input from stdin, to for example query directly from a manpage
 * Much faster startup time
 * Much improved retriever:
