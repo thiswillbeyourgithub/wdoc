@@ -12,7 +12,7 @@ from langchain.docstore.document import Document
 
 from py_ankiconnect import PyAnkiconnect
 
-VERSION = "1.0"
+VERSION = "1.1"
 
 # logger
 logger.add(
