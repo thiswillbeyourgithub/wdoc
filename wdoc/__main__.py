@@ -5,6 +5,7 @@ Entry point file
 import json
 import sys
 import fire
+from pathlib import Path
 
 from .wdoc import wdoc, whi, is_verbose
 
@@ -30,6 +31,14 @@ def cli_launcher() -> None:
         whi("No args shown. Use '--help' to display the help.")
         raise SystemExit(0)
 
+    # turn 'wdoc parse' into 'wdoc_parse_file'
+    if "wdoc parse " in sysline or "wdoc parse_file" in sysline:
+        if is_verbose:
+            whi("Replacing 'wdoc parse' by 'wdoc_parse_file'")
+        sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
+        del sys.argv[1]
+        cli_parse_file()
+        raise SystemExit(0)
 
     # while we're at it, make it so that
     # "wdoc summary" is parsed like "wdoc --task=summary"
