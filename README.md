@@ -272,7 +272,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **How can I improve the prompt for a specific task without coding?**
     * Each prompt of the `query` task are roleplaying as employees working for wdoc, either as Evaluator (the LLM that filters out relevant documents), Answerer (the LLM that answers the question from a filtered document) or Combiner (the LLM that combines answers from Answerer as one). They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use wdoc's parser for my own documents?**
-    * If you are in the shell cli you can easily use `wdoc_parse_file my_file.pdf`.
+    * If you are in the shell cli you can easily use `wdoc parse my_file.pdf` (this actually replaces the call to call instead `wdoc_parse_file my_file.pdf`).
     add `--only_text` to only get the text and no metadata. If you're having problem with argument parsing you can try adding the `--pipe` argument.
     * If you want the document using python:
         ``` python
