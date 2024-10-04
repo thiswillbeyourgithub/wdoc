@@ -1822,6 +1822,8 @@ class WDoc:
         filetype: str = "auto",
         only_text: bool = False,
         cli_kwargs: Optional[dict] = None,
+        debug: bool = False,
+        verbose: bool = False,
         **kwargs
         ) -> Union[List[Document], str]:
         """
@@ -1838,6 +1840,12 @@ class WDoc:
         - cli_kwargs: a dict containing arguments that are destined to
             batch_load_doc and not about the document per say. For example things
             like "n_jobs", "backend" etc.
+
+        - debug: bool, default False
+            like in WDoc
+
+        - verbose: bool, default False
+            like in WDoc
         """
         default_cli_kwargs = {
             "llm_name": "testing/testing",
