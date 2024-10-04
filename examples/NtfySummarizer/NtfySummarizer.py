@@ -5,7 +5,7 @@ from pathlib import Path, PosixPath
 import requests
 import time
 from functools import partial
-from WDoc import WDoc
+from wdoc import wdoc
 import fire
 from beartype import beartype
 
@@ -28,7 +28,7 @@ def log(text: str) -> None:
 def _send_notif(
     message: str,
     topic: str,
-    title: str = "WDoc Summaries",
+    title: str = "wdoc Summaries",
     ) -> str:
     """
     Send a notification to a specified ntfy.sh topic.
@@ -36,7 +36,7 @@ def _send_notif(
     Args:
         message (str): The message content to be sent.
         topic (str): The ntfy.sh topic to send the notification to.
-        title (str, optional): The title of the notification. Defaults to "WDoc Summaries".
+        title (str, optional): The title of the notification. Defaults to "wdoc Summaries".
 
     Returns:
         str: The message that was sent.
@@ -57,7 +57,7 @@ def _send_file(
     message: str,
     path: Union[str, PosixPath],
     topic: str,
-    title: str = "WDoc Summaries",
+    title: str = "wdoc Summaries",
     ) -> None:
     """
     Send a file as an attachment to a specified ntfy.sh topic.
@@ -66,7 +66,7 @@ def _send_file(
         message (str): The message content to be sent with the file.
         path (Union[str, PosixPath]): The path to the file to be sent.
         topic (str): The ntfy.sh topic to send the notification to.
-        title (str, optional): The title of the notification. Defaults to "WDoc Summaries".
+        title (str, optional): The title of the notification. Defaults to "wdoc Summaries".
 
     Raises:
         AssertionError: If the specified file does not exist.
@@ -108,7 +108,7 @@ def main(
     sn = partial(
         _send_notif,
         topic=topic,
-        title="WDoc Summaries",
+        title="wdoc Summaries",
     )
 
     try:
@@ -124,7 +124,7 @@ def main(
         assert message
         assert url.startswith("http"), f"url must start with http, not '{url}'"
 
-        instance = WDoc(
+        instance = wdoc(
             task="summary",
             path=url,
             # notification_callback=sn,
@@ -162,7 +162,7 @@ def main(
                 f.write(full_message)
             try:
                 _send_file(
-                    title="WDoc Summaries",
+                    title="wdoc Summaries",
                     path=path,
                     topic=topic,
                     message=f"Summary of {url}",

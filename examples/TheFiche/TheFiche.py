@@ -1,8 +1,8 @@
 """
-TheFiche: A module for generating and exporting Logseq pages based on WDoc queries.
+TheFiche: A module for generating and exporting Logseq pages based on wdoc queries.
 
 This module provides functionality to create structured Logseq pages
-with content generated from WDoc queries, including metadata and properties.
+with content generated from wdoc queries, including metadata and properties.
 """
 
 import json
@@ -11,7 +11,7 @@ from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
 from typing import List, Dict
 import time
 from textwrap import indent
-from WDoc import WDoc
+from wdoc import wdoc
 import litellm
 import fire
 from pathlib import Path, PosixPath
@@ -62,9 +62,9 @@ def chat(
     return answer
 
 
-def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
+def run_wdoc(query: str, kwargs2: dict) -> Tuple[wdoc, dict]:
     "call to wdoc, optionaly cached"
-    instance = WDoc(
+    instance = wdoc(
         task="query",
         import_mode=True,
         query=query,
@@ -82,17 +82,17 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
         extra = ""
 
     props = {
-        "block_type": "WDoc_the_fiche",
-        "WDoc_version": instance.VERSION,
-        "WDoc_model": f"{instance.modelname} of {instance.modelbackend}",
-        "WDoc_evalmodel": f"{instance.query_eval_modelname} of {instance.query_eval_modelbackend}",
-        "WDoc_evalmodel_check_nb": instance.query_eval_check_number,
-        "WDoc_cost": f"{float(instance.latest_cost):.5f}",
-        "WDoc_n_docs_found": len(fiche["unfiltered_docs"]),
-        "WDoc_n_docs_filtered": len(fiche["filtered_docs"]),
-        "WDoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
-        "WDoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
-        "WDoc_kwargs": json.dumps(kwargs2, ensure_ascii=False),
+        "block_type": "wdoc_the_fiche",
+        "wdoc_version": instance.VERSION,
+        "wdoc_model": f"{instance.modelname} of {instance.modelbackend}",
+        "wdoc_evalmodel": f"{instance.query_eval_modelname} of {instance.query_eval_modelbackend}",
+        "wdoc_evalmodel_check_nb": instance.query_eval_check_number,
+        "wdoc_cost": f"{float(instance.latest_cost):.5f}",
+        "wdoc_n_docs_found": len(fiche["unfiltered_docs"]),
+        "wdoc_n_docs_filtered": len(fiche["filtered_docs"]),
+        "wdoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
+        "wdoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
+        "wdoc_kwargs": json.dumps(kwargs2, ensure_ascii=False),
         "the_fiche_version": VERSION,
         "the_fiche_date": today,
         "the_fiche_timestamp": int(time.time()),
@@ -103,10 +103,10 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[WDoc, dict]:
 @beartype
 class TheFiche:
     """
-    A class for generating and exporting Logseq pages based on WDoc queries.
+    A class for generating and exporting Logseq pages based on wdoc queries.
 
     This class encapsulates the process of creating a Logseq page with content
-    generated from a WDoc query, including metadata and properties.
+    generated from a wdoc query, including metadata and properties.
     """
     def __init__(
         self,
@@ -124,15 +124,15 @@ class TheFiche:
         Initialize a TheFiche instance and generate a Logseq page.
 
         Args:
-            query (str): The query to be processed by WDoc.
+            query (str): The query to be processed by wdoc.
             logseq_page (Union[str, PosixPath]): The path to the Logseq page file.
             overwrite (bool, optional): Whether to overwrite an existing file. Defaults to False. If False, will append to the file instead of overwriting. Else, will also overwrite sources if present.
             sources_location (str): If 'as_pages', will store each source as its own page in a 'TheFiche___' namespace. If 'below', sources will be written at the end of the page. Default to "as_pages".
             sources_ref_as_prop (bool): if True, make sure the sources appear as block properties instead of leaving them as is. Default to False.
             use_cache (bool): set to False to bypass the cache, default True.
-            logseq_linkify (bool): If True, will ask WDoc's strong LLM to find the import keywords and automatically replace them in the output file by logseq [[links]], enabling the use of graph properties. Default to True.
+            logseq_linkify (bool): If True, will ask wdoc's strong LLM to find the import keywords and automatically replace them in the output file by logseq [[links]], enabling the use of graph properties. Default to True.
             the_fiche_callback (callable): will be called at the end of the run with as argument all what's in locals(). Use only if you know what you're doing.
-            **kwargs: Additional keyword arguments to pass to WDoc.
+            **kwargs: Additional keyword arguments to pass to wdoc.
 
         Raises:
             AssertionError: If the file exists and overwrite is False, or if the ratio of used/found documents is too high.
@@ -157,8 +157,8 @@ class TheFiche:
 
         p(f"Fiche properties: {props}")
 
-        n_used = props["WDoc_n_docs_used"]
-        n_found = props["WDoc_n_docs_found"]
+        n_used = props["wdoc_n_docs_used"]
+        n_found = props["wdoc_n_docs_found"]
 
         text = fiche["final_answer"]
         assert text.strip()
@@ -252,7 +252,7 @@ anticorps
             ]
             tag_answer = cached_chat(
                 messages=messages,
-                model=inspect.signature(WDoc).parameters["modelname"].default if "modelname" not in kwargs else kwargs["modelname"],
+                model=inspect.signature(wdoc).parameters["modelname"].default if "modelname" not in kwargs else kwargs["modelname"],
                 temperature=0,
             )
             tags_text = tag_answer["choices"][0]["message"]["content"]

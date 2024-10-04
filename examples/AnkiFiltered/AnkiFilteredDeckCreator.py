@@ -1,9 +1,9 @@
 """
-Simple script to create a filtered deck from a WDoc search
+Simple script to create a filtered deck from a wdoc search
 """
 import os
-from WDoc import WDoc
-from WDoc.utils.typechecker import optional_typecheck
+from wdoc import wdoc
+from wdoc.utils.typechecker import optional_typecheck
 import fire
 from loguru import logger
 from typing import List
@@ -62,7 +62,7 @@ class FilteredDeckCreator:
         decknames = akc("deckNames")
         assert deckname not in decknames, f"Deckname {deckname} is already used. You have to delete it manually"
 
-        instance = WDoc(
+        instance = wdoc(
             task="search",
             import_mode=True,
             query=query,
