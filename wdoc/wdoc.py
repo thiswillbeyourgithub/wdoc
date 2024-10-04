@@ -1420,7 +1420,14 @@ class wdoc:
                 rag_chain = (
                     retrieve_documents
                     | sieve_documents(instance=self)
+                    | pbar_chain(
+                            llm=self.eval_llm,
+                            len_func="len(inputs['unfiltered_docs'])",
+                            desc="LLM evaluation",
+                            unit="doc",
+                        )
                     | refilter_documents
+                    | pbar_closer(llm=self.eval_llm)
                 )
                 tried_top_k = []
                 while True:
