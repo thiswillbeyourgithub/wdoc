@@ -1807,24 +1807,41 @@ class WDoc:
         **kwargs
         ) -> Union[List[Document], str]:
         """
+        # 'parse_file' documentation
+
+        ## Description
+
         Simple function to load a document given at least  path arg. Used for cli
         and convenience in python scripts.
 
-        Arguments are as follows:
-        - path: same argument as for WDoc
-        - filetype: same argument as for WDoc
-        - only_text: only return the text instead of a List of langchain Documents
-        - cli_kwargs: a dict containing arguments that are destined to
-            batch_load_doc and not about the document per say. For example things
-            like "n_jobs", "backend" etc.
-        - debug: bool, default False
-            same as when calling WDoc directly
-        - verbose: bool, default False
-            same as when calling WDoc directly
-        - **kwargs: supposed to be any argument supported by DocDict ( the full
-            list is at WDoc.utils.misc.filetype_arg_types)
+        ## Arguments
 
-        Returns either the document's page_content as a string, or a list of
+        - `path`: str
+          - Same as for WDoc
+
+        - `filetype`: str
+            - Same argument as for WDoc
+
+        - `only_text`: bool, default `False`
+            - only return the text instead of a List of langchain Documents
+
+        - `cli_kwargs`: dict, default `None`
+            - Dict containing keyword arguments destined to the function
+            `batch_load_doc` and not about a specific document per say.
+            e.g. "file_loader_n_jobs", etc.
+
+        - `debug`: bool, default `False`
+            - Same as for WDoc
+
+        - `verbose`: bool, default `False`
+            - Same as for WDoc
+
+        - `**kwargs`
+          - Remaning keyword arguments are assumed to be DocDict arguments,
+            the full list is at WDoc.utils.misc.filetype_arg_types
+
+        ## Return value
+        - Either the document's page_content as a string, or a list of
         langchain Document (so with attributes `page_content` and `metadata`).
         """
         default_cli_kwargs = {
