@@ -2,6 +2,7 @@
 Simple script to create a filtered deck from a wdoc search
 """
 import os
+from wdoc.utils.env import WDOC_DEFAULT_MODELNAME
 from wdoc import wdoc
 from wdoc.utils.typechecker import optional_typecheck
 import fire
@@ -55,6 +56,7 @@ class FilteredDeckCreator:
         reschedule: bool = False,
         sort_order: int = 8,
         create_empty: bool = False,
+        query_eval_modelname: str = WDOC_DEFAULT_MODELNAME,  # by default, use the same model as we use normally for querying
         **kwargs,
         ) -> None:
         akc("sync")
@@ -63,6 +65,7 @@ class FilteredDeckCreator:
         assert deckname not in decknames, f"Deckname {deckname} is already used. You have to delete it manually"
 
         instance = wdoc(
+            query_eval_modelname=query_eval_modelname,
             task=task,
             import_mode=True,
             query=query,
