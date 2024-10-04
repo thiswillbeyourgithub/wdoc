@@ -4,6 +4,7 @@ Code related to loggings, coloured logs, etc.
 
 import rtoml
 import json
+from textwrap import dedent
 from tqdm import tqdm
 from loguru import logger
 from pathlib import Path
@@ -105,6 +106,7 @@ console = Console()
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
+    message = dedent(message)
     if not md_printing_disabled:
         logger.info(message)
         md = Markdown(message)
