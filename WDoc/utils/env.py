@@ -1,3 +1,9 @@
+"""
+Sets the default value for environment variables, parse the actual values,
+check their types and finally make them easier to access by other parts of
+WDoc.
+"""
+
 import os
 from typing import Any, Optional, Union, Literal
 from beartype import beartype, BeartypeConf
