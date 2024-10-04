@@ -67,11 +67,11 @@ setup(
               "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools", "doctoolsllm", "winston_doc"],
     entry_points={
         'console_scripts': [
-            'WDoc=WDoc.__init__:cli_launcher',
-            'WDoc_parse_file=WDoc.__init__:cli_parse_file',
+            'WDoc=WDoc.__main__:cli_launcher',
+            'WDoc_parse_file=WDoc.__main__:cli_parse_file',
 
-            'wdoc=WDoc.__init__:cli_launcher',
-            'wdoc_parse_file=WDoc.__init__:cli_parse_file',
+            'wdoc=WDoc.__main__:cli_launcher',
+            'wdoc_parse_file=WDoc.__main__:cli_parse_file',
         ],
     },
     python_requires=">=3.10",
