@@ -338,11 +338,15 @@ def batch_load_doc(
     if loader_max_timeout <= 0:
         loader_max_timeout = None
 
-    sharedmem = "sharedmem"
-    if backend == "loky":
-        sharedmem = None
-        if is_verbose:
-            red("Using loky backend so not using 'require=sharedmem'")
+    sharedmem = None
+    if len(to_load) == 1:
+        n_jobs = 1
+    else:
+        if backend == "loky":
+            if is_verbose:
+                red("Using loky backend so not using 'require=sharedmem'")
+        else:
+            sharedmem = "sharedmem"
 
     # # early stopping if all the documents of a recursive filetype failed
     # expected_recur_nb = {}
@@ -355,8 +359,6 @@ def batch_load_doc(
 
     docs = []
     t_load = time.time()
-    if len(to_load) == 1:
-        n_jobs = 1
     try:
         generator_doc_lists = Parallel(
             n_jobs=n_jobs,
