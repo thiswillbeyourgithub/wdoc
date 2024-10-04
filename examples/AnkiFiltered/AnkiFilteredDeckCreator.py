@@ -49,6 +49,7 @@ class FilteredDeckCreator:
         self,
         deckname: str,
         query: str,
+        task: str = "search",  # could also be 'query', would be more expensive but would use the large LLM
         filtered_deck_query: str = "",
         new_tag: str = "",
         reschedule: bool = False,
@@ -62,15 +63,19 @@ class FilteredDeckCreator:
         assert deckname not in decknames, f"Deckname {deckname} is already used. You have to delete it manually"
 
         instance = wdoc(
-            task="search",
+            task=task,
             import_mode=True,
             query=query,
             **kwargs,
         )
         found = instance.query_task(query=query)
 
+        if "relevant_filtered_docs"  in found:
+            docs = found["relevant_filtered_docs"]
+        else:
+            docs = found["filtered_docs"]
         cids = self.find_anki_docs(
-            docs=found["relevant_filtered_docs"]
+            docs=docs,
         )
 
         query = filtered_deck_query
