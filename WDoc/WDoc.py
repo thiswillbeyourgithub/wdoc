@@ -96,7 +96,7 @@ class WDoc:
     @set_func_signature
     def __init__(
         self,
-        task: str,
+        task: Literal["query", "search", "summarize", "summarize_then_query"],
         filetype: str = "auto",
 
         modelname: str = WDOC_DEFAULT_MODELNAME,
