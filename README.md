@@ -90,7 +90,6 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./WDoc/docs/USAGE.md) or via `python -m WDoc --help`. I work hard to maintain an exhaustive documentation.
 * **Scriptable / Extensible**: You can use WDoc in other python project using `--import_mode`. Take a look at the examples [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" WDoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
-* **Lazy imports**: Faster statup time thanks to lazy_import
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
 * **Document filtering**: based on regex for document content or metadata.
