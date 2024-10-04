@@ -124,7 +124,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
     """
-    md_printer("# WDoc Prompt")
+    md_printer("# wdoc Prompt")
 
     # loading history from files
     prev_questions = []

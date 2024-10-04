@@ -41,7 +41,7 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format='{time} {level} WDoc {thread} {process} {function} {line} {message}',
+    format='{time} {level} wdoc {thread} {process} {function} {line} {message}',
     level="DEBUG",
     enqueue=False,
     colorize=False,
@@ -127,12 +127,12 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 
 @optional_typecheck
 def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
-    "set the docstring of WDoc class to WDoc/docs/USAGE.md's content"
+    "set the docstring of wdoc class to wdoc/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
-    assert usage_file.exists(), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/WDoc/blob/main/WDoc/docs/USAGE.md"
+    assert usage_file.exists(), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/USAGE.md"
     usage = usage_file.read_text().strip()
     assert usage
-    obj.__doc__ = obj.__doc__ + "\n\n# Content of WDoc/docs/USAGE.md\n\n" + usage
+    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/USAGE.md\n\n" + usage
     if isinstance(obj, type):
         obj.__init__.__doc__ = usage
     return obj

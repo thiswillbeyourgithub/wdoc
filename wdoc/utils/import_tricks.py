@@ -1,5 +1,5 @@
 """
-First file to be imported when import WDoc by __main__
+First file to be imported when import wdoc by __main__
 It's purpose is to detect wether we should use import tricks like
 lazyloading or threaded imports
 """

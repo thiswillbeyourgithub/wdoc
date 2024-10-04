@@ -6,23 +6,23 @@ import json
 import sys
 import fire
 
-from .WDoc import WDoc, whi
+from .wdoc import wdoc, whi
 
 def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier
-    shorthands then call WDoc"""
+    shorthands then call wdoc"""
     sysline = " ".join(sys.argv)
 
     if " --version" in sysline:
-        print(f"WDoc version: {WDoc.__VERSION__}")
+        print(f"wdoc version: {wdoc.__VERSION__}")
         raise SystemExit(0)
     elif " --help" in sysline or " -h" in sysline:
         print("Showing help")
-        WDoc.md_printer(WDoc.__doc__)
+        wdoc.md_printer(wdoc.__doc__)
         raise SystemExit(0)
     elif " --completion" in sysline:
         if " -- --completion" in sysline:
-            fire.Fire(WDoc)
+            fire.Fire(wdoc)
         else:
             raise Exception("To create completion scripts, use '-- --completion' as arguments.")
     elif len(sys.argv) == 1:
@@ -31,7 +31,7 @@ def cli_launcher() -> None:
 
 
     # while we're at it, make it so that
-    # "WDoc summary" is parsed like "WDoc --task=summary"
+    # "wdoc summary" is parsed like "wdoc --task=summary"
     if " --task" not in sysline:
         arg_replacement_rules = {
             "query": "--task=query",
@@ -43,7 +43,7 @@ def cli_launcher() -> None:
         if sys.argv[1] in arg_replacement_rules:
             bef = sys.argv[1]
             aft = arg_replacement_rules[bef]
-            if WDoc.flags.is_verbose:
+            if wdoc.flags.is_verbose:
                 whi(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
@@ -52,19 +52,19 @@ def cli_launcher() -> None:
             path = sys.argv[2]
             newarg = f"--path={path}"
             sys.argv[2]= newarg
-            if WDoc.flags.is_verbose:
+            if wdoc.flags.is_verbose:
                 whi(f"Replaced '{path}' to '{newarg}'")
 
-    fire.Fire(WDoc)
+    fire.Fire(wdoc)
 
 def cli_parse_file() -> None:
     sys_args = sys.argv
     if "--help" in sys_args:
         print("Showing help")
-        WDoc.md_printer(WDoc.parse_file.__doc__)
-        # help(WDoc.parse_file)
-        # print(WDoc.parse_file.__doc__)
-        # fire.Fire(WDoc.parse_file)
+        wdoc.md_printer(wdoc.parse_file.__doc__)
+        # help(wdoc.parse_file)
+        # print(wdoc.parse_file.__doc__)
+        # fire.Fire(wdoc.parse_file)
         raise SystemExit(0)
 
     if "--pipe" in sys_args or "pipe" in sys_args:
@@ -103,9 +103,9 @@ def cli_parse_file() -> None:
                 kwargs[k] = True
         for a in args:
             kwargs[a] = True
-        parsed = WDoc.parse_file(**kwargs)
+        parsed = wdoc.parse_file(**kwargs)
     else:
-        parsed = fire.Fire(WDoc.parse_file)
+        parsed = fire.Fire(wdoc.parse_file)
 
     if isinstance(parsed, list):
         d = {

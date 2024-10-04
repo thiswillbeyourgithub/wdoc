@@ -411,7 +411,7 @@ def wrapped_model_name_matcher(model: str) -> str:
         return match[0]
     else:
         red(f"Couldn't match the modelname {model} to any known model. "
-            "Continuing but this will probably crash WDoc further "
+            "Continuing but this will probably crash wdoc further "
             "down the code.")
         return model
 
@@ -596,7 +596,7 @@ def disable_internet(allowed: dict) -> None:
         "The only allowed IPs from now on are the ones from the "
         "argument llm_api_bases. Note that this permanently filters "
         "outgoing python connections so might interfere with other "
-        "python programs is you are importing WDoc instead "
+        "python programs is you are importing wdoc instead "
         "of calling it from the shell"
     )
 
@@ -676,7 +676,7 @@ def disable_internet(allowed: dict) -> None:
 
 @optional_typecheck
 def set_func_signature(func: Callable) -> Callable:
-    """dynamically set the extra args of WDoc.__init__ so that
+    """dynamically set the extra args of wdoc.__init__ so that
     instead of **cli_kwargs the signature indicates all allowed arguments.
     Needed to get correct behavior from fire.Fire '--completion' """
     original_sig = inspect.signature(func)

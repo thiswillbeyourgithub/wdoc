@@ -1,7 +1,7 @@
 """
 Sets the default value for environment variables, parse the actual values,
 check their types and finally make them easier to access by other parts of
-WDoc.
+wdoc.
 """
 
 import sys

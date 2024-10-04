@@ -18,7 +18,7 @@
     * the type of input. Depending on the value, different other parameters
     are needed. If json_entries is used, the line of the input file can contain
     any of those parameters as long as they are as json. You can find
-    an example of json_entries file in `WDoc/docs/json_entries_example.txt`
+    an example of json_entries file in `wdoc/docs/json_entries_example.txt`
 
     * Supported values and available arguments:
         *For the details of each argument, [see below](#loader-specific-arguments)*
@@ -295,7 +295,7 @@
     * WARNING: The cache is temporarily ignored in non openaillms
     generations because of an error with langchain's ChatLiteLLM.
     Basically if you don't use `--private` and use llm form openai,
-    WDoc will use ChatOpenAI with regular caching, otherwise
+    wdoc will use ChatOpenAI with regular caching, otherwise
     we use ChatLiteLLM with LLM caching disabled.
     More at https://github.com/langchain-ai/langchain/issues/22389
 
@@ -336,7 +336,7 @@
 
 * `--import_mode`: bool, default `False`
     * if True, will return the answer from query instead of printing it.
-    The idea is to use if when you import WDoc instead of running
+    The idea is to use if when you import wdoc instead of running
     it from the cli. See `--silent`
 
 * `--disable_md_printing`: bool, default `True`
@@ -486,7 +486,7 @@
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
     * If 'youtube': will take the youtube transcripts as text content.
-    * If 'whisper': WDoc will download
+    * If 'whisper': wdoc will download
     the audio from the youtube link, and whisper will be used to turn the audio into text. whisper_prompt and whisper_lang will be used if set.
     * If 'deepgram' will download
     the audio from the youtube link, and deepgram will be used to turn the audio into text. `--deepgram_kwargs` will be used if set.
@@ -504,9 +504,9 @@
 # Other specific arguments
 
 * `--out_file`: str or PosixPath, default `None`
-    * If WDoc must create a summary, if out_file given the summary will
+    * If wdoc must create a summary, if out_file given the summary will
     be written to this file. Note that the file is not erased and
-    WDoc will simply append to it.
+    wdoc will simply append to it.
     * If `--summary_n_recursion` is used, additional files will be
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
@@ -596,7 +596,7 @@
     key `source_tag`. Useful when using filetype combination.
     It is EXTREMELY recommended to include a source_tag to any document
     you want to save: especially if using recursive filetypes. This
-    is because after loading all documents WDoc use the source_tag
+    is because after loading all documents wdoc use the source_tag
     to see if it should continue or crash. If you want to load 10_000 pdf
     in one go as I do, then it makes sense to continue if some failed to
     crash but not if a whole source_tag is missing.
@@ -633,7 +633,7 @@
 * `WDOC_STRICT_DOCDICT`
     * if "True", will crash instead of printing if trying to set an unexpected argument in a DocDict.
         Otherwise, you can specify things like "anki_profile" as argument to filetype "pdf" without crashing,
-        this also makes no sense but can be useful if there's a bug in WDoc that is not yet fixed
+        this also makes no sense but can be useful if there's a bug in wdoc that is not yet fixed
     and you want to continue in the meantime.
     * If set to "False": we print in red unexpected arguments but add them anyway.
     * If set to "strip": we print in red unexpected arguments and ignore them.

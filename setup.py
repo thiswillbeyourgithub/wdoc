@@ -34,7 +34,7 @@ class PostInstallCommand(install):
             print(
                 "Error when trying to run 'openparse-download' to download"
                 f" weights for deep learning based table detection : '{err}'"
-                "\nBy default WDoc still uses pymupdf via openparse so it "
+                "\nBy default wdoc still uses pymupdf via openparse so it "
                 "shouldn't matter too much.\n"
                 "For more: see https://github.com/Filimoa/open-parse/"
             )
@@ -43,8 +43,8 @@ class PostInstallCommand(install):
 with open("README.md", "r") as readme:
     long_description = readme.read()
     long_description = long_description.replace(
-        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true" width="256"></p>',
-        '![icon](https://github.com/thiswillbeyourgithub/WDoc/blob/main/images/icon.png?raw=true)',
+        '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="256"></p>',
+        '![icon](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true)',
     )
     assert 'align="center"' not in long_description
 
@@ -54,7 +54,7 @@ setup(
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/thiswillbeyourgithub/WDoc/",
+    url="https://github.com/thiswillbeyourgithub/wdoc/",
     packages=find_packages(),
     include_package_data=True,
     classifiers=[
@@ -67,11 +67,8 @@ setup(
               "youtube", "mp3", "embeddings", "AI", "LLM", "openai", "logseq", "doctools", "doctoolsllm", "winston_doc"],
     entry_points={
         'console_scripts': [
-            'WDoc=WDoc.__main__:cli_launcher',
-            'WDoc_parse_file=WDoc.__main__:cli_parse_file',
-
-            'wdoc=WDoc.__main__:cli_launcher',
-            'wdoc_parse_file=WDoc.__main__:cli_parse_file',
+            'wdoc=wdoc.__main__:cli_launcher',
+            'wdoc_parse_file=wdoc.__main__:cli_parse_file',
         ],
     },
     python_requires=">=3.10",

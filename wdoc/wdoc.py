@@ -78,15 +78,15 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables.base import RunnableEach
 from langchain_core.output_parsers.string import StrOutputParser
 
-logger.info("Starting WDoc")
+logger.info("Starting wdoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 @optional_typecheck
 @set_USAGE_as_docstring
-class WDoc:
-    "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
+class wdoc:
+    "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
 
     VERSION: str = "2.1.8"
     allowed_extra_args = extra_args_types
@@ -134,7 +134,7 @@ class WDoc:
 
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically appended the content of WDoc/docs/USAGE.md"
+        "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
         if version:
             print(self.VERSION)
             return
@@ -144,7 +144,7 @@ class WDoc:
                 out = notification_callback(text)
                 assert out == text, "The notification callback must return the same string"
                 return out
-            ntfy("Starting WDoc")
+            ntfy("Starting wdoc")
         else:
             @optional_typecheck
             def ntfy(text: str) -> str:
@@ -776,7 +776,7 @@ class WDoc:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    WDoc version {self.VERSION} with model {self.modelname}"
+            header += f"    wdoc version {self.VERSION} with model {self.modelname}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
@@ -1817,10 +1817,10 @@ class WDoc:
         ## Arguments
 
         - `path`: str
-          - Same as for WDoc
+          - Same as for wdoc
 
         - `filetype`: str
-            - Same argument as for WDoc
+            - Same argument as for wdoc
 
         - `only_text`: bool, default `False`
             - only return the text instead of a List of langchain Documents
@@ -1831,14 +1831,14 @@ class WDoc:
             e.g. "file_loader_n_jobs", etc.
 
         - `debug`: bool, default `False`
-            - Same as for WDoc
+            - Same as for wdoc
 
         - `verbose`: bool, default `False`
-            - Same as for WDoc
+            - Same as for wdoc
 
         - `**kwargs`
           - Remaning keyword arguments are assumed to be DocDict arguments,
-            the full list is at WDoc.utils.misc.filetype_arg_types
+            the full list is at wdoc.utils.misc.filetype_arg_types
 
         ## Return value
         - Either the document's page_content as a string, or a list of
@@ -1877,7 +1877,7 @@ class WDoc:
 
 
 
-def debug_exceptions(instance: Optional[WDoc] = None) -> None:
+def debug_exceptions(instance: Optional[wdoc] = None) -> None:
     "open a debugger is --debug is set"
     def handle_exception(exc_type, exc_value, exc_traceback):
         if not issubclass(exc_type, KeyboardInterrupt):

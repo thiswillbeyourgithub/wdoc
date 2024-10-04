@@ -12,4 +12,4 @@ push = false
 [bumpver.file_patterns]
 "bumpver.toml" = ['current_version = "{version}"']
 "setup.py" = ['version="{version}"']
-"WDoc/WDoc.py" = ['VERSION: str = "{version}"']
+"wdoc/wdoc.py" = ['VERSION: str = "{version}"']
