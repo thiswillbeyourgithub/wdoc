@@ -1827,8 +1827,6 @@ class WDoc:
         Returns either the document's page_content as a string, or a list of
         langchain Document (so with attributes `page_content` and `metadata`).
         """
-        if debug:
-            debug_exceptions()
         default_cli_kwargs = {
             "llm_name": "testing/testing",
             "task": "query",
@@ -1836,8 +1834,16 @@ class WDoc:
             "n_jobs": 1,
             "loading_failure": "crash",
         }
+
+        if debug:
+            default_cli_kwargs["debug"] = debug
+            debug_exceptions()
+        if verbose:
+            default_cli_kwargs["verbose"] = verbose
+
         if cli_kwargs is not None:
             default_cli_kwargs.update(cli_kwargs)
+
         if kwargs:
             kwargs = DocDict(kwargs)
 
