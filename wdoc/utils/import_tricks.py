@@ -95,7 +95,7 @@ def trick_imports() -> None:
     custom_loading("sklearn.decomposition")
     custom_loading("sklearn.preprocessing")
 
-    if WDOC_IMPORT_TYPE == "thread":
+    if WDOC_IMPORT_TYPE in ["both", "thread"]:
         q.put(None)  # kill the import worker
 
 if WDOC_IMPORT_TYPE != "native":
