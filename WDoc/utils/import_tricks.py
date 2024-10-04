@@ -9,7 +9,6 @@ import sys
 from .env import WDOC_IMPORT_TYPE
 
 def trick_imports() -> None:
-    print("Starting trick imports")
     import lazy_import
     from queue import Queue
     import threading
