@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Literal
 from beartype import beartype, BeartypeConf
 from beartype.door import is_bearable
 
@@ -40,7 +40,7 @@ WDOC_DEFAULT_EMBED_MODEL = "openai/text-embedding-3-small"
 WDOC_DEFAULT_QUERY_EVAL_MODELNAME = "openai/gpt-4o-mini"
 
 valid_types = {
-    'WDOC_TYPECHECKING': str,
+    'WDOC_TYPECHECKING': Literal["disabled", "warn", "crash"],
     'WDOC_NO_MODELNAME_MATCHING': bool,
     'WDOC_ALLOW_NO_PRICE': bool,
     'WDOC_OPEN_ANKI': bool,
@@ -51,8 +51,8 @@ valid_types = {
     'WDOC_DEBUGGER': bool,
     'WDOC_EXPIRE_CACHE_DAYS': int,
     'WDOC_EMPTY_LOADER': bool,
-    'WDOC_BEHAVIOR_EXCL_INCL_USELESS': str,
     'WDOC_DISABLE_LAZYLOADING': Any,
+    'WDOC_BEHAVIOR_EXCL_INCL_USELESS': Literal["warn", "crash"],
     'WDOC_MOD_FAISS_SCORE_FN': bool,
     'WDOC_LLM_MAX_CONCURRENCY': int,
     'WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE': int,
