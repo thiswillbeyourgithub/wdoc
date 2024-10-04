@@ -4,6 +4,7 @@ check their types and finally make them easier to access by other parts of
 WDoc.
 """
 
+import sys
 import os
 from typing import Optional, Union, Literal
 from beartype import beartype, BeartypeConf
@@ -44,6 +45,11 @@ WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE = 500
 WDOC_DEFAULT_MODELNAME = "openai/gpt-4o"
 WDOC_DEFAULT_EMBED_MODEL = "openai/text-embedding-3-small"
 WDOC_DEFAULT_QUERY_EVAL_MODELNAME = "openai/gpt-4o-mini"
+
+# by default use lazy loading if using --help argument
+if " --help" in " ".join(sys.argv):
+    print("--help so using lazy loading")
+    WDOC_IMPORT_TYPE = "lazy"
 
 valid_types = {
     'WDOC_TYPECHECKING': Literal["disabled", "warn", "crash"],
