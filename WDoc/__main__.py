@@ -25,8 +25,10 @@ def cli_launcher() -> None:
             fire.Fire(WDoc)
         else:
             raise Exception("To create completion scripts, use '-- --completion' as arguments.")
-    elif len(sys.argv[1:]) == 0:
-        print("No args shown. Use '--help' to display the help.")
+    elif len(sys.argv) == 1:
+        whi("No args shown. Use '--help' to display the help.")
+        raise SystemExit(0)
+
 
     # while we're at it, make it so that
     # "WDoc summary" is parsed like "WDoc --task=summary"
