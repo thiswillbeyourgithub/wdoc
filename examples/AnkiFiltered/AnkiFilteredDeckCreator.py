@@ -52,7 +52,7 @@ class FilteredDeckCreator:
         query: str,
         task: str = "search",  # could also be 'query', would be more expensive but would use the large LLM
         filtered_deck_query: str = "",
-        new_tag: str = "",
+        new_tag: str = "",  # will have 'wdoc_filtered_deck::' prepended to each space separated tag
         reschedule: bool = False,
         sort_order: int = 8,
         create_empty: bool = False,
@@ -85,6 +85,10 @@ class FilteredDeckCreator:
         query += " (cid:" + ",".join([str(c) for c in cids]) + ")"
 
         if new_tag:
+            if " " not in new_tag:
+                new_tag = "wdoc_filtered_deck::" + new_tag
+            else:
+                new_tag = new_tag.replace(" ", " wdoc_filtered_deck::")
             nids = akc("cardsToNotes", cards=[int(c) for c in cids])
             p(f"Adding tags {new_tag} to nids:{nids}")
             akc("addTags", notes=nids, tags=new_tag)
