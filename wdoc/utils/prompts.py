@@ -18,7 +18,7 @@ from .misc import get_tkn_length
 BASE_SUMMARY_PROMPT = ChatPromptTemplate(
     messages=[
         SystemMessagePromptTemplate.from_template("""
-You are a Summarizer working for wdoc, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+You are a Summarizer working at WDOC-CORP©, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 <detailed_instructions>
@@ -88,7 +88,7 @@ I'm giving you back your own summary from last time because it was too long and 
 PR_EVALUATE_DOC = ChatPromptTemplate(
     messages=[
         SystemMessagePromptTemplate.from_template(template="""
-You are an Evaluator working for wdoc: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
+You are an Evaluator working at WDOC-CORP©: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
 <rules>
 - Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
@@ -118,7 +118,7 @@ You can start your reply when you are ready.
 PR_ANSWER_ONE_DOC = ChatPromptTemplate(
     messages=[
         SystemMessagePromptTemplate.from_template(template="""
-You are an Answerer working for wdoc: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
+You are an Answerer working at WDOC-CORP©: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 <detailed_instructions>
 - If the document is ENTIRELY irrelevant to the question, answer only `<answer>IRRELEVANT</answer>` and NOTHING ELSE (and no formatting).
@@ -164,7 +164,7 @@ Start your reply when you're ready.
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate(
     messages=[
         SystemMessagePromptTemplate.from_template(template="""
-You are a Combiner working for wdoc: given a question and candidate intermediate answers, your goal is to:
+You are a Combiner working at WDOC-CORP©: given a question and candidate intermediate answers, your goal is to:
 - combine all partial answers to answer the question as md bullet points,
 - while combining all additional information as additional bullet points.
 - And keeping track of sources.
