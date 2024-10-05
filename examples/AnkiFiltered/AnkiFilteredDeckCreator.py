@@ -7,7 +7,7 @@ from wdoc import wdoc
 from wdoc.utils.typechecker import optional_typecheck
 import fire
 from loguru import logger
-from typing import List
+from typing import List, Tuple
 from langchain.docstore.document import Document
 
 from py_ankiconnect import PyAnkiconnect
@@ -78,19 +78,18 @@ class FilteredDeckCreator:
             docs = found["relevant_filtered_docs"]
         else:
             docs = found["filtered_docs"]
-        cids = self.find_anki_docs(
+        nids, cids = self.find_anki_docs(
             docs=docs,
         )
 
         query = filtered_deck_query
-        query += " (cid:" + ",".join([str(c) for c in cids]) + ")"
+        query += " (nid:" + ",".join([str(n) for n in nids]) + ")"
 
         if new_tag:
             if " " not in new_tag:
                 new_tag = "wdoc_filtered_deck::" + new_tag
             else:
                 new_tag = new_tag.replace(" ", " wdoc_filtered_deck::")
-            nids = akc("cardsToNotes", cards=[int(c) for c in cids])
             p(f"Adding tags {new_tag} to nids:{nids}")
             akc("addTags", notes=nids, tags=new_tag)
             p("Done adding tags")
@@ -108,10 +107,11 @@ class FilteredDeckCreator:
         akc("sync")
 
     @classmethod
-    def find_anki_docs(self, docs: List[Document]) -> List[int]:
+    def find_anki_docs(self, docs: List[Document]) -> Tuple[List[int], List[int]]:
         """
         goes through the metadata of each langchain Document to find which
-        correspond to anki cards
+        correspond to anki cards.
+        Returns [ nids, cids ]
         """
         anki_docs = []
         for doc in docs:
@@ -122,6 +122,7 @@ class FilteredDeckCreator:
 
         present_anki_docs = []
         cids = []
+        nids = []
         for idoc, doc in enumerate(anki_docs):
             if "anki_cid" in doc.metadata:
                 cid = doc.metadata["anki_cid"]
@@ -130,6 +131,8 @@ class FilteredDeckCreator:
                     cids.append(cid)
             elif "anki_nid" in doc.metadata:
                 nid = doc.metadata["anki_nid"]
+                if nid not in nids:
+                    nids.append(nid)
                 temp_cids =  akc("findCards", query=f"nid:{nid}")
                 if temp_cids:
                     present_anki_docs.append(doc)
@@ -139,7 +142,7 @@ class FilteredDeckCreator:
         assert cids, "No cids found"
         p(f"Found cids:{cids}")
 
-        return cids
+        return nids, cids
 
     @classmethod
     def create_filtered_deck(
