@@ -72,11 +72,11 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
     1. The documents are retrieved using embedding
-    2. Then a weak LLM model ("Evaluator") is used to tell which of those document is not relevant
-    3. Then the strong LLM is used to answer ("Answerer") the question using each individual remaining documents.
-    4. Then all relevant answers are combined ("Combiner") into a single short markdown-formatted answer. Before being combined, they are batched by semantic clusters
+    2. Then a weak LLM model ("Eve the Evaluator") is used to tell which of those document is not relevant
+    3. Then the strong LLM is used to answer ("Anna the Answerer") the question using each individual remaining documents.
+    4. Then all relevant answers are combined ("Carl the Combiner") into a single short markdown-formatted answer. Before being combined, they are batched by semantic clusters
     and semantic order using scipy's hierarchical clustering and leaf ordering, this makes it easier for the LLM to combine the answers in a manner that makes bottom up sense.
-    Evaluator, Answerer and Combiner are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step.
+    `Eve the Evaluator`, `Anna the Answerer` and `Carl the Combiner` are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step. There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query.
     5. Each document is identified by a unique hash and the answers are sourced, meaning you know from which document comes each information of the answer.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
 * **Advanced summary**:
@@ -270,7 +270,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **What's up with the name?**
     * One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 * **How can I improve the prompt for a specific task without coding?**
-    * Each prompt of the `query` task are roleplaying as employees working for wdoc, either as Evaluator (the LLM that filters out relevant documents), Answerer (the LLM that answers the question from a filtered document) or Combiner (the LLM that combines answers from Answerer as one). They are all receiving orders from you if you talk to them in a prompt.
+    * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use wdoc's parser for my own documents?**
     * If you are in the shell cli you can easily use `wdoc parse my_file.pdf` (this actually replaces the call to call instead `wdoc_parse_file my_file.pdf`).
     add `--only_text` to only get the text and no metadata. If you're having problem with argument parsing you can try adding the `--pipe` argument.
