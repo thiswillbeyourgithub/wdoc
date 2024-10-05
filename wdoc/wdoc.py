@@ -1465,7 +1465,7 @@ class wdoc:
 
             md_printer("\n\n# Documents")
             if WDOC_OPEN_ANKI:
-                anki_cid = []
+                anki_nids = []
                 to_print = ""
             for id, doc in enumerate(docs):
                 to_print += f"## Document #{id + 1}\n"
@@ -1474,11 +1474,11 @@ class wdoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += "\n"
-                if WDOC_OPEN_ANKI and "anki_cid" in doc.metadata:
-                    cid_str = str(doc.metadata["anki_cid"]).split(" ")
-                    for cid in cid_str:
-                        if cid not in anki_cid:
-                            anki_cid.append(cid)
+                if WDOC_OPEN_ANKI and "anki_nid" in doc.metadata:
+                    nid_str = str(doc.metadata["anki_nid"]).split(" ")
+                    for nid in nid_str:
+                        if nid not in anki_nids:
+                            anki_nids.append(nid)
             md_printer(to_print)
             if self.query_eval_modelname:
                 red(
@@ -1486,14 +1486,14 @@ class wdoc:
                 red(
                     f"Number of documents after query eval filter: {len(output['filtered_docs'])}")
 
-            if WDOC_OPEN_ANKI and anki_cid:
+            if WDOC_OPEN_ANKI and anki_nids:
                 open_answ = input(
-                    f"\nAnki cards found, open in anki? (yes/no/debug)\n(cids: {anki_cid})\n> ")
+                    f"\nAnki notes found, open in anki? (yes/no/debug)\n(nids: {anki_nids})\n> ")
                 if open_answ == "debug":
                     breakpoint()
                 elif open_answ in ["y", "yes"]:
                     whi("Opening anki.")
-                    query = f"cid:{','.join(anki_cid)}"
+                    query = f"nid:{','.join(anki_nids)}"
                     ankiconnect(
                         action="guiBrowse",
                         query=query,
