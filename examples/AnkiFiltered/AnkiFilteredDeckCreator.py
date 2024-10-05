@@ -48,7 +48,7 @@ akc = PyAnkiconnect(
 class FilteredDeckCreator:
     def __init__(
         self,
-        deckname: str,
+        deckname: str,  # will have 'wdoc_filtered_deck::' prepended to it
         query: str,
         task: str = "search",  # could also be 'query', would be more expensive but would use the large LLM
         filtered_deck_query: str = "",
@@ -61,6 +61,7 @@ class FilteredDeckCreator:
         ) -> None:
         akc("sync")
         p(f"Started with query '{query}'")
+        deckname = "wdoc_filtered_deck::" + deckname
         decknames = akc("deckNames")
         assert deckname not in decknames, f"Deckname {deckname} is already used. You have to delete it manually"
 
