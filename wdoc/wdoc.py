@@ -1395,7 +1395,7 @@ class wdoc:
                     }
                     return inputs
 
-                refilter_documents = {
+                meta_refilter_docs = {
                     "filtered_docs": (
                         RunnablePassthrough.assign(
                             evaluations=RunnablePassthrough.assign(
@@ -1426,7 +1426,7 @@ class wdoc:
                             desc="LLM evaluation",
                             unit="doc",
                         )
-                    | refilter_documents
+                    | meta_refilter_docs
                     | pbar_closer(llm=self.eval_llm)
                 )
                 tried_top_k = []
@@ -1530,7 +1530,7 @@ class wdoc:
                     "question_to_answer": inputs["question_to_answer"],
                 }
                 return inputs
-            refilter_documents = {
+            meta_refilter_docs = {
                 "filtered_docs": (
                     RunnablePassthrough.assign(
                         evaluations=RunnablePassthrough.assign(
@@ -1582,7 +1582,7 @@ class wdoc:
                         desc="LLM evaluation",
                         unit="doc",
                     )
-                | refilter_documents
+                | meta_refilter_docs
                 | pbar_closer(llm=self.eval_llm)
                 | pbar_chain(
                         llm=self.llm,
