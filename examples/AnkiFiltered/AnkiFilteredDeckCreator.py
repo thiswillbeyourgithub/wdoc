@@ -125,15 +125,15 @@ class FilteredDeckCreator:
         nids = []
         for idoc, doc in enumerate(anki_docs):
             if "anki_cid" in doc.metadata:
-                cid = doc.metadata["anki_cid"]
+                cid = int(doc.metadata["anki_cid"])
                 if akc("findCards", query=f"cid:{cid}"):
                     present_anki_docs.append(doc)
-                    cids.append(cid)
+                    cids.append(int(cid))
             elif "anki_nid" in doc.metadata:
-                nid = doc.metadata["anki_nid"]
+                nid = int(doc.metadata["anki_nid"])
                 if nid not in nids:
                     nids.append(nid)
-                temp_cids =  akc("findCards", query=f"nid:{nid}")
+                temp_cids =  [int(c) for c in akc("findCards", query=f"nid:{nid}")]
                 if temp_cids:
                     present_anki_docs.append(doc)
                     cids.extend(temp_cids)
