@@ -145,6 +145,9 @@ class FilteredDeckCreator:
         nids = list(set(nids))
         p(f"Found cids:{cids}")
 
+        p(f"Ratio of cid per document: {len(cids)/len(docs):.4f}")
+        p(f"Ratio of nid per document: {len(nids)/len(docs):.4f}")
+
         return nids, cids
 
     @classmethod
