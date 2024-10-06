@@ -20,6 +20,8 @@ from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 # global lock to create new locks
 databases_locks = {"global": Lock()}
 
+SQLITE3_CHECK_SAME_THREAD=True
+
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
     __VERSION__ = "0.1"
@@ -41,7 +43,7 @@ class SQLiteCacheFixed(BaseCache):
         if self.database_path.exists():
             self.clear()
         else:
-            conn = sqlite3.connect(self.database_path)
+            conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
             cursor = conn.cursor()
             with self.lock:
                 cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
@@ -65,7 +67,7 @@ class SQLiteCacheFixed(BaseCache):
             return
         self._cache[(prompt, llm_string)] = return_val
         data = zlib.compress(dill.dumps({"key": key, "value": return_val}))
-        conn = sqlite3.connect(self.database_path)
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
         with self.lock:
             cursor.execute("INSERT INTO saved_llm_calls (data) VALUES (?)", (data,))
@@ -75,7 +77,7 @@ class SQLiteCacheFixed(BaseCache):
 
     def clear(self) -> None:
         """Clear cache."""
-        conn = sqlite3.connect(self.database_path)
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
         with self.lock:
             cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
