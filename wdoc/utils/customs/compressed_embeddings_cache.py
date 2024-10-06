@@ -9,6 +9,7 @@ import time
 import zlib
 from pathlib import Path
 from typing import Iterator, List, Optional, Sequence, Tuple, Union
+from functools import cache as memoize
 
 from langchain_core.stores import ByteStore
 
@@ -102,8 +103,6 @@ class LocalFileStore(ByteStore):
         Returns:
             Path: The full path for the given key.
         """
-        if not re.match(HASH_REGEX, key):
-            raise InvalidKeyException(f"Invalid characters in key (the key should be a hash): {key}")
         full_path = os.path.abspath(self.root_path / key)
         common_path = os.path.commonpath([str(self.root_path), full_path])
         if common_path != str(self.root_path):
@@ -113,6 +112,13 @@ class LocalFileStore(ByteStore):
             )
 
         return Path(full_path)
+
+    @memoize
+    def _check_key_regex(self, key: str) -> None:
+        """memoized regex checker for if the key is indeed a hash and does
+        not contain invalid characters"""
+        if not re.match(HASH_REGEX, key):
+            raise InvalidKeyException(f"Invalid characters in key (the key should be a hash): {key}")
 
     def _mkdir_for_store(self, dir: Path) -> None:
         """Makes a store directory path (including parents) with specified permissions
@@ -144,6 +150,7 @@ class LocalFileStore(ByteStore):
         """
         values: List[Optional[bytes]] = []
         for key in keys:
+            self._check_key_regex(key)
             full_path = self._get_full_path(key)
             if full_path.exists():
                 value = full_path.read_bytes()
@@ -168,6 +175,7 @@ class LocalFileStore(ByteStore):
             None
         """
         for key, value in key_value_pairs:
+            self._check_key_regex(key)
             full_path = self._get_full_path(key)
             self._mkdir_for_store(full_path.parent)
             if self.compress:
