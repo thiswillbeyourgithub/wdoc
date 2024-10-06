@@ -61,6 +61,7 @@ class SQLiteCacheFixed(BaseCache):
         cursor = conn.cursor()
         try:
             with self.lock:
+                cursor.execute("BEGIN")
                 cursor.execute("INSERT INTO saved_llm_calls (data) VALUES (?)", (data,))
                 conn.commit()
         finally:
@@ -73,6 +74,7 @@ class SQLiteCacheFixed(BaseCache):
         cursor = conn.cursor()
         try:
             with self.lock:
+                cursor.execute("BEGIN")
                 cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
                                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 data TEXT)''')
