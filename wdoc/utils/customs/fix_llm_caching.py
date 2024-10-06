@@ -45,11 +45,13 @@ class SQLiteCacheFixed(BaseCache):
         else:
             conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
             cursor = conn.cursor()
-            with self.lock:
-                cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
-                                (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                data TEXT)''')
-            conn.close()
+            try:
+                with self.lock:
+                    cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
+                                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    data TEXT)''')
+            finally:
+                conn.close()
             self._cache = {}
 
 
@@ -69,24 +71,28 @@ class SQLiteCacheFixed(BaseCache):
         data = zlib.compress(dill.dumps({"key": key, "value": return_val}))
         conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
-        with self.lock:
-            cursor.execute("INSERT INTO saved_llm_calls (data) VALUES (?)", (data,))
-            conn.commit()
-        conn.close()
+        try:
+            with self.lock:
+                cursor.execute("INSERT INTO saved_llm_calls (data) VALUES (?)", (data,))
+                conn.commit()
+        finally:
+            conn.close()
 
 
     def clear(self) -> None:
         """Clear cache."""
         conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
-        with self.lock:
-            cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
-                            (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            data TEXT)''')
-            cursor.execute("SELECT data FROM saved_llm_calls")
-            conn.commit()
-        rows = cursor.fetchall()
-        conn.close()
+        try:
+            with self.lock:
+                cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
+                                (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                data TEXT)''')
+                cursor.execute("SELECT data FROM saved_llm_calls")
+                conn.commit()
+            rows = cursor.fetchall()
+        finally:
+            conn.close()
         datas = [
             dill.loads(
                 zlib.decompress(row[0])
