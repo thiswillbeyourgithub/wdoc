@@ -55,6 +55,7 @@ class LocalFileStore(ByteStore):
         chmod_dir: Optional[int] = None,
         update_atime: bool = False,
         compress: Union[bool, int] = False,
+        regex_check: bool = False,
     ) -> None:
         """Implement the BaseStore interface for the local file system.
 
@@ -73,10 +74,13 @@ class LocalFileStore(ByteStore):
                 stored data, reducing speed but lowering size. The int given
                 is the level of compression of zlib, so between -1 and 9, both
                 included. If `True`, defaults to -1, like in zlib.
+            regex_check: (bool, defaults to `False`) If True will check
+                that keys indeed contain only characters expected in a hash.
         """
         self.chmod_file = chmod_file
         self.chmod_dir = chmod_dir
         self.update_atime = update_atime
+        self.regex_check = regex_check
 
         if compress is True:
             compress = -1
@@ -117,7 +121,7 @@ class LocalFileStore(ByteStore):
     def _check_key_regex(self, key: str) -> None:
         """memoized regex checker for if the key is indeed a hash and does
         not contain invalid characters"""
-        if not re.match(HASH_REGEX, key):
+        if self.regex_check and not re.match(HASH_REGEX, key):
             raise InvalidKeyException(f"Invalid characters in key (the key should be a hash): {key}")
 
     def _mkdir_for_store(self, dir: Path) -> None:
