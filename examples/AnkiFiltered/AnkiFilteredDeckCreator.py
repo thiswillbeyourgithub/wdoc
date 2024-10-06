@@ -111,6 +111,8 @@ class FilteredDeckCreator:
         """
         goes through the metadata of each langchain Document to find which
         correspond to anki cards.
+        Note that the order will NOT be respected (i.e. nids, cids and documents
+        will all have their own order and length)
         Returns [ nids, cids ]
         """
         anki_docs = []
@@ -129,10 +131,9 @@ class FilteredDeckCreator:
                 if akc("findCards", query=f"cid:{cid}"):
                     present_anki_docs.append(doc)
                     cids.append(int(cid))
-            elif "anki_nid" in doc.metadata:
+            if "anki_nid" in doc.metadata:
                 nid = int(doc.metadata["anki_nid"])
-                if nid not in nids:
-                    nids.append(nid)
+                nids.append(nid)
                 temp_cids =  [int(c) for c in akc("findCards", query=f"nid:{nid}")]
                 if temp_cids:
                     present_anki_docs.append(doc)
@@ -140,6 +141,8 @@ class FilteredDeckCreator:
 
         assert present_anki_docs, "No anki notes after filtering"
         assert cids, "No cids found"
+        cids = list(set(cids))
+        nids = list(set(nids))
         p(f"Found cids:{cids}")
 
         return nids, cids
