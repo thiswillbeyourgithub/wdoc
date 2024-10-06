@@ -19,12 +19,14 @@ from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 # use the same lock for each instance accessing the same db, as well as a
 # global lock to create new locks
 databases_locks = {"global": Lock()}
+# also use the same cache
+databases_caches = {}
 
 SQLITE3_CHECK_SAME_THREAD=False
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
-    __VERSION__ = "0.1"
+    __VERSION__ = "0.2"
 
     def __init__(
         self,
@@ -38,6 +40,7 @@ class SQLiteCacheFixed(BaseCache):
         if self.lockkey not in databases_locks:
             with databases_locks["global"]:
                 databases_locks[self.lockkey] = Lock()
+                databases_caches[self.lockkey] = {}
         self.lock = databases_locks[self.lockkey]
 
         self.clear()
@@ -46,16 +49,17 @@ class SQLiteCacheFixed(BaseCache):
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
         key = (prompt, llm_string)
+        self._cache = databases_caches[self.lockkey]
         if key in self._cache:
             return self._cache[key]
-
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
         """Update cache based on prompt and llm_string."""
         key = (prompt, llm_string)
         if key in self._cache and self._cache[key] == return_val:
             return
-        self._cache[(prompt, llm_string)] = return_val
+        with self.lock:
+            self._cache[(prompt, llm_string)] = return_val
         data = zlib.compress(pickle.dumps({"key": key, "value": return_val}))
         conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
@@ -88,10 +92,14 @@ class SQLiteCacheFixed(BaseCache):
                 zlib.decompress(row[0])
             ) for row in rows
         ]
-        self._cache = {
+        newcache = {
             d["key"]: d["value"]
             for d in datas
         }
+        with self.lock:
+            with databases_locks["global"]:
+                databases_caches[self.lockkey] = newcache
+            self._cache = databases_caches[self.lockkey]
 
 
     async def alookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
