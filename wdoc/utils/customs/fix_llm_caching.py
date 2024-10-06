@@ -16,6 +16,10 @@ from threading import Lock
 
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 
+# use the same lock for each instance accessing the same db, as well as a
+# global lock to create new locks
+databases_locks = {"global": Lock()}
+
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
 
@@ -23,8 +27,13 @@ class SQLiteCacheFixed(BaseCache):
         self,
         database_path: Union[str, PosixPath],
         ) -> None:
-        self.lock = Lock()
         self.database_path = Path(database_path)
+        self.lockkey = str(self.database_path.absolute().resolve())
+        if self.lockkey not in databases_locks:
+            with databases_locks["global"]:
+                databases_locks[self.lockkey] = Lock()
+        self.lock = databases_locks[self.lockkey]
+
         if database_path.exists():
             self.clear()
         else:
