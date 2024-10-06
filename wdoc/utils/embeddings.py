@@ -174,10 +174,12 @@ def load_embeddings(
     if private:
         embed_model_str = "private_" + embed_model_str
 
+    # lfs = LocalFileStore(
+    #     root_path=cache_dir / "CacheEmbeddings" / embed_model_str,
+    #     update_atime=True,
+    # )
     lfs = LocalFileStore(
-        root_path=cache_dir / "CacheEmbeddings" / embed_model_str,
-        update_atime=True,
-        compress=True
+        database_path=cache_dir / "CacheEmbeddings" / embed_model_str,
     )
     cache_content = list(lfs.yield_keys())
     whi(f"Found {len(cache_content)} embeddings in local cache")
