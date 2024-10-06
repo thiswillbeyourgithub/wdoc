@@ -121,8 +121,8 @@ class LocalFileStore(ByteStore):
         if not dir.exists():
             self._mkdir_for_store(dir.parent)
             dir.mkdir(exist_ok=True)
-            if self.chmod_dir is not None:
-                os.chmod(dir, self.chmod_dir)
+        if self.chmod_dir is not None:
+            os.chmod(dir, self.chmod_dir)
 
     def mget(self, keys: Sequence[str]) -> List[Optional[bytes]]:
         """Get the values associated with the given keys.
