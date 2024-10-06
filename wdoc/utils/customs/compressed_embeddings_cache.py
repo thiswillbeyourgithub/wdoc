@@ -103,7 +103,7 @@ class LocalFileStore(ByteStore):
     def _check_key_regex(self, key: str) -> None:
         """memoized regex checker for if the key is indeed a hash and does
         not contain invalid characters"""
-        if self.regex_check and not re.match(HASH_REGEX, key):
+        if not re.match(HASH_REGEX, key):
             raise InvalidKeyException(f"Invalid characters in key (the key should be a hash): {key}")
 
     def _mkdir_for_store(self, dir: Path) -> None:
@@ -136,7 +136,8 @@ class LocalFileStore(ByteStore):
         """
         values: List[Optional[bytes]] = []
         for key in keys:
-            self._check_key_regex(key)
+            if self.regex_check:
+                self._check_key_regex(key)
             full_path = self.root_path / key
             if full_path.exists():
                 value = full_path.read_bytes()
@@ -161,7 +162,8 @@ class LocalFileStore(ByteStore):
             None
         """
         for key, value in key_value_pairs:
-            self._check_key_regex(key)
+            if self.regex_check:
+                self._check_key_regex(key)
             full_path = self.root_path / key
             if self.compress:
                 com_val = zlib.compress(value, level=self.compress)
