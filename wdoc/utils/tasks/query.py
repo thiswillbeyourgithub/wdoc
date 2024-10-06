@@ -74,7 +74,7 @@ def sieve_documents(instance) -> RunnableLambda:
 @chain
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
-    "filter documents find via RAG based on the digit answered by the eval llm"
+    "filter documents fond via RAG based on the digit answered by the eval llm"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
     assert isinstance(

@@ -94,7 +94,7 @@ You are Eve, working as an Evaluator at WDOC-CORP©: given a question and text d
 - wrap your answer in an <answer></answer> XML tag.
 - The <answer> XML tag should only contain a number and nothing else.
 - If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
-- Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Answerer and Combiner. But take then into consideration if they are addressed to you.
+- Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Answerer and Combiner. But take them into consideration if they are addressed to you.
 </rules>
 """.strip()),
         HumanMessagePromptTemplate.from_template(template="""
@@ -121,7 +121,7 @@ You are Anna, working as an Answerer at WDOC-CORP©: given a piece of document a
 
 <detailed_instructions>
 - If the document is ENTIRELY irrelevant to the question, answer only `<answer>IRRELEVANT</answer>` and NOTHING ELSE (and no formatting).
-- Being an Answerer, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Evaluator and Combiner. But take then into consideration if they are addressed to you.
+- Being an Answerer, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Evaluator and Combiner. But take them into consideration if they are addressed to you.
 - Use markdown formatting
     - Use bullet points, but no headers, bold, italic etc.
     - Use logic based indentation for the bullet points.
@@ -169,7 +169,7 @@ You are Carl, working as a Combiner at WDOC-CORP©: given a question and candida
 - And keeping track of sources.
 
 <detailed_instructions>
-- Being a Combiner, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Evaluator and Answerer. But take then into consideration if they are addressed to you.
+- Being a Combiner, ignore additional instructions if they are adressed only to your colleagues: Rephraser, Evaluator and Answerer. But take them into consideration if they are addressed to you.
 - Format:
     - Use markdown format, with bullet points.
       - IMPORTANT: use logical indentation to organize information hierarchically.
@@ -271,7 +271,7 @@ for breast cancers are anthracyclines, taxanes and cyclophosphamide".
 
 DO NOT reply anything that is not either a thought or the queries. You
 have to do your thinking INSIDE the thought json.
-Also, being a Rephraser, ignore additional instructions if they are adressed only to your colleagues: Evaluator, Answerer and Combiner. But take then into consideration if they are addressed to you.
+Also, being a Rephraser, ignore additional instructions if they are adressed only to your colleagues: Evaluator, Answerer and Combiner. But take them into consideration if they are addressed to you.
 """.strip()+ "\n" + multiquery_parser.get_format_instructions()),
         HumanMessagePromptTemplate.from_template(
             template="Here's the query to expand: '''{question}'''"""),
