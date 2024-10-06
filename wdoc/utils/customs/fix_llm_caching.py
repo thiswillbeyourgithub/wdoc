@@ -28,13 +28,14 @@ class SQLiteCacheFixed(BaseCache):
         database_path: Union[str, PosixPath],
         ) -> None:
         self.database_path = Path(database_path)
+
         self.lockkey = str(self.database_path.absolute().resolve())
         if self.lockkey not in databases_locks:
             with databases_locks["global"]:
                 databases_locks[self.lockkey] = Lock()
         self.lock = databases_locks[self.lockkey]
 
-        if database_path.exists():
+        if self.database_path.exists():
             self.clear()
         else:
             conn = sqlite3.connect(self.database_path)
