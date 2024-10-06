@@ -163,6 +163,18 @@ class TheFiche:
         text = fiche["final_answer"]
         assert text.strip()
 
+        # make sure that md line that start with an int are prepended with a -
+        # I know this is not standard markdown but it avoid issues with logseq
+        lines = text.splitlines(keepends=True)
+        for il, li in enumerate(lines):
+            ls = li.lstrip()
+            if not ls:
+                continue
+            first = ls[0]
+            if first.isdigit():
+                lines[il] = li.replace(first, "- " + first, 1)
+        text = "".join(lines)
+
         # prepare sources hash dict
         doc_hash = {
             d.metadata["content_hash"][:5]: d.metadata
