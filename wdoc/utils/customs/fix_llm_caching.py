@@ -22,12 +22,15 @@ databases_locks = {"global": Lock()}
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
+    __VERSION__ = "0.1"
 
     def __init__(
         self,
         database_path: Union[str, PosixPath],
         ) -> None:
-        self.database_path = Path(database_path)
+        dbp = Path(database_path)
+        # add versioning to avoid trying to use non backward compatible version
+        self.database_path = dbp.parent / (dbp.stem + f"_v{self.__VERSION__}" + dbp.suffix)
 
         self.lockkey = str(self.database_path.absolute().resolve())
         if self.lockkey not in databases_locks:

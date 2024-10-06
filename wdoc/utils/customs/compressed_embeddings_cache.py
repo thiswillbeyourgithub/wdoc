@@ -43,6 +43,7 @@ class LocalFileStore(ByteStore):
                 print(key)  # noqa: T201
 
     """
+    __VERSION__ = "0.1"  # anticipate breaking cache change
 
     def __init__(
         self,
@@ -71,10 +72,10 @@ class LocalFileStore(ByteStore):
                 is the level of compression of zlib, so between -1 and 9, both
                 included. If `True`, defaults to -1, like in zlib.
         """
-        self.root_path = Path(root_path).absolute()
         self.chmod_file = chmod_file
         self.chmod_dir = chmod_dir
         self.update_atime = update_atime
+
         if compress is True:
             compress = -1
         if isinstance(compress, int):
@@ -83,6 +84,12 @@ class LocalFileStore(ByteStore):
                 f"included. Not {compress}"
             )
         self.compress = compress
+
+        rp = Path(root_path).absolute().resolve()
+        rp = rp.parent / (rp.stem + f"_v{self.__VERSION__}" + rp.suffix)
+        if self.compress:
+            rp = rp.parent / (rp.stem + "_z" + rp.suffix)
+        self.root_path = rp
 
 
     def _get_full_path(self, key: str) -> Path:
