@@ -96,6 +96,7 @@ class LocalFileStore(ByteStore):
         if self.compress:
             rp = rp.parent / (rp.stem + "_z" + rp.suffix)
         self.root_path = rp
+        self._mkdir_for_store()
 
 
     def _get_full_path(self, key: str) -> Path:
@@ -181,7 +182,6 @@ class LocalFileStore(ByteStore):
         for key, value in key_value_pairs:
             self._check_key_regex(key)
             full_path = self._get_full_path(key)
-            self._mkdir_for_store(full_path.parent)
             if self.compress:
                 com_val = zlib.compress(value, level=self.compress)
                 full_path.write_bytes(com_val)
