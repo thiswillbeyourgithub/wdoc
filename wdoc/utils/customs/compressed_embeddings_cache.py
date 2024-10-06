@@ -3,17 +3,11 @@ source : https://api.python.langchain.com/en/latest/_modules/langchain/storage/f
 
 This is basically the exact same code but with added compression
 """
-import os
-import re
-import time
-import zlib
 from pathlib import Path
 from typing import Iterator, List, Optional, Sequence, Tuple, Union
 import hashlib
 
 from langchain_core.stores import ByteStore
-
-from langchain.storage.exceptions import InvalidKeyException
 
 from .fix_llm_caching import SQLiteCacheFixed
 
@@ -126,9 +120,6 @@ class LocalFileStore(ByteStore):
         for key in keys:
             groups.append((key, "None"))
         self.mset(self.groups)
-        with self._sqlcache.lock:
-            for key in keys:
-                del self._sqlcache._cache[(key, "")]
 
 
     def yield_keys(self, prefix: Optional[str] = None) -> Iterator[str]:
@@ -140,7 +131,5 @@ class LocalFileStore(ByteStore):
         Returns:
             Iterator[str]: An iterator over keys that match the given prefix.
         """
-        with self._sqlcache.lock:
-            keys = [k for k in self._sqlcache._cache.keys()]
-        for k in keys:
+        for k in self._sqlcache.__get_keys__():
             yield k
