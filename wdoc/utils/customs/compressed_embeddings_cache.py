@@ -99,25 +99,6 @@ class LocalFileStore(ByteStore):
         self._mkdir_for_store()
 
 
-    def _get_full_path(self, key: str) -> Path:
-        """Get the full path for a given key relative to the root path.
-
-        Args:
-            key (str): The key relative to the root path.
-
-        Returns:
-            Path: The full path for the given key.
-        """
-        full_path = os.path.abspath(self.root_path / key)
-        common_path = os.path.commonpath([str(self.root_path), full_path])
-        if common_path != str(self.root_path):
-            raise InvalidKeyException(
-                f"Invalid key: {key}. Key should be relative to the full path."
-                f"{self.root_path} vs. {common_path} and full path of {full_path}"
-            )
-
-        return Path(full_path)
-
     @memoize
     def _check_key_regex(self, key: str) -> None:
         """memoized regex checker for if the key is indeed a hash and does
@@ -156,7 +137,7 @@ class LocalFileStore(ByteStore):
         values: List[Optional[bytes]] = []
         for key in keys:
             self._check_key_regex(key)
-            full_path = self._get_full_path(key)
+            full_path = self.root_path / key
             if full_path.exists():
                 value = full_path.read_bytes()
                 if self.compress:
@@ -181,7 +162,7 @@ class LocalFileStore(ByteStore):
         """
         for key, value in key_value_pairs:
             self._check_key_regex(key)
-            full_path = self._get_full_path(key)
+            full_path = self.root_path / key
             if self.compress:
                 com_val = zlib.compress(value, level=self.compress)
                 full_path.write_bytes(com_val)
@@ -201,7 +182,7 @@ class LocalFileStore(ByteStore):
             None
         """
         for key in keys:
-            full_path = self._get_full_path(key)
+            full_path = self.root_path / key
             if full_path.exists():
                 full_path.unlink()
 
@@ -215,7 +196,7 @@ class LocalFileStore(ByteStore):
         Returns:
             Iterator[str]: An iterator over keys that match the given prefix.
         """
-        prefix_path = self._get_full_path(prefix) if prefix else self.root_path
+        prefix_path = self.root_path / prefix if prefix else self.root_path
         for file in prefix_path.rglob("*"):
             if file.is_file():
                 relative_path = file.relative_to(self.root_path)
