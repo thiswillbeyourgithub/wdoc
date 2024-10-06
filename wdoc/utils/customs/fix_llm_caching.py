@@ -11,7 +11,7 @@ import zlib
 import sqlite3
 import dill
 from pathlib import Path, PosixPath
-from typing import Union, Any, Optional
+from typing import Union, Optional
 from threading import Lock
 
 from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
@@ -69,7 +69,7 @@ class SQLiteCacheFixed(BaseCache):
             conn.close()
 
 
-    def clear(self, **kwargs: Any) -> None:
+    def clear(self) -> None:
         """Clear cache."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
@@ -104,7 +104,7 @@ class SQLiteCacheFixed(BaseCache):
         self.update(prompt, llm_string, return_val)
 
 
-    async def aclear(self, **kwargs: Any) -> None:
+    async def aclear(self) -> None:
         """Clear cache."""
         self.clear()
 
