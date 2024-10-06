@@ -271,7 +271,9 @@ for breast cancers are anthracyclines, taxanes and cyclophosphamide".
 
 DO NOT reply anything that is not either a thought or the queries. You
 have to do your thinking INSIDE the thought json.
-Also, being a Rephraser, ignore additional instructions if they are adressed only to your colleagues: Evaluator, Answerer and Combiner. But take them into consideration if they are addressed to you.
+Also, being a Rephraser, you can take into consideration additional
+instructions that are adressed to your colleagues: Evaluator, Answerer and
+Combiner. They can sometimes be useful to expand the queries.
 """.strip()+ "\n" + multiquery_parser.get_format_instructions()),
         HumanMessagePromptTemplate.from_template(
             template="Here's the query to expand: '''{question}'''"""),
