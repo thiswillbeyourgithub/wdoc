@@ -40,19 +40,7 @@ class SQLiteCacheFixed(BaseCache):
                 databases_locks[self.lockkey] = Lock()
         self.lock = databases_locks[self.lockkey]
 
-        if self.database_path.exists():
-            self.clear()
-        else:
-            conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
-            cursor = conn.cursor()
-            try:
-                with self.lock:
-                    cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
-                                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    data TEXT)''')
-            finally:
-                conn.close()
-            self._cache = {}
+        self.clear()
 
 
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
