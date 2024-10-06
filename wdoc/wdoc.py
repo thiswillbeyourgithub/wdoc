@@ -1461,6 +1461,28 @@ class wdoc:
                     red(f"Only found {len(docs)} relevant documents")
 
             if self.import_mode:
+                if "unfiltered_docs" in output:
+                    red(
+                        f"Number of documents using embeddings: {len(output['unfiltered_docs'])}")
+                if "filtered_docs" in output:
+                    red(
+                        f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}")
+                if "relevant_filtered_docs" in output:
+                    red(
+                        f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}")
+
+                evalllmcallback = self.eval_llm.callbacks[0]
+                etotal_cost = self.query_evalllm_price[0] * evalllmcallback.prompt_tokens + \
+                    self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+                yel(
+                    f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})")
+
+                llmcallback = self.llm.callbacks[0]
+                total_cost = self.llm_price[0] * llmcallback.prompt_tokens + \
+                    self.llm_price[1] * llmcallback.completion_tokens
+                yel(
+                    f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})")
+                red(f"Total cost: ${total_cost + etotal_cost:.5f}")
                 return output
 
             md_printer("\n\n# Documents")
