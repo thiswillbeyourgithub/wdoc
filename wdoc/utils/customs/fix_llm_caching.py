@@ -9,7 +9,7 @@ Create a caching class that looks like it's just in memory but actually saves to
 
 import zlib
 import sqlite3
-import dill
+import pickle
 from pathlib import Path, PosixPath
 from typing import Union, Optional
 from threading import Lock
@@ -56,7 +56,7 @@ class SQLiteCacheFixed(BaseCache):
         if key in self._cache and self._cache[key] == return_val:
             return
         self._cache[(prompt, llm_string)] = return_val
-        data = zlib.compress(dill.dumps({"key": key, "value": return_val}))
+        data = zlib.compress(pickle.dumps({"key": key, "value": return_val}))
         conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
         try:
@@ -84,7 +84,7 @@ class SQLiteCacheFixed(BaseCache):
         finally:
             conn.close()
         datas = [
-            dill.loads(
+            pickle.loads(
                 zlib.decompress(row[0])
             ) for row in rows
         ]
