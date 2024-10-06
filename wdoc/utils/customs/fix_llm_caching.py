@@ -49,7 +49,7 @@ class SQLiteCacheFixed(BaseCache):
                 cursor.execute('''CREATE TABLE IF NOT EXISTS saved_llm_calls
                                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 data TEXT)''')
-                conn.close()
+            conn.close()
             self._cache = {}
 
 
@@ -72,7 +72,7 @@ class SQLiteCacheFixed(BaseCache):
         with self.lock:
             cursor.execute("INSERT INTO saved_llm_calls (data) VALUES (?)", (data,))
             conn.commit()
-            conn.close()
+        conn.close()
 
 
     def clear(self) -> None:
@@ -84,9 +84,9 @@ class SQLiteCacheFixed(BaseCache):
                             (id INTEGER PRIMARY KEY AUTOINCREMENT,
                             data TEXT)''')
             cursor.execute("SELECT data FROM saved_llm_calls")
-            rows = cursor.fetchall()
             conn.commit()
-            conn.close()
+        rows = cursor.fetchall()
+        conn.close()
         datas = [
             dill.loads(
                 zlib.decompress(row[0])
