@@ -20,7 +20,7 @@ from langchain_core.caches import RETURN_VAL_TYPE, BaseCache
 # global lock to create new locks
 databases_locks = {"global": Lock()}
 
-SQLITE3_CHECK_SAME_THREAD=True
+SQLITE3_CHECK_SAME_THREAD=False
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
