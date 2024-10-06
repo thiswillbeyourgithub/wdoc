@@ -256,7 +256,7 @@ def load_embeddings(
             # whi(f"Embedding batch #{ib + 1}")
             try:
                 temp = FAISS.from_documents(
-                    docs[batch[0]:batch[1]],
+                    batch,
                     cached_embeddings,
                     normalize_L2=True,
                     relevance_score_fn=score_function,
@@ -267,7 +267,7 @@ def load_embeddings(
                 if trial + 1 >= n_trial:
                     red("Too many errors: bypassing the cache:")
                     temp = FAISS.from_documents(
-                        docs[batch[0]:batch[1]],
+                        batch,
                         cached_embeddings.underlying_embeddings,
                         normalize_L2=True,
                         relevance_score_fn=score_function,
@@ -282,7 +282,7 @@ def load_embeddings(
         verbose=0 if not is_verbose else 51,
     )(
         delayed(embedand_one_batch)(
-            batch=batch,
+            batch=docs[batch[0], batch[1]],
             ib=ib,
         )
         for ib, batch in tqdm(
