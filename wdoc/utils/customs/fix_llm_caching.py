@@ -188,6 +188,19 @@ class SQLiteCacheFixed(BaseCache):
             diff = lenbefore - lenafter
             print(f"Removed {diff} entries of cache. Remaining: {lenafter}")
 
+    def __get_columns__(self) -> List[str]:
+        "get the list of column in the db"
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
+        cursor = conn.cursor()
+        try:
+            with self.lock:
+                cursor.execute("PRAGMA table_info(storage)")
+                columns = [column[1] for column in cursor.fetchall()]
+        finally:
+            conn.close()
+        assert columns == ["key", "data", "timestamp"], columns
+        return columns
+
 
 if "__main__" == __name__:
     import code
