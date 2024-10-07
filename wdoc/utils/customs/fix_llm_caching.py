@@ -7,7 +7,6 @@ Create a caching class that looks like it's just in memory but actually saves to
 """
 
 
-import zlib
 import sqlite3
 import json
 import pickle
@@ -61,7 +60,14 @@ class SQLiteCacheFixed(BaseCache):
                                 data BLOB,
                                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                 )''')
+
+                # Enable compression
+                cursor.execute("PRAGMA page_size = 4096")
+                cursor.execute("PRAGMA auto_vacuum = FULL")
+
                 conn.commit()
+
+                cursor.execute("VACUUM")
         finally:
             conn.close()
 
@@ -97,7 +103,7 @@ class SQLiteCacheFixed(BaseCache):
         if result:
             result = result[0]
         if result:
-            result = pickle.loads(zlib.decompress(result))
+            result = pickle.loads(result)
             with self.lock:
                 self._cache[key] = result
         return result
@@ -116,7 +122,7 @@ class SQLiteCacheFixed(BaseCache):
 
         conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
         cursor = conn.cursor()
-        compressed = zlib.compress(pickle.dumps(data))
+        compressed = pickle.dumps(data)
         try:
             with self.lock:
                 cursor.execute("BEGIN")
@@ -180,6 +186,8 @@ class SQLiteCacheFixed(BaseCache):
             with self.lock:
                 cursor.execute("BEGIN")
                 cursor.execute("DELETE FROM storage WHERE timestamp < ?", (expiration_date,))
+
+                cursor.execute("VACUUM")
         finally:
             conn.close()
 
