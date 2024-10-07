@@ -56,7 +56,7 @@ class SQLiteCacheFixed(BaseCache):
         try:
             with self.lock:
                 cursor.execute("BEGIN")
-                cursor.execute('''CREATE TABLE IF NOT EXISTS cache (
+                cursor.execute('''CREATE TABLE IF NOT EXISTS storage (
                                 key TEXT PRIMARY KEY,
                                 data BLOB,
                                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -88,8 +88,8 @@ class SQLiteCacheFixed(BaseCache):
         try:
             with self.lock:
                 cursor.execute("BEGIN")
-                cursor.execute('SELECT data FROM cache WHERE key = ?', (key,))
-                cursor.execute("UPDATE cache SET timestamp = CURRENT_TIMESTAMP WHERE key = ?", (key,))
+                cursor.execute('SELECT data FROM storage WHERE key = ?', (key,))
+                cursor.execute("UPDATE storage SET timestamp = CURRENT_TIMESTAMP WHERE key = ?", (key,))
                 result = cursor.fetchone()
 
         finally:
@@ -120,7 +120,7 @@ class SQLiteCacheFixed(BaseCache):
         try:
             with self.lock:
                 cursor.execute("BEGIN")
-                cursor.execute("INSERT OR REPLACE INTO cache (key, data) VALUES (?, ?)", (key, compressed))
+                cursor.execute("INSERT OR REPLACE INTO storage (key, data, timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)", (key, compressed))
                 conn.commit()
                 self._cache[key] = data
         finally:
@@ -157,7 +157,7 @@ class SQLiteCacheFixed(BaseCache):
         try:
             with self.lock:
                 cursor.execute("BEGIN")
-                cursor.execute('SELECT key FROM cache')
+                cursor.execute('SELECT key FROM storage')
                 results = [row[0] if row else None for row in cursor.fetchall()]
         finally:
             conn.close()
@@ -179,7 +179,7 @@ class SQLiteCacheFixed(BaseCache):
         try:
             with self.lock:
                 cursor.execute("BEGIN")
-                cursor.execute("DELETE FROM cache WHERE timestamp < ?", (expiration_date,))
+                cursor.execute("DELETE FROM storage WHERE timestamp < ?", (expiration_date,))
         finally:
             conn.close()
 
