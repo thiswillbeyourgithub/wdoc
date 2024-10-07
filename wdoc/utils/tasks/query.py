@@ -60,7 +60,8 @@ def sieve_documents(instance) -> RunnableLambda:
         # we have to pass an instance otherwise we can't know if the top_k got updated
         assert hasattr(instance, "top_k")
         assert hasattr(instance, "max_top_k")
-        assert instance.max_top_k >= instance.top_k
+        if instance.max_top_k:
+            assert instance.max_top_k >= instance.top_k
         if len(inputs) > instance.top_k:
             red(
                 "Number of documents found via embeddings was "

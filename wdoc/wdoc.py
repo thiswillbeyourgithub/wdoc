@@ -1284,6 +1284,8 @@ class wdoc:
         @chain
         @optional_typecheck
         def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
+            if not self.max_top_k:
+                return filtered_docs
             ratio = len(filtered_docs) / self.top_k
             if ratio >= 0.9:
                 if self.top_k < self.max_top_k:
