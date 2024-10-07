@@ -11,8 +11,9 @@ import zlib
 import sqlite3
 import json
 import pickle
+import datetime
 from pathlib import Path, PosixPath
-from typing import Union, Any, List
+from typing import Union, Any, List, Optional
 from threading import Lock
 
 from langchain_core.caches import BaseCache
@@ -32,8 +33,10 @@ class SQLiteCacheFixed(BaseCache):
     def __init__(
         self,
         database_path: Union[str, PosixPath],
+        expiration_days: Optional[int] = 0,
         ) -> None:
         dbp = Path(database_path)
+        self.expiration_days = expiration_days
         # add versioning to avoid trying to use non backward compatible version
         self.database_path = dbp.parent / (dbp.stem + f"_v{self.__VERSION__}" + dbp.suffix)
 
@@ -55,7 +58,7 @@ class SQLiteCacheFixed(BaseCache):
                 cursor.execute("BEGIN")
                 cursor.execute('''CREATE TABLE IF NOT EXISTS cache (
                                 key TEXT PRIMARY KEY,
-                                data BLOB
+                                data BLOB,
                                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                 )''')
                 conn.commit()
@@ -160,3 +163,40 @@ class SQLiteCacheFixed(BaseCache):
             conn.close()
         for r in results:
             yield r
+
+    def __expire__(self, verbose: bool = False) -> None:
+        "get the list of keys present in the db"
+        if not self.expiration_days:
+            return
+        assert self.expiration_days > 0, "expiration_days has to be a positive int or 0 to disable"
+        expiration_date = datetime.datetime.now() - datetime.timedelta(days=self.expiration_days)
+
+        if verbose:
+            lenbefore = len(list(self.__get_keys__()))
+
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
+        cursor = conn.cursor()
+        try:
+            with self.lock:
+                cursor.execute("BEGIN")
+                cursor.execute("DELETE FROM cache WHERE timestamp < ?", (expiration_date,))
+        finally:
+            conn.close()
+
+        if verbose:
+            lenafter = len(list(self.__get_keys__()))
+            diff = lenbefore - lenafter
+            print(f"Removed {diff} entries of cache. Remaining: {lenafter}")
+
+
+if "__main__" == __name__:
+    import code
+
+    Path("test.sql").unlink(missing_ok=True)
+    lfs = SQLiteCacheFixed("test.sql", expiration_days=1)
+    lfs.__expire__()
+    lfs.__set_data__(key="test", data=5)
+    assert "test" in list(lfs.__get_keys__())
+    lfs.__set_data__(key="test", data=7)
+    print(lfs.__get_data__(key="test"))
+    code.interact(local=locals())

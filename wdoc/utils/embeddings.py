@@ -181,6 +181,9 @@ def load_embeddings(
     lfs = LocalFileStore(
         database_path=cache_dir / "CacheEmbeddings" / embed_model_str,
     )
+    lfs._sqlcache.expiration_days = WDOC_EXPIRE_CACHE_DAYS
+    lfs._sqlcache.__expire__(verbose=True)
+
     cache_content = list(lfs.yield_keys())
     whi(f"Found {len(cache_content)} embeddings in local cache")
 
