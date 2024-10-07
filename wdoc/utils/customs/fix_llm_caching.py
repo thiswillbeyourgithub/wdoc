@@ -27,7 +27,7 @@ SQLITE3_CHECK_SAME_THREAD=False
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
-    __VERSION__ = "0.3"
+    __VERSION__ = "0.4"
 
     def __init__(
         self,
@@ -56,6 +56,7 @@ class SQLiteCacheFixed(BaseCache):
                 cursor.execute('''CREATE TABLE IF NOT EXISTS cache (
                                 key TEXT PRIMARY KEY,
                                 data BLOB
+                                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                 )''')
                 conn.commit()
         finally:
@@ -85,6 +86,7 @@ class SQLiteCacheFixed(BaseCache):
             with self.lock:
                 cursor.execute("BEGIN")
                 cursor.execute('SELECT data FROM cache WHERE key = ?', (key,))
+                cursor.execute("UPDATE cache SET timestamp = CURRENT_TIMESTAMP WHERE key = ?", (key,))
                 result = cursor.fetchone()
 
         finally:
