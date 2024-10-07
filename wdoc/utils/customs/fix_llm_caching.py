@@ -27,7 +27,7 @@ SQLITE3_CHECK_SAME_THREAD=False
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
-    __VERSION__ = "0.4"
+    __VERSION__ = "0.5"
 
     def __init__(
         self,
