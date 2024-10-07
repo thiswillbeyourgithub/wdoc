@@ -161,10 +161,11 @@ class TheFiche:
         n_found = props["wdoc_n_docs_found"]
 
         text = fiche["final_answer"]
-        assert text.strip()
+        assert text.strip(), fiche
 
-        # make sure that md line that start with an int are prepended with a -
-        # I know this is not standard markdown but it avoid issues with logseq
+        # make sure that md line that start with an int are prepended with
+        # a '-' ; I know this is not standard markdown but it avoid issues
+        # with logseq
         lines = text.splitlines(keepends=True)
         for il, li in enumerate(lines):
             ls = li.lstrip()
