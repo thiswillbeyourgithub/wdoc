@@ -60,14 +60,15 @@ class SQLiteCacheFixed(BaseCache):
                                 data BLOB,
                                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                                 )''')
+                conn.commit()
 
                 # Enable compression
                 cursor.execute("PRAGMA page_size = 4096")
                 cursor.execute("PRAGMA auto_vacuum = FULL")
-
                 conn.commit()
 
                 cursor.execute("VACUUM")
+                conn.commit()
         finally:
             conn.close()
 
@@ -96,6 +97,7 @@ class SQLiteCacheFixed(BaseCache):
                 cursor.execute("BEGIN")
                 cursor.execute('SELECT data FROM storage WHERE key = ?', (key,))
                 cursor.execute("UPDATE storage SET timestamp = CURRENT_TIMESTAMP WHERE key = ?", (key,))
+                conn.commit()
                 result = cursor.fetchone()
 
         finally:
@@ -162,7 +164,6 @@ class SQLiteCacheFixed(BaseCache):
         cursor = conn.cursor()
         try:
             with self.lock:
-                cursor.execute("BEGIN")
                 cursor.execute('SELECT key FROM storage')
                 results = [row[0] if row else None for row in cursor.fetchall()]
         finally:
@@ -186,8 +187,10 @@ class SQLiteCacheFixed(BaseCache):
             with self.lock:
                 cursor.execute("BEGIN")
                 cursor.execute("DELETE FROM storage WHERE timestamp < ?", (expiration_date,))
+                conn.commit()
 
                 cursor.execute("VACUUM")
+                conn.commit()
         finally:
             conn.close()
 
