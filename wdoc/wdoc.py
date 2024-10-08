@@ -358,11 +358,15 @@ class wdoc:
             self.llm_cache = False
         else:
             if not private:
-                self.llm_cache = SQLiteCacheFixed(database_path=(
-                    cache_dir / "langchain.db").resolve().absolute())
+                self.llm_cache = SQLiteCacheFixed(
+                    database_path=(cache_dir / "langchain.db").resolve().absolute(),
+                    verbose=is_verbose,
+                )
             else:
-                self.llm_cache = SQLiteCacheFixed(database_path=(
-                    cache_dir / "private_langchain.db").resolve().absolute())
+                self.llm_cache = SQLiteCacheFixed(
+                    database_path=(cache_dir / "private_langchain.db").resolve().absolute(),
+                    verbose=is_verbose,
+                )
             set_llm_cache(self.llm_cache)
 
         if WDOC_ALLOW_NO_PRICE:

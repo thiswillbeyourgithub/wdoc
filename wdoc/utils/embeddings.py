@@ -181,6 +181,7 @@ def load_embeddings(
     lfs = LocalFileStore(
         database_path=cache_dir / "CacheEmbeddings" / embed_model_str,
         expiration_days=WDOC_EXPIRE_CACHE_DAYS,
+        verbose=is_verbose,
     )
 
     cache_content = list(lfs.yield_keys())

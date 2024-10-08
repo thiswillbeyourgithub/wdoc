@@ -43,6 +43,7 @@ class LocalFileStore(ByteStore):
         self,
         database_path: Union[str, Path],
         expiration_days: int = None,
+        verbose: bool = False,
         *args,
         **kwargs,
     ) -> None:
@@ -51,12 +52,14 @@ class LocalFileStore(ByteStore):
         Args:
             database_path (Union[str, Path]): The path to the sqlite to use
             expiration_days: int, embeddings older than this will get removed
+            verbose: bool, default Fakle
             *args: All other args are ignored
             **kwargs: Ignored too
         """
         self.sd = SQLiteDict(
             database_path=database_path,
             expiration_days=expiration_days,
+            verbose=verbose,
         )
 
     def mget(self, keys: Sequence[str]) -> List[Optional[bytes]]:

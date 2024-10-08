@@ -22,10 +22,12 @@ class SQLiteCacheFixed(BaseCache):
         self,
         database_path: Union[str, Path],
         expiration_days: Optional[int] = 0,
+        verbose: bool = False,
         ) -> None:
         self.sd = SQLiteDict(
             database_path=database_path,
             expiration_days=expiration_days,
+            verbose=verbose,
         )
 
 
