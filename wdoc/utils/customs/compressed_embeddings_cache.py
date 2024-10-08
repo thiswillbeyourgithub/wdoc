@@ -5,16 +5,10 @@ This is basically the exact same code but with added compression
 """
 from pathlib import Path
 from typing import Iterator, List, Optional, Sequence, Tuple, Union
-import hashlib
 
 from langchain_core.stores import ByteStore
 
-from .fix_llm_caching import SQLiteCacheFixed
-
-def hasher(text: str) -> str:
-    """used to hash the text contant of each doc to cache the splitting and
-    embeddings"""
-    return hashlib.sha256(text.encode()).hexdigest()[:20]
+from .sql_dict import SQLiteDict
 
 
 class LocalFileStore(ByteStore):
@@ -48,6 +42,7 @@ class LocalFileStore(ByteStore):
     def __init__(
         self,
         database_path: Union[str, Path],
+        expiration_days: int = None,
         *args,
         **kwargs,
     ) -> None:
@@ -55,14 +50,13 @@ class LocalFileStore(ByteStore):
 
         Args:
             database_path (Union[str, Path]): The path to the sqlite to use
+            expiration_days: int, embeddings older than this will get removed
             *args: All other args are ignored
             **kwargs: Ignored too
         """
-        database_path = Path(database_path)
-        if database_path.is_dir():
-            database_path = database_path / "db.sqlite"
-        self._sqlcache = SQLiteCacheFixed(
+        self.sd = SQLiteDict(
             database_path=database_path,
+            expiration_days=expiration_days,
         )
 
     def mget(self, keys: Sequence[str]) -> List[Optional[bytes]]:
@@ -75,18 +69,8 @@ class LocalFileStore(ByteStore):
             A sequence of optional values associated with the keys.
             If a key is not found, the corresponding value will be None.
         """
-        values = [
-            self._sqlcache.lookup(
-                prompt=key,
-                llm_string=""
-            ) for key in keys
-        ]
-        # deleted keys are stored as 'None'
-        for iv, v in enumerate(values):
-            if isinstance(v, str) and v == "None":
-                values[iv] = None
-                with self._sqlcache.lock:
-                    del self._sqlcache._cache[(keys[iv], "")]
+        values = self.sd.__getitems__(keys)
+        values = [v if v is not self.sd.missing_value else None for v in values]
         return values
 
 
@@ -99,12 +83,7 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        for key, value in key_value_pairs:
-            self._sqlcache.update(
-                prompt=key,
-                llm_string="",
-                return_val=value,
-            )
+        return self.sd.__setitems__(key_value_pairs)
 
 
     def mdelete(self, keys: Sequence[str]) -> None:
@@ -116,10 +95,7 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        groups = []
-        for key in keys:
-            groups.append((key, "None"))
-        self.mset(self.groups)
+        return self.sd.__delitems__(keys)
 
 
     def yield_keys(self, prefix: Optional[str] = None) -> Iterator[str]:
@@ -131,5 +107,5 @@ class LocalFileStore(ByteStore):
         Returns:
             Iterator[str]: An iterator over keys that match the given prefix.
         """
-        for k in self._sqlcache.__get_keys__():
+        for k in self.sd.keys():
             yield k
