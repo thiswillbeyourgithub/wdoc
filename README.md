@@ -269,10 +269,10 @@ Detailed example
 5. For more: read the documentation at `wdoc --help`
 
 ## Scripts made with wdoc
-* *More to come in [the examples folder](./examples/)*
-* [Ntfy Summarizer](examples/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
-* [TheFiche](examples/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
-* [FilteredDeckCreator](examples/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by wdoc.
+* *More to come in [the scripts folder](./scripts/)*
+* [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
+* [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
+* [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by wdoc.
 
 ## FAQ
 
@@ -301,7 +301,7 @@ FAQ
     * I use it to query my personal documents using the `--private` argument.
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
     * I use it to ask questions about entire youtube playlists.
-    * Other use case are the reason I made the [scripts made with wdoc example section}(#scripts-made-with-wdoc)
+    * Other use case are the reason I made the [scripts made with wdoc section](#scripts-made-with-wdoc)
 * **What's up with the name?**
     * One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 * **How can I improve the prompt for a specific task without coding?**
