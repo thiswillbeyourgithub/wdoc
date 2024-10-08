@@ -306,6 +306,8 @@ class SQLiteDict(dict):
 
     def __setitems__(self, key_value_pairs: Sequence[Sequence]) -> None:
         "actual code to set the data in the db then the cache"
+        if not self.already_called:
+            self.already_called = True
         assert all(len(pair) == 2 for pair in key_value_pairs)
         keys = [kv[0] for kv in key_value_pairs]
         vals = [kv[1] for kv in key_value_pairs]
