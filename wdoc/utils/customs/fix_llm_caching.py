@@ -13,7 +13,7 @@ from typing import Union, Any, Optional, Generator
 
 from langchain_core.caches import BaseCache
 
-from .sql_dict import SQLiteDict
+from PersistDict import PersistDict
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory using SQLiteDict."""
@@ -24,7 +24,7 @@ class SQLiteCacheFixed(BaseCache):
         expiration_days: Optional[int] = 0,
         verbose: bool = False,
         ) -> None:
-        self.sd = SQLiteDict(
+        self.pdi = PersistDict(
             database_path=database_path,
             expiration_days=expiration_days,
             verbose=verbose,
@@ -35,7 +35,7 @@ class SQLiteCacheFixed(BaseCache):
         """Look up based on prompt and llm_string."""
         key = json.dumps((prompt, llm_string))
         try:
-            val = self.sd[key]
+            val = self.pdi[key]
         except KeyError:
             return None
         return val
@@ -44,11 +44,11 @@ class SQLiteCacheFixed(BaseCache):
     def update(self, prompt: str, llm_string: str, return_val: Any) -> None:
         """Update cache based on prompt and llm_string."""
         key = json.dumps((prompt, llm_string))
-        self.sd[key] = return_val
+        self.pdi[key] = return_val
 
     def clear(self) -> None:
         raise NotImplementedError()
-        # self.sd.clear()
+        # self.pdi.clear()
 
     async def alookup(self, prompt: str, llm_string: str) -> Any:
         """Look up based on prompt and llm_string."""
@@ -66,5 +66,5 @@ class SQLiteCacheFixed(BaseCache):
 
     def __get_keys__(self) -> Generator[str, None, None]:
         "get the list of keys present in the db"
-        for k in self.sd.keys():
+        for k in self.pdi.keys():
             yield k

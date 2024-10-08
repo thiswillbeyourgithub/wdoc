@@ -8,7 +8,7 @@ from typing import Iterator, List, Optional, Sequence, Tuple, Union
 
 from langchain_core.stores import ByteStore
 
-from .sql_dict import SQLiteDict
+from PersistDict import PersistDict
 
 
 class LocalFileStore(ByteStore):
@@ -56,7 +56,7 @@ class LocalFileStore(ByteStore):
             *args: All other args are ignored
             **kwargs: Ignored too
         """
-        self.sd = SQLiteDict(
+        self.pdi = PersistDict(
             database_path=database_path,
             expiration_days=expiration_days,
             verbose=verbose,
@@ -72,8 +72,8 @@ class LocalFileStore(ByteStore):
             A sequence of optional values associated with the keys.
             If a key is not found, the corresponding value will be None.
         """
-        values = self.sd.__getitems__(keys)
-        values = [v if v is not self.sd.missing_value else None for v in values]
+        values = self.pdi.__getitems__(keys)
+        values = [v if v is not self.pdi.missing_value else None for v in values]
         return values
 
 
@@ -86,7 +86,7 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        return self.sd.__setitems__(key_value_pairs)
+        return self.pdi.__setitems__(key_value_pairs)
 
 
     def mdelete(self, keys: Sequence[str]) -> None:
@@ -98,7 +98,7 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        return self.sd.__delitems__(keys)
+        return self.pdi.__delitems__(keys)
 
 
     def yield_keys(self, prefix: Optional[str] = None) -> Iterator[str]:
@@ -110,5 +110,5 @@ class LocalFileStore(ByteStore):
         Returns:
             Iterator[str]: An iterator over keys that match the given prefix.
         """
-        for k in self.sd.keys():
+        for k in self.pdi.keys():
             yield k
