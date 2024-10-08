@@ -129,6 +129,7 @@ class wdoc:
         DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = False,
+        oneoff: bool = False,
         silent: bool = False,
         version: bool = False,
 
@@ -353,6 +354,7 @@ class wdoc:
         self.llms_api_bases = llms_api_bases
         self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
+        self.oneoff = oneoff
 
         if disable_llm_cache:
             self.llm_cache = False
@@ -1140,6 +1142,8 @@ class wdoc:
     @optional_typecheck
     def query_task(self, query: Optional[str]) -> dict:
         if not query:
+            if self.oneoff:
+                raise SystemExit("Done")
             query, self.interaction_settings = ask_user(
                 self.interaction_settings)
         assert all(

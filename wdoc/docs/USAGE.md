@@ -344,6 +344,11 @@
 * `--disable_md_printing`: bool, default `True`
     * if True, instead of using rich to display some information, default to simpler colored prints.
 
+* `--oneoff`: bool, default `False`
+    * If True, will not ask for a prompt but quit right away. This
+    is useful for example if you run several cli calls in parallel and
+    don't want them to take all the RAM after they're done.
+
 * `--silent`: bool, default False
     * disable almost all prints while still writing to the log.
     Can be handy if `--import_mode` is used but beware that this can
