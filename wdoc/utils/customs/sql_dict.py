@@ -42,6 +42,7 @@ class SQLiteDict(dict):
         value_serializer: Callable = pickle.dumps,
         value_unserializer: Callable = pickle.loads,
         password: Optional[str] = None,
+        password_inc: int = 100_000,
         verbose: bool = False,
         ) -> None:
         if verbose:
@@ -50,7 +51,10 @@ class SQLiteDict(dict):
             if verbose:
                 logger.debug("SQLiteDict: Password entered")
             assert len(password.strip()) > 7, "password has to be at least 7 characters long excluding whitespaces"
-            self.__pw__ = hashpw(password)
+            salt = "Z05gFsdff9m3pQhOfSB2sE0Y0waMpYw0RTaxNKH3He965ct/7xHBCQmBr+HgKu7bC8uhNkN4kk9NuHh7FU7sHQ"
+            for i in range(password_inc):
+                password = hashlib.sha3_512((salt + password).encode("utf-8")).hexdigest()
+            self.__pw__ = password
         else:
             self.__pw__ = None
         del password
@@ -460,14 +464,6 @@ class SQLiteDict(dict):
             assert r is not self.missing_value
             assert len(r) == 2
             yield r[0], self.value_unserializer(r[1])
-
-
-def hashpw(key: str) -> str:
-    """hashing the password to avoid storing it as attribute in cleartext"""
-    salt = "Z05gFsdff9m3pQhOfSB2sE0Y0waMpYw0RTaxNKH3He965ct/7xHBCQmBr+HgKu7bC8uhNkN4kk9NuHh7FU7sHQ"
-    for i in range(100_000):
-        key = hashlib.sha3_512((salt + key).encode("utf-8")).hexdigest()
-    return key
 
 
 class SingletonHolder:
