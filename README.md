@@ -39,32 +39,46 @@ wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
   - [Known issues](#known-issues)
 
 ## Ultra short guide for people in a hurry
-Here's a very short introduction to the cli workflow if you're in a hurry:
+<details>
+<summary>
+Give it to me I am in a hurry!
+</summary>
+
+
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
 wdoc --path $link --task query --filetype "online_pdf" --query "What does it say about alphago?" --query_retrievers='default_multiquery' --top_k=auto_200_500
-# this will:
-# 1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
-# 2. cut the text into chunks and create embeddings for each
-# 3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
-# 4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
-# 5. Pass each of those documents to the smaller LLM (default: openai/gpt-4o-mini) to tell us if the document seems appropriate given the user query
-# 6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-# 7. Then each relevant doc is sent to the strong LLM (by default, openai/gpt-4o) to extract relevant info and give one answer.
-# 8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
-# 9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
+```
+* This will:
+    1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
+    2. cut the text into chunks and create embeddings for each
+    3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
+    4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
+    5. Pass each of those documents to the smaller LLM (default: openai/gpt-4o-mini) to tell us if the document seems appropriate given the user query
+    6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
+    7. Then each relevant doc is sent to the strong LLM (by default, openai/gpt-4o) to extract relevant info and give one answer.
+    8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
+    9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
+
+``` zsh
+link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
 wdoc --path $link --task summarize --filetype "online_pdf"
-# this will:
-# 1. Split the text into chunks
-# 2. pass each chunk into the strong LLM (by default openai/gpt-4o) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
-# 3. When creating each new chunk, the LLM has access to the previous chunk for context.
-# 4. All summary are then concatenated and returned to the user
-# For extra large documents like books for example, this summary can be recusively fed to wdoc using argument --summary_n_recursion=2 for example.
-
-# Those two tasks can be combined with --task summarize_then_query which will summarize the document but give you a prompt at the end to ask question in case you want to clarify things.
 ```
+* This will:
+    1. Split the text into chunks
+    2. pass each chunk into the strong LLM (by default openai/gpt-4o) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+    3. When creating each new chunk, the LLM has access to the previous chunk for context.
+    4. All summary are then concatenated and returned to the user
+
+* For extra large documents like books for example, this summary can be recusively fed to wdoc using argument --summary_n_recursion=2 for example.
+
+* Those two tasks, query and summary, can be combined with --task summarize_then_query which will summarize the document but give you a prompt at the end to ask question in case you want to clarify things.
+
+* For more, you can jump to the section [Walkthrough and examples](#walkthrough-and-examples)
+
+</details>
 
 ## Features
 * **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
@@ -99,6 +113,12 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **Hacker mindset**: I'm a friendly dev! Just open an issue if you have a feature request or anything else.
 
 ### Planned features
+
+<details>
+<summary>
+Click to read more
+</summary>
+
 *(These don't include improvements, bugfixes, refactoring etc.)*
 * **THIS LIST IS NOT UP TO DATE AND THERE ARE MANY MORE THINGS PLANNED**
 * Start using unit tests
@@ -115,6 +135,8 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * Include the possible whisper/deepgram extra expenses when counting costs.
 * Add support for user defined loaders.
 * Automatically caption document images using an LLM, especially nice for anki cards.
+
+</details>
 
 ### Supported filetypes
 * **auto**: default, guess the filetype for you
@@ -150,6 +172,12 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **summarize_then_query** summarize the document then allow you to query directly about it.
 
 ## Walkthrough and examples
+
+<details>
+<summary>
+Detailed example
+</summary>
+
 1. Say you want to ask a question about one pdf, that's simple: `wdoc --task "query" --path "my_file.pdf" --filetype="pdf" --modelname='openai/gpt-4o'`. Note that you could have just let `--filetype="auto"` and it would have worked the same.
 * *Note: By default wdoc tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries.*
 2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `wdoc --task "query" --path "my/other_dir" --pattern "**/*pdf" --filetype "recursive_paths" --recursed_filetype "pdf" --query "My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that wdoc knows what arguments to expect, and specify as recursed_filetype "pdf" so that wdoc knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by wdoc like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query "my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
@@ -218,6 +246,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 
 </details>
 
+</details>
 
 ## Getting started
 *Tested on python 3.11.7, which is therefore recommended*
@@ -246,6 +275,12 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * [FilteredDeckCreator](examples/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by wdoc.
 
 ## FAQ
+
+<details>
+<summary>
+FAQ
+</summary>
+
 * **Who is this for?**
     * wdoc is for power users who want document querying on steroid, and in depth AI powered document summaries.
 * **What's RAG?**
@@ -287,6 +322,8 @@ wdoc --path $link --task summarize --filetype "online_pdf"
         * The class has to take a `path` argument in `__init__`, have a `load` method taking
         no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
         class for an example.
+
+</details>
 
 ## Notes
 * Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer used to count tokens to embed is the OpenAI tokenizer, which is not universal)
