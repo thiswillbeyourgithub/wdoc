@@ -81,6 +81,8 @@ class SQLiteDict(dict):
         with self.lock:
             with self.shared.meta_db_lock:
                 self.__cache__ = self.shared.db_caches[self.lockkey]
+                self.__tick_cache__()
+
 
         # create db if not exist
         self.__init_table__()
@@ -172,13 +174,15 @@ class SQLiteDict(dict):
 
     def __getitems__(self, keys: Sequence[str]) -> Sequence[Any]:
         "actual lookup through cache or db"
-        # check the cache is still as expected
         if self.verbose:
             logger.debug(f"SQLiteDict: getting items for keys {keys}")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
+            # check the cache is still as expected
+
+        self.__check_cache__()
 
         with self.lock:
+            conn = self.__connect__()
+
             # already cached
             states = []
             known_vals = []
@@ -194,7 +198,6 @@ class SQLiteDict(dict):
                 return known_vals
 
             # load the value from the db
-            conn = self.__connect__()
             cursor = conn.cursor()
             try:
                 cursor.execute("BEGIN")
@@ -218,6 +221,7 @@ class SQLiteDict(dict):
                         self.__cache__[t] = results[t]
                     else:
                         output.append(self.missing_value)
+            self.__tick_cache__()
         return output
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -230,8 +234,6 @@ class SQLiteDict(dict):
         vals = [kv[1] for kv in key_value_pairs]
         if self.verbose:
             logger.debug(f"SQLiteDict: setting item at keys {keys}")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
         if any(v is self.missing_value for v in vals):
             raise Exception(f"SQLiteDict can't store self.missing_value '{self.missing_value}' objects as it's used to denote missing objects")
 
@@ -256,6 +258,7 @@ class SQLiteDict(dict):
                 conn.commit()
                 for k, v in key_value_pairs:
                     self.__cache__[k] = v
+                self.__tick_cache__()
         finally:
             conn.close()
 
@@ -266,8 +269,7 @@ class SQLiteDict(dict):
         "delete item from cache and db"
         if self.verbose:
             logger.debug(f"SQLiteDict: deleting items at key {keys}")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
+        self.__check_cache__()
         conn = self.__connect__()
         cursor = conn.cursor()
         try:
@@ -277,8 +279,8 @@ class SQLiteDict(dict):
                 conn.commit()
                 for key in keys:
                     if key in self.__cache__:
-                        print(key)
                         del self.__cache__[key]
+                self.__tick_cache__()
 
         finally:
             conn.close()
@@ -290,6 +292,24 @@ class SQLiteDict(dict):
         with self.lock:
             self.__cache__.clear()
 
+    def __check_cache__(self) -> None:
+        """check if the db has been modified recently and not by us, then we
+        need to drop the cache. It can happen if multiple python scripts are
+        running at the same time."""
+        if self.__cache__.last_modtime < self.database_path.stat().st_mtime:
+            if self.verbose:
+                logger.debug("Cache was not up to date so clearing it.")
+            self.__clear_cache__()
+            self.__tick_cache__()
+        # also check that the is is still as expected
+        with self.shared.meta_db_lock:
+            assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
+
+    def __tick_cache__(self) -> None:
+        "updates the last_modtime attribute of the cache"
+        self.__cache__.last_modtime = self.database_path.stat().st_mtime
+
+
     def clear(self) -> None:
         raise NotImplementedError("Can't clear like a dict")
 
@@ -300,8 +320,6 @@ class SQLiteDict(dict):
             return
         if self.verbose:
             logger.debug("SQLiteDict: expirating cache")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
         assert self.expiration_days > 0, "expiration_days has to be a positive int or 0 to disable"
         expiration_date = datetime.datetime.now() - datetime.timedelta(days=self.expiration_days)
 
@@ -327,16 +345,18 @@ class SQLiteDict(dict):
             logger.debug(f"SQLiteDict: expirating cache removed {diff} keys, remaining: {keysafter}")
 
 
+        self.__check_cache__()
+
         with self.lock:
             for kb in keysbefore:
                 if kb not in keysafter and kb in self.__cache__:
                     del self.__cache__[kb]
+                    self.__tick_cache__()
 
     def __integrity_check__(self) -> None:
         if self.verbose:
             logger.debug("SQLiteDict: checking integrity of db")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
+        self.__check_cache__()
         conn = self.__connect__()
         cursor = conn.cursor()
         try:
@@ -366,8 +386,7 @@ class SQLiteDict(dict):
     def __version_check__(self) -> None:
         if self.verbose:
             logger.debug("SQLiteDict: checking version")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
+        self.__check_cache__()
         conn = self.__connect__()
         cursor = conn.cursor()
         try:
@@ -387,15 +406,11 @@ class SQLiteDict(dict):
     def __len__(self) -> int:
         if self.verbose:
             logger.debug("SQLiteDict: getting length")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
         return len(list(self.keys()))
 
     def __contains__(self, key: str) -> bool:
         if self.verbose:
             logger.debug(f"SQLiteDict: checking if contains key {key}")
-            with self.shared.meta_db_lock:
-                assert id(self.__cache__) == id(self.shared.db_caches[self.lockkey])
         if key in self.__cache__:
             return True
         for k in self.keys():
@@ -443,6 +458,7 @@ class SQLiteDict(dict):
                 results = cursor.fetchall()
                 for k, v in results:
                     self.__cache__[k] = v
+                self.__tick_cache__()
         finally:
             conn.close()
         for r in results:
@@ -494,6 +510,7 @@ class SingletonHolder:
         # same idea for cache, if another instance points to the same path it could
         # modify a value and make the cache of another db wrong
         self.db_caches: dict = {}
+
         self.initialized = True
 
 if __name__ ==  "__main__":
