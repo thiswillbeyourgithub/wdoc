@@ -24,6 +24,7 @@ databases_locks = {"global": Lock()}
 databases_caches = {}
 
 SQLITE3_CHECK_SAME_THREAD=False
+SQLITE3_CONNECTION_TIMEOUT = 30
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory."""
