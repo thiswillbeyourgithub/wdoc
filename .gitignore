@@ -17,5 +17,5 @@ dist
 scripts/NtfySummarizer/TOPICS
 scripts/NtfySummarizer/summaries
 scripts/notfinished_*
-scripts/**/perso.py
+scripts/**/*perso*
 latest_release_notes.md
