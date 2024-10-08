@@ -1,16 +1,93 @@
 """
-Just a metaclass creating something that looks like a dict but actually
-is a cached access to a permanent sqlite3 db.
+Just a DIY implementation of SqlDict: it can be handled as easily as a
+dict but actually uses an sqlite3 database underneath.
+This makes it very easy to add persistent cache to anything.
 
-Differences with dict:
-- keys have to be string, that's what the sqlite db table is expecting
-- value can't be dataclasses.MISSING
-- .clear() will throw a NotImplementedError to avoid erasing the db
-- add methods .__getitems__ .__setitems__ and .__delitems__
-    - Calling __getitems__ with some keys missing will return self.missing_value for those keys, defaulting to dataclasses.MISSING
+Usage:
+# create the object
+d = SQLiteDict(
+    database_path=a_path,
+    compression=True,
+    password="J4mesB0nd",
+    verbose=True,
+)
+# then treat it like a dict:
+d["a"] = 1
 
-TODOs:
-- threaded access to the db
+# You can even create it via __call__, like a dict:
+# d = d(a=1, b="b", c=str)  # this actually calls __call__ but is only
+# allowed once per SqlDict, just like regular dict
+
+# it's a child from dict
+assert isinstance(d, dict)
+
+# prints like a dict
+print(d)
+# {'a': 1, 'b': 'b', 'c': str}
+
+# Supports the same methodas dict
+assert sorted(list(d.keys())) == ["a", "b", "c"], d
+assert "b" in d
+del d["b"]
+assert list(d.keys()) == ["a", "c"], d
+assert len(d) == 2, d
+assert d.__repr__() == {"a": 1, "c": str}.__repr__()
+assert d.__str__() == {"a": 1, "c": str}.__str__()
+
+# supports all the same types as value as pickle (or more if you change
+# the serializer)
+d["d"] = None
+
+# new method to get and set multiple elements at the same time
+assert d.__getitems__(["c", "d", "a"]) == [str, None, 1]
+
+d.__setitems__(( ("a", 1), ("b", 2), ("c", 3), ('d', 4)))
+assert d.__getitems__(["c", "d", "a", "b"]) == [3, 4, 1, 2], d.__getitems__(["c", "d", "a", "b"])
+
+d.__delitems__(["c", "a"])
+assert d.__getitems__(["b", "d"]) == [2, 4], d
+assert len(d) == 2, d
+
+# If you create another object pointing at the same db, they will share the
+# same cache and won't corrupt the db:
+d2 = SQLiteDict(
+database_path=dbp,
+compression=compr,
+password=pw,
+verbose=True,
+)
+list(d.keys()) == list(d2.keys()), d2
+
+Notable features:
+- threadsafe: if several threads try to access the same db it won't be a
+  problem. Even if multiple other threads use also another db. And if
+  several python scripts run at the same time and try to access the same
+  db, sqlite3 should make them wait appropriately.
+- atime and ctime: each entry includes a creation time and a last access time.
+- expiration: won't grow too large because old keys are automatically removed.
+- cached: an actual python dict is used to cache the access to the db.
+  This cache is shared among instances, and dropped if another scripts uses
+  the same db.
+- compression: using the builtin sqlite3 compression.
+- customizable serializer for the value: by default pickle is used, but could
+  be numpy.npz, joblib.dumps, dill.dumps etc
+- encryption: unsing the UNMAINTAINED library pysqlcipher3, because it was
+  very easy to add. In the future will use an up to date library and encrypt
+  value in place directly.
+
+Differences with regular dict:
+- keys have to be str, that's what the sqlite db table is expecting.
+- an object stored at self.missing_value is used to designate a MISSING value,
+  so you can't pickle this object. By default it's dataclasses.MISSING.
+- .clear() will throw a NotImplementedError to avoid erasing the db. If you
+  just want to clear the cache use self.clear_cache()
+- add 3 methods to 'slice' the dict with multiple key/values:
+    * .__getitems__
+    * .__setitems__
+    * .__delitems__
+    - Note that calling __getitems__ with some keys missing will not return
+      a KeyError but a self.missing_value for those keys, which by default is
+      dataclasses.MISSING.
 
 """
 
@@ -285,7 +362,7 @@ class SQLiteDict(dict):
         finally:
             conn.close()
 
-    def __clear_cache__(self) -> None:
+    def clear_cache(self) -> None:
         "clears the cache"
         if self.verbose:
             logger.debug("SQLiteDict: clearing cache")
@@ -299,7 +376,7 @@ class SQLiteDict(dict):
         if self.__cache__.last_modtime < self.database_path.stat().st_mtime:
             if self.verbose:
                 logger.debug("Cache was not up to date so clearing it.")
-            self.__clear_cache__()
+            self.clear_cache()
             self.__tick_cache__()
         # also check that the is is still as expected
         with self.shared.meta_db_lock:
@@ -548,7 +625,7 @@ if __name__ ==  "__main__":
                 assert d["b"] == "b", d
                 assert d["c"] == str, d
                 if doclear:
-                    d.__cache__.clear()
+                    d.clear_cache()
                 assert sorted(list(d.keys())) == ["a", "b", "c"], d
                 print(d)
                 del d["b"]
@@ -581,7 +658,8 @@ if __name__ ==  "__main__":
                 assert d["0"] is None
                 del d["0"]
                 assert "0" not in d2, d2
-                d2.__cache__.clear()
+                if doclear:
+                    d2.clear_cache()
                 assert "0" not in d2, d2
 
     import code
