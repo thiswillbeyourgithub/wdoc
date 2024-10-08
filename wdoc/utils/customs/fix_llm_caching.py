@@ -51,7 +51,7 @@ class SQLiteCacheFixed(BaseCache):
                 self._cache = databases_caches[self.lockkey]
 
         # create db
-        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD, timeout=SQLITE3_CONNECTION_TIMEOUT)
         cursor = conn.cursor()
         try:
             with self.lock:
@@ -91,7 +91,7 @@ class SQLiteCacheFixed(BaseCache):
             return self._cache[key]
 
         # load the value from the db
-        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD, timeout=SQLITE3_CONNECTION_TIMEOUT)
         cursor = conn.cursor()
         try:
             with self.lock:
@@ -123,7 +123,7 @@ class SQLiteCacheFixed(BaseCache):
         if key in self._cache and self._cache[key] == data:
             return
 
-        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD)
+        conn = sqlite3.connect(self.database_path, check_same_thread=SQLITE3_CHECK_SAME_THREAD, timeout=SQLITE3_CONNECTION_TIMEOUT)
         cursor = conn.cursor()
         compressed = pickle.dumps(data)
         try:
