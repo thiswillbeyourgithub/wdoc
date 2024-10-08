@@ -14,8 +14,8 @@ obsolete
 dist
 
 # author files
-examples/NtfySummarizer/TOPICS
-examples/NtfySummarizer/summaries
-examples/notfinished_*
-examples/**/perso.py
+scripts/NtfySummarizer/TOPICS
+scripts/NtfySummarizer/summaries
+scripts/notfinished_*
+scripts/**/perso.py
 latest_release_notes.md
