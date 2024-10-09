@@ -167,10 +167,7 @@ def collate_intermediate_answers(
     for iia, ia in enumerate(list_ia):
         ia = ia.replace("- • ", "- ").replace("• ", "- ")  # occasional bad md
         out += f"""
-<source_id>
-{iia + 1}
-</source_id>
-<ia>
+<ia source_id={iia + 1}>
 {ia}
 </ia>\n""".lstrip()
     return out
