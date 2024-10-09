@@ -802,26 +802,6 @@ def load_online_pdf(
     whi(f"Loading online pdf: '{path}'")
 
     try:
-        loader = OnlinePDFLoader(path)
-        if pdf_loader_max_timeout > 0:
-            with signal_timeout(
-                timeout=pdf_loader_max_timeout,
-                exception=TimeoutPdfLoaderError,
-                ):
-                docs = loader.load()
-            try:
-                signal.alarm(0)  # disable alarm again just in case
-            except Exception:
-                pass
-        else:
-            docs = loader.load()
-        return docs
-
-    except Exception as err:
-        red(
-            f"Failed parsing online PDF {path} using only OnlinePDFLoader be cause '{err}'.\nWill try downloading it directly."
-        )
-
         response = requests.get(path)
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
             temp_file.write(response.content)
@@ -836,6 +816,26 @@ def load_online_pdf(
             doccheck_min_token=doccheck_min_token,
             doccheck_max_token=doccheck_max_token,
         )
+        return docs
+
+    except Exception as err:
+        red(
+            f"Failed parsing online PDF {path} by downloading it and trying to parse because of error '{err}'. Retrying one last time with OnlinePDFLoader."
+        )
+        loader = OnlinePDFLoader(path)
+        if pdf_loader_max_timeout > 0:
+            with signal_timeout(
+                timeout=pdf_loader_max_timeout,
+                exception=TimeoutPdfLoaderError,
+                ):
+                docs = loader.load()
+            try:
+                signal.alarm(0)  # disable alarm again just in case
+            except Exception:
+                pass
+        else:
+            docs = loader.load()
+
         return docs
 
 

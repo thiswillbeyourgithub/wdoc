@@ -50,9 +50,11 @@
 
         * `online_pdf`
             * Same arguments as for `--filetype=pdf`
-                Note that the way `online_pdf` are handled is a bit different than `pdf`: we
-                first try using langchain's integrated OnlinePDFLoader and if it fails,
-                we download the file and parse it like if `--filetype==pdf`.
+                Note that the way `online_pdf` are handled is a bit
+                different than `pdf`: we first try to download it then
+                parse it with `filetype=pdf` and as a last resort we
+                use langchain's integrated OnlinePDFLoader as it's
+                far slower.
 
         * `anki`
             * Optional:
@@ -381,9 +383,10 @@
     Not all parsers are tried. Instead, after each parsing we check using
     fasttext and heuristics based on doccheck_* args to rank the quality of the parsing.
     When stop if 1 parsing is high enough or take the best if 3 parsing worked.
-    Note that the way `online_pdf` are handled is a bit different: we
-    first try using langchain's integrated OnlinePDFLoader and if it fails,
-    we download the file and parse it like if `--filetype==pdf`.
+    Note that the way `online_pdf` are handled is a bit different than
+    `pdf`: we first try to download it then parse it with
+    `filetype=pdf` and as a last resort we use langchain's
+    integrated OnlinePDFLoader as it's far slower.
 
     Currently implemented:
     - Okayish metadata:
@@ -653,10 +656,10 @@
 
 * `WDOC_MAX_PDF_LOADER_TIMEOUT`
     * Number of seconds to wait for each pdf loader before giving up this loader. This includes the `online_pdf` loader.
-    Note that it probably makes PDF parsing substantially.
-    Default is `-1` to disable.
-    Disabled when using `--file_loader_parallel_backend=threading` as python does not allow it.
-    Also disabled if <= 0.
+        Note that it probably makes PDF parsing substantially.
+        Default is `-1` to disable.
+        Disabled when using `--file_loader_parallel_backend=threading` as python does not allow it.
+        Also disabled if <= 0.
 
 * `WDOC_DEBUGGER`
     * If True, will open the debugger in case of issue. Implied by `--debug`
