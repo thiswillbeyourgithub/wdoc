@@ -22,7 +22,7 @@ from loguru import logger
 from joblib import Memory
 import re
 
-VERSION = "1.2"
+VERSION = "1.3"
 
 # logger
 logger.add(
