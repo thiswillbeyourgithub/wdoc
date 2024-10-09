@@ -176,6 +176,17 @@ class TheFiche:
                 lines[il] = li.replace(first, "- " + first, 1)
         text = "".join(lines)
 
+        # also, any line starting with > must be escaped to not be seen as a quote
+        lines = text.splitlines(keepends=True)
+        for il, li in enumerate(lines):
+            ls = li.lstrip()
+            ls = ls.replace("-", "", 1).lstrip()
+            if not ls:
+                continue
+            if ls.startswith(">"):
+                lines[il] = li.replace(">", r"\>", 1)
+        text = "".join(lines)
+
         # prepare sources hash dict
         doc_hash = {
             d.metadata["content_hash"][:5]: d.metadata
