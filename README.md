@@ -106,6 +106,7 @@ wdoc --path $link --task summarize --filetype "online_pdf"
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
+* **Langfuse support**: If you set the appropriate langfuse environment variables they will be used. See [this guide to learn more](https://langfuse.com/docs/integrations/litellm/tracing) (Note: disabled if using private_mode)
 * **Document filtering**: based on regex for document content or metadata.
 * **Fast**: Parallel document loading, parsing, embeddings, querying, etc.
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
