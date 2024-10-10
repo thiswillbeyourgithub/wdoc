@@ -270,6 +270,16 @@ class wdoc:
                         f"private mode enabled: overwriting '{k}' from environment variables just in case")
                     os.environ[k] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
 
+            if any("LANGFUSE_" in k for k in os.environ.keys()):
+                red("Disabled langfuse because using private mode.")
+            os.environ["LANGFUSE_PUBLIC_KEY"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            os.environ["LANGFUSE_SECRET_KEY"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            os.environ["LANGFUSE_HOST"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            if litellm.success_callback or litellm.failure_callback:
+                red("Disabled litellm callbacks because using private mode.")
+            litellm.success_callback = []
+            litellm.failure_callback = []
+
             # to be extra safe, let's try to block any remote connection
             disable_internet(
                 allowed=llms_api_bases,

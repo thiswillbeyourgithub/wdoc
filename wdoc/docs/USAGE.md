@@ -329,6 +329,8 @@
     server: for example check that the api_base was modified and used,
     check that no api keys are used, check that embedding models are
     local only. It will also use a separate cache from non private.
+    Note that in the current implementation, this disables any
+    callbacks to langfuse.
 
 * `--llms_api_bases`: dict, default `None`
     * a dict with keys in `["model", "query_eval_model"]`
