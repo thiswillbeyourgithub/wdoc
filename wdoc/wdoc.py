@@ -273,6 +273,7 @@ class wdoc:
             litellm.api_base = llms_api_bases["model"]
         assert isinstance(
             private, bool), "private arg should be a boolean, not {private}"
+        assert private == is_private
         if private:
             assert llms_api_bases["model"], "private is set but llms_api_bases['model'] is not set"
             assert llms_api_bases["query_eval_model"], "private is set but llms_api_bases['query_eval_model'] is not set"
