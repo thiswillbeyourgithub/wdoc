@@ -87,7 +87,7 @@ if (
         "LANGFUSE_SECRET_KEY" in os.environ and
         "LANGFUSE_HOST" in os.environ
 ) and not is_private:
-    red("Activating LANGFUSE litellm callbacks (only used if using litellm)")
+    red("Activating LANGFUSE litellm callbacks (meaning litellm's backend well be used, even if you're calling openai)")
     litellm.success_callback = ["langfuse"]
     litellm.failure_callback = ["langfuse"]
 

@@ -108,8 +108,9 @@ def load_llm(
         assert not WDOC_PRIVATE_MODE
         assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
 
-    if not private and backend == "openai" and api_base is None:
     assert private == is_private
+
+    if (not private) and (backend == "openai") and (api_base is None) and ("langfuse" not in litellm.success_callback):
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
