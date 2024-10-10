@@ -101,7 +101,7 @@ if (
 class wdoc:
     "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
 
-    VERSION: str = "2.3.0"
+    VERSION: str = "2.3.1"
     allowed_extra_args = extra_args_types
     md_printer = md_printer
 
