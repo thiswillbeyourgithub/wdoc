@@ -324,4 +324,9 @@ FAQ
         no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
         class for an example.
 
+* **What should I do if I keep hitting rate limits?**
+    * The simplest way is to add the `debug` argument. It will disable multithreading,
+        multiprocessing and LLM concurrency. A less harsh alternative is to set the
+        environment variable `WDOC_LLM_MAX_CONCURRENCY` to a lower value.
+
 </details>
