@@ -73,7 +73,7 @@ class LocalFileStore(ByteStore):
             If a key is not found, the corresponding value will be None.
         """
         values = self.pdi.__getitems__(keys)
-        values = [v if v is not self.pdi.missing_value else None for v in values]
+        values = [v if v is not self.pdi.__missing_value__ else None for v in values]
         return values
 
 
