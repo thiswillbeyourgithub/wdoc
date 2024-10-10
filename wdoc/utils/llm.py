@@ -19,7 +19,7 @@ import litellm
 
 from .logger import whi, red, yel
 from .typechecker import optional_typecheck
-from .flags import is_verbose
+from .flags import is_verbose, is_private
 from .env import WDOC_PRIVATE_MODE
 
 TESTING_LLM = "testing/testing"
@@ -109,6 +109,7 @@ def load_llm(
         assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
 
     if not private and backend == "openai" and api_base is None:
+    assert private == is_private
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
