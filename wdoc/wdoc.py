@@ -47,7 +47,7 @@ from .utils.interact import ask_user
 from .utils.retrievers import create_multiquery_retriever
 from .utils.retrievers import create_parent_retriever
 from .utils.embeddings import load_embeddings
-from .utils.flags import is_verbose, is_debug
+from .utils.flags import is_verbose, is_debug, is_private
 from .utils.env import (
         WDOC_OPEN_ANKI,
         WDOC_TYPECHECKING,
@@ -82,6 +82,14 @@ logger.info("Starting wdoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
+if (
+        "LANGFUSE_PUBLIC_KEY" in os.environ and
+        "LANGFUSE_SECRET_KEY" in os.environ and
+        "LANGFUSE_HOST" in os.environ
+) and not is_private:
+    red("Activating LANGFUSE litellm callbacks (only used if using litellm)")
+    litellm.success_callback = ["langfuse"]
+    litellm.failure_callback = ["langfuse"]
 
 @optional_typecheck
 @set_USAGE_as_docstring
