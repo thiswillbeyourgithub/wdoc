@@ -477,6 +477,7 @@ class wdoc:
             llm_verbosity=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
             private=self.private,
+            tags=["strong_model"],
         )
         # if "anthropic" in self.modelname.lower() or "anthropic" in self.backend.lower():
         #     prompts.enable_prompt_caching("answer")
@@ -1265,6 +1266,7 @@ class wdoc:
                 temperature=0 if self.query_eval_check_number == 1 else 1,
                 api_base=self.llms_api_bases["query_eval_model"],
                 private=self.private,
+                tags=["eval_model"],
                 **eval_args,
             )
             # if "anthropic" in self.query_eval_modelname.lower() or "anthropic" in self.query_eval_modelbackend.lower():

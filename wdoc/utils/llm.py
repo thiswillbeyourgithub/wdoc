@@ -33,11 +33,24 @@ def load_llm(
     llm_cache: Union[None, bool, BaseCache],
     api_base: Optional[str],
     private: bool,
+    tags: List[str],
     **extra_model_args,
 ) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
+
+    # setup tags for langfuse or others
+    if tags is None:
+        tags = []
+    if "wdoc" not in tags:
+        tags.append("wdoc")
+    if "tags" in extra_model_args:
+        assert isinstance(extra_model_args["tags"], list)
+        for t in extra_model_args["tags"]:
+            if t not in tags:
+                tags.append(t)
+
     assert "cache" not in extra_model_args
     if backend == "testing":
         assert modelname == "testing/testing"
@@ -115,7 +128,7 @@ def load_llm(
             api_base=api_base,
             cache=llm_cache,
             verbose=llm_verbosity,
-            tags=["wdoc"],
+            tags=tags,
             callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
             **extra_model_args,
         )
