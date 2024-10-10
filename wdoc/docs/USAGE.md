@@ -287,6 +287,8 @@
     * If the estimated price is above this limit, stop instead.
     Note that the cost estimate for the embeddings is using the
     openai tokenizer, which is not universal.
+    This only applies to the summary and to the embeddings, not
+    to queries.
     This check is skipped if the api_base url are changed.
 
 * `--notification_callback`: Callable, default `None`

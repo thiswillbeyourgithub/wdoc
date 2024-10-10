@@ -324,6 +324,3 @@ FAQ
         class for an example.
 
 </details>
-
-## Notes
-* Before summarizing, if the beforehand estimate of cost is above $5, the app will abort to be safe just in case you drop a few bibles in there. (Note: the tokenizer used to count tokens to embed is the OpenAI tokenizer, which is not universal)
