@@ -88,8 +88,13 @@ if (
         "LANGFUSE_HOST" in os.environ
 ) and not is_private:
     red("Activating LANGFUSE litellm callbacks (meaning litellm's backend well be used, even if you're calling openai)")
-    litellm.success_callback = ["langfuse"]
-    litellm.failure_callback = ["langfuse"]
+    try:
+        import langfuse
+        litellm.success_callback = ["langfuse"]
+        litellm.failure_callback = ["langfuse"]
+    except Exception as e:
+        red(f"Failed to import langfuse, make sure it's installed. Error was: ''{e}'")
+
 
 @optional_typecheck
 @set_USAGE_as_docstring
