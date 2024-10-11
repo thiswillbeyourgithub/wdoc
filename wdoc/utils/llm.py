@@ -22,6 +22,7 @@ from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 from .flags import is_verbose, is_private
 from .env import WDOC_PRIVATE_MODE
+from .misc import version_holder
 
 TESTING_LLM = "testing/testing"
 
@@ -43,6 +44,7 @@ if (
             public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
             host=os.environ["LANGFUSE_HOST"],
             session_id=str(uuid.uuid4()),
+            version=version_holder[0],
         )]
     except Exception as e:
         red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")

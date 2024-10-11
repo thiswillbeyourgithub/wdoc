@@ -757,3 +757,6 @@ The following LLM answer might have had a problem during parsing
 </output>
 """.strip(),
             }
+
+# this will contain wdoc's version to be used by langfuse's callback without circular imports
+version_holder = []

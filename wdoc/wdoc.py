@@ -31,7 +31,8 @@ from .utils.misc import (
     check_docs_tkn_length, get_tkn_length,
     extra_args_types, disable_internet,
     set_func_signature, query_eval_cache,
-    thinking_answer_parser, DocDict
+    thinking_answer_parser, DocDict,
+    version_holder,
 )
 from .utils.prompts import prompts
 from .utils.tasks.query import refilter_docs, check_intermediate_answer, parse_eval_output, pbar_chain, pbar_closer, collate_intermediate_answers, semantic_batching, sieve_documents
@@ -1971,3 +1972,5 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
 
     sys.excepthook = handle_exception
     faulthandler.enable()
+
+version_holder.append(wdoc.VERSION)
