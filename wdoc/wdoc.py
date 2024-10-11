@@ -82,19 +82,6 @@ logger.info("Starting wdoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-if (
-        "LANGFUSE_PUBLIC_KEY" in os.environ and
-        "LANGFUSE_SECRET_KEY" in os.environ and
-        "LANGFUSE_HOST" in os.environ
-) and not is_private:
-    red("Activating LANGFUSE litellm callbacks (meaning litellm's backend well be used, even if you're calling openai)")
-    try:
-        import langfuse
-        litellm.success_callback = ["langfuse"]
-        litellm.failure_callback = ["langfuse"]
-    except Exception as e:
-        red(f"Failed to import langfuse, make sure it's installed. Error was: ''{e}'")
-
 
 @optional_typecheck
 @set_USAGE_as_docstring
