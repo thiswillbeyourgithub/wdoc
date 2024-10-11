@@ -6,6 +6,7 @@ import sys
 from typing import List, Union, Callable, get_type_hints, Literal
 from joblib import Memory
 from joblib import hash as jhash
+import uuid
 import socket
 import os
 import json
@@ -29,7 +30,7 @@ from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
 
 from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
-from .flags import is_verbose, is_debug
+from .flags import is_verbose, is_debug, is_private
 from .errors import UnexpectedDocDictArgument
 from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_IMPORT_TYPE
 
@@ -759,4 +760,29 @@ The following LLM answer might have had a problem during parsing
             }
 
 # this will contain wdoc's version to be used by langfuse's callback without circular imports
-version_holder = []
+langfuse_callback_holder = []
+def create_langfuse_callback(version: str) -> None:
+    if (
+            "LANGFUSE_PUBLIC_KEY" in os.environ and
+            "LANGFUSE_SECRET_KEY" in os.environ and
+            "LANGFUSE_HOST" in os.environ
+    ) and not is_private:
+        red("Activating langfuse callbacks")
+        try:
+            # # litellm's callbacks seem more flawed than langchain's
+            # import langfuse
+            # litellm.success_callback = ["langfuse"]
+            # litellm.failure_callback = ["langfuse"]
+
+            from langfuse.callback import CallbackHandler as LangfuseCallback
+            langfuse_callback = LangfuseCallback(
+                secret_key=os.environ["LANGFUSE_SECRET_KEY"],
+                public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
+                host=os.environ["LANGFUSE_HOST"],
+                session_id=str(uuid.uuid4()),
+                version=version,
+            )
+            langfuse_callback_holder.append(langfuse_callback)
+        except Exception as e:
+            red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")
+

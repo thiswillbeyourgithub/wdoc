@@ -22,33 +22,9 @@ from .logger import whi, red, yel
 from .typechecker import optional_typecheck
 from .flags import is_verbose, is_private
 from .env import WDOC_PRIVATE_MODE
-from .misc import version_holder
+from .misc import langfuse_callback_holder
 
 TESTING_LLM = "testing/testing"
-
-if (
-        "LANGFUSE_PUBLIC_KEY" in os.environ and
-        "LANGFUSE_SECRET_KEY" in os.environ and
-        "LANGFUSE_HOST" in os.environ
-) and not is_private:
-    red("Activating langfuse callbacks")
-    try:
-        # # litellm's callbacks seem more flawed than langchain's
-        # import langfuse
-        # litellm.success_callback = ["langfuse"]
-        # litellm.failure_callback = ["langfuse"]
-
-        from langfuse.callback import CallbackHandler as LangfuseCallback
-        langfuse_handler = [LangfuseCallback(
-            secret_key=os.environ["LANGFUSE_SECRET_KEY"],
-            public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
-            host=os.environ["LANGFUSE_HOST"],
-            session_id=str(uuid.uuid4()),
-            version=version_holder[0],
-        )]
-    except Exception as e:
-        red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")
-        langfuse_handler = []
 
 
 @optional_typecheck
@@ -130,7 +106,7 @@ def load_llm(
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
 
         assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        assert not langfuse_handler, "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
+        assert not langfuse_callback_holder, "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
     else:
         assert not WDOC_PRIVATE_MODE
         assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
@@ -146,7 +122,7 @@ def load_llm(
             cache=llm_cache,
             disable_streaming=True,  # Not needed and might break cache
             verbose=llm_verbosity,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_handler,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
             **extra_model_args,
         )
     else:
@@ -160,7 +136,7 @@ def load_llm(
             cache=llm_cache,
             verbose=llm_verbosity,
             tags=tags,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_handler,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
             **extra_model_args,
         )
         litellm.drop_params = True
