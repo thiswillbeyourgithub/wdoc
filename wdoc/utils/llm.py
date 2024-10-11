@@ -6,6 +6,7 @@ counting callback.
 from typing import Union, List, Any, Optional
 import os
 from typing import Dict
+import uuid
 
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.agents import AgentAction, AgentFinish
@@ -41,6 +42,7 @@ if (
             secret_key=os.environ["LANGFUSE_SECRET_KEY"],
             public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
             host=os.environ["LANGFUSE_HOST"],
+            session_id=str(uuid.uuid4()),
         )]
     except Exception as e:
         red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")
