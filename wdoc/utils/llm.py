@@ -72,7 +72,7 @@ def load_llm(
         llm = FakeListChatModel(
             verbose=llm_verbosity,
             responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
             disable_streaming=True,  # Not needed and might break cache
             cache=False,
             **extra_model_args,
@@ -122,7 +122,7 @@ def load_llm(
             cache=llm_cache,
             disable_streaming=True,  # Not needed and might break cache
             verbose=llm_verbosity,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,  # use langchain's callback to langfuse
             **extra_model_args,
         )
     else:
@@ -136,7 +136,7 @@ def load_llm(
             cache=llm_cache,
             verbose=llm_verbosity,
             tags=tags,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
             **extra_model_args,
         )
         litellm.drop_params = True

@@ -769,11 +769,14 @@ def create_langfuse_callback(version: str) -> None:
     ) and not is_private:
         red("Activating langfuse callbacks")
         try:
-            # # litellm's callbacks seem more flawed than langchain's
-            # import langfuse
-            # litellm.success_callback = ["langfuse"]
-            # litellm.failure_callback = ["langfuse"]
+            # # use litellm's callbacks for chatlitellm backend
+            import litellm
+            import langfuse
+            litellm.success_callback = ["langfuse"]
+            litellm.failure_callback = ["langfuse"]
 
+            # # and use langchain's callback for openai's backend
+            # BUT as of october 2024 it seems buggy with chatlitellm, the modelname does not seem to be passed?
             from langfuse.callback import CallbackHandler as LangfuseCallback
             langfuse_callback = LangfuseCallback(
                 secret_key=os.environ["LANGFUSE_SECRET_KEY"],
