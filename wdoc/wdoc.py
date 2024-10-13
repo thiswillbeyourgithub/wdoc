@@ -1024,41 +1024,41 @@ class wdoc:
                 # check that all key filter indeed match metadata keys
                 for k in filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys:
                     assert any(k.match(
-                        key) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
+                        str(key)) for key in all_metadata_keys), f"Key {k} didn't match any key in the metadata"
 
                 @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     # match keys
                     for inc in filters_k_plus:
-                        if not any(inc.match(k) for k in meta.keys()):
+                        if not any(inc.match(str(k)) for k in meta.keys()):
                             return False
                     for exc in filters_k_minus:
-                        if any(exc.match(k) for k in meta.keys()):
+                        if any(exc.match(str(k)) for k in meta.keys()):
                             return False
 
                     # match values
                     for inc in filters_v_plus:
-                        if not any(inc.match(v) for v in meta.values()):
+                        if not any(inc.match(str(v)) for v in meta.values()):
                             return False
                     for exc in filters_v_minus:
-                        if any(exc.match(v) for v in meta.values()):
+                        if any(exc.match(str(v)) for v in meta.values()):
                             return False
 
                     # match both
                     for kp, vp in zip(filters_b_plus_keys, filters_b_plus_values):
-                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        good_keys = (k for k in meta.keys() if kp.match(str(k)))
                         gk_checked = 0
                         for gk in good_keys:
-                            if vp.match(meta[gk]):
+                            if vp.match(str(meta[gk])):
                                 gk_checked += 1
                                 break
                         if not gk_checked:
                             return False
                     for kp, vp in zip(filters_b_minus_keys, filters_b_minus_values):
-                        good_keys = (k for k in meta.keys() if kp.match(k))
+                        good_keys = (k for k in meta.keys() if kp.match(str(k)))
                         gk_checked = 0
                         for gk in good_keys:
-                            if vp.match(meta[gk]):
+                            if vp.match(str(meta[gk])):
                                 return False
                             gk_checked += 1
                         if not gk_checked:
