@@ -264,13 +264,14 @@ if "pdftotext" in sys.modules:
 
 # unsilence audio
 sox_effects = [
-    # ["norm"],  # normalize audio
+    ["norm"],  # normalize audio
     # isolate voice frequency
-    # ["highpass", "-1", "100"],
-    # ["lowpass", "-1", "3000"],
+    # human speech for low male is about 100hz and high female about 17khz
+    ["highpass", "-1", "100"],
+    ["lowpass", "-1", "17000"],
     # -2 is for a steeper filtering: removes high frequency and very low ones
-    # ["highpass", "-2", "50"],
-    # ["lowpass", "-2", "5000"],
+    ["highpass", "-2", "50"],
+    ["lowpass", "-2", "18000"],
     ["norm"],  # normalize audio
     # max silence should be 3s
     ["silence", "-l", "1", "0", "1%", "-1", "3.0", "1%"],
