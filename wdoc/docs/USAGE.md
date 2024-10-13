@@ -525,7 +525,7 @@
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
 
-* `--filter_metadata`: dict, default `None`
+* `--filter_metadata`: list or str, default `None`
     * list of regex string to use as metadata filter when querying.
     Format: `[kvb][+-]your_regex`
 
@@ -562,7 +562,7 @@
     But the embeddings are not saved afterwards so they are not lost,
     just not present in memory for this prompt.
 
-* `--filter_content`: dict, default `None`
+* `--filter_content`: list or str, default `None`
     * Like `--filter_metadata` but filters through the page_content of
     each document instead of the metadata.
     Syntax: `[+-]your_regex`
