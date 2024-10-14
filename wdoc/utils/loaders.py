@@ -2632,7 +2632,9 @@ def load_online_media(
             f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'")
 
         try:
-            Path(audio_path).unlink(missing_ok=True)
+            yel(f"Audio path: '{audio_path}'")
+            # don't delete it as some users might need it
+            # Path(audio_path).unlink(missing_ok=True)
             audio = pydub.AudioSegment.from_file(audio_file)
             # extract audio from video
             whi(f"Extracting audio from {audio_file} to {audio_path} (this can take some time)")
