@@ -2575,6 +2575,7 @@ def load_online_media(
         file_name = loaders_temp_dir / \
             f"online_media_{uuid6.uuid6()}"  # without extension!
         ydl_opts = {
+            # 'format': 'bestaudio/best',
             'format': 'bestaudio/best',
             # 'force_generic_extractor': True,
             # 'default_search': 'auto',
