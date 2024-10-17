@@ -141,7 +141,7 @@ def batch_load_doc(
                             else:
                                 raise Exception("No more python magic heuristics to try")
                     except Exception as err:
-                        red(f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic")
+                        red(f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'")
 
                 assert (
                     load_filetype != "auto"
