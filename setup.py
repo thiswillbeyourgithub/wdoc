@@ -16,6 +16,14 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
+        # do "python -m pip install git+https://github.com/ytdl-patched/ytdl-patched"
+        try:
+            subprocess.check_call(
+                [sys.executable, '-m', 'pip', 'install', 'git+https://github.com/ytdl-patched/ytdl-patched']
+            )
+        except Exception as err:
+            print(f"Error when installing youtube_dl_patched from git: '{err}'")
+
         # do "python -m pip install -U git+https://github.com/ytdl-org/youtube-dl.git"
         try:
             subprocess.check_call(
@@ -109,7 +117,7 @@ setup(
         'ankipandas>=0.3.15',  # anki
         'tldextract>=5.1.2',  # url
         'goose3 >= 3.1.19',  # url
-        "youtube_dl",  # youtube_dl, the latest version will try to be installed from the git repo directly using the PostInstallCommand function above
+        "youtube_dl",  # youtube_dl, we try to install yt_dl_patched using PostInstallCommand as it's not in pypi but we install yt_dl anyway just in case. Also the latest version will try to be installed from the git repo directly using the PostInstallCommand function above.
         "youtube-transcript-api >= 0.6.2",  # youtube
         "pytube >= 15.0.0",  # youtube
         'LogseqMarkdownParser >= 3.3',  # logseq files (I'm the dev behind it)

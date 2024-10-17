@@ -51,7 +51,12 @@ def trick_imports() -> None:
         )
         thread.start()
 
-    def custom_loading(module: str) -> None:
+    def custom_loading(module: str, strict: bool = True) -> None:
+        if not strict:
+            try:
+                custom_loading(module=module)
+            except Exception:
+                return
         if WDOC_IMPORT_TYPE == "both":
             lazy_import.lazy_module(module)
             q.put(module)
@@ -77,7 +82,7 @@ def trick_imports() -> None:
     custom_loading('tldextract')
     custom_loading('pyfiglet')
     custom_loading('youtube_dl')
-    custom_loading('youtube_dl.utils')
+    custom_loading('yt_dlp', strict=False)
     custom_loading('pandas')
     custom_loading('ankipandas')
     custom_loading('ftfy')
