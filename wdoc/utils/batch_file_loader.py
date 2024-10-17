@@ -145,7 +145,7 @@ def batch_load_doc(
 
                 assert (
                     load_filetype != "auto"
-                ), f"Could not infer load_filetype of {load_kwargs['path']}. Use the 'load_filetype' argument."
+                ), f"Could not infer filetype of {load_kwargs['path']}. Use the 'filetype' argument."
                 if load_filetype not in recursive_types:
                     to_load[ild]["filetype"] = load_filetype
 
