@@ -46,7 +46,7 @@ def trick_imports() -> None:
         q = Queue()
         thread = threading.Thread(
             target=import_worker,
-            args=(q),
+            args=(q,),
             daemon=False,
         )
         thread.start()
