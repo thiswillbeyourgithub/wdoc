@@ -575,7 +575,7 @@ def unlazyload_modules():
                         f"Error when unlazyloading module '{k}'. Error: '{err}'"
                         "\nThis can be caused by beartype's typechecking"
                         "\nYou can also try setting the env variable "
-                        "WDOC_DISABLE_LAZYLOADING to 'true'"
+                        "WDOC_IMPORT_TYPE to 'native' or 'thread'"
                     ) from err
                 break  # otherwise dict size change during iteration
             assert "Lazily-loaded" not in str(v)
