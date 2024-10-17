@@ -1449,12 +1449,14 @@ def load_txt(path: str, file_hash: str) -> List[Document]:
 @optional_strip_unexp_args
 def load_text_input(
         path: str,
-        metadata: Optional[Union[str, dict]],
         file_hash: str,
+        metadata: Optional[Union[str, dict]] = None,
 ) -> List[Document]:
     whi(f"Loading text input: '{path}'")
     text = path.strip()
     assert text, "Empty text"
+    if metadata is None:
+        metadata = {}
     if isinstance(metadata, str):
         metadata = json.loads(metadata)
 
