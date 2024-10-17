@@ -320,7 +320,7 @@ def batch_load_doc(
 
     if len(to_load) > 1:
         for tl in to_load:
-            assert tl["filetype"] != "string", "You shouldn't not be using filetype 'string' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
+            assert tl["filetype"] != "text", "You shouldn't not be using filetype 'text' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
     # dir name where to store temporary files
     load_temp_name = "file_load_" + str(uuid6.uuid6())
