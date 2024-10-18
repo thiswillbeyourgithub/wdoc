@@ -1420,7 +1420,6 @@ def replace_media(
 
 @debug_return_empty
 @optional_strip_unexp_args
-@doc_loaders_cache.cache
 def load_string() -> List[Document]:
     whi("Loading string")
     content = prompt(
