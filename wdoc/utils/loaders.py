@@ -390,8 +390,7 @@ def load_one_doc(
     split into documents, add some metadata then return.
     The loader is cached"""
     text_splitter = get_splitter(task, modelname=llm_name)
-    if filetype != "string":  # only filetype that can take empty arguments
-        assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
+    assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()
     assert expected_global_dir, f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
@@ -438,7 +437,6 @@ def load_one_doc(
         )
 
     elif filetype == "string":
-        assert not kwargs, f"Received unexpected arguments for filetype 'string': {kwargs}"
         docs = load_string()
 
     elif filetype == "txt":

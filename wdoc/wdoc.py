@@ -217,6 +217,8 @@ class wdoc:
             query_eval_modelname = None
         if filetype == "auto":
             assert "path" in cli_kwargs and cli_kwargs["path"], "If filetype is 'auto', a --path must be given"
+        elif filetype == "string":
+            cli_kwargs["path"] = "empty placeholder"
         assert "/" in modelname, "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
         if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(litellm.models_by_provider.keys()):
             raise Exception(
