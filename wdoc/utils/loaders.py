@@ -72,13 +72,13 @@ from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER, WDOC_PRIVATE_MODE
 
-try:
-    import yt_dlp as youtube_dl
-except ImportError as e :
-    red("Failed to import yt_dlp, a better fork of youtube_dl.\n"
-        "Consider installing it from pip with pip install git+https://github.com/ytdl-patched/ytdl-patched\n"
-        "Will fallback to using youtube_dl")
-    import youtube_dl
+# try:
+#     import yt_dlp as youtube_dl
+# except ImportError as e :
+#     red("Failed to import yt_dlp, a better fork of youtube_dl.\n"
+#         "Consider installing it from pip with pip install git+https://github.com/ytdl-patched/ytdl-patched\n"
+#         "Will fallback to using youtube_dl")
+#     import youtube_dl
 
 try:
     import pdftotext
