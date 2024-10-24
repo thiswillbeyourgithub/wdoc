@@ -59,6 +59,7 @@ import torchaudio
 import playwright.sync_api
 import openparse
 from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
+import yt_dlp as youtube_dl
 
 from .misc import (doc_loaders_cache, html_to_text, hasher,
                    file_hasher, get_splitter, check_docs_tkn_length,
@@ -71,15 +72,6 @@ from .logger import whi, yel, red, logger
 from .flags import is_verbose, is_linux, is_debug
 from .errors import TimeoutPdfLoaderError
 from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER, WDOC_PRIVATE_MODE
-
-# try:
-#     import yt_dlp as youtube_dl
-# except ImportError as e :
-#     red("Failed to import yt_dlp, a better fork of youtube_dl.\n"
-#         "Consider installing it from pip with pip install git+https://github.com/ytdl-patched/ytdl-patched\n"
-#         "Will fallback to using youtube_dl")
-#     import youtube_dl
-import youtube_dl
 
 try:
     import pdftotext

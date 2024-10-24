@@ -81,7 +81,6 @@ def trick_imports() -> None:
     custom_loading('sqlite3')
     custom_loading('tldextract')
     custom_loading('pyfiglet')
-    custom_loading('youtube_dl')
     custom_loading('yt_dlp', strict=False)
     custom_loading('pandas')
     custom_loading('ankipandas')
