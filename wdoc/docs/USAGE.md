@@ -631,8 +631,11 @@
         * `crash`: crash if a typechecking fails in any function.
 
 * `WDOC_NO_MODELNAME_MATCHING`
-    * If "true": will bypass the model name matching. Useful for exotic
-    or models that are fresh out of the oven, or bugs with backend parsing. Default is `True`.
+    * If "false": will try to infer the model name based on a more human readable string.
+    For example '4o' might be matched to 'openai/gpt-4o'. Useful for exotic
+    or models that are fresh out of the oven, or bugs with backend parsing.
+    As it can lead to issues it was decided to disable the matching by default, hence
+    the default value is `True`.
 
 * `WDOC_ALLOW_NO_PRICE`
     * if "true", won't crash if no price was found for the given
