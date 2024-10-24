@@ -341,6 +341,7 @@ def batch_load_doc(
     sharedmem = None
     if len(to_load) == 1:
         n_jobs = 1
+        to_load[0]["loading_failure"] = "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
     else:
         if backend == "loky":
             if is_verbose:
