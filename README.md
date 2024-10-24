@@ -252,14 +252,14 @@ Detailed example
 ## Getting started
 *wdoc currently requires Python 3.11 to run for now. Make sure that your Python version matches this one or it will not work.*
 1. To install:
-    * Using pip: `pip install -U wdoc`
+    * Using pip: `pip11 install -U wdoc`
     * Or to get a specific git branch:
-        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev`
-        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main`
+        * `dev` branch: `pip11 install git+https://github.com/thiswillbeyourgithub/wdoc@dev`
+        * `main` branch: `pip11 install git+https://github.com/thiswillbeyourgithub/wdoc@main`
     * You can also use pipx or uvx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
         * Using pipx: `pipx run wdoc --help`
         * Using uvx: `uvx wdoc --help`
-    * In any case, it is recommended to try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
+    * In any case, it is recommended to try to install pdftotext with `pip11 install -U wdoc[pdftotext]` as well as add fasttext support with `pip11 install -U wdoc[fasttext]`.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]` and `wdoc --task=summary --path=MYDOC [ARGS]` (you can use `wdoc` instead of `wdoc`)
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, clone this repo and try again after `cd` inside it.
