@@ -79,6 +79,7 @@ from .env import WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_EMPTY_LOADER, WDOC_PRIVATE_MO
 #         "Consider installing it from pip with pip install git+https://github.com/ytdl-patched/ytdl-patched\n"
 #         "Will fallback to using youtube_dl")
 #     import youtube_dl
+import youtube_dl
 
 try:
     import pdftotext
