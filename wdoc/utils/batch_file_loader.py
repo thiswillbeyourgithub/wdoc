@@ -43,7 +43,7 @@ inference_rules = {
     # will return the key
     # the order of the keys is important
     "youtube_playlist": ["youtube.*playlist"],
-    "youtube": ["youtube", "invidi"],
+    "youtube": ["youtube", "invidi", "youtu\."],
     "logseq_markdown": [".*logseq.*.md"],
     "txt": [".txt$", ".md$"],
     "online_pdf": ["^http.*pdf.*"],
