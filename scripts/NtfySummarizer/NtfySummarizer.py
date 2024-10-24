@@ -1,3 +1,4 @@
+import traceback
 import json
 from typing import Union
 import os
@@ -172,7 +173,10 @@ def main(
                 raise
         log("Done\n")
     except Exception as err:
-        err_mess = f"Error for message '{message}':\n{str(err)}"
+
+        stack_trace_str = traceback.format_exc()
+
+        err_mess = f"Error for message '{message}':\n{str(err)}\n\nTrace:\n{stack_trace_str}"
         log(err_mess)
         sn(message=err_mess)
         raise
