@@ -10,7 +10,7 @@ wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 * **Goal and project specifications**: wdoc uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
 * **Current status**: **Under active development**
-    * Used daily by the developer for several months: but still in alpha
+    * Used daily by the developer for several months: but still in alpha. **I would greatly benefit from testing by users as it's the quickest way for me to find the many small bugs that are quick to fix.**
     * May have some instabilities, but issues can usually be resolved quickly
     * The main branch is more stable than the dev branch, which offers more features
     * Open to feature requests and pull requests
