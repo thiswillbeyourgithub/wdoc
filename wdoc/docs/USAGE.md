@@ -632,7 +632,7 @@
 
 * `WDOC_NO_MODELNAME_MATCHING`
     * If "true": will bypass the model name matching. Useful for exotic
-    or models that are fresh out of the oven. Default is `False`.
+    or models that are fresh out of the oven, or bugs with backend parsing. Default is `True`.
 
 * `WDOC_ALLOW_NO_PRICE`
     * if "true", won't crash if no price was found for the given

@@ -26,7 +26,7 @@ def parse(val: str) -> Optional[Union[bool, int, str]]:
     return val
 
 WDOC_TYPECHECKING = "warn"
-WDOC_NO_MODELNAME_MATCHING = False
+WDOC_NO_MODELNAME_MATCHING = True
 WDOC_ALLOW_NO_PRICE = False
 WDOC_OPEN_ANKI = False
 WDOC_STRICT_DOCDICT = False
