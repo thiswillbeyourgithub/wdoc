@@ -80,7 +80,7 @@ setup(
             'wdoc_parse_file=wdoc.__main__:cli_parse_file',
         ],
     },
-    python_requires="==3.11",
+    python_requires=">=3.11, <3.12",
     install_requires=[
         'sqlalchemy>=2.0.32',
         'beautifulsoup4>=4.12.3',
