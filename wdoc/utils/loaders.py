@@ -2267,7 +2267,7 @@ def cached_yt_loader(
             raise Exception(f"Subtitles found but not for the languages '{language}' nor '{translation}' for youtube video entitled '{title}' at link '{path}'\nAvailable languages were: '{available}'")
 
     # get metadata too
-    meta = {}
+    meta = {"title": title, "author": info["channel"]}
     for k in ["description", "categories", "tags", "channel", "upload_date", "duration_string", "language"]:
         if k in info:
             meta["yt_" + k] = info[k]
