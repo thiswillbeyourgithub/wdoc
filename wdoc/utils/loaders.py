@@ -2285,10 +2285,11 @@ def cached_yt_loader(
             return f"{hour:02d}:{minute:02d}:{second:02d}"
 
         for ich, ch in enumerate(chap):
-            chap[ich]["start_time"] = seconds_to_timecode(chap[ich]["start_time"])
-            chap[ich]["end_time"] = seconds_to_timecode(chap[ich]["end_time"])
+            chap[ich]["start"] = seconds_to_timecode(chap[ich]["start_time"])
+            chap[ich]["end"] = seconds_to_timecode(chap[ich]["end_time"])
+            del chap[ich]["start_time"], chap[ich]["end_time"]
 
-        meta["yt_chapters"] = chap
+        meta["yt_chapters"] = json.dumps(chap, ensure_ascii=False)
 
     def timecode_to_second(inp: str) -> float:
         "turns a vtt timecode into seconds"
