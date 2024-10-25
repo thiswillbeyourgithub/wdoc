@@ -660,6 +660,10 @@ class wdoc:
                 metadata.append(f"<author>\n{author}\n</author>")
             else:
                 author = None
+            if "yt_chapters" in relevant_docs[0].metadata:
+                chapters = json.dumps(relevant_docs[0].metadata["yt_chapters"])
+                metadata.append(
+                    f"<youtube_chapters>\n{chapters}\n</youtube_chapters>")
 
             if metadata:
                 metadata = "<text_metadata>\n" + "\n".join(metadata) + "\n"
