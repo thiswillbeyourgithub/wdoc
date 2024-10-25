@@ -38,7 +38,6 @@ from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.document_loaders import PDFMinerLoader
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_community.document_loaders import OnlinePDFLoader
-from langchain_community.document_loaders import YoutubeLoader
 from langchain_community.document_loaders import SeleniumURLLoader
 from langchain_community.document_loaders import PlaywrightURLLoader
 from langchain_community.document_loaders import WebBaseLoader
@@ -691,9 +690,7 @@ def load_youtube_video(
 
     if youtube_audio_backend == "youtube":
         whi(f"Using youtube.com loader: '{path}'")
-        fyu = YoutubeLoader.from_youtube_url
         docs = cached_yt_loader(
-            loader=fyu,
             path=path,
             add_video_info=True,
             language=youtube_language if youtube_language else [
@@ -2220,20 +2217,127 @@ def load_youtube_playlist(playlist_url: str) -> Any:
 
 
 @optional_typecheck
-@doc_loaders_cache.cache(ignore=["loader"])
+@doc_loaders_cache.cache
 def cached_yt_loader(
-        loader: Any,
         path: str,
         add_video_info: bool,
         language: List[str],
         translation: Optional[str]) -> List[Document]:
     yel(f"Not using cache for youtube {path}")
-    docs = loader(
-        path,
-        add_video_info=add_video_info,
-        language=language,
-        translation=translation,
-    ).load()
+
+    options = {
+        'writesubtitles': True,
+        'writeautomaticsub': True,
+        'subtitleslangs': language,
+        'skip_download': True,
+        'subtitlesformat': 'vtt',
+        'allsubtitles': True,
+        'extract_flat': False,
+    }
+    if translation is None:
+        translation = []
+    else:
+        traslation = [translation]
+
+    with youtube_dl.YoutubeDL(options) as ydl:
+        # First check available subs
+        info = ydl.extract_info(path, download=False)
+
+        title = info.get('fulltitle', None)
+
+        # Check both manual and auto subs
+        good_subs = info.get('subtitles', {})
+        auto_subs = info.get('automatic_captions', {})
+
+        if not good_subs and not auto_subs:
+            raise Exception(f"No subtitles found for youtube video entitled '{title}' at link '{path}'")
+
+        sub = None
+        for subs in [good_subs, auto_subs]:
+            if sub is not None:
+                break
+            for lang in language + translation:
+                if lang in subs.keys():
+                    sub_url = [s for s in subs[lang] if s["ext"] == "vtt"][0]["url"]
+                    sub = requests.get(sub_url).content
+                    sub = ftfy.fix_text(sub.decode()).strip()
+                    break
+        if sub is None:
+            available = list(set(list(good_subs.keys()) + list(auto_subs.keys())))
+            raise Exception(f"Subtitles found but not for the languages '{language}' nor '{translation}' for youtube video entitled '{title}' at link '{path}'\nAvailable languages were: '{available}'")
+
+    # get metadata too
+    meta = {}
+    for k in ["description", "categories", "tags", "channel", "upload_date", "duration_string", "language"]:
+        if k in info:
+            meta["yt_" + k] = info[k]
+
+    # the chapters, if present, are in seconds, while the vtt uses human readable timecodes so converting the chapters
+    if "chapters" in info:
+        chap = info["chapters"]
+        def seconds_to_timecode(inp: str) -> str:
+            second = float(inp)
+            minute = second // 60
+            second = second % 60
+            hour = minute // 60
+            minute = minute % 60
+            hour, minute, second = int(hour), int(minute), int(second)
+            return f"{hour:02d}:{minute:02d}:{second:02d}"
+
+        for ich, ch in enumerate(chap):
+            chap[ich]["start_time"] = seconds_to_timecode(chap[ich]["start_time"])
+            chap[ich]["end_time"] = seconds_to_timecode(chap[ich]["end_time"])
+
+        meta["yt_chapters"] = chap
+
+    def timecode_to_second(inp: str) -> float:
+        "turns a vtt timecode into seconds"
+        hour, minute, second = map(int, inp.split(':'))
+        return hour * 3600 + minute * 60 + second
+
+    def is_timecode(inp: str) -> bool:
+        try:
+            timecode_to_second(inp)
+            return True
+        except Exception:
+            return False
+
+    # reduce greatly the number of token in the subtitles by removing some less important formatting
+    lines = sub.splitlines()
+    timecode_pattern = re.compile(r'(?:\d{2}:\d{2}:\d{2}\.\d{3})|(?:<\d{2}:\d{2}:\d{2}\.\d{3}>)|(?:</?c>)')
+    latest_tc = -1  # store the timecode once every Xs
+    newlines = []
+    for li in lines:
+        if " --> " in li:
+            li = re.sub("\.\d+ -->.*", "", li).strip()
+
+            # remove duplicate timecodes:
+            tc = timecode_to_second(li)
+            if tc - latest_tc < 15:
+                li = ""
+            else:
+                latest_tc = tc
+        else:
+            li = timecode_pattern.sub("", li).strip()
+
+        if is_timecode(li):
+            newlines.append(li + "\n")
+        elif not newlines:
+            newlines.append(li)
+        elif is_timecode(newlines[-1]):
+            newlines.append(li)
+        elif li not in newlines[-1]:
+            newlines[-1] = newlines[-1].strip() + " " + li.strip()
+
+    content = "\n".join(newlines)
+
+    docs = [
+        Document(
+            page_content=content,
+            metadata=meta,
+        )
+    ]
+
     return docs
 
 
