@@ -56,6 +56,7 @@ class LocalFileStore(ByteStore):
             *args: All other args are ignored
             **kwargs: Ignored too
         """
+        Path(database_path).parent.mkdir(exist_ok=True, parents=True)
         self.pdi = PersistDict(
             database_path=database_path,
             expiration_days=expiration_days,
