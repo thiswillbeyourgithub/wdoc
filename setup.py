@@ -120,7 +120,7 @@ setup(
         "youtube_dl",  # youtube_dl, we try to install yt_dl_patched using PostInstallCommand as it's not in pypi but we install yt_dl anyway just in case. Also the latest version will try to be installed from the git repo directly using the PostInstallCommand function above.
         "youtube-transcript-api >= 0.6.2",  # youtube
         # "pytube >= 15.0.0",  # youtube
-        "yt-dlp >= 2024.10.23.232902.dev0",  # youtube
+        "yt-dlp >= 2024.11.2.232942.dev0",  # youtube
         'LogseqMarkdownParser >= 3.3',  # logseq files (I'm the dev behind it)
         'deepgram-sdk >= 3.2.7',  # audio transcription
         'httpx >= 0.27.0',  # to increase deepgram timeout
