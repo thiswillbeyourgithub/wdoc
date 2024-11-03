@@ -15,7 +15,7 @@ wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
     * The main branch is more stable than the dev branch, which offers more features
     * Open to feature requests and pull requests
     * All feedbacks, including reports of typos, are highly appreciated
-    * Please consult the developer before making a PR, as there may be ongoing improvements in the pipeline
+    * Please open an issue before making a PR, as there may be ongoing improvements in the pipeline
 
 * **Key Features**:
     * Aims to support *any* filetypes query from all of them at the same time (15+ are already implemented!)
