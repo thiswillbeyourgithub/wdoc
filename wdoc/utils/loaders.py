@@ -2237,7 +2237,7 @@ def cached_yt_loader(
     if translation is None:
         translation = []
     else:
-        traslation = [translation]
+        translation = [translation]
 
     with youtube_dl.YoutubeDL(options) as ydl:
         # First check available subs
