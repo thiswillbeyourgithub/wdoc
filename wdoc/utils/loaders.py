@@ -690,13 +690,17 @@ def load_youtube_video(
 
     if youtube_audio_backend == "youtube":
         whi(f"Using youtube.com loader: '{path}'")
-        docs = cached_yt_loader(
-            path=path,
-            add_video_info=True,
-            language=youtube_language if youtube_language else [
-                "fr-FR", "fr", "en", "en-US", "en-UK"],
-            translation=youtube_translation if youtube_translation else None,
-        )
+        try:
+            docs = cached_yt_loader(
+                path=path,
+                add_video_info=True,
+                language=youtube_language if youtube_language else [
+                    "fr-FR", "fr", "en", "en-US", "en-UK"],
+                translation=youtube_translation if youtube_translation else None,
+            )
+        except Exception as err:
+            raise Exception(
+                f"Error when using yt-dlp. Keep in mind that youtube frequently changed its backend so upgrading yt-dlp to its latest version can often fix issues. Original error was: '{err}'") from err
     else:
         whi(f"Downloading audio from url: '{path}'")
         file_name = loaders_temp_dir / \
