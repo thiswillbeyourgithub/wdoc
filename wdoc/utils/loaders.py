@@ -2269,7 +2269,7 @@ def cached_yt_loader(
     # get metadata too
     meta = {"title": title, "author": info["channel"]}
     for k in ["description", "categories", "tags", "channel", "upload_date", "duration_string", "language"]:
-        if k in info:
+        if k in info and info[k]:
             meta["yt_" + k] = info[k]
 
     # the chapters, if present, are in seconds, while the vtt uses human readable timecodes so converting the chapters
