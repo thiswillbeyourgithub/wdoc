@@ -1965,6 +1965,9 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
             p("\n--verbose was used so opening debug console at the "
                 "appropriate frame. Press 'c' to continue to the frame "
                 "of this print.")
+            p("Please open an issue on github and include the trace. It's "
+              "tremendously useful for me as there are many small bugs that "
+              "can be quickly squashed if users just told me about it :)")
             [p(line) for line in traceback.format_tb(exc_traceback)]
             p(str(exc_type) + " : " + str(exc_value))
             if hasattr(exc_value, "__cause__") and hasattr(exc_value.__cause__, "__traceback__"):
