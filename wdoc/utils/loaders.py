@@ -2273,7 +2273,7 @@ def cached_yt_loader(
             meta["yt_" + k] = info[k]
 
     # the chapters, if present, are in seconds, while the vtt uses human readable timecodes so converting the chapters
-    if "chapters" in info:
+    if "chapters" in info and info["chapters"]:
         chap = info["chapters"]
         def seconds_to_timecode(inp: str) -> str:
             second = float(inp)
