@@ -147,6 +147,8 @@ extra_args_types = {
     "filter_content": Union[List[str], str],
     "filter_metadata": Union[List[str], str],
     "source_tag": str,
+    "pattern": str,
+    "recursed_filetype": str,
 }
 extra_args_types.update(filetype_arg_types)
 
