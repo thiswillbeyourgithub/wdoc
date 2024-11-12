@@ -456,7 +456,7 @@ def get_splitter(
     if task not in text_splitters:
         text_splitters[task] = {}
     if modelname in text_splitters[task]:
-        return text_splitters[task]
+        return text_splitters[task][modelname]
 
     if modelname == "testing/testing":
         return get_splitter(task=task, modelname="gpt-3.5-turbo")
