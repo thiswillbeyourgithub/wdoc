@@ -73,9 +73,7 @@ class LocalFileStore(ByteStore):
             A sequence of optional values associated with the keys.
             If a key is not found, the corresponding value will be None.
         """
-        values = self.pdi.__getitems__(keys)
-        values = [v if v is not self.pdi.__missing_value__ else None for v in values]
-        return values
+        return [self.pdi[k] for k in keys]
 
 
     def mset(self, key_value_pairs: Sequence[Tuple[str, bytes]]) -> None:
@@ -87,7 +85,8 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        return self.pdi.__setitems__(key_value_pairs)
+        for k, v in key_value_pairs:
+            self.pdi[k] = v
 
 
     def mdelete(self, keys: Sequence[str]) -> None:
@@ -99,7 +98,8 @@ class LocalFileStore(ByteStore):
         Returns:
             None
         """
-        return self.pdi.__delitems__(keys)
+        for k in keys:
+            del self.pdi[k]
 
 
     def yield_keys(self, prefix: Optional[str] = None) -> Iterator[str]:
