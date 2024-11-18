@@ -151,7 +151,7 @@ Click to read more
 * **text**: send a text content directly as path
 * **local_html**: useful for website dumps
 * **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
-* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence etc. Note: audio that are too large for whisper (usually >25mb) are automatically split into smaller files, transcribed, then combined.
+* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com). Supports automatically removing silence etc. Note: audio that are too large for whisper (usually >25mb) are automatically split into smaller files, transcribed, then combined. Also, audio transcripts are converted to text containing timestamps at regular intervals, making it possible to ask the LLM when something was said.
 * **local_video**: extract the audio then treat it as **local_audio**
 * **online_media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
 * **epub**: barely tested because epub is in general a poorly defined format
