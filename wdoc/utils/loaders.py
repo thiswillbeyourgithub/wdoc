@@ -741,9 +741,11 @@ def load_youtube_video(
                 prompt=whisper_prompt,
             )
 
+            timestamped_text = convert_verbose_json_to_timestamped_text(content)
+
             docs = [
                 Document(
-                    page_content=content["text"],
+                    page_content=timestamped_text,
                     metadata={
                         "source": "youtube_whisper",
                     },
@@ -1744,9 +1746,10 @@ def load_local_audio(
             language=whisper_lang,
             prompt=whisper_prompt,
         )
+        timestamped_text = convert_verbose_json_to_timestamped_text(content)
         docs = [
             Document(
-                page_content=content["text"],
+                page_content=timestamped_text,
                 metadata={
                     "source": str(Path(path)),
                 },
@@ -2026,6 +2029,47 @@ def split_too_large_audio(
     split_files = [f for f in split_folder.iterdir()]
     assert split_files
     return split_files
+
+@optional_typecheck
+def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
+    # turn the json into vtt, then reuse the code used for youtube chapters
+    buffer = ""
+    for seg in transcript["segments"]:
+        start = seconds_to_timecode(seg["start"])
+        end = seconds_to_timecode(seg["end"])
+        text = seg["text"]
+        buffer += f"{start}.0 --> {end}\n{text}\n\n"
+
+    # reduce greatly the number of token in the subtitles by removing some less important formatting
+    lines = buffer.splitlines()
+    timecode_pattern = re.compile(r'(?:\d{2}:\d{2}:\d{2}\.\d{3})|(?:<\d{2}:\d{2}:\d{2}\.\d{3}>)|(?:</?c>)')
+    latest_tc = -1  # store the timecode once every Xs
+    newlines = []
+    for li in lines:
+        if " --> " in li:
+            li = re.sub("\.\d+ -->.*", "", li).strip()
+
+            # remove duplicate timecodes:
+            tc = timecode_to_second(li)
+            if tc - latest_tc < 15:
+                li = ""
+            else:
+                latest_tc = tc
+        else:
+            li = timecode_pattern.sub("", li).strip()
+
+        if is_timecode(li):
+            newlines.append(li + "\n")
+        elif not newlines:
+            newlines.append(li)
+        elif is_timecode(newlines[-1]):
+            newlines.append(li)
+        elif li not in newlines[-1]:
+            newlines[-1] = newlines[-1].strip() + " " + li.strip()
+
+    content = "\n".join(newlines)
+    return content
+
 @debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
