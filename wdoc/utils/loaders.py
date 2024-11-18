@@ -65,6 +65,9 @@ from .misc import (doc_loaders_cache, html_to_text, hasher,
                    average_word_length, wpm, loaders_temp_dir_file,
                    min_lang_prob, min_token, max_token,
                    optional_strip_unexp_args,
+                   seconds_to_timecode,
+                   timecode_to_second,
+                   is_timecode
                    )
 from .typechecker import optional_typecheck
 from .logger import whi, yel, red, logger
@@ -2370,14 +2373,6 @@ def cached_yt_loader(
     # the chapters, if present, are in seconds, while the vtt uses human readable timecodes so converting the chapters
     if "chapters" in info and info["chapters"]:
         chap = info["chapters"]
-        def seconds_to_timecode(inp: str) -> str:
-            second = float(inp)
-            minute = second // 60
-            second = second % 60
-            hour = minute // 60
-            minute = minute % 60
-            hour, minute, second = int(hour), int(minute), int(second)
-            return f"{hour:02d}:{minute:02d}:{second:02d}"
 
         for ich, ch in enumerate(chap):
             chap[ich]["start"] = seconds_to_timecode(chap[ich]["start_time"])
@@ -2385,18 +2380,6 @@ def cached_yt_loader(
             del chap[ich]["start_time"], chap[ich]["end_time"]
 
         meta["yt_chapters"] = json.dumps(chap, ensure_ascii=False)
-
-    def timecode_to_second(inp: str) -> float:
-        "turns a vtt timecode into seconds"
-        hour, minute, second = map(int, inp.split(':'))
-        return hour * 3600 + minute * 60 + second
-
-    def is_timecode(inp: str) -> bool:
-        try:
-            timecode_to_second(inp)
-            return True
-        except Exception:
-            return False
 
     # reduce greatly the number of token in the subtitles by removing some less important formatting
     lines = sub.splitlines()

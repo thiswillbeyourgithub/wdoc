@@ -791,3 +791,25 @@ def create_langfuse_callback(version: str) -> None:
         except Exception as e:
             red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")
 
+def seconds_to_timecode(inp: str) -> str:
+    "used for vtt subtitle conversion"
+    second = float(inp)
+    minute = second // 60
+    second = second % 60
+    hour = minute // 60
+    minute = minute % 60
+    hour, minute, second = int(hour), int(minute), int(second)
+    return f"{hour:02d}:{minute:02d}:{second:02d}"
+
+def timecode_to_second(inp: str) -> float:
+    "turns a vtt timecode into seconds"
+    hour, minute, second = map(int, inp.split(':'))
+    return hour * 3600 + minute * 60 + second
+
+def is_timecode(inp: str) -> bool:
+    try:
+        timecode_to_second(inp)
+        return True
+    except Exception:
+        return False
+
