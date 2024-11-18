@@ -1936,20 +1936,93 @@ def transcribe_audio_whisper(
     assert "OPENAI_API_KEY" in os.environ and not os.environ[
         "OPENAI_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", "No environment variable OPENAI_API_KEY found"
 
-    t = time.time()
-    with open(audio_path, "rb") as audio_file:
-        transcript = litellm.transcription(
-            model="whisper-1",
-            file=audio_file,
-            prompt=prompt,
-            language=language,
-            temperature=0,
-            response_format="verbose_json",
-        ).json()
-    whi(f"Done transcribing {audio_path} in {int(time.time()-t)}s")
+    try:
+        t1 = time.time()
+        with open(audio_path, "rb") as audio_file:
+            transcript = litellm.transcription(
+                model="whisper-1",
+                file=audio_file,
+                prompt=prompt,
+                language=language,
+                temperature=0,
+                response_format="verbose_json",
+            ).json()
+        t2 = time.time()
+        whi(f"Done transcribing {audio_path} in {int(t2-t1)}s")
+
+    except Exception as e:
+        if "Maximum content size limit" in str(e):
+            audio_splits = split_too_large_audio(audio_path)
+
+            # reconstitute appropriate durations
+            transcripts = []
+            for f in audio_splits:
+                h = file_hasher({"path": f})
+                temp = transcribe_audio_whisper(
+                    audio_path=f,
+                    audio_hash=h,
+                    language=language,
+                    prompt=prompt,
+                )
+                transcripts.append(temp)
+
+            if len(transcripts) == 1:
+                return transcripts[0]
+
+            whi(f"Combining {len(transcripts)} audio splits into a single json")
+            ref = transcripts.pop(0)
+            if ref["words"] is not None:
+                red("Warning: the transcript contains a 'words' output, which will be discarded as the combination of word timestamps is not yet supported.")
+                ref["words"] = None
+            for itrans, trans in enumerate(transcripts):
+                assert trans["task"] == ref["task"]
+                if trans["language"] != ref["language"]:
+                    red(f"Warning: the language of the reference split audio ({ref['language']}) is not the same as the language of the current split ({trans['language']})")
+                if trans["words"] is not None:
+                    red("Warning: the transcript contains a 'words' output, which will be discarded as the combination of word timestamps is not yet supported.")
+                    trans["words"] = None
+
+                temp = trans["segments"]
+                for it, t in enumerate(temp):
+                    temp[it]["end"] += ref["duration"]
+                    temp[it]["start"] += ref["duration"]
+
+                ref["segments"].extend(temp)
+
+                ref["duration"] += trans["duration"]
+                ref["text"] += " [note: audio was split here] " + trans["text"]
+
+            return ref
+
+        else:
+            raise
     return transcript
 
+@optional_typecheck
+def split_too_large_audio(
+    audio_path: Union[PosixPath, str],
+    ) -> List[PosixPath]:
+    """Whisper has a file size limit of about 25mb. If we hit that limit, we
+    split the audio file into multiple 30 minute files, then combine the
+    outputs
+    """
+    audio_path = Path(audio_path)
+    whi(f"Splitting large audio file '{audio_path}' into 30minute segment because it's too long for whisper")
+    split_folder = audio_path.parent / (audio_path.stem + "_splits")
+    split_folder.mkdir(exist_ok=False)
+    ext = audio_path.suffix
 
+    ffmpeg.input(
+        str(audio_path.absolute())
+    ).output(
+        str((split_folder / f"split__%03d.{ext}").absolute()),
+        c="copy",
+        f="segment",
+        segment_time=1600,  # 30 minute by default
+    ).run()
+    split_files = [f for f in split_folder.iterdir()]
+    assert split_files
+    return split_files
 @debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
