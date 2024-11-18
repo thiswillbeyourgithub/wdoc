@@ -458,8 +458,8 @@ def load_one_doc(
 
     elif filetype == "local_audio":
         docs = load_local_audio(
-            loaders_temp_dir=temp_dir,
             file_hash=file_hash,
+            loaders_temp_dir=temp_dir,
             **kwargs,
         )
 
