@@ -1675,11 +1675,28 @@ def load_local_audio(
 
         dur = waveform.shape[1] / sample_rate
         start = time.time()
-        waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
-            waveform,
-            sample_rate,
-            sox_effects,
-        )
+        try:
+            waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
+                waveform,
+                sample_rate,
+                sox_effects,
+            )
+        except Exception as e:
+            red(f"Error when applying sox effects: '{e}'.\nRetrying to apply each filter individually.")
+            for sef in sox_effects:
+                nfailed = 0
+                whi(f"Applying filter '{sef}'")
+                try:
+                    waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
+                        waveform,
+                        sample_rate,
+                        [sef],
+                    )
+                except Exception as err:
+                    red(f"Error when applying sox effects '{sef}': {err}")
+                    nfailed += 1
+                if nfailed == len(sox_effects):
+                    raise Exception("All sox_effects failed, you should report this bug and turn off --audio_unsilence")
         elapsed = time.time() - start
         new_dur = waveform.shape[1] / sample_rate
         assert new_dur < dur, (
