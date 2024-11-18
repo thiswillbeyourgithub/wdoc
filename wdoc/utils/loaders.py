@@ -466,6 +466,7 @@ def load_one_doc(
     elif filetype == "local_video":
         docs = load_local_video(
             file_hash=file_hash,
+            loaders_temp_dir=temp_dir,
             **kwargs,
         )
 
