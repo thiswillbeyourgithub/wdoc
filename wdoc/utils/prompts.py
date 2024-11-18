@@ -48,6 +48,7 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
     - Write your summary in {language}
     - Avoid repetitions
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
+    - If the text includes timestamps, write the approximate time of the sections in the top level bullet points.
 </instructions>
 """.strip()),
         HumanMessagePromptTemplate.from_template("""
