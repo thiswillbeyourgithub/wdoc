@@ -2038,7 +2038,9 @@ def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
         start = seconds_to_timecode(seg["start"])
         end = seconds_to_timecode(seg["end"])
         text = seg["text"]
-        buffer += f"{start}.0 --> {end}\n{text}\n\n"
+        buffer += f"\n\n{start}.0 --> {end}\n{text}"
+
+    buffer = buffer.strip()
 
     # reduce greatly the number of token in the subtitles by removing some less important formatting
     lines = buffer.splitlines()
