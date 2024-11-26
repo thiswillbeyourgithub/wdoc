@@ -1,17 +1,17 @@
 # NtfySummarizer
 
-NtfySummarizer is a tool that uses [ntfy.sh](ntfy.sh) and [WDoc](https://github.com/thiswillbeyourgithub/WDoc) to receive URLs, generate summaries of web content, and send the summaries back via ntfy.sh notifications. You can use it for example to get the summary of a webpage or youtube videos directly on your phone.
+NtfySummarizer is a tool that uses [ntfy.sh](ntfy.sh) and [wdoc](https://github.com/thiswillbeyourgithub/wdoc) to receive URLs, generate summaries of web content, and send the summaries back via ntfy.sh notifications. You can use it for example to get the summary of a webpage or youtube videos directly on your phone.
 
 ## Overview
 
 This tool allows you to:
 1. Receive URLs through an ntfy.sh topic
-2. Process the URLs to generate summaries using WDoc
+2. Process the URLs to generate summaries using wdoc
 3. Send the summaries back through another ntfy.sh topic
 
 ## Prerequisites
 - [ntfy.sh](https://ntfy.sh) installed on your phone and computer
-- [WDoc](https://github.com/thiswillbeyourgithub/WDoc/)
+- [wdoc](https://github.com/thiswillbeyourgithub/wdoc/)
 
 ## Setup
 
@@ -63,6 +63,6 @@ Then `sudo systemctl restart ntfy-client.service`.
 
 - Ensure that the `TOPICS` file is properly configured with your desired topic names.
 - Check that you have the necessary permissions to execute `script.sh`.
-- Verify that the WDoc library is correctly installed and configured in your Python environment.
+- Verify that the wdoc library is correctly installed and configured in your Python environment.
 
 For more information on ntfy.sh usage, visit the [ntfy.sh documentation](https://ntfy.sh/docs/).
