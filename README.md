@@ -120,22 +120,9 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 Click to read more
 </summary>
 
-*(These don't include improvements, bugfixes, refactoring etc.)*
-* **THIS LIST IS NOT UP TO DATE AND THERE ARE MANY MORE THINGS PLANNED**
-* Start using unit tests
-* Accept input from stdin, to for example query directly from a manpage
-* Much faster startup time
-* Much improved retriever:
-    * Web search retriever, online information lookup via jina.ai reader and search.
-    * LLM powered synonym expansion for embeddings search.
-* A way to specify at indexing time how trusting you are of a given set of document.
-* A way to open the documents automatically, based on the platform used. For ex if okular is installed, open pdfs directly at the appropriate page.
-* Improve the scriptability of wdoc. Add examples for how you use it with Logseq.
-    * Include a server example, that mimics the OpenAI's API to make your RAG directly accessible to other apps.
-    * Add a gradio GUI.
-* Include the possible whisper/deepgram extra expenses when counting costs.
-* Add support for user defined loaders.
-* Automatically caption document images using an LLM, especially nice for anki cards.
+** This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)**
+<!-- BEGIN_TODO -->
+<!-- END_TODO -->
 
 </details>
 
