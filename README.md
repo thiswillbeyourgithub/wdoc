@@ -120,7 +120,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 Click to read more
 </summary>
 
-** This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)**
+<i>This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)</i>
 
 <!-- BEGIN_TODO -->
 - ### Features
