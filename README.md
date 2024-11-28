@@ -123,6 +123,38 @@ Click to read more
 ** This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)**
 
 <!-- BEGIN_TODO -->
+- ### Features
+	- TODO make it easy to support other embeddings model, right now it seems only openai is easy to use. But litellm does not have an embeddings engine with langchain. Maybe there's one on github?
+	- TODO use unit tests
+	- TODO add a /save PATH command to save the chat and metadata to a json file
+	- TODO Accept input from stdin, to for example query directly from a manpage
+		- TODO make wdoc work if used with shell pipes
+	- TODO add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
+	- TODO add an audio backend to use the subtitles from a video file directly
+	- TODO store the anki images as 'imagekeys' as the idea works for other parsers too
+	- TODO add an argument --whole_text to avoid chunking (this would just increase the chunk size to a super large number I guess)
+	- TODO add a filetype "custom_parser" and an argument "--custom_parser" containing a path to a python file. Must receive a docdict and a few other things and return a list of documents
+		- TODO then make it work with an online search engine for technical things
+-
+- ### enhancements
+	- TODO understand why it appears that in some cases the sources id is never properly parsed
+	- TODO create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
+	- TODO use heuristics to find the best number of clusters
+	- TODO arg to use jina v3 embeddings for semantic batching because it allows specifying tasks that seem appropriate for that
+	- TODO add an env variable or arg to overload the backend url for whisper. Then set it always for you and mention it there: https://github.com/fedirz/faster-whisper-server/issues/5
+	- TODO anki_profile should be able to be a path
+	- TODO store wdoc's version and indexing timestamp in the metadata of the document
+	- TODO add a (high) token threshold above which two texts are not combined but just concatenated in the semantic order. It would avoid it loosing context. Use a --- separator
+	- TODO use a pydantic basemodel for output instead of a dict
+		- TODO same for summaries, it should at least contain the method to substitute the sources and then back
+	- TODO investigate storing the vectors in a sqlite3 file
+	- TODO make a plugin to llm that looks like file-to-prompt from simonw
+	- TODO Always bind a user metadata to litellm for langfuse etc
+		- TODO Add more metadata to each request to langfuse more informative
+	- TODO add a reranker to better sort the output of the retrievers. Right now with the multiquery it returns way too many and I'm thinking it might be a bad idea to just crop at top_k as I'm doing currently
+	- TODO add a status argument that just outputs the logs location and size, the cache location and size, the number of documents etc
+	- TODO add the python magic of the file as a file metadata
+-
 <!-- END_TODO -->
 
 </details>
