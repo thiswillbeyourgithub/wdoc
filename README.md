@@ -121,6 +121,7 @@ Click to read more
 </summary>
 
 ** This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)**
+
 <!-- BEGIN_TODO -->
 <!-- END_TODO -->
 
