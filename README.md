@@ -123,38 +123,106 @@ Click to read more
 <i>This TODO list is maintained automatically by [MdXLogseqTODOSync](https://github.com/thiswillbeyourgithub/MdXLogseqTODOSync)</i>
 
 <!-- BEGIN_TODO -->
+- ## Most urgent
+    - the logit bias is wrong for openai models: the token is specific to a given family of model
+    - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
+        - be careful to how to use import_mode
+    - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
+        - probably by creating a server with fastapi then a quick pipeline file
+    - write unit tests
+    - support other vector databases
+    - make it easier to use other embeddings API than openai
+    - create a readthedocs site
+    - understand why it appears that in some cases the sources id is never properly parsed
+        - crash if source got lost  + arg to disable
 - ### Features
-	- TODO make it easy to support other embeddings model, right now it seems only openai is easy to use. But litellm does not have an embeddings engine with langchain. Maybe there's one on github?
-	- TODO use unit tests
-	- TODO add a /save PATH command to save the chat and metadata to a json file
-	- TODO Accept input from stdin, to for example query directly from a manpage
-		- TODO make wdoc work if used with shell pipes
-	- TODO add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
-	- TODO add an audio backend to use the subtitles from a video file directly
-	- TODO store the anki images as 'imagekeys' as the idea works for other parsers too
-	- TODO add an argument --whole_text to avoid chunking (this would just increase the chunk size to a super large number I guess)
-	- TODO add a filetype "custom_parser" and an argument "--custom_parser" containing a path to a python file. Must receive a docdict and a few other things and return a list of documents
-		- TODO then make it work with an online search engine for technical things
+    - make it easy to support other embeddings model, right now it seems only openai is easy to use. But litellm does not have an embeddings engine with langchain. Maybe there's one on github?
+    - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
+        - default value is "author" "page" title"
+    - add a /save PATH command to save the chat and metadata to a json file
+    - Accept input from stdin, to for example query directly from a manpage
+        - make wdoc work if used with shell pipes
+    - add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
+    - add an audio backend to use the subtitles from a video file directly
+    - store the anki images as 'imagekeys' as the idea works for other parsers too
+    - add an argument --whole_text to avoid chunking (this would just increase the chunk size to a super large number I guess)
+    - add a filetype "custom_parser" and an argument "--custom_parser" containing a path to a python file. Must receive a docdict and a few other things and return a list of documents
+        - then make it work with an online search engine for technical things
+    - add a langchain code loader that uses aider to get the repomap
+        - https://github.com/paul-gauthier/aider/issues/1043#issuecomment-2278486840
+    - add a pikepdf loader because it can be used to automatically decrypt pdfs
+    - add a query_branching_nb argument that asks an LLM to identify a list of keywords from the intermediate answers, then look again for documents using this keyword and filtering via the weak llm
+    - write a script that shows how to use bertopic on the documents of wdoc
+    - add a jina web search and async retriever https://jina.ai/news/jina-reader-for-search-grounding-to-improve-factuality-of-llms/
+    - add a retriever where the LLM answer without any context
+    - add support for readabilipy for parsing html
+        - https://github.com/alan-turing-institute/ReadabiliPy
+    - add an obsidian loader
+        - https://pypi.org/project/obsidiantools/
+    - add a /chat command to the prompt, it would enable starting an interactive session directly with the llm
+    - make sure to expose loaders and batch_loader to make it easy to import by others
+    - find a way to make it work with llm from simonw
 -
 - ### enhancements
-	- TODO understand why it appears that in some cases the sources id is never properly parsed
-	- TODO create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
-	- TODO use heuristics to find the best number of clusters
-	- TODO arg to use jina v3 embeddings for semantic batching because it allows specifying tasks that seem appropriate for that
-	- TODO add an env variable or arg to overload the backend url for whisper. Then set it always for you and mention it there: https://github.com/fedirz/faster-whisper-server/issues/5
-	- TODO anki_profile should be able to be a path
-	- TODO store wdoc's version and indexing timestamp in the metadata of the document
-	- TODO add a (high) token threshold above which two texts are not combined but just concatenated in the semantic order. It would avoid it loosing context. Use a --- separator
-	- TODO use a pydantic basemodel for output instead of a dict
-		- TODO same for summaries, it should at least contain the method to substitute the sources and then back
-	- TODO investigate storing the vectors in a sqlite3 file
-	- TODO make a plugin to llm that looks like file-to-prompt from simonw
-	- TODO Always bind a user metadata to litellm for langfuse etc
-		- TODO Add more metadata to each request to langfuse more informative
-	- TODO add a reranker to better sort the output of the retrievers. Right now with the multiquery it returns way too many and I'm thinking it might be a bad idea to just crop at top_k as I'm doing currently
-	- TODO add a status argument that just outputs the logs location and size, the cache location and size, the number of documents etc
-	- TODO add the python magic of the file as a file metadata
--
+    - store the available tasks in a single var in misc.py
+    - check that the task search work on things other than anki
+    - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
+    - Use an env var to drop_params of litellm
+- add more specific exceptions for file loading error. One exception for all, one for batch and one for individual loader
+    - use heuristics to find the best number of clusters when doing semantic reranking
+    - arg to use jina v3 embeddings for semantic batching because it allows specifying tasks that seem appropriate for that
+    - add an env variable or arg to overload the backend url for whisper. Then set it always for you and mention it there: https://github.com/fedirz/faster-whisper-server/issues/5
+    - find a way to set a max cost at which to crash if it exceeds a maximum cost during a query, probably via the price callback
+    - anki_profile should be able to be a path
+    - store wdoc's version and indexing timestamp in the metadata of the document
+    - arg --oneoff that does not trigger the chat after replying. Allowing to not hog all the RAM if ran in multiple terminals for example through SSH
+    - add a (high) token threshold above which two texts are not combined but just concatenated in the semantic order. It would avoid it loosing context. Use a --- separator
+    - compute the cost of whisper and deepgram
+    - use a pydantic basemodel for output instead of a dict
+        - same for summaries, it should at least contain the method to substitute the sources and then back
+    - investigate storing the vectors in a sqlite3 file
+    - make a plugin to llm that looks like file-to-prompt from simonw
+    - Always bind a user metadata to litellm for langfuse etc
+        - Add more metadata to each request to langfuse more informative
+    - add a reranker to better sort the output of the retrievers. Right now with the multiquery it returns way too many and I'm thinking it might be a bad idea to just crop at top_k as I'm doing currently
+    - add a status argument that just outputs the logs location and size, the cache location and size, the number of documents etc
+    - add the python magic of the file as a file metadata
+    - add an env var to specify the threshold for relevant document by the query eval llm
+    - find a way to return the evaluations for each document also
+    - move retrievers.py in an embeddings folder
+    - stop using lambda functions in the chains because it makes the code barely readable
+    - when doing recursive summary: tell the model that if it's really sure that there are no modifications to do: it should just reply "EXIT" and it would save time and money instead of waiting for it to copy back the exact content
+    - add image parsing as base64 metadata from pdf
+    - use multiple small chains instead of one large and complicated and hard to maintain
+    - add an arg to bypass query combine, useful for small models
+    - break the load_embeddings into sub functions
+    - tell the llm to write a special message if the parsing failed or we got a 404 or paywall etc
+        - catch this text and crash
+    - add check that all metadata is only made of int float and str
+    - move the code that filters embeddings inside the embeddings.py file
+        - this way we can dynamically refilter using the chat prompt
+    - task summary then query should keep in context both the full text and the summary
+    - if there's only one intermediate answer, pass it as answer without trying to recombine
+    - filter_metadata should support an OR syntax
+    - add a --show_models argument to display the list of available models
+    - add a way to open the documents automatically, based on platform dirs etc. For ex if okular is installed, open pdfs directly at the right page
+        - the best way would be to create opener.py that does a bit like loader but for all filetypes and platforms
+    - add an image filetype: it will be either OCR'd using format and/or will be captioned using a multimodal llm, for example gpt4o mini
+        - nanollava is a 0.5b that probably can be used for that with proper prompting
+    - add a key/val arg to specify the trust we have in a doc, call this metadata context in the prompt
+    - add an arg to return just the dict of all documents and embeddings. Notably useful to debug documents
+    - use a class for the cli prompt, instead of a dumb function
+- arg pour disable eval llm filtering
+        - just answer 1 directly if no eval llm is set
+    - display the number of documents and tokens in the bottom toolbar
+    - add a demo gif
+    - investigate asking the LLM to  add leading emojis to the bullet point for quicker reading of summaries
+    - see how easy or hard it is to use an async chain
+    - ability to cap the search documents capped by a number of tokens instead of a number of documents
+    - for anki, allow using a query instead of loading with ankipandas
+    - add a "try_all" filetype that will try each filetype and keep the first that works
+    - add bespoke-minicheck from ollama to fact check when using RAG: https://ollama.com/library/bespoke-minicheck
+        - or via their API directly : https://docs.bespokelabs.ai/bespoke-minicheck/api but they don't seem to properly disclose what they do with the data
 <!-- END_TODO -->
 
 </details>
