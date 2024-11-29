@@ -14,7 +14,6 @@ from datetime import timedelta
 from pathlib import Path
 from difflib import get_close_matches
 import bs4
-from bs4 import GuessedAtParserWarning
 import hashlib
 from functools import partial, wraps
 from functools import cache as memoize
