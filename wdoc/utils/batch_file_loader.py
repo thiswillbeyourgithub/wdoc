@@ -21,7 +21,7 @@ from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
 
 from langchain.docstore.document import Document
 from joblib import Parallel, delayed
-from pathlib import Path, PosixPath
+from pathlib import Path
 import json
 import rtoml
 import dill
@@ -226,12 +226,12 @@ def batch_load_doc(
         ]
         for ialt, alt in enumerate(alternatives):
             if Path(alt).exists():
-                if isinstance(doc["path"], PosixPath):
+                if isinstance(doc["path"], Path):
                     doc["path"] = alt
                 elif isinstance(doc["path"], str):
                     doc["path"] = str(alt.absolute())
                 else:
-                    raise ValueError(f"At this point path should only be str or PosixPath: {doc['path']}")
+                    raise ValueError(f"At this point path should only be str or Path: {doc['path']}")
                 break
 
     # remove duplicate documents
@@ -534,7 +534,7 @@ def batch_load_doc(
 @optional_typecheck
 def parse_recursive_paths(
     cli_kwargs: dict,
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     pattern: str,
     recursed_filetype: str,
     include: Optional[List[str]] = None,
@@ -617,7 +617,7 @@ def parse_recursive_paths(
 @optional_typecheck
 def parse_json_entries(
     cli_kwargs: dict,
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     **extra_args,
     ) -> List[Union[DocDict, dict]]:
     whi(f"Loading json_entries: '{path}'")
@@ -653,7 +653,7 @@ def parse_json_entries(
 @optional_typecheck
 def parse_toml_entries(
     cli_kwargs: dict,
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     **extra_args,
     ) -> List[Union[DocDict, dict]]:
     whi(f"Loading toml_entries: '{path}'")
@@ -686,7 +686,7 @@ def parse_toml_entries(
 @optional_typecheck
 def parse_link_file(
     cli_kwargs: dict,
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     **extra_args,
     ) -> List[DocDict]:
     whi(f"Loading link_file: '{path}'")
@@ -721,7 +721,7 @@ def parse_link_file(
 @optional_typecheck
 def parse_youtube_playlist(
     cli_kwargs: dict,
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     **extra_args,
     ) -> List[DocDict]:
     if "\\" in path:

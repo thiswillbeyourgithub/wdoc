@@ -15,7 +15,7 @@ import copy
 from textwrap import indent
 from typing import List, Union, Any, Optional, Callable, Literal
 import tldextract
-from pathlib import Path, PosixPath
+from pathlib import Path
 import time
 import re
 import os
@@ -105,8 +105,8 @@ class wdoc:
         query_eval_modelname: Optional[str] = WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
 
         embed_kwargs: Optional[dict] = None,
-        save_embeds_as: Union[str, PosixPath] = "{user_cache}/latest_docs_and_embeddings",
-        load_embeds_from: Optional[Union[str, PosixPath]] = None,
+        save_embeds_as: Union[str, Path] = "{user_cache}/latest_docs_and_embeddings",
+        load_embeds_from: Optional[Union[str, Path]] = None,
         top_k: Union[str, int] = "auto_200_500",
 
         query: Optional[str] = None,
@@ -1869,7 +1869,7 @@ class wdoc:
     @staticmethod
     @optional_typecheck
     def parse_file(
-        path: Union[str, PosixPath],
+        path: Union[str, Path],
         filetype: str = "auto",
         only_text: bool = False,
         cli_kwargs: Optional[dict] = None,

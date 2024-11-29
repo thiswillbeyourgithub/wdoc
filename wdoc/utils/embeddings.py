@@ -9,7 +9,7 @@ import hashlib
 import os
 import random
 import time
-from pathlib import Path, PosixPath
+from pathlib import Path
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from functools import wraps
@@ -68,8 +68,8 @@ else:
 def load_embeddings(
     embed_model: str,
     embed_kwargs: dict,
-    load_embeds_from: Optional[Union[str, PosixPath]],
-    save_embeds_as: Union[str, PosixPath],
+    load_embeds_from: Optional[Union[str, Path]],
+    save_embeds_as: Union[str, Path],
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,

@@ -16,7 +16,7 @@ import uuid6
 import tempfile
 import requests
 import shutil
-from pathlib import Path, PosixPath
+from pathlib import Path
 import re
 from tqdm import tqdm
 import json
@@ -124,7 +124,7 @@ anki_replacements_regex = re.compile(r'\{([^}]*)\}')
 class OpenparseDocumentParser:
     def __init__(
         self,
-        path: Union[str, PosixPath],
+        path: Union[str, Path],
         table_args: Optional[dict] = {
             "parsing_algorithm": "pymupdf",
             "table_output_format": "markdown",
@@ -248,7 +248,7 @@ if "pdftotext" in sys.modules:
     @optional_typecheck
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
-        def __init__(self, path: Union[str, PosixPath]) -> None:
+        def __init__(self, path: Union[str, Path]) -> None:
             self.path = path
 
         def load(self) -> List[Document]:
@@ -371,7 +371,7 @@ def load_one_doc_wrapped(
 def load_one_doc(
     task: str,
     llm_name: str,
-    temp_dir: PosixPath,
+    temp_dir: Path,
     filetype: str,
     file_hash: str,
     source_tag: Optional[str] = None,
@@ -598,7 +598,7 @@ def load_one_doc(
         # replace any path to just the filename, to avoid sending privacy
         # revealing information to LLMs
         for k, v in docs[i].metadata.items():
-            if isinstance(v, PosixPath):
+            if isinstance(v, Path):
                 docs[i].metadata[k] = v.name
 
         # set hash
@@ -613,7 +613,7 @@ def load_one_doc(
             meta_dump = json.dumps(docs[i].metadata, ensure_ascii=False)
         except Exception:
             for k, v in docs[i].metadata.items():
-                if isinstance(v, PosixPath):
+                if isinstance(v, Path):
                     docs[i].metadata[k] = v.name
                     continue
                 try:
@@ -671,7 +671,7 @@ def cloze_stripper(clozed: str) -> str:
 @optional_strip_unexp_args
 def load_youtube_video(
     path: str,
-    loaders_temp_dir: PosixPath,
+    loaders_temp_dir: Path,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
     youtube_audio_backend: Optional[str] = "youtube",
@@ -850,7 +850,7 @@ def load_online_pdf(
 def load_anki(
     verbose: bool,
     text_splitter: TextSplitter,
-    loaders_temp_dir: PosixPath,
+    loaders_temp_dir: Path,
     anki_profile: Optional[str] = None,
     anki_deck: Optional[str] = None,
     anki_notetype: Optional[str] = None,
@@ -1661,10 +1661,10 @@ def load_logseq_markdown(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_audio(
-    path: Union[str, PosixPath],
+    path: Union[str, Path],
     file_hash: str,
     audio_backend: str,
-    loaders_temp_dir: PosixPath,
+    loaders_temp_dir: Path,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -1801,7 +1801,7 @@ def load_local_video(
     path: str,
     file_hash: str,
     audio_backend: str,
-    loaders_temp_dir: PosixPath,
+    loaders_temp_dir: Path,
     audio_unsilence: Optional[bool] = None,
 
     whisper_lang: Optional[str] = None,
@@ -1863,7 +1863,7 @@ def load_local_video(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
-    audio_path: Union[str, PosixPath],
+    audio_path: Union[str, Path],
     audio_hash: str,
     deepgram_kwargs: Optional[dict] = None,
 ) -> dict:
@@ -1932,7 +1932,7 @@ def transcribe_audio_deepgram(
 @optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
-        audio_path: Union[PosixPath, str],
+        audio_path: Union[Path, str],
         audio_hash: str,
         language: Optional[str],
         prompt: Optional[str]) -> dict:
@@ -2006,8 +2006,8 @@ def transcribe_audio_whisper(
 
 @optional_typecheck
 def split_too_large_audio(
-    audio_path: Union[PosixPath, str],
-    ) -> List[PosixPath]:
+    audio_path: Union[Path, str],
+    ) -> List[Path]:
     """Whisper has a file size limit of about 25mb. If we hit that limit, we
     split the audio file into multiple 30 minute files, then combine the
     outputs
@@ -2763,7 +2763,7 @@ def find_online_media(
 def load_online_media(
     path: str,
     audio_backend: str,
-    loaders_temp_dir: PosixPath,
+    loaders_temp_dir: Path,
 
     audio_unsilence: Optional[bool] = None,
     whisper_lang: Optional[str] = None,
@@ -2798,7 +2798,7 @@ def load_online_media(
 
 
     @optional_typecheck
-    def dl_audio_from_url(trial: int, url: str) -> PosixPath:
+    def dl_audio_from_url(trial: int, url: str) -> Path:
         file_name = loaders_temp_dir / \
             f"online_media_{uuid6.uuid6()}"  # without extension!
         ydl_opts = {

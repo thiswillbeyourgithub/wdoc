@@ -11,7 +11,7 @@ import socket
 import os
 import json
 from datetime import timedelta
-from pathlib import Path, PosixPath
+from pathlib import Path
 from difflib import get_close_matches
 import bs4
 from bs4 import GuessedAtParserWarning
@@ -139,9 +139,9 @@ filetype_arg_types = {
 
 # extra arguments supported when instanciating wdoc
 extra_args_types = {
-    "path": Union[str, PosixPath],
+    "path": Union[str, Path],
     "embed_instruct": str,
-    "out_file": Union[str, PosixPath],
+    "out_file": Union[str, Path],
     "include": str,
     "exclude": str,
     "filter_content": Union[List[str], str],
@@ -311,7 +311,7 @@ def file_hasher(doc: dict) -> str:
             hashable = False
     if not doc["path"]:
         hashable = False
-    if not isinstance(doc["path"], (str, PosixPath)):
+    if not isinstance(doc["path"], (str, Path)):
         hashable = False
 
     if hashable:

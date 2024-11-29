@@ -375,7 +375,7 @@
     to a loader. They apply depending on the value of `--filetype`.
     An unexpected argument for a given filetype will result in a crash.
 
-* `--path`: str or PosixPath
+* `--path`: str or Path
     * Used by most loaders. For example for `--filetype=youtube` the path
     must point to a youtube video.
 
@@ -517,7 +517,7 @@
 
 # Other specific arguments
 
-* `--out_file`: str or PosixPath, default `None`
+* `--out_file`: str or Path, default `None`
     * If wdoc must create a summary, if out_file given the summary will
     be written to this file. Note that the file is not erased and
     wdoc will simply append to it.
