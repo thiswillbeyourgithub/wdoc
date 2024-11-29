@@ -212,7 +212,7 @@ Click to read more
     - add a key/val arg to specify the trust we have in a doc, call this metadata context in the prompt
     - add an arg to return just the dict of all documents and embeddings. Notably useful to debug documents
     - use a class for the cli prompt, instead of a dumb function
-- arg pour disable eval llm filtering
+- arg to disable eval llm filtering
         - just answer 1 directly if no eval llm is set
     - display the number of documents and tokens in the bottom toolbar
     - add a demo gif
