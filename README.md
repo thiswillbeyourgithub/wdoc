@@ -284,54 +284,59 @@ Detailed example
 
 > # Summary
 > ## https://www.youtube.com/watch?v=arj7oStGLkU
-> - The speaker, Tim Urban, was a government major in college who had to write many papers
-> - *He claims* his typical work pattern for papers was:
->     - Planning to spread work evenly
->     - Actually procrastinating until the last minute
-> - For his 90-page senior thesis:
->     - Planned to work steadily over a year
->     - *Actually* ended up writing 90 pages in 72 hours before the deadline
->     - Pulled two all-nighters
->     - Resulted in a 'very, very bad thesis'
-> - Urban is now a writer-blogger for 'Wait But Why'
-> - He wrote about procrastination to explain it to non-procrastinators
-> - *Humorously claims* to have done brain scans comparing procrastinator and non-procrastinator brains
-> - Introduces concept of 'Instant Gratification Monkey' in procrastinator's brain
->     - Monkey takes control from the Rational Decision-Maker
->     - Leads to unproductive activities like reading Wikipedia, checking fridge, YouTube spirals
-> - Monkey characteristics:
->     - Lives in the present moment
->     - No memory of past or knowledge of future
->     - Only cares about 'easy and fun'
-> - Rational Decision-Maker:
->     - Allows long-term planning and big picture thinking
->     - Wants to do what makes sense in the moment
-> - 'Dark Playground': where procrastinators spend time on leisure activities when they shouldn't
->     - Filled with guilt, dread, anxiety, self-hatred
-> - 'Panic Monster': procrastinator's guardian angel
->     - Wakes up when deadlines are close or there's danger of embarrassment
->     - Only thing the Monkey fears
-> - Urban relates his own experience procrastinating on preparing this TED talk
-> - *Claims* thousands of people emailed him about having the same procrastination problem
-> - Two types of procrastination:
->     - 1. Short-term with deadlines (contained by Panic Monster)
->     - 2. Long-term without deadlines (more damaging)
->         - Affects self-starter careers, personal life, health, relationships
->         - Can lead to long-term unhappiness and regrets
-> - *Urban believes* all people are procrastinators to some degree
-> - Presents 'Life Calendar': visual representation of weeks in a 90-year life
-> - Encourages audience to:
->     - Think about what they're procrastinating on
->     - Stay aware of the Instant Gratification Monkey
->     - Start addressing procrastination soon
-> - *Humorously* suggests not starting today, but 'sometime soon'
-> 
-> Tokens used for https://www.youtube.com/watch?v=arj7oStGLkU: '4365' ($0.00060)
-> 
-> Total cost of those summaries: '4365' ($0.00060, estimate was $0.00028)
-> 
-> Total time saved by those summaries: 8.4 minutes
-> 
+> - Let me take a deep breath and summarize this TED talk about procrastination:
+> - [0:00-3:40] Personal experience with procrastination in college:
+>     - Author's pattern with papers: planning to work steadily but actually doing everything last minute
+>     - 90-page senior thesis experience:
+>         - Planned to work steadily over a year
+>         - Actually wrote 90 pages in 72 hours with two all-nighters
+>         - *Jokingly implies* it was brilliant, then admits it was 'very, very bad'
+> - [3:40-6:45] Brain comparison between procrastinators and non-procrastinators:
+>     - Both have a **Rational Decision-Maker**
+>     - Procrastinator's brain also has an **Instant Gratification Monkey**:
+>         - Lives entirely in present moment
+>         - Only cares about 'easy and fun'
+>         - Works fine for animals but problematic for humans in advanced civilization
+>     - **Rational Decision-Maker** capabilities:
+>         - Can visualize future
+>         - See big picture
+>         - Make long-term plans
+> - [6:45-10:55] The procrastinator's system:
+>     - **Dark Playground**:
+>         - Where leisure activities happen at wrong times
+>         - Characterized by guilt, dread, anxiety, self-hatred
+>     - **Panic Monster**:
+>         - Only thing monkey fears
+>         - Awakens near deadlines or threats of public embarrassment
+>         - Enables last-minute productivity
+>     - Personal example with TED talk preparation:
+>         - Procrastinated for months
+>         - Only started working when panic set in
+> - [10:55-13:05] Two types of procrastination:
+>     - Deadline-based procrastination:
+>         - Effects contained due to Panic Monster intervention
+>         - Less harmful long-term
+>     - Non-deadline procrastination:
+>         - More dangerous
+>         - Affects important life areas without deadlines:
+>             - Entrepreneurial pursuits
+>             - Family relationships
+>             - Health
+>             - Personal relationships
+>         - Can cause long-term unhappiness and regrets
+> - [13:05-14:04] Concluding thoughts:
+>     - *Author believes* no true non-procrastinators exist
+>     - Presents **Life Calendar**:
+>         - Shows 90 years in weekly boxes
+>         - Emphasizes limited time available
+>     - Call to action: need to address procrastination 'sometime soon'
+> - Key audience response moments:
+>     - Multiple instances of '(Laughter)' noted throughout
+>     - Particularly strong response from PhD students relating to procrastination issues
+>     - Received thousands of emails after blog post about procrastination
+> Tokens used for https://www.youtube.com/watch?v=arj7oStGLkU: '4936' (in: 4307, out: 629, cost: $0.00063)
+> Total cost of those summaries: 4936 tokens for $0.00063 (estimate was $0.00030)
+> Total time saved by those summaries: 8.8 minutes
 > Done summarizing.
 
 </details>
