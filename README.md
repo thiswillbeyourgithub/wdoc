@@ -28,7 +28,7 @@ wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summa
 ### Table of contents
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
-  - [Planned Features](#planned-features)
+  - [Roadmap](#roadmap)
   - [Supported filetypes](#supported-filetypes)
   - [Supported tasks](#supported-tasks)
   - [Walkthrough and examples](#walkthrough-and-examples)
@@ -113,7 +113,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
 * **Hacker mindset**: I'm a friendly dev! Just open an issue if you have a feature request or anything else.
 
-### Planned features
+### Roadmap
 
 <details>
 <summary>
