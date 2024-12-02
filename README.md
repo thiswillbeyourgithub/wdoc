@@ -162,6 +162,7 @@ Click to read more
     - add a /chat command to the prompt, it would enable starting an interactive session directly with the llm
     - make sure to expose loaders and batch_loader to make it easy to import by others
     - find a way to make it work with llm from simonw
+    - make images an actual filetype
 -
 - ### enhancements
     - store the available tasks in a single var in misc.py
