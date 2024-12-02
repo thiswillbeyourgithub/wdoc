@@ -277,7 +277,7 @@ Detailed example
 6. To know more about each argument supported by each filetype, `wdoc --help`
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by wdoc. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and wdoc automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
-9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="english" --disable_md_printing`:
+9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing`:
 
 <details><summary>Click to see the output</summary>
 
