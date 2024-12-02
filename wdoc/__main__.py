@@ -15,7 +15,7 @@ def cli_launcher() -> None:
     sysline = " ".join(sys.argv)
 
     if " --version" in sysline:
-        print(f"wdoc version: {wdoc.__VERSION__}")
+        print(f"wdoc version: {wdoc.VERSION}")
         raise SystemExit(0)
     elif " --help" in sysline or " -h" in sysline:
         print("Showing help")
