@@ -1924,10 +1924,7 @@ class wdoc:
         }
 
         if debug:
-            default_cli_kwargs["debug"] = debug
             debug_exceptions()
-        if verbose:
-            default_cli_kwargs["verbose"] = verbose
 
         if cli_kwargs is not None:
             default_cli_kwargs.update(cli_kwargs)
