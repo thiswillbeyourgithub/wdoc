@@ -38,8 +38,13 @@ source_suffix = {
 
 html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
-    'navigation_depth': 0,  # Removes the navigation
-    # OR
-    # 'sidebar_hide_name': True,  # Less aggressive, just hides the project name
+    'flyout_display': 'attached',
+    'language_selector': False,
+    'style_external_links': True,
+    'prev_next_buttons_location': 'both',
+    'analytics_anonymize_ip': True,
+
+    'navigation_depth': -1,
+    'sidebar_hide_name': True,  # Less aggressive, just hides the project name
 }
 html_static_path = ['_static']
