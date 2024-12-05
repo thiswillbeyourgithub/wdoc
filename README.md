@@ -424,4 +424,7 @@ FAQ
         multiprocessing and LLM concurrency. A less harsh alternative is to set the
         environment variable `WDOC_LLM_MAX_CONCURRENCY` to a lower value.
 
+* **How can I run the tests?**
+    * Try `python -m pytest tests`
+
 </details>
