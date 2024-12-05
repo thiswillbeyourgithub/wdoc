@@ -1869,7 +1869,7 @@ class wdoc:
     @staticmethod
     @optional_typecheck
     def parse_file(
-        path: Union[str, Path] = None,
+        path: Optional[Union[str, Path]] = None,
         filetype: str = "auto",
         only_text: bool = False,
         cli_kwargs: Optional[dict] = None,
