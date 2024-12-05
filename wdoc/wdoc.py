@@ -1869,7 +1869,7 @@ class wdoc:
     @staticmethod
     @optional_typecheck
     def parse_file(
-        path: Union[str, Path],
+        path: Union[str, Path] = None,
         filetype: str = "auto",
         only_text: bool = False,
         cli_kwargs: Optional[dict] = None,
@@ -1888,10 +1888,10 @@ class wdoc:
         ## Arguments
 
         - `path`: str
-          - Same as for wdoc
+          - Same as for wdoc (can be None, for example if filetype is `anki`).
 
         - `filetype`: str
-            - Same argument as for wdoc
+            - Same as for wdoc
 
         - `only_text`: bool, default `False`
             - only return the text instead of a List of langchain Documents
@@ -1933,8 +1933,14 @@ class wdoc:
             kwargs = DocDict(kwargs)
 
         # all loaders need a path arg except anki
-        if filetype != "anki":
-            kwargs["path"] = path
+        if filetype == "anki" and path:
+            red("You supplied a --path argument even though the filetype is `anki`, we must ignore `path` in that case.")
+        else:
+            if not path:
+                red("You did not specify a --path argument, this will probably cause issues.")
+            else:
+                kwargs["path"] = path
+
         out = batch_load_doc(
             filetype=filetype,
             **default_cli_kwargs,
