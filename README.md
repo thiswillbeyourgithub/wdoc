@@ -355,7 +355,7 @@ Detailed example
         * Using uvx: `uvx wdoc --help`
     * In any case, it is recommended to try to install pdftotext with `pip11 install -U wdoc[pdftotext]` as well as add fasttext support with `pip11 install -U wdoc[fasttext]`.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
-3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]` and `wdoc --task=summary --path=MYDOC [ARGS]` (you can use `wdoc` instead of `wdoc`)
+3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, clone this repo and try again after `cd` inside it.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
     * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
