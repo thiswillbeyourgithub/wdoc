@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts.chat import HumanMessagePromptTemplate, SystemMessagePromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from typing import List
+from beartype.typing import List
 from pydantic import BaseModel, Field, model_validator
 
 from .logger import red, whi

@@ -8,7 +8,7 @@ from textwrap import dedent
 from tqdm import tqdm
 from loguru import logger
 from pathlib import Path
-from typing import Type, Callable, Optional, Union, List, Dict
+from beartype.typing import Type, Callable, Optional, Union, List, Dict
 from rich.markdown import Markdown
 from rich.console import Console
 from platformdirs import user_cache_dir, user_log_dir

@@ -3,7 +3,7 @@ Chain (logic) used to query a document.
 """
 
 import re
-from typing import Tuple, List, Union, Literal
+from beartype.typing import Tuple, List, Union, Literal
 import time
 from numpy.typing import NDArray
 

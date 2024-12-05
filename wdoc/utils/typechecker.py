@@ -4,7 +4,7 @@ it's disabled but the flag WDOC_TYPECHECKING can be set to "crash" or
 to "warn" to just print the error.
 """
 
-from typing import Callable
+from beartype.typing import Callable
 from beartype import beartype, BeartypeConf
 
 from .env import WDOC_TYPECHECKING

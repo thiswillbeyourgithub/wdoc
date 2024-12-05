@@ -3,7 +3,7 @@ Miscellanous functions etc.
 """
 
 import sys
-from typing import List, Union, Callable, get_type_hints, Literal
+from beartype.typing import List, Union, Callable, get_type_hints, Literal
 from joblib import Memory
 from joblib import hash as jhash
 import uuid

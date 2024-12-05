@@ -3,7 +3,7 @@
 * Loads and store embeddings for each document.
 """
 
-from typing import List, Union, Optional, Any, Tuple, Callable
+from beartype.typing import List, Union, Optional, Any, Tuple, Callable
 # import math
 import hashlib
 import os

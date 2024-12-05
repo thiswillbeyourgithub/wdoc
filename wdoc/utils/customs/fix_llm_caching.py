@@ -9,7 +9,7 @@ Create a caching class that looks like it's just in memory but actually saves to
 
 import json
 from pathlib import Path
-from typing import Union, Any, Optional, Generator
+from beartype.typing import Union, Any, Optional, Generator
 
 from langchain_core.caches import BaseCache
 

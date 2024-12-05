@@ -13,7 +13,7 @@ import json
 import pyfiglet
 import copy
 from textwrap import indent
-from typing import List, Union, Any, Optional, Callable, Literal
+from beartype.typing import List, Union, Any, Optional, Callable, Literal
 import tldextract
 from pathlib import Path
 import time

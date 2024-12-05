@@ -15,7 +15,7 @@ import sys
 from tqdm import tqdm
 from functools import cache as memoizer
 import time
-from typing import List, Tuple, Union, Optional
+from beartype.typing import List, Tuple, Union, Optional
 import random
 from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
 

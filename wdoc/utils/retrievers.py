@@ -2,7 +2,7 @@
 Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
-from typing import Any, List, Union
+from beartype.typing import Any, List, Union
 from langchain.docstore.document import Document
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.storage import LocalFileStore

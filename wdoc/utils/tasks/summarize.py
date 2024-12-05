@@ -3,7 +3,7 @@ Chain (logic) used to summarize a document.
 """
 
 from tqdm import tqdm
-from typing import List, Any, Union, Tuple
+from beartype.typing import List, Any, Union, Tuple
 from pathlib import Path
 
 from langchain.docstore.document import Document

@@ -4,7 +4,7 @@ source : https://api.python.langchain.com/en/latest/_modules/langchain/storage/f
 This is basically the exact same code but with added compression
 """
 from pathlib import Path
-from typing import Iterator, List, Optional, Sequence, Tuple, Union
+from beartype.typing import Iterator, List, Optional, Sequence, Tuple, Union
 
 from langchain_core.stores import ByteStore
 

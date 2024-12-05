@@ -7,7 +7,7 @@ import copy
 import sys
 import os
 import time
-from typing import List, Union, Any, Optional, Callable, Dict, Tuple
+from beartype.typing import List, Union, Any, Optional, Callable, Dict, Tuple
 import signal
 from contextlib import contextmanager
 import traceback

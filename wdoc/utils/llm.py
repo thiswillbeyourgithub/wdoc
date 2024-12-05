@@ -3,7 +3,7 @@ Code related to loading the LLM instance, with an appropriate price
 counting callback.
 """
 
-from typing import Union, List, Any, Optional, Dict
+from beartype.typing import Union, List, Any, Optional, Dict
 import os
 
 from langchain_core.callbacks import BaseCallbackHandler

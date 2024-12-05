@@ -6,7 +6,7 @@ wdoc.
 
 import sys
 import os
-from typing import Optional, Union, Literal
+from beartype.typing import Optional, Union, Literal
 from beartype import beartype, BeartypeConf
 from beartype.door import is_bearable
 
