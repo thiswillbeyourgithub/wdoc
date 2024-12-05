@@ -409,6 +409,7 @@ FAQ
         from wdoc import wdoc
         list_of_docs = Wdoc.parse_file(path=my_path)
         ```
+    * Another example would be to use wdoc to parse an anki deck: `wdoc_parse_file --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --only_text`
 * **What should I do if my PDF are encrypted?**
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
