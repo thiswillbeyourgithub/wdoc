@@ -1,4 +1,6 @@
-# Table of contents
+# wdoc --help
+
+### Table of contents
 - [Global arguments](#global-arguments)
 - [Loader specific arguments](#loader-specific-arguments).
 - [Other specific arguments](#other-specific-arguments)
