@@ -127,7 +127,7 @@ Click to read more
     - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - be careful to how to use import_mode
-    - make it easy to use `wdoc` as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
+    - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
     - write unit tests
     - support other vector databases
@@ -141,7 +141,7 @@ Click to read more
         - default value is "author" "page" title"
     - add a /save PATH command to save the chat and metadata to a json file
     - Accept input from stdin, to for example query directly from a manpage
-        - make `wdoc` work if used with shell pipes
+        - make wdoc work if used with shell pipes
     - add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
     - add an audio backend to use the subtitles from a video file directly
     - store the anki images as 'imagekeys' as the idea works for other parsers too
@@ -152,7 +152,7 @@ Click to read more
         - https://github.com/paul-gauthier/aider/issues/1043#issuecomment-2278486840
     - add a pikepdf loader because it can be used to automatically decrypt pdfs
     - add a query_branching_nb argument that asks an LLM to identify a list of keywords from the intermediate answers, then look again for documents using this keyword and filtering via the weak llm
-    - write a script that shows how to use bertopic on the documents of `wdoc`
+    - write a script that shows how to use bertopic on the documents of wdoc
     - add a jina web search and async retriever https://jina.ai/news/jina-reader-for-search-grounding-to-improve-factuality-of-llms/
     - add a retriever where the LLM answer without any context
     - add support for readabilipy for parsing html
@@ -169,13 +169,13 @@ Click to read more
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
     - Use an env var to drop_params of litellm
-- add more specific exceptions for file loading error. One exception for all, one for batch and one for individual loader
+    - add more specific exceptions for file loading error. One exception for all, one for batch and one for individual loader
     - use heuristics to find the best number of clusters when doing semantic reranking
     - arg to use jina v3 embeddings for semantic batching because it allows specifying tasks that seem appropriate for that
     - add an env variable or arg to overload the backend url for whisper. Then set it always for you and mention it there: https://github.com/fedirz/faster-whisper-server/issues/5
     - find a way to set a max cost at which to crash if it exceeds a maximum cost during a query, probably via the price callback
     - anki_profile should be able to be a path
-    - store `wdoc`'s version and indexing timestamp in the metadata of the document
+    - store wdoc's version and indexing timestamp in the metadata of the document
     - arg --oneoff that does not trigger the chat after replying. Allowing to not hog all the RAM if ran in multiple terminals for example through SSH
     - add a (high) token threshold above which two texts are not combined but just concatenated in the semantic order. It would avoid it loosing context. Use a --- separator
     - compute the cost of whisper and deepgram
@@ -213,7 +213,7 @@ Click to read more
     - add a key/val arg to specify the trust we have in a doc, call this metadata context in the prompt
     - add an arg to return just the dict of all documents and embeddings. Notably useful to debug documents
     - use a class for the cli prompt, instead of a dumb function
-- arg to disable eval llm filtering
+    - arg to disable eval llm filtering
         - just answer 1 directly if no eval llm is set
     - display the number of documents and tokens in the bottom toolbar
     - add a demo gif
