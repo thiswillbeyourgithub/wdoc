@@ -5,9 +5,9 @@
 > *I'm wdoc. I solve RAG problems.*
 > - wdoc, imitating Winston "The Wolf" Wolf
 
-wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources. I was frustrated with all other RAG solutions for querying or summarizing, so I made my perfect solution in a single package.
+`wdoc` is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources. I was frustrated with all other RAG solutions for querying or summarizing, so I made my perfect solution in a single package.
 
-* **Goal and project specifications**: wdoc uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
+* **Goal and project specifications**: `wdoc` uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
 * **Current status**: **Under active development**
     * Used daily by the developer for several months: but still in alpha. **I would greatly benefit from testing by users as it's the quickest way for me to find the many small bugs that are quick to fix.**
@@ -72,7 +72,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     3. When creating each new chunk, the LLM has access to the previous chunk for context.
     4. All summary are then concatenated and returned to the user
 
-* For extra large documents like books for example, this summary can be recusively fed to wdoc using argument --summary_n_recursion=2 for example.
+* For extra large documents like books for example, this summary can be recusively fed to `wdoc` using argument --summary_n_recursion=2 for example.
 
 * Those two tasks, query and summary, can be combined with --task summarize_then_query which will summarize the document but give you a prompt at the end to ask question in case you want to clarify things.
 
@@ -98,11 +98,11 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     * The summaries are then checked again n times for correct logical indentation etc.
     * The summary can be in the same language as the documents or directly translated.
 * **Many tasks**: See [Supported tasks](#Supported-tasks).
-* **Trust but verify**: The answer is sourced: wdoc keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
+* **Trust but verify**: The answer is sourced: `wdoc` keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./wdoc/docs/USAGE.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation.
-* **Scriptable / Extensible**: You can use wdoc in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc).
+* **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
@@ -127,7 +127,7 @@ Click to read more
     - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - be careful to how to use import_mode
-    - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
+    - make it easy to use `wdoc` as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
     - write unit tests
     - support other vector databases
@@ -141,7 +141,7 @@ Click to read more
         - default value is "author" "page" title"
     - add a /save PATH command to save the chat and metadata to a json file
     - Accept input from stdin, to for example query directly from a manpage
-        - make wdoc work if used with shell pipes
+        - make `wdoc` work if used with shell pipes
     - add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
     - add an audio backend to use the subtitles from a video file directly
     - store the anki images as 'imagekeys' as the idea works for other parsers too
@@ -152,7 +152,7 @@ Click to read more
         - https://github.com/paul-gauthier/aider/issues/1043#issuecomment-2278486840
     - add a pikepdf loader because it can be used to automatically decrypt pdfs
     - add a query_branching_nb argument that asks an LLM to identify a list of keywords from the intermediate answers, then look again for documents using this keyword and filtering via the weak llm
-    - write a script that shows how to use bertopic on the documents of wdoc
+    - write a script that shows how to use bertopic on the documents of `wdoc`
     - add a jina web search and async retriever https://jina.ai/news/jina-reader-for-search-grounding-to-improve-factuality-of-llms/
     - add a retriever where the LLM answer without any context
     - add support for readabilipy for parsing html
@@ -175,7 +175,7 @@ Click to read more
     - add an env variable or arg to overload the backend url for whisper. Then set it always for you and mention it there: https://github.com/fedirz/faster-whisper-server/issues/5
     - find a way to set a max cost at which to crash if it exceeds a maximum cost during a query, probably via the price callback
     - anki_profile should be able to be a path
-    - store wdoc's version and indexing timestamp in the metadata of the document
+    - store `wdoc`'s version and indexing timestamp in the metadata of the document
     - arg --oneoff that does not trigger the chat after replying. Allowing to not hog all the RAM if ran in multiple terminals for example through SSH
     - add a (high) token threshold above which two texts are not combined but just concatenated in the semantic order. It would avoid it loosing context. Use a --- separator
     - compute the cost of whisper and deepgram
@@ -269,13 +269,13 @@ Detailed example
 </summary>
 
 1. Say you want to ask a question about one pdf, that's simple: `wdoc --task="query" --path="my_file.pdf" --filetype="pdf" --modelname='openai/gpt-4o'`. Note that you could have just let `--filetype="auto"` and it would have worked the same.
-* *Note: By default wdoc tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries. This does not always work so use it only after getting comfortable with wdoc.*
-2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that wdoc knows what arguments to expect, and specify as recursed_filetype "pdf" so that wdoc knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by wdoc like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
+* *Note: By default `wdoc` tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries. This does not always work so use it only after getting comfortable with `wdoc`.*
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that `wdoc` knows what arguments to expect, and specify as recursed_filetype "pdf" so that `wdoc` knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by `wdoc` like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive_paths", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources. `.toml` files are also supported.
-4. You can specify a "source_tag" metadata to help distinguish between documents you imported. It is EXTREMELY recommended to include a source_tag to any document you want to save: especially if using recursive filetypes. This is because after loading all documents wdoc use the source_tag to see if it should continue or crash. If you want to load 10_000 pdf in one go as I do, then it makes sense to continue if some failed to crash but not if a whole source_tag is missing.
+4. You can specify a "source_tag" metadata to help distinguish between documents you imported. It is EXTREMELY recommended to include a source_tag to any document you want to save: especially if using recursive filetypes. This is because after loading all documents `wdoc` use the source_tag to see if it should continue or crash. If you want to load 10_000 pdf in one go as I do, then it makes sense to continue if some failed to crash but not if a whole source_tag is missing.
 5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
 6. To know more about each argument supported by each filetype, `wdoc --help`
-7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by wdoc. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and wdoc automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
+7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by `wdoc`. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and `wdoc` automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 8. If you want to make sure your data remains private here's an example with ollama: `wdoc --private --llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434"}' --modelname="ollama_chat/gemma:2b" --query_eval_modelname="ollama_chat/gemma:2b" --embed_model="BAAI/bge-m3" my_task`
 9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing`:
 
@@ -344,7 +344,7 @@ Detailed example
 </details>
 
 ## Getting started
-*wdoc currently requires Python 3.11 to run for now. Make sure that your Python version matches this one or it will not work.*
+*`wdoc` currently requires Python 3.11 to run for now. Make sure that your Python version matches this one or it will not work.*
 1. To install:
     * Using pip: `pip11 install -U wdoc`
     * Or to get a specific git branch:
@@ -367,7 +367,7 @@ Detailed example
 * *More to come in [the scripts folder](./scripts/)*
 * [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
 * [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
-* [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by wdoc.
+* [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by `wdoc`.
 
 ## FAQ
 
@@ -377,31 +377,31 @@ FAQ
 </summary>
 
 * **Who is this for?**
-    * wdoc is for power users who want document querying on steroid, and in depth AI powered document summaries.
+    * `wdoc` is for power users who want document querying on steroid, and in depth AI powered document summaries.
 * **What's RAG?**
     * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
     * I'm a medical student so I need to be able to ask medical question from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc).
-* **Why is wdoc better than most RAG system to ask questions on documents?**
-    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also wdoc is very customizable.
-* **Why can wdoc also produce summaries?**
+* **Why is `wdoc` better than most RAG system to ask questions on documents?**
+    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also `wdoc` is very customizable.
+* **Why can `wdoc` also produce summaries?**
     * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
-* **What other tasks are supported by wdoc?**
+* **What other tasks are supported by `wdoc`?**
     * See [Supported tasks](#Supported-tasks).
-* **Which LLM providers are supported by wdoc?**
-    * wdoc supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
-* **What do you use wdoc for?**
-    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to wdoc I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
+* **Which LLM providers are supported by `wdoc`?**
+    * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section).
+* **What do you use `wdoc` for?**
+    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to `wdoc` I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
     * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
     * I use it to query my personal documents using the `--private` argument.
     * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
     * I use it to ask questions about entire youtube playlists.
-    * Other use case are the reason I made the [scripts made with wdoc section](#scripts-made-with-wdoc)
+    * Other use case are the reason I made the [scripts made with `wdoc` section](#scripts-made-with-wdoc)
 * **What's up with the name?**
     * One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
 * **How can I improve the prompt for a specific task without coding?**
     * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
-* **How can I use wdoc's parser for my own documents?**
+* **How can I use `wdoc`'s parser for my own documents?**
     * If you are in the shell cli you can easily use `wdoc parse my_file.pdf` (this actually replaces the call to call instead `wdoc_parse_file my_file.pdf`).
     add `--only_text` to only get the text and no metadata. If you're having problem with argument parsing you can try adding the `--pipe` argument.
     * If you want the document using python:
@@ -413,7 +413,7 @@ FAQ
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
 * **How can I add my own pdf parser?**
-    * Write a python class and add it there: `wdoc.utils.loaders.pdf_loaders['parser_name']=parser_object` then call wdoc with `--pdf_parsers=parser_name`.
+    * Write a python class and add it there: `wdoc.utils.loaders.pdf_loaders['parser_name']=parser_object` then call `wdoc` with `--pdf_parsers=parser_name`.
         * The class has to take a `path` argument in `__init__`, have a `load` method taking
         no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
         class for an example.
