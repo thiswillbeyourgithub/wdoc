@@ -1,6 +1,6 @@
 # wdoc
 
-<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512"></p>
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512" style="background-color: transparent !important"></p>
 
 > *I'm wdoc. I solve RAG problems.*
 > - wdoc, imitating Winston "The Wolf" Wolf
