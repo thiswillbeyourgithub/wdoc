@@ -48,6 +48,12 @@ html_theme_options = {
 
     'navigation_depth': -1,
     'sidebar_hide_name': True,  # Less aggressive, just hides the project name
+
+    # specific to pydata theme
+    # source: https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/navigation.html
+    "show_nav_level": 6,
+    "collapse_navigation": True
+
 }
 html_static_path = ['_static']
 html_css_files = ['custom.css']
