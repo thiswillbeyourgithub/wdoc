@@ -132,7 +132,6 @@ Click to read more
     - write unit tests
     - support other vector databases
     - make it easier to use other embeddings API than openai
-    - create a readthedocs site
     - understand why it appears that in some cases the sources id is never properly parsed
         - crash if source got lost  + arg to disable
 - ### Features
