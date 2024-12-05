@@ -6,7 +6,7 @@
 wdoc documentation
 ==================
 
-This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`, a sophisticated RAG system made by `a medical student <https://github.com/thiswillbeyourgithub>`.
+This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_, a sophisticated RAG system made by `a medical student <https://github.com/thiswillbeyourgithub>`_.
 
 Below the table of content is the content of the `README.md`, followed by the content of `wdoc/docs/USAGE.md` (i.e. what you see when you run `uvx wdoc --help`).
 
