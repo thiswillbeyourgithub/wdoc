@@ -1,9 +1,9 @@
+# wdoc
+
 <p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512"></p>
 
 > *I'm wdoc. I solve RAG problems.*
 > - wdoc, imitating Winston "The Wolf" Wolf
-
-# wdoc
 
 wdoc is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources. I was frustrated with all other RAG solutions for querying or summarizing, so I made my perfect solution in a single package.
 
