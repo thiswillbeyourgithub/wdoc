@@ -27,18 +27,6 @@ extensions = [
     'myst_parser'  # for markdown support
 ]
 
-autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-    'exclude-members': '__weakref__'
-}
-
-napoleon_google_docstring = True
-napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
-
 templates_path = ['_templates']
 exclude_patterns = []
 source_suffix = {
@@ -70,6 +58,3 @@ html_theme_options = {
 }
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
-html_sidebars = {
-    "**": ["sidebar-nav-bs", "sidebar-ethical-ads"]
-}
