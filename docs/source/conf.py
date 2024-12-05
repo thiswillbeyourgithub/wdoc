@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'wdoc'
 copyright = '2024, thiswillbeyourgithub'
 author = 'thiswillbeyourgithub'
-release = '2.4.13'
+release = '2.4.14'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
