@@ -16,14 +16,6 @@ Below the table of content is the content of the `README.md`, followed by the co
    readme
    usage
 
-README
-======
+.. include:: readme.rst
 
-.. include:: readme.md
-   :parser: myst_parser.sphinx_
-
-USAGE
-======
-
-.. include:: usage.md
-   :parser: myst_parser.sphinx_
+.. include:: usage.rst
