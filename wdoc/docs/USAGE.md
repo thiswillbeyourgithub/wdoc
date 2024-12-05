@@ -1,4 +1,4 @@
-# wdoc --help
+# --help
 
 ### Table of contents
 - [Global arguments](#global-arguments)
