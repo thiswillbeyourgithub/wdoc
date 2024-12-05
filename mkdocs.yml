@@ -1,9 +1,0 @@
-site_name: Your Project Name
-theme:
-  name: readthedocs
-markdown_extensions:
-  - toc:
-      permalink: true
-      baselevel: 1
-nav:
-  - Home: README.md
