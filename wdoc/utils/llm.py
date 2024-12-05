@@ -3,9 +3,8 @@ Code related to loading the LLM instance, with an appropriate price
 counting callback.
 """
 
-from typing import Union, List, Any, Optional
+from typing import Union, List, Any, Optional, Dict
 import os
-from typing import Dict
 import uuid
 
 from langchain_core.callbacks import BaseCallbackHandler
