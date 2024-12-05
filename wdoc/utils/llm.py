@@ -5,7 +5,6 @@ counting callback.
 
 from typing import Union, List, Any, Optional, Dict
 import os
-import uuid
 
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.agents import AgentAction, AgentFinish
