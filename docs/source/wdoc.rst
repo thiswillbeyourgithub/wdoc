@@ -1,29 +1,24 @@
 wdoc package
 ============
 
+.. automodule:: wdoc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: -1
 
    wdoc.utils
 
 Submodules
 ----------
 
-wdoc.wdoc module
-----------------
 
 .. automodule:: wdoc.wdoc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: wdoc
    :members:
    :undoc-members:
    :show-inheritance:
