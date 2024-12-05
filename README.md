@@ -7,7 +7,7 @@
 
 `wdoc` is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources. I was frustrated with all other RAG solutions for querying or summarizing, so I made my perfect solution in a single package.
 
-*(The online documentation can be found [here](https://wdoc.readthedocs.io/en/latest/readme.html))*
+*(The online documentation can be found [here](https://wdoc.readthedocs.io/en/stable))*
 
 * **Goal and project specifications**: `wdoc` uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
