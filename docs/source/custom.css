@@ -1,3 +1,9 @@
+.wy-nav-side {
+    display: none !important;
+}
+.wy-nav-content-wrap {
+    margin-left: 0 !important;
+}
 .bd-sidebar {
     display: none !important;
 }
