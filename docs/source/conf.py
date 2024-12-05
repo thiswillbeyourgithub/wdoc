@@ -48,3 +48,4 @@ html_theme_options = {
     'sidebar_hide_name': True,  # Less aggressive, just hides the project name
 }
 html_static_path = ['_static']
+html_css_files = ['custom.css']
