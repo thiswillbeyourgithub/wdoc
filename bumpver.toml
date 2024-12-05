@@ -13,3 +13,4 @@ push = false
 "bumpver.toml" = ['current_version = "{version}"']
 "setup.py" = ['version="{version}"']
 "wdoc/wdoc.py" = ['VERSION: str = "{version}"']
+"docs/source/conf.py" = ["release = '{version}'"]
