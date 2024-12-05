@@ -350,13 +350,13 @@ Detailed example
     * Or to get a specific git branch:
         * `dev` branch: `pip11 install git+https://github.com/thiswillbeyourgithub/wdoc@dev`
         * `main` branch: `pip11 install git+https://github.com/thiswillbeyourgithub/wdoc@main`
-    * You can also use pipx or uvx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
-        * Using pipx: `pipx run wdoc --help`
+    * You can also use uvx or pipx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
         * Using uvx: `uvx wdoc --help`
+        * Using pipx: `pipx run wdoc --help`
     * In any case, it is recommended to try to install pdftotext with `pip11 install -U wdoc[pdftotext]` as well as add fasttext support with `pip11 install -U wdoc[fasttext]`.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
-    * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, clone this repo and try again after `cd` inside it.
+    * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
     * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
