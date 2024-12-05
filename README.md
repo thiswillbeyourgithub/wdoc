@@ -131,7 +131,6 @@ Click to read more
         - be careful to how to use import_mode
     - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
-    - write unit tests
     - support other vector databases
     - make it easier to use other embeddings API than openai
     - understand why it appears that in some cases the sources id is never properly parsed
