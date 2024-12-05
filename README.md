@@ -163,7 +163,6 @@ Click to read more
     - make sure to expose loaders and batch_loader to make it easy to import by others
     - find a way to make it work with llm from simonw
     - make images an actual filetype
--
 - ### enhancements
     - store the available tasks in a single var in misc.py
     - check that the task search work on things other than anki
