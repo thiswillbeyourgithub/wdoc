@@ -116,7 +116,7 @@ def cli_parse_file() -> None:
             kwargs[a] = True
 
         # all loaders need a path arg except anki
-        if "filetype" in kwargs and kwargs["filetype"] == anki and "path" not in kwargs:
+        if "filetype" in kwargs and kwargs["filetype"] == "anki" and "path" not in kwargs:
             kwargs["path"] = None
         parsed = wdoc.parse_file(**kwargs)
     else:
