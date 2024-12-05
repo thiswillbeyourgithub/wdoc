@@ -1932,9 +1932,11 @@ class wdoc:
         if kwargs:
             kwargs = DocDict(kwargs)
 
+        # all loaders need a path arg except anki
+        if filetype != "anki":
+            kwargs["path"] = path
         out = batch_load_doc(
             filetype=filetype,
-            path=path,
             **default_cli_kwargs,
             **kwargs,
         )
