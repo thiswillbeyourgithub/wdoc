@@ -126,7 +126,10 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
-    - make the pytest suite comprehensive
+    - add more tests
+        - add test for the private mode
+        - add test for the testing models
+        - add test for each parser
     - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - be careful to how to use import_mode
