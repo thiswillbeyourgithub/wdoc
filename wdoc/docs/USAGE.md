@@ -703,6 +703,14 @@
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
     Must be an int. By default is 15.
 
+* `WDOC_MAX_CHUNK_SIZE`
+    * When splitting large text into chunks, `wdoc` infers the maximum context size from litellm's models metadata.
+    The maximum chunk size is capped by this value, as the maximum advertised context length is usually optimistic
+    and is often at the cost of prompt adherence.
+    Note that the chunk size inferred for query is not the same as for summary as we need  a much better prompt adherence
+    for the latter.
+    Default is `32_000`.
+
 * `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`
     * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should

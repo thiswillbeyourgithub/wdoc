@@ -31,7 +31,7 @@ from .logger import whi, red, yel, cache_dir
 from .typechecker import optional_typecheck
 from .flags import is_verbose, is_debug, is_private
 from .errors import UnexpectedDocDictArgument
-from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_IMPORT_TYPE
+from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_IMPORT_TYPE, WDOC_MAX_CHUNK_SIZE
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
 
@@ -466,7 +466,7 @@ def get_splitter(
         max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
 
         # don't use overly large chunks anyway
-        max_tokens = min(max_tokens, 16_000)
+        max_tokens = min(max_tokens, WDOC_MAX_CHUNK_SIZE)
     except Exception as err:
         max_tokens = 4096
         red(f"Failed to get max_tokens limit for model {modelname}: '{err}'")
