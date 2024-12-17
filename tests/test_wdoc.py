@@ -59,3 +59,13 @@ def test_invalid_filetype():
             debug=False,
             verbose=False
         )
+
+def test_summary_tim_urban():
+    """Test summarization of Tim Urban's procrastination video."""
+    instance = wdoc(
+        task="summarize",
+        filetype="youtube",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        debug=False,
+        verbose=False,
+    )
