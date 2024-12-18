@@ -20,7 +20,7 @@ release = '2.4.16'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
+    # 'sphinx.ext.napoleon',  # not needed because the docstrings of wdoc are not using appropriate formats
     'sphinx.ext.viewcode',
     'myst_parser'  # for markdown support
 ]
