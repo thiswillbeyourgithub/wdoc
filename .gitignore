@@ -19,3 +19,6 @@ scripts/NtfySummarizer/summaries
 scripts/notfinished_*
 scripts/**/*perso*
 latest_release_notes.md
+
+# tests
+test_cache.db
