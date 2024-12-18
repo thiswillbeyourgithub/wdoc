@@ -8,6 +8,7 @@
 
 import os
 import sys
+sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../..'))
 
 project = 'wdoc'
@@ -22,7 +23,8 @@ extensions = [
     'sphinx.ext.autodoc',
     # 'sphinx.ext.napoleon',  # not needed because the docstrings of wdoc are not using appropriate formats
     'sphinx.ext.viewcode',
-    'myst_parser'  # for markdown support
+    'myst_parser',  # for markdown support
+    'raw_docstring'
 ]
 
 templates_path = ['_templates']
