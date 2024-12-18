@@ -10,9 +10,21 @@ Core Module
    :show-inheritance:
    :private-members:
    :special-members:
+   :imported-members:
 
 Utility Modules
 -------------
+
+Interactive Utilities
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: wdoc.utils.interact
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :private-members:
+   :special-members:
+   :imported-members:
 
 Miscellaneous Utilities
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -23,6 +35,7 @@ Miscellaneous Utilities
    :show-inheritance:
    :private-members:
    :special-members:
+   :imported-members:
 
 Logger
 ~~~~~~
@@ -33,6 +46,7 @@ Logger
    :show-inheritance:
    :private-members:
    :special-members:
+   :imported-members:
 
 LLM Utilities
 ~~~~~~~~~~~~
@@ -43,3 +57,4 @@ LLM Utilities
    :show-inheritance:
    :private-members:
    :special-members:
+   :imported-members:

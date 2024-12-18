@@ -8,8 +8,11 @@
 
 import os
 import sys
+
+# Add the project root and extension directories to the Python path
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../../wdoc'))
 
 project = 'wdoc'
 copyright = '2024, thiswillbeyourgithub'
@@ -36,7 +39,14 @@ autodoc_default_options = {
     'private-members': True,
     'special-members': True,
     'show-inheritance': True,
+    'imported-members': True,
 }
+
+autodoc_member_order = 'bysource'
+autodoc_typehints = 'description'
+autodoc_preserve_defaults = True
+autodoc_inherit_docstrings = True
+autodoc_docstring_signature = True
 
 # Napoleon settings
 napoleon_google_docstring = True
