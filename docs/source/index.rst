@@ -22,3 +22,5 @@ Below the table of content is the content of the `README.md`, followed by the co
 
 .. include:: usage.md
    :parser: myst_parser.sphinx_
+
+.. include:: api.rst
