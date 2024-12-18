@@ -1,6 +1,13 @@
 API Documentation
 ================
 
+.. automodule:: wdoc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :private-members:
+   :noindex:
+
 .. automodule:: wdoc.wdoc
    :members:
    :undoc-members:
