@@ -25,6 +25,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'myst_parser',  # for markdown support
     'raw_docstring',
+    'better_docstring',
     'sphinx.ext.autosectionlabel'
 ]
 
@@ -49,6 +50,8 @@ napoleon_use_admonition_for_references = True
 napoleon_use_ivar = True
 napoleon_use_param = True
 napoleon_use_rtype = True
+napoleon_attr_annotations = True
+napoleon_preprocess_types = True
 
 templates_path = ['_templates']
 exclude_patterns = []

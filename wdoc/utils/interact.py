@@ -19,7 +19,14 @@ from .typechecker import optional_typecheck
 
 @optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
-    "parsed settings to be well displayed in the prompt toolbar"
+    """Parse settings for display in the prompt toolbar.
+    
+    Args:
+        settings (dict): Dictionary containing the current settings
+        
+    Returns:
+        Any: Formatted text suitable for display in the toolbar
+    """
     out = []
     keys = sorted(list(settings.keys()))
     for k in keys:
@@ -85,7 +92,14 @@ class SettingsCompleter(Completer):
 
 @optional_typecheck
 def show_help() -> None:
-    "display CLI help"
+    """Display CLI help information.
+    
+    This function displays the CLI help information by formatting and showing
+    the docstring from the ask_user function.
+    
+    Returns:
+        None
+    """
     md_printer(dedent(ask_user.__doc__).strip())
 
 
