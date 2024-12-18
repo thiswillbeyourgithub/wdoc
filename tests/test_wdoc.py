@@ -68,10 +68,15 @@ def test_invalid_filetype():
 )
 def test_summary_tim_urban():
     """Test summarization of Tim Urban's procrastination video."""
-    instance = wdoc(
+    _ = wdoc(
         task="summarize",
-        filetype="youtube",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        modelname="openai/gpt-4o",
+        query_eval_modelname="openai/gpt-4o-mini",
+        embed_model="openai/text-embedding-3-small",
+        #filetype="youtube",
+        filetype="auto",
         debug=False,
         verbose=False,
     )
+
