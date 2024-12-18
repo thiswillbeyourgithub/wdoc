@@ -83,5 +83,6 @@ def test_summary_tim_urban():
         filetype="auto",
         debug=False,
         verbose=False,
+        import_mode=True,
     )
 
