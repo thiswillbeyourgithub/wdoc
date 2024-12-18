@@ -1,3 +1,4 @@
+import sys
 import pytest
 from pathlib import Path
 from wdoc.wdoc import wdoc
@@ -60,6 +61,11 @@ def test_invalid_filetype():
             verbose=False
         )
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them."
+)
 def test_summary_tim_urban():
     """Test summarization of Tim Urban's procrastination video."""
     instance = wdoc(
