@@ -470,7 +470,7 @@ def batch_load_doc(
 
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
-    if "summar" not in task:
+    if "summar" not in task and len(docs) > 1:
         red("Deduplicating...")
         whi("Getting all hash")
         content_hash = [d.metadata["content_hash"] for d in docs]
