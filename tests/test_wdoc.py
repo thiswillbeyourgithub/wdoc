@@ -86,3 +86,23 @@ def test_summary_tim_urban():
         import_mode=True,
     )
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them."
+)
+def test_query_tim_urban():
+    """Test query task on Tim Urban's procrastination video."""
+    _ = wdoc(
+        task="query",
+        query="What university did the author go to?",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        modelname="openai/gpt-4o",
+        query_eval_modelname="openai/gpt-4o-mini",
+        embed_model="openai/text-embedding-3-small",
+        #filetype="youtube",
+        filetype="auto",
+        debug=False,
+        verbose=False,
+        import_mode=True,
+    )
