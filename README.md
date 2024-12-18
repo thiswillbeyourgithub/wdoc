@@ -429,6 +429,6 @@ FAQ
         environment variable `WDOC_LLM_MAX_CONCURRENCY` to a lower value.
 
 * **How can I run the tests?**
-    * Try `python -m pytest tests`
+    * Try `python -m pytest tests/test_wdoc.py -v` to run the basic tests, and `python -m pytest tests/test_wdoc.py -v -m api` to run the test that use external APIs.
 
 </details>

@@ -3,11 +3,13 @@ import pytest
 from pathlib import Path
 from wdoc.wdoc import wdoc
 
+@pytest.mark.basic
 def test_wdoc_version():
     """Test that wdoc has a valid version string."""
     assert isinstance(wdoc.VERSION, str)
     assert len(wdoc.VERSION.split(".")) == 3
 
+@pytest.mark.basic
 def test_fail_parse_small_file_text(sample_text_file):
     """Test that a too small text file parsing fails."""
     # should fail because the file is too small
@@ -19,6 +21,7 @@ def test_fail_parse_small_file_text(sample_text_file):
             verbose=False
         )
 
+@pytest.mark.basic
 def test_parse_file_text(sample_text_file):
     """Test basic text file parsing."""
     # make a bigger text file
@@ -35,6 +38,7 @@ def test_parse_file_text(sample_text_file):
     assert docs[0].page_content.startswith("This is a test document")
     assert "multiple lines" in docs[0].page_content
 
+@pytest.mark.basic
 def test_parse_file_only_text(sample_text_file):
     """Test text-only output from parse_file."""
     f = Path(sample_text_file)
@@ -51,6 +55,7 @@ def test_parse_file_only_text(sample_text_file):
     assert text.startswith("This is a test document")
     assert "multiple lines" in text
 
+@pytest.mark.basic
 def test_invalid_filetype():
     """Test that invalid filetype raises an error."""
     with pytest.raises(Exception):
