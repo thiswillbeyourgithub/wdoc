@@ -4,11 +4,21 @@ wdoc.utils.tasks package
 Submodules
 ----------
 
-.. toctree::
-   :maxdepth: 4
+wdoc.utils.tasks.query module
+-----------------------------
 
-   wdoc.utils.tasks.query
-   wdoc.utils.tasks.summarize
+.. automodule:: wdoc.utils.tasks.query
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+wdoc.utils.tasks.summarize module
+---------------------------------
+
+.. automodule:: wdoc.utils.tasks.summarize
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
