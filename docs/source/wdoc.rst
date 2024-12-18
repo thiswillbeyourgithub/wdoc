@@ -12,13 +12,10 @@ Subpackages
 Submodules
 ----------
 
-wdoc.wdoc module
-----------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: wdoc.wdoc
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   wdoc.wdoc
 
 Module contents
 ---------------
