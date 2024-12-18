@@ -24,8 +24,31 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'myst_parser',  # for markdown support
-    'raw_docstring'
+    'raw_docstring',
+    'sphinx.ext.autosectionlabel'
 ]
+
+# Autodoc settings
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'private-members': True,
+    'special-members': True,
+    'show-inheritance': True,
+}
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = True
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 templates_path = ['_templates']
 exclude_patterns = []
