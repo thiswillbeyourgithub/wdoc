@@ -20,7 +20,7 @@ Core Module
    :imported-members:
 
 Utility Modules
--------------
+--------------
 
 Interactive Utilities
 ~~~~~~~~~~~~~~~~~~~
