@@ -10,7 +10,6 @@ import os
 import sys
 
 # Add the project root and extension directories to the Python path
-sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../..'))
 
 project = 'wdoc'
@@ -26,8 +25,6 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'myst_parser',  # for markdown support
-    'raw_docstring',
-    'better_docstring',
     'sphinx.ext.autosectionlabel'
 ]
 
