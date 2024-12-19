@@ -1,9 +1,14 @@
 API Documentation
 ================
 
+
 .. contents:: Table of Contents
    :depth: 4
    :local:
+   :maxdepth: 6
+   :glob:
+   _autogen/*
+
 
 Core Module
 ----------

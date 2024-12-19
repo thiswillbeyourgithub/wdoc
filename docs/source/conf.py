@@ -8,9 +8,33 @@
 
 import os
 import sys
+from sphinx.ext.apidoc import main as apidoc_main
+
+# don't include docstrings of objects that are not part of wdoc
+def skip_imported(app, what, name, obj, skip, options):
+    if hasattr(obj, '__module__'):
+        if not obj.__module__.startswith('wdoc'):
+            return True
+    return skip
 
 # Add the project root and extension directories to the Python path
 sys.path.insert(0, os.path.abspath('./../..'))
+
+def setup(app):
+    # source: https://stackoverflow.com/questions/52648002/readthedocs-does-not-display-docstring-documentation
+    apidoc_main(['-f', #Overwrite existing files
+                        '-T', #Create table of contents
+                        #'-e', #Give modules their own pages
+                        '-E', #user docstring headers
+                        #'-M', #Modules first
+                        '-o', #Output the files to:
+                        './source/_autogen/', #Output Directory
+                        './../wdoc', #Main Module directory
+                        ]
+    )
+
+    # don't include docstrings of objects that are not part of wdoc
+    app.connect('autodoc-skip-member', skip_imported)
 
 project = 'wdoc'
 copyright = '2024, thiswillbeyourgithub'
@@ -90,13 +114,3 @@ html_theme_options = {
 }
 html_static_path = ['_static']
 # html_css_files = ["custom.css"]
-
-# don't include docstrings of objects that are not part of wdoc
-def skip_imported(app, what, name, obj, skip, options):
-    if hasattr(obj, '__module__'):
-        if not obj.__module__.startswith('wdoc'):
-            return True
-    return skip
-
-def setup(app):
-    app.connect('autodoc-skip-member', skip_imported)
