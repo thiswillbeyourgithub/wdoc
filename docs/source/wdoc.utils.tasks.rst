@@ -4,21 +4,19 @@ wdoc.utils.tasks package
 Submodules
 ----------
 
-wdoc.utils.tasks.query module
------------------------------
 
 .. automodule:: wdoc.utils.tasks.query
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
 
-wdoc.utils.tasks.summarize module
----------------------------------
 
 .. automodule:: wdoc.utils.tasks.summarize
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
 
 Module contents
 ---------------
@@ -27,3 +25,4 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
