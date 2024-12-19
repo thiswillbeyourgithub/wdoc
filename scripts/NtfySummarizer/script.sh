@@ -16,6 +16,9 @@ for rcfile in ~/.zshrc ~/.bashrc ~/.bash_profile; do
     fi
 done
 
+# cd into wdoc, useful to trigger some autoenv things for some users
+cd $local_path/../../
+
 eval $(cat $local_path/TOPICS)
 
 # Check if required variables are set
