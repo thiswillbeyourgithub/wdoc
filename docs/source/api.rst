@@ -2,10 +2,9 @@ API Documentation
 ================
 
 
-.. contents:: Table of Contents
-   :depth: 4
-   :local:
+.. toctree::
    :maxdepth: 6
+   :caption: Table of Contents
 
 
 Core Module
