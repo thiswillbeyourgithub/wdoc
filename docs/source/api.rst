@@ -3,7 +3,7 @@ full api
 
 
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 2
    :caption: Table of Contents
 
    modules
