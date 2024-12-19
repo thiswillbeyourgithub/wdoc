@@ -90,3 +90,13 @@ html_theme_options = {
 }
 html_static_path = ['_static']
 # html_css_files = ["custom.css"]
+
+# don't include docstrings of objects that are not part of wdoc
+def skip_imported(app, what, name, obj, skip, options):
+    if hasattr(obj, '__module__'):
+        if not obj.__module__.startswith('wdoc'):
+            return True
+    return skip
+
+def setup(app):
+    app.connect('autodoc-skip-member', skip_imported)
