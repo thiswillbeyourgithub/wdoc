@@ -29,7 +29,8 @@ fi
 
 output=$(python "${0:h}"/NtfySummarizer.py --topic="$topic_send" 2>&1 >/dev/null) && echo "Success" && exit 0
 
-mess="An error happened during the python execution
+mess="An error happened during wdoc execution on input \"$NTFY_MESSAGE\"
+
 Full output:
 $output"
 ntfy publish $topic_send "$mess" || echo $mess
