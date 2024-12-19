@@ -12,19 +12,13 @@ Subpackages
 Submodules
 ----------
 
-
-.. automodule:: wdoc.__main__
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :private-members:
-
+wdoc.wdoc module
+----------------
 
 .. automodule:: wdoc.wdoc
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
 Module contents
 ---------------
@@ -33,4 +27,3 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:

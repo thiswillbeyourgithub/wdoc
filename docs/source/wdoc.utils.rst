@@ -13,103 +13,117 @@ Subpackages
 Submodules
 ----------
 
+wdoc.utils.batch\_file\_loader module
+-------------------------------------
 
 .. automodule:: wdoc.utils.batch_file_loader
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.embeddings module
+----------------------------
 
 .. automodule:: wdoc.utils.embeddings
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.env module
+---------------------
 
 .. automodule:: wdoc.utils.env
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.errors module
+------------------------
 
 .. automodule:: wdoc.utils.errors
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.flags module
+-----------------------
 
 .. automodule:: wdoc.utils.flags
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.import\_tricks module
+--------------------------------
 
 .. automodule:: wdoc.utils.import_tricks
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.interact module
+--------------------------
 
 .. automodule:: wdoc.utils.interact
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.llm module
+---------------------
 
 .. automodule:: wdoc.utils.llm
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.loaders module
+-------------------------
 
 .. automodule:: wdoc.utils.loaders
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.logger module
+------------------------
 
 .. automodule:: wdoc.utils.logger
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.misc module
+----------------------
 
 .. automodule:: wdoc.utils.misc
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.prompts module
+-------------------------
 
 .. automodule:: wdoc.utils.prompts
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.retrievers module
+----------------------------
 
 .. automodule:: wdoc.utils.retrievers
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
+wdoc.utils.typechecker module
+-----------------------------
 
 .. automodule:: wdoc.utils.typechecker
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
 
 Module contents
 ---------------
@@ -118,4 +132,3 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
-   :private-members:
