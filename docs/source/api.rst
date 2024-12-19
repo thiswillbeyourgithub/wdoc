@@ -7,4 +7,3 @@ full api
    :caption: Table of Contents
 
    modules
-   wdoc
