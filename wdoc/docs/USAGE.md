@@ -709,6 +709,7 @@
     and is often at the cost of prompt adherence.
     Note that the chunk size inferred for query is not the same as for summary as we need  a much better prompt adherence
     for the latter.
+    This can also be used to avoid chunking when querying a text if you want the LLM to have the entier text as context instead of chunking.
     Default is `32_000`.
 
 * `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`
