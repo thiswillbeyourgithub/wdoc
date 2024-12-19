@@ -33,4 +33,6 @@ mess="An error happened during wdoc execution on input \"$NTFY_MESSAGE\"
 
 Full output:
 $output"
-ntfy publish $topic_send "$mess" || echo $mess
+
+# the topic has to be declared twice otherwise the env has priority
+NTFY_TOPIC="$topic_send" ntfy publish $topic_send "$mess" || echo $mess
