@@ -24,4 +24,9 @@ if [[ -z "$topic_receive" || -z "$topic_send" ]]; then
     exit 1
 fi
 
-python "${0:h}"/NtfySummarizer.py --topic="$topic_send"
+output=$(python "${0:h}"/NtfySummarizer.py --topic="$topic_send" 2>&1 >/dev/null) && echo "Success" && exit 0
+
+mess="An error happened during the python execution
+Full output:
+$output"
+ntfy publish $topic_send "$mess" || echo $mess
