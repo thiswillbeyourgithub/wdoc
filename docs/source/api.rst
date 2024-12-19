@@ -1,6 +1,10 @@
 API Documentation
 ================
 
+.. contents:: Table of Contents
+   :depth: 4
+   :local:
+
 Core Module
 ----------
 
