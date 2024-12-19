@@ -8,7 +8,7 @@ if [[ ! -f "$local_path/TOPICS" ]]; then
     exit 1
 fi
 
-# Source shell configuration files if they exist
+# # Source shell configuration files if they exist, this can be useful for some user that for example declared specific env variables
 for rcfile in ~/.zshrc ~/.bashrc ~/.bash_profile; do
     if [[ -f "$rcfile" ]]; then
         source "$rcfile"
