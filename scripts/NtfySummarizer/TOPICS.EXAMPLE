@@ -1,5 +1,6 @@
+# Remember that those topics must be unique if you don't want others to launch wdoc for you or read what you read!
 # The topic to receive URLs for summarization
-topic_receive="WDoc_summarize"
+topic_receive="WDoc_summarize_aslkdjaslkdjalksdj"
 
 # The topic to send summarized results
-topic_send="WDoc_summaries"
+topic_send="WDoc_summaries_qwopeiuqwepoi"
