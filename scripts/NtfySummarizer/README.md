@@ -62,7 +62,7 @@ Then `sudo systemctl restart ntfy-client.service`.
 ## Troubleshooting
 
 - Ensure that the `TOPICS` file is properly configured with your desired topic names.
-- Check that you have the necessary permissions to execute `script.sh`.
+- Check that you have the necessary permissions to execute `script.sh`. In my case I had to modify `/lib/systemd/system/ntfy-client.service` to change `User=` and `Group=` to my own username instead of `ntfy`, otherwise I had '`Permission denied`.
 - Verify that the wdoc library is correctly installed and configured in your Python environment.
 
 For more information on ntfy.sh usage, visit the [ntfy.sh documentation](https://ntfy.sh/docs/).
