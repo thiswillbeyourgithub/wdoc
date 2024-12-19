@@ -8,7 +8,6 @@
 
 import os
 import sys
-from sphinx.ext.apidoc import main as apidoc_main
 
 # don't include docstrings of objects that are not part of wdoc
 def skip_imported(app, what, name, obj, skip, options):
@@ -21,20 +20,6 @@ def skip_imported(app, what, name, obj, skip, options):
 sys.path.insert(0, os.path.abspath('./../..'))
 
 def setup(app):
-    # source: https://stackoverflow.com/questions/52648002/readthedocs-does-not-display-docstring-documentation
-    print("Running sphinx-apidoc")
-    apidoc_main(['-f', #Overwrite existing files
-                        '-T', #Create table of contents
-                        #'-e', #Give modules their own pages
-                        '-E', #user docstring headers
-                        #'-M', #Modules first
-                        '-o', #Output the files to:
-                        './source/_autogen/', #Output Directory
-                        './../wdoc', #Main Module directory
-                        ]
-    )
-    print("Done running sphinx-apidoc")
-
     # don't include docstrings of objects that are not part of wdoc
     app.connect('autodoc-skip-member', skip_imported)
 

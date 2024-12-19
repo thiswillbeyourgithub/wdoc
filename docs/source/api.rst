@@ -6,8 +6,6 @@ API Documentation
    :depth: 4
    :local:
    :maxdepth: 6
-   :glob:
-   _autogen/*
 
 
 Core Module
