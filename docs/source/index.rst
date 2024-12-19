@@ -11,7 +11,7 @@ This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdo
 Below the table of content is the content of the `README.md`, followed by the content of `wdoc/docs/USAGE.md` (i.e. what you see when you run `uvx wdoc --help`).
 
 .. toctree::
-   :maxdepth: 6
+   :maxdepth: 2
 
    readme
    usage
