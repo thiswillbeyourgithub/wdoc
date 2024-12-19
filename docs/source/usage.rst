@@ -1,6 +1,3 @@
---help output
-=============
-
 .. toctree::
    :maxdepth: 2
 
