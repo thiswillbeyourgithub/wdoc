@@ -12,7 +12,6 @@ import sys
 # Add the project root and extension directories to the Python path
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('../../wdoc'))
 
 project = 'wdoc'
 copyright = '2024, thiswillbeyourgithub'
