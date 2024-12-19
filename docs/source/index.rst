@@ -14,6 +14,7 @@ Below the table of content is the content of the `README.md`, followed by the co
    :maxdepth: 2
 
    readme
+   usage
 
 .. include:: readme.md
    :parser: myst_parser.sphinx_
