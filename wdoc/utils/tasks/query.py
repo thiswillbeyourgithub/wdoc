@@ -3,32 +3,35 @@ Chain (logic) used to query a document.
 """
 
 import re
-from beartype.typing import Tuple, List, Union, Literal
 import time
-from numpy.typing import NDArray
 
+import numpy as np
+import pandas as pd
+import scipy
+import sklearn.decomposition as decomposition
+import sklearn.metrics as metrics
+import sklearn.preprocessing as preprocessing
+from beartype.typing import List, Literal, Tuple, Union
 from langchain.docstore.document import Document
+from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
-from tqdm import tqdm
-import numpy as np
-
-from langchain.embeddings import CacheBackedEmbeddings
-from langchain_community.chat_models.fake import FakeListChatModel
-from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
-import pandas as pd
-import sklearn.metrics as metrics
-import sklearn.decomposition as decomposition
-import sklearn.preprocessing as preprocessing
-import scipy
+from numpy.typing import NDArray
+from tqdm import tqdm
 
-from ..typechecker import optional_typecheck
-from ..errors import NoDocumentsRetrieved, NoDocumentsAfterLLMEvalFiltering, InvalidDocEvaluationByLLMEval
-from ..logger import red, whi
-from ..misc import thinking_answer_parser, get_tkn_length
-from ..flags import is_verbose
 from ..env import WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+from ..errors import (
+    InvalidDocEvaluationByLLMEval,
+    NoDocumentsAfterLLMEvalFiltering,
+    NoDocumentsRetrieved,
+)
+from ..flags import is_verbose
+from ..logger import red, whi
+from ..misc import get_tkn_length, thinking_answer_parser
+from ..typechecker import optional_typecheck
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
@@ -38,11 +41,9 @@ def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if "<answer>IRRELEVANT</answer>" in ans:
         return False
-    if (
-        ((not irrelevant_regex.search(ans)) and len(ans) < len("IRRELEVANT") * 2)
-        or
-        len(ans) >= len("IRRELEVANT") * 2
-    ):
+    if ((not irrelevant_regex.search(ans)) and len(ans) < len("IRRELEVANT") * 2) or len(
+        ans
+    ) >= len("IRRELEVANT") * 2:
         return True
     return False
 
@@ -52,6 +53,7 @@ def sieve_documents(instance) -> RunnableLambda:
     """cap the number of retrieved documents as if multiple retrievers are used
     we can end up with a lot more document!
     """
+
     @chain
     @optional_typecheck
     def _sieve(inputs: dict) -> dict:
@@ -66,9 +68,11 @@ def sieve_documents(instance) -> RunnableLambda:
             red(
                 "Number of documents found via embeddings was "
                 f"'{inputs['unfiltered_docs']}' which is > top_k ({instance.top_k}) "
-                "so we crop")
-        inputs["unfiltered_docs"] = inputs["unfiltered_docs"][:instance.top_k]
+                "so we crop"
+            )
+        inputs["unfiltered_docs"] = inputs["unfiltered_docs"][: instance.top_k]
         return inputs
+
     return _sieve
 
 
@@ -79,11 +83,14 @@ def refilter_docs(inputs: dict) -> List[Document]:
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
     assert isinstance(
-        unfiltered_docs, list), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
+        unfiltered_docs, list
+    ), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
     assert isinstance(
-        evaluations, list), f"evaluations should be a list, not {type(evaluations)}"
+        evaluations, list
+    ), f"evaluations should be a list, not {type(evaluations)}"
     assert len(unfiltered_docs) == len(
-        evaluations), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
+        evaluations
+    ), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
     if not unfiltered_docs:
         raise NoDocumentsRetrieved("No document corresponding to the query")
 
@@ -96,7 +103,9 @@ def refilter_docs(inputs: dict) -> List[Document]:
             try:
                 a = int(a)
             except Exception as err:
-                red(f"Document was not evaluated with a number: '{err}' for answer '{a}'\nKeeping the document anyway.")
+                red(
+                    f"Document was not evaluated with a number: '{err}' for answer '{a}'\nKeeping the document anyway."
+                )
                 a = 5
             answers[ia] = a
 
@@ -105,13 +114,16 @@ def refilter_docs(inputs: dict) -> List[Document]:
 
     if not filtered_docs:
         raise NoDocumentsAfterLLMEvalFiltering(
-            "No document remained after filtering with the query")
+            "No document remained after filtering with the query"
+        )
     return filtered_docs
 
 
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
-    mess = f"The eval LLM returned an output that can't be parsed as expected: '{output}'"
+    mess = (
+        f"The eval LLM returned an output that can't be parsed as expected: '{output}'"
+    )
     # empty
     if not output.strip():
         raise InvalidDocEvaluationByLLMEval(mess)
@@ -126,7 +138,9 @@ def parse_eval_output(output: str) -> str:
         answer = int(answer)
         return str(answer)
     except Exception as err:
-        red(f"Document was not evaluated with a number: '{err}' for answer '{answer}'\nKeeping the document anyway.")
+        red(
+            f"Document was not evaluated with a number: '{err}' for answer '{answer}'\nKeeping the document anyway."
+        )
         return str(5)
 
     if "-" in parsed["answer"]:
@@ -152,16 +166,17 @@ def parse_eval_output(output: str) -> str:
         raise InvalidDocEvaluationByLLMEval(mess)
 
 
-
 @optional_typecheck
 def collate_intermediate_answers(
     list_ia: List[str],
-    ) -> str:
+) -> str:
     """write the intermediate answers in a single string to be
     combined by the LLM"""
     # remove answers deemed irrelevant
     list_ia = [ia for ia in list_ia if check_intermediate_answer(ia)]
-    assert len(list_ia) >= 2, f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
+    assert (
+        len(list_ia) >= 2
+    ), f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
 
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
@@ -172,11 +187,12 @@ def collate_intermediate_answers(
 </ia>\n""".lstrip()
     return out
 
+
 @optional_typecheck
 def semantic_batching(
     texts: List[str],
     embedding_engine: CacheBackedEmbeddings,
-    ) -> List[List[str]]:
+) -> List[List[str]]:
     """
     Given a list of text, embed them, do a hierarchical clutering then
     sort the list according to the leaf order, then create buckets that best
@@ -199,7 +215,7 @@ def semantic_batching(
     if len(texts) <= 3:
         return [texts]
 
-    text_sizes = {t:get_tkn_length(t) for t in texts}
+    text_sizes = {t: get_tkn_length(t) for t in texts}
 
     # get embeddings
     n_trial = 3
@@ -208,7 +224,9 @@ def semantic_batching(
             embeds = np.array(embedding_engine.embed_documents(texts)).squeeze()
             break
         except Exception as e:
-            red(f"Error at trial {trial+1}/{n_trial} when trying to embed texts for semantic batching: '{e}'")
+            red(
+                f"Error at trial {trial+1}/{n_trial} when trying to embed texts for semantic batching: '{e}'"
+            )
             if trial + 1 >= n_trial:
                 red("Too many errors so crashing")
                 raise
@@ -216,7 +234,9 @@ def semantic_batching(
                 time.sleep(2)
 
     n_dim = embeds.shape[1]
-    assert n_dim > 2, f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
+    assert (
+        n_dim > 2
+    ), f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
 
     max_n_dim = min(100, len(texts))
 
@@ -231,14 +251,18 @@ def semantic_batching(
             vr = np.cumsum(pca.explained_variance_ratio_)[-1]
             if vr <= 0.90:
                 red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
-            assert vr >= 0.75, f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
+            assert (
+                vr >= 0.75
+            ), f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
             embeddings = pd.DataFrame(
                 columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
                 index=[i for i in range(len(texts))],
                 data=embeds_reduced,
             )
     except Exception as err:
-        red(f"Error when doing dimension reduction for semantic batching. Original shape: {embeds.shape}. Error: '{err}'\nContinuing anyway.")
+        red(
+            f"Error when doing dimension reduction for semantic batching. Original shape: {embeds.shape}. Error: '{err}'\nContinuing anyway."
+        )
 
     if "embeddings" not in locals():
         embeddings = pd.DataFrame(
@@ -256,8 +280,8 @@ def semantic_batching(
             embeddings.values,
             n_jobs=-1,
             metric="euclidean",
-            )
-        )
+        ),
+    )
     # make sure the intersection is 0 and not a very small float
     for ind in pd_dist.index:
         pd_dist.at[ind, ind] = 0
@@ -265,11 +289,11 @@ def semantic_batching(
     pd_dist = pd_dist.add(pd_dist.T).div(2)
 
     # get the hierarchichal semantic sorting order
-    dist: NDArray[int] = scipy.spatial.distance.squareform(pd_dist.values)  # convert to condensed format
+    dist: NDArray[int] = scipy.spatial.distance.squareform(
+        pd_dist.values
+    )  # convert to condensed format
     Z: NDArray[Tuple[int, Literal[4]]] = scipy.cluster.hierarchy.linkage(
-        dist,
-        method='ward',
-        optimal_ordering=True
+        dist, method="ward", optimal_ordering=True
     )
 
     order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
@@ -290,9 +314,7 @@ def semantic_batching(
     cluster_mean_tkn = {}
     for divider in [3, 4, 5, 6]:
         cluster_labels = scipy.cluster.hierarchy.fcluster(
-            Z,
-            len(pd_dist.index)//divider,
-            criterion='maxclust'
+            Z, len(pd_dist.index) // divider, criterion="maxclust"
         )
         labels = np.unique(cluster_labels)
         labels.sort()
@@ -303,7 +325,7 @@ def semantic_batching(
         # at the average number of token in each clusters
         total_mean = 0
         for lab in labels:
-            lt = [texts[int(ind)] for ind in np.argwhere(cluster_labels==lab)]
+            lt = [texts[int(ind)] for ind in np.argwhere(cluster_labels == lab)]
             lsize = sum([text_sizes[t] for t in lt])
             lmean = lsize / len(lt)
             total_mean += lmean
@@ -331,12 +353,12 @@ def semantic_batching(
     assert len(labels) > 1, cluster_labels
 
     # make sure no cluster contains only one text
-    while not all((cluster_labels==lab).sum() > 1 for lab in labels):
+    while not all((cluster_labels == lab).sum() > 1 for lab in labels):
         if is_verbose:
             whi("Remapping clusters.")
         for lab in labels:
             if (cluster_labels == lab).sum() == 1:
-                t = texts[np.argmax(cluster_labels==lab)]
+                t = texts[np.argmax(cluster_labels == lab)]
                 # the closest is always itself so checking the 2nd closest
                 t_close = (pd_dist.loc[texts.index(t), :]).nsmallest(2).index.tolist()
                 assert texts.index(t) == t_close[0]
@@ -350,14 +372,14 @@ def semantic_batching(
                     if is_verbose:
                         whi(f"Remapped one item from cluster {l_closest} to {lab}")
                 else:  # good to go
-                    cluster_labels[cluster_labels==lab] = l_closest
+                    cluster_labels[cluster_labels == lab] = l_closest
                     if is_verbose:
                         whi(f"Remapped single item of cluster {lab} to {l_closest}")
                 break
         labels = np.unique(cluster_labels)
         labels.sort()
     assert len(labels) > 1, cluster_labels
-    assert all((cluster_labels==lab).sum() > 1 for lab in labels), cluster_labels
+    assert all((cluster_labels == lab).sum() > 1 for lab in labels), cluster_labels
 
     # Create buckets
     buckets = []
@@ -366,7 +388,7 @@ def semantic_batching(
 
     # fill each bucket until reaching max_token
     for lab in labels:
-        lab_ind = np.argwhere(cluster_labels==lab)
+        lab_ind = np.argwhere(cluster_labels == lab)
         assert len(lab_ind) > 1, f"{lab_ind}\n{cluster_labels}"
         assert len(lab_ind) < len(texts), f"{lab_ind}\n{cluster_labels}"
         for clustid in lab_ind:
@@ -403,10 +425,22 @@ def semantic_batching(
                     next_id = ib + 1
                 elif ib + 1 == len(buckets):  # last, take the penultimate
                     next_id = ib - 1
-                elif ib != len(buckets):  # not first nor last, take the neighbour with least minimal distance
+                elif ib != len(
+                    buckets
+                ):  # not first nor last, take the neighbour with least minimal distance
                     t_cur = b[0]
-                    prev = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib-1]])
-                    next = min([pd_dist.loc[texts.index(t_cur), texts.index(t)] for t in buckets[ib+1]])
+                    prev = min(
+                        [
+                            pd_dist.loc[texts.index(t_cur), texts.index(t)]
+                            for t in buckets[ib - 1]
+                        ]
+                    )
+                    next = min(
+                        [
+                            pd_dist.loc[texts.index(t_cur), texts.index(t)]
+                            for t in buckets[ib + 1]
+                        ]
+                    )
                     assert prev > 0 and next > 0
                     if prev < next:
                         next_id = ib - 1
@@ -422,7 +456,9 @@ def semantic_batching(
                     else:
                         buckets[next_id].append(b.pop())
                     assert not b, b
-                elif len(buckets[next_id]) == 2:  # merging 2:1 -> 1:2 would create a loop
+                elif (
+                    len(buckets[next_id]) == 2
+                ):  # merging 2:1 -> 1:2 would create a loop
                     if next_id > ib:
                         buckets[next_id].insert(0, b.pop())
                     else:
@@ -437,11 +473,15 @@ def semantic_batching(
                 assert id(b) == id(buckets[ib])
                 break
         buckets = [b for b in buckets if b]
-    assert all(len(b) >= 2 for b in buckets), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
+    assert all(
+        len(b) >= 2 for b in buckets
+    ), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
 
     unchained = []
     [unchained.extend(b) for b in buckets]
-    assert len(unchained) == len(set(unchained)), "There were duplicate texts in buckets!"
+    assert len(unchained) == len(
+        set(unchained)
+    ), "There were duplicate texts in buckets!"
     assert all(t in texts for t in unchained), "Some text of buckets were added!"
 
     return buckets
@@ -452,14 +492,14 @@ def pbar_chain(
     llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
     len_func: str,
     **tqdm_kwargs,
-    ) -> RunnableLambda:
+) -> RunnableLambda:
     "create a chain that just sets a tqdm progress bar"
 
     @chain
     def actual_pbar_chain(
         inputs: Union[dict, List],
         llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
-        ) -> Union[dict, List]:
+    ) -> Union[dict, List]:
 
         llm.callbacks[0].pbar.append(
             tqdm(
@@ -474,21 +514,23 @@ def pbar_chain(
 
     return actual_pbar_chain
 
+
 @optional_typecheck
 def pbar_closer(
     llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel],
-    ) -> RunnableLambda:
+) -> RunnableLambda:
     "close a pbar created by pbar_chain"
 
     @chain
     def actual_pbar_closer(
         inputs: Union[dict, List],
         llm: Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel] = llm,
-        ) -> Union[dict, List]:
+    ) -> Union[dict, List]:
         pbar = llm.callbacks[0].pbar[-1]
         pbar.update(pbar.total - pbar.n)
         pbar.n = pbar.total
         pbar.close()
 
         return inputs
+
     return actual_pbar_closer

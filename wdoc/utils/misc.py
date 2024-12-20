@@ -2,36 +2,42 @@
 Miscellanous functions etc.
 """
 
-import sys
-from typing import List, Union, Callable, get_type_hints, Literal
-from joblib import Memory
-from joblib import hash as jhash
-import uuid
-import socket
-import os
-import json
-from datetime import timedelta
-from pathlib import Path
-from difflib import get_close_matches
-import bs4
 import hashlib
-from functools import partial, wraps
-from functools import cache as memoize
-from py_ankiconnect import PyAnkiconnect
 import inspect
+import json
+import os
+import socket
+import sys
+import uuid
+import warnings
+from datetime import timedelta
+from difflib import get_close_matches
+from functools import cache as memoize
+from functools import partial, wraps
+from pathlib import Path
+from typing import Callable, List, Literal, Union, get_type_hints
+
+import bs4
 import litellm
 from beartype.door import is_bearable
-import warnings
-
+from joblib import Memory
+from joblib import hash as jhash
 from langchain.docstore.document import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
-from langchain.text_splitter import TextSplitter, RecursiveCharacterTextSplitter
+from py_ankiconnect import PyAnkiconnect
 
-from .logger import whi, red, yel, cache_dir
-from .typechecker import optional_typecheck
-from .flags import is_verbose, is_debug, is_private
+from .env import (
+    WDOC_EXPIRE_CACHE_DAYS,
+    WDOC_IMPORT_TYPE,
+    WDOC_MAX_CHUNK_SIZE,
+    WDOC_NO_MODELNAME_MATCHING,
+    WDOC_STRICT_DOCDICT,
+)
 from .errors import UnexpectedDocDictArgument
-from .env import WDOC_NO_MODELNAME_MATCHING, WDOC_STRICT_DOCDICT, WDOC_EXPIRE_CACHE_DAYS, WDOC_IMPORT_TYPE, WDOC_MAX_CHUNK_SIZE
+from .flags import is_debug, is_private, is_verbose
+from .logger import cache_dir, red, whi, yel
+from .typechecker import optional_typecheck
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
 
@@ -39,10 +45,17 @@ ankiconnect = optional_typecheck(PyAnkiconnect())
 loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
-warnings.filterwarnings("ignore", category=UserWarning, module='bs4', message=".*The input looks more like a filename than markup.*")
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    module="bs4",
+    message=".*The input looks more like a filename than markup.*",
+)
 
 # additional warnings to ignore
-warnings.filterwarnings("ignore", module='litellm', message=".*Counting tokens for OpenAI model=.*")
+warnings.filterwarnings(
+    "ignore", module="litellm", message=".*Counting tokens for OpenAI model=.*"
+)
 
 try:
     import ftlangdetect
@@ -50,10 +63,13 @@ try:
     @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text.lower())["score"]
+
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
     if is_verbose:
-        red(f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'")
+        red(
+            f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'"
+        )
     if "ftlangdetect" in sys.modules:
         del sys.modules["ftlangdetect"]
 
@@ -63,18 +79,21 @@ except Exception as err:
         @optional_typecheck
         def language_detector(text: str) -> float:
             return langdetect.detect_langs(text.lower())[0].prob
+
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
         if is_verbose:
             red(f"Couldn't import optional package 'langdetect' either: '{err}'")
+
         @optional_typecheck
         def language_detector(text: str) -> None:
             return None
 
-doc_loaders_cache_dir = (cache_dir / "doc_loaders")
+
+doc_loaders_cache_dir = cache_dir / "doc_loaders"
 doc_loaders_cache_dir.mkdir(exist_ok=True)
 doc_loaders_cache = Memory(doc_loaders_cache_dir, verbose=0)
-hashdoc_cache_dir = (cache_dir / "doc_hashing")
+hashdoc_cache_dir = cache_dir / "doc_hashing"
 hashdoc_cache_dir.mkdir(exist_ok=True)
 hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 (cache_dir / "query_eval_llm").mkdir(exist_ok=True)
@@ -108,31 +127,22 @@ filetype_arg_types = {
     "anki_template": str,
     "anki_tag_filter": str,
     "anki_tag_render_filter": str,
-
     "json_dict_template": str,
     "json_dict_exclude_keys": List,
-
     "audio_backend": Literal["whisper", "deepgram"],
     "audio_unsilence": bool,
-
     "whisper_lang": str,
     "whisper_prompt": str,
-
     "deepgram_kwargs": dict,
-
     "youtube_language": str,
     "youtube_translation": str,
     "youtube_audio_backend": Literal["youtube", "whisper", "deepgram"],
-
     "load_functions": List,
-
     "doccheck_min_token": int,
     "doccheck_max_token": int,
     "doccheck_min_lang_prob": float,
-
     "online_media_url_regex": str,
     "online_media_resourcetype_regex": str,
-
     "loading_failure": str,
 }
 
@@ -151,6 +161,7 @@ extra_args_types = {
 }
 extra_args_types.update(filetype_arg_types)
 
+
 class DocDict(dict):
     """like dictionnaries but only allows keys that can be used when loading
     a document. Also checks the value type.
@@ -162,10 +173,17 @@ class DocDict(dict):
         if False: print in red if unexpected arg but add anyway
         if "strip": print in red but don't add
     """
+
     allowed_keys: set = set(
         sorted(
-            ["path", "filetype", "file_hash", "source_tag", "recur_parent_id",
-            ] + list(filetype_arg_types.keys())
+            [
+                "path",
+                "filetype",
+                "file_hash",
+                "source_tag",
+                "recur_parent_id",
+            ]
+            + list(filetype_arg_types.keys())
         )
     )
     allowed_types: dict = filetype_arg_types
@@ -187,9 +205,11 @@ class DocDict(dict):
 
     def __check_values__(self, key, value, strict) -> bool:
         if key not in self.allowed_keys:
-            mess  = (f"Cannot set key '{key}' in a DocDict. Allowed keys are "
+            mess = (
+                f"Cannot set key '{key}' in a DocDict. Allowed keys are "
                 f"'{','.join(self.allowed_keys)}'\nYou can use the env "
-                "variable WDOC_STRICT_DOCDICT to avoid this issue.")
+                "variable WDOC_STRICT_DOCDICT to avoid this issue."
+            )
             if strict is True:
                 raise UnexpectedDocDictArgument(mess)
             elif strict is False:
@@ -201,11 +221,17 @@ class DocDict(dict):
             else:
                 raise ValueError(strict)
 
-        elif (key in self.allowed_types) and (value is not None) and (not is_bearable(value, self.allowed_types[key])):
-            mess = (f"Type of key {key} should be {self.allowed_types[key]},"
+        elif (
+            (key in self.allowed_types)
+            and (value is not None)
+            and (not is_bearable(value, self.allowed_types[key]))
+        ):
+            mess = (
+                f"Type of key {key} should be {self.allowed_types[key]},"
                 f"not {type(value)}."
                 "\nYou can use the env "
-                "variable WDOC_STRICT_DOCDICT to avoid this issue.")
+                "variable WDOC_STRICT_DOCDICT to avoid this issue."
+            )
 
             if strict is True:
                 raise UnexpectedDocDictArgument(mess)
@@ -242,6 +268,7 @@ class DocDict(dict):
         self.__check_values__(key, value, self.__strict__)
         super().__setitem__(key, value)
 
+
 @optional_typecheck
 def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
@@ -261,12 +288,16 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
         @optional_typecheck
         @wraps(truefunc)
         def wrapper(*args, **kwargs):
-            assert not args, f"We are not expecting args here, only kwargs. Received {args}"
+            assert (
+                not args
+            ), f"We are not expecting args here, only kwargs. Received {args}"
             sig = inspect.signature(truefunc)
             bound_args = sig.bind_partial(**kwargs)
 
             # Remove unexpected positional arguments
-            bound_args.arguments = {k: v for k, v in bound_args.arguments.items() if k in sig.parameters}
+            bound_args.arguments = {
+                k: v for k, v in bound_args.arguments.items() if k in sig.parameters
+            }
 
             # Remove unexpected keyword arguments
             kwargs2 = {k: v for k, v in kwargs.items() if k in sig.parameters}
@@ -277,12 +308,13 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
                 red(mess)
-            assert kwargs2, f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
+            assert (
+                kwargs2
+            ), f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
 
             return func(**kwargs2)
 
         return wrapper
-
 
 
 @optional_typecheck
@@ -318,7 +350,7 @@ def file_hasher(doc: dict) -> str:
         stats = file.stat()
         return _file_hasher(
             abs_path=str(file.resolve().absolute()),
-            stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size]
+            stats=[stats.st_mtime, stats.st_ctime, stats.st_ino, stats.st_size],
         )
     else:
         return hasher(json.dumps(doc, ensure_ascii=False))
@@ -336,12 +368,14 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
-    html = html.replace("<br>", "\n").replace("</br>", "\n")  # otherwise newlines are lost
+    html = html.replace("<br>", "\n").replace(
+        "</br>", "\n"
+    )  # otherwise newlines are lost
 
-    soup = bs4.BeautifulSoup(html, 'html.parser')
+    soup = bs4.BeautifulSoup(html, "html.parser")
     content = []
     for element in soup.descendants:
-        if element.name == 'img' and (not remove_image):
+        if element.name == "img" and (not remove_image):
             element = str(element)
             if element in html:
                 content.append(element)
@@ -349,11 +383,11 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
                 content.append(element[:-2] + ">")
             else:
                 if is_verbose:
-                    temptext = ' '.join(filter(None, content))
+                    temptext = " ".join(filter(None, content))
                     red(f"Image not properly parsed from bs4:\n{element}\n{temptext}")
         elif isinstance(element, bs4.NavigableString):
             content.append(str(element).strip())
-    text = ' '.join(filter(None, content))
+    text = " ".join(filter(None, content))
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")
     if "<img" in text and remove_image:
@@ -381,9 +415,14 @@ def wrapped_model_name_matcher(model: str) -> str:
     for k, v in dict(os.environ).items():
         if k.endswith("_API_KEY"):
             backend = k.split("_API_KEY")[0].lower()
-            if backend not in all_backends and is_verbose and not printed_unexpected_api_keys[0]:
+            if (
+                backend not in all_backends
+                and is_verbose
+                and not printed_unexpected_api_keys[0]
+            ):
                 yel(
-                    f"Found API_KEY for backend {backend} that is not a known backend for litellm.")
+                    f"Found API_KEY for backend {backend} that is not a known backend for litellm."
+                )
             else:
                 backends.append(backend)
     if is_verbose:
@@ -400,7 +439,8 @@ def wrapped_model_name_matcher(model: str) -> str:
         )
     if backend not in backends:
         raise Exception(
-            f"Trying to use backend {backend} but no API KEY was found for it in the environnment.")
+            f"Trying to use backend {backend} but no API KEY was found for it in the environnment."
+        )
     candidates = litellm.models_by_provider[backend]
     if modelname in candidates:
         return model
@@ -412,9 +452,11 @@ def wrapped_model_name_matcher(model: str) -> str:
     if match:
         return match[0]
     else:
-        red(f"Couldn't match the modelname {model} to any known model. "
+        red(
+            f"Couldn't match the modelname {model} to any known model. "
             "Continuing but this will probably crash wdoc further "
-            "down the code.")
+            "down the code."
+        )
         return model
 
 
@@ -433,19 +475,23 @@ def model_name_matcher(model: str) -> str:
     out = wrapped_model_name_matcher(model)
     if out != model and is_verbose:
         yel(f"Matched model name {model} to {out}")
-    assert out in litellm.model_cost or out.split(
-        "/", 1)[1] in litellm.model_cost, f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    assert (
+        out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
+    ), f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
     return out
+
 
 @optional_typecheck
 def get_tkn_length(
     tosplit: str,
     modelname: str = "gpt-3.5-turbo",
-    ) -> int:
+) -> int:
     modelname = modelname.replace("openrouter/", "")
     return litellm.token_counter(model=modelname, text=tosplit)
 
+
 text_splitters = {}
+
 
 @optional_typecheck
 def get_splitter(
@@ -534,10 +580,7 @@ def check_docs_tkn_length(
 
     # check if language check is above a threshold and cast as lowercase as it's apparently what it was trained on
     try:
-        probs = [
-            language_detector(d.page_content.replace("\n", "<br>"))
-            for d in docs
-        ]
+        probs = [language_detector(d.page_content.replace("\n", "<br>")) for d in docs]
         if probs[0] is None or not probs:
             # bypass if language_detector not defined
             return 1.0
@@ -550,7 +593,9 @@ def check_docs_tkn_length(
         if str(err).startswith("Low language probability"):
             raise
         else:
-            red(f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document.")
+            red(
+                f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document."
+            )
             return 1.0
     return prob
 
@@ -606,24 +651,24 @@ def disable_internet(allowed: dict) -> None:
     unlazyload_modules()
 
     # list of certainly allowed IPs
-    allowed_IPs = set([
-        "localhost",
-        "127.0.0.1",
-    ])
+    allowed_IPs = set(
+        [
+            "localhost",
+            "127.0.0.1",
+        ]
+    )
     vals = [
-        v.split("//")[1].split(":")[0]
-        if "//" in v
-        else v.split(":")[0]
+        v.split("//")[1].split(":")[0] if "//" in v else v.split(":")[0]
         for v in list(allowed.values())
     ]
     [allowed_IPs.add(v) for v in vals]
 
     # list of probably allowed IPs
     private_ranges = [
-        ('10.0.0.0', '10.255.255.255'),
-        ('172.16.0', '172.31.255.255'),
-        ('192.168.0.0', '192.168.255.255'),
-        ('127.0.0.0', '127.255.255.255')
+        ("10.0.0.0", "10.255.255.255"),
+        ("172.16.0", "172.31.255.255"),
+        ("192.168.0.0", "192.168.255.255"),
+        ("127.0.0.0", "127.255.255.255"),
     ]
 
     @memoize
@@ -632,11 +677,15 @@ def disable_internet(allowed: dict) -> None:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
             return True
-        ip = int.from_bytes(socket.inet_aton(ip), 'big')
+        ip = int.from_bytes(socket.inet_aton(ip), "big")
         if ip in allowed_IPs:
             return True
         for start, end in private_ranges:
-            if int.from_bytes(socket.inet_aton(start), 'big') <= ip <= int.from_bytes(socket.inet_aton(end), 'big'):
+            if (
+                int.from_bytes(socket.inet_aton(start), "big")
+                <= ip
+                <= int.from_bytes(socket.inet_aton(end), "big")
+            ):
                 return True
         return False
 
@@ -645,8 +694,7 @@ def disable_internet(allowed: dict) -> None:
         "overload socket.create_connection to forbid outgoing connections"
         ip = socket.gethostbyname(address[0])
         if not is_private(ip):
-            raise RuntimeError(
-                "Network connections to the open internet are blocked")
+            raise RuntimeError("Network connections to the open internet are blocked")
         return socket._original_create_connection(address, *args, **kwargs)
 
     socket.socket = lambda *args, **kwargs: None
@@ -669,46 +717,57 @@ def disable_internet(allowed: dict) -> None:
         ip = socket.gethostbyname("www.google.com")
         skip = False
     except Exception as err:
-        red("Failed to get IP address of www.google.com to check if it is "
+        red(
+            "Failed to get IP address of www.google.com to check if it is "
             "indeed blocked. You probably did this on purpose so not "
-            f"crashing. Error: '{err}'")
+            f"crashing. Error: '{err}'"
+        )
         skip = True
     if not skip:
-        assert not is_private(ip), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+        assert not is_private(
+            ip
+        ), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+
 
 @optional_typecheck
 def set_func_signature(func: Callable) -> Callable:
     """dynamically set the extra args of wdoc.__init__ so that
     instead of **cli_kwargs the signature indicates all allowed arguments.
-    Needed to get correct behavior from fire.Fire '--completion' """
+    Needed to get correct behavior from fire.Fire '--completion'"""
     original_sig = inspect.signature(func)
-    assert list(original_sig.parameters.values())[-1].kind == inspect.Parameter.VAR_KEYWORD
+    assert (
+        list(original_sig.parameters.values())[-1].kind == inspect.Parameter.VAR_KEYWORD
+    )
     new_params = list(original_sig.parameters.values())[:-1]  # Remove **cli_kwargs
     new_params.extend(
-                [
-                    inspect.Parameter(
-                        name=arg,
-                        kind=inspect.Parameter.KEYWORD_ONLY,
-                        annotation=hint,
-                        default=None,
-                    )
-                    for arg, hint in extra_args_types.items()
-            ]
+        [
+            inspect.Parameter(
+                name=arg,
+                kind=inspect.Parameter.KEYWORD_ONLY,
+                annotation=hint,
+                default=None,
+            )
+            for arg, hint in extra_args_types.items()
+        ]
     )
     new_sig = original_sig.replace(parameters=new_params)
 
     @wraps(func)
     def new_func(self, *args, **kwargs):
         return func(self, *args, **kwargs)
+
     new_func.__signature__ = new_sig
     new_func.__annotations__ = get_type_hints(func) | extra_args_types
 
     return new_func
 
+
 THIN = "<thinking>"
 THINE = "</thinking>"
 ANSW = "<answer>"
 ANSWE = "</answer>"
+
+
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
     try:
@@ -719,8 +778,12 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             output = output.replace(THINE, THIN, 1)
 
         if (THIN not in output) and (ANSW not in output):
-            assert THINE not in output, f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
-            assert ANSWE not in output, f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
+            assert (
+                THINE not in output
+            ), f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
+            assert (
+                ANSWE not in output
+            ), f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
 
             return {"thinking": "", "answer": output}
 
@@ -730,20 +793,37 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
 
         answer = ""
         if ANSW in output and ANSWE in output:
-            answer = output.replace(thinking, "").split(ANSW, 1)[1].split(ANSWE, 1)[0].strip()
+            answer = (
+                output.replace(thinking, "")
+                .split(ANSW, 1)[1]
+                .split(ANSWE, 1)[0]
+                .strip()
+            )
 
-        assert THIN not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert THINE not in answer, f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert ANSW not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
-        assert ANSWE not in answer, f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert (
+            THIN not in answer
+        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert (
+            THINE not in answer
+        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert (
+            ANSW not in answer
+        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert (
+            ANSWE not in answer
+        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
 
         assert answer, f"No answer could be parsed from LLM output: '{output}'"
 
         return {"thinking": thinking, "answer": answer}
     except Exception as err:
-        if strict:  # otherwise combining answers could snowball into losing lots of text
+        if (
+            strict
+        ):  # otherwise combining answers could snowball into losing lots of text
             raise
-        red(f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{output}'\nWill continue if not using --debug")
+        red(
+            f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{output}'\nWill continue if not using --debug"
+        )
         if is_debug:
             raise
         else:
@@ -760,25 +840,30 @@ The following LLM answer might have had a problem during parsing
 """.strip(),
             }
 
+
 # this will contain wdoc's version to be used by langfuse's callback without circular imports
 langfuse_callback_holder = []
+
+
 def create_langfuse_callback(version: str) -> None:
     if (
-            "LANGFUSE_PUBLIC_KEY" in os.environ and
-            "LANGFUSE_SECRET_KEY" in os.environ and
-            "LANGFUSE_HOST" in os.environ
+        "LANGFUSE_PUBLIC_KEY" in os.environ
+        and "LANGFUSE_SECRET_KEY" in os.environ
+        and "LANGFUSE_HOST" in os.environ
     ) and not is_private:
         red("Activating langfuse callbacks")
         try:
             # # use litellm's callbacks for chatlitellm backend
-            import litellm
             import langfuse
+            import litellm
+
             litellm.success_callback = ["langfuse"]
             litellm.failure_callback = ["langfuse"]
 
             # # and use langchain's callback for openai's backend
             # BUT as of october 2024 it seems buggy with chatlitellm, the modelname does not seem to be passed?
             from langfuse.callback import CallbackHandler as LangfuseCallback
+
             langfuse_callback = LangfuseCallback(
                 secret_key=os.environ["LANGFUSE_SECRET_KEY"],
                 public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
@@ -788,7 +873,10 @@ def create_langfuse_callback(version: str) -> None:
             )
             langfuse_callback_holder.append(langfuse_callback)
         except Exception as e:
-            red(f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'")
+            red(
+                f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'"
+            )
+
 
 def seconds_to_timecode(inp: str) -> str:
     "used for vtt subtitle conversion"
@@ -800,10 +888,12 @@ def seconds_to_timecode(inp: str) -> str:
     hour, minute, second = int(hour), int(minute), int(second)
     return f"{hour:02d}:{minute:02d}:{second:02d}"
 
+
 def timecode_to_second(inp: str) -> float:
     "turns a vtt timecode into seconds"
-    hour, minute, second = map(int, inp.split(':'))
+    hour, minute, second = map(int, inp.split(":"))
     return hour * 3600 + minute * 60 + second
+
 
 def is_timecode(inp: str) -> bool:
     try:
@@ -811,4 +901,3 @@ def is_timecode(inp: str) -> bool:
         return True
     except Exception:
         return False
-

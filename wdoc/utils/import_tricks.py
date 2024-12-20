@@ -8,10 +8,12 @@ import sys
 
 from .env import WDOC_IMPORT_TYPE
 
+
 def trick_imports() -> None:
-    import lazy_import
-    from queue import Queue
     import threading
+    from queue import Queue
+
+    import lazy_import
 
     def import_worker(q: Queue):
         while True:
@@ -41,7 +43,6 @@ def trick_imports() -> None:
                     )
                 # print(f"Unlazyloaded module: {first}")
 
-
     if WDOC_IMPORT_TYPE == "thread":
         q = Queue()
         thread = threading.Thread(
@@ -68,26 +69,28 @@ def trick_imports() -> None:
             lazy_import.lazy_module(module)
             assert module in sys.modules, module
         else:
-            raise ValueError(f"Unexpected value for WDOC_IMPORT_TYPE: '{WDOC_IMPORT_TYPE}'")
+            raise ValueError(
+                f"Unexpected value for WDOC_IMPORT_TYPE: '{WDOC_IMPORT_TYPE}'"
+            )
 
     custom_loading("langchain")
     custom_loading("langchain_community")
     custom_loading("langchain.text_splitter")
     custom_loading("litellm")
-    custom_loading('numpy')
-    custom_loading('faiss')
-    custom_loading('zlib')
-    custom_loading('dill')
-    custom_loading('sqlite3')
-    custom_loading('tldextract')
-    custom_loading('pyfiglet')
-    custom_loading('yt_dlp', strict=False)
-    custom_loading('pandas')
-    custom_loading('ankipandas')
-    custom_loading('ftfy')
-    custom_loading('bs4')
-    custom_loading('goose3')
-    custom_loading('LogseqMarkdownParser')
+    custom_loading("numpy")
+    custom_loading("faiss")
+    custom_loading("zlib")
+    custom_loading("dill")
+    custom_loading("sqlite3")
+    custom_loading("tldextract")
+    custom_loading("pyfiglet")
+    custom_loading("yt_dlp", strict=False)
+    custom_loading("pandas")
+    custom_loading("ankipandas")
+    custom_loading("ftfy")
+    custom_loading("bs4")
+    custom_loading("goose3")
+    custom_loading("LogseqMarkdownParser")
     custom_loading("deepgram")
     custom_loading("pydub")
     custom_loading("ffmpeg")
@@ -101,6 +104,7 @@ def trick_imports() -> None:
 
     if WDOC_IMPORT_TYPE in ["both", "thread"]:
         q.put(None)  # kill the import worker
+
 
 if WDOC_IMPORT_TYPE != "native":
     trick_imports()

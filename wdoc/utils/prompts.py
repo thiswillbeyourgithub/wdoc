@@ -2,22 +2,24 @@
 Prompts used by wdoc.
 """
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.prompts import PromptTemplate
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts.chat import HumanMessagePromptTemplate, SystemMessagePromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
 from beartype.typing import List
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.prompts.chat import (
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from pydantic import BaseModel, Field, model_validator
 
 from .logger import red, whi
 from .misc import get_tkn_length
 
-
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate(
     messages=[
-        SystemMessagePromptTemplate.from_template("""
+        SystemMessagePromptTemplate.from_template(
+            """
 You are Sam, the best employee of WDOC-CORP©, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
@@ -50,14 +52,17 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
     - If the text includes timestamps, write the approximate time of the sections in the top level bullet points.
 </instructions>
-""".strip()),
-        HumanMessagePromptTemplate.from_template("""
+""".strip()
+        ),
+        HumanMessagePromptTemplate.from_template(
+            """
 {recursion_instruction}{metadata}{previous_summary}
 
 <text_section>
 {text}
 </text_section>
-""".strip())
+""".strip()
+        ),
     ],
     input_variables=[
         "language",
@@ -87,7 +92,8 @@ I'm giving you back your own summary from last time because it was too long and 
 # RAG
 PR_EVALUATE_DOC = ChatPromptTemplate(
     messages=[
-        SystemMessagePromptTemplate.from_template(template="""
+        SystemMessagePromptTemplate.from_template(
+            template="""
 You are Eve, working as an Evaluator at WDOC-CORP©: given a question and text document. Your goal is to answer a number between 0 and 10 depending on how much the document is relevant to the question. 0 means completely irrelevant, 10 means totally relevant, and in betweens for subjective relation. If you are really unsure, you should answer '5'.
 
 <rules>
@@ -97,8 +103,10 @@ You are Eve, working as an Evaluator at WDOC-CORP©: given a question and text d
 - If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Raphael the Rephraser, Anna the Answerer and Carl the Combiner. But take them into consideration if they are addressed to you.
 </rules>
-""".strip()),
-        HumanMessagePromptTemplate.from_template(template="""
+""".strip()
+        ),
+        HumanMessagePromptTemplate.from_template(
+            template="""
 <text_document>
 {doc}
 </text_document>
@@ -109,7 +117,8 @@ You are Eve, working as an Evaluator at WDOC-CORP©: given a question and text d
 
 Take a deep breath.
 You can start your reply when you are ready.
-""".strip())
+""".strip()
+        ),
     ],
     validate_template=True,
     input_variables=["doc", "q"],
@@ -117,7 +126,8 @@ You can start your reply when you are ready.
 
 PR_ANSWER_ONE_DOC = ChatPromptTemplate(
     messages=[
-        SystemMessagePromptTemplate.from_template(template="""
+        SystemMessagePromptTemplate.from_template(
+            template="""
 You are Anna, working as an Answerer at WDOC-CORP©: given a piece of document and a question, your goal is to extract the relevant information while following specific instructions.
 
 <instructions>
@@ -141,8 +151,10 @@ You are Anna, working as an Answerer at WDOC-CORP©: given a piece of document a
 - ALWAYS double check that you are not contradicting the original document before answering.
 - If you're unsure but the document refers to an image that has a reasonnable chance to be relevant, treat this document as if it was probably relevant.
 </instructions>
-""".strip()),
-        HumanMessagePromptTemplate.from_template(template="""
+""".strip()
+        ),
+        HumanMessagePromptTemplate.from_template(
+            template="""
 <context>
 {context}
 </context>
@@ -154,7 +166,8 @@ You are Anna, working as an Answerer at WDOC-CORP©: given a piece of document a
 Now take a deep breath.
 Take your time.
 Start your reply when you're ready.
-""".strip())
+""".strip()
+        ),
     ],
     validate_template=True,
     input_variables=["context", "question_to_answer"],
@@ -162,7 +175,8 @@ Start your reply when you're ready.
 
 PR_COMBINE_INTERMEDIATE_ANSWERS = ChatPromptTemplate(
     messages=[
-        SystemMessagePromptTemplate.from_template(template="""
+        SystemMessagePromptTemplate.from_template(
+            template="""
 You are Carl, working as a Combiner at WDOC-CORP©: given a question and partial answers, your goal is to:
 - combine all partial answers to answer the original question as md bullet points,
 - while combining all additional information as additional bullet points.
@@ -200,8 +214,10 @@ You are Carl, working as a Combiner at WDOC-CORP©: given a question and partial
 - wrap your answer in an <answer> XML tag.
 - The <answer> XML tag should only contain your answer.
 </instructions>
-""".strip()),
-         HumanMessagePromptTemplate.from_template(template="""
+""".strip()
+        ),
+        HumanMessagePromptTemplate.from_template(
+            template="""
 <question>
 {question}
 </question>
@@ -213,13 +229,15 @@ You are Carl, working as a Combiner at WDOC-CORP©: given a question and partial
 Now take a deep breath.
 Take your time.
 Start your reply when you're ready.
-""".strip())
+""".strip()
+        ),
     ],
     validate_template=True,
     input_variables=["question", "intermediate_answers"],
 )
 
 # embedding queries
+
 
 # https://python.langchain.com/docs/how_to/output_parser_structured/
 class ExpandedQuery(BaseModel):
@@ -238,7 +256,9 @@ class ExpandedQuery(BaseModel):
             raise ValueError("output_queries has to be a list of str")
         oq = [q.strip() for q in oq if q.strip()]
         if not oq:
-            raise ValueError("output_queries can't be empty after removing empty strings")
+            raise ValueError(
+                "output_queries can't be empty after removing empty strings"
+            )
         return values
 
     @model_validator(mode="after")
@@ -246,11 +266,13 @@ class ExpandedQuery(BaseModel):
     def remove_thoughts(cls, values) -> List[str]:
         return values.output_queries
 
+
 multiquery_parser = PydanticOutputParser(pydantic_object=ExpandedQuery)
 PR_MULTI_QUERY_PROMPT = ChatPromptTemplate(
     messages=[
         # has to be a systemmessage directly otherwise pydantic's fstrings impact the validation
-        SystemMessage(content="""
+        SystemMessage(
+            content="""
 You are Raphael, working as a Rephraser at WDOC-CORP©: given a user
 RAG query, your task is to expand the query (i.e. you generate 10 different
 versions of the query to increase the chances of retrieving the most
@@ -274,13 +296,18 @@ have to do your thinking INSIDE the thought json.
 Also, being a Rephraser, you can take into consideration additional
 instructions that are adressed to your colleagues: Eve the Evaluator, Anan the
 Answerer and Carl the Combiner. They can sometimes be useful to expand the queries.
-""".strip()+ "\n" + multiquery_parser.get_format_instructions()),
+""".strip()
+            + "\n"
+            + multiquery_parser.get_format_instructions()
+        ),
         HumanMessagePromptTemplate.from_template(
-            template="Here's the query to expand: '''{question}'''"""),
+            template="Here's the query to expand: '''{question}'''" ""
+        ),
     ],
     input_variables=["question"],
     validate_template=True,
 )
+
 
 class Prompts_class:
     evaluate: ChatPromptTemplate
@@ -296,9 +323,16 @@ class Prompts_class:
             setattr(self, key, pr)
 
     def enable_prompt_caching(self, prompt_key: str) -> None:
-        assert prompt_key in ["evaluate", "answer", "combine", "multiquery"], "Unexpected prompt_key"
+        assert prompt_key in [
+            "evaluate",
+            "answer",
+            "combine",
+            "multiquery",
+        ], "Unexpected prompt_key"
 
-        whi(f"Detected anthropic in llm name so enabling anthropic prompt_caching for {prompt_key} prompt")
+        whi(
+            f"Detected anthropic in llm name so enabling anthropic prompt_caching for {prompt_key} prompt"
+        )
         prompt = getattr(self, prompt_key)
         sys = prompt.messages[0]
         assert isinstance(sys, (SystemMessagePromptTemplate, SystemMessage)), sys
@@ -311,26 +345,23 @@ class Prompts_class:
         # exactly like openai
         tkl = get_tkn_length(content)
         if tkl < 750:
-            red(f"System prompt is only {tkl} openai tokens so caching will won't work, not using it.")
+            red(
+                f"System prompt is only {tkl} openai tokens so caching will won't work, not using it."
+            )
             return
 
         new_content = [
-            {
-                "type": "text",
-                "text": content,
-                "cache_control": {
-                    "type": "ephemeral"
-                }
-            }
+            {"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}
         ]
         if hasattr(sys, "content"):
             prompt.messages[0].content = new_content
         else:
             prompt.messages[0].prompt.template = new_content
 
+
 prompts = Prompts_class(
     evaluate=PR_EVALUATE_DOC,
     answer=PR_ANSWER_ONE_DOC,
     combine=PR_COMBINE_INTERMEDIATE_ANSWERS,
-    multiquery=PR_MULTI_QUERY_PROMPT
+    multiquery=PR_MULTI_QUERY_PROMPT,
 )

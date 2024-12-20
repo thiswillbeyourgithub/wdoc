@@ -5,23 +5,22 @@ Retrievers used to retrieve the appropriate embeddings for a given query.
 from beartype.typing import Any, List, Union
 from langchain.docstore.document import Document
 from langchain.retrievers import ParentDocumentRetriever
-from langchain.storage import LocalFileStore
-from langchain_core.retrievers import BaseRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.storage import LocalFileStore
 from langchain_community.chat_models import ChatLiteLLM
+from langchain_core.retrievers import BaseRetriever
 from langchain_openai import ChatOpenAI
 
-
 from .misc import cache_dir, get_splitter
+from .prompts import multiquery_parser, prompts
 from .typechecker import optional_typecheck
-from .prompts import prompts, multiquery_parser
 
 
 @optional_typecheck
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM, ChatOpenAI],
     retriever: BaseRetriever,
-    ) -> MultiQueryRetriever:
+) -> MultiQueryRetriever:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
     mqr = MultiQueryRetriever(
@@ -62,7 +61,7 @@ def create_parent_retriever(
         search_kwargs={
             "k": top_k,
             "score_threshold": relevancy,
-        }
+        },
     )
     parent.add_documents(loaded_docs)
     return parent

@@ -2,28 +2,28 @@
 Code related to the prompt (in the sense of "directly ask the user a question")
 """
 
-from beartype.typing import Optional, Tuple, Any
+import json
 import time
 from pathlib import Path
-import json
 from textwrap import dedent
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit import PromptSession
-from prompt_toolkit.formatted_text import FormattedText
-from prompt_toolkit.completion import WordCompleter
 
+from beartype.typing import Any, Optional, Tuple
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion, WordCompleter
+from prompt_toolkit.formatted_text import FormattedText
+
+from .logger import md_printer, red, whi
 from .misc import cache_dir
-from .logger import whi, red, md_printer
 from .typechecker import optional_typecheck
 
 
 @optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
     """Parse settings for display in the prompt toolbar.
-    
+
     Args:
         settings (dict): Dictionary containing the current settings
-        
+
     Returns:
         Any: Formatted text suitable for display in the toolbar
     """
@@ -34,19 +34,15 @@ def get_toolbar_text(settings: dict) -> Any:
             continue
         v = settings[k]
         out.append(f"{k.replace('_', ' - ').title()}: {v}")
-    out = ['class:toolbar'] + [" - ".join(out)]
+    out = ["class:toolbar"] + [" - ".join(out)]
     return FormattedText([tuple(out)])
 
 
 class SettingsCompleter(Completer):
     @optional_typecheck
     def __init__(
-            self,
-            wdocCliSettings,
-            wdocHistoryPrompts,
-            wdocHistoryWords,
-            *args,
-            **kwargs):
+        self, wdocCliSettings, wdocHistoryPrompts, wdocHistoryWords, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.wdocCliSettings = wdocCliSettings
         self.wdocHistoryPrompts = wdocHistoryPrompts
@@ -93,10 +89,10 @@ class SettingsCompleter(Completer):
 @optional_typecheck
 def show_help() -> None:
     """Display CLI help information.
-    
+
     This function displays the CLI help information by formatting and showing
     the docstring from the ask_user function.
-    
+
     Returns:
         None
     """
@@ -161,14 +157,10 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             key=lambda x: x["timestamp"],
         )
 
-    prompts = [x["prompt"]
-               for x in prev_questions if x["task"] == settings["task"]]
-    words = [w for w in " ".join(prompts).split(
-        " ") if len(w) > 2 and w.isalpha()]
+    prompts = [x["prompt"] for x in prev_questions if x["task"] == settings["task"]]
+    words = [w for w in " ".join(prompts).split(" ") if len(w) > 2 and w.isalpha()]
     completer = SettingsCompleter(
-        wdocCliSettings=settings,
-        wdocHistoryPrompts=prompts,
-        wdocHistoryWords=words
+        wdocCliSettings=settings, wdocHistoryPrompts=prompts, wdocHistoryWords=words
     )
 
     while True:
@@ -241,11 +233,11 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 continue
             try:
                 if sett_k == "top_k":
-                    assert int(
-                        sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
+                    assert int(sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
                 elif sett_k == "relevancy":
-                    assert float(sett_v) >= -1 and float(
-                        sett_v) <= 1, f"Can't set relevancy to < -1 or > +1 ({sett_v})"
+                    assert (
+                        float(sett_v) >= -1 and float(sett_v) <= 1
+                    ), f"Can't set relevancy to < -1 or > +1 ({sett_v})"
                     sett_v = float(sett_v)
                 elif sett_k == "retriever":
                     assert all(
@@ -260,9 +252,11 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                     sett_v = bool(sett_v)
                 settings[sett_k] = type(settings[sett_k])(sett_v)
             except Exception as err:
-                red(f"Error: can't set '{sett_k}' to '{sett_v}' because it "
+                red(
+                    f"Error: can't set '{sett_k}' to '{sett_v}' because it "
                     f"can't keep the type '{type(settings[sett_k])}'\n"
-                    f"Error: '{err}'")
+                    f"Error: '{err}'"
+                )
                 show_help()
                 continue
             whi(f"Set {sett_k}={sett_v}")
@@ -276,18 +270,14 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     md_printer("### Done prompting")
 
     # saving new history to file
-    if len(
-            [
-                x
-                for x in prev_questions
-                if x["prompt"].strip() == user_input
-            ]) == 0:
+    if len([x for x in prev_questions if x["prompt"].strip() == user_input]) == 0:
         prev_questions.append(
             {
                 "prompt": user_input,
                 "timestamp": int(time.time()),
                 "task": settings["task"],
-            })
+            }
+        )
     prev_questions = sorted(
         prev_questions,
         key=lambda x: x["timestamp"],

@@ -4,10 +4,12 @@ Entry point file
 
 import json
 import sys
-import fire
 from pathlib import Path
 
-from .wdoc import wdoc, whi, is_verbose
+import fire
+
+from .wdoc import is_verbose, wdoc, whi
+
 
 def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier
@@ -26,7 +28,9 @@ def cli_launcher() -> None:
             fire.Fire(wdoc)
             raise SystemExit(0)
         else:
-            raise Exception("To create completion scripts, use '-- --completion' as arguments.")
+            raise Exception(
+                "To create completion scripts, use '-- --completion' as arguments."
+            )
     elif len(sys.argv) == 1:
         whi("No args shown. Use '--help' to display the help.")
         raise SystemExit(0)
@@ -59,14 +63,17 @@ def cli_launcher() -> None:
             sys.argv[1] = aft
 
     # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
-    if "--path" not in sysline and "string" not in sysline:  # if string is present that can be because of filetype=string, in which case path is not needed
+    if (
+        "--path" not in sysline and "string" not in sysline
+    ):  # if string is present that can be because of filetype=string, in which case path is not needed
         path = sys.argv[2]
         newarg = f"--path={path}"
-        sys.argv[2]= newarg
+        sys.argv[2] = newarg
         if is_verbose:
             whi(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
+
 
 def cli_parse_file() -> None:
     sys_args = sys.argv
@@ -102,7 +109,7 @@ def cli_parse_file() -> None:
                 continue
             if k == "--pipe" or k == "pipe":
                 continue
-            if v.startswith("\"") and v.endswith("\""):
+            if v.startswith('"') and v.endswith('"'):
                 v = v[1:-1]
                 kwargs[k] = v
             if v.startswith("'") and v.endswith("'"):
@@ -116,7 +123,11 @@ def cli_parse_file() -> None:
             kwargs[a] = True
 
         # all loaders need a path arg except anki
-        if "filetype" in kwargs and kwargs["filetype"] == "anki" and "path" not in kwargs:
+        if (
+            "filetype" in kwargs
+            and kwargs["filetype"] == "anki"
+            and "path" not in kwargs
+        ):
             kwargs["path"] = None
         parsed = wdoc.parse_file(**kwargs)
     else:
@@ -124,10 +135,8 @@ def cli_parse_file() -> None:
 
     if isinstance(parsed, list):
         d = {
-            "documents": {
-                "content": d.page_content,
-                "metadata": d.metadata
-            } for d in parsed
+            "documents": {"content": d.page_content, "metadata": d.metadata}
+            for d in parsed
         }
         try:
             out = json.dumps(d, indent=2, ensure_ascii=False)
@@ -139,6 +148,7 @@ def cli_parse_file() -> None:
 
     sys.stdout.write(out)
     sys.stdout.flush()
+
 
 if __name__ == "__main__":
     cli_launcher()

@@ -5,22 +5,23 @@ This module provides functionality to create structured Logseq pages
 with content generated from wdoc queries, including metadata and properties.
 """
 
-import json
 import inspect
-from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
-from typing import List, Dict
-import time
-from textwrap import indent
-from wdoc import wdoc
-import litellm
-import fire
-from pathlib import Path, PosixPath
-from datetime import datetime
-from beartype import beartype
-from typing import Union, Tuple, Optional, Callable
-from loguru import logger
-from joblib import Memory
+import json
 import re
+import time
+from datetime import datetime
+from pathlib import Path, PosixPath
+from textwrap import indent
+from typing import Callable, Dict, List, Optional, Tuple, Union
+
+import fire
+import litellm
+from beartype import beartype
+from joblib import Memory
+from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
+from loguru import logger
+
+from wdoc import wdoc
 
 VERSION = "1.3"
 
@@ -29,27 +30,31 @@ logger.add(
     "logs.txt",
     rotation="100MB",
     retention=5,
-    format='{time} {level} {thread} TheFiche {process} {function} {line} {message}',
+    format="{time} {level} {thread} TheFiche {process} {function} {line} {message}",
     level="DEBUG",
     enqueue=True,
     colorize=False,
 )
+
+
 def p(*args):
     "simple way to log to logs.txt and to print"
     print(*args)
     logger.info(*args)
+
 
 d = datetime.today()
 today = f"{d.day:02d}/{d.month:02d}/{d.year:04d}"
 
 mem = Memory(".cache", verbose=False)
 
+
 def chat(
     model: str,
     messages: List[Dict],
     temperature: float,
     **kwargs: Dict,
-    ) -> Dict:
+) -> Dict:
     """call to an LLM api. Cached."""
     answer = litellm.completion(
         model=model,
@@ -58,7 +63,9 @@ def chat(
         stream=False,
         **kwargs,
     ).json()
-    assert all(a["finish_reason"] == "stop" for a in answer["choices"]), f"Found bad finish_reason: '{answer}'"
+    assert all(
+        a["finish_reason"] == "stop" for a in answer["choices"]
+    ), f"Found bad finish_reason: '{answer}'"
     return answer
 
 
@@ -74,9 +81,7 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[wdoc, dict]:
     assert "error" not in fiche
 
     if len(fiche["all_intermediate_answers"]) > 1:
-        extra = '->'.join(
-            [str(len(ia)) for ia in fiche["all_intermediate_answers"]]
-        )
+        extra = "->".join([str(len(ia)) for ia in fiche["all_intermediate_answers"]])
         extra = f"({extra})"
     else:
         extra = ""
@@ -91,7 +96,9 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[wdoc, dict]:
         "wdoc_n_docs_found": len(fiche["unfiltered_docs"]),
         "wdoc_n_docs_filtered": len(fiche["filtered_docs"]),
         "wdoc_n_docs_used": len(fiche["relevant_filtered_docs"]),
-        "wdoc_n_combine_steps": str(len(fiche["all_intermediate_answers"])) + " " + extra,
+        "wdoc_n_combine_steps": str(len(fiche["all_intermediate_answers"]))
+        + " "
+        + extra,
         "wdoc_kwargs": json.dumps(kwargs2, ensure_ascii=False),
         "the_fiche_version": VERSION,
         "the_fiche_date": today,
@@ -99,6 +106,7 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[wdoc, dict]:
         "the_fiche_query": query,
     }
     return fiche, props
+
 
 @beartype
 class TheFiche:
@@ -108,6 +116,7 @@ class TheFiche:
     This class encapsulates the process of creating a Logseq page with content
     generated from a wdoc query, including metadata and properties.
     """
+
     def __init__(
         self,
         query: str,
@@ -119,7 +128,7 @@ class TheFiche:
         logseq_linkify: bool = True,
         the_fiche_callback: Optional[Callable] = None,
         **kwargs,
-        ):
+    ):
         """
         Initialize a TheFiche instance and generate a Logseq page.
 
@@ -137,7 +146,9 @@ class TheFiche:
         Raises:
             AssertionError: If the file exists and overwrite is False, or if the ratio of used/found documents is too high.
         """
-        p(f"Starting TheFiche with args: {query}, {logseq_page}, {overwrite}, {sources_location} and kwargs: {kwargs}")
+        p(
+            f"Starting TheFiche with args: {query}, {logseq_page}, {overwrite}, {sources_location} and kwargs: {kwargs}"
+        )
         assert sources_location in ["as_pages", "below"]
         logseq_page = Path(logseq_page)
 
@@ -189,8 +200,7 @@ class TheFiche:
 
         # prepare sources hash dict
         doc_hash = {
-            d.metadata["content_hash"][:5]: d.metadata
-            for d in fiche["filtered_docs"]
+            d.metadata["content_hash"][:5]: d.metadata for d in fiche["filtered_docs"]
         }
         # discard sources that are not used
         used_hash = []
@@ -206,7 +216,7 @@ class TheFiche:
 
         if logseq_linkify:
             if use_cache:
-                cached_chat =  mem.cache(chat)
+                cached_chat = mem.cache(chat)
             else:
                 cached_chat = chat
             litellm.drop_params = True
@@ -270,17 +280,23 @@ infection
 anticorps
 </tags>
 '''
-"""
+""",
                 },
                 {"role": "user", "content": text_wo_s},
             ]
             tag_answer = cached_chat(
                 messages=messages,
-                model=inspect.signature(wdoc).parameters["modelname"].default if "modelname" not in kwargs else kwargs["modelname"],
+                model=(
+                    inspect.signature(wdoc).parameters["modelname"].default
+                    if "modelname" not in kwargs
+                    else kwargs["modelname"]
+                ),
                 temperature=0,
             )
             tags_text = tag_answer["choices"][0]["message"]["content"]
-            assert "<tags>" in tags_text and "</tags>" in tags_text, f"missing <tags> or </tags> in new text:\n'''\n{tags_text}\n'''"
+            assert (
+                "<tags>" in tags_text and "</tags>" in tags_text
+            ), f"missing <tags> or </tags> in new text:\n'''\n{tags_text}\n'''"
             tags = tags_text.split("<tags>", 1)[1].split("</tags>", 1)[0].splitlines()
             tags = [t.strip() for t in tags if t.strip()]
             for t in tags:
@@ -300,8 +316,13 @@ anticorps
                 result = list(set(result))
                 assert len(result) <= len(string_list)
                 return result
+
             sub_tags = find_substrings(tags)
-            sup_tags = [t for t in tags if t not in sub_tags and re.search(t, text, re.IGNORECASE)]
+            sup_tags = [
+                t
+                for t in tags
+                if t not in sub_tags and re.search(t, text, re.IGNORECASE)
+            ]
             if sup_tags:
                 for it, t in enumerate(sup_tags):
                     tb = r"\b" + t + r"\b"
@@ -327,7 +348,7 @@ anticorps
                             line = line + " [[" + t + "]]"
                         else:
                             head = line.rstrip()
-                            tail = line[len(head):]
+                            tail = line[len(head) :]
                             assert head == head.rstrip()
                             assert tail != tail.rstrip(), tail
                             line = head + " [[" + t + "]]" + tail
@@ -336,7 +357,9 @@ anticorps
                     new_text += line
                 # assert text != new_text
                 if text == new_text:
-                    p(f"Text was not different after checking for subtags, which are: '{sub_tags}'")
+                    p(
+                        f"Text was not different after checking for subtags, which are: '{sub_tags}'"
+                    )
 
                 text = new_text
 
@@ -357,15 +380,18 @@ anticorps
                 if dh not in used_hash:
                     continue
                 cont = [
-                    fd.page_content for fd in fiche["filtered_docs"]
+                    fd.page_content
+                    for fd in fiche["filtered_docs"]
                     if fd.metadata["all_hash"] == dm["all_hash"]
                 ]
-                assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
+                assert (
+                    len(cont) == 1
+                ), f"Found multiple sources with the same hash! {cont}"
                 cont = cont[0].strip()
                 new_block = LogseqBlock(f"- [[{dh}]]: {indent(cont, '  ').strip()}")
                 for k, v in dm.items():
                     new_block.set_property(k, v)
-                diff = (4 - new_block.indentation_level % 4)
+                diff = 4 - new_block.indentation_level % 4
                 if diff != 0:
                     diff += 4
                 new_block.indentation_level += 4 + diff
@@ -376,12 +402,17 @@ anticorps
             for dh, dm in doc_hash.items():
                 if dh not in used_hash:
                     continue
-                source_path = logseq_dir / ("TheFicheSources___" + dm["all_hash"] + ".md")
+                source_path = logseq_dir / (
+                    "TheFicheSources___" + dm["all_hash"] + ".md"
+                )
                 cont = [
-                    fd.page_content for fd in fiche["filtered_docs"]
+                    fd.page_content
+                    for fd in fiche["filtered_docs"]
                     if fd.metadata["all_hash"] == dm["all_hash"]
                 ]
-                assert len(cont) == 1, f"Found multiple sources with the same hash! {cont}"
+                assert (
+                    len(cont) == 1
+                ), f"Found multiple sources with the same hash! {cont}"
                 cont = cont[0].strip()
                 new_h = dm["all_hash"][:5]
 
@@ -390,14 +421,22 @@ anticorps
 
                 conflict = False
                 if source_path.exists():
-                    p(f"Warning: a source for {dh} ({new_h}) already exists at {source_path}")
+                    p(
+                        f"Warning: a source for {dh} ({new_h}) already exists at {source_path}"
+                    )
                     prev_source = parse_file(source_path)
                     if prev_source.page_properties["content_hash"][:5].startswith(dh):
-                        if not prev_source.page_properties["all_hash"].startswith(new_h):
-                            p(f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file")
+                        if not prev_source.page_properties["all_hash"].startswith(
+                            new_h
+                        ):
+                            p(
+                                f"Found previous source with the same name and overlapping content but different alias: page: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file"
+                            )
                             conflict = True
                     else:
-                        p(f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file")
+                        p(
+                            f"Found previous source with the same name but does not contain the new content: {source_path}, dh: {dh}, new_h: {new_h}\nCreating a conflict file"
+                        )
                         conflict = True
 
                 if conflict:
@@ -434,10 +473,13 @@ anticorps
                         )
                         assert f"[[{new_h}]]" not in b.content
                         assert new_h not in content.blocks[ib].content
-                        content.blocks[ib].content = content.blocks[ib].content.replace(" []", "")
-                        content.blocks[ib].content = content.blocks[ib].content.replace("[]", "")
+                        content.blocks[ib].content = content.blocks[ib].content.replace(
+                            " []", ""
+                        )
+                        content.blocks[ib].content = content.blocks[ib].content.replace(
+                            "[]", ""
+                        )
                         content.blocks[ib].set_property("source", f"[[{new_h}]]")
-
 
         # save to file
         if (not logseq_page.absolute().exists()) or overwrite:

@@ -3,24 +3,24 @@ Code related to loading the LLM instance, with an appropriate price
 counting callback.
 """
 
-from beartype.typing import Union, List, Any, Optional, Dict
 import os
 
-from langchain_core.callbacks import BaseCallbackHandler
+import litellm
+from beartype.typing import Any, Dict, List, Optional, Union
+from langchain_community.chat_models import ChatLiteLLM
+from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.caches import BaseCache
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
-from langchain_community.chat_models.fake import FakeListChatModel
-from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
-from langchain_core.caches import BaseCache
-import litellm
 
-from .logger import whi, red, yel
-from .typechecker import optional_typecheck
-from .flags import is_verbose, is_private
 from .env import WDOC_PRIVATE_MODE
+from .flags import is_private, is_verbose
+from .logger import red, whi, yel
 from .misc import langfuse_callback_holder
+from .typechecker import optional_typecheck
 
 TESTING_LLM = "testing/testing"
 
@@ -57,20 +57,21 @@ def load_llm(
         if llm_verbosity:
             whi("Loading a fake LLM using the testing/ backend")
         lorem_ipsum = (
-                "Lorem ipsum dolor sit amet, consectetur adipiscing "
-                "elit, sed do eiusmod tempor incididunt ut labore et "
-                "dolore magna aliqua. Ut enim ad minim veniam, quis "
-                "nostrud exercitation ullamco laboris nisi ut aliquip "
-                "ex ea commodo consequat. Duis aute irure dolor in "
-                "reprehenderit in voluptate velit esse cillum dolore eu "
-                "fugiat nulla pariatur. Excepteur sint occaecat cupidatat "
-                "non proident, sunt in culpa qui officia deserunt mollit "
-                "anim id est laborum."
+            "Lorem ipsum dolor sit amet, consectetur adipiscing "
+            "elit, sed do eiusmod tempor incididunt ut labore et "
+            "dolore magna aliqua. Ut enim ad minim veniam, quis "
+            "nostrud exercitation ullamco laboris nisi ut aliquip "
+            "ex ea commodo consequat. Duis aute irure dolor in "
+            "reprehenderit in voluptate velit esse cillum dolore eu "
+            "fugiat nulla pariatur. Excepteur sint occaecat cupidatat "
+            "non proident, sunt in culpa qui officia deserunt mollit "
+            "anim id est laborum."
         )
         llm = FakeListChatModel(
             verbose=llm_verbosity,
             responses=[f"Fake answer n°{i}: {lorem_ipsum}" for i in range(1, 100)],
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
+            + langfuse_callback_holder,
             disable_streaming=True,  # Not needed and might break cache
             cache=False,
             **extra_model_args,
@@ -85,29 +86,51 @@ def load_llm(
     if private:
         assert api_base, "If private is set, api_base must be set too"
         assert WDOC_PRIVATE_MODE
-        assert "WDOC_PRIVATE_MODE" in os.environ, "Missing env variable WDOC_PRIVATE_MODE"
-        assert os.environ["WDOC_PRIVATE_MODE"] == "true", "Wrong value for env variable WDOC_PRIVATE_MODE"
+        assert (
+            "WDOC_PRIVATE_MODE" in os.environ
+        ), "Missing env variable WDOC_PRIVATE_MODE"
+        assert (
+            os.environ["WDOC_PRIVATE_MODE"] == "true"
+        ), "Wrong value for env variable WDOC_PRIVATE_MODE"
     if api_base:
         red(f"Will use custom api_base {api_base}")
-    if not (f"{backend.upper()}_API_KEY" in os.environ and os.environ[f"{backend.upper()}_API_KEY"]):
+    if not (
+        f"{backend.upper()}_API_KEY" in os.environ
+        and os.environ[f"{backend.upper()}_API_KEY"]
+    ):
         if not api_base:
             raise Exception(
-                f"No environment variable named {backend.upper()}_API_KEY found")
+                f"No environment variable named {backend.upper()}_API_KEY found"
+            )
         else:
-            yel(f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this.")
+            yel(
+                f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this."
+            )
 
     # extra check for private mode
     if private:
         assert os.environ["WDOC_PRIVATE_MODE"] == "true"
         red(
-            f"private is on so overwriting {backend.upper()}_API_KEY from environment variables")
-        assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            f"private is on so overwriting {backend.upper()}_API_KEY from environment variables"
+        )
+        assert (
+            os.environ[f"{backend.upper()}_API_KEY"]
+            == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+        )
 
-        assert os.environ[f"{backend.upper()}_API_KEY"] == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        assert not langfuse_callback_holder, "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
+        assert (
+            os.environ[f"{backend.upper()}_API_KEY"]
+            == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+        )
+        assert (
+            not langfuse_callback_holder
+        ), "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
     else:
         assert not WDOC_PRIVATE_MODE
-        assert "WDOC_PRIVATE_MODE" not in os.environ or os.environ["WDOC_PRIVATE_MODE"] == "false"
+        assert (
+            "WDOC_PRIVATE_MODE" not in os.environ
+            or os.environ["WDOC_PRIVATE_MODE"] == "false"
+        )
 
     assert private == is_private
 
@@ -120,13 +143,16 @@ def load_llm(
             cache=llm_cache,
             disable_streaming=True,  # Not needed and might break cache
             verbose=llm_verbosity,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)] + langfuse_callback_holder,  # use langchain's callback to langfuse
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
+            + langfuse_callback_holder,  # use langchain's callback to langfuse
             **extra_model_args,
         )
     else:
         max_tokens = litellm.get_model_info(modelname)["max_tokens"]
         if "max_tokens" not in extra_model_args:
-            extra_model_args["max_tokens"] = int(max_tokens * 0.9)  # intentionaly limiting max tokens because it can cause bugs
+            extra_model_args["max_tokens"] = int(
+                max_tokens * 0.9
+            )  # intentionaly limiting max tokens because it can cause bugs
         llm = ChatLiteLLM(
             model_name=modelname,
             disable_streaming=True,  # Not needed and might break cache
@@ -134,13 +160,17 @@ def load_llm(
             cache=llm_cache,
             verbose=llm_verbosity,
             tags=tags,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
+            callbacks=[
+                PriceCountingCallback(verbose=llm_verbosity)
+            ],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
             **extra_model_args,
         )
         litellm.drop_params = True
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
-        assert llm.api_base == api_base, "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
+        assert (
+            llm.api_base == api_base
+        ), "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
 
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
     if llm.cache:
@@ -153,6 +183,7 @@ def load_llm(
 @optional_typecheck
 class PriceCountingCallback(BaseCallbackHandler):
     "source: https://python.langchain.com/docs/modules/callbacks/"
+
     def __init__(self, verbose, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.verbose = verbose
@@ -180,14 +211,14 @@ class PriceCountingCallback(BaseCallbackHandler):
         return "PriceCountingCallback"
 
     def _check_methods_called(self) -> bool:
-        assert all(meth in dir(self) for meth in self.methods_called), (
-            "unexpected method names!")
+        assert all(
+            meth in dir(self) for meth in self.methods_called
+        ), "unexpected method names!"
         wrong = [
-            meth for meth in self.methods_called
-            if meth not in self.authorized_methods]
+            meth for meth in self.methods_called if meth not in self.authorized_methods
+        ]
         if wrong:
-            raise Exception(
-                f"Unauthorized_method were called: {','.join(wrong)}")
+            raise Exception(f"Unauthorized_method were called: {','.join(wrong)}")
         return True
 
     def on_llm_start(
@@ -204,7 +235,10 @@ class PriceCountingCallback(BaseCallbackHandler):
         self._check_methods_called()
 
     def on_chat_model_start(
-        self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], **kwargs: Any
+        self,
+        serialized: Dict[str, Any],
+        messages: List[List[BaseMessage]],
+        **kwargs: Any,
     ) -> Any:
         """Run when Chat Model starts running."""
         self.methods_called.append("on_chat_model_start")

@@ -6,14 +6,13 @@ Create a caching class that looks like it's just in memory but actually saves to
 
 """
 
-
 import json
 from pathlib import Path
-from beartype.typing import Union, Any, Optional, Generator
 
+from beartype.typing import Any, Generator, Optional, Union
 from langchain_core.caches import BaseCache
-
 from PersistDict import PersistDict
+
 
 class SQLiteCacheFixed(BaseCache):
     """Cache that stores things in memory using SQLiteDict."""
@@ -23,13 +22,12 @@ class SQLiteCacheFixed(BaseCache):
         database_path: Union[str, Path],
         expiration_days: Optional[int] = 0,
         verbose: bool = False,
-        ) -> None:
+    ) -> None:
         self.pdi = PersistDict(
             database_path=database_path,
             expiration_days=expiration_days,
             verbose=verbose,
         )
-
 
     def lookup(self, prompt: str, llm_string: str) -> Any:
         """Look up based on prompt and llm_string."""
@@ -39,7 +37,6 @@ class SQLiteCacheFixed(BaseCache):
         except KeyError:
             return None
         return val
-
 
     def update(self, prompt: str, llm_string: str, return_val: Any) -> None:
         """Update cache based on prompt and llm_string."""
@@ -54,9 +51,7 @@ class SQLiteCacheFixed(BaseCache):
         """Look up based on prompt and llm_string."""
         return self.lookup(prompt, llm_string)
 
-    async def aupdate(
-        self, prompt: str, llm_string: str, return_val: Any
-    ) -> None:
+    async def aupdate(self, prompt: str, llm_string: str, return_val: Any) -> None:
         """Update cache based on prompt and llm_string."""
         self.update(prompt, llm_string, return_val)
 

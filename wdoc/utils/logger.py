@@ -2,30 +2,31 @@
 Code related to loggings, coloured logs, etc.
 """
 
-import rtoml
 import json
-from textwrap import dedent
-from tqdm import tqdm
-from loguru import logger
-from pathlib import Path
-from beartype.typing import Type, Callable, Optional, Union, List, Dict
-from rich.markdown import Markdown
-from rich.console import Console
-from platformdirs import user_cache_dir, user_log_dir
 import warnings
+from pathlib import Path
+from textwrap import dedent
 
+import rtoml
+from beartype.typing import Callable, Dict, List, Optional, Type, Union
+from loguru import logger
+from platformdirs import user_cache_dir, user_log_dir
+from rich.console import Console
+from rich.markdown import Markdown
+from tqdm import tqdm
+
+from .flags import is_silent, md_printing_disabled
 from .typechecker import optional_typecheck
-from .flags import md_printing_disabled, is_silent
 
 # ignore warnings from beautiful soup
-warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
+warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
 
 cache_dir = Path(user_cache_dir(appname="wdoc"))
 cache_dir.mkdir(parents=True, exist_ok=True)
 
 log_dir = Path(user_log_dir(appname="wdoc"))
 log_dir.mkdir(exist_ok=True, parents=True)
-log_file = (log_dir / "logs.txt")
+log_file = log_dir / "logs.txt"
 log_file.touch(exist_ok=True)
 
 # logger
@@ -37,7 +38,7 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format='{time} {level} wdoc {thread} {process} {function} {line} {message}',
+    format="{time} {level} wdoc {thread} {process} {function} {line} {message}",
     level="DEBUG",
     enqueue=False,
     colorize=False,
@@ -89,6 +90,7 @@ def get_coloured_logger(color_asked: str) -> Callable:
         if not is_silent:
             tqdm.write(col + string + colors["reset"], **args)
         return string
+
     return printer
 
 
@@ -125,7 +127,9 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of wdoc class to wdoc/docs/USAGE.md's content"
     usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
-    assert usage_file.exists(), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/USAGE.md"
+    assert (
+        usage_file.exists()
+    ), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/USAGE.md"
     usage = usage_file.read_text().strip()
     assert usage
     obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/USAGE.md\n\n" + usage

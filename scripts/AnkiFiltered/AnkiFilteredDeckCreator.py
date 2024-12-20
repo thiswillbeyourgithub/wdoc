@@ -1,16 +1,18 @@
 """
 Simple script to create a filtered deck from a wdoc search
 """
-import os
-from wdoc.utils.env import WDOC_DEFAULT_MODELNAME
-from wdoc import wdoc
-from wdoc.utils.typechecker import optional_typecheck
-import fire
-from loguru import logger
-from typing import List, Tuple
-from langchain.docstore.document import Document
 
+import os
+from typing import List, Tuple
+
+import fire
+from langchain.docstore.document import Document
+from loguru import logger
 from py_ankiconnect import PyAnkiconnect
+
+from wdoc import wdoc
+from wdoc.utils.env import WDOC_DEFAULT_MODELNAME
+from wdoc.utils.typechecker import optional_typecheck
 
 VERSION = "1.1"
 
@@ -19,15 +21,18 @@ logger.add(
     "logs.txt",
     rotation="100MB",
     retention=5,
-    format='{time} {level} {thread} FilteredDeckCreator {process} {function} {line} {message}',
+    format="{time} {level} {thread} FilteredDeckCreator {process} {function} {line} {message}",
     level="DEBUG",
     enqueue=True,
     colorize=False,
 )
+
+
 def p(*args):
     "simple way to log to logs.txt and to print"
     print(*args)
     logger.info(*args)
+
 
 # default anki host
 if "PYTHON_PY_ANKICONNECT_HOST" in os.environ:
@@ -44,6 +49,7 @@ akc = PyAnkiconnect(
     default_port=port,
 )
 
+
 @optional_typecheck
 class FilteredDeckCreator:
     def __init__(
@@ -58,12 +64,14 @@ class FilteredDeckCreator:
         create_empty: bool = False,
         query_eval_modelname: str = WDOC_DEFAULT_MODELNAME,  # by default, use the same model as we use normally for querying
         **kwargs,
-        ) -> None:
+    ) -> None:
         akc("sync")
         p(f"Started with query '{query}'")
         deckname = "wdoc_filtered_deck::" + deckname
         decknames = akc("deckNames")
-        assert deckname not in decknames, f"Deckname {deckname} is already used. You have to delete it manually"
+        assert (
+            deckname not in decknames
+        ), f"Deckname {deckname} is already used. You have to delete it manually"
 
         instance = wdoc(
             query_eval_modelname=query_eval_modelname,
@@ -74,7 +82,7 @@ class FilteredDeckCreator:
         )
         found = instance.query_task(query=query)
 
-        if "relevant_filtered_docs"  in found:
+        if "relevant_filtered_docs" in found:
             docs = found["relevant_filtered_docs"]
         else:
             docs = found["filtered_docs"]
@@ -134,7 +142,7 @@ class FilteredDeckCreator:
             if "anki_nid" in doc.metadata:
                 nid = int(doc.metadata["anki_nid"])
                 nids.append(nid)
-                temp_cids =  [int(c) for c in akc("findCards", query=f"nid:{nid}")]
+                temp_cids = [int(c) for c in akc("findCards", query=f"nid:{nid}")]
                 if temp_cids:
                     present_anki_docs.append(doc)
                     cids.extend(temp_cids)
@@ -159,8 +167,10 @@ class FilteredDeckCreator:
         reschedule: bool = False,
         sort_order: int = 8,
         create_empty: bool = False,
-        ) -> None:
-        logger.info(f"Creating filtered deck {deckname}, {search_query}, {gather_count}, {reschedule}, {sort_order}, {create_empty}")
+    ) -> None:
+        logger.info(
+            f"Creating filtered deck {deckname}, {search_query}, {gather_count}, {reschedule}, {sort_order}, {create_empty}"
+        )
         akc(
             action="createFilteredDeck",
             newDeckName=deckname,
@@ -170,6 +180,7 @@ class FilteredDeckCreator:
             sortOrder=sort_order,
             createEmpty=create_empty,
         )
+
 
 if __name__ == "__main__":
     fire.Fire(FilteredDeckCreator)
