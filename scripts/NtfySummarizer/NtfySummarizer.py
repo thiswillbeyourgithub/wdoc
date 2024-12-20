@@ -1,22 +1,24 @@
-import traceback
 import json
-from typing import Union
 import os
-from pathlib import Path, PosixPath
-import requests
 import time
+import traceback
 from functools import partial
-from wdoc import wdoc
-import fire
-from beartype import beartype
-
-from rich.markdown import Markdown
 from io import StringIO
+from pathlib import Path, PosixPath
+from typing import Union
+
+import fire
+import requests
+from beartype import beartype
 from rich.console import Console
+from rich.markdown import Markdown
+
+from wdoc import wdoc
 
 VERSION = "0.2"
 
 log_file = Path(__file__).parent / "logs.txt"
+
 
 @beartype
 def log(text: str) -> None:
@@ -30,7 +32,7 @@ def _send_notif(
     message: str,
     topic: str,
     title: str = "wdoc Summaries",
-    ) -> str:
+) -> str:
     """
     Send a notification to a specified ntfy.sh topic.
 
@@ -44,7 +46,7 @@ def _send_notif(
     """
     requests.post(
         url=f"https://ntfy.sh/{topic}",
-        data=message.encode(encoding='utf-8'),
+        data=message.encode(encoding="utf-8"),
         headers={
             "Title": title,
             # "Priority": "urgent",
@@ -53,13 +55,14 @@ def _send_notif(
     )
     return message
 
+
 @beartype
 def _send_file(
     message: str,
     path: Union[str, PosixPath],
     topic: str,
     title: str = "wdoc Summaries",
-    ) -> None:
+) -> None:
     """
     Send a file as an attachment to a specified ntfy.sh topic.
 
@@ -89,7 +92,7 @@ def _send_file(
 def main(
     topic: str,
     render_md: bool = False,
-    ) -> None:
+) -> None:
     """
     Main function to process a URL or file type and URL, generate a summary, and send it as a notification.
 
@@ -116,7 +119,7 @@ def main(
         message = message.strip()
         if message.startswith("http"):
             url = message
-            filetype="auto"
+            filetype = "auto"
         else:
             filetype, url = message.split(" ", 1)
         log(f"Filetype: {filetype} ; Url: {url}")
@@ -158,7 +161,11 @@ def main(
         else:
             message_shortened = message.split("://", 1)[1][:30].replace("/", "_")
             (Path(__file__).parent / "summaries").mkdir(exist_ok=True)
-            path = Path(__file__).parent / "summaries" / f"{message_shortened}_{int(time.time())}.md"
+            path = (
+                Path(__file__).parent
+                / "summaries"
+                / f"{message_shortened}_{int(time.time())}.md"
+            )
             with open(path, "w") as f:
                 f.write(full_message)
             try:
@@ -176,11 +183,13 @@ def main(
 
         stack_trace_str = traceback.format_exc()
 
-        err_mess = f"Error for message '{message}':\n{str(err)}\n\nTrace:\n{stack_trace_str}"
+        err_mess = (
+            f"Error for message '{message}':\n{str(err)}\n\nTrace:\n{stack_trace_str}"
+        )
         log(err_mess)
         sn(message=err_mess)
         raise
 
+
 if __name__ == "__main__":
     fire.Fire(main)
-

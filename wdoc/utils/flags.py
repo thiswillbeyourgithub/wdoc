@@ -2,11 +2,13 @@
 easy access for all other files wether we are in verbose mode or not etc
 """
 
-import sys
 import platform
+import sys
+
 is_linux = platform.system() == "Linux"
 
 cmdline = " ".join(sys.argv[1:])
+
 
 def check_kwargs(arg: str, abbrv: str = None) -> bool:
     if f" {arg}" in cmdline or f" --{arg}" in cmdline:
@@ -14,6 +16,7 @@ def check_kwargs(arg: str, abbrv: str = None) -> bool:
     if abbrv and f" -{abbrv}" in cmdline:
         return True
     return False
+
 
 is_debug = check_kwargs("debug", "d")
 

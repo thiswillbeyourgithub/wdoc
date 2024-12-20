@@ -3,47 +3,54 @@
 * Loads and store embeddings for each document.
 """
 
-from beartype.typing import List, Union, Optional, Any, Tuple, Callable
 # import math
 import hashlib
 import os
 import random
 import time
-from pathlib import Path
-from tqdm import tqdm
-from joblib import Parallel, delayed
 from functools import wraps
+from pathlib import Path
 
+import litellm
 import numpy as np
-from pydantic import Extra
+from beartype.typing import Any, Callable, List, Optional, Tuple, Union
+from joblib import Parallel, delayed
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.embeddings import (
+    HuggingFaceEmbeddings,
+    HuggingFaceInstructEmbeddings,
+    SentenceTransformerEmbeddings,
+)
 from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+from pydantic import Extra
+from tqdm import tqdm
+
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cache import LocalFileStore
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
-from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_openai import OpenAIEmbeddings
-import litellm
-
-from .misc import cache_dir, get_tkn_length
-from .logger import whi, red
-from .typechecker import optional_typecheck
-from .flags import is_verbose
 from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN
+from .flags import is_verbose
+from .logger import red, whi
+from .misc import cache_dir, get_tkn_length
+from .typechecker import optional_typecheck
+
 
 def status(message: str):
     if is_verbose:
         whi(f"STATUS: {message}")
 
+
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
-DEFAULT_QUERY_INSTRUCTION = "Represent the question for retrieving supporting documents: "
+DEFAULT_QUERY_INSTRUCTION = (
+    "Represent the question for retrieving supporting documents: "
+)
 
 
 if WDOC_MOD_FAISS_SCORE_FN:
+
     def score_function(distance: float) -> float:
         """
         Scoring function for faiss to make sure it's positive.
@@ -60,6 +67,7 @@ if WDOC_MOD_FAISS_SCORE_FN:
         # return 1.0 - distance / math.sqrt(2)
         new = 1 - ((1 + distance) / 2)
         return new
+
 else:
     score_function = None
 
@@ -89,8 +97,11 @@ def load_embeddings(
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
         assert not private, f"Set private but tried to use openai embeddings"
-        assert "OPENAI_API_KEY" in os.environ and os.environ[
-            "OPENAI_API_KEY"] and "REDACTED" not in os.environ["OPENAI_API_KEY"], "Missing OPENAI_API_KEY"
+        assert (
+            "OPENAI_API_KEY" in os.environ
+            and os.environ["OPENAI_API_KEY"]
+            and "REDACTED" not in os.environ["OPENAI_API_KEY"]
+        ), "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
             model=embed_model,
@@ -100,18 +111,23 @@ def load_embeddings(
         )
 
     elif backend == "huggingface":
-        assert not private, f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
+        assert (
+            not private
+        ), f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
         }
         model_kwargs.update(embed_kwargs)
         if "google" in embed_model and "gemma" in embed_model.lower():
-            assert "HUGGINGFACE_API_KEY" in os.environ and os.environ[
-                "HUGGINGFACE_API_KEY"] and "REDACTED" not in os.environ["HUGGINGFACE_API_KEY"], "Missing HUGGINGFACE_API_KEY"
+            assert (
+                "HUGGINGFACE_API_KEY" in os.environ
+                and os.environ["HUGGINGFACE_API_KEY"]
+                and "REDACTED" not in os.environ["HUGGINGFACE_API_KEY"]
+            ), "Missing HUGGINGFACE_API_KEY"
             hftkn = os.environ["HUGGINGFACE_API_KEY"]
             # your token to use the models
-            model_kwargs['use_auth_token'] = hftkn
+            model_kwargs["use_auth_token"] = hftkn
         if instruct:
             embeddings = HuggingFaceInstructEmbeddings(
                 model_name=embed_model,
@@ -128,7 +144,9 @@ def load_embeddings(
         if "google" in embed_model and "gemma" in embed_model.lower():
             # please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
             # or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
-            embeddings.client.tokenizer.pad_token = embeddings.client.tokenizer.eos_token
+            embeddings.client.tokenizer.pad_token = (
+                embeddings.client.tokenizer.eos_token
+            )
 
     elif backend == "sentencetransformers":
         if private:
@@ -164,9 +182,7 @@ def load_embeddings(
         try:
             if Path(embed_model).exists():
                 with open(Path(embed_model).resolve().absolute().__str__(), "rb") as f:
-                    h = hashlib.sha256(
-                        f.read() + str(instruct)
-                    ).hexdigest()[:15]
+                    h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
                 embed_model_str = Path(embed_model).name + "_" + h
         except Exception:
             pass
@@ -203,7 +219,8 @@ def load_embeddings(
             str(path),
             cached_embeddings,
             relevance_score_fn=score_function,
-            allow_dangerous_deserialization=True)
+            allow_dangerous_deserialization=True,
+        )
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return db, cached_embeddings
@@ -217,24 +234,25 @@ def load_embeddings(
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
-    whi(
-        f"Total number of tokens in documents: '{full_tkn}'")
+    whi(f"Total number of tokens in documents: '{full_tkn}'")
     if private:
         whi("Not checking token price because private is set")
         price = 0
     elif backend != "openai":
-        whi(
-            f"Not checking token price because using a private backend: {backend}")
+        whi(f"Not checking token price because using a private backend: {backend}")
         price = 0
     elif f"{backend}/{embed_model}" in litellm.model_cost:
         price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
-        assert litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0
+        assert (
+            litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0
+        )
     elif embed_model in litellm.model_cost:
         price = litellm.model_cost[embed_model]["input_cost_per_token"]
         assert litellm.model_cost[embed_model]["output_cost_per_token"] == 0
     else:
         raise Exception(
-            red(f"Couldn't find the price of embedding model {embed_model}"))
+            red(f"Couldn't find the price of embedding model {embed_model}")
+        )
 
     dol_price = full_tkn * price
     red(f"Total cost to embed all tokens is ${dol_price:.6f}")
@@ -268,7 +286,9 @@ def load_embeddings(
                 )
                 break
             except Exception as e:
-                red(f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}")
+                red(
+                    f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}"
+                )
                 if trial + 1 >= n_trial:
                     red("Too many errors: bypassing the cache:")
                     temp = FAISS.from_documents(
@@ -281,13 +301,14 @@ def load_embeddings(
                 else:
                     time.sleep(1)
         return temp
+
     temp_dbs = Parallel(
         backend="threading",
         n_jobs=10,
         verbose=0 if not is_verbose else 51,
     )(
         delayed(embedand_one_batch)(
-            batch=docs[batch[0]: batch[1]],
+            batch=docs[batch[0] : batch[1]],
             ib=ib,
         )
         for ib, batch in tqdm(
@@ -310,13 +331,15 @@ def load_embeddings(
 
     return db, cached_embeddings
 
+
 class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
     @optional_typecheck
     def __init__(self, *args, **kwargs):
         assert "encode_kwargs" in kwargs
         if "normalize_embeddings" in kwargs["encode_kwargs"]:
-            assert kwargs["encode_kwargs"]["normalize_embeddings"] is False, (
-                "Not supposed to normalize embeddings using RollingWindowEmbeddings")
+            assert (
+                kwargs["encode_kwargs"]["normalize_embeddings"] is False
+            ), "Not supposed to normalize embeddings using RollingWindowEmbeddings"
         assert kwargs["encode_kwargs"]["pooling"] in ["maxpool", "meanpool"]
         pooltech = kwargs["encode_kwargs"]["pooling"]
         del kwargs["encode_kwargs"]["pooling"]
@@ -337,8 +360,9 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         if not isinstance(max_len, int):
             # the clip model has a different way to use the encoder
             # sources : https://github.com/UKPLab/sentence-transformers/issues/1269
-            assert "clip" in str(model).lower(), (
-                f"sbert model with no 'max_seq_length' attribute and not clip: '{model}'")
+            assert (
+                "clip" in str(model).lower()
+            ), f"sbert model with no 'max_seq_length' attribute and not clip: '{model}'"
             max_len = 77
             encode = model._first_module().processor.tokenizer.encode
         else:
@@ -374,14 +398,14 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                 until_j = len(encode(" ".join(words[:j])))
                 if until_j >= max_len:
                     jjj = 1
-                    while len(encode(" ".join(words[:j-jjj]))) >= max_len:
+                    while len(encode(" ".join(words[: j - jjj]))) >= max_len:
                         jjj += 1
-                    sub_sentences.append(" ".join(words[:j-jjj]))
+                    sub_sentences.append(" ".join(words[: j - jjj]))
 
                     # remove first word until 1/3 of the max_token was removed
                     # this way we have a rolling window
                     jj = max(1, int((max_len // 3) / avg_tkn * 0.8))
-                    while len(encode(" ".join(words[jj:j-jjj]))) > n23:
+                    while len(encode(" ".join(words[jj : j - jjj]))) > n23:
                         jj += 1
                     words = words[jj:]
 
@@ -402,22 +426,18 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             if "" in sub_sentences:
                 while "" in sub_sentences:
                     sub_sentences.remove("")
-            assert sum([len(encode(ss)) > max_len for ss in sub_sentences]) == 0, (
-                f"error when splitting long sentences: {sub_sentences}")
+            assert (
+                sum([len(encode(ss)) > max_len for ss in sub_sentences]) == 0
+            ), f"error when splitting long sentences: {sub_sentences}"
             add_sent.extend(sub_sentences)
             add_sent_idx.extend([i] * len(sub_sentences))
 
         if add_sent:
-            sent_check = [
-                len(encode(s)) > max_len
-                for s in sentences
-            ]
-            addsent_check = [
-                len(encode(s)) > max_len
-                for s in add_sent
-            ]
-            assert sum(sent_check + addsent_check) == 0, (
-                f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}")
+            sent_check = [len(encode(s)) > max_len for s in sentences]
+            addsent_check = [len(encode(s)) > max_len for s in add_sent]
+            assert (
+                sum(sent_check + addsent_check) == 0
+            ), f"The rolling average failed apparently:\n{sent_check}\n{addsent_check}"
 
         vectors = super().embed_documents(sentences + add_sent)
         t = type(vectors)
@@ -429,13 +449,13 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             # at the position of the original sentence (not split)
             # add the vectors of the corresponding sub_sentence
             # then return only the 'pooled' section
-            assert len(add_sent) == len(add_sent_idx), (
-                "Invalid add_sent length")
+            assert len(add_sent) == len(add_sent_idx), "Invalid add_sent length"
             offset = len(sentences)
             for sid in list(set(add_sent_idx)):
                 id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                 add_sent_vec = vectors[
-                    offset + min(id_range): offset + max(id_range), :]
+                    offset + min(id_range) : offset + max(id_range), :
+                ]
                 if self.__pool_technique == "maxpool":
                     vectors[sid] = np.amax(add_sent_vec, axis=0)
                 elif self.__pool_technique == "meanpool":
@@ -448,4 +468,3 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             vectors = vectors.tolist()
         assert isinstance(vectors, t), "wrong type?"
         return vectors
-

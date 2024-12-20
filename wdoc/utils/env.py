@@ -4,14 +4,16 @@ check their types and finally make them easier to access by other parts of
 wdoc.
 """
 
-import sys
 import os
-from beartype.typing import Optional, Union, Literal
-from beartype import beartype, BeartypeConf
+import sys
+
+from beartype import BeartypeConf, beartype
 from beartype.door import is_bearable
+from beartype.typing import Literal, Optional, Union
 
 # must create it because we can't import it from typechecker.py
 warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
+
 
 @warn_typecheck
 def parse(val: str) -> Optional[Union[bool, int, str]]:
@@ -24,6 +26,7 @@ def parse(val: str) -> Optional[Union[bool, int, str]]:
     elif val == "none" or val == "":
         return None
     return val
+
 
 WDOC_TYPECHECKING = "warn"
 WDOC_NO_MODELNAME_MATCHING = True
@@ -53,26 +56,26 @@ if " --help" in " ".join(sys.argv):
     WDOC_IMPORT_TYPE = "lazy"
 
 valid_types = {
-    'WDOC_TYPECHECKING': Literal["disabled", "warn", "crash"],
-    'WDOC_NO_MODELNAME_MATCHING': bool,
-    'WDOC_ALLOW_NO_PRICE': bool,
-    'WDOC_OPEN_ANKI': bool,
-    'WDOC_STRICT_DOCDICT': bool,
-    'WDOC_MAX_LOADER_TIMEOUT': int,
-    'WDOC_MAX_PDF_LOADER_TIMEOUT': int,
-    'WDOC_PRIVATE_MODE': bool,
-    'WDOC_DEBUGGER': bool,
-    'WDOC_EXPIRE_CACHE_DAYS': int,
-    'WDOC_EMPTY_LOADER': bool,
-    'WDOC_BEHAVIOR_EXCL_INCL_USELESS': Literal["warn", "crash"],
-    'WDOC_IMPORT_TYPE': Literal["native", "lazy", "thread", "both"],
-    'WDOC_MOD_FAISS_SCORE_FN': bool,
-    'WDOC_LLM_MAX_CONCURRENCY': int,
-    'WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE': int,
-    'WDOC_MAX_CHUNK_SIZE': int,
-    'WDOC_DEFAULT_MODELNAME': str,
-    'WDOC_DEFAULT_EMBED_MODEL': str,
-    'WDOC_DEFAULT_QUERY_EVAL_MODELNAME': str,
+    "WDOC_TYPECHECKING": Literal["disabled", "warn", "crash"],
+    "WDOC_NO_MODELNAME_MATCHING": bool,
+    "WDOC_ALLOW_NO_PRICE": bool,
+    "WDOC_OPEN_ANKI": bool,
+    "WDOC_STRICT_DOCDICT": bool,
+    "WDOC_MAX_LOADER_TIMEOUT": int,
+    "WDOC_MAX_PDF_LOADER_TIMEOUT": int,
+    "WDOC_PRIVATE_MODE": bool,
+    "WDOC_DEBUGGER": bool,
+    "WDOC_EXPIRE_CACHE_DAYS": int,
+    "WDOC_EMPTY_LOADER": bool,
+    "WDOC_BEHAVIOR_EXCL_INCL_USELESS": Literal["warn", "crash"],
+    "WDOC_IMPORT_TYPE": Literal["native", "lazy", "thread", "both"],
+    "WDOC_MOD_FAISS_SCORE_FN": bool,
+    "WDOC_LLM_MAX_CONCURRENCY": int,
+    "WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE": int,
+    "WDOC_MAX_CHUNK_SIZE": int,
+    "WDOC_DEFAULT_MODELNAME": str,
+    "WDOC_DEFAULT_EMBED_MODEL": str,
+    "WDOC_DEFAULT_QUERY_EVAL_MODELNAME": str,
 }
 
 # sanity check for the default values
@@ -88,5 +91,7 @@ for k in os.environ.keys():
         continue
     v = parse(os.environ[k])
     assert k in locals().keys(), f"Unexpected key env variable starting by 'wdoc_': {k}"
-    assert is_bearable(v, valid_types[k]), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{valid_types['k']}'"
+    assert is_bearable(
+        v, valid_types[k]
+    ), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{valid_types['k']}'"
     locals()[k] = v

@@ -6,34 +6,51 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
-from collections import Counter
-import shutil
-import uuid
-import uuid6
-import re
-import sys
-from tqdm import tqdm
-from functools import cache as memoizer
-import time
-from beartype.typing import List, Tuple, Union, Optional
-import random
-from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
-
-from langchain.docstore.document import Document
-from joblib import Parallel, delayed
-from pathlib import Path
 import json
-import rtoml
+import random
+import re
+import shutil
+import sys
+import time
+import uuid
+from collections import Counter
+from functools import cache as memoizer
+from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
+from pathlib import Path
+
 import dill
+import rtoml
+import uuid6
+from beartype.typing import List, Optional, Tuple, Union
+from joblib import Parallel, delayed
+from langchain.docstore.document import Document
+from tqdm import tqdm
 
-from .misc import doc_loaders_cache, file_hasher, min_token, get_tkn_length, unlazyload_modules, cache_dir, DocDict
-from .typechecker import optional_typecheck
-from .logger import red, whi, logger
-from .loaders import load_one_doc_wrapped, yt_link_regex, load_youtube_playlist, markdownlink_regex, loaders_temp_dir_file
+from .env import WDOC_BEHAVIOR_EXCL_INCL_USELESS, WDOC_MAX_LOADER_TIMEOUT
 from .flags import is_debug, is_verbose
-from .env import WDOC_MAX_LOADER_TIMEOUT, WDOC_BEHAVIOR_EXCL_INCL_USELESS
+from .loaders import (
+    load_one_doc_wrapped,
+    load_youtube_playlist,
+    loaders_temp_dir_file,
+    markdownlink_regex,
+    yt_link_regex,
+)
+from .logger import logger, red, whi
+from .misc import (
+    DocDict,
+    cache_dir,
+    doc_loaders_cache,
+    file_hasher,
+    get_tkn_length,
+    min_token,
+    unlazyload_modules,
+)
+from .typechecker import optional_typecheck
 
-assert WDOC_BEHAVIOR_EXCL_INCL_USELESS in ["warn", "crash"], "Unexpected value of WDOC_BEHAVIOR_EXCL_INCL_USELESS"
+assert WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
+    "warn",
+    "crash",
+], "Unexpected value of WDOC_BEHAVIOR_EXCL_INCL_USELESS"
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -55,7 +72,6 @@ inference_rules = {
     "powerpoint": [".ppt$", ".pptx$", ".odp$"],
     "word": [".doc$", ".docx$", ".odt$"],
     "local_video": [".mp4", ".avi", ".mkv"],
-
     "json_entries": [".*.json"],
     "toml_entries": [".*.toml"],
 }
@@ -66,7 +82,7 @@ recursive_types = [
     "toml_entries",
     "link_file",
     "youtube_playlist",
-    "auto"
+    "auto",
 ]
 
 # compile the inference rules as regex
@@ -74,14 +90,11 @@ for k, v in inference_rules.items():
     for i, vv in enumerate(v):
         inference_rules[k][i] = re.compile(vv)
 
+
 @optional_typecheck
 def batch_load_doc(
-    llm_name: str,
-    filetype: str,
-    task: str,
-    backend: str,
-    n_jobs: int,
-    **cli_kwargs) -> List[Document]:
+    llm_name: str, filetype: str, task: str, backend: str, n_jobs: int, **cli_kwargs
+) -> List[Document]:
     """load the input"""
 
     # just in case, make sure all modules are loaded
@@ -126,9 +139,12 @@ def batch_load_doc(
                         if fp.exists():
                             try:
                                 import magic
+
                                 info = magic.from_file(fp).lower()
                             except Exception as err:
-                                raise Exception(f"Failed to run python-magic as a last resort heuristic: '{err}'") from err
+                                raise Exception(
+                                    f"Failed to run python-magic as a last resort heuristic: '{err}'"
+                                ) from err
                             if "pdf" in info:
                                 load_filetype = "pdf"
                                 break
@@ -139,9 +155,13 @@ def batch_load_doc(
                                 load_filetype = "epub"
                                 break
                             else:
-                                raise Exception("No more python magic heuristics to try")
+                                raise Exception(
+                                    "No more python magic heuristics to try"
+                                )
                     except Exception as err:
-                        red(f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'")
+                        red(
+                            f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'"
+                        )
 
                 assert (
                     load_filetype != "auto"
@@ -155,10 +175,7 @@ def batch_load_doc(
 
             if load_filetype == "recursive_paths":
                 new_doc_to_load.extend(
-                    parse_recursive_paths(
-                        cli_kwargs=cli_kwargs,
-                        **load_kwargs
-                    )
+                    parse_recursive_paths(cli_kwargs=cli_kwargs, **load_kwargs)
                 )
                 break
 
@@ -185,16 +202,15 @@ def batch_load_doc(
 
             elif load_filetype == "youtube_playlist":
                 new_doc_to_load.extend(
-                    parse_youtube_playlist(
-                        cli_kwargs=cli_kwargs,
-                        **load_kwargs
-                    )
+                    parse_youtube_playlist(cli_kwargs=cli_kwargs, **load_kwargs)
                 )
                 break
 
         if new_doc_to_load:
             for indtl, ndtl in enumerate(new_doc_to_load):
-                assert ndtl, f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
+                assert (
+                    ndtl
+                ), f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
 
             assert load_filetype in recursive_types
             to_load.remove(to_load[ild])
@@ -203,10 +219,7 @@ def batch_load_doc(
             continue
 
     try:
-        to_load = [
-            d if isinstance(d, DocDict) else DocDict(d)
-            for d in to_load
-        ]
+        to_load = [d if isinstance(d, DocDict) else DocDict(d) for d in to_load]
     except Exception as err:
         raise Exception(f"Expected to have only DocDict at this point: {err}'")
 
@@ -231,7 +244,9 @@ def batch_load_doc(
                 elif isinstance(doc["path"], str):
                     doc["path"] = str(alt.absolute())
                 else:
-                    raise ValueError(f"At this point path should only be str or Path: {doc['path']}")
+                    raise ValueError(
+                        f"At this point path should only be str or Path: {doc['path']}"
+                    )
                 break
 
     # remove duplicate documents
@@ -253,7 +268,10 @@ def batch_load_doc(
         for k in to_del:
             all_unexp_keys.add(k)
             del doc[k]
-            assert k not in ["include", "exclude"], "Include or exclude arguments should be reomved at this point"
+            assert k not in [
+                "include",
+                "exclude",
+            ], "Include or exclude arguments should be reomved at this point"
 
     if "summar" not in task:
         # shuffle the list of files to load to make
@@ -265,17 +283,18 @@ def batch_load_doc(
         n_jobs=-1 if len(to_load) > 1 else 1,
         backend=backend,
         verbose=0 if not is_verbose else 51,
-    )(delayed(file_hasher)(doc=doc) for doc in tqdm(
-      to_load,
-      desc="Hashing files",
-      unit="doc",
-      colour="magenta",
-      disable=len(to_load) <= 10_000,
-      )
+    )(
+        delayed(file_hasher)(doc=doc)
+        for doc in tqdm(
+            to_load,
+            desc="Hashing files",
+            unit="doc",
+            colour="magenta",
+            disable=len(to_load) <= 10_000,
+        )
     )
     for i, h in enumerate(doc_hashes):
         to_load[i]["file_hash"] = doc_hashes[i]
-
 
     if "summar" not in task:
         # shuffle the list of files again to be random but deterministic:
@@ -295,9 +314,11 @@ def batch_load_doc(
         @optional_typecheck
         def deterministic_sorter(doc_dict: DocDict) -> int:
             h = doc_dict["file_hash"]
-            h2 = ''.join(filter(str.isdigit, h))
+            h2 = "".join(filter(str.isdigit, h))
             h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
-            h_ordered = h_ints * (10 ** (sorted_filetypes.index(doc_dict["filetype"]) + 1))
+            h_ordered = h_ints * (
+                10 ** (sorted_filetypes.index(doc_dict["filetype"]) + 1)
+            )
             return h_ordered
 
         to_load = sorted(
@@ -306,28 +327,33 @@ def batch_load_doc(
         )
 
     # load_functions are slow to load so loading them here in advance for every file
-    if any(
-        ("load_functions" in doc and doc["load_functions"])
-            for doc in to_load):
+    if any(("load_functions" in doc and doc["load_functions"]) for doc in to_load):
         whi("Preloading load_functions")
         for idoc, doc in enumerate(to_load):
             if "load_functions" in doc:
                 if doc["load_functions"]:
                     to_load[idoc]["load_functions"] = parse_load_functions(
-                        tuple(doc["load_functions"]))
+                        tuple(doc["load_functions"])
+                    )
 
     to_load = list(set(to_load))  # remove duplicates docdicts
 
     if len(to_load) > 1:
         for tl in to_load:
-            assert tl["filetype"] != "text", "You shouldn't not be using filetype 'text' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
+            assert (
+                tl["filetype"] != "text"
+            ), "You shouldn't not be using filetype 'text' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
 
     # dir name where to store temporary files
     load_temp_name = "file_load_" + str(uuid6.uuid6())
     # delete previous temp dir if it's several days old
     for f in cache_dir.iterdir():
         f = f.resolve()
-        if f.is_dir() and f.name.startswith("file_load_") and (abs(time.time() - f.stat().st_mtime) > 2 * 86400):
+        if (
+            f.is_dir()
+            and f.name.startswith("file_load_")
+            and (abs(time.time() - f.stat().st_mtime) > 2 * 86400)
+        ):
             assert str(cache_dir.absolute()) in str(f.absolute())
             shutil.rmtree(f)
     temp_dir = cache_dir / load_temp_name
@@ -341,7 +367,9 @@ def batch_load_doc(
     sharedmem = None
     if len(to_load) == 1:
         n_jobs = 1
-        to_load[0]["loading_failure"] = "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
+        to_load[0][
+            "loading_failure"
+        ] = "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
     else:
         if backend == "loky":
             if is_verbose:
@@ -368,18 +396,19 @@ def batch_load_doc(
             timeout=loader_max_timeout,
             return_as="generator",  # try to reduce memory footprint
             require=sharedmem,
-        )(delayed(load_one_doc_wrapped)(
+        )(
+            delayed(load_one_doc_wrapped)(
                 llm_name=llm_name,
                 task=task,
                 temp_dir=temp_dir,
                 **d,
             )
             for d in tqdm(
-                    to_load,
-                    desc="Loading",
-                    unit="doc",
-                    colour="magenta",
-                )
+                to_load,
+                desc="Loading",
+                unit="doc",
+                colour="magenta",
+            )
         )
         doc_lists = []
         for idoc, o in enumerate(generator_doc_lists):
@@ -403,24 +432,35 @@ def batch_load_doc(
             #             mess += f"\nLatest error was: '{o}'"
             #             raise Exception(red(mess))
     except MultiprocessTimeoutError as e:
-        raise Exception(red(f"Timed out when loading batch files after {loader_max_timeout}s")) from e
+        raise Exception(
+            red(f"Timed out when loading batch files after {loader_max_timeout}s")
+        ) from e
 
     # erases content that links to the loaders temporary files at startup
     loaders_temp_dir_file.write_text("")
 
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     missing_docargs = []
-    for idoc, d in tqdm(enumerate(doc_lists), total=len(doc_lists), desc="Concatenating results", disable=not is_verbose):
+    for idoc, d in tqdm(
+        enumerate(doc_lists),
+        total=len(doc_lists),
+        desc="Concatenating results",
+        disable=not is_verbose,
+    ):
         if isinstance(d, list):
             docs.extend(d)
         else:
             assert isinstance(d, str)
-            missing_docargs.append(dict(to_load[idoc]))  # must be cast as dict to set error message
+            missing_docargs.append(
+                dict(to_load[idoc])
+            )  # must be cast as dict to set error message
             missing_docargs[-1]["error_message"] = d
     assert not any(isinstance(d, str) for d in docs)
 
     if missing_docargs:
-        missing_docargs = sorted(missing_docargs, key=lambda x: json.dumps(x, ensure_ascii=False))
+        missing_docargs = sorted(
+            missing_docargs, key=lambda x: json.dumps(x, ensure_ascii=False)
+        )
         red(f"Number of failed documents: {len(missing_docargs)}:")
     else:
         red("No document failed to load!")
@@ -459,7 +499,9 @@ def batch_load_doc(
         red(f"Found {no_st} documents with no source_tag")
 
         if should_crash:
-            red("Something might have gone wrong given those source tags.\nAnswer 'crash' to crash, 'd' to debug, anything else to continue.")
+            red(
+                "Something might have gone wrong given those source tags.\nAnswer 'crash' to crash, 'd' to debug, anything else to continue."
+            )
             ans = input(">")
             if ans == "d":
                 breakpoint()
@@ -501,7 +543,9 @@ def batch_load_doc(
                             continue
                     elif k not in deduped[ch].metadata:
                         deduped[ch].metadata[k] = v
-                    elif isinstance(v, list) and isinstance(deduped[ch].metadata[k], list):
+                    elif isinstance(v, list) and isinstance(
+                        deduped[ch].metadata[k], list
+                    ):
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
                     elif is_verbose:
                         red(f"UNEXPECTED METADATA TYPE: '{k}:{v}'")
@@ -519,8 +563,10 @@ def batch_load_doc(
         assert not dupes, dupes
         docs = [d for d in docs if d is not None]
         if deduped:
-            docs  += list(deduped.values())
-        assert len(docs) <= lenbefore, f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
+            docs += list(deduped.values())
+        assert (
+            len(docs) <= lenbefore
+        ), f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
 
     assert docs, "No documents were succesfully loaded!"
 
@@ -542,15 +588,12 @@ def parse_recursive_paths(
     **extra_args,
 ) -> List[Union[DocDict, dict]]:
     whi(f"Parsing recursive load_filetype: '{path}'")
-    assert (
-        recursed_filetype
-        not in [
-            "recursive_paths",
-            "json_entries",
-            "youtube",
-            "anki",
-        ]
-    ), "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
+    assert recursed_filetype not in [
+        "recursive_paths",
+        "json_entries",
+        "youtube",
+        "anki",
+    ], "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
 
     if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
         logger.info(r"File was not found so replaced '\ ' by ' '")
@@ -562,9 +605,7 @@ def parse_recursive_paths(
     assert doclist, "No document after filtering by file"
     doclist = [p for p in doclist if p]
     assert doclist, "No document after removing nonemtpy"
-    doclist = [
-        p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
-    ]
+    doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
     recur_parent_id = str(uuid.uuid4())
 
     if include:
@@ -619,16 +660,12 @@ def parse_json_entries(
     cli_kwargs: dict,
     path: Union[str, Path],
     **extra_args,
-    ) -> List[Union[DocDict, dict]]:
+) -> List[Union[DocDict, dict]]:
     whi(f"Loading json_entries: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
+    doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
     doclist = [
-        p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
-    ]
-    doclist = [
-        p.strip()
-        for p in doclist
-        if p.strip() and not p.strip().startswith("#")
+        p.strip() for p in doclist if p.strip() and not p.strip().startswith("#")
     ]
     recur_parent_id = str(uuid.uuid4())
 
@@ -655,7 +692,7 @@ def parse_toml_entries(
     cli_kwargs: dict,
     path: Union[str, Path],
     **extra_args,
-    ) -> List[Union[DocDict, dict]]:
+) -> List[Union[DocDict, dict]]:
     whi(f"Loading toml_entries: '{path}'")
     content = rtoml.load(toml=Path(path))
     assert isinstance(content, dict)
@@ -688,12 +725,10 @@ def parse_link_file(
     cli_kwargs: dict,
     path: Union[str, Path],
     **extra_args,
-    ) -> List[DocDict]:
+) -> List[DocDict]:
     whi(f"Loading link_file: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
-    doclist = [
-        p[1:].strip() if p.startswith("-") else p.strip() for p in doclist
-    ]
+    doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
     doclist = [
         p.strip()
         for p in doclist
@@ -723,7 +758,7 @@ def parse_youtube_playlist(
     cli_kwargs: dict,
     path: Union[str, Path],
     **extra_args,
-    ) -> List[DocDict]:
+) -> List[DocDict]:
     if "\\" in path:
         red(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
@@ -757,15 +792,15 @@ def parse_youtube_playlist(
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
     assert isinstance(load_functions, list), "load_functions must be a list"
-    assert all(isinstance(lf, str)
-               for lf in load_functions), "load_functions elements must be strings"
+    assert all(
+        isinstance(lf, str) for lf in load_functions
+    ), "load_functions elements must be strings"
 
     try:
         for ilf, lf in enumerate(load_functions):
             load_functions[ilf] = eval(lf)
     except Exception as err:
-        raise Exception(
-            f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
+        raise Exception(f"Error when evaluating load_functions #{ilf}: {lf} '{err}'")
     load_functions = tuple(load_functions)
     pickled = dill.dumps(load_functions)
     return pickled

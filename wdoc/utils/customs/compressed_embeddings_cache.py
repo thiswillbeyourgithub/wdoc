@@ -3,11 +3,11 @@ source : https://api.python.langchain.com/en/latest/_modules/langchain/storage/f
 
 This is basically the exact same code but with added compression
 """
+
 from pathlib import Path
+
 from beartype.typing import Iterator, List, Optional, Sequence, Tuple, Union
-
 from langchain_core.stores import ByteStore
-
 from PersistDict import PersistDict
 
 
@@ -75,7 +75,6 @@ class LocalFileStore(ByteStore):
         """
         return [self.pdi[k] if k in self.pdi else None for k in keys]
 
-
     def mset(self, key_value_pairs: Sequence[Tuple[str, bytes]]) -> None:
         """Set the values for the given keys.
 
@@ -87,7 +86,6 @@ class LocalFileStore(ByteStore):
         """
         for k, v in key_value_pairs:
             self.pdi[k] = v
-
 
     def mdelete(self, keys: Sequence[str]) -> None:
         """Delete the given keys and their associated values.
@@ -101,7 +99,6 @@ class LocalFileStore(ByteStore):
         for k in keys:
             if k in self.pdi:
                 del self.pdi[k]
-
 
     def yield_keys(self, prefix: Optional[str] = None) -> Iterator[str]:
         """Get an iterator over keys that match the given prefix.
