@@ -27,7 +27,7 @@ from pydantic import Extra
 from tqdm import tqdm
 
 # from langchain.storage import LocalFileStore
-from .customs.compressed_embeddings_cache import LocalFileStore
+from .customs.compressed_embeddings_cacher import LocalFileStore
 from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN
 from .flags import is_verbose
 from .logger import red, whi
