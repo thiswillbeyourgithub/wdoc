@@ -15,7 +15,7 @@ from rich.markdown import Markdown
 
 from wdoc import wdoc
 
-VERSION = "0.2"
+VERSION = "0.3"
 
 log_file = Path(__file__).parent / "logs.txt"
 
