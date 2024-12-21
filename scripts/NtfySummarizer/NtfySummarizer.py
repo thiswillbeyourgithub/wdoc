@@ -49,6 +49,7 @@ def _send_notif(
         data=message.encode(encoding="utf-8"),
         headers={
             "Title": title,
+            "Markdown": "yes",
             # "Priority": "urgent",
             # "Tags": "warning,skull"
         },
