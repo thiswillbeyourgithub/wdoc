@@ -92,6 +92,7 @@ def _send_file(
 @beartype
 def main(
     topic: str,
+    message: str = None,
     render_md: bool = False,
 ) -> None:
     """
@@ -99,16 +100,23 @@ def main(
 
     Args:
         topic (str): The ntfy.sh topic to send the notification to.
+        message (str, optional): The message to process. If not provided, will use NTFY_MESSAGE env var.
         render_md (bool, False by default): True to pass the md string into rich for rendering before sending to ntfy
 
     Raises:
-        AssertionError: If NTFY_MESSAGE is not in os.environ, or if the message format is incorrect.
+        AssertionError: If neither message argument nor NTFY_MESSAGE env var is available, or if the message format is incorrect.
         Exception: For any errors that occur during processing.
     """
     log(f"Started with topic: '{topic}'. Version: {VERSION}")
     topic = topic.strip()
-    assert "NTFY_MESSAGE" in os.environ, "missing NTFY_MESSAGE in os.environ"
-    message: str = os.environ["NTFY_MESSAGE"]
+
+    # Try env var first, fall back to argument
+    if message is None:
+        if "NTFY_MESSAGE" not in os.environ:
+            raise ValueError(
+                "No message provided: need either --message argument or NTFY_MESSAGE environment variable"
+            )
+        message = os.environ["NTFY_MESSAGE"]
     log(f"Message: {message}")
     sn = partial(
         _send_notif,
