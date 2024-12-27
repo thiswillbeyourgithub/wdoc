@@ -359,6 +359,7 @@ Detailed example
         * Using uvx: `uvx wdoc --help`
         * Using pipx: `pipx run wdoc --help`
     * In any case, it is recommended to try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
+    * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.

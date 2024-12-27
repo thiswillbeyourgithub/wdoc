@@ -179,6 +179,10 @@ setup(
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
         ],
+        "dev": [
+            "black >= 24.10.0",
+            "isort >= 5.13.2",
+        ],
     },
     cmdclass={
         "install": PostInstallCommand,
