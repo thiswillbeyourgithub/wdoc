@@ -482,6 +482,44 @@ def model_name_matcher(model: str) -> str:
     return out
 
 
+def get_model_price(model: str) -> List[float]:
+    assert (
+        not WDOC_ALLOW_NO_PRICE
+    ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {WDOC_ALLOW_NO_PRICE}"
+    if model in litellm.model_cost:
+        return [
+            litellm.model_cost[model]["input_cost_per_token"],
+            litellm.model_cost[model]["output_cost_per_token"],
+        ]
+    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
+        return [
+            litellm.model_cost[trial]["input_cost_per_token"],
+            litellm.model_cost[trial]["output_cost_per_token"],
+        ]
+    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
+        return [
+            litellm.model_cost[trial2]["input_cost_per_token"],
+            litellm.model_cost[trial2]["output_cost_per_token"],
+        ]
+    else:
+        raise Exception(
+            red(
+                f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
+            )
+        )
+
+
+def get_model_max_tokens(model: str) -> int:
+    if model in litellm.model_cost:
+        return litellm.model_cost[model]["max_tokens"]
+    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
+        return litellm.model_cost[trial]["max_tokens"]
+    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
+        return litellm.model_cost[trial2]["max_tokens"]
+    else:
+        return litellm.get_model_info(model)["max_tokens"]  # crash if not found
+
+
 @optional_typecheck
 def get_tkn_length(
     tosplit: str,
@@ -902,41 +940,3 @@ def is_timecode(inp: str) -> bool:
         return True
     except Exception:
         return False
-
-
-def get_model_price(model: str) -> List[float]:
-    assert (
-        not WDOC_ALLOW_NO_PRICE
-    ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {WDOC_ALLOW_NO_PRICE}"
-    if model in litellm.model_cost:
-        return [
-            litellm.model_cost[model]["input_cost_per_token"],
-            litellm.model_cost[model]["output_cost_per_token"],
-        ]
-    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
-        return [
-            litellm.model_cost[trial]["input_cost_per_token"],
-            litellm.model_cost[trial]["output_cost_per_token"],
-        ]
-    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
-        return [
-            litellm.model_cost[trial2]["input_cost_per_token"],
-            litellm.model_cost[trial2]["output_cost_per_token"],
-        ]
-    else:
-        raise Exception(
-            red(
-                f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
-            )
-        )
-
-
-def get_model_max_tokens(model: str) -> int:
-    if model in litellm.model_cost:
-        return litellm.model_cost[model]["max_tokens"]
-    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
-        return litellm.model_cost[trial]["max_tokens"]
-    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
-        return litellm.model_cost[trial2]["max_tokens"]
-    else:
-        return litellm.get_model_info(model)["max_tokens"]  # crash if not found
