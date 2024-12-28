@@ -135,7 +135,7 @@ def load_llm(
     assert private == is_private
 
     if (not private) and (backend == "openai") and (api_base is None):
-        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
+        max_tokens = get_model_max_tokens(modelname)
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
         llm = ChatOpenAI(
@@ -148,7 +148,7 @@ def load_llm(
             **extra_model_args,
         )
     else:
-        max_tokens = litellm.get_model_info(modelname)["max_tokens"]
+        max_tokens = get_model_max_tokens(modelname)
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(
                 max_tokens * 0.9

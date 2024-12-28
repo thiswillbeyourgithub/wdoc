@@ -510,7 +510,7 @@ def get_splitter(
         return get_splitter(task=task, modelname="gpt-3.5-turbo")
 
     try:
-        max_tokens = litellm.get_model_info(modelname)["max_input_tokens"]
+        max_tokens = get_model_max_tokens(modelname)
 
         # don't use overly large chunks anyway
         max_tokens = min(max_tokens, WDOC_MAX_CHUNK_SIZE)
@@ -929,3 +929,14 @@ def get_model_price(model: str) -> List[float]:
                 f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
             )
         )
+
+
+def get_model_max_tokens(model: str) -> int:
+    if model in litellm.model_cost:
+        return litellm.model_cost[model]["max_tokens"]
+    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
+        return litellm.model_cost[trial]["max_tokens"]
+    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
+        return litellm.model_cost[trial2]["max_tokens"]
+    else:
+        return litellm.get_model_info(model)["max_tokens"]  # crash if not found
