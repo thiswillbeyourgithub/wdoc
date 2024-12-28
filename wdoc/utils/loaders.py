@@ -2168,7 +2168,7 @@ def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
     newlines = []
     for li in lines:
         if " --> " in li:
-            li = re.sub("\.\d+ -->.*", "", li).strip()
+            li = re.sub(r"\.\d+ -->.*", "", li).strip()
 
             # remove duplicate timecodes:
             tc = timecode_to_second(li)
@@ -2548,7 +2548,7 @@ def cached_yt_loader(
     newlines = []
     for li in lines:
         if " --> " in li:
-            li = re.sub("\.\d+ -->.*", "", li).strip()
+            li = re.sub(r"\.\d+ -->.*", "", li).strip()
 
             # remove duplicate timecodes:
             tc = timecode_to_second(li)
