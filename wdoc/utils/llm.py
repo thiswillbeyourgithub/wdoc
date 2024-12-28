@@ -19,7 +19,7 @@ from langchain_openai import ChatOpenAI
 from .env import WDOC_PRIVATE_MODE
 from .flags import is_private, is_verbose
 from .logger import red, whi, yel
-from .misc import langfuse_callback_holder
+from .misc import get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
 
 TESTING_LLM = "testing/testing"

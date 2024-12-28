@@ -68,14 +68,15 @@ from .utils.logger import (
     whi,
     yel,
 )
-from .utils.misc import (  # debug_chain,
+from .utils.misc import ankiconnect  # debug_chain,
+from .utils.misc import (
     DocDict,
-    ankiconnect,
     average_word_length,
     check_docs_tkn_length,
     create_langfuse_callback,
     disable_internet,
     extra_args_types,
+    get_model_price,
     get_splitter,
     get_tkn_length,
     model_name_matcher,
@@ -83,7 +84,6 @@ from .utils.misc import (  # debug_chain,
     set_func_signature,
     thinking_answer_parser,
     wpm,
-    get_model_price,
 )
 from .utils.prompts import prompts
 from .utils.retrievers import create_multiquery_retriever, create_parent_retriever

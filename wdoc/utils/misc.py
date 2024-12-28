@@ -28,12 +28,12 @@ from langchain_core.runnables import chain
 from py_ankiconnect import PyAnkiconnect
 
 from .env import (
+    WDOC_ALLOW_NO_PRICE,
     WDOC_EXPIRE_CACHE_DAYS,
     WDOC_IMPORT_TYPE,
     WDOC_MAX_CHUNK_SIZE,
     WDOC_NO_MODELNAME_MATCHING,
     WDOC_STRICT_DOCDICT,
-    WDOC_ALLOW_NO_PRICE,
 )
 from .errors import UnexpectedDocDictArgument
 from .flags import is_debug, is_private, is_verbose
