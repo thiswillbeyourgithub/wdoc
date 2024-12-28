@@ -83,6 +83,7 @@ from .utils.misc import (  # debug_chain,
     set_func_signature,
     thinking_answer_parser,
     wpm,
+    get_model_price,
 )
 from .utils.prompts import prompts
 from .utils.retrievers import create_multiquery_retriever, create_parent_retriever
@@ -466,18 +467,8 @@ class wdoc:
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
-        elif modelname in litellm.model_cost:
-            self.llm_price = [
-                litellm.model_cost[modelname]["input_cost_per_token"],
-                litellm.model_cost[modelname]["output_cost_per_token"],
-            ]
-        elif modelname.split("/", 1)[1] in litellm.model_cost:
-            self.llm_price = [
-                litellm.model_cost[modelname.split("/", 1)[1]]["input_cost_per_token"],
-                litellm.model_cost[modelname.split("/", 1)[1]]["output_cost_per_token"],
-            ]
         else:
-            raise Exception(red(f"Can't find the price of {modelname}"))
+            self.llm_price = get_model_price(modelname)
 
         if query_eval_modelname is not None:
             if WDOC_ALLOW_NO_PRICE:
@@ -490,22 +481,8 @@ class wdoc:
                     "Disabling price computation for query_eval_model because api_base was modified"
                 )
                 self.query_evalllm_price = [0.0, 0.0]
-            elif query_eval_modelname in litellm.model_cost:
-                self.query_evalllm_price = [
-                    litellm.model_cost[query_eval_modelname]["input_cost_per_token"],
-                    litellm.model_cost[query_eval_modelname]["output_cost_per_token"],
-                ]
-            elif query_eval_modelname.split("/", 1)[1] in litellm.model_cost:
-                self.query_evalllm_price = [
-                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]][
-                        "input_cost_per_token"
-                    ],
-                    litellm.model_cost[query_eval_modelname.split("/", 1)[1]][
-                        "output_cost_per_token"
-                    ],
-                ]
             else:
-                raise Exception(red(f"Can't find the price of {query_eval_modelname}"))
+                self.query_evalllm_price = get_model_price(query_eval_modelname)
 
         if is_verbose:
             set_verbose(True)
