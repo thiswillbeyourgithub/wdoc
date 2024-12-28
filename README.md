@@ -84,7 +84,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 
 ## Features
 * **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
-* **100+ LLMs**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/). Personnaly I'm using openrouter's Sonnet 3.5 as strong LLM and openai's gpt-4o-mini as query_eval LLM, with openai embeddings.
+* **100+ LLMs**: OpenAI, Mistral, Claude, Ollama, Openrouter, etc. Thanks to [litellm](https://docs.litellm.ai/). Personnaly I'm using openrouter's deepseek v3 model as strong LLM and eval LLM (previously : Claude Sonnet 3.5 and gpt-4o-mini), and openai embeddings.
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
     1. The documents are retrieved using embedding
