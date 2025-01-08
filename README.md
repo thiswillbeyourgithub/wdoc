@@ -133,6 +133,9 @@ Click to read more
     - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - be careful to how to use import_mode
+        - pay attention to how to modify the init and main.py files
+        - pay attention to how the --help flag works
+        - pay attention to how the USAGE document is structured
     - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
     - support other vector databases
@@ -143,6 +146,7 @@ Click to read more
     - make it easy to support other embeddings model, right now it seems only openai is easy to use. But litellm does not have an embeddings engine with langchain. Maybe there's one on github?
     - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
         - default value is "author" "page" title"
+        - pay attention to avoid including personnal info (for example use relative paths instead of absolute paths)
     - add a /save PATH command to save the chat and metadata to a json file
     - Accept input from stdin, to for example query directly from a manpage
         - make wdoc work if used with shell pipes
@@ -154,6 +158,7 @@ Click to read more
         - then make it work with an online search engine for technical things
     - add a langchain code loader that uses aider to get the repomap
         - https://github.com/paul-gauthier/aider/issues/1043#issuecomment-2278486840
+        - https://aider.chat/docs/scripting.html
     - add a pikepdf loader because it can be used to automatically decrypt pdfs
     - add a query_branching_nb argument that asks an LLM to identify a list of keywords from the intermediate answers, then look again for documents using this keyword and filtering via the weak llm
     - write a script that shows how to use bertopic on the documents of wdoc
