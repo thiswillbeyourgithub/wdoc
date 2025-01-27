@@ -2243,7 +2243,11 @@ def load_word_document(
     try:
         loader = Docx2txtLoader(path)
         content = loader.load()
-        docs = [Document(page_content=content)]
+        if isinstance(content, str):
+            docs = [Document(page_content=content)]
+        else:
+            assert isinstance(content, List) and all(isinstance(c, Document) for c in content), f"unexpected type of content: {str(content)[:1000]}"
+            docs = content
         check_docs_tkn_length(docs, path)
     except Exception as err:
         red(
@@ -2252,6 +2256,11 @@ def load_word_document(
         loader = UnstructuredWordDocumentLoader(path)
         content = loader.load()
         docs = [Document(page_content=content)]
+        if isinstance(content, str):
+            docs = [Document(page_content=content)]
+        else:
+            assert isinstance(content, List) and all(isinstance(c, Document) for c in content), f"unexpected type of content: {str(content)[:1000]}"
+            docs = content
         check_docs_tkn_length(docs, path)
 
     return docs
