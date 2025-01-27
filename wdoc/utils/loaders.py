@@ -2252,6 +2252,7 @@ def load_word_document(
         loader = UnstructuredWordDocumentLoader(path)
         content = loader.load()
         docs = [Document(page_content=content)]
+        check_docs_tkn_length(docs, path)
 
     return docs
 
