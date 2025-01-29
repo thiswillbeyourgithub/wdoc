@@ -2246,7 +2246,9 @@ def load_word_document(
         if isinstance(content, str):
             docs = [Document(page_content=content)]
         else:
-            assert isinstance(content, List) and all(isinstance(c, Document) for c in content), f"unexpected type of content: {str(content)[:1000]}"
+            assert isinstance(content, List) and all(
+                isinstance(c, Document) for c in content
+            ), f"unexpected type of content: {str(content)[:1000]}"
             docs = content
         check_docs_tkn_length(docs, path)
     except Exception as err:
@@ -2259,7 +2261,9 @@ def load_word_document(
         if isinstance(content, str):
             docs = [Document(page_content=content)]
         else:
-            assert isinstance(content, List) and all(isinstance(c, Document) for c in content), f"unexpected type of content: {str(content)[:1000]}"
+            assert isinstance(content, List) and all(
+                isinstance(c, Document) for c in content
+            ), f"unexpected type of content: {str(content)[:1000]}"
             docs = content
         check_docs_tkn_length(docs, path)
 
