@@ -414,13 +414,13 @@ FAQ
     * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use `wdoc`'s parser for my own documents?**
     * If you are in the shell cli you can easily use `wdoc parse my_file.pdf` (this actually replaces the call to call instead `wdoc_parse_file my_file.pdf`).
-    add `--only_text` to only get the text and no metadata. If you're having problem with argument parsing you can try adding the `--pipe` argument.
+    add `--format=langchain` to get the text and metadata as json, otherwise you will only get the text. If you're having problem with argument parsing you can try adding the `--pipe` argument.
     * If you want the document using python:
         ``` python
         from wdoc import wdoc
         list_of_docs = Wdoc.parse_file(path=my_path)
         ```
-    * Another example would be to use wdoc to parse an anki deck: `wdoc_parse_file --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --only_text`
+    * Another example would be to use wdoc to parse an anki deck: `wdoc_parse_file --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
 * **What should I do if my PDF are encrypted?**
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)

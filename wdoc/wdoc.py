@@ -2096,7 +2096,7 @@ class wdoc:
     def parse_file(
         path: Optional[Union[str, Path]] = None,
         filetype: str = "auto",
-        only_text: bool = False,
+        format: str = "text",
         cli_kwargs: Optional[dict] = None,
         debug: bool = False,
         verbose: bool = False,
@@ -2118,8 +2118,10 @@ class wdoc:
         - `filetype`: str
             - Same as for wdoc
 
-        - `only_text`: bool, default `False`
-            - only return the text instead of a List of langchain Documents
+        - `format`: str, default `text`
+            - if `text`: only return the text
+            - if `langchain`: return a list of langchain Documents as json
+              (meaning metadata are included)
 
         - `cli_kwargs`: dict, default `None`
             - Dict containing keyword arguments destined to the function
@@ -2175,10 +2177,12 @@ class wdoc:
             **default_cli_kwargs,
             **kwargs,
         )
-        if not only_text:
+        if format == "text":
             return out
-        else:
+        elif format == "langchain":
             return "\n".join([d.page_content for d in out])
+        else:
+            raise ValueError(format)
 
 
 def debug_exceptions(instance: Optional[wdoc] = None) -> None:

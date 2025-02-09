@@ -39,7 +39,7 @@ def test_parse_file_text(sample_text_file):
 
 
 @pytest.mark.basic
-def test_parse_file_only_text(sample_text_file):
+def test_parse_file_formats(sample_text_file):
     """Test text-only output from parse_file."""
     f = Path(sample_text_file)
     content = f.read_text()
@@ -47,13 +47,22 @@ def test_parse_file_only_text(sample_text_file):
     text = wdoc.parse_file(
         path=str(sample_text_file),
         filetype="txt",
-        only_text=True,
+        format="text",
         debug=False,
         verbose=False,
     )
     assert isinstance(text, str)
     assert text.startswith("This is a test document")
     assert "multiple lines" in text
+    docs = wdoc.parse_file(
+        path=str(sample_text_file),
+        filetype="txt",
+        format="langchain",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(docs, list)
+    assert all(isinstance(d, dict) for d in docs)
 
 
 @pytest.mark.basic
