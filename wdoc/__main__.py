@@ -16,6 +16,16 @@ def cli_launcher() -> None:
     shorthands then call wdoc"""
     sysline = " ".join(sys.argv)
 
+    # turn 'wdoc parse' into 'wdoc_parse_file'
+    if "wdoc parse " in sysline or "wdoc parse_file" in sysline:
+        if is_verbose:
+            whi("Replacing 'wdoc parse' by 'wdoc_parse_file'")
+        sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
+        del sys.argv[1]
+        sysline = " ".join(sys.argv)
+        cli_parse_file()
+        raise SystemExit(0)
+
     if " --version" in sysline:
         print(f"wdoc version: {wdoc.VERSION}")
         raise SystemExit(0)
@@ -33,15 +43,6 @@ def cli_launcher() -> None:
             )
     elif len(sys.argv) == 1:
         whi("No args shown. Use '--help' to display the help.")
-        raise SystemExit(0)
-
-    # turn 'wdoc parse' into 'wdoc_parse_file'
-    if "wdoc parse " in sysline or "wdoc parse_file" in sysline:
-        if is_verbose:
-            whi("Replacing 'wdoc parse' by 'wdoc_parse_file'")
-        sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
-        del sys.argv[1]
-        cli_parse_file()
         raise SystemExit(0)
 
     # while we're at it, make it so that
