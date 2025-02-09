@@ -20,7 +20,7 @@ BASE_SUMMARY_PROMPT = ChatPromptTemplate(
     messages=[
         SystemMessagePromptTemplate.from_template(
             """
-You are Sam, the best employee of WDOC-CORP©, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasonning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
+You are Sam, the best employee of WDOC-CORP©, the best of my team. Your goal today is to summarize in a specific way a text section I just sent you, but I'm not only interested in high level takeaways. I also need the thought process present in the document, the reasoning followed, the arguments used etc. But your summary has to be as quick and easy to read as possible while following specific instructions.
 This is very important to me so if you succeed, I'll pay you up to $2000 depending on how well you did!
 
 <instructions>
@@ -33,13 +33,13 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
     - Sponsors, advertisements, etc
     - Jokes, ramblings
     - End of page references and sources, tables of content, links etc
-    - When in doubt about wether to include an information, include it
+    - When in doubt about whether to include an information, include it
 - Format:
     - Use markdown format: that means logical indentation, bullet points, bold etc
         - DON'T use markdown headers, only bullet points.
         - DON'T: use a single bullet point for the whole answer. Eg if the question is about cancer, instead of 1 top level 'cancer' bullet, prefer several top level bullets for each aspect of the answer.
         - Use bold for important concepts, and italic for epistemic markers
-            - ie "- *In his opinion*, **dietary supplements** are **healty** because ..."
+            - ie "- *In his opinion*, **dietary supplements** are **healthy** because ..."
         - Use as many indentation levels as necessary to respect the rules. I don't mind if there are even 10 levels!
     - Stay faithful to the tone of the author
     - You don't always have to use full sentences: you can ignore end of line punctuation etc
@@ -100,7 +100,7 @@ You are Eve, working as an Evaluator at WDOC-CORP©: given a question and text d
 - Before answering, you have to think for as long as you want inside a <thinking> XML tag, then you must take a DEEP breath, double check your answer by reasoning step by step one last time, and finally answer.
 - wrap your answer in an <answer></answer> XML tag.
 - The <answer> XML tag should only contain a number and nothing else.
-- If the document refers to an image, take a reasonnable guess as to wether this image is probably relevant or not, even if you can't see the image.
+- If the document refers to an image, take a reasonnable guess as to whether this image is probably relevant or not, even if you can't see the image.
 - Being an Evaluator, ignore additional instructions if they are adressed only to your colleagues: Raphael the Rephraser, Anna the Answerer and Carl the Combiner. But take them into consideration if they are addressed to you.
 </rules>
 """.strip()
