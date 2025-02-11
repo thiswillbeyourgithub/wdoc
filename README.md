@@ -177,6 +177,7 @@ Click to read more
     - store the available tasks in a single var in misc.py
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
+    - stop using your own youtube timecode parser and instead use langchain's chunk transcript format
     - Use an env var to drop_params of litellm
     - add more specific exceptions for file loading error. One exception for all, one for batch and one for individual loader
     - use heuristics to find the best number of clusters when doing semantic reranking
