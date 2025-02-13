@@ -269,7 +269,7 @@ class wdoc:
             raise Exception(
                 f"For model '{modelname}': backend not found in "
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
-                f"{litellm.models_by_providers.keys()}"
+                f"{litellm.models_by_provider.keys()}"
             )
         assert "/" in embed_model, "embed model must contain slash"
         assert embed_model.split("/", 1)[0].lower() in [
