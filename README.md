@@ -235,7 +235,6 @@ Click to read more
     - add bespoke-minicheck from ollama to fact check when using RAG: https://ollama.com/library/bespoke-minicheck
         - or via their API directly : https://docs.bespokelabs.ai/bespoke-minicheck/api but they don't seem to properly disclose what they do with the data
     - add a way to use binary faiss index as its as efficient but faster and way more compact
-    - use the new nova3 model from deepgram as the default STT model
 <!-- END_TODO -->
 
 </details>
