@@ -513,6 +513,7 @@ def get_model_max_tokens(model: str) -> int:
     if model in litellm.model_cost:
         return litellm.model_cost[model]["max_tokens"]
     elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
+@optional_typecheck
         return litellm.model_cost[trial]["max_tokens"]
     elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
         return litellm.model_cost[trial2]["max_tokens"]
