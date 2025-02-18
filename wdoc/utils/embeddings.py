@@ -203,6 +203,7 @@ def load_embeddings(
     except Exception as e:
         red(f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper")
 
+    # Use a sanitized name for the cache path
     if "/" in embed_model:
         try:
             if Path(embed_model).exists():
