@@ -296,12 +296,14 @@ class wdoc:
                 llms_api_bases = json.loads(llms_api_bases)
             except Exception as err:
                 raise Exception(f"Error when parsing llms_api_bases as a dict: {err}")
-        assert isinstance(llms_api_bases, dict), "llms_api_bases must be a dict"
+        assert isinstance(
+            llms_api_bases, dict
+        ), "llms_api_bases must be a dict or be a string that can be parsed as a dict"
         for k in llms_api_bases:
             assert k in [
                 "model",
                 "query_eval_model",
-            ], f"Invalid k of llms_api_bases: {k}"
+            ], f"Invalid k of llms_api_bases not in 'model', 'query_eval_model': {k}"
         for k in ["model", "query_eval_model"]:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
