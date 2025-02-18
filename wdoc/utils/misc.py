@@ -71,7 +71,7 @@ try:
 except Exception as err:
     if is_verbose:
         red(
-            f"Couldn't import optional package 'ftlangdetect', trying to import langdetect (but it's much slower): '{err}'"
+            f"Couldn't import optional package 'ftlangdetect' from 'fasttext-langdetect', trying to import langdetect (but it's much slower): '{err}'"
         )
     if "ftlangdetect" in sys.modules:
         del sys.modules["ftlangdetect"]
