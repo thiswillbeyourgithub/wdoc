@@ -51,6 +51,19 @@ class LiteLLMEmbeddings(Embeddings):
             input_type="feature-extraction",
             **self.embed_kwargs,
         )
+        if hasattr(
+            vecs, "data"
+        ):  # must an EmbeddingsResponse format, for example ollama
+            data = vecs.data
+            print(data)
+            if isinstance(data, list) and isinstance(data[0], dict):
+                vecs = [v["embedding"] for v in data]
+            elif isinstance(data, list) and hasattr(data[0], "embedding"):
+                vecs = [v.embedding for v in data]
+            else:
+                raise Exception(
+                    f"Failed to parsed output of litellm embedding for model '{self.model}'. String rendering is '{vecs}'. Please open a github issue to get that fixed."
+                )
         return vecs
 
     def embed_query(self, text: str) -> List[float]:
