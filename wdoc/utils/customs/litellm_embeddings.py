@@ -55,7 +55,6 @@ class LiteLLMEmbeddings(Embeddings):
             vecs, "data"
         ):  # must an EmbeddingsResponse format, for example ollama
             data = vecs.data
-            print(data)
             if isinstance(data, list) and isinstance(data[0], dict):
                 vecs = [v["embedding"] for v in data]
             elif isinstance(data, list) and hasattr(data[0], "embedding"):
