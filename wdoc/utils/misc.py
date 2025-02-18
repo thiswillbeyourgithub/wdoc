@@ -588,7 +588,10 @@ def get_splitter(
         return get_splitter(task=task, modelname="gpt-3.5-turbo")
 
     try:
-        max_tokens = get_model_max_tokens(modelname)
+        if modelname != "gpt-3.5-turbo":
+            max_tokens = get_model_max_tokens(ModelName(modelname))
+        else:
+            max_tokens = get_model_max_tokens(ModelName("openai/" + modelname))
 
         # don't use overly large chunks anyway
         max_tokens = min(max_tokens, WDOC_MAX_CHUNK_SIZE)
