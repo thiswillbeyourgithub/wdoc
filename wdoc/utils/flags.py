@@ -2,6 +2,7 @@
 easy access for all other files wether we are in verbose mode or not etc
 """
 
+import os
 import platform
 import sys
 
@@ -25,5 +26,7 @@ is_verbose = is_debug or check_kwargs("verbose", "v")
 is_silent = check_kwargs("silent", "s")
 
 is_private = check_kwargs("private")
+if is_private:  # set it as early as possible
+    os.environ["WDOC_PRIVATE_MODE"] = True
 
 md_printing_disabled = check_kwargs("disable_md_printing")

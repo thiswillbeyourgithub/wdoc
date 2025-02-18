@@ -53,6 +53,8 @@ from .utils.errors import (
     NoDocumentsRetrieved,
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
+
+# just in case: setting the is_private flag as soon as possible to the env variables
 from .utils.flags import is_debug, is_private, is_verbose
 from .utils.interact import ask_user
 from .utils.llm import TESTING_LLM, load_llm
