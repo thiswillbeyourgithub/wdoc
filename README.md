@@ -171,7 +171,6 @@ Click to read more
     - find a way to make it work with llm from simonw
     - make images an actual filetype
 - ### Enhancements
-    - use a dataclass or pydantic with validation to parse and store the backends. It would clarify the code as currently we just split the string and hope not to make a mistake
     - store the available tasks in a single var in misc.py
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
@@ -204,7 +203,6 @@ Click to read more
     - add image parsing as base64 metadata from pdf
     - use multiple small chains instead of one large and complicated and hard to maintain
     - add an arg to bypass query combine, useful for small models
-    - break the load_embeddings into sub functions
     - tell the llm to write a special message if the parsing failed or we got a 404 or paywall etc
         - catch this text and crash
     - add check that all metadata is only made of int float and str
