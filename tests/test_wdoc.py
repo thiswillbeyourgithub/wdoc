@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from wdoc.utils.embeddings import load_embeddings_engine, test_embeddings
+from wdoc.utils.misc import ModelName
 from wdoc.wdoc import wdoc
 
 
@@ -115,3 +117,46 @@ def test_query_tim_urban():
         verbose=False,
         import_mode=True,
     )
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_openai_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName("openai/text-embedding-3-small"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    test_embeddings(emb)
+
+
+@pytest.mark.basic
+def test_ollama_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName("ollama/bge-m3"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    test_embeddings(emb)
+
+
+@pytest.mark.basic
+def test_hf_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName("huggingface/BAAI/bge-m3"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    test_embeddings(emb)
