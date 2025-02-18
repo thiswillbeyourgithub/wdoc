@@ -136,7 +136,7 @@ setup(
         "loguru >= 0.7.2",
         "grandalf >= 0.8",  # to print ascii graph
         "lazy-import >= 0.2.2",
-        "py_ankiconnect >= 1.1.0",  # DIY wrapper to tell anki to sync just in case
+        "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
         "scikit-learn >= 1.5.1",  # for semantic reordering
         "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optionnal as it can help infer the filetype
