@@ -411,7 +411,7 @@ FAQ
     * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use `wdoc`'s parser for my own documents?**
     * If you are in the shell cli you can easily use `wdoc parse my_file.pdf` (this actually replaces the call to call instead `wdoc_parse_file my_file.pdf`).
-    add `--format=langchain` to get the text and metadata as json, otherwise you will only get the text. If you're having problem with argument parsing you can try adding the `--pipe` argument.
+    add `--format=langchain_dict` to get the text and metadata as a list of dict, otherwise you will only get the text. Other formats exist including `--format=xml` to make it LLM friendly like [files-to-promt](https://github.com/simonw/files-to-prompt) If you're having problem with argument parsing you can try adding the `--pipe` argument.
     * If you want the document using python:
         ``` python
         from wdoc import wdoc
