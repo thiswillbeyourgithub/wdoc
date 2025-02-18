@@ -3,15 +3,15 @@ from pathlib import Path
 
 import pytest
 
+
 def pytest_configure(config):
     """Register custom markers."""
     config.addinivalue_line(
         "markers",
-        "basic: mark test as a basic test that doesn't require external services"
+        "basic: mark test as a basic test that doesn't require external services",
     )
     config.addinivalue_line(
-        "markers", 
-        "api: mark test as requiring external API access"
+        "markers", "api: mark test as requiring external API access"
     )
 
 

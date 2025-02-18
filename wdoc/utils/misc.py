@@ -514,6 +514,7 @@ def get_model_price(model: str) -> List[float]:
 @dataclass
 class ModelName:
     "Simply stores the different way to phrase a model name"
+
     original: str
     backend: str = field(init=False)
     model: str = field(init=False)
