@@ -19,6 +19,7 @@ class LiteLLMEmbeddings(Embeddings):
         dimensions: Optional[int],
         api_base: Optional[str],
         private: bool,
+        **embed_kwargs,
     ):
         assert (
             "/" in embed_model
@@ -32,6 +33,7 @@ class LiteLLMEmbeddings(Embeddings):
         self.dimensions = dimensions
         self.private = private
         self.api_base = api_base
+        self.extra_args = extra_args
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
@@ -43,6 +45,7 @@ class LiteLLMEmbeddings(Embeddings):
             encoding_format="float",
             tiemout=600,
             api_base=self.api_base,
+            **embed_kwargs,
         )
         return vecs
 

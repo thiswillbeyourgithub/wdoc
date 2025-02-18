@@ -28,6 +28,7 @@ from tqdm import tqdm
 
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cacher import LocalFileStore
+from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN, WDOC_DEFAULT_EMBED_DIMENSION
 from .flags import is_verbose
 from .logger import red, whi
@@ -86,6 +87,7 @@ def load_embeddings(
     cli_kwargs: dict,
 ) -> Tuple[FAISS, CacheBackedEmbeddings]:
     """loads embeddings for each document"""
+    orig_embed_model = embed_model
     backend = embed_model.split("/", 1)[0]
     embed_model = embed_model.replace(backend + "/", "")
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
@@ -97,7 +99,20 @@ def load_embeddings(
 
     if is_verbose:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
-    if backend == "openai":
+
+    if True:
+        try:
+            embeddings = LiteLLMEmbeddings(
+                model=orig_embed_model,
+                dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
+                api_base=api_base,
+                private=private,
+                **embed_kwargs,
+            )
+            test_embeddings(embeddings)
+        except Exception as e:
+            red(f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough.")
+    elif backend == "openai":
         if private:
             assert api_base, "If private is set, api_base must be set too"
         else:
