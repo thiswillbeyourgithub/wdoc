@@ -16,11 +16,11 @@ from difflib import get_close_matches
 from functools import cache as memoize
 from functools import partial, wraps
 from pathlib import Path
-from typing import Callable, List, Literal, Union, get_type_hints
 
 import bs4
 import litellm
 from beartype.door import is_bearable
+from beartype.typing import Callable, List, Literal, Union, get_type_hints
 from joblib import Memory
 from joblib import hash as jhash
 from langchain.docstore.document import Document
