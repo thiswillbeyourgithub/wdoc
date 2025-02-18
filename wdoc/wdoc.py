@@ -2241,12 +2241,4 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
 
 
 if not is_private:
-    for k in [
-        "LANGFUSE_PUBLIC_KEY",
-        "LANGFUSE_SECRET_KEY",
-        "LANGFUSE_HOST",
-    ]:
-        newk = "WDOC_" + k
-        if newk in os.environ and os.environ[newk]:
-            os.environ[k] = os.environ[newk]
     create_langfuse_callback(f"wdoc_{wdoc.VERSION}")

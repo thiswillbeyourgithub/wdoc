@@ -893,11 +893,21 @@ langfuse_callback_holder = []
 
 
 def create_langfuse_callback(version: str) -> None:
+    assert not is_private
+    # replace langfuse's env variable if set for wdoc
+    for k in [
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
+        "LANGFUSE_HOST",
+    ]:
+        newk = "WDOC_" + k
+        if newk in os.environ and os.environ[newk]:
+            os.environ[k] = os.environ[newk]
     if (
         "LANGFUSE_PUBLIC_KEY" in os.environ
         and "LANGFUSE_SECRET_KEY" in os.environ
         and "LANGFUSE_HOST" in os.environ
-    ) and not is_private:
+    ):
         red("Activating langfuse callbacks")
         try:
             # # use litellm's callbacks for chatlitellm backend
@@ -921,7 +931,7 @@ def create_langfuse_callback(version: str) -> None:
             langfuse_callback_holder.append(langfuse_callback)
         except Exception as e:
             red(
-                f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: ''{e}'"
+                f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: '{e}'"
             )
 
 
