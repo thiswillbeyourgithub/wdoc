@@ -2162,7 +2162,7 @@ class wdoc:
         langchain Document (so with attributes `page_content` and `metadata`).
         """
         default_cli_kwargs = {
-            "llm_name": "testing/testing",
+            "llm_name": ModelName("testing/testing"),
             "task": "query",
             "backend": "loky",  # doesn't matter because n_jobs is 1 anyway
             "n_jobs": 1,
