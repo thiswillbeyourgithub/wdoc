@@ -10,6 +10,7 @@ import socket
 import sys
 import uuid
 import warnings
+from dataclasses import dataclass, field
 from datetime import timedelta
 from difflib import get_close_matches
 from functools import cache as memoize
@@ -33,6 +34,7 @@ from .env import (
     WDOC_IMPORT_TYPE,
     WDOC_MAX_CHUNK_SIZE,
     WDOC_NO_MODELNAME_MATCHING,
+    WDOC_PRIVATE_MODE,
     WDOC_STRICT_DOCDICT,
 )
 from .errors import UnexpectedDocDictArgument
@@ -509,16 +511,21 @@ def get_model_price(model: str) -> List[float]:
         )
 
 
-def get_model_max_tokens(model: str) -> int:
-    if model in litellm.model_cost:
-        return litellm.model_cost[model]["max_tokens"]
-    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
 @optional_typecheck
+def get_model_max_tokens(model: ModelName) -> int:
+    if model.original in litellm.model_cost:
+        return litellm.model_cost[model.original]["max_tokens"]
+    elif (trial := model.name) in litellm.model_cost:
         return litellm.model_cost[trial]["max_tokens"]
-    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
+    elif (trial2 := model.name.split("/")[-1]) in litellm.model_cost:
         return litellm.model_cost[trial2]["max_tokens"]
     else:
-        return litellm.get_model_info(model)["max_tokens"]  # crash if not found
+        try:
+            return litellm.get_model_info(model)["max_tokens"]
+        except Exception:
+            return litellm.get_model_info(model.name)[
+                "max_tokens"
+            ]  # crash if still not found
 
 
 @optional_typecheck
@@ -941,3 +948,34 @@ def is_timecode(inp: str) -> bool:
         return True
     except Exception:
         return False
+
+
+@dataclass
+class ModelName:
+    "Simply stores the different way to phrase a model name"
+    original: str
+    backend: str = field(init=False)
+    model: str = field(init=False)
+    sanitized: str = field(init=False)
+
+    def __post_init__(self):
+        assert (
+            "/" in self.original
+        ), f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        self.backend, self.model = self.original.split("/", 1)
+        self.backend = self.backend.lower()
+
+        # Use a sanitized name for the cache path
+        if "/" in self.model:
+            try:
+                if Path(self.model).exists():
+                    with open(
+                        Path(self.model).resolve().absolute().__str__(), "rb"
+                    ) as f:
+                        h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
+                    self.sanitized = Path(self.model).name + "_" + h
+            except Exception:
+                pass
+        assert "/" not in self.sanitized
+        if WDOC_PRIVATE_MODE:
+            self.sanitized = "private_" + self.sanitized

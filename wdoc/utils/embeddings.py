@@ -36,7 +36,7 @@ from .env import (
 )
 from .flags import is_verbose
 from .logger import red, whi
-from .misc import cache_dir, get_tkn_length
+from .misc import ModelName, cache_dir, get_tkn_length
 from .typechecker import optional_typecheck
 
 
@@ -78,33 +78,28 @@ else:
 
 
 @optional_typecheck
-def load_embeddings(
-    embed_model: str,
-    embed_kwargs: dict,
-    load_embeds_from: Optional[Union[str, Path]],
-    api_base: Optional[str],
-    save_embeds_as: Union[str, Path],
-    loaded_docs: Any,
-    dollar_limit: Union[int, float],
-    private: bool,
+def load_embeddings_engine(
+    modelname: ModelName,
     cli_kwargs: dict,
-) -> Tuple[FAISS, CacheBackedEmbeddings]:
-    """loads embeddings for each document"""
-    orig_embed_model = embed_model
-    backend = embed_model.split("/", 1)[0]
-    embed_model = embed_model.replace(backend + "/", "")
+    api_base: Optional[str],
+    embed_kwargs: dict,
+    private: bool,
+) -> CacheBackedEmbeddings:
+    """
+    Create the embeddings class used to compute embeddings
+    """
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
     else:
         instruct = False
 
     if is_verbose:
-        whi(f"Selected embedding model '{embed_model}' of backend {backend}")
+        whi(f"Selected embedding model '{modelname}' of backend {modelname.backend}")
 
     if True:
         try:
             embeddings = LiteLLMEmbeddings(
-                model=orig_embed_model,
+                model=modelname.original,
                 dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
                 api_base=api_base,
                 private=private,
@@ -115,7 +110,7 @@ def load_embeddings(
             red(
                 f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
             )
-    elif backend == "openai":
+    elif modelname.backend == "openai":
         if private:
             assert api_base, "If private is set, api_base must be set too"
         else:
@@ -126,14 +121,14 @@ def load_embeddings(
             ), "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
-            model=embed_model,
+            model=modelname.name,
             openai_api_key=os.environ["OPENAI_API_KEY"],
             api_base=api_base,
             dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
             **embed_kwargs,
         )
 
-    elif backend == "huggingface":
+    elif modelname.backend == "huggingface":
         assert (
             not private
         ), f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
@@ -142,7 +137,7 @@ def load_embeddings(
             # "device": "cuda",
         }
         model_kwargs.update(embed_kwargs)
-        if "google" in embed_model and "gemma" in embed_model.lower():
+        if modelname.backend == "google" and "gemma" in modelname.model.lower():
             assert (
                 "HUGGINGFACE_API_KEY" in os.environ
                 and os.environ["HUGGINGFACE_API_KEY"]
@@ -153,25 +148,25 @@ def load_embeddings(
             model_kwargs["use_auth_token"] = hftkn
         if instruct:
             embeddings = HuggingFaceInstructEmbeddings(
-                model_name=embed_model,
+                model_name=modelname.model,
                 model_kwargs=model_kwargs,
                 embed_instruction=DEFAULT_EMBED_INSTRUCTION,
                 query_instruction=DEFAULT_QUERY_INSTRUCTION,
             )
         else:
             embeddings = HuggingFaceEmbeddings(
-                model_name=embed_model,
+                model_name=modelname.model,
                 model_kwargs=model_kwargs,
             )
 
-        if "google" in embed_model and "gemma" in embed_model.lower():
+        if modelname.backend == "google" and "gemma" in modelname.model.lower():
             # please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)`
             # or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[pad]'})
             embeddings.client.tokenizer.pad_token = (
                 embeddings.client.tokenizer.eos_token
             )
 
-    elif backend == "sentencetransformers":
+    elif modelname.backend == "sentencetransformers":
         if private:
             red(f"Private is set and will use sentencetransformers backend")
         embed_kwargs.update(
@@ -181,12 +176,12 @@ def load_embeddings(
             }
         )
         embeddings = SentenceTransformerEmbeddings(
-            model_name=embed_model,
+            model_name=modelname.name,
             encode_kwargs=embed_kwargs,
         )
 
     else:
-        raise ValueError(f"Invalid embedding backend: {backend}")
+        raise ValueError(f"Invalid embedding backend: {modelname.backend}")
 
     try:
         test_embeddings(embeddings)
@@ -195,25 +190,8 @@ def load_embeddings(
             f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
         )
 
-    # Use a sanitized name for the cache path
-    if "/" in embed_model:
-        try:
-            if Path(embed_model).exists():
-                with open(Path(embed_model).resolve().absolute().__str__(), "rb") as f:
-                    h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
-                embed_model_str = Path(embed_model).name + "_" + h
-        except Exception:
-            pass
-    assert "/" not in embed_model_str
-    if private:
-        embed_model_str = "private_" + embed_model_str
-
-    # lfs = LocalFileStore(
-    #     root_path=cache_dir / "CacheEmbeddings" / embed_model_str,
-    #     update_atime=True,
-    # )
     lfs = LocalFileStore(
-        database_path=cache_dir / "CacheEmbeddings" / embed_model_str,
+        database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
         expiration_days=WDOC_EXPIRE_CACHE_DAYS,
         verbose=is_verbose,
     )
@@ -225,8 +203,30 @@ def load_embeddings(
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
         embeddings,
         lfs,
-        namespace=embed_model_str,
+        namespace=modelname.sanitized,
     )
+
+    try:
+        test_embeddings(cached_embeddings)
+    except Exception as e:
+        red(
+            f"Error when testing embeddings after loading the cache, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
+        )
+
+    return cached_embeddings
+
+
+@optional_typecheck
+def load_saved_embeddings(
+    embeddings: embeddings,
+    save_embeds_as: Union[str, Path],
+    load_embeds_from: Optional[Union[str, Path]],
+    loaded_docs: Any,
+    dollar_limit: Union[int, float],
+    private: bool,
+    cli_kwargs: dict,
+) -> Faiss:
+    """loads embeddings for each document"""
 
     # reload passed embeddings
     if load_embeds_from:
@@ -256,21 +256,22 @@ def load_embeddings(
     if private:
         whi("Not checking token price because private is set")
         price = 0
-    elif backend != "openai":
-        whi(f"Not checking token price because using a private backend: {backend}")
+    elif modelname.backend != "openai":
+        whi(
+            f"Not checking token price because using a private backend: {modelname.backend}"
+        )
         price = 0
-    elif f"{backend}/{embed_model}" in litellm.model_cost:
-        price = litellm.model_cost[f"{backend}/{embed_model}"]["input_cost_per_token"]
-        assert (
-            litellm.model_cost[f"{backend}/{embed_model}"]["output_cost_per_token"] == 0
-        )
-    elif embed_model in litellm.model_cost:
-        price = litellm.model_cost[embed_model]["input_cost_per_token"]
-        assert litellm.model_cost[embed_model]["output_cost_per_token"] == 0
+    elif modelname.original in litellm.model_cost:
+        price = litellm.model_cost[modelname.original]["input_cost_per_token"]
+        assert litellm.model_cost[modelname.original]["output_cost_per_token"] == 0
+    elif modelname.name in litellm.model_cost:
+        price = litellm.model_cost[modelname.name]["input_cost_per_token"]
+        assert litellm.model_cost[modelname.name]["output_cost_per_token"] == 0
     else:
-        raise Exception(
-            red(f"Couldn't find the price of embedding model {embed_model}")
+        red(
+            f"Couldn't find the price of embedding model {modelname.original}. Assuming the cost is zero"
         )
+        price = 0
 
     dol_price = full_tkn * price
     red(f"Total cost to embed all tokens is ${dol_price:.6f}")

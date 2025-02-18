@@ -19,7 +19,7 @@ from langchain_openai import ChatOpenAI
 from .env import WDOC_PRIVATE_MODE
 from .flags import is_private, is_verbose
 from .logger import red, whi, yel
-from .misc import get_model_max_tokens, langfuse_callback_holder
+from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
 
 TESTING_LLM = "testing/testing"
@@ -27,8 +27,7 @@ TESTING_LLM = "testing/testing"
 
 @optional_typecheck
 def load_llm(
-    modelname: str,
-    backend: str,
+    modelname: ModelName,
     llm_verbosity: bool,
     llm_cache: Union[None, bool, BaseCache],
     api_base: Optional[str],
@@ -52,8 +51,8 @@ def load_llm(
                 tags.append(t)
 
     assert "cache" not in extra_model_args
-    if backend == "testing":
-        assert modelname == "testing/testing"
+    if modelname.backend == "testing":
+        assert modelname.original == "testing/testing"
         if llm_verbosity:
             whi("Loading a fake LLM using the testing/ backend")
         lorem_ipsum = (
@@ -78,7 +77,7 @@ def load_llm(
         )
         return llm
     else:
-        assert "testing" not in modelname.lower()
+        assert "testing" not in modelname.original.lower()
 
     if is_verbose:
         whi("Loading model via litellm")
@@ -95,31 +94,31 @@ def load_llm(
     if api_base:
         red(f"Will use custom api_base {api_base}")
     if not (
-        f"{backend.upper()}_API_KEY" in os.environ
-        and os.environ[f"{backend.upper()}_API_KEY"]
+        f"{modelname.backend.upper()}_API_KEY" in os.environ
+        and os.environ[f"{modelname.backend.upper()}_API_KEY"]
     ):
         if not api_base:
             raise Exception(
-                f"No environment variable named {backend.upper()}_API_KEY found"
+                f"No environment variable named {modelname.backend.upper()}_API_KEY found"
             )
         else:
             yel(
-                f"No environment variable named {backend.upper()}_API_KEY found. Continuing because some setups are fine with this."
+                f"No environment variable named {modelname.backend.upper()}_API_KEY found. Continuing because some setups are fine with this."
             )
 
     # extra check for private mode
     if private:
         assert os.environ["WDOC_PRIVATE_MODE"] == "true"
         red(
-            f"private is on so overwriting {backend.upper()}_API_KEY from environment variables"
+            f"private is on so overwriting {modelname.backend.upper()}_API_KEY from environment variables"
         )
         assert (
-            os.environ[f"{backend.upper()}_API_KEY"]
+            os.environ[f"{modelname.backend.upper()}_API_KEY"]
             == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
         )
 
         assert (
-            os.environ[f"{backend.upper()}_API_KEY"]
+            os.environ[f"{modelname.backend.upper()}_API_KEY"]
             == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
         )
         assert (
@@ -134,12 +133,12 @@ def load_llm(
 
     assert private == is_private
 
-    if (not private) and (backend == "openai") and (api_base is None):
+    if (not private) and (modelname.backend == "openai") and (api_base is None):
         max_tokens = get_model_max_tokens(modelname)
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
         llm = ChatOpenAI(
-            model_name=modelname.split("/", 1)[1],
+            model_name=modelname.model,
             cache=llm_cache,
             disable_streaming=True,  # Not needed and might break cache
             verbose=llm_verbosity,
@@ -154,7 +153,7 @@ def load_llm(
                 max_tokens * 0.9
             )  # intentionaly limiting max tokens because it can cause bugs
         llm = ChatLiteLLM(
-            model_name=modelname,
+            model_name=modelname.name,
             disable_streaming=True,  # Not needed and might break cache
             api_base=api_base,
             cache=llm_cache,

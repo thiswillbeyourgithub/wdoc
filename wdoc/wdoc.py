@@ -37,7 +37,7 @@ from tqdm import tqdm
 
 from .utils.batch_file_loader import batch_load_doc
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
-from .utils.embeddings import load_embeddings
+from .utils.embeddings import load_embeddings_engine, load_saved_embeddings
 from .utils.env import (
     WDOC_ALLOW_NO_PRICE,
     WDOC_DEBUGGER,
@@ -68,10 +68,10 @@ from .utils.logger import (
     whi,
     yel,
 )
-from .utils.misc import (
-    #debug_chain,
-    ankiconnect,
+from .utils.misc import (  # debug_chain,
     DocDict,
+    ModelName,
+    ankiconnect,
     average_word_length,
     check_docs_tkn_length,
     create_langfuse_callback,
@@ -272,12 +272,6 @@ class wdoc:
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
                 f"{litellm.models_by_provider.keys()}"
             )
-        assert "/" in embed_model, "embed model must contain slash"
-        assert embed_model.split("/", 1)[0].lower() in [
-            "openai",
-            "sentencetransformers",
-            "huggingface",
-        ], "Backend of embeddings must be either openai, sentencetransformers or huggingface"
         if embed_kwargs is None:
             embed_kwargs = {}
         if isinstance(embed_kwargs, str):
@@ -404,14 +398,14 @@ class wdoc:
             self.max_top_k = None
 
         # storing as attributes
-        self.modelbackend = modelname.split("/", 1)[0].lower()
-        self.modelname = modelname
+        self.modelname = ModelName(modelname)
         if query_eval_modelname is not None:
-            self.query_eval_modelbackend = query_eval_modelname.split("/", 1)[0].lower()
-            self.query_eval_modelname = query_eval_modelname
+            self.query_eval_modelname = ModelName(query_eval_modelname)
+        else:
+            self.query_eval_modelname = None
         self.task = task
         self.filetype = filetype
-        self.embed_model = embed_model
+        self.embed_model = ModelName(embed_model)
         self.embed_kwargs = embed_kwargs
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
@@ -458,7 +452,7 @@ class wdoc:
 
         if WDOC_ALLOW_NO_PRICE:
             red(
-                f"Disabling price computation for {modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
+                f"Disabling price computation for {self.modelname.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
             )
             self.llm_price = [0.0, 0.0]
 
@@ -467,18 +461,18 @@ class wdoc:
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
-        elif modelname == TESTING_LLM:
+        elif self.modelname.backend == TESTING_LLM:
             red(
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
         else:
-            self.llm_price = get_model_price(modelname)
+            self.llm_price = get_model_price(self.modelname.original)
 
-        if query_eval_modelname is not None:
+        if self.query_eval_modelname is not None:
             if WDOC_ALLOW_NO_PRICE:
                 red(
-                    f"Disabling price computation for {query_eval_modelname} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
+                    f"Disabling price computation for {self.query_eval_modelname.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
                 )
                 self.query_evalllm_price = [0.0, 0.0]
             elif llms_api_bases["query_eval_model"]:
@@ -487,7 +481,9 @@ class wdoc:
                 )
                 self.query_evalllm_price = [0.0, 0.0]
             else:
-                self.query_evalllm_price = get_model_price(query_eval_modelname)
+                self.query_evalllm_price = get_model_price(
+                    self.query_eval_modelname.original
+                )
 
         if is_verbose:
             set_verbose(True)
@@ -656,7 +652,7 @@ class wdoc:
                 )
 
         llm_params = litellm.get_supported_openai_params(
-            model=self.modelname if self.modelbackend != "testing" else {}
+            model=self.modelname if self.modelname.backend != "testing" else {}
         )
         if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
@@ -762,7 +758,7 @@ class wdoc:
                 docs=relevant_docs,
                 metadata=metadata,
                 language=self.summary_language,
-                modelbackend=self.modelbackend,
+                modelbackend=self.modelname.backend,
                 llm=self.llm,
                 llm_price=self.llm_price,
                 verbose=self.llm_verbosity,
@@ -825,7 +821,7 @@ class wdoc:
                         docs=summary_docs,
                         metadata=metadata,
                         language=self.summary_language,
-                        modelbackend=self.modelbackend,
+                        modelbackend=self.modelname.backend,
                         llm=self.llm,
                         llm_price=self.llm_price,
                         verbose=self.llm_verbosity,
@@ -1039,17 +1035,21 @@ class wdoc:
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
-        self.loaded_embeddings, self.embeddings = load_embeddings(
-            embed_model=self.embed_model,
-            embed_kwargs=self.embed_kwargs,
-            load_embeds_from=self.load_embeds_from,
+        self.embeddings = load_embeddings_engine(
+            modelname=self.embed_model,
+            cli_kwargs=self.cli_kwargs,
             api_base=self.llms_api_bases["embeddings"],
+            embed_kwargs=self.embed_kwargs,
+            private=self.private,
+        )
+        self.loaded_embeddings = load_saved_embeddings(
+            embeddings=self.embeddings,
+            load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
             private=self.private,
             use_rolling=self.DIY_rolling_window_embedding,
-            cli_kwargs=self.cli_kwargs,
         )
 
         # set default ask_user argument
@@ -1399,32 +1399,31 @@ class wdoc:
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
             failed = False
-            if self.query_eval_modelbackend == "openrouter":
+            if self.query_eval_modelname.backend == "openrouter":
                 try:
                     self.eval_llm_params = litellm.get_supported_openai_params(
-                        model_name_matcher(self.query_eval_modelname.split("/", 1)[1])
+                        model_name_matcher(self.query_eval_modelname.name)
                     )
                 except Exception as err:
                     failed = True
                     red(
                         f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'"
                     )
-            if self.query_eval_modelbackend != "openrouter" or failed:
+            if self.query_eval_modelname.backend != "openrouter" or failed:
                 self.eval_llm_params = litellm.get_supported_openai_params(
-                    model=self.query_eval_modelname,
-                    custom_llm_provider=self.query_eval_modelbackend,
+                    model=self.query_eval_modelname.name,
+                    custom_llm_provider=self.query_eval_modelname.backend,
                 )
             eval_args = {}
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
             elif self.query_eval_check_number > 1:
                 red(
-                    f"Model {self.query_eval_modelname} does not support parameter 'n' so will be called multiple times instead. This might cost more."
+                    f"Model {self.query_eval_modelname.original} does not support parameter 'n' so will be called multiple times instead. This might cost more."
                 )
-                assert self.query_eval_modelbackend != "openai"
+                assert self.query_eval_modelname.backend != "openai"
             self.eval_llm = load_llm(
                 modelname=self.query_eval_modelname,
-                backend=self.query_eval_modelbackend,
                 llm_cache=False,  # disables caching because another caching is used on top
                 llm_verbosity=self.llm_verbosity,
                 temperature=0 if self.query_eval_check_number == 1 else 1,
@@ -1433,7 +1432,7 @@ class wdoc:
                 tags=["eval_model"],
                 **eval_args,
             )
-            # if "anthropic" in self.query_eval_modelname.lower() or "anthropic" in self.query_eval_modelbackend.lower():
+            # if "anthropic" in self.query_eval_modelname.original.lower() or "anthropic" in self.query_eval_modelname.backend.lower():
             #     prompts.enable_prompt_caching("evaluate")
 
         # the eval doc chain needs its own caching
@@ -1577,7 +1576,7 @@ class wdoc:
         multi = {"max_concurrency": WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1}
 
         if self.task == "search":
-            if self.query_eval_modelname:
+            if self.query_eval_modelname is not None:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
                 @optional_typecheck
@@ -1715,7 +1714,7 @@ class wdoc:
                         if nid not in anki_nids:
                             anki_nids.append(nid)
             md_printer(to_print)
-            if self.query_eval_modelname:
+            if self.query_eval_modelname is not None:
                 red(
                     f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
                 )
