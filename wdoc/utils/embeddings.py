@@ -128,7 +128,7 @@ def load_embeddings_engine(
             ), "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
-            model=modelname.name,
+            model=modelname.model,
             openai_api_key=os.environ["OPENAI_API_KEY"],
             api_base=api_base,
             dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
@@ -183,7 +183,7 @@ def load_embeddings_engine(
             }
         )
         embeddings = SentenceTransformerEmbeddings(
-            model_name=modelname.name,
+            model_name=modelname.model,
             encode_kwargs=embed_kwargs,
         )
 
@@ -277,9 +277,9 @@ def load_saved_embeddings(
         elif modelname.original in litellm.model_cost:
             price = litellm.model_cost[modelname.original]["input_cost_per_token"]
             assert litellm.model_cost[modelname.original]["output_cost_per_token"] == 0
-        elif modelname.name in litellm.model_cost:
-            price = litellm.model_cost[modelname.name]["input_cost_per_token"]
-            assert litellm.model_cost[modelname.name]["output_cost_per_token"] == 0
+        elif modelname.model in litellm.model_cost:
+            price = litellm.model_cost[modelname.model]["input_cost_per_token"]
+            assert litellm.model_cost[modelname.model]["output_cost_per_token"] == 0
         else:
             red(
                 f"Couldn't find the price of embedding model {modelname.original}. Assuming the cost is zero"
