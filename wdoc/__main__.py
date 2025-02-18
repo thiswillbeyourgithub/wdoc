@@ -78,8 +78,12 @@ def cli_launcher() -> None:
 
     # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
     if (
-        "--path" not in sysline and "string" not in sysline
-    ):  # if string is present that can be because of filetype=string, in which case path is not needed
+        ("--path" not in sysline)
+        and (not re.findall(r"\bstring\b", sysline))
+        and (not re.findall(r"\banki\b", sysline))
+    ):
+        # if string is present that can be because of --filetype=string or
+        # --filetype=anki, in which case 'path' argument is not needed
         path = sys.argv[2]
         newarg = f"--path={path}"
         sys.argv[2] = newarg
