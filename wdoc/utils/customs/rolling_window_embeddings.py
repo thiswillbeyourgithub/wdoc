@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from pydantic import Extra
@@ -19,7 +21,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
         self.__pool_technique = pooltech
 
     @optional_typecheck
-    def embed_documents(self, texts, *args, **kwargs):
+    def embed_documents(self, texts: List[str], *args, **kwargs) -> List[List[float]]:
         """sbert silently crops any token above the max_seq_length,
         so we do a windowing embedding then pool (maxpool or meanpool)
         No normalization is done because the faiss index does it for us
@@ -76,7 +78,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
                     # remove first word until 1/3 of the max_token was removed
                     # this way we have a rolling window
                     jj = max(1, int((max_len // 3) / avg_tkn * 0.8))
-                    while len(encode(" ".join(words[jj: j - jjj]))) > n23:
+                    while len(encode(" ".join(words[jj : j - jjj]))) > n23:
                         jj += 1
                     words = words[jj:]
 
@@ -125,7 +127,7 @@ class RollingWindowEmbeddings(SentenceTransformerEmbeddings, extra=Extra.allow):
             for sid in list(set(add_sent_idx)):
                 id_range = [i for i, j in enumerate(add_sent_idx) if j == sid]
                 add_sent_vec = vectors[
-                    offset + min(id_range): offset + max(id_range), :
+                    offset + min(id_range) : offset + max(id_range), :
                 ]
                 if self.__pool_technique == "maxpool":
                     vectors[sid] = np.amax(add_sent_vec, axis=0)

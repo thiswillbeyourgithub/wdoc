@@ -311,7 +311,7 @@ def load_embeddings(
         verbose=0 if not is_verbose else 51,
     )(
         delayed(embedand_one_batch)(
-            batch=docs[batch[0] : batch[1]],
+            batch=docs[batch[0]: batch[1]],
             ib=ib,
         )
         for ib, batch in tqdm(
