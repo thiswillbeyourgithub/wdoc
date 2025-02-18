@@ -94,7 +94,7 @@ except Exception as err:
             red(
                 "On linux, you can try to install pdftotext with :\nsudo "
                 "apt install build-essential libpoppler-cpp-dev pkg-config "
-                "python3-dev\nThen:\npython -m pip install pdftotext"
+                "python3-dev\nThen:\nuv pip install pdftotext"
             )
 
 # needed in case of buggy unstructured install
