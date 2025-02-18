@@ -227,6 +227,7 @@ def load_embeddings_engine(
 
 @optional_typecheck
 def load_saved_embeddings(
+    modelname: ModelName,
     embeddings: Embeddings,
     save_embeds_as: Union[str, Path],
     load_embeds_from: Optional[Union[str, Path]],
