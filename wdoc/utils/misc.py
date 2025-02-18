@@ -860,6 +860,7 @@ ANSW = "<answer>"
 ANSWE = "</answer>"
 
 
+@optional_typecheck
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
     try:
@@ -937,6 +938,7 @@ The following LLM answer might have had a problem during parsing
 langfuse_callback_holder = []
 
 
+@optional_typecheck
 def create_langfuse_callback(version: str) -> None:
     assert not is_private
     # replace langfuse's env variable if set for wdoc
@@ -980,6 +982,7 @@ def create_langfuse_callback(version: str) -> None:
             )
 
 
+@optional_typecheck
 def seconds_to_timecode(inp: str) -> str:
     "used for vtt subtitle conversion"
     second = float(inp)
@@ -991,12 +994,14 @@ def seconds_to_timecode(inp: str) -> str:
     return f"{hour:02d}:{minute:02d}:{second:02d}"
 
 
+@optional_typecheck
 def timecode_to_second(inp: str) -> float:
     "turns a vtt timecode into seconds"
     hour, minute, second = map(int, inp.split(":"))
     return hour * 3600 + minute * 60 + second
 
 
+@optional_typecheck
 def is_timecode(inp: str) -> bool:
     try:
         timecode_to_second(inp)
