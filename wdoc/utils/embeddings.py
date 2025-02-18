@@ -27,7 +27,7 @@ from tqdm import tqdm
 
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cacher import LocalFileStore
-from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN
+from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN, WDOC_DEFAULT_EMBED_DIMENSION
 from .flags import is_verbose
 from .logger import red, whi
 from .misc import cache_dir, get_tkn_length
@@ -109,6 +109,7 @@ def load_embeddings(
             model=embed_model,
             openai_api_key=os.environ["OPENAI_API_KEY"],
             api_base=api_base,
+            dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
             **embed_kwargs,
         )
 

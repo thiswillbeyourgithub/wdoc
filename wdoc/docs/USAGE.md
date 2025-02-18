@@ -729,3 +729,6 @@
 
 * `WDOC_DEFAULT_EMBED_MODEL`, default: `"openai/text-embedding-3-small"`
     * Default model to use for embeddings.
+
+* `WDOC_DEFAULT_EMBED_DIMENSION`, default: `none`
+    * Default number of dimension to ask from the embeddings provider.
