@@ -404,7 +404,7 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
-    text_splitter = get_splitter(task, modelname=llm_name.model)
+    text_splitter = get_splitter(task, modelname=llm_name)
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()

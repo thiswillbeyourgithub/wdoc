@@ -563,43 +563,47 @@ def get_model_max_tokens(modelname: ModelName) -> int:
 @optional_typecheck
 def get_tkn_length(
     tosplit: str,
-    modelname: str = "gpt-3.5-turbo",
+    modelname: Union[str, ModelName] = "gpt-3.5-turbo",
 ) -> int:
+    if isinstance(modelname, ModelName):
+        modelname = modelname.original
     modelname = modelname.replace("openrouter/", "")
     return litellm.token_counter(model=modelname, text=tosplit)
 
 
 text_splitters = {}
 
+DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-3.5-turbo")
+
 
 @optional_typecheck
 def get_splitter(
     task: str,
-    modelname="gpt-3.5-turbo",
+    modelname: ModelName = DEFAULT_SPLITTER_MODELNAME,
 ) -> TextSplitter:
     "we don't use the same text splitter depending on the task"
     # avoid creating many times this object
     if task not in text_splitters:
         text_splitters[task] = {}
-    if modelname in text_splitters[task]:
-        return text_splitters[task][modelname]
+    if modelname.original in text_splitters[task]:
+        return text_splitters[task][modelname.original]
 
-    if modelname == "testing/testing":
-        return get_splitter(task=task, modelname="gpt-3.5-turbo")
+    if modelname.original == "testing/testing":
+        return get_splitter(task=task, modelname=DEFAULT_SPLITTER_MODELNAME)
 
     try:
-        if modelname != "gpt-3.5-turbo":
-            max_tokens = get_model_max_tokens(ModelName(modelname))
+        if modelname.model == "gpt-3.5-turbo":
+            max_tokens = 4096
         else:
-            max_tokens = get_model_max_tokens(ModelName("openai/" + modelname))
+            max_tokens = get_model_max_tokens(modelname)
 
         # don't use overly large chunks anyway
         max_tokens = min(max_tokens, WDOC_MAX_CHUNK_SIZE)
     except Exception as err:
         max_tokens = 4096
-        red(f"Failed to get max_tokens limit for model {modelname}: '{err}'")
+        red(f"Failed to get max_tokens limit for model {modelname.original}: '{err}'")
 
-    model_tkn_length = partial(get_tkn_length, modelname=modelname)
+    model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
     if task in ["query", "search"]:
         text_splitter = RecursiveCharacterTextSplitter(
@@ -625,7 +629,7 @@ def get_splitter(
     else:
         raise Exception(task)
 
-    text_splitters[task][modelname] = text_splitter
+    text_splitters[task][modelname.original] = text_splitter
     return text_splitter
 
 
