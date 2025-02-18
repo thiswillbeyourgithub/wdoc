@@ -122,7 +122,7 @@ setup(
         "langchain>=0.3.1",
         "langchain-community>=0.3.1",
         "langchain-openai>=0.2.1",
-        "langfuse>=2.57.1",  # for observability
+        "langfuse>=2.59.3",  # for observability
         "litellm>=1.47.0",
         "prompt-toolkit>=3.0.47",
         "tqdm>=4.66.4",
