@@ -121,7 +121,7 @@ if "USER_AGENT" not in os.environ:
 class wdoc:
     "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
 
-    VERSION: str = "2.5.7"
+    VERSION: str = "2.6.0"
     allowed_extra_args = extra_args_types
     md_printer = md_printer
 
