@@ -146,7 +146,6 @@ class wdoc:
         file_loader_n_jobs: int = -1,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
-        DIY_rolling_window_embedding: Union[bool, int] = False,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = False,
         oneoff: bool = False,
@@ -429,7 +428,6 @@ class wdoc:
         self.file_loader_parallel_backend = file_loader_parallel_backend
         self.file_loader_n_jobs = file_loader_n_jobs
         self.llms_api_bases = llms_api_bases
-        self.DIY_rolling_window_embedding = bool(DIY_rolling_window_embedding)
         self.import_mode = import_mode
         self.oneoff = oneoff
 
@@ -1049,7 +1047,6 @@ class wdoc:
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,
             private=self.private,
-            use_rolling=self.DIY_rolling_window_embedding,
         )
 
         # set default ask_user argument
