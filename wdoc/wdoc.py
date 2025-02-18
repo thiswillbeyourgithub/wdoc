@@ -2169,8 +2169,8 @@ class wdoc:
         if cli_kwargs is not None:
             default_cli_kwargs.update(cli_kwargs)
 
-        assert (
-            "task" not in kwargs and "task" not in default_cli_kwargs
+        assert ("task" not in kwargs) and (
+            "task" not in default_cli_kwargs
         ), "Cannot give --task argument if we are only parsing"
 
         if kwargs:
