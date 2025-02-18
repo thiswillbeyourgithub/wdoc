@@ -93,6 +93,8 @@ def load_embeddings(
         instruct = True
     else:
         instruct = False
+    if use_rolling:
+        assert backend == "sentencetransformers", "Cannot use rolling embedding for embeddingt backends other than sentencetransformers"
 
     if is_verbose:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
