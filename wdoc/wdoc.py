@@ -337,6 +337,13 @@ class wdoc:
             os.environ["LANGFUSE_PUBLIC_KEY"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
             os.environ["LANGFUSE_SECRET_KEY"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
             os.environ["LANGFUSE_HOST"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            os.environ["WDOC_LANGFUSE_PUBLIC_KEY"] = (
+                "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            )
+            os.environ["WDOC_LANGFUSE_SECRET_KEY"] = (
+                "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            )
+            os.environ["WDOC_LANGFUSE_HOST"] = "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
             if litellm.success_callback or litellm.failure_callback:
                 red("Disabled litellm callbacks because using private mode.")
             litellm.success_callback = []
@@ -2233,4 +2240,13 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
     faulthandler.enable()
 
 
-create_langfuse_callback(f"wdoc_{wdoc.VERSION}")
+if not is_private:
+    for k in [
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_SECRET_KEY",
+        "LANGFUSE_HOST",
+    ]:
+        newk = "WDOC_" + k
+        if newk in os.environ and os.environ[newk]:
+            os.environ[k] = os.environ[newk]
+    create_langfuse_callback(f"wdoc_{wdoc.VERSION}")

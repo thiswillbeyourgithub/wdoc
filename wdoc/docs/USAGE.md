@@ -735,3 +735,12 @@
 
 * `WDOC_EMBED_TESTING`, default: `True`
     * If False, will skip the test of the embeddings model on simple sentences to find out if we loaded everything correctly.
+
+* `WDOC_LANGFUSE_PUBLIC_KEY`, default: `None`
+    * If present, will replace the env variable `LANGFUSE_PUBLIC_KEY`.
+
+* `WDOC_LANGFUSE_SECRET_KEY`, default: `None`
+    * If present, will replace the env variable `LANGFUSE_SECRET_KEY`.
+
+* `WDOC_LANGFUSE_HOST`, default: `None`
+    * If present, will replace the env variable `LANGFUSE_HOST`.
