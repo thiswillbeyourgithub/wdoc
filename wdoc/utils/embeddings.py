@@ -233,7 +233,6 @@ def load_saved_embeddings(
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
-    cli_kwargs: dict,
 ) -> FAISS:
     """loads embeddings for each document"""
 
