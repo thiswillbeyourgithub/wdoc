@@ -169,21 +169,6 @@ def load_embeddings_engine(
             )
 
     elif modelname.backend == "sentencetransformers":
-        try:
-            hfname = ModelName("huggingface/sentence-transformers/" + modelname.name)
-            embeddings = load_embeddings_engine(
-                modelname=hfname,
-                cli_kwargs=cli_kwargs,
-                api_base=api_base,
-                embed_kwargs=embed_kwargs,
-                private=private,
-                do_test=False,
-            )
-            test_embeddings(cached_embeddings)
-        except Exception:
-            red(
-                f"Error when trying to use '{hfname.original}' instead of '{modelname.original}'. Error is '{e}'. Falling back to sentencetransformers backend instead of huggingface's. Please open a github issue to help the developper"
-            )
         if private:
             red(f"Private is set and will use sentencetransformers backend")
         embed_kwargs.update(
