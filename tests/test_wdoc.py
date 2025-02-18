@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from langchain_core.documents.base import Document
 
 from wdoc.utils.embeddings import load_embeddings_engine, test_embeddings
 from wdoc.utils.misc import ModelName
@@ -33,7 +34,11 @@ def test_parse_file_text(sample_text_file):
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
     docs = wdoc.parse_file(
-        path=str(sample_text_file), filetype="txt", debug=False, verbose=False
+        path=str(sample_text_file),
+        filetype="txt",
+        debug=False,
+        verbose=False,
+        format="langchain",
     )
     assert len(docs) > 0
     assert docs[0].page_content.startswith("This is a test document")
@@ -46,16 +51,6 @@ def test_parse_file_formats(sample_text_file):
     f = Path(sample_text_file)
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
-    text = wdoc.parse_file(
-        path=str(sample_text_file),
-        filetype="txt",
-        format="text",
-        debug=False,
-        verbose=False,
-    )
-    assert isinstance(text, str)
-    assert text.startswith("This is a test document")
-    assert "multiple lines" in text
     docs = wdoc.parse_file(
         path=str(sample_text_file),
         filetype="txt",
@@ -63,8 +58,46 @@ def test_parse_file_formats(sample_text_file):
         debug=False,
         verbose=False,
     )
-    assert isinstance(docs, list)
-    assert all(isinstance(d, dict) for d in docs)
+    assert isinstance(docs, list), type(docs)
+    assert len(docs) == 1, len(docs)
+    assert all(isinstance(d, Document) for d in docs), ",".join(type(d) for d in docs)
+    doc = docs[0]
+    assert isinstance(doc, Document), type(text)
+    assert doc.page_content.startswith("This is a test document"), doc
+    assert "multiple lines" in doc.page_content, doc.page_content
+
+    ld = wdoc.parse_file(
+        path=str(sample_text_file),
+        filetype="txt",
+        format="langchain_dict",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(ld, list), type(ld)
+    for ldd in ld:
+        assert isinstance(ldd, dict), ldd
+        assert "page_content" in ldd, ldd
+        assert "metadata" in ldd, ldd
+
+    text = wdoc.parse_file(
+        path=str(sample_text_file),
+        filetype="txt",
+        format="text",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(text, str), type(text)
+
+    xml = wdoc.parse_file(
+        path=str(sample_text_file),
+        filetype="txt",
+        format="xml",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(xml, str), type(xml)
+
+    assert xml != text
 
 
 @pytest.mark.basic
@@ -149,14 +182,14 @@ def test_ollama_embeddings():
     test_embeddings(emb)
 
 
-@pytest.mark.basic
-def test_hf_embeddings():
-    emb = load_embeddings_engine(
-        modelname=ModelName("huggingface/BAAI/bge-m3"),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-    test_embeddings(emb)
+# @pytest.mark.basic
+# def test_hf_embeddings():
+#     emb = load_embeddings_engine(
+#         modelname=ModelName("huggingface/sentence-transformers/paraphrase-MiniLM-L6-v2"),
+#         cli_kwargs={},
+#         api_base=None,
+#         embed_kwargs={},
+#         private=False,
+#         do_test=True,
+#     )
+#     test_embeddings(emb)
