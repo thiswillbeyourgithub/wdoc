@@ -124,6 +124,7 @@ setup(
         "langchain-openai>=0.2.1",
         "langfuse>=2.59.3",  # for observability
         "litellm>=1.61.8",
+        "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "prompt-toolkit>=3.0.47",
         "tqdm>=4.66.4",
         "faiss-cpu>=1.8.0",
