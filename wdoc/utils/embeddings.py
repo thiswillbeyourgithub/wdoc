@@ -15,6 +15,7 @@ import litellm
 import numpy as np
 from beartype.typing import Any, Callable, List, Optional, Tuple, Union
 from joblib import Parallel, delayed
+from langchain_core.embeddings import Embeddings
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
@@ -181,6 +182,11 @@ def load_embeddings(
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
 
+    try:
+        test_embeddings(embeddings)
+    except Exception as e:
+        red(f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper")
+
     if "/" in embed_model:
         try:
             if Path(embed_model).exists():
@@ -333,3 +339,13 @@ def load_embeddings(
     db.save_local(save_embeds_as)
 
     return db, cached_embeddings
+
+def test_embeddings(embeddings_engine: Embeddings) -> None:
+    "Simple testing of embeddings to know early if something seems wrong"
+    vec1 = embeddings.embed_query("This is a test")
+    vec2 = embeddings.embed_documents(["This is another test"])
+    shape1 = np.array(vec1).shape
+    shape2 = np.array(vec2[0]).shape
+    assert shape1==shape2, f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
+    assert not (vec1 == vec2).all(), f"Test vectors 1 and 2 are identical despite different inputs"
+    assert not ((vec1 == 0).all() or (vec2 == 0).all()), "Test vectors 1 or 2 or both is only zeroes"
