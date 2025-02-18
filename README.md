@@ -142,6 +142,7 @@ Click to read more
     - understand why it appears that in some cases the sources id is never properly parsed
         - crash if source got lost  + arg to disable
 - ### Features
+    - add crawl4ai parser: https://github.com/unclecode/crawl4ai
     - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
         - default value is "author" "page" title"
         - pay attention to avoid including personnal info (for example use relative paths instead of absolute paths)
