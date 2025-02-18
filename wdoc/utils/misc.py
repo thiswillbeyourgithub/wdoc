@@ -691,6 +691,12 @@ def unlazyload_modules():
     while True:
         found_one = False
         for k, v in sys.modules.items():
+            try:
+                str(v)
+            except Exception as e:
+                red(
+                    f"Very weird error when loading a package, consider setting WDOC_IMPORT_TYPE to another value than '{WDOC_IMPORT_TYPE}'. Error message was '{e}'"
+                )
             if "Lazily-loaded" in str(v):
                 try:
                     dir(v)  # this is enough to trigger the loading
