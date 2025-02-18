@@ -268,25 +268,29 @@ def load_saved_embeddings(
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
     whi(f"Total number of tokens in documents: '{full_tkn}'")
-    if private:
-        whi("Not checking token price because private is set")
+    if modelname.backend in [
+        "ollama",
+        "huggingface",
+        "sentence-transformers",
+        "sentencetransformers",
+    ]:
         price = 0
-    elif modelname.backend != "openai":
-        whi(
-            f"Not checking token price because using a private backend: {modelname.backend}"
-        )
-        price = 0
-    elif modelname.original in litellm.model_cost:
-        price = litellm.model_cost[modelname.original]["input_cost_per_token"]
-        assert litellm.model_cost[modelname.original]["output_cost_per_token"] == 0
-    elif modelname.name in litellm.model_cost:
-        price = litellm.model_cost[modelname.name]["input_cost_per_token"]
-        assert litellm.model_cost[modelname.name]["output_cost_per_token"] == 0
+        whi("Local embedding model detected, setting the price to 0")
     else:
-        red(
-            f"Couldn't find the price of embedding model {modelname.original}. Assuming the cost is zero"
-        )
-        price = 0
+        if private:
+            whi("Not checking token price because private is set")
+            price = 0
+        elif modelname.original in litellm.model_cost:
+            price = litellm.model_cost[modelname.original]["input_cost_per_token"]
+            assert litellm.model_cost[modelname.original]["output_cost_per_token"] == 0
+        elif modelname.name in litellm.model_cost:
+            price = litellm.model_cost[modelname.name]["input_cost_per_token"]
+            assert litellm.model_cost[modelname.name]["output_cost_per_token"] == 0
+        else:
+            red(
+                f"Couldn't find the price of embedding model {modelname.original}. Assuming the cost is zero"
+            )
+            price = 0
 
     dol_price = full_tkn * price
     red(f"Total cost to embed all tokens is ${dol_price:.6f}")

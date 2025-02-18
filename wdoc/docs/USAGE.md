@@ -291,7 +291,9 @@
     openai tokenizer, which is not universal.
     This only applies to the summary and to the embeddings, not
     to queries.
-    This check is skipped if the api_base url are changed.
+    This check is skipped if the api_base url are changed using `llms_api_bases`.
+    Note that the cost is assumed to be `0` for embeddings if we don't find
+    the price using litellm.
 
 * `--notification_callback`: Callable, default `None`
     * a function that must take as input a string and return the same
