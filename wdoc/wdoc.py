@@ -1048,7 +1048,7 @@ class wdoc:
         )
         self.loaded_embeddings = load_saved_embeddings(
             modelname=self.embed_model,
-            embeddings=self.embeddings,
+            cached_embeddings=self.embeddings,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
             loaded_docs=self.loaded_docs,

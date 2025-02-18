@@ -228,7 +228,7 @@ def load_embeddings_engine(
 @optional_typecheck
 def load_saved_embeddings(
     modelname: ModelName,
-    embeddings: Embeddings,
+    cached_embeddings: Embeddings,
     save_embeds_as: Union[str, Path],
     load_embeds_from: Optional[Union[str, Path]],
     loaded_docs: Any,
@@ -361,7 +361,7 @@ def load_saved_embeddings(
     # saving embeddings
     db.save_local(save_embeds_as)
 
-    return db, cached_embeddings
+    return db
 
 
 def test_embeddings(embeddings: Embeddings) -> None:
