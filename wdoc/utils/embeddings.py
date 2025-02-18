@@ -281,7 +281,7 @@ def load_embeddings(
         for i in range(len(docs) // batch_size + 1)
     ]
 
-    def embedand_one_batch(
+    def embed_one_batch(
         batch: List,
         ib: int,
     ):
@@ -318,7 +318,7 @@ def load_embeddings(
         n_jobs=10,
         verbose=0 if not is_verbose else 51,
     )(
-        delayed(embedand_one_batch)(
+        delayed(embed_one_batch)(
             batch=docs[batch[0]: batch[1]],
             ib=ib,
         )
