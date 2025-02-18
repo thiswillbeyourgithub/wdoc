@@ -45,6 +45,7 @@ class LiteLLMEmbeddings(Embeddings):
             encoding_format="float",
             tiemout=600,
             api_base=self.api_base,
+            user="wdoc_embeddings",
             **embed_kwargs,
         )
         return vecs

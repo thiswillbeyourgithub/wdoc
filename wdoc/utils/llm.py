@@ -162,6 +162,7 @@ def load_llm(
             callbacks=[
                 PriceCountingCallback(verbose=llm_verbosity)
             ],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
+            user="wdoc_llm",
             **extra_model_args,
         )
         litellm.drop_params = True
