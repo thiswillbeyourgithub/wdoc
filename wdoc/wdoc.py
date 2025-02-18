@@ -44,6 +44,7 @@ from .utils.env import (
     WDOC_DEFAULT_EMBED_MODEL,
     WDOC_DEFAULT_MODELNAME,
     WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
+    WDOC_EMBED_TESTING,
     WDOC_LLM_MAX_CONCURRENCY,
     WDOC_OPEN_ANKI,
     WDOC_TYPECHECKING,
@@ -1048,6 +1049,7 @@ class wdoc:
             api_base=self.llms_api_bases["embeddings"],
             embed_kwargs=self.embed_kwargs,
             private=self.private,
+            do_test=WDOC_EMBED_TESTING,
         )
         self.loaded_embeddings = load_saved_embeddings(
             embeddings=self.embeddings,

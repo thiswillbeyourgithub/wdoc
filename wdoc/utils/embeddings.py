@@ -31,7 +31,6 @@ from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import (
     WDOC_DEFAULT_EMBED_DIMENSION,
-    WDOC_EMBED_TESTING,
     WDOC_EXPIRE_CACHE_DAYS,
     WDOC_MOD_FAISS_SCORE_FN,
 )
@@ -85,6 +84,7 @@ def load_embeddings_engine(
     api_base: Optional[str],
     embed_kwargs: dict,
     private: bool,
+    do_test: bool,
 ) -> CacheBackedEmbeddings:
     """
     Create the embeddings class used to compute embeddings
@@ -106,7 +106,8 @@ def load_embeddings_engine(
                 private=private,
                 **embed_kwargs,
             )
-            test_embeddings(embeddings)
+            if do_test:
+                test_embeddings(embeddings)
         except Exception as e:
             red(
                 f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
@@ -176,6 +177,7 @@ def load_embeddings_engine(
                 api_base=api_base,
                 embed_kwargs=embed_kwargs,
                 private=private,
+                do_test=False,
             )
             test_embeddings(cached_embeddings)
         except Exception:
@@ -198,12 +200,13 @@ def load_embeddings_engine(
     else:
         raise ValueError(f"Invalid embedding backend: {modelname.backend}")
 
-    try:
-        test_embeddings(embeddings)
-    except Exception as e:
-        red(
-            f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
-        )
+    if do_test:
+        try:
+            test_embeddings(embeddings)
+        except Exception as e:
+            red(
+                f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
+            )
 
     lfs = LocalFileStore(
         database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
@@ -221,12 +224,13 @@ def load_embeddings_engine(
         namespace=modelname.sanitized,
     )
 
-    try:
-        test_embeddings(cached_embeddings)
-    except Exception as e:
-        red(
-            f"Error when testing embeddings after loading the cache, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
-        )
+    if do_test:
+        try:
+            test_embeddings(cached_embeddings)
+        except Exception as e:
+            red(
+                f"Error when testing embeddings after loading the cache, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
+            )
 
     return cached_embeddings
 
@@ -372,8 +376,6 @@ def load_saved_embeddings(
 
 def test_embeddings(embeddings_engine: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
-    if not WDOC_EMBED_TESTING:
-        return
     vec1 = embeddings.embed_query("This is a test")
     vec2 = embeddings.embed_documents(["This is another test"])
     shape1 = np.array(vec1).shape
