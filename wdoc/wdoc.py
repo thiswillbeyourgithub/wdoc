@@ -2231,4 +2231,4 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
     faulthandler.enable()
 
 
-create_langfuse_callback(wdoc.VERSION)
+create_langfuse_callback(f"wdoc_{wdoc.VERSION}")
