@@ -15,21 +15,21 @@ class LiteLLMEmbeddings(Embeddings):
 
     def __init__(
         self,
-        embed_model: str,
+        model: str,
         dimensions: Optional[int],
         api_base: Optional[str],
         private: bool,
         **embed_kwargs,
     ):
         assert (
-            "/" in embed_model
-        ), "embed_model must contain a /, for example 'ollama/bge-m3' or 'openai/text-embedding-ada-002'"
+            "/" in model
+        ), "model must contain a /, for example 'ollama/bge-m3' or 'openai/text-embedding-ada-002'"
         if private:
             if not api_base:
                 assert any(
-                    provider in embed_model for provider in ["ollama", "huggingface"]
-                ), "--private argument is set and api_base not overridden BUT the embed_model does not contain ollama nor huggingface, this can be a mistake so crashing out of abundance of caution. If you think this is a bug please open an issue on github."
-        self.embed_model = embed_model
+                    provider in model for provider in ["ollama", "huggingface"]
+                ), "--private argument is set and api_base not overridden BUT the model does not contain ollama nor huggingface, this can be a mistake so crashing out of abundance of caution. If you think this is a bug please open an issue on github."
+        self.model = model
         self.dimensions = dimensions
         self.private = private
         self.api_base = api_base
@@ -39,7 +39,7 @@ class LiteLLMEmbeddings(Embeddings):
         """Embed search docs."""
         # https://docs.litellm.ai/docs/embedding/supported_embedding
         vecs = litellm.embeddings(
-            model=self.embed_model,
+            model=self.model,
             input=texts,
             dimensions=self.dimensions,
             encoding_format="float",
