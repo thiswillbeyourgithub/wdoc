@@ -344,10 +344,6 @@
     information to a remote server, you can use `---private`.
     Note that the values of `llms_api_bases` are whitelisted when using `private`.
 
-* `--DIY_rolling_window_embedding`: bool, default `False`
-    * enables using a DIY rolling window embedding instead of using
-    the default langchain SentenceTransformerEmbedding implementation
-
 * `--import_mode`: bool, default `False`
     * if True, will return the answer from query instead of printing it.
     The idea is to use if when you import wdoc instead of running

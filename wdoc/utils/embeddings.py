@@ -83,7 +83,6 @@ def load_embeddings(
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
-    use_rolling: bool,
     cli_kwargs: dict,
 ) -> Tuple[FAISS, CacheBackedEmbeddings]:
     """loads embeddings for each document"""
@@ -94,8 +93,6 @@ def load_embeddings(
         instruct = True
     else:
         instruct = False
-    if use_rolling:
-        assert backend == "sentencetransformers", "Cannot use rolling embedding for embeddingt backends other than sentencetransformers"
 
     if is_verbose:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
@@ -171,29 +168,16 @@ def load_embeddings(
     elif backend == "sentencetransformers":
         if private:
             red(f"Private is set and will use sentencetransformers backend")
-        if use_rolling:
-            embed_kwargs.update(
-                {
-                    "batch_size": 1,
-                    "pooling": "meanpool",
-                    "device": None,
-                }
-            )
-            embeddings = RollingWindowEmbeddings(
-                model_name=embed_model,
-                encode_kwargs=embed_kwargs,
-            )
-        else:
-            embed_kwargs.update(
-                {
-                    "batch_size": 1,
-                    "device": None,
-                }
-            )
-            embeddings = SentenceTransformerEmbeddings(
-                model_name=embed_model,
-                encode_kwargs=embed_kwargs,
-            )
+        embed_kwargs.update(
+            {
+                "batch_size": 1,
+                "device": None,
+            }
+        )
+        embeddings = SentenceTransformerEmbeddings(
+            model_name=embed_model,
+            encode_kwargs=embed_kwargs,
+        )
 
     else:
         raise ValueError(f"Invalid embedding backend: {backend}")
