@@ -153,7 +153,7 @@ def load_llm(
                 max_tokens * 0.9
             )  # intentionaly limiting max tokens because it can cause bugs
         llm = ChatLiteLLM(
-            model_name=modelname.model,
+            model_name=modelname.original,
             disable_streaming=True,  # Not needed and might break cache
             api_base=api_base,
             cache=llm_cache,
