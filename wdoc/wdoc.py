@@ -82,6 +82,7 @@ from .utils.misc import (  # debug_chain,
     extra_args_types,
     get_model_price,
     get_splitter,
+    get_supported_model_params,
     get_tkn_length,
     model_name_matcher,
     query_eval_cache,
@@ -605,9 +606,7 @@ class wdoc:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if "logit_bias" in litellm.get_supported_openai_params(
-                    model=self.modelname,
-                ):
+                if "logit_bias" in get_supported_model_params(self.modelname):
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing.")
@@ -665,9 +664,7 @@ class wdoc:
                     "Cost estimate > limit but the api_base was modified so not crashing."
                 )
 
-        llm_params = litellm.get_supported_openai_params(
-            model=self.modelname if self.modelname.backend != "testing" else {}
-        )
+        llm_params = get_supported_model_params(self.modelname)
         if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
@@ -996,9 +993,7 @@ class wdoc:
     @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
-        if "logit_bias" in litellm.get_supported_openai_params(
-            model=self.modelname,
-        ):
+        if "logit_bias" in get_supported_model_params(self.modelname):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -1035,17 +1030,11 @@ class wdoc:
                 56899: logit_val,  # "                                                                            "
                 98517: logit_val,  # "                                                                                "
             }
-        if "frequency_penalty" in litellm.get_supported_openai_params(
-            model=self.modelname,
-        ):
+        if "frequency_penalty" in get_supported_model_params(self.modelname):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in litellm.get_supported_openai_params(
-            model=self.modelname,
-        ):
+        if "presence_penalty" in get_supported_model_params(self.modelname):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in litellm.get_supported_openai_params(
-            model=self.modelname,
-        ):
+        if "temperature" in get_supported_model_params(self.modelname):
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
@@ -1415,8 +1404,8 @@ class wdoc:
             failed = False
             if self.query_eval_modelname.backend == "openrouter":
                 try:
-                    self.eval_llm_params = litellm.get_supported_openai_params(
-                        model_name_matcher(self.query_eval_modelname.name)
+                    self.eval_llm_params = get_supported_model_params(
+                        self.query_eval_modelname
                     )
                 except Exception as err:
                     failed = True
@@ -1424,9 +1413,8 @@ class wdoc:
                         f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'"
                     )
             if self.query_eval_modelname.backend != "openrouter" or failed:
-                self.eval_llm_params = litellm.get_supported_openai_params(
-                    model=self.query_eval_modelname.name,
-                    custom_llm_provider=self.query_eval_modelname.backend,
+                self.eval_llm_params = get_supported_model_params(
+                    self.query_eval_modelname
                 )
             eval_args = {}
             if "n" in self.eval_llm_params:

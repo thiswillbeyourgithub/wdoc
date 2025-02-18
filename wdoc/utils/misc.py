@@ -1003,3 +1003,38 @@ def is_timecode(inp: str) -> bool:
         return True
     except Exception:
         return False
+
+
+@optional_typecheck
+def get_supported_model_params(modelname: ModelName) -> list:
+    if modelname.backend == "testing":
+        return []
+    for test in [
+        modelname.original,
+        modelname.model,
+        model_name_matcher(modelname.original),
+    ]:
+        params = litellm.get_supported_openai_params(test)
+        if params:
+            return params
+    for test in [
+        modelname.original,
+        modelname.model,
+        model_name_matcher(modelname.original),
+    ]:
+        params = litellm.get_supported_openai_params(
+            test, custom_llm_provider=modelname.backend
+        )
+        if params:
+            return params
+    for test in [
+        modelname.original,
+        modelname.model,
+        model_name_matcher(modelname.original),
+    ]:
+        params = litellm.get_supported_openai_params(
+            test, custom_llm_provider="openrouter"
+        )
+        if params:
+            return params
+    return []
