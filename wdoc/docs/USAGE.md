@@ -334,6 +334,7 @@
     Note that in the current implementation, this disables any
     callbacks to langfuse. If you only want to override some API endpoints,
     take a look at the argument `--llms_api_bases`.
+    Note that the values of `llms_api_bases` are whitelisted when using `private`.
 
 * `--llms_api_bases`: dict, default `None`
     * a dict with keys in `["model", "query_eval_model", "embeddings"]`
@@ -341,6 +342,7 @@
     endpoint. This is needed to use local LLMs for example using
     ollama, lmstudio, etc. If you want to be sure not to leak any
     information to a remote server, you can use `---private`.
+    Note that the values of `llms_api_bases` are whitelisted when using `private`.
 
 * `--DIY_rolling_window_embedding`: bool, default `False`
     * enables using a DIY rolling window embedding instead of using
