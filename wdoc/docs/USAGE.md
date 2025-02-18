@@ -336,7 +336,7 @@
     take a look at the argument `--llms_api_bases`.
 
 * `--llms_api_bases`: dict, default `None`
-    * a dict with keys in `["model", "query_eval_model"]`
+    * a dict with keys in `["model", "query_eval_model", "embeddings"]`
     The corresponding value will be used to change the url of the
     endpoint. This is needed to use local LLMs for example using
     ollama, lmstudio, etc. If you want to be sure not to leak any

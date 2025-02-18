@@ -303,16 +303,18 @@ class wdoc:
             assert k in [
                 "model",
                 "query_eval_model",
-            ], f"Invalid k of llms_api_bases not in 'model', 'query_eval_model': {k}"
-        for k in ["model", "query_eval_model"]:
+                "embeddings",
+            ], f"Invalid k of llms_api_bases not in 'model', 'query_eval_model', 'embeddings': {k}"
+        for k in ["model", "query_eval_model", "embeddings"]:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
         if (
             llms_api_bases["model"] == llms_api_bases["query_eval_model"]
+            and llms_api_bases["model"] == llms_api_bases["embeddings"]
             and llms_api_bases["model"]
         ):
             red(
-                "Setting litellm wide api_base because it's the same for model and query_eval_model"
+                "Setting litellm wide api_base because it's the same for model, query_eval_model and embeddings"
             )
             litellm.api_base = llms_api_bases["model"]
         assert isinstance(
@@ -1040,6 +1042,7 @@ class wdoc:
             embed_model=self.embed_model,
             embed_kwargs=self.embed_kwargs,
             load_embeds_from=self.load_embeds_from,
+            api_base=self.llms_api_bases["embeddings"],
             save_embeds_as=self.save_embeds_as,
             loaded_docs=self.loaded_docs,
             dollar_limit=self.dollar_limit,

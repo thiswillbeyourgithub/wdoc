@@ -77,6 +77,7 @@ def load_embeddings(
     embed_model: str,
     embed_kwargs: dict,
     load_embeds_from: Optional[Union[str, Path]],
+    api_base: Optional[str],
     save_embeds_as: Union[str, Path],
     loaded_docs: Any,
     dollar_limit: Union[int, float],
@@ -96,17 +97,20 @@ def load_embeddings(
     if is_verbose:
         whi(f"Selected embedding model '{embed_model}' of backend {backend}")
     if backend == "openai":
-        assert not private, f"Set private but tried to use openai embeddings"
-        assert (
-            "OPENAI_API_KEY" in os.environ
-            and os.environ["OPENAI_API_KEY"]
-            and "REDACTED" not in os.environ["OPENAI_API_KEY"]
-        ), "Missing OPENAI_API_KEY"
+        if private:
+            assert api_base, "If private is set, api_base must be set too"
+        else:
+            assert (
+                "OPENAI_API_KEY" in os.environ
+                and os.environ["OPENAI_API_KEY"]
+                and "REDACTED" not in os.environ["OPENAI_API_KEY"]
+            ), "Missing OPENAI_API_KEY"
 
         embeddings = OpenAIEmbeddings(
             model=embed_model,
             # model="text-embedding-ada-002",
             openai_api_key=os.environ["OPENAI_API_KEY"],
+            api_base=api_base,
             **embed_kwargs,
         )
 
