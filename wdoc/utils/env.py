@@ -52,9 +52,9 @@ WDOC_DEFAULT_EMBED_DIMENSION = None
 WDOC_EMBED_TESTING = True
 WDOC_DEFAULT_QUERY_EVAL_MODELNAME = "openai/gpt-4o-mini"
 
-"WDOC_LANGFUSE_PUBLIC_KEY" = None
-"WDOC_LANGFUSE_SECRET_KEY" = None
-"WDOC_LANGFUSE_HOST" = None
+WDOC_LANGFUSE_PUBLIC_KEY = None
+WDOC_LANGFUSE_SECRET_KEY = None
+WDOC_LANGFUSE_HOST = None
 
 # by default use lazy loading if using --help argument
 if " --help" in " ".join(sys.argv):

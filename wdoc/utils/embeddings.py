@@ -233,14 +233,14 @@ def load_embeddings_engine(
 
 @optional_typecheck
 def load_saved_embeddings(
-    embeddings: embeddings,
+    embeddings: Embeddings,
     save_embeds_as: Union[str, Path],
     load_embeds_from: Optional[Union[str, Path]],
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
     cli_kwargs: dict,
-) -> Faiss:
+) -> FAISS:
     """loads embeddings for each document"""
 
     # reload passed embeddings

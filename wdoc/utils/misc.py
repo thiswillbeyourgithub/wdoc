@@ -511,6 +511,37 @@ def get_model_price(model: str) -> List[float]:
         )
 
 
+@dataclass
+class ModelName:
+    "Simply stores the different way to phrase a model name"
+    original: str
+    backend: str = field(init=False)
+    model: str = field(init=False)
+    sanitized: str = field(init=False)
+
+    def __post_init__(self):
+        assert (
+            "/" in self.original
+        ), f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        self.backend, self.model = self.original.split("/", 1)
+        self.backend = self.backend.lower()
+
+        # Use a sanitized name for the cache path
+        if "/" in self.model:
+            try:
+                if Path(self.model).exists():
+                    with open(
+                        Path(self.model).resolve().absolute().__str__(), "rb"
+                    ) as f:
+                        h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
+                    self.sanitized = Path(self.model).name + "_" + h
+            except Exception:
+                pass
+        assert "/" not in self.sanitized
+        if WDOC_PRIVATE_MODE:
+            self.sanitized = "private_" + self.sanitized
+
+
 @optional_typecheck
 def get_model_max_tokens(model: ModelName) -> int:
     if model.original in litellm.model_cost:
@@ -958,34 +989,3 @@ def is_timecode(inp: str) -> bool:
         return True
     except Exception:
         return False
-
-
-@dataclass
-class ModelName:
-    "Simply stores the different way to phrase a model name"
-    original: str
-    backend: str = field(init=False)
-    model: str = field(init=False)
-    sanitized: str = field(init=False)
-
-    def __post_init__(self):
-        assert (
-            "/" in self.original
-        ), f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
-        self.backend, self.model = self.original.split("/", 1)
-        self.backend = self.backend.lower()
-
-        # Use a sanitized name for the cache path
-        if "/" in self.model:
-            try:
-                if Path(self.model).exists():
-                    with open(
-                        Path(self.model).resolve().absolute().__str__(), "rb"
-                    ) as f:
-                        h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
-                    self.sanitized = Path(self.model).name + "_" + h
-            except Exception:
-                pass
-        assert "/" not in self.sanitized
-        if WDOC_PRIVATE_MODE:
-            self.sanitized = "private_" + self.sanitized
