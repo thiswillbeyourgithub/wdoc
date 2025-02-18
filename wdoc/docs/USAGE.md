@@ -690,7 +690,7 @@
 * `WDOC_PRIVATE_MODE`
     * You should never set it yourself. It is set automatically if the `--private` argument is used, and used throughout to triple check that it's indeed fully private.
 
-* `WDOC_IMPORT_TYPE`, default `lazy`
+* `WDOC_IMPORT_TYPE`, default `thread`
     * If `native` will just import the packages needed by wdoc without any tricks.
     * If `thread`, will try to use a separate thread to import packages making the startup time potentially smaller.
     * If `lazy`, will use lazy loading on some packages, making the startup time potentially smaller.
