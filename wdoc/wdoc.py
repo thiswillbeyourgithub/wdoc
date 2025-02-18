@@ -2163,6 +2163,12 @@ class wdoc:
         - Either the document's page_content as a string, or a list of
         langchain Document (so with attributes `page_content` and `metadata`).
         """
+        assert format in [
+            "text",
+            "xml",
+            "langchain",
+            "langchain_dict",
+        ], f"Unexpected --format value: '{format}'"
         default_cli_kwargs = {
             "llm_name": ModelName("testing/testing"),
             "task": "query",
