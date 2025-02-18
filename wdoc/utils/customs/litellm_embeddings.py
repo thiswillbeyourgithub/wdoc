@@ -43,7 +43,7 @@ class LiteLLMEmbeddings(Embeddings):
             input=texts,
             dimensions=self.dimensions,
             encoding_format="float",
-            tiemout=600,
+            timeout=600,
             api_base=self.api_base,
             user="wdoc_embeddings",
             drop_params=True,
