@@ -147,6 +147,8 @@ def cli_parse_file() -> None:
             and "path" not in kwargs
         ):
             kwargs["path"] = None
+        if is_verbose:
+            whi(f"Arguments that will be used for parser: '{kwargs}'")
         parsed = wdoc.parse_file(**kwargs)
     else:
         parsed = fire.Fire(wdoc.parse_file)
