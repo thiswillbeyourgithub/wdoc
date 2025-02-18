@@ -2120,7 +2120,7 @@ class wdoc:
         debug: bool = False,
         verbose: bool = False,
         **kwargs,
-    ) -> Union[List[Document], str]:
+    ) -> Union[List[Document], str, List[dict]]:
         """
         # 'parse_file' documentation
 
@@ -2139,8 +2139,10 @@ class wdoc:
 
         - `format`: str, default `text`
             - if `text`: only return the text
-            - if `langchain`: return a list of langchain Documents as json
-              (meaning metadata are included)
+            - if `xml`: returns text in an xml like format
+            - if `langchain`: return a list of langchain Documents
+            - if `langchain_dict`: return a list of langchain Documents as
+              python dicts (easy to json parse, and metadata are included)
 
         - `cli_kwargs`: dict, default `None`
             - Dict containing keyword arguments destined to the function
@@ -2201,9 +2203,31 @@ class wdoc:
             **kwargs,
         )
         if format == "text":
-            return out
+            n = len(out)
+            return (
+                "Parsed documents\n"
+                + "\n".join(
+                    [f"Doc #{i}/{n}\n{d.page_content}\n\n" for i, d in enumerate(out)]
+                ).rstrip()
+            )
+        elif format == "xml":
+            return (
+                "<documents>\n"
+                + "\n".join(
+                    [
+                        f"<doc id={i}>\n{d.page_content}\n</doc>"
+                        for i, d in enumerate(out)
+                    ]
+                )
+                + "\n</documents>"
+            )
         elif format == "langchain":
-            return "\n".join([d.page_content for d in out])
+            return out
+        elif format == "langchain_dict":
+            return [
+                {"page_content": doc.page_content, "metadata": doc.metadata}
+                for doc in out
+            ]
         else:
             raise ValueError(format)
 
