@@ -15,6 +15,12 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     print("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
+# sensible default user agent
+if "USER_AGENT" not in os.environ:
+    os.environ["USER_AGENT"] = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+    )
+
 from .wdoc import is_verbose, wdoc, whi
 
 
