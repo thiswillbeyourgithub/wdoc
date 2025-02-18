@@ -945,8 +945,8 @@ def create_langfuse_callback(version: str) -> None:
             import langfuse
             import litellm
 
-            litellm.success_callback = ["langfuse"]
-            litellm.failure_callback = ["langfuse"]
+            litellm.success_callback.append("langfuse")
+            litellm.failure_callback.append("langfuse")
 
             # # and use langchain's callback for openai's backend
             # BUT as of october 2024 it seems buggy with chatlitellm, the modelname does not seem to be passed?
