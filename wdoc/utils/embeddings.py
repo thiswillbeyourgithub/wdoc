@@ -15,7 +15,6 @@ import litellm
 import numpy as np
 from beartype.typing import Any, Callable, List, Optional, Tuple, Union
 from joblib import Parallel, delayed
-from langchain_core.embeddings import Embeddings
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
@@ -23,13 +22,18 @@ from langchain_community.embeddings import (
     SentenceTransformerEmbeddings,
 )
 from langchain_community.vectorstores import FAISS
+from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 from tqdm import tqdm
 
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
-from .env import WDOC_EXPIRE_CACHE_DAYS, WDOC_MOD_FAISS_SCORE_FN, WDOC_DEFAULT_EMBED_DIMENSION
+from .env import (
+    WDOC_DEFAULT_EMBED_DIMENSION,
+    WDOC_EXPIRE_CACHE_DAYS,
+    WDOC_MOD_FAISS_SCORE_FN,
+)
 from .flags import is_verbose
 from .logger import red, whi
 from .misc import cache_dir, get_tkn_length
@@ -108,7 +112,9 @@ def load_embeddings(
             )
             test_embeddings(embeddings)
         except Exception as e:
-            red(f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough.")
+            red(
+                f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
+            )
     elif backend == "openai":
         if private:
             assert api_base, "If private is set, api_base must be set too"
@@ -185,7 +191,9 @@ def load_embeddings(
     try:
         test_embeddings(embeddings)
     except Exception as e:
-        red(f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper")
+        red(
+            f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
+        )
 
     # Use a sanitized name for the cache path
     if "/" in embed_model:
@@ -318,7 +326,7 @@ def load_embeddings(
         verbose=0 if not is_verbose else 51,
     )(
         delayed(embed_one_batch)(
-            batch=docs[batch[0]: batch[1]],
+            batch=docs[batch[0] : batch[1]],
             ib=ib,
         )
         for ib, batch in tqdm(
@@ -341,12 +349,19 @@ def load_embeddings(
 
     return db, cached_embeddings
 
+
 def test_embeddings(embeddings_engine: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
     vec1 = embeddings.embed_query("This is a test")
     vec2 = embeddings.embed_documents(["This is another test"])
     shape1 = np.array(vec1).shape
     shape2 = np.array(vec2[0]).shape
-    assert shape1==shape2, f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
-    assert not (vec1 == vec2).all(), f"Test vectors 1 and 2 are identical despite different inputs"
-    assert not ((vec1 == 0).all() or (vec2 == 0).all()), "Test vectors 1 or 2 or both is only zeroes"
+    assert (
+        shape1 == shape2
+    ), f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
+    assert not (
+        vec1 == vec2
+    ).all(), f"Test vectors 1 and 2 are identical despite different inputs"
+    assert not (
+        (vec1 == 0).all() or (vec2 == 0).all()
+    ), "Test vectors 1 or 2 or both is only zeroes"
