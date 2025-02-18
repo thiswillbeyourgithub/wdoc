@@ -108,7 +108,6 @@ def load_embeddings(
 
         embeddings = OpenAIEmbeddings(
             model=embed_model,
-            # model="text-embedding-ada-002",
             openai_api_key=os.environ["OPENAI_API_KEY"],
             api_base=api_base,
             **embed_kwargs,
