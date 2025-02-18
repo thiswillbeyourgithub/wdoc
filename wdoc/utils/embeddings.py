@@ -112,7 +112,7 @@ def load_embeddings_engine(
             red(
                 f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
             )
-    elif modelname.backend == "openai":
+    if "embeddings" not in locals() and modelname.backend == "openai":
         if private:
             assert api_base, "If private is set, api_base must be set too"
         else:
