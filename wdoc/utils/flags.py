@@ -25,8 +25,28 @@ is_verbose = is_debug or check_kwargs("verbose", "v")
 
 is_silent = check_kwargs("silent", "s")
 
-is_private = check_kwargs("private")
-if is_private:  # set it as early as possible
-    os.environ["WDOC_PRIVATE_MODE"] = True
-
 md_printing_disabled = check_kwargs("disable_md_printing")
+
+
+class PrivateSanityChecker(int):
+    "simple class that ALWAYS checks that WDOC_PRIVATE_MODE is appropriate when is_private is compared to anything"
+
+    def __new__(cls, value=False):  # needed to subclass bool
+        return super().__new__(cls, bool(value))
+
+    def __init__(self, value):
+        assert isinstance(value, bool)
+        self.value = value
+
+    def __sanity_check__(self):
+        if self.value:
+            assert str(os.environ["WDOC_PRIVATE_MODE"]).lower() == "true"
+        else:
+            assert str(os.environ["WDOC_PRIVATE_MODE"]).lower() == "false"
+
+    def __eq__(self, other):
+        self.__sanity_check__()
+        return self.value == other
+
+
+is_private = PrivateSanityChecker(check_kwargs("private"))
