@@ -148,14 +148,16 @@ def cli_parse_file() -> None:
         parsed = fire.Fire(wdoc.parse_file)
 
     if isinstance(parsed, list):
-        d = {
-            "documents": {"content": d.page_content, "metadata": d.metadata}
-            for d in parsed
-        }
+        if all(not isinstance(d, dict) for d in parsed):
+            parsed_d = [
+                {"page_content": d.page_content, "metadata": d.metadata} for d in parsed
+            ]
+        else:
+            parsed_d = parsed
         try:
-            out = json.dumps(d, indent=2, ensure_ascii=False)
+            out = json.dumps(parsed_d, indent=2, ensure_ascii=False)
         except Exception:
-            out = str(d)
+            out = str(parsed_d)
     else:
         assert isinstance(parsed, str)
         out = parsed
