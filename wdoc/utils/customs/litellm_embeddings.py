@@ -48,7 +48,7 @@ class LiteLLMEmbeddings(Embeddings):
             user="wdoc_embeddings",
             drop_params=True,
             # 'sentence-similarity', 'feature-extraction', 'rerank', 'embed', 'similarity'
-            input_type="feature-extraction",
+            # input_type="feature-extraction",  # seems to crash for openai
             **self.embed_kwargs,
         )
         if hasattr(
