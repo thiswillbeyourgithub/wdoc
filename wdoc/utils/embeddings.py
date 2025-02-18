@@ -361,10 +361,10 @@ def load_saved_embeddings(
 
 def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
-    vec1 = embeddings.embed_query("This is a test")
-    vec2 = embeddings.embed_documents(["This is another test"])
-    shape1 = np.array(vec1).shape
-    shape2 = np.array(vec2[0]).shape
+    vec1 = np.array(embeddings.embed_query("This is a test"))
+    vec2 = np.array(embeddings.embed_documents(["This is another test"])[0])
+    shape1 = vec1.shape
+    shape2 = vec2.shape
     assert (
         shape1 == shape2
     ), f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
