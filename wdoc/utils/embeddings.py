@@ -374,7 +374,7 @@ def load_saved_embeddings(
     return db, cached_embeddings
 
 
-def test_embeddings(embeddings_engine: Embeddings) -> None:
+def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
     vec1 = embeddings.embed_query("This is a test")
     vec2 = embeddings.embed_documents(["This is another test"])

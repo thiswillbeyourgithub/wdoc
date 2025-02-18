@@ -33,12 +33,12 @@ class LiteLLMEmbeddings(Embeddings):
         self.dimensions = dimensions
         self.private = private
         self.api_base = api_base
-        self.extra_args = extra_args
+        self.embed_kwargs = embed_kwargs
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
         # https://docs.litellm.ai/docs/embedding/supported_embedding
-        vecs = litellm.embeddings(
+        vecs = litellm.embedding(
             model=self.model,
             input=texts,
             dimensions=self.dimensions,
@@ -46,7 +46,7 @@ class LiteLLMEmbeddings(Embeddings):
             tiemout=600,
             api_base=self.api_base,
             user="wdoc_embeddings",
-            **embed_kwargs,
+            **self.embed_kwargs,
         )
         return vecs
 
