@@ -730,3 +730,6 @@
 
 * `WDOC_DEFAULT_EMBED_DIMENSION`, default: `none`
     * Default number of dimension to ask from the embeddings provider.
+
+* `WDOC_EMBED_TESTING`, default: `True`
+    * If False, will skip the test of the embeddings model on simple sentences to find out if we loaded everything correctly.

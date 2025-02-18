@@ -49,6 +49,7 @@ WDOC_MAX_CHUNK_SIZE = 16_000
 WDOC_DEFAULT_MODELNAME = "openai/gpt-4o"
 WDOC_DEFAULT_EMBED_MODEL = "openai/text-embedding-3-small"
 WDOC_DEFAULT_EMBED_DIMENSION = None
+WDOC_EMBED_TESTING = True
 WDOC_DEFAULT_QUERY_EVAL_MODELNAME = "openai/gpt-4o-mini"
 
 # by default use lazy loading if using --help argument
@@ -77,6 +78,7 @@ valid_types = {
     "WDOC_DEFAULT_MODELNAME": str,
     "WDOC_DEFAULT_EMBED_MODEL": str,
     "WDOC_DEFAULT_EMBED_DIMENSION": Optional[int],
+    "WDOC_EMBED_TESTING": bool,
     "WDOC_DEFAULT_QUERY_EVAL_MODELNAME": str,
 }
 

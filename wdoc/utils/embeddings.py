@@ -31,6 +31,7 @@ from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import (
     WDOC_DEFAULT_EMBED_DIMENSION,
+    WDOC_EMBED_TESTING,
     WDOC_EXPIRE_CACHE_DAYS,
     WDOC_MOD_FAISS_SCORE_FN,
 )
@@ -367,6 +368,8 @@ def load_saved_embeddings(
 
 def test_embeddings(embeddings_engine: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
+    if not WDOC_EMBED_TESTING:
+        return
     vec1 = embeddings.embed_query("This is a test")
     vec2 = embeddings.embed_documents(["This is another test"])
     shape1 = np.array(vec1).shape
