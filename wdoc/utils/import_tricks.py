@@ -76,6 +76,7 @@ def trick_imports() -> None:
     custom_loading("langchain")
     custom_loading("langchain_community")
     custom_loading("langchain.text_splitter")
+    custom_loading("langfuse")
     custom_loading("litellm")
     custom_loading("numpy")
     custom_loading("faiss")
