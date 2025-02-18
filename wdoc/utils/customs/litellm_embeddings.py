@@ -47,6 +47,8 @@ class LiteLLMEmbeddings(Embeddings):
             api_base=self.api_base,
             user="wdoc_embeddings",
             drop_params=True,
+            # 'sentence-similarity', 'feature-extraction', 'rerank', 'embed', 'similarity'
+            input_type="feature-extraction",
             **self.embed_kwargs,
         )
         return vecs
