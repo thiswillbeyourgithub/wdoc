@@ -332,13 +332,15 @@
     check that no api keys are used, check that embedding models are
     local only. It will also use a separate cache from non private.
     Note that in the current implementation, this disables any
-    callbacks to langfuse.
+    callbacks to langfuse. If you only want to override some API endpoints,
+    take a look at the argument `--llms_api_bases`.
 
 * `--llms_api_bases`: dict, default `None`
     * a dict with keys in `["model", "query_eval_model"]`
     The corresponding value will be used to change the url of the
     endpoint. This is needed to use local LLMs for example using
-    ollama, lmstudio etc.
+    ollama, lmstudio, etc. If you want to be sure not to leak any
+    information to a remote server, you can use `---private`.
 
 * `--DIY_rolling_window_embedding`: bool, default `False`
     * enables using a DIY rolling window embedding instead of using
