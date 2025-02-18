@@ -68,8 +68,9 @@ from .utils.logger import (
     whi,
     yel,
 )
-from .utils.misc import ankiconnect  # debug_chain,
 from .utils.misc import (
+    #debug_chain,
+    ankiconnect,
     DocDict,
     average_word_length,
     check_docs_tkn_length,
