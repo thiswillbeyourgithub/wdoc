@@ -527,6 +527,7 @@ class ModelName:
         self.backend = self.backend.lower()
 
         # Use a sanitized name for the cache path
+        self.sanitized = self.original
         if "/" in self.model:
             try:
                 if Path(self.model).exists():
@@ -537,24 +538,24 @@ class ModelName:
                     self.sanitized = Path(self.model).name + "_" + h
             except Exception:
                 pass
-        assert "/" not in self.sanitized
+        self.sanitized = self.sanitized.replace("/", "_")
         if WDOC_PRIVATE_MODE:
             self.sanitized = "private_" + self.sanitized
 
 
 @optional_typecheck
-def get_model_max_tokens(model: ModelName) -> int:
-    if model.original in litellm.model_cost:
-        return litellm.model_cost[model.original]["max_tokens"]
-    elif (trial := model.name) in litellm.model_cost:
+def get_model_max_tokens(modelname: ModelName) -> int:
+    if modelname.original in litellm.model_cost:
+        return litellm.model_cost[modelname.original]["max_tokens"]
+    elif (trial := modelname.model) in litellm.model_cost:
         return litellm.model_cost[trial]["max_tokens"]
-    elif (trial2 := model.name.split("/")[-1]) in litellm.model_cost:
+    elif (trial2 := modelname.model.split("/")[-1]) in litellm.model_cost:
         return litellm.model_cost[trial2]["max_tokens"]
     else:
         try:
-            return litellm.get_model_info(model)["max_tokens"]
+            return litellm.get_model_info(modelname.original)["max_tokens"]
         except Exception:
-            return litellm.get_model_info(model.name)[
+            return litellm.get_model_info(modelname.name)[
                 "max_tokens"
             ]  # crash if still not found
 

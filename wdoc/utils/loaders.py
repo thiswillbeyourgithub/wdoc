@@ -66,6 +66,7 @@ from .errors import TimeoutPdfLoaderError
 from .flags import is_debug, is_linux, is_verbose
 from .logger import logger, red, whi, yel
 from .misc import (
+    ModelName,
     average_word_length,
     check_docs_tkn_length,
     doc_loaders_cache,
@@ -389,7 +390,7 @@ def load_one_doc_wrapped(
 @optional_typecheck
 def load_one_doc(
     task: str,
-    llm_name: str,
+    llm_name: ModelName,
     temp_dir: Path,
     filetype: str,
     file_hash: str,
@@ -403,7 +404,7 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
-    text_splitter = get_splitter(task, modelname=llm_name)
+    text_splitter = get_splitter(task, modelname=llm_name.model)
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
 
     expected_global_dir = loaders_temp_dir_file.read_text().strip()

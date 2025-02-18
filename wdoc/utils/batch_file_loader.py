@@ -38,6 +38,7 @@ from .loaders import (
 from .logger import logger, red, whi
 from .misc import (
     DocDict,
+    ModelName,
     cache_dir,
     doc_loaders_cache,
     file_hasher,
@@ -93,7 +94,12 @@ for k, v in inference_rules.items():
 
 @optional_typecheck
 def batch_load_doc(
-    llm_name: str, filetype: str, task: str, backend: str, n_jobs: int, **cli_kwargs
+    llm_name: ModelName,
+    filetype: str,
+    task: str,
+    backend: str,
+    n_jobs: int,
+    **cli_kwargs,
 ) -> List[Document]:
     """load the input"""
 

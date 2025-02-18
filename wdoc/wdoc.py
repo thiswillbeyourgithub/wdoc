@@ -546,7 +546,7 @@ class wdoc:
         # loading llm
         self.llm = load_llm(
             modelname=self.modelname,
-            backend=self.modelbackend,
+            backend=self.modelname.backend,
             llm_cache=self.llm_cache,
             temperature=0,
             llm_verbosity=self.llm_verbosity,
