@@ -46,6 +46,8 @@
 Give it to me I am in a hurry!
 </summary>
 
+**Note: a list of examples can be found in [examples.md](./wdoc/docs/examples.md)**
+
 
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
