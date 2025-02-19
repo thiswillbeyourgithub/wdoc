@@ -67,7 +67,7 @@ from .utils.logger import (
     logger,
     md_printer,
     red,
-    set_USAGE_as_docstring,
+    set_help_md_as_docstring,
     whi,
     yel,
 )
@@ -117,9 +117,9 @@ if "USER_AGENT" not in os.environ:
 
 
 @optional_typecheck
-@set_USAGE_as_docstring
+@set_help_md_as_docstring
 class wdoc:
-    "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
+    "This docstring is dynamically appended the content of wdoc/docs/help.md"
 
     VERSION: str = "2.6.0"
     allowed_extra_args = extra_args_types
@@ -163,7 +163,7 @@ class wdoc:
         version: bool = False,
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically appended the content of wdoc/docs/USAGE.md"
+        "This docstring is dynamically appended the content of wdoc/docs/help.md"
         if version:
             print(self.VERSION)
             return

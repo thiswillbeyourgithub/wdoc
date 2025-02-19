@@ -124,15 +124,15 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 
 
 @optional_typecheck
-def set_USAGE_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
-    "set the docstring of wdoc class to wdoc/docs/USAGE.md's content"
-    usage_file = Path(__file__).parent.parent / "docs/USAGE.md"
+def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
+    "set the docstring of wdoc class to wdoc/docs/help.md's content"
+    usage_file = Path(__file__).parent.parent / "docs/help.md"
     assert (
         usage_file.exists()
-    ), f"Couldn't find USAGE.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/USAGE.md"
+    ), f"Couldn't find help.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/help.md"
     usage = usage_file.read_text().strip()
     assert usage
-    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/USAGE.md\n\n" + usage
+    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/help.md\n\n" + usage
     if isinstance(obj, type):
         obj.__init__.__doc__ = usage
     return obj

@@ -103,7 +103,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Trust but verify**: The answer is sourced: `wdoc` keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
-* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [USAGE.md](./wdoc/docs/USAGE.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation.
+* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [help.md](./wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation.
 * **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
@@ -135,7 +135,7 @@ Click to read more
         - be careful to how to use import_mode
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
-        - pay attention to how the USAGE document is structured
+        - pay attention to how the help.md document is structured
     - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
     - support other vector databases
