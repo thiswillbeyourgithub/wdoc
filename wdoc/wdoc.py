@@ -42,8 +42,8 @@ from .utils.env import (
     WDOC_ALLOW_NO_PRICE,
     WDOC_DEBUGGER,
     WDOC_DEFAULT_EMBED_MODEL,
-    WDOC_DEFAULT_MODELNAME,
-    WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
+    WDOC_DEFAULT_MODEL,
+    WDOC_DEFAULT_QUERY_EVAL_MODEL,
     WDOC_EMBED_TESTING,
     WDOC_LLM_MAX_CONCURRENCY,
     WDOC_OPEN_ANKI,
@@ -131,9 +131,9 @@ class wdoc:
         self,
         task: Literal["query", "search", "summarize", "summarize_then_query"],
         filetype: str = "auto",
-        modelname: str = WDOC_DEFAULT_MODELNAME,
+        model: str = WDOC_DEFAULT_MODEL,
         embed_model: str = WDOC_DEFAULT_EMBED_MODEL,
-        query_eval_modelname: Optional[str] = WDOC_DEFAULT_QUERY_EVAL_MODELNAME,
+        query_eval_model: Optional[str] = WDOC_DEFAULT_QUERY_EVAL_MODEL,
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, Path] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, Path]] = None,
@@ -229,18 +229,18 @@ class wdoc:
                         f"Cli_kwargs '{k}' is of type '{type(val)}' instead of '{expected_type}'"
                     )
 
-        if modelname == TESTING_LLM:
-            if modelname != TESTING_LLM:
+        if model == TESTING_LLM:
+            if model != TESTING_LLM:
                 red(
-                    f"Detected 'testing' model in {modelname}, setting it to '{TESTING_LLM}'"
+                    f"Detected 'testing' model in {model}, setting it to '{TESTING_LLM}'"
                 )
-                modelname = TESTING_LLM
+                model = TESTING_LLM
             else:
-                red(f"Detected 'testing' model in {modelname}")
-            if isinstance(query_eval_modelname, str):
-                if query_eval_modelname != TESTING_LLM:
-                    red(f"Setting the query_eval_modelname to {TESTING_LLM} too")
-                    query_eval_modelname = TESTING_LLM
+                red(f"Detected 'testing' model in {model}")
+            if isinstance(query_eval_model, str):
+                if query_eval_model != TESTING_LLM:
+                    red(f"Setting the query_eval_model to {TESTING_LLM} too")
+                    query_eval_model = TESTING_LLM
 
         # checking argument validity
         assert (
@@ -260,10 +260,10 @@ class wdoc:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
             assert (
-                query_eval_modelname is not None
-            ), "query_eval_modelname can't be None if doing RAG"
+                query_eval_model is not None
+            ), "query_eval_model can't be None if doing RAG"
         else:
-            query_eval_modelname = None
+            query_eval_model = None
         if filetype == "auto":
             assert (
                 "path" in cli_kwargs and cli_kwargs["path"]
@@ -271,13 +271,13 @@ class wdoc:
         elif filetype == "string":
             cli_kwargs["path"] = "empty placeholder"
         assert (
-            "/" in modelname
-        ), "modelname must be in litellm format: provider/model. For example 'openai/gpt-4o'"
-        if modelname != TESTING_LLM and modelname.split("/", 1)[0] not in list(
+            "/" in model
+        ), "model must be in litellm format: provider/model. For example 'openai/gpt-4o'"
+        if model != TESTING_LLM and model.split("/", 1)[0] not in list(
             litellm.models_by_provider.keys()
         ):
             raise Exception(
-                f"For model '{modelname}': backend not found in "
+                f"For model '{model}': backend not found in "
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
                 f"{litellm.models_by_provider.keys()}"
             )
@@ -365,15 +365,13 @@ class wdoc:
         else:
             os.environ["WDOC_PRIVATE_MODE"] = "false"
 
-        if (modelname != TESTING_LLM) and (not llms_api_bases["model"]):
-            modelname = model_name_matcher(modelname)
-        if (query_eval_modelname is not None) and (
-            not llms_api_bases["query_eval_model"]
-        ):
-            if modelname == TESTING_LLM:
-                assert query_eval_modelname == TESTING_LLM
+        if (model != TESTING_LLM) and (not llms_api_bases["model"]):
+            model = model_name_matcher(model)
+        if (query_eval_model is not None) and (not llms_api_bases["query_eval_model"]):
+            if model == TESTING_LLM:
+                assert query_eval_model == TESTING_LLM
             else:
-                query_eval_modelname = model_name_matcher(query_eval_modelname)
+                query_eval_model = model_name_matcher(query_eval_model)
 
         if query is True:
             # otherwise specifying --query and forgetting to add text fails
@@ -414,11 +412,11 @@ class wdoc:
             self.max_top_k = None
 
         # storing as attributes
-        self.modelname = ModelName(modelname)
-        if query_eval_modelname is not None:
-            self.query_eval_modelname = ModelName(query_eval_modelname)
+        self.model = ModelName(model)
+        if query_eval_model is not None:
+            self.query_eval_model = ModelName(query_eval_model)
         else:
-            self.query_eval_modelname = None
+            self.query_eval_model = None
         self.task = task
         self.filetype = filetype
         self.embed_model = ModelName(embed_model)
@@ -428,7 +426,7 @@ class wdoc:
         self.top_k = top_k
         self.query_retrievers = (
             query_retrievers
-            if modelname != TESTING_LLM
+            if model != TESTING_LLM
             else query_retrievers.replace("multiquery", "")
         )
         self.query_eval_check_number = int(query_eval_check_number)
@@ -467,7 +465,7 @@ class wdoc:
 
         if WDOC_ALLOW_NO_PRICE:
             red(
-                f"Disabling price computation for {self.modelname.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
+                f"Disabling price computation for {self.model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
             )
             self.llm_price = [0.0, 0.0]
 
@@ -476,18 +474,18 @@ class wdoc:
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
-        elif self.modelname.backend == TESTING_LLM:
+        elif self.model.backend == TESTING_LLM:
             red(
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
         else:
-            self.llm_price = get_model_price(self.modelname.original)
+            self.llm_price = get_model_price(self.model.original)
 
-        if self.query_eval_modelname is not None:
+        if self.query_eval_model is not None:
             if WDOC_ALLOW_NO_PRICE:
                 red(
-                    f"Disabling price computation for {self.query_eval_modelname.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
+                    f"Disabling price computation for {self.query_eval_model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
                 )
                 self.query_evalllm_price = [0.0, 0.0]
             elif llms_api_bases["query_eval_model"]:
@@ -497,7 +495,7 @@ class wdoc:
                 self.query_evalllm_price = [0.0, 0.0]
             else:
                 self.query_evalllm_price = get_model_price(
-                    self.query_eval_modelname.original
+                    self.query_eval_model.original
                 )
 
         if is_verbose:
@@ -552,8 +550,8 @@ class wdoc:
 
         # loading llm
         self.llm = load_llm(
-            modelname=self.modelname,
-            backend=self.modelname.backend,
+            modelname=self.model,
+            backend=self.model.backend,
             llm_cache=self.llm_cache,
             temperature=0,
             llm_verbosity=self.llm_verbosity,
@@ -561,7 +559,7 @@ class wdoc:
             private=self.private,
             tags=["strong_model"],
         )
-        # if "anthropic" in self.modelname.lower() or "anthropic" in self.backend.lower():
+        # if "anthropic" in self.model.lower() or "anthropic" in self.backend.lower():
         #     prompts.enable_prompt_caching("answer")
         #     prompts.enable_prompt_caching("combine")
         #     prompts.enable_prompt_caching("multiquery")
@@ -581,7 +579,7 @@ class wdoc:
                     del filtered_cli_kwargs[k]
 
             self.loaded_docs = batch_load_doc(
-                llm_name=self.modelname,
+                llm_name=self.model,
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
@@ -606,7 +604,7 @@ class wdoc:
 
             if self.task == "summary_then_query":
                 whi("Done summarizing. Switching to query mode.")
-                if "logit_bias" in get_supported_model_params(self.modelname):
+                if "logit_bias" in get_supported_model_params(self.model):
                     del self.llm.model_kwargs["logit_bias"]
             else:
                 whi("Done summarizing.")
@@ -664,7 +662,7 @@ class wdoc:
                     "Cost estimate > limit but the api_base was modified so not crashing."
                 )
 
-        llm_params = get_supported_model_params(self.modelname)
+        llm_params = get_supported_model_params(self.model)
         if "logit_bias" in llm_params:
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
@@ -769,7 +767,7 @@ class wdoc:
                 docs=relevant_docs,
                 metadata=metadata,
                 language=self.summary_language,
-                modelbackend=self.modelname.backend,
+                modelbackend=self.model.backend,
                 llm=self.llm,
                 llm_price=self.llm_price,
                 verbose=self.llm_verbosity,
@@ -810,7 +808,7 @@ class wdoc:
 
                     splitter = get_splitter(
                         "recursive_summary",
-                        modelname=self.modelname,
+                        modelname=self.model,
                     )
                     summary_docs = [Document(page_content=summary_text)]
                     summary_docs = splitter.transform_documents(summary_docs)
@@ -832,7 +830,7 @@ class wdoc:
                         docs=summary_docs,
                         metadata=metadata,
                         language=self.summary_language,
-                        modelbackend=self.modelname.backend,
+                        modelbackend=self.model.backend,
                         llm=self.llm,
                         llm_price=self.llm_price,
                         verbose=self.llm_verbosity,
@@ -913,7 +911,7 @@ class wdoc:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    wdoc version {self.VERSION} with model {self.modelname}"
+            header += f"    wdoc version {self.VERSION} with model {self.model}"
 
             # save to output file
             if "out_file" in self.cli_kwargs:
@@ -993,7 +991,7 @@ class wdoc:
     @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
-        if "logit_bias" in get_supported_model_params(self.modelname):
+        if "logit_bias" in get_supported_model_params(self.model):
             # increase likelyhood that chatgpt will use indentation by
             # biasing towards adding space.
             logit_val = 3
@@ -1030,11 +1028,11 @@ class wdoc:
                 56899: logit_val,  # "                                                                            "
                 98517: logit_val,  # "                                                                                "
             }
-        if "frequency_penalty" in get_supported_model_params(self.modelname):
+        if "frequency_penalty" in get_supported_model_params(self.model):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in get_supported_model_params(self.modelname):
+        if "presence_penalty" in get_supported_model_params(self.model):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in get_supported_model_params(self.modelname):
+        if "temperature" in get_supported_model_params(self.model):
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
@@ -1403,30 +1401,28 @@ class wdoc:
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
             failed = False
-            if self.query_eval_modelname.backend == "openrouter":
+            if self.query_eval_model.backend == "openrouter":
                 try:
                     self.eval_llm_params = get_supported_model_params(
-                        self.query_eval_modelname
+                        self.query_eval_model
                     )
                 except Exception as err:
                     failed = True
                     red(
                         f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'"
                     )
-            if self.query_eval_modelname.backend != "openrouter" or failed:
-                self.eval_llm_params = get_supported_model_params(
-                    self.query_eval_modelname
-                )
+            if self.query_eval_model.backend != "openrouter" or failed:
+                self.eval_llm_params = get_supported_model_params(self.query_eval_model)
             eval_args = {}
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
             elif self.query_eval_check_number > 1:
                 red(
-                    f"Model {self.query_eval_modelname.original} does not support parameter 'n' so will be called multiple times instead. This might cost more."
+                    f"Model {self.query_eval_model.original} does not support parameter 'n' so will be called multiple times instead. This might cost more."
                 )
-                assert self.query_eval_modelname.backend != "openai"
+                assert self.query_eval_model.backend != "openai"
             self.eval_llm = load_llm(
-                modelname=self.query_eval_modelname,
+                modelname=self.query_eval_model,
                 llm_cache=False,  # disables caching because another caching is used on top
                 llm_verbosity=self.llm_verbosity,
                 temperature=0 if self.query_eval_check_number == 1 else 1,
@@ -1435,7 +1431,7 @@ class wdoc:
                 tags=["eval_model"],
                 **eval_args,
             )
-            # if "anthropic" in self.query_eval_modelname.original.lower() or "anthropic" in self.query_eval_modelname.backend.lower():
+            # if "anthropic" in self.query_eval_model.original.lower() or "anthropic" in self.query_eval_model.backend.lower():
             #     prompts.enable_prompt_caching("evaluate")
 
         # the eval doc chain needs its own caching
@@ -1579,7 +1575,7 @@ class wdoc:
         multi = {"max_concurrency": WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1}
 
         if self.task == "search":
-            if self.query_eval_modelname is not None:
+            if self.query_eval_model is not None:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @chain
                 @optional_typecheck
@@ -1717,7 +1713,7 @@ class wdoc:
                         if nid not in anki_nids:
                             anki_nids.append(nid)
             md_printer(to_print)
-            if self.query_eval_modelname is not None:
+            if self.query_eval_model is not None:
                 red(
                     f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
                 )

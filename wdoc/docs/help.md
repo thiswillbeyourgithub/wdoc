@@ -150,9 +150,9 @@
 
 ---
 
-* `--modelname`: str, default to value of WDOC_DEFAULT_MODELNAME
+* `--model`: str, default to value of WDOC_DEFAULT_MODEL
     * Keep in mind that given that the default backend used is litellm
-    the part of modelname before the slash (/) is the backend name (also called provider).
+    the part of model name before the slash (/) is the backend name (also called provider).
     If the backend is 'testing/' then it will be parsed as 'testing/testing' and
     a fake LLM will be used for debugging purposes. It answers like a normal LLM
     but costs 0 and makes no sense.
@@ -219,11 +219,11 @@
         * `svm`: svm
         * `parent`: parent chunk
 
-    if contains `hyde` but modelname contains `testing` then `hyde` will
+    if contains `hyde` but if model contains `testing` then `hyde` will
     be removed.
 
-* `--query_eval_modelname`: str, default to value of WDOC_DEFAULT_QUERY_EVAL_MODELNAME
-    * Cheaper and quicker model than modelname. Used for intermediate
+* `--query_eval_model`: str, default to value of WDOC_DEFAULT_QUERY_EVAL_MODEL
+    * Cheaper and quicker model than model. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
@@ -720,11 +720,11 @@
     reduce the cost of the "combine intermediate answers" step when querying.
     Default is `1000`.
 
-* `WDOC_DEFAULT_MODELNAME`, default: `"openai/gpt-4o"`
+* `WDOC_DEFAULT_MODEL`, default: `"openai/gpt-4o"`
     * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
     combine those answers. It can also be used by some retrievers etc.
 
-* `WDOC_DEFAULT_QUERY_EVAL_MODELNAME`, default: `"openai/gpt-4o-mini"`
+* `WDOC_DEFAULT_QUERY_EVAL_MODEL`, default: `"openai/gpt-4o-mini"`
     * Default small LLM to use. It will be used to evaluate wether each document is relevant to the query or not.
 
 * `WDOC_DEFAULT_EMBED_MODEL`, default: `"openai/text-embedding-3-small"`

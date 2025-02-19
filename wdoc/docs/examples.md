@@ -6,7 +6,7 @@
 
 1. Query a simple PDF file
 ```zsh
-wdoc --task=query --path="my_file.pdf" --filetype="pdf" --modelname='openai/gpt-4o'
+wdoc --task=query --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
 ```
 
 2. Recursively query multiple PDFs in a directory
@@ -38,8 +38,8 @@ wdoc --task=summary \
 
 5. Use local models with Ollama
 ```zsh
-wdoc --modelname="ollama_chat/gemma:2b" \
-     --query_eval_modelname="ollama_chat/gemma:2b" \
+wdoc --model="ollama_chat/gemma:2b" \
+     --query_eval_model="ollama_chat/gemma:2b" \
      --embed_model="ollama/bge-m3" \
      my_task
 ```

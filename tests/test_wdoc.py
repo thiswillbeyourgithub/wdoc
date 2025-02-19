@@ -123,8 +123,8 @@ def test_summary_tim_urban():
     _ = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        modelname="openai/gpt-4o",
-        query_eval_modelname="openai/gpt-4o-mini",
+        model="openai/gpt-4o",
+        query_eval_model="openai/gpt-4o-mini",
         embed_model="openai/text-embedding-3-small",
         # filetype="youtube",
         filetype="auto",
@@ -145,8 +145,8 @@ def test_query_tim_urban():
         task="query",
         query="What university did the author go to?",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        modelname="openai/gpt-4o",
-        query_eval_modelname="openai/gpt-4o-mini",
+        model="openai/gpt-4o",
+        query_eval_model="openai/gpt-4o-mini",
         embed_model="openai/text-embedding-3-small",
         # filetype="youtube",
         filetype="auto",
@@ -166,8 +166,8 @@ def test_whisper_tim_urban():
     _ = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        modelname="openai/gpt-4o",
-        query_eval_modelname="openai/gpt-4o-mini",
+        model="openai/gpt-4o",
+        query_eval_model="openai/gpt-4o-mini",
         embed_model="openai/text-embedding-3-small",
         filetype="youtube",
         youtube_audio_backend="whisper",
@@ -211,7 +211,7 @@ def test_ollama_embeddings():
 # @pytest.mark.basic
 # def test_hf_embeddings():
 #     emb = load_embeddings_engine(
-#         modelname=ModelName("huggingface/sentence-transformers/paraphrase-MiniLM-L6-v2"),
+#         model=ModelName("huggingface/sentence-transformers/paraphrase-MiniLM-L6-v2"),
 #         cli_kwargs={},
 #         api_base=None,
 #         embed_kwargs={},
@@ -225,9 +225,9 @@ def test_ollama_embeddings():
 def test_help_output():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
-        ["python", "-m", "wdoc", "--help"],
-        capture_output=True,
-        text=True,
-        check=True
+        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=True
     )
-    assert "This docstring is dynamically appended the content of wdoc/docs/help.md" in result.stdout
+    assert (
+        "This docstring is dynamically appended the content of wdoc/docs/help.md"
+        in result.stdout
+    )
