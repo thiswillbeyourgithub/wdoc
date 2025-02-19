@@ -37,7 +37,7 @@ from tqdm import tqdm
 
 from .utils.batch_file_loader import batch_load_doc
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
-from .utils.embeddings import load_embeddings_engine, load_saved_embeddings
+from .utils.embeddings import load_embeddings_engine, create_embeddings
 from .utils.env import (
     WDOC_ALLOW_NO_PRICE,
     WDOC_DEBUGGER,
@@ -1046,7 +1046,7 @@ class wdoc:
             private=self.private,
             do_test=WDOC_EMBED_TESTING,
         )
-        self.loaded_embeddings = load_saved_embeddings(
+        self.loaded_embeddings = create_embeddings(
             modelname=self.embed_model,
             cached_embeddings=self.embeddings,
             load_embeds_from=self.load_embeds_from,

@@ -226,7 +226,7 @@ def load_embeddings_engine(
 
 
 @optional_typecheck
-def load_saved_embeddings(
+def create_embeddings(
     modelname: ModelName,
     cached_embeddings: Embeddings,
     save_embeds_as: Union[str, Path],
