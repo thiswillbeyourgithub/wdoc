@@ -1038,7 +1038,7 @@ class wdoc:
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
-        self.embeddings = load_embeddings_engine(
+        self.embedding_engine = load_embeddings_engine(
             modelname=self.embed_model,
             cli_kwargs=self.cli_kwargs,
             api_base=self.llms_api_bases["embeddings"],
@@ -1048,7 +1048,7 @@ class wdoc:
         )
         self.loaded_embeddings = create_embeddings(
             modelname=self.embed_model,
-            cached_embeddings=self.embeddings,
+            cached_embeddings=self.embedding_engine,
             load_embeds_from=self.load_embeds_from,
             save_embeds_as=self.save_embeds_as,
             loaded_docs=self.loaded_docs,
@@ -1333,7 +1333,7 @@ class wdoc:
             retrievers.append(
                 KNNRetriever.from_texts(
                     self.all_texts,
-                    self.embeddings,
+                    self.embedding_engine,
                     relevancy_threshold=self.interaction_settings["relevancy"],
                     k=self.interaction_settings["top_k"],
                 )
@@ -1342,7 +1342,7 @@ class wdoc:
             retrievers.append(
                 SVMRetriever.from_texts(
                     self.all_texts,
-                    self.embeddings,
+                    self.embedding_engine,
                     relevancy_threshold=self.interaction_settings["relevancy"],
                     k=self.interaction_settings["top_k"],
                 )
@@ -1380,7 +1380,7 @@ class wdoc:
 
             # remove redundant results from the merged retrievers:
             filtered = EmbeddingsRedundantFilter(
-                embeddings=self.embeddings,
+                embeddings=self.embedding_engine,
                 similarity_threshold=0.999,
             )
             filter_pipeline = DocumentCompressorPipeline(transformers=[filtered])
@@ -1949,7 +1949,7 @@ class wdoc:
                     temp_interm_answ = [
                         ia for ia in temp_interm_answ if check_intermediate_answer(ia)
                     ]
-                    batches = semantic_batching(temp_interm_answ, self.embeddings)
+                    batches = semantic_batching(temp_interm_answ, self.embedding_engine)
                     batch_args = [
                         {"question_to_answer": query_an, "intermediate_answers": b}
                         for b in batches
