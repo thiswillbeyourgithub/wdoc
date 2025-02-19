@@ -62,7 +62,7 @@ def test_parse_file_formats(sample_text_file):
     assert len(docs) == 1, len(docs)
     assert all(isinstance(d, Document) for d in docs), ",".join(type(d) for d in docs)
     doc = docs[0]
-    assert isinstance(doc, Document), type(text)
+    assert isinstance(doc, Document), type(doc)
     assert doc.page_content.startswith("This is a test document"), doc
     assert "multiple lines" in doc.page_content, doc.page_content
 
@@ -146,6 +146,28 @@ def test_query_tim_urban():
         embed_model="openai/text-embedding-3-small",
         # filetype="youtube",
         filetype="auto",
+        debug=False,
+        verbose=False,
+        import_mode=True,
+    )
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_whisper_tim_urban():
+    """Test summarization of Tim Urban's video using whisper transcription."""
+    _ = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        modelname="openai/gpt-4o",
+        query_eval_modelname="openai/gpt-4o-mini",
+        embed_model="openai/text-embedding-3-small",
+        filetype="youtube",
+        youtube_audio_backend="whisper",
+        whisper_lang="en",
         debug=False,
         verbose=False,
         import_mode=True,
