@@ -1,4 +1,4 @@
-# --help
+# Help
 
 ### Table of contents
 - [Global arguments](#global-arguments)
