@@ -182,7 +182,7 @@ setup(
         ],
         "dev": [
             "black >= 25.1.0",
-            "isort >= 6.0.0",
+            # "isort >= 6.0.0",
             "pre-commit >= 4.1.0",
             "pytest >= 8.3.4",
         ],
