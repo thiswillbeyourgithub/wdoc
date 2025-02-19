@@ -103,7 +103,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Trust but verify**: The answer is sourced: `wdoc` keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
-* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. The full usage can be found in the file [help.md](./wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation.
+* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. Take a look at the [examples.md](./wdoc/docs/examples.md) for a list of shell and python examples. The full help can be found in the file [help.md](./wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation.
 * **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
@@ -369,6 +369,7 @@ Detailed example
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
     * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
+    * Take a look at the [examples.md](./wdoc/docs/examples.md) for a list of shell and python examples. 
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
 5. For more: read the documentation at `wdoc --help`
