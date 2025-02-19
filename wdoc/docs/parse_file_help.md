@@ -1,4 +1,4 @@
-# 'parse_file' documentation
+# Parse file
 
 ## Description
 
