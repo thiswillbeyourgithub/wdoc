@@ -108,43 +108,11 @@ instance = wdoc(
     task="summary",
     path="https://example.com/paper.pdf",
     filetype="online_pdf",
-    model="gpt-4",  # Use GPT-4 for summarization
-    embed_model="text-embedding-3-large",  # Specify embedding model
+    model="openai/gpt-4o",  # Use GPT-4o for summarization
+    embed_model="openai/text-embedding-3-large",  # Specify embedding model
     import_mode=True
 )
 
 results = instance.summary_results
 summary_text = results['summary']
-```
-
-3. Batch document summarization
-```python
-from pathlib import Path
-from wdoc import wdoc
-
-def summarize_documents(docs_dir: Path, output_dir: Path) -> None:
-    """Summarize all PDFs in a directory"""
-    instance = wdoc(
-        task="summary",
-        path=str(docs_dir),
-        filetype="recursive_paths",
-        recursed_filetype="pdf",
-        import_mode=True,
-        save_embeds_as="embeddings_cache.pkl"  # Cache embeddings for speed
-    )
-    
-    results = instance.summary_results
-    
-    # Save each summary
-    output_dir.mkdir(exist_ok=True)
-    for doc_path, summary in zip(docs_dir.glob("**/*.pdf"), results['summaries']):
-        out_file = output_dir / f"{doc_path.stem}_summary.md"
-        out_file.write_text(summary)
-        print(f"Saved summary for {doc_path.name}")
-        print(f"Reading time saved: {results['doc_reading_length']:.1f} minutes")
-
-# Use the function
-docs_path = Path("documents")
-output_path = Path("summaries")
-summarize_documents(docs_path, output_path)
 ```
