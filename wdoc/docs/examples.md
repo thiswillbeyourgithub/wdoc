@@ -19,7 +19,7 @@ wdoc --task=query \
      --query="My question about those documents"
 ```
 
-3. Summarize a YouTube video
+3. Summarize a YouTube video in french based on the english transcript
 ```zsh
 wdoc --task=summary \
      --path='https://www.youtube.com/watch?v=arj7oStGLkU' \
@@ -28,7 +28,15 @@ wdoc --task=summary \
      --disable_md_printing
 ```
 
-4. Use local models with Ollama
+4. Summarize a YouTube video based on the whisper transcript
+```zsh
+wdoc --task=summary \
+     --path='https://www.youtube.com/watch?v=arj7oStGLkU' \
+     --youtube_audio_backend="whisper" \
+     --whisper_lang="en"
+```
+
+5. Use local models with Ollama
 ```zsh
 wdoc --modelname="ollama_chat/gemma:2b" \
      --query_eval_modelname="ollama_chat/gemma:2b" \
@@ -36,7 +44,7 @@ wdoc --modelname="ollama_chat/gemma:2b" \
      my_task
 ```
 
-5. Parse an Anki deck
+6. Parse an Anki deck as text
 ```zsh
 wdoc_parse_file --filetype "anki" \
                 --anki_profile "Main" \
@@ -47,7 +55,7 @@ wdoc_parse_file --filetype "anki" \
                 --format=langchain_dict
 ```
 
-6. Query an online PDF
+7. Query an online PDF
 ```zsh
 wdoc --path="https://example.com/document.pdf" \
      --task=query \
@@ -55,7 +63,7 @@ wdoc --path="https://example.com/document.pdf" \
      --query="What does it say about X?"
 ```
 
-7. Save and load embeddings for faster subsequent queries
+8. Save and load embeddings for faster subsequent queries
 ```zsh
 # First run - save embeddings
 wdoc --task=query \
