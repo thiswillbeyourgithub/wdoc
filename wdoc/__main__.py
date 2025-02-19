@@ -24,7 +24,12 @@ def cli_launcher() -> None:
     sysline = " ".join(sys.argv)
 
     # turn 'wdoc parse' into 'wdoc_parse_file'
-    if "wdoc parse " in sysline or "wdoc parse_file" in sysline:
+    if (
+        "wdoc parse " in sysline
+        or "wdoc parse_file " in sysline
+        or "__main__.py parse " in sysline
+        or "__main__.py parse_file  " in sysline
+    ):
         if is_verbose:
             whi("Replacing 'wdoc parse' by 'wdoc_parse_file'")
         sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
