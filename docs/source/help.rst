@@ -3,5 +3,5 @@
 
    usage
 
-.. include:: usage_link.md
+.. include:: help.md
    :parser: myst_parser.sphinx_
