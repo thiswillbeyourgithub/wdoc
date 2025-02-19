@@ -1,10 +1,12 @@
-
 # 'parse_file' documentation
 
 ## Description
 
-Simple function to load a document given at least  path arg. Used for cli
-and convenience in python scripts.
+`parse_file` is the function called when you do `wdoc parse_file --path=my_path`.
+It takes as argument basically the file related arguments of wdoc and completely
+bypasses anything related to summarising, querying, LLM etc. Hence it is meant
+to be used as an utility that parses any input to text. You can for example
+use it to quickly parse anything to send to [@simonw's](https://github.com/simonw/) [llm](https://github.com/simonw/llm) or any other .shell utility.
 
 ## Arguments
 
