@@ -104,7 +104,7 @@ for k in os.environ.keys():
     # assert k in locals().keys(), f"Unexpected key env variable starting by 'wdoc_': {k}."
     if k not in locals().keys():
         print(
-            f"Unexpected key env variable starting by 'wdoc_': {k}. This might me a typo in your configuration!"
+            f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
         )
     else:
         assert is_bearable(
