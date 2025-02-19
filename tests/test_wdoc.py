@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -218,3 +219,15 @@ def test_ollama_embeddings():
 #         do_test=True,
 #     )
 #     test_embeddings(emb)
+
+
+@pytest.mark.basic
+def test_help_output():
+    """Test that --help output contains expected docstring."""
+    result = subprocess.run(
+        ["python", "-m", "wdoc", "--help"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+    assert "This docstring is dynamically appended the content of wdoc/docs/help.md" in result.stdout
