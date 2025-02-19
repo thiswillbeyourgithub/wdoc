@@ -984,7 +984,7 @@ def create_langfuse_callback(version: str) -> None:
 
 
 @optional_typecheck
-def seconds_to_timecode(inp: str) -> str:
+def seconds_to_timecode(inp: Union[str, float]) -> str:
     "used for vtt subtitle conversion"
     second = float(inp)
     minute = second // 60
@@ -996,14 +996,14 @@ def seconds_to_timecode(inp: str) -> str:
 
 
 @optional_typecheck
-def timecode_to_second(inp: str) -> float:
+def timecode_to_second(inp: str) -> Union[int, float]:
     "turns a vtt timecode into seconds"
     hour, minute, second = map(int, inp.split(":"))
     return hour * 3600 + minute * 60 + second
 
 
 @optional_typecheck
-def is_timecode(inp: str) -> bool:
+def is_timecode(inp: Union[float, str]) -> bool:
     try:
         timecode_to_second(inp)
         return True
