@@ -126,13 +126,32 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
 @optional_typecheck
 def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of wdoc class to wdoc/docs/help.md's content"
-    usage_file = Path(__file__).parent.parent / "docs/help.md"
+    help_file = Path(__file__).parent.parent / "docs/help.md"
     assert (
-        usage_file.exists()
-    ), f"Couldn't find help.md file as '{usage_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/help.md"
-    usage = usage_file.read_text().strip()
-    assert usage
-    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/help.md\n\n" + usage
+        help_file.exists()
+    ), f"Couldn't find help.md file as '{help_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/help.md"
+    helpcont = help_file.read_text().strip()
+    assert help
+    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/help.md\n\n" + helpcont
     if isinstance(obj, type):
-        obj.__init__.__doc__ = usage
+        obj.__init__.__doc__ = helpcont
+    return obj
+
+
+@optional_typecheck
+def set_parse_file_help_md_as_docstring(
+    obj: Union[Type, Callable],
+) -> Union[Type, Callable]:
+    "set the docstring of wdoc.parse_file to wdoc/docs/parse_file_help.md's content"
+    parsefilehelp_file = Path(__file__).parent.parent / "docs/parse_file_help.md"
+    assert (
+        parsefilehelp_file.exists()
+    ), f"Couldn't find help.md file as '{parsefilehelp_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/parse_file_help.md"
+    parsefilehelp = parsefilehelp_file.read_text().strip()
+    assert parsefilehelp
+    obj.__doc__ = (
+        obj.__doc__
+        + "\n\n# Content of wdoc/docs/parse_file_help.md\n\n"
+        + parsefilehelp
+    )
     return obj

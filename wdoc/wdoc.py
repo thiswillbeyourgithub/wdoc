@@ -68,6 +68,7 @@ from .utils.logger import (
     md_printer,
     red,
     set_help_md_as_docstring,
+    set_parse_file_help_md_as_docstring,
     whi,
     yel,
 )
@@ -119,7 +120,7 @@ if "USER_AGENT" not in os.environ:
 @optional_typecheck
 @set_help_md_as_docstring
 class wdoc:
-    "This docstring is dynamically appended the content of wdoc/docs/help.md"
+    "This docstring is dynamically updated with the content of wdoc/docs/help.md"
 
     VERSION: str = "2.6.1"
     allowed_extra_args = extra_args_types
@@ -163,7 +164,7 @@ class wdoc:
         version: bool = False,
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically appended the content of wdoc/docs/help.md"
+        "This docstring is dynamically updated with the content of wdoc/docs/help.md"
         if version:
             print(self.VERSION)
             return
@@ -2098,6 +2099,7 @@ class wdoc:
 
     @staticmethod
     @optional_typecheck
+    @set_parse_file_help_md_as_docstring
     def parse_file(
         path: Optional[Union[str, Path]] = None,
         filetype: str = "auto",
@@ -2107,48 +2109,7 @@ class wdoc:
         verbose: bool = False,
         **kwargs,
     ) -> Union[List[Document], str, List[dict]]:
-        """
-        # 'parse_file' documentation
-
-        ## Description
-
-        Simple function to load a document given at least  path arg. Used for cli
-        and convenience in python scripts.
-
-        ## Arguments
-
-        - `path`: str
-          - Same as for wdoc (can be None, for example if filetype is `anki`).
-
-        - `filetype`: str
-            - Same as for wdoc
-
-        - `format`: str, default `text`
-            - if `text`: only return the text
-            - if `xml`: returns text in an xml like format
-            - if `langchain`: return a list of langchain Documents
-            - if `langchain_dict`: return a list of langchain Documents as
-              python dicts (easy to json parse, and metadata are included)
-
-        - `cli_kwargs`: dict, default `None`
-            - Dict containing keyword arguments destined to the function
-            `batch_load_doc` and not about a specific document per say.
-            e.g. "file_loader_n_jobs", etc.
-
-        - `debug`: bool, default `False`
-            - Same as for wdoc
-
-        - `verbose`: bool, default `False`
-            - Same as for wdoc
-
-        - `**kwargs`
-          - Remaning keyword arguments are assumed to be DocDict arguments,
-            the full list is at wdoc.utils.misc.filetype_arg_types
-
-        ## Return value
-        - Either the document's page_content as a string, or a list of
-        langchain Document (so with attributes `page_content` and `metadata`).
-        """
+        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
         assert format in [
             "text",
             "xml",
