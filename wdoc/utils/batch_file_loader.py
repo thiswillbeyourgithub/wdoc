@@ -27,7 +27,7 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 
 from .env import WDOC_BEHAVIOR_EXCL_INCL_USELESS, WDOC_MAX_LOADER_TIMEOUT
-from .flags import is_debug, is_verbose
+from .flags import is_debug, is_verbose, is_piped
 from .loaders import (
     load_one_doc_wrapped,
     load_youtube_playlist,
@@ -52,6 +52,7 @@ assert WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
     "warn",
     "crash",
 ], "Unexpected value of WDOC_BEHAVIOR_EXCL_INCL_USELESS"
+
 
 # rules used to attribute input to proper filetype. For example
 # any link containing youtube will be treated as a youtube link
@@ -296,7 +297,7 @@ def batch_load_doc(
             desc="Hashing files",
             unit="doc",
             colour="magenta",
-            disable=len(to_load) <= 10_000,
+            disable=len(to_load) <= 10_000 or is_piped,
         )
     )
     for i, h in enumerate(doc_hashes):
@@ -414,6 +415,7 @@ def batch_load_doc(
                 desc="Loading",
                 unit="doc",
                 colour="magenta",
+                disable=is_piped,
             )
         )
         doc_lists = []
@@ -451,7 +453,7 @@ def batch_load_doc(
         enumerate(doc_lists),
         total=len(doc_lists),
         desc="Concatenating results",
-        disable=not is_verbose,
+        disable=not is_verbose or is_piped,
     ):
         if isinstance(d, list):
             docs.extend(d)
@@ -528,7 +530,9 @@ def batch_load_doc(
         [dupes.add(h) for h, c in counts.items() if c > 1]
         deduped = {}
         lenbefore = len(docs)
-        for idoc, doc in enumerate(tqdm(docs, desc="Deduplicating", unit="doc")):
+        for idoc, doc in enumerate(
+            tqdm(docs, desc="Deduplicating", unit="doc", disable=is_piped)
+        ):
             ch = doc.metadata["content_hash"]
             if not dupes:
                 whi("No duplicates!")

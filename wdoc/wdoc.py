@@ -56,7 +56,7 @@ from .utils.errors import (
 )
 
 # just in case: setting the is_private flag as soon as possible to the env variables
-from .utils.flags import is_debug, is_private, is_verbose
+from .utils.flags import is_debug, is_private, is_verbose, is_piped
 from .utils.interact import ask_user
 from .utils.llm import TESTING_LLM, load_llm
 
@@ -157,7 +157,7 @@ class wdoc:
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         import_mode: Union[bool, int] = False,
-        disable_md_printing: bool = False,
+        disable_md_printing: bool = is_piped,
         oneoff: bool = False,
         silent: bool = False,
         version: bool = False,
@@ -1075,7 +1075,7 @@ class wdoc:
                     self.loaded_embeddings.docstore._dict.values(),
                     desc="gathering metadata keys",
                     unit="doc",
-                    disable=not is_verbose,
+                    disable=(not is_verbose) or is_piped,
                 ):
                     for k in doc.metadata.keys():
                         all_metadata_keys.add(k)
@@ -1269,7 +1269,7 @@ class wdoc:
                 self.loaded_embeddings.docstore._dict.items(),
                 desc="Filtering",
                 unit="docs",
-                disable=not is_verbose,
+                disable=(not is_verbose) or is_piped,
             ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
@@ -1936,6 +1936,7 @@ class wdoc:
                     unit="answer",
                     total=len(output["intermediate_answers"]),
                     # disable=not is_verbose,
+                    disable=is_piped,
                 )
                 temp_interm_answ = output["intermediate_answers"]
                 temp_interm_answ = thinking_answer_parser(temp_interm_answ)["answer"]

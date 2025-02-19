@@ -50,3 +50,7 @@ class PrivateSanityChecker(int):
 
 
 is_private = PrivateSanityChecker(check_kwargs("private"))
+
+# useful to know if we should use tqdm or not (it can cause broken pipe errors
+# otherwise) and modify the formatting output
+is_piped = sys.stdout.isatty()

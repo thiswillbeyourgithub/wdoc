@@ -63,7 +63,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 
 from .env import WDOC_EMPTY_LOADER, WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_PRIVATE_MODE
 from .errors import TimeoutPdfLoaderError
-from .flags import is_debug, is_linux, is_verbose
+from .flags import is_debug, is_linux, is_verbose, is_piped
 from .logger import logger, red, whi, yel
 from .misc import (
     ModelName,
@@ -935,7 +935,7 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
-    if verbose:
+    if verbose and not is_piped:
         tqdm.pandas()
 
         def pbar(*x, **y):
@@ -2653,7 +2653,12 @@ def load_pdf(
             f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}"
         )
 
-    pbar = tqdm(total=len(pdf_parsers), desc=f"Parsing PDF {name}", unit="loader")
+    pbar = tqdm(
+        total=len(pdf_parsers),
+        desc=f"Parsing PDF {name}",
+        unit="loader",
+        disable=is_piped,
+    )
     for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:

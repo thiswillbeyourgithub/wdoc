@@ -351,8 +351,10 @@
     The idea is to use if when you import wdoc instead of running
     it from the cli. See `--silent`
 
-* `--disable_md_printing`: bool, default `True`
+* `--disable_md_printing`: bool, default `True` if in a pipe and `False` otherwise.
     * if True, instead of using rich to display some information, default to simpler colored prints.
+    * Naturally this is disablef if we are in a pipe, for example if you want to
+    use `ẁdoc_parse_file my_document | llm "do something"`
 
 * `--oneoff`: bool, default `False`
     * If True, will not ask for a prompt but quit right away. This
