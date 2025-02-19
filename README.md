@@ -153,6 +153,7 @@ Click to read more
     - add an audio backend to use the subtitles from a video file directly
     - store the anki images as 'imagekeys' as the idea works for other parsers too
     - add an argument --whole_text to avoid chunking (this would just increase the chunk size to a super large number I guess)
+    - add apprise callback support
     - add a filetype "custom_parser" and an argument "--custom_parser" containing a path to a python file. Must receive a docdict and a few other things and return a list of documents
         - then make it work with an online search engine for technical things
     - add a langchain code loader that uses aider to get the repomap
