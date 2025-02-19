@@ -87,7 +87,8 @@ def load_embeddings_engine(
     do_test: bool,
 ) -> CacheBackedEmbeddings:
     """
-    Create the embeddings class used to compute embeddings
+    Create the Embeddings class used to compute embeddings. This class is wrapped
+    into a CacheBackedEmbeddings to add a caching layer.
     """
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
@@ -235,7 +236,11 @@ def create_embeddings(
     dollar_limit: Union[int, float],
     private: bool,
 ) -> FAISS:
-    """loads embeddings for each document"""
+    """
+    For each document of loaded_docs, we check if the embeddings were already
+    computed and present in the cache or ask the CacheBackedEmbeddings class
+    to create them and return to wdoc.loaded_embeddings.
+    """
 
     # reload passed embeddings
     if load_embeds_from:
