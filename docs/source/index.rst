@@ -16,6 +16,7 @@ Below the table of content is the content of the `README.md`, followed by the co
    readme
    examples
    help
+   parse_file_help
    api
 
 .. include:: readme.md
