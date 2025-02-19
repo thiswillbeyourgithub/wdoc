@@ -1,7 +1,7 @@
-full api
+Full API
 ========
 
-Here you can find the entirety of the API documentation of wdoc. Simply explore the code hierarchy using the table of content on the left.
+Using the sidebar on the left you can navigate the entirety of wdoc's API.
 
 .. toctree::
    :maxdepth: 8

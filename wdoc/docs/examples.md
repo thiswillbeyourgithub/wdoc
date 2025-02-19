@@ -1,4 +1,6 @@
-# Table of Contents
+# Examples
+
+### Table of Contents
 1. [Shell Examples](#shell-examples)
 2. [Python Script Examples](#python-script-examples)
 
