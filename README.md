@@ -353,7 +353,7 @@ Detailed example
 </details>
 
 ## Getting started
-*`wdoc` currently requires Python 3.11 to run for now. Make sure that your Python version matches this one or it will not work.*
+*`wdoc` was mainly developped on python 3.11.7 but I'm not sure all the versions that work. When in doubt, make sure that your Python version matches this one.*
 1. To install:
     * Using pip: `pip install -U wdoc`
     * Or to get a specific git branch:
