@@ -80,44 +80,71 @@ wdoc --task=query \
 
 # Python Script Examples
 
-1. Basic document parsing
+1. Basic document summarization
 ```python
 from wdoc import wdoc
 
-# Parse a file
-list_of_docs = Wdoc.parse_file(path="my_path")
+# Initialize wdoc for summarization
+instance = wdoc(
+    task="summary",
+    path="document.pdf",
+    summary_language="en",  # Optional: specify output language
+    import_mode=True  # Use import mode for scripting
+)
+
+# Get summary results
+results = instance.summary_results
+print(f"Summary:\n{results['summary']}")
+print(f"Processing cost: ${results['doc_total_cost']:.5f}")
+print(f"Original reading time: {results['doc_reading_length']:.1f} minutes")
 ```
 
-2. Using wdoc as an imported module
+2. Summarize with custom model settings
 ```python
-# Example of using wdoc in import mode
-from wdoc import Wdoc
+from wdoc import wdoc
 
-# Initialize wdoc
-w = Wdoc(import_mode=True)
+# Use specific models for better control
+instance = wdoc(
+    task="summary",
+    path="https://example.com/paper.pdf",
+    filetype="online_pdf",
+    model="gpt-4",  # Use GPT-4 for summarization
+    embed_model="text-embedding-3-large",  # Specify embedding model
+    import_mode=True
+)
 
-# Load documents
-docs = w.load_documents(path="my_document.pdf", filetype="pdf")
-
-# Query the documents
-response = w.query_documents(docs, query="What is the main topic?")
+results = instance.summary_results
+summary_text = results['summary']
 ```
 
-3. Custom PDF parser implementation
+3. Batch document summarization
 ```python
-class CustomPDFParser:
-    def __init__(self, path):
-        self.path = path
+from pathlib import Path
+from wdoc import wdoc
+
+def summarize_documents(docs_dir: Path, output_dir: Path) -> None:
+    """Summarize all PDFs in a directory"""
+    instance = wdoc(
+        task="summary",
+        path=str(docs_dir),
+        filetype="recursive_paths",
+        recursed_filetype="pdf",
+        import_mode=True,
+        save_embeds_as="embeddings_cache.pkl"  # Cache embeddings for speed
+    )
     
-    def load(self):
-        # Your custom parsing logic here
-        # Must return List[Document]
-        pass
+    results = instance.summary_results
+    
+    # Save each summary
+    output_dir.mkdir(exist_ok=True)
+    for doc_path, summary in zip(docs_dir.glob("**/*.pdf"), results['summaries']):
+        out_file = output_dir / f"{doc_path.stem}_summary.md"
+        out_file.write_text(summary)
+        print(f"Saved summary for {doc_path.name}")
+        print(f"Reading time saved: {results['doc_reading_length']:.1f} minutes")
 
-# Register the custom parser
-from wdoc.utils.loaders import pdf_loaders
-pdf_loaders['custom_parser'] = CustomPDFParser
-
-# Use the custom parser
-wdoc.parse_file(path="document.pdf", pdf_parsers="custom_parser")
+# Use the function
+docs_path = Path("documents")
+output_path = Path("summaries")
+summarize_documents(docs_path, output_path)
 ```
