@@ -113,6 +113,22 @@ def test_invalid_filetype():
         )
 
 
+@pytest.mark.basic
+def test_parse_online_pdf():
+    """Test parsing an online PDF about situational awareness."""
+    docs = wdoc.parse_file(
+        path="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf",
+        filetype="online_pdf",
+        format="langchain",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(docs, list)
+    assert len(docs) > 0
+    assert all(isinstance(d, Document) for d in docs)
+    assert any("alphago" in d.page_content.lower() for d in docs)
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
