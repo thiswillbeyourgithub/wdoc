@@ -224,15 +224,65 @@ def test_ollama_embeddings():
     test_embeddings(emb)
 
 
+@pytest.mark.basic
+def test_help_output_shell():
+    """Test that --help output contains expected docstring."""
+    result = subprocess.run(
+        ["wdoc", "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+        # stderr=subprocess.STDOUT,
+    )
+    output = result.stdout + result.stderr
+    print(output)
+    assert (
+        "This docstring is dynamically updated with the content of wdoc/docs/help.md"
+        not in output
+    )
+    assert "Content of wdoc/docs/help.md" in output
 
 
 @pytest.mark.basic
-def test_help_output():
+def test_help_output_python():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
-        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=True
+        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=False
     )
+    output = result.stdout + result.stderr
     assert (
-        "This docstring is dynamically appended the content of wdoc/docs/help.md"
-        in result.stdout
+        "This docstring is dynamically updated with the content of wdoc/docs/help.md"
+        not in output
     )
+    assert "Content of wdoc/docs/help.md" in output
+
+
+@pytest.mark.basic
+def test_parse_file_help_output_shell():
+    """Test that --help output contains expected docstring."""
+    result = subprocess.run(
+        ["wdoc", "parse", "--help"], capture_output=True, text=True, check=False
+    )
+    output = result.stdout + result.stderr
+    assert (
+        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
+        not in output
+    )
+    assert "Content of wdoc/docs/parse_file_help.md" in output
+
+
+@pytest.mark.basic
+def test_parse_file_help_output_python():
+    """Test that --help output contains expected docstring."""
+    result = subprocess.run(
+        ["python", "-m", "wdoc", "parse", "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    output = result.stdout + result.stderr
+    assert (
+        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
+        not in output
+    )
+    assert "Content of wdoc/docs/parse_file_help.md" in output
