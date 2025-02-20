@@ -120,7 +120,9 @@ if "USER_AGENT" not in os.environ:
 @optional_typecheck
 @set_help_md_as_docstring
 class wdoc:
-    "This docstring is dynamically updated with the content of wdoc/docs/help.md"
+    """
+    This docstring is dynamically updated with the content of wdoc/docs/help.md
+    """
 
     VERSION: str = "2.6.2"
     allowed_extra_args = extra_args_types
@@ -164,7 +166,9 @@ class wdoc:
         version: bool = False,
         **cli_kwargs,
     ) -> None:
-        "This docstring is dynamically updated with the content of wdoc/docs/help.md"
+        """
+        This docstring is dynamically updated with the content of wdoc/docs/help.md
+        """
         if version:
             print(self.VERSION)
             return
@@ -2109,7 +2113,9 @@ class wdoc:
         verbose: bool = False,
         **kwargs,
     ) -> Union[List[Document], str, List[dict]]:
-        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
+        """
+        This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md
+        """
         assert format in [
             "text",
             "xml",
