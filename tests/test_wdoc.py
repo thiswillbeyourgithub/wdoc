@@ -224,17 +224,6 @@ def test_ollama_embeddings():
     test_embeddings(emb)
 
 
-# @pytest.mark.basic
-# def test_hf_embeddings():
-#     emb = load_embeddings_engine(
-#         model=ModelName("huggingface/sentence-transformers/paraphrase-MiniLM-L6-v2"),
-#         cli_kwargs={},
-#         api_base=None,
-#         embed_kwargs={},
-#         private=False,
-#         do_test=True,
-#     )
-#     test_embeddings(emb)
 
 
 @pytest.mark.basic
