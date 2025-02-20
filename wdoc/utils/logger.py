@@ -132,7 +132,7 @@ def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable
     ), f"Couldn't find help.md file as '{help_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/help.md"
     helpcont = help_file.read_text().strip()
     assert help
-    obj.__doc__ = obj.__doc__ + "\n\n# Content of wdoc/docs/help.md\n\n" + helpcont
+    obj.__doc__ = "# Content of wdoc/docs/help.md\n\n" + helpcont
     if isinstance(obj, type):
         obj.__init__.__doc__ = helpcont
     return obj
@@ -146,12 +146,8 @@ def set_parse_file_help_md_as_docstring(
     parsefilehelp_file = Path(__file__).parent.parent / "docs/parse_file_help.md"
     assert (
         parsefilehelp_file.exists()
-    ), f"Couldn't find help.md file as '{parsefilehelp_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/parse_file_help.md"
+    ), f"Couldn't find parse_file_help.md file as '{parsefilehelp_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/parse_file_help.md"
     parsefilehelp = parsefilehelp_file.read_text().strip()
     assert parsefilehelp
-    obj.__doc__ = (
-        obj.__doc__
-        + "\n\n# Content of wdoc/docs/parse_file_help.md\n\n"
-        + parsefilehelp
-    )
+    obj.__doc__ = "# Content of wdoc/docs/parse_file_help.md\n\n" + parsefilehelp
     return obj
