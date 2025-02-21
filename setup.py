@@ -119,47 +119,47 @@ setup(
         "fire>=0.6.0",
         "ftfy>=6.2.0",
         "joblib>=1.4.2",
-        "langchain>=0.3.19",
-        "langchain-community>=0.3.17",
-        "langchain-openai>=0.3.6",
+        "langchain>=0.3.1",
+        "langchain-community>=0.3.1",
+        "langchain-openai>=0.2.1",
         "langfuse>=2.59.3",  # for observability
         "litellm>=1.61.8",
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "prompt-toolkit>=3.0.47",
-        "tqdm>=4.67.1",
-        "faiss-cpu>=1.10.0",
-        "rich>=13.9.4",
+        "tqdm>=4.66.4",
+        "faiss-cpu>=1.8.0",
+        "rich>=13.8.1",
         "beartype >= 0.19.0",
         "platformdirs >= 4.2.2",
         "dill >= 0.3.8",
         "pyfiglet >= 1.0.2",  # banner
-        "rtoml >= 0.12.0",
-        "loguru >= 0.7.3",
+        "rtoml >= 0.11.0",
+        "loguru >= 0.7.2",
         "grandalf >= 0.8",  # to print ascii graph
         "lazy-import >= 0.2.2",
         "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
-        "scikit-learn >= 1.6.1",  # for semantic reordering
-        "scipy >= 1.15.2",  # for semantic reordering
+        "scikit-learn >= 1.5.1",  # for semantic reordering
+        "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optionnal as it can help infer the filetype
         "uuid6",  # for time sortable timestamp
         "PersistDict >= 0.2.1",  # by me, like a dict but an LMDB database, to fix langchain's caches
         # Loaders:
         "docx2txt >= 0.8",  # word documents
-        "pandoc >= 2.4",  # epub
-        "unstructured[all-docs]>=0.16.21",  # many file formats
+        "pandoc >= 2.3",  # epub
+        "unstructured[all-docs]>=0.14.6",  # many file formats
         "ankipandas>=0.3.15",  # anki
         "tldextract>=5.1.2",  # url
         "goose3 >= 3.1.19",  # url
         "youtube_dl",  # youtube_dl, we try to install yt_dl_patched using PostInstallCommand as it's not in pypi but we install yt_dl anyway just in case. Also the latest version will try to be installed from the git repo directly using the PostInstallCommand function above.
         "youtube-transcript-api >= 0.6.2",  # youtube
         # "pytube >= 15.0.0",  # youtube
-        "yt-dlp >= 2025.2.11.232920.dev0",  # youtube
+        "yt-dlp >= 2024.11.2.232942.dev0",  # youtube
         "LogseqMarkdownParser >= 3.3",  # logseq files (I'm the dev behind it)
         "deepgram-sdk >= 3.2.7",  # audio transcription
         "httpx >= 0.27.0",  # to increase deepgram timeout
         "pydub >= 0.25.1",  # extracting audio from local video
         "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-        "torchaudio >= 2.6.0",  # silence removal from audio
+        "torchaudio >= 2.3.1",  # silence removal from audio
         "playwright >= 1.45.0",  # for online_media and urls
         # pdf
         "pdfminer.six >= 20231228",
@@ -168,7 +168,7 @@ setup(
         "pymupdf >= 1.24.5",
         "pdfplumber >= 0.11.1",
         "pdf2image >= 1.17.0",
-        "openparse[ml] >= 0.7.0",  # pdf with table support
+        "openparse[ml] >= 0.5.7",  # pdf with table support
     ],
     extra_require={
         "fasttext": [
