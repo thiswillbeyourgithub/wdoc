@@ -146,7 +146,7 @@ setup(
         # Loaders:
         "docx2txt >= 0.8",  # word documents
         "pandoc >= 2.4",  # epub
-        "unstructured[all-docs]>=0.15.14",  # many file formats
+        "unstructured[all-docs]>=0.16.21",  # many file formats
         "ankipandas>=0.3.15",  # anki
         "tldextract>=5.1.2",  # url
         "goose3 >= 3.1.19",  # url
@@ -162,11 +162,11 @@ setup(
         "torchaudio >= 2.6.0",  # silence removal from audio
         "playwright >= 1.45.0",  # for online_media and urls
         # pdf
-        "pdfminer-six == 20231228",  # fixed version because of unstructured vs pdfplumber vs pdfminer.six
+        "pdfminer.six >= 20231228",
         "pillow_heif >= 0.16.0",
         "pypdfium2 >= 4.30.0",
         "pymupdf >= 1.24.5",
-        "pdfplumber >= 0.11.5",
+        "pdfplumber >= 0.11.1",
         "pdf2image >= 1.17.0",
         "openparse[ml] >= 0.7.0",  # pdf with table support
     ],
