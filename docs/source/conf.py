@@ -38,7 +38,7 @@ def setup(app):
 project = "wdoc"
 copyright = "2024, thiswillbeyourgithub"
 author = "thiswillbeyourgithub"
-release = "2.6.3"
+release = "2.6.4"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
