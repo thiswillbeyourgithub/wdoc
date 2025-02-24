@@ -11,7 +11,8 @@ os.environ["WDOC_TYPECHECKING"] = "crash"
 
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
-from wdoc.utils.embeddings import load_embeddings_engine, test_embeddings
+from wdoc.utils.embeddings import load_embeddings_engine
+from wdoc.utils.embeddings import test_embeddings as _test_embeddings
 from wdoc.utils.tasks.query import semantic_batching
 from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.misc import ModelName
@@ -213,7 +214,7 @@ def test_openai_embeddings():
         private=False,
         do_test=True,
     )
-    test_embeddings(emb)
+    _test_embeddings(emb)
 
 
 @pytest.mark.basic
@@ -227,7 +228,7 @@ def test_ollama_embeddings():
         private=False,
         do_test=True,
     )
-    test_embeddings(emb)
+    _test_embeddings(emb)
 
 
 @pytest.mark.basic
