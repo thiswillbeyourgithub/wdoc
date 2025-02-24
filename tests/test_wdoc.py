@@ -6,16 +6,15 @@ from pathlib import Path
 import pytest
 from langchain_core.documents.base import Document
 
-from wdoc.utils.tasks.query import semantic_batching
-from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.misc import ModelName
-from wdoc.utils.env import WDOC_DEFAULT_EMBED_MODEL
-
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine, test_embeddings
+from wdoc.utils.tasks.query import semantic_batching
+from wdoc.utils.embeddings import load_embeddings_engine
+from wdoc.utils.misc import ModelName
+from wdoc.utils.env import WDOC_DEFAULT_EMBED_MODEL
 
 
 @pytest.mark.basic
