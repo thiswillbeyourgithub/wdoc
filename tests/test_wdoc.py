@@ -286,3 +286,20 @@ def test_parse_file_help_output_python():
         not in output
     )
     assert "Content of wdoc/docs/parse_file_help.md" in output
+
+
+@pytest.mark.basic
+def test_parse_nytimes():
+    """Test parsing the NYTimes homepage."""
+    docs = wdoc.parse_file(
+        path="https://www.nytimes.com/",
+        filetype="auto",
+        format="langchain",
+        debug=False,
+        verbose=False,
+    )
+    assert isinstance(docs, list)
+    assert len(docs) > 0
+    assert all(isinstance(d, Document) for d in docs)
+    # Check that we got some actual content
+    assert any(len(d.page_content.strip()) > 0 for d in docs)
