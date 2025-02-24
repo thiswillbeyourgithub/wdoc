@@ -137,7 +137,7 @@ Click to read more
         - be careful to how to use import_mode
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
-        - pay attention to how the help.md document is structured
+        - pay attention to how the USAGE document is structured
     - make it easy to use wdoc as an openwebui pipeline (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/4)
         - probably by creating a server with fastapi then a quick pipeline file
     - support other vector databases
@@ -179,6 +179,8 @@ Click to read more
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
     - stop using your own youtube timecode parser and instead use langchain's chunk transcript format
+    - implement usearch instead of faiss, it seems in all points faster, supports quantized embeddings, i trust their langchain implementation more
+        - https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.usearch.USearch.html#langchain_community.vectorstores.usearch.USearch
     - Use an env var to drop_params of litellm
     - add more specific exceptions for file loading error. One exception for all, one for batch and one for individual loader
     - use heuristics to find the best number of clusters when doing semantic reranking
