@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -332,6 +333,38 @@ def test_semantic_batching():
             assert any("Python" in text for text in batch)
 
     assert texts != all_texts and texts != all_texts[::-1], all_texts
+
+
+@pytest.mark.basic
+def test_parse_docx():
+    """Test parsing a DOCX file."""
+    # Create temporary file and download sample DOCX file
+    with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+        tmp_path = tmp.name
+
+    url = "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_500KB_DOCX.docx"
+    subprocess.run(["wget", "-q", url, "-O", tmp_path], check=True)
+
+    try:
+        # Parse the file
+        docs = wdoc.parse_file(
+            path=tmp_path,
+            # filetype="word",
+            format="langchain",
+            debug=False,
+            verbose=False,
+        )
+
+        # Verify output
+        assert isinstance(docs, list)
+        assert len(docs) > 0
+        assert all(isinstance(d, Document) for d in docs)
+        # Check that we got some actual content
+        assert any(len(d.page_content.strip()) > 0 for d in docs)
+
+    finally:
+        # Cleanup
+        os.unlink(tmp_path)
 
 
 @pytest.mark.basic
