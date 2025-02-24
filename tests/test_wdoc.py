@@ -6,6 +6,11 @@ from pathlib import Path
 import pytest
 from langchain_core.documents.base import Document
 
+from wdoc.utils.tasks.query import semantic_batching
+from wdoc.utils.embeddings import load_embeddings_engine
+from wdoc.utils.misc import ModelName
+from wdoc.utils.env import WDOC_DEFAULT_EMBED_MODEL
+
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
 from wdoc.wdoc import wdoc
@@ -286,6 +291,48 @@ def test_parse_file_help_output_python():
         not in output
     )
     assert "Content of wdoc/docs/parse_file_help.md" in output
+
+
+@pytest.mark.basic
+def test_semantic_batching():
+    """Test that semantic_batching properly groups related texts."""
+    texts = [
+        "The cat chased the mouse around the house",
+        "Python is a popular programming language",
+        "JavaScript is used for web development",
+        "The dog barked at the mailman yesterday",
+    ]
+
+    embeddings = load_embeddings_engine(
+        modelname=ModelName(WDOC_DEFAULT_EMBED_MODEL),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+
+    batches = semantic_batching(texts, embeddings)
+
+    # Basic validation
+    assert isinstance(batches, list)
+    assert len(batches) >= 1
+    assert all(isinstance(batch, list) for batch in batches)
+
+    # Check all texts are present
+    all_texts = []
+    for batch in batches:
+        all_texts.extend(batch)
+    assert sorted(all_texts) == sorted(texts)
+
+    # Check semantic grouping (programming languages should be together)
+    for batch in batches:
+        if "Python" in batch[0]:
+            assert any("JavaScript" in text for text in batch)
+        elif "JavaScript" in batch[0]:
+            assert any("Python" in text for text in batch)
+
+    assert texts != all_texts and texts != all_texts[::-1], all_texts
 
 
 @pytest.mark.basic
