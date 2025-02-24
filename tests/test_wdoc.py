@@ -219,7 +219,8 @@ def test_openai_embeddings():
 @pytest.mark.basic
 def test_ollama_embeddings():
     emb = load_embeddings_engine(
-        modelname=ModelName("ollama/bge-m3"),
+        # modelname=ModelName("ollama/bge-m3"),
+        modelname=ModelName("ollama/snowflake-arctic-embed2"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
