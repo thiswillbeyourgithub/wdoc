@@ -9,6 +9,16 @@ from langchain_core.documents.base import Document
 
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
+# Default model names if not specified in environment
+WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
+    "WDOC_TEST_OLLAMA_EMBED_MODEL", "snowflake-arctic-embed2"
+)
+WDOC_TEST_OPENAI_MODEL = os.getenv("WDOC_TEST_OPENAI_MODEL", "gpt-4o")
+WDOC_TEST_OPENAI_EVAL_MODEL = os.getenv("WDOC_TEST_OPENAI_EVAL_MODEL", "gpt-4o-mini")
+WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
+    "WDOC_TEST_OPENAI_EMBED_MODEL", "text-embedding-3-small"
+)
+
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
@@ -145,9 +155,9 @@ def test_summary_tim_urban():
     _ = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model="openai/gpt-4o",
-        query_eval_model="openai/gpt-4o-mini",
-        embed_model="openai/text-embedding-3-small",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         # filetype="youtube",
         filetype="auto",
         debug=False,
@@ -167,9 +177,9 @@ def test_query_tim_urban():
         task="query",
         query="What university did the author go to?",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model="openai/gpt-4o",
-        query_eval_model="openai/gpt-4o-mini",
-        embed_model="openai/text-embedding-3-small",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         # filetype="youtube",
         filetype="auto",
         debug=False,
@@ -188,9 +198,9 @@ def test_whisper_tim_urban():
     _ = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model="openai/gpt-4o",
-        query_eval_model="openai/gpt-4o-mini",
-        embed_model="openai/text-embedding-3-small",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         filetype="youtube",
         youtube_audio_backend="whisper",
         whisper_lang="en",
@@ -207,7 +217,7 @@ def test_whisper_tim_urban():
 )
 def test_openai_embeddings():
     emb = load_embeddings_engine(
-        modelname=ModelName("openai/text-embedding-3-small"),
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
@@ -220,8 +230,7 @@ def test_openai_embeddings():
 @pytest.mark.basic
 def test_ollama_embeddings():
     emb = load_embeddings_engine(
-        # modelname=ModelName("ollama/bge-m3"),
-        modelname=ModelName("ollama/snowflake-arctic-embed2"),
+        modelname=ModelName(f"ollama/{WDOC_TEST_OLLAMA_EMBED_MODEL}"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
