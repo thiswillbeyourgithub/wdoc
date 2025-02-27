@@ -59,9 +59,9 @@ wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say
     2. cut the text into chunks and create embeddings for each
     3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
     4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
-    5. Pass each of those documents to the smaller LLM (default: openai/gpt-4o-mini) to tell us if the document seems appropriate given the user query
+    5. Pass each of those documents to the smaller LLM (default: anthropic/claude-3-5-haiku-20241022) to tell us if the document seems appropriate given the user query
     6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-    7. Then each relevant doc is sent to the strong LLM (by default, openai/gpt-4o) to extract relevant info and give one answer.
+    7. Then each relevant doc is sent to the strong LLM (by default, anthropic/claude-3-7-sonnet-20250219) to extract relevant info and give one answer.
     8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
     9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
 
@@ -72,7 +72,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 ```
 * This will:
     1. Split the text into chunks
-    2. pass each chunk into the strong LLM (by default openai/gpt-4o) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+    2. pass each chunk into the strong LLM (by default anthropic/claude-3-7-sonnet-20250219) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
     3. When creating each new chunk, the LLM has access to the previous chunk for context.
     4. All summary are then concatenated and returned to the user
 
