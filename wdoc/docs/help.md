@@ -176,7 +176,7 @@
             name)
 
 * `--embed_kwargs`: dict, default `None`
-    * dictionnary of keyword arguments to pass to the embedding.
+    * dictionary of keyword arguments to pass to the embedding.
 
 * `--save_embeds_as`: str, default `"{user_dir}/latest_docs_and_embeddings"`
     * only used if task is query
