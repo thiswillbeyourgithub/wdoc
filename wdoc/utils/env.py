@@ -70,7 +70,7 @@ valid_types = {
     "WDOC_NO_MODELNAME_MATCHING": bool,
     "WDOC_ALLOW_NO_PRICE": bool,
     "WDOC_OPEN_ANKI": bool,
-    "WDOC_STRICT_DOCDICT": bool,
+    "WDOC_STRICT_DOCDICT": Union[bool, Literal["strip"]],
     "WDOC_MAX_LOADER_TIMEOUT": int,
     "WDOC_MAX_PDF_LOADER_TIMEOUT": int,
     "WDOC_PRIVATE_MODE": bool,
