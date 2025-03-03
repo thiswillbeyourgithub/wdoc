@@ -57,6 +57,7 @@ WDOC_LANGFUSE_SECRET_KEY = None
 WDOC_LANGFUSE_HOST = None
 
 WDOC_LITELLM_TAGS = None
+WDOC_LITELLM_USER = "wdoc_llm"
 
 # by default use lazy loading if using --help argument
 if " --help" in " ".join(sys.argv):
@@ -90,6 +91,7 @@ valid_types = {
     "WDOC_LANGFUSE_SECRET_KEY": Optional[str],
     "WDOC_LANGFUSE_HOST": Optional[str],
     "WDOC_LITELLM_TAGS": Optional[str],
+    "WDOC_LITELLM_USER": str,
 }
 
 # sanity check for the default values

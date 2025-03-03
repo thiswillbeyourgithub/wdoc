@@ -16,7 +16,7 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_openai import ChatOpenAI
 
-from .env import WDOC_PRIVATE_MODE, WDOC_LITELLM_TAGS
+from .env import WDOC_PRIVATE_MODE, WDOC_LITELLM_TAGS, WDOC_LITELLM_USER
 from .flags import is_private, is_verbose
 from .logger import red, whi, yel
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
@@ -169,7 +169,7 @@ def load_llm(
             callbacks=[
                 PriceCountingCallback(verbose=llm_verbosity)
             ],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
-            user="wdoc_llm",
+            user=WDOC_LITELLM_USER,
             **extra_model_args,
         )
         litellm.drop_params = True

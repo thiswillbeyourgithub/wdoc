@@ -749,3 +749,6 @@
 
 * `WDOC_LITELLM_TAGS`, default: `None`
     * If a comma separated list of string: they will be put as `tags` in the litellm LLM request via the ChatLiteLLM object.
+
+* `WDOC_LITELLM_USER`, default: `wdoc_llm`
+    * Put as `user` argument when creating ChatLiteLLM object that talks to LLMs.
