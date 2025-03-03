@@ -16,7 +16,7 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_openai import ChatOpenAI
 
-from .env import WDOC_PRIVATE_MODE
+from .env import WDOC_PRIVATE_MODE, WDOC_LITELLM_TAGS
 from .flags import is_private, is_verbose
 from .logger import red, whi, yel
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
@@ -49,6 +49,13 @@ def load_llm(
         for t in extra_model_args["tags"]:
             if t not in tags:
                 tags.append(t)
+
+    env_tags = WDOC_LITELLM_TAGS
+    if env_tags:
+        if isinstance(env_tags, str):
+            env_tags = env_tags.split(",")
+        assert isinsttance(env_tags, list), env_tags
+        tags.extend(env_tags)
 
     assert "cache" not in extra_model_args
     if modelname.backend == "testing":

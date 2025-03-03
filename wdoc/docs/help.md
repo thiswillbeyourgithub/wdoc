@@ -746,3 +746,6 @@
 
 * `WDOC_LANGFUSE_HOST`, default: `None`
     * If present, will replace the env variable `LANGFUSE_HOST`.
+
+* `WDOC_LITELLM_TAGS`, default: `None`
+    * If a comma separated list of string: they will be put as `tags` in the litellm LLM request via the ChatLiteLLM object.
