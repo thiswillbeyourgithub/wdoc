@@ -3,6 +3,7 @@ import sys
 import subprocess
 import tempfile
 from pathlib import Path
+from copy import copy
 
 import pytest
 from langchain_core.documents.base import Document
@@ -20,6 +21,7 @@ WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
 )
 
 from wdoc.wdoc import wdoc
+from wdoc.utils.env import WDOC_TYPECHECKING, WDOC_ENABLE_EXPERIMENTAL_ENV
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.embeddings import test_embeddings as _test_embeddings
@@ -393,3 +395,19 @@ def test_parse_nytimes():
     assert all(isinstance(d, Document) for d in docs)
     # Check that we got some actual content
     assert any(len(d.page_content.strip()) > 0 for d in docs)
+
+
+@pytest.mark.experimental
+@pytest.mark.skipif(
+    " -m experimental" not in " ".join(sys.argv),
+    reason="Skip tests of experimental feature by default, use '-m experimental' to run them.",
+)
+def test_wdoc_env_var_refresh():
+    """Test that wdoc env variables are indeed dynamically refreshed."""
+    val = copy(WDOC_TYPECHECKING._value)
+    assert WDOC_TYPECHECKING == val
+    os.environ["WDOC_TYPECHECKING"] = str(val) + "newvalue"
+    assert WDOC_TYPECHECKING != val
+    assert WDOC_TYPECHECKING == str(val) + "newvalue"
+    os.environ["WDOC_TYPECHECKING"] = str(val)
+    assert WDOC_TYPECHECKING == val

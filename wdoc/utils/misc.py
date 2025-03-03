@@ -104,9 +104,9 @@ query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 
 # remove cache files older than X days
 if WDOC_EXPIRE_CACHE_DAYS:
-    doc_loaders_cache.reduce_size(age_limit=timedelta(days=WDOC_EXPIRE_CACHE_DAYS))
-    hashdoc_cache.reduce_size(age_limit=timedelta(days=WDOC_EXPIRE_CACHE_DAYS))
-    query_eval_cache.reduce_size(age_limit=timedelta(days=WDOC_EXPIRE_CACHE_DAYS))
+    doc_loaders_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
+    hashdoc_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
+    query_eval_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
 
 # for reading length estimation
 wpm = 250
