@@ -17,15 +17,16 @@ warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 
 @warn_typecheck
 def parse(val: str) -> Optional[Union[bool, int, str]]:
-    if val == "true":
+    if val.lower() == "true":
         return True
-    elif val == "false":
+    elif val.lower() == "false":
         return False
     elif val.isdigit():
         return int(val)
-    elif val == "none" or val == "":
+    elif val.lower() == "none" or val == "":
         return None
-    return val
+    else:
+        return val
 
 
 WDOC_TYPECHECKING = "warn"
