@@ -1,7 +1,7 @@
 Single Page Documentation
 ==================
 
-This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>` in a single page, for easy LLM parsing.
+This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_ in a single page, for easy LLM parsing.
 
 `wdoc` is a sophisticated RAG system made by `Olicorne, a medical student <https://github.com/thiswillbeyourgithub>`_
 
