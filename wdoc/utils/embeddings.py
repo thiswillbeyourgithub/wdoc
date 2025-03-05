@@ -21,6 +21,7 @@ from langchain_community.embeddings import (
     HuggingFaceInstructEmbeddings,
     SentenceTransformerEmbeddings,
 )
+from langchain_core.vectorstores.base import VectorStore
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
@@ -235,7 +236,7 @@ def create_embeddings(
     loaded_docs: Any,
     dollar_limit: Union[int, float],
     private: bool,
-) -> FAISS:
+) -> VectorStore:
     """
     For each document of loaded_docs, we check if the embeddings were already
     computed and present in the cache or ask the CacheBackedEmbeddings class
@@ -311,7 +312,7 @@ def create_embeddings(
     def embed_one_batch(
         batch: List,
         ib: int,
-    ) -> FAISS:
+    ) -> VectorStore:
         n_trial = 3
         for trial in range(n_trial):
             # whi(f"Embedding batch #{ib + 1}")
