@@ -307,10 +307,11 @@ def create_embeddings(
         for i in range(len(docs) // batch_size + 1)
     ]
 
+    @optional_typecheck
     def embed_one_batch(
         batch: List,
         ib: int,
-    ):
+    ) -> FAISS:
         n_trial = 3
         for trial in range(n_trial):
             # whi(f"Embedding batch #{ib + 1}")
@@ -369,6 +370,7 @@ def create_embeddings(
     return db
 
 
+@optional_typecheck
 def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
     vec1 = np.array(embeddings.embed_query("This is a test"))
