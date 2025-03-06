@@ -34,7 +34,6 @@ import pandas as pd
 import playwright.sync_api
 import pydub
 import requests
-import torchaudio
 import uuid6
 import yt_dlp as youtube_dl
 from beartype.typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -85,6 +84,12 @@ from .misc import (
     wpm,
 )
 from .typechecker import optional_typecheck
+
+try:
+    import torchaudio
+except Exception as e:
+    # torchaudio can be tricky to install to just in case let's avoid crashing wdoc entirely
+    red(f"Failed to import torchaudio: '{e}'")
 
 try:
     import pdftotext

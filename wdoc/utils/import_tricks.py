@@ -95,7 +95,7 @@ def trick_imports() -> None:
     custom_loading("deepgram")
     custom_loading("pydub")
     custom_loading("ffmpeg")
-    custom_loading("torchaudio")
+    custom_loading("torchaudio", strict=False)
     custom_loading("playwright.sync_api")
     custom_loading("openparse")
     custom_loading("scipy")
