@@ -53,6 +53,10 @@ def trick_imports() -> None:
         thread.start()
 
     def custom_loading(module: str, strict: bool = True) -> None:
+        """
+        Bunch of import tricks. The strict parameter allows to specify module
+        that can be tricky to install or import.
+        """
         if not strict:
             try:
                 custom_loading(module=module)
