@@ -54,7 +54,7 @@ def load_llm(
     if env_tags:
         if isinstance(env_tags, str):
             env_tags = env_tags.split(",")
-        assert isinsttance(env_tags, list), env_tags
+        assert isinstance(env_tags, list), env_tags
         tags.extend(env_tags)
 
     assert "cache" not in extra_model_args
