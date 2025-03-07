@@ -89,6 +89,10 @@ def do_summarize(
 
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
+        # Remove first line if it contains "a deep breath"
+        if output_lines and "a deep breath" in output_lines[0]:
+            output_lines = output_lines[1:]
+
         for il, ll in enumerate(output_lines):
             # remove if contains no alphanumeric character
             if not any(char.isalpha() for char in ll.strip()):
