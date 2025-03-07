@@ -692,12 +692,12 @@
 * `WDOC_PRIVATE_MODE`
     * You should never set it yourself. It is set automatically if the `--private` argument is used, and used throughout to triple check that it's indeed fully private.
 
-* `WDOC_IMPORT_TYPE`, default `thread`
-    * If `native` will just import the packages needed by wdoc without any tricks.
+* `WDOC_IMPORT_TYPE`, default `native`
+    * If `native` will just import the packages needed by wdoc without any tricks. This is the default as it's bug-free but can be a bit slower to start up.
     * If `thread`, will try to use a separate thread to import packages making the startup time potentially smaller.
     * If `lazy`, will use lazy loading on some packages, making the startup time potentially smaller.
     * If `both`, will try to use both.
-    All other then `native` are experimental as they rely on weird python tricks.
+    All other than `native` are experimental as they rely on weird python tricks that may cause issues.
 
 * `WDOC_MOD_FAISS_SCORE_FN`
     * If True, modify on the fly the FAISS vectorstores to change their scoring function. This was  inspired by [this langchain issue where users claim the default scoring function is wrong](https://github.com/langchain-ai/langchain/issues/17333)
