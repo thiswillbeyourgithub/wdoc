@@ -98,7 +98,12 @@ class EnvVar:
             return current_value
         else:
             print(name)
-            return getattr(self._value, name)(*args, **kwargs)
+
+            # Pass any arguments to the underlying attribute
+            def method_wrapper(*args, **kwargs):
+                return getattr(self._value, name)(*args, **kwargs)
+
+            return method_wrapper
 
     def __eq__(self, other):
         self.__refresh__()
