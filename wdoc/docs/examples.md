@@ -5,6 +5,8 @@
 2. [Shell Examples](#shell-examples)
 3. [Python Script Examples](#python-script-examples)
 
+Note that there is [an official open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) that is even simpler to use.
+
 
 ## Walkthrough
 

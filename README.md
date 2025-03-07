@@ -25,7 +25,7 @@
     * Supports **virtually any LLM providers**, including local ones, and even with extra layers of security for super secret stuff.
     * Use both an expensive and cheap LLM to make recall as high as possible because we can afford fetching a lot of documents per query (via embeddings)
     * **Finally a *useful* AI powered summary**: get the thought process of the author instead of nebulous takeaways.
-    * **Extensible**, this is both a tool and a library.
+    * **Extensible**, this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool)
 
 ### Table of contents
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
@@ -82,6 +82,8 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 
 * For more, you can jump to the section [Walkthrough and examples](#walkthrough-and-examples)
 
+* Note that there is [an official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) that is even simpler to use.
+
 </details>
 
 ## Features
@@ -106,7 +108,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/docs/examples.md) for a list of shell and python examples. The full help can be found in the file [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation. The complete documentation in a single page is available [on the website](https://wdoc.readthedocs.io/en/latest/all_docs.html).
-* **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc).
+* **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc). There is even [an open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
@@ -305,6 +307,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/docs/example
 * [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
 * [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
 * [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by `wdoc`.
+* [Official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool), hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
 
 ## FAQ
 
@@ -368,5 +371,8 @@ FAQ
 
 * **How can I query a text but without chunking? / How can I query a text with the full text as context?**
     * If you set the environment variable `WDOC_MAX_CHUNK_SIZE` to a very high value and use a model with enough context according to litellm's metadata, then no chunking will happen and the LLM will have the full text as context.
+
+* **Is there a way to use `wdoc` with [Open-WebUI](https://github.com/open-webui/open-webui/)?**
+    * Yes! I am maintaining an [official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) which is hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
 
 </details>
