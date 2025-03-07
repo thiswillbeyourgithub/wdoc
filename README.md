@@ -303,8 +303,8 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/docs/example
 5. For more: read the documentation at `wdoc --help`
 
 ## Scripts made with wdoc
-* *More to come in [the scripts folder](./scripts/)*
-* [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh)
+* *More to come in [the scripts folder](./scripts/)*.
+* [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh).
 * [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
 * [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by `wdoc`.
 * [Official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool), hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
