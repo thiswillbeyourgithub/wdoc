@@ -33,7 +33,7 @@ def sample_text_file(temp_dir):
     return file_path
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def sample_pdf_file(temp_dir):
     """Create a sample PDF file path for testing."""
     return temp_dir / "sample.pdf"
