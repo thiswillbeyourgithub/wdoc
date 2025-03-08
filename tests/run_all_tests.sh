@@ -13,8 +13,8 @@ uv pip install pytest &&\
 sleep 1 &&\
 mkdir temp &&\
 cd temp &&\
-python -m pytest ../test_wdoc.py -v && \
-python -m pytest ../test_wdoc.py -v -m api &&\
+python -m pytest ../test_wdoc.py -n auto -v && \
+python -m pytest ../test_wdoc.py -n auto -v -m api &&\
 cd .. &&\
 deactivate &&\
 trash test_venv temp &&\
