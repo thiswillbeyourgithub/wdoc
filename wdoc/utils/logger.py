@@ -53,7 +53,7 @@ colors = {
 
 
 @optional_typecheck
-def get_coloured_logger(color_asked: str) -> Callable:
+def get_coloured_logger(color_asked: str, level: str) -> Callable:
     """used to print color coded logs"""
     col = colors[color_asked]
 
@@ -82,17 +82,19 @@ def get_coloured_logger(color_asked: str) -> Callable:
                 string = string.__repr__()
         for k, v in colors.items():
             string = string.replace(v, "")
+        getattr(logger, level)(string)
         logger.info(string)
-        if not is_silent:
-            tqdm.write(col + string + colors["reset"], **args)
+        # if not is_silent:
+        #     tqdm.write(col + string + colors["reset"], **args)
         return string
 
     return printer
 
 
-whi = get_coloured_logger("white")
-yel = get_coloured_logger("yellow")
-red = get_coloured_logger("red")
+deb = get_coloured_logger("white", level="debug")
+whi = get_coloured_logger("white", level="info")
+yel = get_coloured_logger("yellow", level="warning")
+red = get_coloured_logger("red", level="warning")
 
 console = Console()
 
