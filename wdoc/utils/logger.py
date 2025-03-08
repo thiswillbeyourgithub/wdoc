@@ -83,7 +83,6 @@ def get_coloured_logger(color_asked: str, level: str) -> Callable:
         for k, v in colors.items():
             string = string.replace(v, "")
         getattr(logger, level)(string)
-        logger.info(string)
         return string
 
     return printer
