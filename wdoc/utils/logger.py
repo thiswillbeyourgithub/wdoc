@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from tqdm import tqdm
 
-from .flags import is_silent, md_printing_disabled
+from .flags import md_printing_disabled
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
@@ -84,8 +84,6 @@ def get_coloured_logger(color_asked: str, level: str) -> Callable:
             string = string.replace(v, "")
         getattr(logger, level)(string)
         logger.info(string)
-        # if not is_silent:
-        #     tqdm.write(col + string + colors["reset"], **args)
         return string
 
     return printer

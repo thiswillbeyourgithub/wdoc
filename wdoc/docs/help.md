@@ -349,7 +349,7 @@
 * `--import_mode`: bool, default `False`
     * if True, will return the answer from query instead of printing it.
     The idea is to use if when you import wdoc instead of running
-    it from the cli. See `--silent`
+    it from the cli.
 
 * `--disable_md_printing`: bool, default `True` if in a pipe and `False` otherwise.
     * if True, instead of using rich to display some information, default to simpler colored prints.
@@ -360,11 +360,6 @@
     * If True, will not ask for a prompt but quit right away. This
     is useful for example if you run several cli calls in parallel and
     don't want them to take all the RAM after they're done.
-
-* `--silent`: bool, default False
-    * disable almost all prints while still writing to the log.
-    Can be handy if `--import_mode` is used but beware that this can
-    remove important information.
 
 * `--version`: bool, default False
     * display the version and exit

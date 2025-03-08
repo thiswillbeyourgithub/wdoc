@@ -23,8 +23,6 @@ is_debug = check_kwargs("debug", "d")
 
 is_verbose = is_debug or check_kwargs("verbose", "v")
 
-is_silent = check_kwargs("silent", "s")
-
 md_printing_disabled = check_kwargs("disable_md_printing")
 
 
