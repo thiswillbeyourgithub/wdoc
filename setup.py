@@ -185,6 +185,7 @@ setup(
             # "isort >= 6.0.0",
             "pre-commit >= 4.1.0",
             "pytest >= 8.3.4",
+            "pytest-xdist >= 3.6.1",
             "build",
             "twine",
         ],
