@@ -256,7 +256,7 @@ def create_embeddings(
         )
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
-        return db, cached_embeddings
+        return db
 
     whi("\nLoading embeddings.")
 
