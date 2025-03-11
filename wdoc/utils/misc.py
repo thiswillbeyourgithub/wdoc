@@ -550,6 +550,14 @@ class ModelName:
 @memoize
 @optional_typecheck
 def get_model_max_tokens(modelname: ModelName) -> int:
+    if modelname.backend == "openrouter":
+        # openrouter and litellm can have outdated or plain wrong parameters
+        submodel = ModelName(modelname.original.replace(f"openrouter/", ""))
+        try:
+            sub_price = get_model_max_tokens(submodel)
+            return sub_price
+        except Exception:
+            pass
     if modelname.original in litellm.model_cost:
         return litellm.model_cost[modelname.original]["max_tokens"]
     elif (trial := modelname.model) in litellm.model_cost:
@@ -1020,6 +1028,12 @@ def is_timecode(inp: Union[float, str]) -> bool:
 def get_supported_model_params(modelname: ModelName) -> list:
     if modelname.backend == "testing":
         return []
+    if modelname.backend == "openrouter":
+        # openrouter and litellm can have outdated or plain wrong parameters
+        submodel = ModelName(modelname.original.replace(f"openrouter/", ""))
+        sub_params = get_supported_model_params(submodel)
+        if sub_params:
+            return sub_params
     for test in [
         modelname.original,
         modelname.model,
