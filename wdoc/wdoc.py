@@ -1914,6 +1914,12 @@ class wdoc:
                     | StrOutputParser()
                 )
 
+                # Create a mapping of document hashes to document numbers
+                source_hashes = {
+                    d.metadata["content_hash"][:5]: str(idoc + 1)
+                    for idoc, d in enumerate(output["filtered_docs"])
+                }
+
                 # add the document hash as source to each intermediate answer, they will then be combined together and replaced again last minute by more legible identifiers
                 for ifd, fd in enumerate(output["filtered_docs"]):
                     ia = output["intermediate_answers"][ifd]
@@ -1921,10 +1927,6 @@ class wdoc:
                     output["intermediate_answers"][
                         ifd
                     ] = f"Source identifier: [{doc_hash}]\n{ia}"
-                source_hashes = {
-                    d.metadata["content_hash"][:5]: str(idoc + 1)
-                    for idoc, d in enumerate(output["filtered_docs"])
-                }
 
                 @optional_typecheck
                 def source_replace(input: str) -> str:
@@ -1950,22 +1952,38 @@ class wdoc:
                     # disable=not is_verbose,
                     disable=is_piped,
                 )
+                # Process intermediate answers while preserving source identifiers
                 temp_interm_answ = output["intermediate_answers"]
-                temp_interm_answ = [
+                # Extract just the answer part for semantic batching, but keep original for processing
+                temp_interm_answ_content = [
                     thinking_answer_parser(a)["answer"] for a in temp_interm_answ
                 ]
                 while True:
                     batches = [[]]
-                    # disregard IRRELEVANT answers
-                    temp_interm_answ = [
-                        ia for ia in temp_interm_answ if check_intermediate_answer(ia)
+                    # disregard IRRELEVANT answers while keeping track of indices
+                    valid_indices = [
+                        i for i, ia in enumerate(temp_interm_answ_content) 
+                        if check_intermediate_answer(ia)
                     ]
-                    batches = semantic_batching(temp_interm_answ, self.embedding_engine)
+                    valid_content = [temp_interm_answ_content[i] for i in valid_indices]
+                    valid_answers = [temp_interm_answ[i] for i in valid_indices]
+                    
+                    # Use content for semantic batching
+                    batches_indices = semantic_batching(valid_content, self.embedding_engine)
+                    
+                    # Map batch indices back to original answers with source identifiers
+                    batches = []
+                    for batch_indices in batches_indices:
+                        # Find positions of these content items in the valid_content list
+                        positions = [valid_content.index(item) for item in batch_indices]
+                        # Map to the corresponding full answers with source identifiers
+                        batches.append([valid_answers[pos] for pos in positions])
                     batch_args = [
                         {"question_to_answer": query_an, "intermediate_answers": b}
                         for b in batches
                     ]
                     temp_interm_answ = []
+                    temp_interm_answ_content = []
                     batch_result = final_answer_chain.batch(batch_args)
                     n_trial = 3
                     for ia, a in enumerate(batch_result):
@@ -1976,7 +1994,10 @@ class wdoc:
                                     a["final_answer"],
                                     strict=True,
                                 )["answer"]
+                                # Apply source replacement to preserve document references
+                                o = source_replace(o)
                                 temp_interm_answ.append(o)
+                                temp_interm_answ_content.append(o)
                                 break
                             except Exception as e:
                                 red(
