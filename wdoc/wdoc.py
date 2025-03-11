@@ -1569,6 +1569,8 @@ class wdoc:
                 red(
                     f"query eval model produced 1 output instead of {self.query_eval_check_number}). Output: '{outputs}'\nThis is usually because the model is wrongly specified by litellm as having a modifiable `n` parameter. To avoid this use another model or set the query_eval_check_number to 1."
                 )
+                if "n" in self.eval_llm_params:
+                    self.eval_llm_params.remove("n")
                 outputs = outputs * self.query_eval_check_number
             assert (
                 len(outputs) == self.query_eval_check_number
