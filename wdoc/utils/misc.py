@@ -546,6 +546,10 @@ class ModelName:
         if WDOC_PRIVATE_MODE:
             self.sanitized = "private_" + self.sanitized
 
+    def __hash__(self):
+        # necessary for memoizing
+        return (str(self.original.__hash__()) + str("ModelName".__hash__())).__hash__()
+
 
 @memoize
 @optional_typecheck
