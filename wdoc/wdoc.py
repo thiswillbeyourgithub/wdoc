@@ -1951,7 +1951,9 @@ class wdoc:
                     disable=is_piped,
                 )
                 temp_interm_answ = output["intermediate_answers"]
-                temp_interm_answ = thinking_answer_parser(temp_interm_answ)["answer"]
+                temp_interm_answ = [
+                    thinking_answer_parser(a)["answer"] for a in temp_interm_answ
+                ]
                 while True:
                     batches = [[]]
                     # disregard IRRELEVANT answers
