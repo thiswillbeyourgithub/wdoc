@@ -484,6 +484,7 @@ def model_name_matcher(model: str) -> str:
     return out
 
 
+@optional_typecheck
 def get_model_price(model: str) -> List[float]:
     assert (
         not WDOC_ALLOW_NO_PRICE
