@@ -3,6 +3,7 @@ Miscellanous functions etc.
 """
 
 import hashlib
+import platform
 import inspect
 import json
 import os
@@ -1067,3 +1068,48 @@ def get_supported_model_params(modelname: ModelName) -> list:
         if params:
             return params
     return []
+
+
+@optional_typecheck
+def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
+    """
+    Advise the Linux kernel to cache the given file in memory.
+
+    Args:
+        file_path: Path to the file or directory to cache
+        recursive: If True and file_path is a directory, cache all files within it
+
+    Returns:
+        bool: True if caching was successful, False otherwise
+    """
+    # Check if we're on Linux
+    if platform.system() != "Linux":
+        # This function only works on Linux systems.
+        return False
+
+    files_to_cache: List[Path] = []
+
+    # Handle directory case
+    if file_path.is_dir():
+        if not recursive:
+            # Warning: {file_path} is a directory. Set recursive=True to cache all files.
+            return False
+        # Collect all files recursively
+        files_to_cache = [f for f in file_path.rglob("*") if f.is_file()]
+    elif file_path.is_file():
+        files_to_cache = [file_path]
+    else:
+        # Error: {file_path} does not exist.
+        return False
+
+    success = True
+    for file in files_to_cache:
+        try:
+            fd = os.open(str(file), os.O_RDONLY)
+            os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
+            os.close(fd)
+        except Exception as e:
+            # red(f"Failed to cache {file}: {e}")
+            success = False
+
+    return success

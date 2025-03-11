@@ -37,7 +37,7 @@ from .env import (
 )
 from .flags import is_verbose
 from .logger import red, whi
-from .misc import ModelName, cache_dir, get_tkn_length
+from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from .typechecker import optional_typecheck
 
 
@@ -248,6 +248,7 @@ def create_embeddings(
         red("Reloading documents and embeddings from file")
         path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
+        cache_file_in_memory(path, recursive=True)
         db = FAISS.load_local(
             str(path),
             cached_embeddings,
