@@ -1566,8 +1566,8 @@ class wdoc:
                 outputs = [parse_eval_output(o) for o in outputs]
 
             assert (
-                len(outputs) == self.query_eval_check_number
-            ), f"query eval model failed to produce {self.query_eval_check_number} outputs: '{outputs}'"
+                len(outputs) <= self.query_eval_check_number
+            ), f"query eval model produced more outputs than expected ({self.query_eval_check_number}). Outputs: '{outputs}'\nInputs: {inputs}'"
 
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
