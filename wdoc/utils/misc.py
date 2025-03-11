@@ -39,7 +39,7 @@ from .env import (
 )
 from .errors import UnexpectedDocDictArgument
 from .flags import is_debug, is_private, is_verbose
-from .logger import cache_dir, red, whi, yel
+from .logger import cache_dir, red, whi, yel, deb
 from .typechecker import optional_typecheck
 
 ankiconnect = optional_typecheck(PyAnkiconnect())
@@ -473,7 +473,7 @@ def model_name_matcher(model: str) -> str:
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
     if WDOC_NO_MODELNAME_MATCHING:
-        whi(f"Bypassing model name matching for model '{model}'")
+        deb(f"Bypassing model name matching for model '{model}'")
         return model
 
     out = wrapped_model_name_matcher(model)
