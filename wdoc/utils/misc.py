@@ -463,6 +463,7 @@ def wrapped_model_name_matcher(model: str) -> str:
         return model
 
 
+@memoize
 @optional_typecheck
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
@@ -484,6 +485,7 @@ def model_name_matcher(model: str) -> str:
     return out
 
 
+@memoize
 @optional_typecheck
 def get_model_price(model: str) -> List[float]:
     assert (
@@ -545,6 +547,7 @@ class ModelName:
             self.sanitized = "private_" + self.sanitized
 
 
+@memoize
 @optional_typecheck
 def get_model_max_tokens(modelname: ModelName) -> int:
     if modelname.original in litellm.model_cost:
@@ -1012,6 +1015,7 @@ def is_timecode(inp: Union[float, str]) -> bool:
         return False
 
 
+@memoize
 @optional_typecheck
 def get_supported_model_params(modelname: ModelName) -> list:
     if modelname.backend == "testing":
