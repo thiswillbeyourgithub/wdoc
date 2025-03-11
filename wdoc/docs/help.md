@@ -234,7 +234,10 @@
     is indeed relevant to the question. The document will not
     be processed further if the mean answer from the eval llm is too low.
     For eval llm that don't support setting `n`, multiple
-    completions will be called, which costs more.
+    completions will be called, which costs more. It happens that some
+    models are incorrectly reported as having a modifiable `n` parameter
+    when they actually don't. In this can instead of crashing `wdoc` will
+    notify you and replicate the received value `n` times.
 
 * `--query_relevancy`: float, default `0.0`
     * threshold underwhich a document cannot be considered relevant by

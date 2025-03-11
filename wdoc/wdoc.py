@@ -1565,9 +1565,14 @@ class wdoc:
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
 
+            if len(outputs) < self.query_eval_check_number and len(outputs) == 1:
+                red(
+                    f"query eval model produced 1 output instead of {self.query_eval_check_number}). Output: '{outputs}'\nThis is usually because the model is wrongly specified by litellm as having a modifiable `n` parameter. To avoid this use another model or set the query_eval_check_number to 1."
+                )
+                outputs = outputs * self.query_eval_check_number
             assert (
-                len(outputs) <= self.query_eval_check_number
-            ), f"query eval model produced more outputs than expected ({self.query_eval_check_number}). Outputs: '{outputs}'\nInputs: {inputs}'"
+                len(outputs) == self.query_eval_check_number
+            ), f"Query eval model produced an unexpected number of outputs ({outputs} but expected {self.query_eval_check_number} outputs).\nInputs: {inputs}'"
 
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
