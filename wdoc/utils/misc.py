@@ -474,7 +474,7 @@ def model_name_matcher(model: str) -> str:
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
     if WDOC_NO_MODELNAME_MATCHING:
-        deb(f"Bypassing model name matching for model '{model}'")
+        # deb(f"Bypassing model name matching for model '{model}'")
         return model
 
     out = wrapped_model_name_matcher(model)
