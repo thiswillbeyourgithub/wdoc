@@ -973,7 +973,7 @@ def create_langfuse_callback(version: str) -> None:
         and "LANGFUSE_SECRET_KEY" in os.environ
         and "LANGFUSE_HOST" in os.environ
     ):
-        red("Activating langfuse callbacks")
+        deb("Activating langfuse callbacks")
         try:
             # # use litellm's callbacks for chatlitellm backend
             import langfuse
