@@ -124,7 +124,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "2.7.0"
+    VERSION: str = "2.7.1"
     allowed_extra_args = extra_args_types
     md_printer = md_printer
 
