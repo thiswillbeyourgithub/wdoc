@@ -2008,16 +2008,14 @@ class wdoc:
                 output["all_intermediate_answers"] = all_intermediate_answers
             else:
                 final_answer = output["intermediate_answers"][0]
-                output["all_intermediate_answers"] = [final_answer]
-
+                
                 # Define source_replace function for the single document case
                 source_hashes = {}
                 for ifd, fd in enumerate(output["filtered_docs"]):
                     doc_hash = fd.metadata["content_hash"][:5]
                     source_hashes[doc_hash] = str(ifd + 1)
                     # Add source identifier to the single intermediate answer
-                    final_answer = f"Source identifier: [{doc_hash}]\n{final_answer}"
-                    output["intermediate_answers"][ifd] = final_answer
+                    output["intermediate_answers"][ifd] = f"Source identifier: [{doc_hash}]\n{final_answer}"
                 
                 @optional_typecheck
                 def source_replace(input: str) -> str:
@@ -2027,7 +2025,10 @@ class wdoc:
                         result = result.replace(f"[{h}]", f"[{idoc}]")
                     return result
                 
-                all_intermediate_answers = [final_answer]
+                # Apply source replacement to final answer
+                final_answer = f"Source identifier: [{list(source_hashes.keys())[0]}]\n{final_answer}"
+                final_answer = source_replace(final_answer)
+                output["all_intermediate_answers"] = [final_answer]
 
             # prepare the content of the output
             output["final_answer"] = final_answer
