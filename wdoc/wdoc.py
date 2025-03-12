@@ -2010,12 +2010,23 @@ class wdoc:
                 final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
 
-                if not source_hashes:
-                    # Create source_hashes if we only have one document
-                    for ifd, fd in enumerate(output["filtered_docs"]):
-                        doc_hash = fd.metadata["content_hash"][:5]
-                        source_hashes[doc_hash] = str(ifd + 1)
-                        
+                # Define source_replace function for the single document case
+                source_hashes = {}
+                for ifd, fd in enumerate(output["filtered_docs"]):
+                    doc_hash = fd.metadata["content_hash"][:5]
+                    source_hashes[doc_hash] = str(ifd + 1)
+                    # Add source identifier to the single intermediate answer
+                    final_answer = f"Source identifier: [{doc_hash}]\n{final_answer}"
+                    output["intermediate_answers"][ifd] = final_answer
+                
+                @optional_typecheck
+                def source_replace(input: str) -> str:
+                    # Make a copy of the input to avoid modifying the original string during iteration
+                    result = input
+                    for h, idoc in source_hashes.items():
+                        result = result.replace(f"[{h}]", f"[{idoc}]")
+                    return result
+                
                 all_intermediate_answers = [final_answer]
 
             # prepare the content of the output
