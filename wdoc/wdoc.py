@@ -1926,9 +1926,11 @@ class wdoc:
 
                 @optional_typecheck
                 def source_replace(input: str) -> str:
+                    # Make a copy of the input to avoid modifying the original string during iteration
+                    result = input
                     for h, idoc in source_hashes.items():
-                        input = input.replace(f"[{h}]", f"[{idoc}]")
-                    return input
+                        result = result.replace(f"[{h}]", f"[{idoc}]")
+                    return result
 
                 llmcallback = self.llm.callbacks[0]
                 cost_before_combine = (
@@ -2007,12 +2009,6 @@ class wdoc:
             else:
                 final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
-
-                if not source_hashes:
-                    # Create source_hashes if we only have one document
-                    for ifd, fd in enumerate(output["filtered_docs"]):
-                        doc_hash = fd.metadata["content_hash"][:5]
-                        source_hashes[doc_hash] = str(ifd + 1)
 
                 if not source_hashes:
                     # Create source_hashes if we only have one document
