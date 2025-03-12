@@ -1915,21 +1915,19 @@ class wdoc:
                 )
 
                 # add the document hash as source to each intermediate answer, they will then be combined together and replaced again last minute by more legible identifiers
+                source_hashes = {}
                 for ifd, fd in enumerate(output["filtered_docs"]):
                     ia = output["intermediate_answers"][ifd]
                     doc_hash = fd.metadata["content_hash"][:5]
+                    source_hashes[doc_hash] = str(ifd + 1)
                     output["intermediate_answers"][
                         ifd
                     ] = f"Source identifier: [{doc_hash}]\n{ia}"
-                source_hashes = {
-                    d.metadata["content_hash"][:5]: str(idoc + 1)
-                    for idoc, d in enumerate(output["filtered_docs"])
-                }
 
                 @optional_typecheck
                 def source_replace(input: str) -> str:
                     for h, idoc in source_hashes.items():
-                        input = input.replace(h, idoc)
+                        input = input.replace(f"[{h}]", f"[{idoc}]")
                     return input
 
                 llmcallback = self.llm.callbacks[0]
@@ -2010,9 +2008,12 @@ class wdoc:
                 final_answer = output["intermediate_answers"][0]
                 output["all_intermediate_answers"] = [final_answer]
 
-                def source_replace(input):
-                    return input
-
+                if not source_hashes:
+                    # Create source_hashes if we only have one document
+                    for ifd, fd in enumerate(output["filtered_docs"]):
+                        doc_hash = fd.metadata["content_hash"][:5]
+                        source_hashes[doc_hash] = str(ifd + 1)
+                        
                 all_intermediate_answers = [final_answer]
 
             # prepare the content of the output
