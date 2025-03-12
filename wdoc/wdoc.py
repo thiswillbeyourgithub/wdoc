@@ -2013,6 +2013,12 @@ class wdoc:
                     for ifd, fd in enumerate(output["filtered_docs"]):
                         doc_hash = fd.metadata["content_hash"][:5]
                         source_hashes[doc_hash] = str(ifd + 1)
+
+                if not source_hashes:
+                    # Create source_hashes if we only have one document
+                    for ifd, fd in enumerate(output["filtered_docs"]):
+                        doc_hash = fd.metadata["content_hash"][:5]
+                        source_hashes[doc_hash] = str(ifd + 1)
                         
                 all_intermediate_answers = [final_answer]
 
