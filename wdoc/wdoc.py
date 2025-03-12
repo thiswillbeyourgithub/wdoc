@@ -1914,22 +1914,20 @@ class wdoc:
                     | StrOutputParser()
                 )
 
-                # add the document hash as source to each intermediate answer, they will then be combined together and replaced again last minute by more legible identifiers
-                source_hashes = {}
+                # Create consistent document identifiers using WDOC_N format
+                output["source_mapping"] = {}
                 for ifd, fd in enumerate(output["filtered_docs"]):
+                    doc_id = f"WDOC_{ifd + 1}"
+                    output["source_mapping"][doc_id] = ifd + 1
                     ia = output["intermediate_answers"][ifd]
-                    doc_hash = fd.metadata["content_hash"][:5]
-                    source_hashes[doc_hash] = str(ifd + 1)
-                    output["intermediate_answers"][
-                        ifd
-                    ] = f"Source identifier: [{doc_hash}]\n{ia}"
+                    output["intermediate_answers"][ifd] = f"Source identifier: [[{doc_id}]]\n{ia}"
 
                 @optional_typecheck
-                def source_replace(input: str) -> str:
+                def source_replace(input: str, mapping: dict) -> str:
                     # Make a copy of the input to avoid modifying the original string during iteration
                     result = input
-                    for h, idoc in source_hashes.items():
-                        result = result.replace(f"[{h}]", f"[{idoc}]")
+                    for doc_id, doc_num in mapping.items():
+                        result = result.replace(f"[[{doc_id}]]", f"[{doc_num}]")
                     return result
 
                 llmcallback = self.llm.callbacks[0]
@@ -1972,8 +1970,10 @@ class wdoc:
                         trial = 0
                         for trial in range(n_trial):
                             try:
+                                answer_text = a["final_answer"]
+                                # Preserve any source identifiers in the combined answer
                                 o = thinking_answer_parser(
-                                    a["final_answer"],
+                                    answer_text,
                                     strict=True,
                                 )["answer"]
                                 temp_interm_answ.append(o)
@@ -2009,27 +2009,17 @@ class wdoc:
             else:
                 final_answer = output["intermediate_answers"][0]
                 
-                # Define source_replace function for the single document case
-                source_hashes = {}
-                for ifd, fd in enumerate(output["filtered_docs"]):
-                    doc_hash = fd.metadata["content_hash"][:5]
-                    source_hashes[doc_hash] = str(ifd + 1)
-                
-                @optional_typecheck
-                def source_replace(input: str) -> str:
-                    # Make a copy of the input to avoid modifying the original string during iteration
-                    result = input
-                    for h, idoc in source_hashes.items():
-                        result = result.replace(f"[{h}]", f"[{idoc}]")
-                    return result
+                # Create consistent document identifiers using WDOC_N format for single document case
+                output["source_mapping"] = {}
+                doc_id = "WDOC_1"
+                output["source_mapping"][doc_id] = 1
                 
                 # Add source identifier to the single intermediate answer
-                doc_hash = output["filtered_docs"][0].metadata["content_hash"][:5]
-                output["intermediate_answers"][0] = f"Source identifier: [{doc_hash}]\n{final_answer}"
+                output["intermediate_answers"][0] = f"Source identifier: [[{doc_id}]]\n{final_answer}"
                 
                 # Apply source replacement to final answer
-                final_answer = f"Source identifier: [{doc_hash}]\n{final_answer}"
-                final_answer = source_replace(final_answer)
+                final_answer = f"Source identifier: [[{doc_id}]]\n{final_answer}"
+                final_answer = source_replace(final_answer, output["source_mapping"])
                 output["all_intermediate_answers"] = [output["intermediate_answers"][0]]
 
             # prepare the content of the output
@@ -2069,14 +2059,14 @@ class wdoc:
                 # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
                 ia = ia["answer"]
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                md_printer(source_replace(to_print))
+                md_printer(source_replace(to_print, output["source_mapping"]))
 
             # print the final answer
             fa = thinking_answer_parser(output["final_answer"])
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
             md_printer("---")
-            md_printer(indent(f"# Answer:\n{source_replace(fa)}\n", "> "))
+            md_printer(indent(f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "))
 
             # print the breakdown of documents used and chain time
             red(

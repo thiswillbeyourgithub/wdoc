@@ -181,8 +181,17 @@ def collate_intermediate_answers(
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
         ia = ia.replace("- • ", "- ").replace("• ", "- ")  # occasional bad md
+        
+        # Preserve the original source identifier if present
+        source_match = re.search(r"Source identifier: \[\[(WDOC_\d+)\]\]", ia)
+        source_id = source_match.group(1) if source_match else f"WDOC_{iia + 1}"
+        
+        # Remove the original source identifier line if present
+        if source_match:
+            ia = re.sub(r"Source identifier: \[\[WDOC_\d+\]\]\n", "", ia)
+        
         out += f"""
-<ia source_id={iia + 1}>
+<ia source_id="{source_id}">
 {ia}
 </ia>\n""".lstrip()
     return out
