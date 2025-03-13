@@ -110,12 +110,6 @@ logger.info("Starting wdoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-# sensible default user agent
-if "USER_AGENT" not in os.environ:
-    os.environ["USER_AGENT"] = (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
-    )
-
 
 @optional_typecheck
 @set_help_md_as_docstring
