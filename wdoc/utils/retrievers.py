@@ -54,9 +54,14 @@ def create_parent_retriever(
     csp = get_splitter(task)
     psp = get_splitter(task)
     psp._chunk_size *= 4
+    lfs = LocalFileStore(
+        database_path=cache_dir / "parent_retriever",
+        verbose=is_verbose,
+        name="parent_retriever",
+    )
     parent = ParentDocumentRetriever(
         vectorstore=loaded_embeddings,
-        docstore=LocalFileStore(cache_dir / "parent_retriever"),
+        docstore=lfs,
         child_splitter=csp,
         parent_splitter=psp,
         search_type="similarity",

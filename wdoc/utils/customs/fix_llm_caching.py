@@ -27,6 +27,7 @@ class SQLiteCacheFixed(BaseCache):
             database_path=database_path,
             expiration_days=expiration_days,
             verbose=verbose,
+            name="SQLiteCacheFixed_" + Path(database_path).name,
         )
 
     def lookup(self, prompt: str, llm_string: str) -> Any:

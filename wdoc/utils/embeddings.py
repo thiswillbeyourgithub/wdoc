@@ -204,6 +204,7 @@ def load_embeddings_engine(
         database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
         expiration_days=WDOC_EXPIRE_CACHE_DAYS,
         verbose=is_verbose,
+        name="Embeddings_" + modelname.sanitized,
     )
 
     cache_content = list(lfs.yield_keys())
