@@ -5,7 +5,7 @@ medical_indexes.txt
 logs.txt*
 author_dir
 pages
-.env
+.env*
 **/__pycache__
 *.egg-info
 build
