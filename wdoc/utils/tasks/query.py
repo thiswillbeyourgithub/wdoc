@@ -328,6 +328,8 @@ def semantic_batching(
     cluster_trials = {}
     cluster_mean_tkn = {}
     for divider in [3, 4, 5, 6]:
+        if divider > len(pd_dist.index):
+            continue
         cluster_labels = scipy.cluster.hierarchy.fcluster(
             Z, len(pd_dist.index) // divider, criterion="maxclust"
         )
