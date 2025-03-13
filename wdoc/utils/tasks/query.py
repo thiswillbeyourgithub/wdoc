@@ -350,6 +350,13 @@ def semantic_batching(
         cluster_mean_tkn[divider] = total_mean
         cluster_trials[divider] = cluster_labels
 
+    if not cluster_trials:
+        assert len(labels) == 1
+        red(
+            f"The clustering algorithm always found the same cluster for the {len(texts)} texts. Assuming the order won't matter."
+        )
+        return [texts]
+
     best_clusters = None
     for d, ct in cluster_mean_tkn.items():
         if ct < max_token and ct >= max_token / 2:
