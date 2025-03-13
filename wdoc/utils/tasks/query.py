@@ -137,18 +137,15 @@ def parse_eval_output(output: str) -> str:
     deb(f"Eval LLM output: '{output}'")
 
     answer = parsed["answer"]
-    try:
+    answer = answer.replace("-", "")  # negative ints are not accepted anyway
+    if not answer.isdigit() and any(l.isdigit() for l in answer.splitlines()):
+        answer = [l for l in answer.splitlines() if l.isdigit()][0]
+
+    if answer.isdigit():
         answer = int(answer)
         return str(answer)
-    except Exception as err:
-        red(
-            f"Document was not evaluated with a number: '{err}' for answer '{answer}'\nKeeping the document anyway."
-        )
-        return str(5)
 
-    if "-" in parsed["answer"]:
-        raise InvalidDocEvaluationByLLMEval(mess)
-    digits = [d for d in list(parsed["answer"]) if d.isdigit()]
+    digits = [d for d in re.split(r"\b", parsed["answer"]) if d.isdigit()]
 
     # contain no digits
     if not digits:
@@ -156,17 +153,9 @@ def parse_eval_output(output: str) -> str:
 
     # good
     elif len(digits) == 1:
-        if digits[0] == "0":
-            return "0"
-        elif digits[0] == "1":
-            return "1"
-        elif digits[0] == "2":
-            return "1"
-        else:
-            raise InvalidDocEvaluationByLLMEval(mess)
+        return digits[0]
     else:
-        # ambiguous
-        raise InvalidDocEvaluationByLLMEval(mess)
+        raise InvalidDocEvaluationByLLMEval(mess)  # ambiguous
 
 
 @log_and_time_fn
