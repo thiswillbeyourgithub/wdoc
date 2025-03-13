@@ -906,8 +906,13 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         if ANSW in output and ANSWE in output:
             answer = (
                 output.replace(thinking, "")
-                .split(ANSW, 1)[1]
-                .split(ANSWE, 1)[0]
+                # .split(ANSW, 1)[1]
+                # .split(ANSWE, 1)[0]
+                # # actually parsing the answer should remove the thinking only as otherwise it can for example remove the source_id if it was specified outside of the answer.
+                .replace(THIN, "")
+                .replace(THINE, "")
+                .replace(ANSW, "")
+                .replace(ANSWE, "")
                 .strip()
             )
 

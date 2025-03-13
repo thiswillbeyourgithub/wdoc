@@ -96,7 +96,7 @@ from .utils.prompts import prompts
 from .utils.retrievers import create_multiquery_retriever, create_parent_retriever
 from .utils.tasks.query import (
     check_intermediate_answer,
-    collate_intermediate_answers,
+    collate_relevant_intermediate_answers,
     parse_eval_output,
     pbar_chain,
     pbar_closer,
@@ -1900,37 +1900,47 @@ class wdoc:
 
             assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
 
-            if len(output["intermediate_answers"]) > 1:
+            output["relevant_filtered_docs"] = []
+            output["relevant_intermediate_answers"] = []
+            for ia, a in enumerate(output["intermediate_answers"]):
+                if check_intermediate_answer(a):
+                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
+                    output["relevant_intermediate_answers"].append(a)
+
+            # Create consistent document identifiers using WDOC_N format
+            output["source_mapping"] = {}
+            for ifd, fd in enumerate(output["relevant_filtered_docs"]):
+                doc_id = f"WDOC_{ifd + 1}"
+                output["source_mapping"][doc_id] = ifd + 1
+                ia = output["relevant_intermediate_answers"][ifd]
+                output["relevant_intermediate_answers"][
+                    ifd
+                ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
+
+            @optional_typecheck
+            def source_replace(input: str, mapping: dict) -> str:
+                # Make a copy of the input to avoid modifying the original string during iteration
+                result = input
+                # substitude in reverse order to avoid WDOC_2 replacing WDOC_21
+                doc_ids = list(mapping.keys())
+                for doc_id in doc_ids[::-1]:
+                    doc_num = mapping[doc_id]
+                    result = result.replace(doc_id, f"[{doc_num}]")
+                return result
+
+            if len(output["relevant_intermediate_answers"]) > 1:
                 # next step is to combine the intermediate answers into a single answer
                 final_answer_chain = RunnablePassthrough.assign(
                     final_answer=RunnablePassthrough.assign(
                         question=lambda inputs: inputs["question_to_answer"],
-                        intermediate_answers=lambda inputs: collate_intermediate_answers(
-                            list_ia=inputs["intermediate_answers"],
+                        intermediate_answers=lambda inputs: collate_relevant_intermediate_answers(
+                            list_ia=inputs["relevant_intermediate_answers"],
                         ),
                     )
                     | prompts.combine
                     | self.llm
                     | StrOutputParser()
                 )
-
-                # Create consistent document identifiers using WDOC_N format
-                output["source_mapping"] = {}
-                for ifd, fd in enumerate(output["filtered_docs"]):
-                    doc_id = f"WDOC_{ifd + 1}"
-                    output["source_mapping"][doc_id] = ifd + 1
-                    ia = output["intermediate_answers"][ifd]
-                    output["intermediate_answers"][
-                        ifd
-                    ] = f"Source identifier: [[{doc_id}]]\n{ia}"
-
-                @optional_typecheck
-                def source_replace(input: str, mapping: dict) -> str:
-                    # Make a copy of the input to avoid modifying the original string during iteration
-                    result = input
-                    for doc_id, doc_num in mapping.items():
-                        result = result.replace(f"[[{doc_id}]]", f"[{doc_num}]")
-                    return result
 
                 llmcallback = self.llm.callbacks[0]
                 cost_before_combine = (
@@ -1942,27 +1952,26 @@ class wdoc:
                 # each batch is at least 2 intermediate answers and maxes at
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
-                all_intermediate_answers = [output["intermediate_answers"]]
+                all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
                 pbar = tqdm(
                     desc="Combining answers",
                     unit="answer",
-                    total=len(output["intermediate_answers"]),
+                    total=len(output["relevant_intermediate_answers"]),
                     # disable=not is_verbose,
                     disable=is_piped,
                 )
-                temp_interm_answ = output["intermediate_answers"]
+                temp_interm_answ = output["relevant_intermediate_answers"]
                 temp_interm_answ = [
                     thinking_answer_parser(a)["answer"] for a in temp_interm_answ
                 ]
                 while True:
                     batches = [[]]
-                    # disregard IRRELEVANT answers
-                    temp_interm_answ = [
-                        ia for ia in temp_interm_answ if check_intermediate_answer(ia)
-                    ]
                     batches = semantic_batching(temp_interm_answ, self.embedding_engine)
                     batch_args = [
-                        {"question_to_answer": query_an, "intermediate_answers": b}
+                        {
+                            "question_to_answer": query_an,
+                            "relevant_intermediate_answers": b,
+                        }
                         for b in batches
                     ]
                     temp_interm_answ = []
@@ -1973,7 +1982,6 @@ class wdoc:
                         for trial in range(n_trial):
                             try:
                                 answer_text = a["final_answer"]
-                                # Preserve any source identifiers in the combined answer
                                 o = thinking_answer_parser(
                                     answer_text,
                                     strict=True,
@@ -1993,10 +2001,10 @@ class wdoc:
                                 # modify the batch slightly to bypass the cache
                                 altered_batch = batch_args[ia]
                                 altered_batch["question_to_answer"] += "."
-                                altered_batch["intermediate_answers"] += "."
+                                altered_batch["relevant_intermediate_answers"] += "."
                                 a = final_answer_chain.batch([altered_batch])[0]
 
-                    all_intermediate_answers.append(temp_interm_answ)
+                    all_rlvt_interim_ans.append(temp_interm_answ)
                     pbar.n = pbar.total - len(temp_interm_answ) + 1
                     pbar.update(0)
                     if len(temp_interm_answ) == 1:
@@ -2004,36 +2012,31 @@ class wdoc:
 
                 assert pbar.n == pbar.total
                 pbar.close()
-                assert len(all_intermediate_answers[-1]) == 1
+                assert len(all_rlvt_interim_ans[-1]) == 1
 
-                final_answer = all_intermediate_answers[-1][0]
-                output["all_intermediate_answers"] = all_intermediate_answers
+                final_answer = all_rlvt_interim_ans[-1][0]
+                output["all_relevant_intermediate_answers"] = all_rlvt_interim_ans
             else:
-                final_answer = output["intermediate_answers"][0]
-
-                # Create consistent document identifiers using WDOC_N format for single document case
-                output["source_mapping"] = {}
-                doc_id = "WDOC_1"
-                output["source_mapping"][doc_id] = 1
-
-                # Add source identifier to the single intermediate answer
-                output["intermediate_answers"][
-                    0
-                ] = f"Source identifier: [[{doc_id}]]\n{final_answer}"
+                final_answer = output["relevant_intermediate_answers"][0]
 
                 # Apply source replacement to final answer
                 final_answer = f"Source identifier: [[{doc_id}]]\n{final_answer}"
-                final_answer = source_replace(final_answer, output["source_mapping"])
-                output["all_intermediate_answers"] = [output["intermediate_answers"][0]]
+                output["all_relevant_intermediate_answers"] = [
+                    output["relevant_intermediate_answers"][0]
+                ]
+
+            # check that all sources used as intermediates are mentionned in the final answer
+            collates = "\n".join(
+                ["\n".join(d) for d in output["all_relevant_intermediate_answers"]]
+            )
+            missing_mapper = []
+            for k, v in output["source_mapping"].items():
+                if k in collates and k not in final_answer:
+                    missing_mapper.append(v)
 
             # prepare the content of the output
+            final_answer = source_replace(final_answer, output["source_mapping"])
             output["final_answer"] = final_answer
-            output["relevant_filtered_docs"] = []
-            output["relevant_intermediate_answers"] = []
-            for ia, a in enumerate(output["intermediate_answers"]):
-                if check_intermediate_answer(a):
-                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
-                    output["relevant_intermediate_answers"].append(a)
 
             # display sources (i.e. documents used to answer)
             md_printer("---")
@@ -2047,13 +2050,14 @@ class wdoc:
                 )
             else:
                 md_printer("\n\n# Intermediate answers for each document:")
+            n = len(output["relevant_intermediate_answers"])
             for counter, (ia, doc) in enumerate(
                 zip(
-                    output["relevant_intermediate_answers"],
-                    output["relevant_filtered_docs"],
+                    output["relevant_intermediate_answers"][::-1],
+                    output["relevant_filtered_docs"][::-1],
                 )
             ):
-                to_print = f"## Document #{counter + 1}\n"
+                to_print = f"## Document #{n - counter}\n"
                 content = doc.page_content.strip()
                 to_print += "```\n" + content + "\n ```\n"
                 for k, v in doc.metadata.items():
@@ -2076,6 +2080,11 @@ class wdoc:
                 )
             )
 
+            if missing_mapper:
+                red(
+                    f"Found some source mappers in intermediate answers that are missing from the final answer. Here are the documents #: {','.join(map(str, missing_mapper))}"
+                )
+
             # print the breakdown of documents used and chain time
             red(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
@@ -2086,13 +2095,13 @@ class wdoc:
             red(
                 f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
             )
-            if len(all_intermediate_answers) > 1:
-                extra = "->".join([str(len(ia)) for ia in all_intermediate_answers])
+            if len(all_rlvt_interim_ans) > 1:
+                extra = "->".join([str(len(ia)) for ia in all_rlvt_interim_ans])
                 extra = f"({extra})"
             else:
                 extra = ""
             red(
-                f"Number of steps to combine intermediate answers: {len(all_intermediate_answers) - 1} {extra}"
+                f"Number of steps to combine intermediate answers: {len(all_rlvt_interim_ans) - 1} {extra}"
             )
             red(f"Time took by the chain: {chain_time:.2f}s")
 

@@ -172,33 +172,22 @@ def parse_eval_output(output: str) -> str:
 
 @log_and_time_fn
 @optional_typecheck
-def collate_intermediate_answers(
+def collate_relevant_intermediate_answers(
     list_ia: List[str],
 ) -> str:
-    """write the intermediate answers in a single string to be
-    combined by the LLM"""
-    # remove answers deemed irrelevant
-    list_ia = [ia for ia in list_ia if check_intermediate_answer(ia)]
+    """rewrite the relevant intermediate answers in a single string to be
+    readable by the combining LLM"""
+    assert list_ia == [
+        ia for ia in list_ia if check_intermediate_answer(ia)
+    ], f"collate_relevant_intermediate_answers should only be receiving relevant answers"
     assert (
         len(list_ia) >= 2
     ), f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
 
-    out = "Intermediate answers:"
-    for iia, ia in enumerate(list_ia):
+    out = ""
+    for ia in list_ia:
         ia = ia.replace("- • ", "- ").replace("• ", "- ")  # occasional bad md
-
-        # Preserve the original source identifier if present
-        source_match = re.search(r"Source identifier: \[\[(WDOC_\d+)\]\]", ia)
-        source_id = source_match.group(1) if source_match else f"WDOC_{iia + 1}"
-
-        # Remove the original source identifier line if present
-        if source_match:
-            ia = re.sub(r"Source identifier: \[\[WDOC_\d+\]\]\n", "", ia)
-
-        out += f"""
-<ia source_id="{source_id}">
-{ia}
-</ia>\n""".lstrip()
+        out += f"{ia}\n".lstrip()
     return out
 
 
@@ -507,6 +496,9 @@ def semantic_batching(
         set(unchained)
     ), "There were duplicate texts in buckets!"
     assert all(t in texts for t in unchained), "Some text of buckets were added!"
+    assert sorted(unchained) == sorted(
+        texts
+    ), f"There is an issue with semantic_batching"
 
     return buckets
 
