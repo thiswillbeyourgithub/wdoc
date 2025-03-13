@@ -29,7 +29,7 @@ from ..errors import (
     NoDocumentsRetrieved,
 )
 from ..flags import is_verbose
-from ..logger import red, whi
+from ..logger import red, whi, deb
 from ..misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
 from ..typechecker import optional_typecheck
 
@@ -134,8 +134,7 @@ def parse_eval_output(output: str) -> str:
 
     parsed = thinking_answer_parser(output)
 
-    if is_verbose:
-        whi(f"Eval LLM output: '{output}'")
+    deb(f"Eval LLM output: '{output}'")
 
     answer = parsed["answer"]
     try:
@@ -367,8 +366,7 @@ def semantic_batching(
 
     # make sure no cluster contains only one text
     while not all((cluster_labels == lab).sum() > 1 for lab in labels):
-        if is_verbose:
-            whi("Remapping clusters.")
+        deb("Remapping clusters.")
         for lab in labels:
             if (cluster_labels == lab).sum() == 1:
                 t = texts[np.argmax(cluster_labels == lab)]
@@ -382,12 +380,10 @@ def semantic_batching(
                     # better to even them out
                     assert len(labels) == 2, labels
                     cluster_labels[t_closest] = lab
-                    if is_verbose:
-                        whi(f"Remapped one item from cluster {l_closest} to {lab}")
+                    deb(f"Remapped one item from cluster {l_closest} to {lab}")
                 else:  # good to go
                     cluster_labels[cluster_labels == lab] = l_closest
-                    if is_verbose:
-                        whi(f"Remapped single item of cluster {lab} to {l_closest}")
+                    deb(f"Remapped single item of cluster {lab} to {l_closest}")
                 break
         labels = np.unique(cluster_labels)
         labels.sort()
@@ -428,8 +424,7 @@ def semantic_batching(
     # now if any bucket contains only one text, that means it has too many
     # tokens itself, so we reequilibrate from the previous buckets
     while not all(len(b) >= 2 for b in buckets):
-        if is_verbose:
-            whi(f"Merging sub buckets. Current len: {len(buckets)}")
+        deb(f"Merging sub buckets. Current len: {len(buckets)}")
         for ib, b in enumerate(buckets):
             assert b
             if len(b) == 1:
@@ -460,8 +455,7 @@ def semantic_batching(
                     else:
                         next_id = ib + 1
                 assert buckets[next_id], buckets[next_id]
-                if is_verbose:
-                    whi(f"Next_id is {next_id}")
+                deb(f"Next_id is {next_id}")
 
                 if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
                     if next_id > ib:

@@ -92,8 +92,7 @@ def load_embeddings_engine(
     else:
         instruct = False
 
-    if is_verbose:
-        whi(f"Selected embedding model '{modelname}' of backend {modelname.backend}")
+    deb(f"Selected embedding model '{modelname}' of backend {modelname.backend}")
 
     if True:
         try:

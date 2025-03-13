@@ -18,7 +18,7 @@ from langchain_openai import ChatOpenAI
 
 from .env import WDOC_PRIVATE_MODE, WDOC_LITELLM_TAGS, WDOC_LITELLM_USER
 from .flags import is_private, is_verbose
-from .logger import red, whi, yel
+from .logger import red, whi, yel, deb
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
 
@@ -86,8 +86,7 @@ def load_llm(
     else:
         assert "testing" not in modelname.original.lower()
 
-    if is_verbose:
-        whi("Loading model via litellm")
+    deb("Loading model via litellm")
 
     if private:
         assert api_base, "If private is set, api_base must be set too"

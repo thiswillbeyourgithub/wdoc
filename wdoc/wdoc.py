@@ -593,10 +593,9 @@ class wdoc:
             self.prepare_query_task()
 
         if self.import_mode:
-            if is_verbose:
-                whi(
-                    "Ready to query or summarize, call your_instance.query_task(your_question)"
-                )
+            deb(
+                "Ready to query or summarize, call your_instance.query_task(your_question)"
+            )
             return
 
         if self.task in ["summarize", "summarize_then_query"]:
@@ -1395,8 +1394,8 @@ class wdoc:
             query_an = sp[1].strip()
         else:
             query_fe, query_an = copy.copy(query), copy.copy(query)
-        whi(f"Query for the embeddings: {query_fe}")
-        whi(f"Question to answer: {query_an}")
+        deb(f"Query for the embeddings: {query_fe}")
+        deb(f"Question to answer: {query_an}")
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
