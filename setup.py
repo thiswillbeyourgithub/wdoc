@@ -142,7 +142,7 @@ setup(
         "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optionnal as it can help infer the filetype
         "uuid6",  # for time sortable timestamp
-        "PersistDict >= 0.2.12",  # by me, like a dict but an LMDB database, to fix langchain's caches
+        "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         # Loaders:
         "docx2txt >= 0.8",  # word documents
         "pandoc >= 2.3",  # epub
