@@ -6,7 +6,8 @@ from beartype.typing import Any, List, Union
 from langchain.docstore.document import Document
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain.storage import LocalFileStore
+
+# from langchain.storage import LocalFileStore
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_core.retrievers import BaseRetriever
 from langchain_openai import ChatOpenAI
@@ -14,6 +15,7 @@ from langchain_openai import ChatOpenAI
 from .misc import cache_dir, get_splitter
 from .prompts import multiquery_parser, prompts
 from .typechecker import optional_typecheck
+from .customs.compressed_embeddings_cacher import LocalFileStore
 
 
 @optional_typecheck
