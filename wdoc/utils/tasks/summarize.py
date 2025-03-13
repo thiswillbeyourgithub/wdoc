@@ -9,13 +9,14 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 
 from ..logger import red, whi
-from ..misc import thinking_answer_parser
+from ..misc import thinking_answer_parser, log_and_time_fn
 from ..prompts import BASE_SUMMARY_PROMPT, PREV_SUMMARY_TEMPLATE, RECURSION_INSTRUCTION
 from ..typechecker import optional_typecheck
 
 HOME = str(Path.home())
 
 
+@log_and_time_fn
 @optional_typecheck
 def do_summarize(
     docs: List[Document],

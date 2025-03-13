@@ -1113,3 +1113,14 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
             success = False
 
     return success
+
+
+def log_and_time_fn(fn: Callable) -> Callable:
+    def wrapper(*args, **kwargs):
+        deb(f"Enterring {fn}")
+        val = fn(*args, **kwargs)
+        deb(f"Exiting {fn}")
+        return val
+
+    wrapped = wraps(fn)(wrapper)
+    return wrapped

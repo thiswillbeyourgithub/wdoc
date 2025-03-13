@@ -30,12 +30,13 @@ from ..errors import (
 )
 from ..flags import is_verbose
 from ..logger import red, whi
-from ..misc import get_tkn_length, thinking_answer_parser
+from ..misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
 from ..typechecker import optional_typecheck
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
+@log_and_time_fn
 @optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
@@ -48,6 +49,7 @@ def check_intermediate_answer(ans: str) -> bool:
     return False
 
 
+@log_and_time_fn
 @optional_typecheck
 def sieve_documents(instance) -> RunnableLambda:
     """cap the number of retrieved documents as if multiple retrievers are used
@@ -77,6 +79,7 @@ def sieve_documents(instance) -> RunnableLambda:
 
 
 @chain
+@log_and_time_fn
 @optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents fond via RAG based on the digit answered by the eval llm"
@@ -119,6 +122,7 @@ def refilter_docs(inputs: dict) -> List[Document]:
     return filtered_docs
 
 
+@log_and_time_fn
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
     mess = (
@@ -166,6 +170,7 @@ def parse_eval_output(output: str) -> str:
         raise InvalidDocEvaluationByLLMEval(mess)
 
 
+@log_and_time_fn
 @optional_typecheck
 def collate_intermediate_answers(
     list_ia: List[str],
@@ -181,15 +186,15 @@ def collate_intermediate_answers(
     out = "Intermediate answers:"
     for iia, ia in enumerate(list_ia):
         ia = ia.replace("- • ", "- ").replace("• ", "- ")  # occasional bad md
-        
+
         # Preserve the original source identifier if present
         source_match = re.search(r"Source identifier: \[\[(WDOC_\d+)\]\]", ia)
         source_id = source_match.group(1) if source_match else f"WDOC_{iia + 1}"
-        
+
         # Remove the original source identifier line if present
         if source_match:
             ia = re.sub(r"Source identifier: \[\[WDOC_\d+\]\]\n", "", ia)
-        
+
         out += f"""
 <ia source_id="{source_id}">
 {ia}
@@ -197,6 +202,7 @@ def collate_intermediate_answers(
     return out
 
 
+@log_and_time_fn
 @optional_typecheck
 def semantic_batching(
     texts: List[str],
