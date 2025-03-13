@@ -327,7 +327,7 @@ def semantic_batching(
     # get each bucket if we were only looking at the number of texts
     cluster_trials = {}
     cluster_mean_tkn = {}
-    for divider in [3, 4, 5, 6]:
+    for divider in [2, 3, 4, 5, 6]:
         if divider > len(pd_dist.index):
             continue
         cluster_labels = scipy.cluster.hierarchy.fcluster(
