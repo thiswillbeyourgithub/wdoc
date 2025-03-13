@@ -52,7 +52,7 @@ class LocalFileStore(ByteStore):
         Args:
             database_path (Union[str, Path]): The path to the sqlite to use
             expiration_days: int, embeddings older than this will get removed
-            verbose: bool, default Fakle
+            verbose: bool, default False
             *args: All other args are ignored
             **kwargs: Ignored too
         """
