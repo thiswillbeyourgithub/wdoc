@@ -44,6 +44,7 @@ class LocalFileStore(ByteStore):
         database_path: Union[str, Path],
         expiration_days: int = None,
         verbose: bool = False,
+        name: str = "LocalFileStore",
         *args,
         **kwargs,
     ) -> None:
@@ -53,6 +54,7 @@ class LocalFileStore(ByteStore):
             database_path (Union[str, Path]): The path to the sqlite to use
             expiration_days: int, embeddings older than this will get removed
             verbose: bool, default False
+            name: str, default to 'LocalFileStore'. Simply used for knowing the origin of PersistDict's logs.
             *args: All other args are ignored
             **kwargs: Ignored too
         """
@@ -61,6 +63,7 @@ class LocalFileStore(ByteStore):
             database_path=database_path,
             expiration_days=expiration_days,
             verbose=verbose,
+            name=name,
         )
 
     def mget(self, keys: Sequence[str]) -> List[Optional[bytes]]:
