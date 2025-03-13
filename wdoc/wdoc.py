@@ -67,6 +67,7 @@ from .utils.logger import (
     logger,
     md_printer,
     red,
+    deb,
     set_help_md_as_docstring,
     set_parse_file_help_md_as_docstring,
     whi,
@@ -1621,6 +1622,8 @@ class wdoc:
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     "question_to_answer": itemgetter("question_to_answer"),
                 }
+
+                deb("Defining the rag_chain")
                 rag_chain = (
                     retrieve_documents
                     | sieve_documents(instance=self)
@@ -1640,6 +1643,7 @@ class wdoc:
                     try:
                         assert self.top_k not in tried_top_k
                         tried_top_k.append(self.top_k)
+                        deb("Calling the rag_chain")
                         output = rag_chain.invoke(
                             {
                                 "question_for_embedding": query_fe,
@@ -1825,6 +1829,7 @@ class wdoc:
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
+            deb("Defining the rag_chain")
             rag_chain = (
                 retrieve_documents
                 | sieve_documents(instance=self)
@@ -1858,6 +1863,7 @@ class wdoc:
                 try:
                     assert self.top_k not in tried_top_k
                     tried_top_k.append(self.top_k)
+                    deb("Calling the rag_chain")
                     output = rag_chain.invoke(
                         {
                             "question_for_embedding": query_fe,
