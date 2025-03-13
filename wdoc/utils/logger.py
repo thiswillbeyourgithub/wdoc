@@ -101,7 +101,6 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
     message = dedent(message)
     if not md_printing_disabled:
-        logger.debug(message)
         md = Markdown(message)
         console.print(md, style=color)
     else:
