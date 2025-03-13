@@ -41,11 +41,6 @@ from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from .typechecker import optional_typecheck
 
 
-def status(message: str):
-    if is_verbose:
-        whi(f"STATUS: {message}")
-
-
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
