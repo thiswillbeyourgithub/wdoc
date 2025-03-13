@@ -1914,7 +1914,9 @@ class wdoc:
                     doc_id = f"WDOC_{ifd + 1}"
                     output["source_mapping"][doc_id] = ifd + 1
                     ia = output["intermediate_answers"][ifd]
-                    output["intermediate_answers"][ifd] = f"Source identifier: [[{doc_id}]]\n{ia}"
+                    output["intermediate_answers"][
+                        ifd
+                    ] = f"Source identifier: [[{doc_id}]]\n{ia}"
 
                 @optional_typecheck
                 def source_replace(input: str, mapping: dict) -> str:
@@ -2002,15 +2004,17 @@ class wdoc:
                 output["all_intermediate_answers"] = all_intermediate_answers
             else:
                 final_answer = output["intermediate_answers"][0]
-                
+
                 # Create consistent document identifiers using WDOC_N format for single document case
                 output["source_mapping"] = {}
                 doc_id = "WDOC_1"
                 output["source_mapping"][doc_id] = 1
-                
+
                 # Add source identifier to the single intermediate answer
-                output["intermediate_answers"][0] = f"Source identifier: [[{doc_id}]]\n{final_answer}"
-                
+                output["intermediate_answers"][
+                    0
+                ] = f"Source identifier: [[{doc_id}]]\n{final_answer}"
+
                 # Apply source replacement to final answer
                 final_answer = f"Source identifier: [[{doc_id}]]\n{final_answer}"
                 final_answer = source_replace(final_answer, output["source_mapping"])
@@ -2060,7 +2064,11 @@ class wdoc:
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
             md_printer("---")
-            md_printer(indent(f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "))
+            md_printer(
+                indent(
+                    f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "
+                )
+            )
 
             # print the breakdown of documents used and chain time
             red(
