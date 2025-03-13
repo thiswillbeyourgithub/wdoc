@@ -36,7 +36,7 @@ from .env import (
     WDOC_MOD_FAISS_SCORE_FN,
 )
 from .flags import is_verbose
-from .logger import red, whi
+from .logger import red, whi, deb
 from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from .typechecker import optional_typecheck
 
@@ -86,6 +86,7 @@ def load_embeddings_engine(
     Create the Embeddings class used to compute embeddings. This class is wrapped
     into a CacheBackedEmbeddings to add a caching layer.
     """
+    deb("Loading the embeddings engine")
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
     else:
@@ -220,6 +221,7 @@ def load_embeddings_engine(
                 f"Error when testing embeddings after loading the cache, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
             )
 
+    deb("Done loading cached embeddings")
     return cached_embeddings
 
 
@@ -238,6 +240,7 @@ def create_embeddings(
     computed and present in the cache or ask the CacheBackedEmbeddings class
     to create them and return to wdoc.loaded_embeddings.
     """
+    deb("Creating embeddings")
 
     # reload passed embeddings
     if load_embeds_from:
@@ -254,8 +257,6 @@ def create_embeddings(
         n_doc = len(db.index_to_docstore_id.keys())
         red(f"Loaded {n_doc} documents")
         return db
-
-    whi("\nLoading embeddings.")
 
     db = None
     ti = time.time()
@@ -363,14 +364,18 @@ def create_embeddings(
     whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
     # saving embeddings
+    deb("Saving embeddings to file")
     db.save_local(save_embeds_as)
+    deb("Done saving embeddings to file")
 
+    deb("Done creating embeddings")
     return db
 
 
 @optional_typecheck
 def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
+    deb("Testing embeddings")
     vec1 = np.array(embeddings.embed_query("This is a test"))
     vec2 = np.array(embeddings.embed_documents(["This is another test"])[0])
     shape1 = vec1.shape
@@ -384,3 +389,4 @@ def test_embeddings(embeddings: Embeddings) -> None:
     assert not (
         (vec1 == 0).all() or (vec2 == 0).all()
     ), "Test vectors 1 or 2 or both is only zeroes"
+    deb("Done testing embeddings")
