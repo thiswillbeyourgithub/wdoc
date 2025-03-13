@@ -750,3 +750,9 @@
 
 * `WDOC_LITELLM_USER`, default: `wdoc_llm`
     * Put as `user` argument when creating ChatLiteLLM object that talks to LLMs.
+
+* `WDOC_APPLY_ASYNCIO_PATCH`, default: `False`
+    * If True, applies the `nest_asyncio` patch to fix the `Event loop closed` error that can occur with Ollama and
+    other async-based LLM providers. Set to False if you're experiencing issues with asyncio or if you're
+    handling asyncio patching elsewhere in your application.
+    See https://github.com/BerriAI/litellm/pull/7625/files
