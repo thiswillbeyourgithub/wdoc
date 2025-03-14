@@ -701,24 +701,22 @@
     * If True, modify on the fly the FAISS vectorstores to change their scoring function. This was  inspired by [this langchain issue where users claim the default scoring function is wrong](https://github.com/langchain-ai/langchain/issues/17333)
     Default is False.
 
-* `WDOC_LLM_MAX_CONCURRENCY`
+* `WDOC_LLM_MAX_CONCURRENCY`, default `15`
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
-    Must be an int. By default is `5`.
+    Must be an int.
 
-* `WDOC_MAX_CHUNK_SIZE`
+* `WDOC_MAX_CHUNK_SIZE`, default `32_000`
     * When splitting large text into chunks, `wdoc` infers the maximum context size from litellm's models metadata.
     The maximum chunk size is capped by this value, as the maximum advertised context length is usually optimistic
     and is often at the cost of prompt adherence.
     Note that the chunk size inferred for query is not the same as for summary as we need  a much better prompt adherence
     for the latter.
     This can also be used to avoid chunking when querying a text if you want the LLM to have the entier text as context instead of chunking.
-    Default is `32_000`.
 
-* `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`
+* `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`, default: `1000`
     * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
-    Default is `1000`.
 
 * `WDOC_DEFAULT_MODEL`, default: `"openai/gpt-4o"`
     * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
