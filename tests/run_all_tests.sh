@@ -9,7 +9,7 @@ sleep 1 &&\
 uv pip install -e ".." &&\
 uv pip install -e "..[fasttext]" &&\
 uv pip install -e "..[pdftotextt]" &&\
-uv pip install pytest &&\
+uv pip install pytest pytest-xdist &&\
 sleep 1 &&\
 mkdir temp &&\
 cd temp &&\
