@@ -290,7 +290,7 @@ def semantic_batching(
 
     order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
 
-    # TODO:; if <= 6 texts we should make 2 or 3 batch just using the order
+    # TODO: if <= 6 texts we should make 2 or 3 batch just using the order
 
     # # this would just return the list of strings in the best order
     # out_texts = [texts[o] for o in order]
