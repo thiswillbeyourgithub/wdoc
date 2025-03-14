@@ -571,10 +571,10 @@
     each document instead of the metadata.
     Syntax: `[+-]your_regex`
     Example:
-    * Keep only the document that contain `winstondoc`
-        `--filter_content=+.*winstondoc.*`
-    * Discard the document that contain `winstondoc`
-        `--filter_content=-.*winstondoc.*`
+    * Keep only the document that contain `wdoc`
+        `--filter_content=+.*wdoc.*`
+    * Discard the document that contain `wdoc`
+        `--filter_content=-.*wdoc.*`
 
 * `--embed_instruct`: bool, default `None`
     * when loading an embedding model using the HuggingFace backend,
