@@ -22,7 +22,7 @@ from langchain_openai import ChatOpenAI
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from ..env import WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+from ..env import WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE, WDOC_CONTINUE_ON_INVALID_EVAL
 from ..errors import (
     InvalidDocEvaluationByLLMEval,
     NoDocumentsAfterLLMEvalFiltering,
@@ -130,7 +130,11 @@ def parse_eval_output(output: str) -> str:
     )
     # empty
     if not output.strip():
-        raise InvalidDocEvaluationByLLMEval(mess)
+        if WDOC_CONTINUE_ON_INVALID_EVAL:
+            red(mess)
+            return "5"
+        else:
+            raise InvalidDocEvaluationByLLMEval(mess)
 
     parsed = thinking_answer_parser(output)
 
@@ -149,13 +153,21 @@ def parse_eval_output(output: str) -> str:
 
     # contain no digits
     if not digits:
-        raise InvalidDocEvaluationByLLMEval(mess)
+        if WDOC_CONTINUE_ON_INVALID_EVAL:
+            red(mess)
+            return "5"
+        else:
+            raise InvalidDocEvaluationByLLMEval(mess)
 
     # good
     elif len(digits) == 1:
         return digits[0]
-    else:
-        raise InvalidDocEvaluationByLLMEval(mess)  # ambiguous
+    else:  # ambiguous
+        if WDOC_CONTINUE_ON_INVALID_EVAL:
+            red(mess)
+            return "5"
+        else:
+            raise InvalidDocEvaluationByLLMEval(mess)
 
 
 @log_and_time_fn

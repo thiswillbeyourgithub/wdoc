@@ -202,6 +202,7 @@ WDOC_LITELLM_TAGS = None
 WDOC_LITELLM_USER = "wdoc_llm"
 WDOC_ENABLE_EXPERIMENTAL_ENV = False
 WDOC_APPLY_ASYNCIO_PATCH = False
+WDOC_CONTINUE_ON_INVALID_EVAL = True
 
 # by default use lazy loading if using --help argument
 if " --help" in " ".join(sys.argv):
@@ -238,6 +239,7 @@ valid_types = {
     "WDOC_LITELLM_USER": str,
     "WDOC_ENABLE_EXPERIMENTAL_ENV": bool,
     "WDOC_APPLY_ASYNCIO_PATCH": bool,
+    "WDOC_CONTINUE_ON_INVALID_EVAL": bool,
 }
 
 # sanity check for the default values

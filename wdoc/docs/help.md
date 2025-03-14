@@ -749,6 +749,12 @@
 * `WDOC_LITELLM_USER`, default: `wdoc_llm`
     * Put as `user` argument when creating ChatLiteLLM object that talks to LLMs.
 
+* `WDOC_CONTINUE_ON_INVALID_EVAL`, default: `True`
+    * If True, instead of raising an `InvalidDocEvaluationByLLMEval` exception when an eval LLM returns output that can't be parsed,
+    the system will print the error message in red and return "5" as the evaluation score. This allows the process to continue
+    despite evaluation parsing failures.
+    * If False, the system will raise the exception as normal, which typically causes the process to terminate.
+
 * `WDOC_APPLY_ASYNCIO_PATCH`, default: `False`
     * If True, applies the `nest_asyncio` patch to fix the `Event loop closed` error that can occur with Ollama and
     other async-based LLM providers. Set to False if you're experiencing issues with asyncio or if you're
