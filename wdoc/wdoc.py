@@ -1306,7 +1306,7 @@ class wdoc:
     def query_task(self, query: Optional[str]) -> dict:
         if not query:
             if self.oneoff:
-                raise SystemExit("Done")
+                sys.exit(0)
             query, self.interaction_settings = ask_user(self.interaction_settings)
         assert all(
             retriev in ["default", "multiquery", "knn", "svm", "parent"]
