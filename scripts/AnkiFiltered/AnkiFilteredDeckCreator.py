@@ -11,7 +11,7 @@ from loguru import logger
 from py_ankiconnect import PyAnkiconnect
 
 from wdoc import wdoc
-from wdoc.utils.env import WDOC_DEFAULT_MODELNAME
+from wdoc.utils.env import WDOC_DEFAULT_MODEL
 from wdoc.utils.typechecker import optional_typecheck
 
 VERSION = "1.1"
@@ -62,7 +62,7 @@ class FilteredDeckCreator:
         reschedule: bool = False,
         sort_order: int = 8,
         create_empty: bool = False,
-        query_eval_modelname: str = WDOC_DEFAULT_MODELNAME,  # by default, use the same model as we use normally for querying
+        query_eval_modelname: str = WDOC_DEFAULT_MODEL,  # by default, use the same model as we use normally for querying
         **kwargs,
     ) -> None:
         akc("sync")
