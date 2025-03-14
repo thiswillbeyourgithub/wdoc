@@ -34,7 +34,7 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format="{time} {level} wdoc {thread} {process} {function} {line} {message}",
+    format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
     level="DEBUG",
     enqueue=False,
     colorize=False,
