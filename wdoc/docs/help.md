@@ -703,7 +703,7 @@
 
 * `WDOC_LLM_MAX_CONCURRENCY`
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
-    Must be an int. By default is 15.
+    Must be an int. By default is `5`.
 
 * `WDOC_MAX_CHUNK_SIZE`
     * When splitting large text into chunks, `wdoc` infers the maximum context size from litellm's models metadata.
