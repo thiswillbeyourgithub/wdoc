@@ -501,6 +501,7 @@ class wdoc:
         if is_verbose:
             set_verbose(True)
             os.environ["LITELLM_LOG"] = "DEBUG"
+            litellm._turn_on_debug()
 
             llm_verbosity = True
             whi(f"Cache location: {cache_dir.absolute()}")
