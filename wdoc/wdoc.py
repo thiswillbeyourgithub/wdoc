@@ -156,6 +156,7 @@ class wdoc:
         llms_api_bases: Optional[Union[dict, str]] = None,
         import_mode: Union[bool, int] = False,
         disable_md_printing: bool = is_piped,
+        out_file: Optional[Union[str, Path]] = None,
         oneoff: bool = False,
         silent: bool = False,
         version: bool = False,
@@ -435,6 +436,7 @@ class wdoc:
         self.verbose = verbose
         self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
+        self.out_file = out_file
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
@@ -574,7 +576,6 @@ class wdoc:
                 "embed_instruct",
                 "filter_content",
                 "filter_metadata",
-                "out_file",
             ]:
                 if k in filtered_cli_kwargs:
                     del filtered_cli_kwargs[k]
@@ -914,18 +915,20 @@ class wdoc:
             header += f"    wdoc version {self.VERSION} with model {self.model}"
 
             # save to output file
-            if "out_file" in self.cli_kwargs:
+            if self.out_file:
                 assert not self.import_mode, "Can't use import_mode with --out_file"
                 for nrecur, sum in recursive_summaries.items():
-                    outfile = Path(self.cli_kwargs["out_file"])
+                    out_file = Path(self.out_file)
                     if len(recursive_summaries) > 1 and nrecur < max(
                         list(recursive_summaries.keys())
                     ):
                         # also store intermediate summaries if present
-                        outfile = outfile.parent / (outfile.stem + f".{nrecur + 1}.md")
+                        out_file = out_file.parent / (
+                            out_file.stem + f".{nrecur + 1}.md"
+                        )
 
-                    with open(str(outfile), "a") as f:
-                        if outfile.exists() and outfile.read_text().strip():
+                    with open(str(out_file), "a") as f:
+                        if out_file.exists() and out_file.read_text().strip():
                             f.write("\n\n\n")
                         f.write(header)
                         if len(recursive_summaries) > 1:
