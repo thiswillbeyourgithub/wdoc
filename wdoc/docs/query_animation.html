@@ -1,0 +1,242 @@
+<svg id="wdoc-flow" width="700" height="920"></svg>
+
+<style>
+.step {
+  fill: #5b8de8;
+  rx: 8;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+  transition: all 0.3s;
+}
+.text {
+  fill: white;
+  text-anchor: middle;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  pointer-events: none;
+}
+.icon {
+  fill: white;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.arrow {
+  stroke: #888;
+  stroke-width: 2;
+  stroke-dasharray: 6, 3;
+  fill: none;
+}
+.active {
+  animation: pulse 1.5s ease-in-out;
+}
+.tooltip {
+  opacity: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  background: #333;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  position: absolute;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  max-width: 200px;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; fill: #3366cc; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2)); }
+}
+</style>
+
+<script>
+(function() {
+  const svg = document.getElementById('wdoc-flow');
+  const ns = 'http://www.w3.org/2000/svg';
+  
+  // Create tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  document.body.appendChild(tooltip);
+  
+  // Create steps with descriptions
+  const steps = [
+    {
+      id: 1, 
+      label: '1. Embedding Creation', 
+      x: 200, y: 60,
+      desc: 'Text is split into chunks and embeddings are created for each chunk',
+    },
+    {
+      id: 2, 
+      label: '2. Query Expansion', 
+      x: 200, y: 120,
+      desc: 'User query is embedded and LLM generates alternative queries',
+    },
+    {
+      id: 3, 
+      label: '3. Embedding Search', 
+      x: 200, y: 180,
+      desc: 'Query embeddings used to find relevant documents (top 200)',
+    },
+    {
+      id: 4, 
+      label: '4. Document Filtering', 
+      x: 200, y: 240,
+      desc: 'Small LLM evaluates if each document is relevant to query',
+    },
+    {
+      id: 5, 
+      label: '5. Iterative Search', 
+      x: 200, y: 300,
+      desc: 'If >90% documents are relevant, search with higher top_k',
+    },
+    {
+      id: 6, 
+      label: '6. Information Extraction', 
+      x: 200, y: 360,
+      desc: 'Strong LLM extracts relevant info from documents',
+    },
+    {
+      id: 7, 
+      label: '7. Semantic Batching', 
+      x: 200, y: 420,
+      desc: 'Group similar answers using hierarchical clustering',
+    },
+    {
+      id: 8, 
+      label: '8. Answer Combination', 
+      x: 200, y: 480,
+      desc: 'LLM combines each batch into single answer recursively',
+    },
+    {
+      id: 9, 
+      label: 'Final Answer', 
+      x: 200, y: 540,
+      desc: 'Coherent response with references to source documents',
+    }
+  ];
+  
+  // Draw steps and add interactive elements
+  steps.forEach(s => {
+    const group = document.createElementNS(ns, 'g');
+    group.setAttribute('id', 'g'+s.id);
+    
+    // Box
+    const box = document.createElementNS(ns, 'rect');
+    box.setAttribute('class', 'step');
+    box.setAttribute('id', 's'+s.id);
+    box.setAttribute('x', s.x-70);
+    box.setAttribute('y', s.y-20);
+    box.setAttribute('width', 140);
+    box.setAttribute('height', 40);
+    
+    // Handle tooltip display
+    box.addEventListener('mouseover', (e) => {
+      tooltip.textContent = s.desc;
+      tooltip.style.opacity = '1';
+      tooltip.style.left = (e.pageX + 10) + 'px';
+      tooltip.style.top = (e.pageY + 10) + 'px';
+    });
+    
+    box.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.pageX + 10) + 'px';
+      tooltip.style.top = (e.pageY + 10) + 'px';
+    });
+    
+    box.addEventListener('mouseout', () => {
+      tooltip.style.opacity = '0';
+    });
+    
+    group.appendChild(box);
+    
+    // Label
+    const text = document.createElementNS(ns, 'text');
+    text.setAttribute('class', 'text');
+    text.setAttribute('x', s.x);
+    text.setAttribute('y', s.y+5);
+    text.textContent = s.label;
+    group.appendChild(text);
+    
+    // Icon
+    if (s.icon) {
+      const icon = document.createElementNS(ns, 'path');
+      icon.setAttribute('class', 'icon');
+      icon.setAttribute('d', s.icon);
+      icon.setAttribute('transform', `translate(${s.x-55}, ${s.y})`);
+      group.appendChild(icon);
+    }
+    
+    svg.appendChild(group);
+  });
+  
+  // Connect with arrows
+  const arrows = [
+    {from: 1, to: 2, d: `M170,60 C200,60 240,60 270,60`},
+    {from: 2, to: 3, d: `M340,60 C370,60 410,60 440,60`},
+    {from: 3, to: 4, d: `M510,60 C540,60 580,60 610,60`},
+    {from: 4, to: 5, d: `M610,80 C610,90 610,110 610,120`},
+    {from: 5, to: 6, d: `M540,140 C510,140 470,140 440,140`},
+    {from: 6, to: 7, d: `M370,140 C340,140 300,140 270,140`},
+    {from: 7, to: 8, d: `M200,140 C170,140 130,140 100,140`},
+    {from: 8, to: 9, d: `M100,160 C100,170 100,190 100,200`}
+  ];
+  
+  // arrows.forEach((a, i) => {
+  //   const arrow = document.createElementNS(ns, 'path');
+  //   arrow.setAttribute('class', 'arrow');
+  //   arrow.setAttribute('id', 'a'+i);
+  //   arrow.setAttribute('d', a.d);
+  //   arrow.setAttribute('marker-end', 'url(#arrowhead)');
+  //   svg.appendChild(arrow);
+  // });
+
+  // Add arrowhead marker
+  const defs = document.createElementNS(ns, 'defs');
+  const marker = document.createElementNS(ns, 'marker');
+  marker.setAttribute('id', 'arrowhead');
+  marker.setAttribute('markerWidth', '10');
+  marker.setAttribute('markerHeight', '7');
+  marker.setAttribute('refX', '10');
+  marker.setAttribute('refY', '3.5');
+  marker.setAttribute('orient', 'auto');
+  
+  const polygon = document.createElementNS(ns, 'polygon');
+  polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+  polygon.setAttribute('fill', '#888');
+  
+  marker.appendChild(polygon);
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+  
+  // Add title
+  const title = document.createElementNS(ns, 'text');
+  title.setAttribute('x', 200);
+  title.setAttribute('y', 25);
+  title.setAttribute('text-anchor', 'middle');
+  title.setAttribute('font-family', 'system-ui, -apple-system, sans-serif');
+  title.setAttribute('font-size', '14px');
+  title.setAttribute('font-weight', 'bold');
+  title.setAttribute('fill', '#333');
+  title.textContent = 'wdoc RAG Query Algorithm Flow';
+  svg.appendChild(title);
+  
+  // Animation with sequential highlighting
+  function animate() {
+    const items = [...Array(9).keys()].map(i => ['s'+(i+1), 'a'+i]).flat().filter(id => document.getElementById(id));
+    
+    items.forEach((id, i) => {
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('active');
+          setTimeout(() => el.classList.remove('active'), 1500);
+        }
+      }, i * 700);
+    });
+    
+    setTimeout(animate, (items.length * 700) + 1000);
+  }
+  
+  setTimeout(animate, 1000);
+})();
+</script>
