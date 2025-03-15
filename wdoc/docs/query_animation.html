@@ -20,12 +20,6 @@
   opacity: 0.9;
   pointer-events: none;
 }
-.arrow {
-  stroke: #888;
-  stroke-width: 2;
-  stroke-dasharray: 6, 3;
-  fill: none;
-}
 .active {
   animation: pulse 1.5s ease-in-out;
 }
@@ -169,26 +163,6 @@
     svg.appendChild(group);
   });
   
-  // Connect with arrows
-  const arrows = [
-    {from: 1, to: 2, d: `M170,60 C200,60 240,60 270,60`},
-    {from: 2, to: 3, d: `M340,60 C370,60 410,60 440,60`},
-    {from: 3, to: 4, d: `M510,60 C540,60 580,60 610,60`},
-    {from: 4, to: 5, d: `M610,80 C610,90 610,110 610,120`},
-    {from: 5, to: 6, d: `M540,140 C510,140 470,140 440,140`},
-    {from: 6, to: 7, d: `M370,140 C340,140 300,140 270,140`},
-    {from: 7, to: 8, d: `M200,140 C170,140 130,140 100,140`},
-    {from: 8, to: 9, d: `M100,160 C100,170 100,190 100,200`}
-  ];
-  
-  // arrows.forEach((a, i) => {
-  //   const arrow = document.createElementNS(ns, 'path');
-  //   arrow.setAttribute('class', 'arrow');
-  //   arrow.setAttribute('id', 'a'+i);
-  //   arrow.setAttribute('d', a.d);
-  //   arrow.setAttribute('marker-end', 'url(#arrowhead)');
-  //   svg.appendChild(arrow);
-  // });
 
   // Add arrowhead marker
   const defs = document.createElementNS(ns, 'defs');
