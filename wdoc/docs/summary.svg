@@ -166,11 +166,6 @@
   <path d="M530,190 L530,250" class="process-arrow" />
   <path d="M505,295 Q450,320 425,330" class="process-arrow" />
   <path d="M375,325 Q320,290 290,220 Q270,160 375,115" class="process-arrow" />
-  
-  <!-- Context flow visualization - clearer and separate from main flow -->
-  <path d="M490,180 Q400,285 310,200 Q290,170 375,125" class="context-arrow" />
-  <rect x="320" y="190" width="90" height="24" rx="12" ry="12" fill="#e1f5fe" stroke="#0091ea" stroke-width="1" />
-  <text x="365" y="206" font-size="12" text-anchor="middle" fill="#0277bd">Context Flow</text>
 
   <!-- Output section -->
   <rect x="300" y="440" width="200" height="60" rx="10" ry="10" fill="#e1f5fe" stroke="#3d7be6" stroke-width="2" filter="url(#dropShadow)" />
