@@ -1,7 +1,11 @@
+import os
 import tempfile
 from pathlib import Path
 
 import pytest
+
+# apply the patch to make ollama work
+os.environ["WDOC_APPLY_ASYNCIO_PATCH"] = "true"
 
 
 def pytest_configure(config):

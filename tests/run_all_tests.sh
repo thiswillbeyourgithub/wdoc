@@ -13,8 +13,8 @@ uv pip install pytest pytest-xdist &&\
 sleep 1 &&\
 mkdir temp &&\
 cd temp &&\
-WDOC_APPLY_ASYNCIO_PATCH=true python -m pytest ../test_wdoc.py -n auto -v && \
-WDOC_APPLY_ASYNCIO_PATCH=true python -m pytest ../test_wdoc.py -m api -v &&\
+python -m pytest ../test_wdoc.py -n auto -v && \
+python -m pytest ../test_wdoc.py -m api -v &&\
 cd .. &&\
 deactivate &&\
 trash test_venv temp &&\
