@@ -156,23 +156,24 @@
   <text x="605" y="297" class="step-sublabel">Summaries</text>
   
   <!-- Step 4: Optional Recursive -->
-  <circle cx="400" cy="340" class="step-circle" />
-  <text x="400" y="340" class="step-number">4</text>
-  <text x="400" y="385" class="step-label">Optional Recursion</text>
-  <text x="400" y="402" class="step-sublabel">For Large Documents</text>
+  <circle cx="270" cy="280" class="step-circle" />
+  <text x="270" y="280" class="step-number">4</text>
+  <text x="195" y="280" class="step-label">Optional Recursion</text>
+  <text x="195" y="297" class="step-sublabel">For Large Documents</text>
   
   <!-- Main process arrows -->
   <path d="M420,120 Q470,130 510,145" class="process-arrow" />
   <path d="M530,190 L530,250" class="process-arrow" />
-  <path d="M505,295 Q450,320 425,330" class="process-arrow" />
-  <path d="M375,325 Q320,290 290,220 Q270,160 375,115" class="process-arrow" />
+  <path d="M505,295 Q470,340 400,440" class="process-arrow" />
+  <path d="M375,115 Q320,150 290,220 Q270,245 250,265" class="process-arrow" />
 
   <!-- Output section -->
   <rect x="300" y="440" width="200" height="60" rx="10" ry="10" fill="#e1f5fe" stroke="#3d7be6" stroke-width="2" filter="url(#dropShadow)" />
   <text x="400" y="465" font-size="16" font-weight="bold" text-anchor="middle" fill="#1a4b91">Final Summary</text>
   <text x="400" y="485" font-size="13" text-anchor="middle" fill="#455a64">Rich Markdown Output</text>
   
-  <path d="M400,370 V440" class="process-arrow" />
+  <!-- Connection from step 4 back to step 1 -->
+  <path d="M290,260 Q310,200 350,130" class="process-arrow" />
   
   <!-- Key Features Section -->
   <text x="400" y="525" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a4b91">Key Features</text>
