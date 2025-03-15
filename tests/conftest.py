@@ -15,14 +15,12 @@ def pytest_configure(config):
     )
 
 
-@pytest.fixture
 def temp_dir():
     """Provide a temporary directory that is cleaned up after the test."""
     with tempfile.TemporaryDirectory() as tmpdirname:
         yield Path(tmpdirname)
 
 
-@pytest.fixture
 def sample_text_file(temp_dir):
     """Create a sample text file for testing."""
     file_path = temp_dir / "sample.txt"
@@ -33,7 +31,6 @@ def sample_text_file(temp_dir):
     return file_path
 
 
-@pytest.fixture(scope="session")
 def sample_pdf_file(temp_dir):
     """Create a sample PDF file path for testing."""
     return temp_dir / "sample.pdf"
