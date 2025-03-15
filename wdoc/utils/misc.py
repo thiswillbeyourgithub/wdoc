@@ -154,7 +154,6 @@ filetype_arg_types = {
 extra_args_types = {
     "path": Union[str, Path],
     "embed_instruct": str,
-    "out_file": Union[str, Path],
     "include": str,
     "exclude": str,
     "filter_content": Union[List[str], str],
