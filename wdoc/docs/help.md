@@ -522,9 +522,11 @@
 # Other specific arguments
 
 * `--out_file`: str or Path, default `None`
-    * If wdoc must create a summary, if out_file given the summary will
+    * For summaries: If wdoc must create a summary, if out_file given the summary will
     be written to this file. Note that the file is not erased and
     wdoc will simply append to it.
+    * For queries: If provided, the final answer and intermediate answers will be 
+    appended to this file in addition to being displayed in the terminal.
     * If `--summary_n_recursion` is used, additional files will be
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
