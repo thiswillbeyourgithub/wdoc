@@ -1,214 +1,204 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="650" viewBox="0 0 800 650">
   <defs>
-    <linearGradient id="boxGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e3f2fd" />
-      <stop offset="100%" stop-color="#bbdefb" />
+    <!-- Consistent color gradient for step circles -->
+    <linearGradient id="stepGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8f5ff" />
+      <stop offset="100%" stop-color="#c5e1ff" />
     </linearGradient>
-    <linearGradient id="boxGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e8f5e9" />
-      <stop offset="100%" stop-color="#c8e6c9" />
-    </linearGradient>
-    <linearGradient id="boxGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fff3e0" />
-      <stop offset="100%" stop-color="#ffe0b2" />
-    </linearGradient>
-    <linearGradient id="boxGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f3e5f5" />
-      <stop offset="100%" stop-color="#e1bee7" />
-    </linearGradient>
+    
+    <!-- Feature box gradient -->
     <linearGradient id="featureGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e8f4f8" />
-      <stop offset="100%" stop-color="#d4e6f1" />
+      <stop offset="0%" stop-color="#f0f7ff" />
+      <stop offset="100%" stop-color="#e0efff" />
     </linearGradient>
-    <filter id="dropShadow" filterUnits="userSpaceOnUse" width="200%" height="200%">
-      <feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#00000033" />
-    </filter>
-    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#3949ab" />
-    </marker>
-    <marker id="contextArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#00897b" />
-    </marker>
-    <!-- Add circular gradient for the cycle -->
+    
+    <!-- Main cycle gradient -->
     <radialGradient id="cycleGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-      <stop offset="0%" stop-color="#e8f5e9" />
-      <stop offset="100%" stop-color="#c8e6c9" />
+      <stop offset="0%" stop-color="#f5faff" />
+      <stop offset="100%" stop-color="#e5f1ff" />
     </radialGradient>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropShadow" filterUnits="userSpaceOnUse" width="200%" height="200%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#00000022" />
+    </filter>
+    
+    <!-- Marker definitions for arrows -->
+    <marker id="processArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2e6cd1" />
+    </marker>
+    <marker id="contextArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0091ea" />
+    </marker>
   </defs>
 
   <style>
-    .flowchart-box {
-      filter: url(#dropShadow);
+    /* Base styling */
+    text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      fill: #37474f;
+    }
+    
+    /* Common elements */
+    .step-circle {
+      fill: url(#stepGradient);
+      stroke: #3d7be6;
       stroke-width: 2;
-      rx: 12;
-      ry: 12;
+      filter: url(#dropShadow);
+      r: 30;
     }
-    .box1 { fill: url(#boxGradient1); stroke: #1e88e5; }
-    .box2 { fill: url(#boxGradient2); stroke: #43a047; }
-    .box3 { fill: url(#boxGradient3); stroke: #fb8c00; }
-    .box4 { fill: url(#boxGradient4); stroke: #8e24aa; }
-    .cycle-step {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      fill: #37474f;
-      text-anchor: middle;
-    }
-    .flowchart-text {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 15px;
-      font-weight: 500;
-      fill: #37474f;
-      text-anchor: middle;
-    }
+    
     .step-number {
-      font-family: 'Segoe UI', Arial, sans-serif;
       font-size: 18px;
       font-weight: bold;
-      fill: white;
+      fill: #1a4b91;
       text-anchor: middle;
+      dominant-baseline: central;
     }
-    .flowchart-arrow {
-      stroke: #3949ab;
-      stroke-width: 3;
-      fill: none;
-      marker-end: url(#arrowhead);
+    
+    .step-label {
+      font-size: 15px;
+      font-weight: 500;
+      text-anchor: middle;
+      fill: #1a4b91;
     }
-    .cycle-arrow {
-      stroke: #43a047;
-      stroke-width: 3;
-      fill: none;
-      marker-end: url(#arrowhead);
+    
+    .step-sublabel {
+      font-size: 12px;
+      font-style: italic;
+      text-anchor: middle;
+      fill: #37474f;
     }
-    .context-arrow {
-      stroke: #00897b;
+    
+    /* Arrow styles */
+    .process-arrow {
+      stroke: #2e6cd1;
       stroke-width: 2.5;
       fill: none;
-      stroke-dasharray: 6,3;
-      marker-end: url(#contextArrowhead);
+      marker-end: url(#processArrow);
     }
-    .title-text {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 28px;
-      font-weight: bold;
-      fill: #1a237e;
-      text-anchor: middle;
+    
+    .context-arrow {
+      stroke: #0091ea;
+      stroke-width: 2;
+      fill: none;
+      stroke-dasharray: 5,3;
+      marker-end: url(#contextArrow);
     }
-    .subtitle-text {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 16px;
-      fill: #455a64;
-      text-anchor: middle;
-    }
+    
+    /* Feature boxes */
     .feature-box {
       fill: url(#featureGradient);
-      stroke: #0277bd;
+      stroke: #3d7be6;
       stroke-width: 1.5;
       rx: 8;
       ry: 8;
       filter: url(#dropShadow);
     }
+    
     .feature-text {
-      font-family: 'Segoe UI', Arial, sans-serif;
       font-size: 13px;
-      fill: #263238;
+      fill: #1a4b91;
       text-anchor: middle;
       font-weight: 500;
     }
-    .step-circle {
-      fill: #3949ab;
-      stroke: #1a237e;
-      stroke-width: 1;
+    
+    /* Title styling */
+    .title-text {
+      font-size: 28px;
+      font-weight: bold;
+      fill: #1a4b91;
+      text-anchor: middle;
     }
-    .icon {
-      fill: none;
-      stroke: #455a64;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    
+    .subtitle-text {
+      font-size: 16px;
+      fill: #455a64;
+      text-anchor: middle;
     }
-    .cycle-icon {
-      fill: none;
-      stroke: #43a047;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    
+    .note-text {
+      font-size: 14px;
+      font-style: italic;
+      fill: #455a64;
+      text-anchor: middle;
     }
   </style>
 
-  <!-- Title with decorative underline -->
+  <!-- Title section -->
   <text x="400" y="40" class="title-text">wdoc Summary Algorithm</text>
-  <line x1="250" y1="50" x2="550" y2="50" stroke="#1a237e" stroke-width="3" />
+  <line x1="250" y1="50" x2="550" y2="50" stroke="#1a4b91" stroke-width="2.5" />
   <text x="400" y="75" class="subtitle-text">Advanced document summarization with context awareness and markdown formatting</text>
 
-  <!-- Circular Process Flow -->
-  <circle cx="400" cy="200" r="150" fill="url(#cycleGradient)" stroke="#43a047" stroke-width="2" filter="url(#dropShadow)" />
+  <!-- Main process cycle -->
+  <circle cx="400" cy="220" r="150" fill="url(#cycleGradient)" stroke="#3d7be6" stroke-width="2" filter="url(#dropShadow)" />
   
-  <!-- Center text - document -->
-  <text x="400" y="200" class="flowchart-text" style="font-size: 16px; font-weight: bold;">Document</text>
+  <!-- Center document label -->
+  <rect x="350" y="210" width="100" height="30" rx="15" ry="15" fill="white" stroke="#3d7be6" stroke-width="1.5" />
+  <text x="400" y="230" font-weight="bold" font-size="16" text-anchor="middle" fill="#1a4b91">Document</text>
   
   <!-- Step 1: Split Document -->
-  <circle cx="400" cy="80" r="30" class="flowchart-box box1" />
-  <text x="400" y="85" class="step-number">1</text>
-  <text x="400" y="50" class="cycle-step">Split Document</text>
-  <text x="400" y="65" class="cycle-step" style="font-size: 12px; font-style: italic;">Into Chunks</text>
+  <circle cx="400" cy="100" class="step-circle" />
+  <text x="400" y="100" class="step-number">1</text>
+  <text x="400" y="145" class="step-label">Split Document</text>
+  <text x="400" y="162" class="step-sublabel">Into Chunks</text>
   
   <!-- Step 2: Summarize Chunks -->
-  <circle cx="550" cy="150" r="30" class="flowchart-box box2" />
-  <text x="550" y="155" class="step-number">2</text>
-  <text x="590" y="135" class="cycle-step">Summarize Chunk +</text>
-  <text x="590" y="150" class="cycle-step" style="font-size: 12px; font-style: italic;">Previous Summary End</text>
+  <circle cx="530" cy="160" class="step-circle" />
+  <text x="530" y="160" class="step-number">2</text>
+  <text x="605" y="145" class="step-label">Summarize Chunks</text>
+  <text x="605" y="162" class="step-sublabel">With Previous Context</text>
   
   <!-- Step 3: Optional Recursive -->
-  <circle cx="550" cy="250" r="30" class="flowchart-box box4" />
-  <text x="550" y="255" class="step-number">3</text>
-  <text x="595" y="250" class="cycle-step">Optional</text>
-  <text x="595" y="265" class="cycle-step" style="font-size: 12px; font-style: italic;">Recursion</text>
+  <circle cx="530" cy="280" class="step-circle" />
+  <text x="530" y="280" class="step-number">3</text>
+  <text x="605" y="280" class="step-label">Optional Recursion</text>
+  <text x="605" y="297" class="step-sublabel">For Large Documents</text>
   
   <!-- Step 4: Concatenate -->
-  <circle cx="400" cy="320" r="30" class="flowchart-box box3" />
-  <text x="400" y="325" class="step-number">4</text>
-  <text x="400" y="360" class="cycle-step">Concatenate</text>
-  <text x="400" y="375" class="cycle-step" style="font-size: 12px; font-style: italic;">Summaries</text>
+  <circle cx="400" cy="340" class="step-circle" />
+  <text x="400" y="340" class="step-number">4</text>
+  <text x="400" y="385" class="step-label">Concatenate</text>
+  <text x="400" y="402" class="step-sublabel">Summaries</text>
   
-  <!-- Cycle arrows -->
-  <path d="M425,90 Q500,100 540,125" class="cycle-arrow" />
-  <path d="M550,180 Q550,220 550,220" class="cycle-arrow" />
-  <path d="M525,265 Q450,300 425,310" class="cycle-arrow" />
-  <path d="M375,308 Q300,280 250,200 Q230,150 340,90" class="cycle-arrow" />
+  <!-- Main process arrows -->
+  <path d="M420,120 Q470,130 510,145" class="process-arrow" />
+  <path d="M530,190 L530,250" class="process-arrow" />
+  <path d="M505,295 Q450,320 425,330" class="process-arrow" />
+  <path d="M375,325 Q320,290 290,220 Q270,160 375,115" class="process-arrow" />
   
-  <!-- Context flow visualization -->
-  <path d="M510,180 Q400,300 280,180 Q260,150 360,105" class="context-arrow" />
-  <rect x="280" y="150" width="120" height="22" rx="11" ry="11" fill="#e0f2f1" stroke="#00897b" stroke-width="1" />
-  <text x="340" y="165" class="flowchart-text" style="font-size: 12px; fill: #00695c;">Context Flow</text>
+  <!-- Context flow visualization - clearer and separate from main flow -->
+  <path d="M490,180 Q400,285 310,200 Q290,170 375,125" class="context-arrow" />
+  <rect x="320" y="190" width="90" height="24" rx="12" ry="12" fill="#e1f5fe" stroke="#0091ea" stroke-width="1" />
+  <text x="365" y="206" font-size="12" text-anchor="middle" fill="#0277bd">Context Flow</text>
 
-  <!-- Output arrow and result -->
-  <rect x="300" y="430" width="200" height="70" class="flowchart-box" fill="#e0f7fa" stroke="#00acc1" />
-  <text x="400" y="455" class="flowchart-text">Final Summary</text>
-  <text x="400" y="475" class="flowchart-text" style="font-size: 12px;">Rich Markdown Output</text>
+  <!-- Output section -->
+  <rect x="300" y="440" width="200" height="60" rx="10" ry="10" fill="#e1f5fe" stroke="#3d7be6" stroke-width="2" filter="url(#dropShadow)" />
+  <text x="400" y="465" font-size="16" font-weight="bold" text-anchor="middle" fill="#1a4b91">Final Summary</text>
+  <text x="400" y="485" font-size="13" text-anchor="middle" fill="#455a64">Rich Markdown Output</text>
   
-  <path d="M400,350 V430" class="flowchart-arrow" />
+  <path d="M400,370 V440" class="process-arrow" />
   
-  <!-- Key Features Section without Icons -->
-  <text x="400" y="520" class="flowchart-text" style="font-size: 18px; font-weight: bold; fill: #0277bd;">Key Features</text>
+  <!-- Key Features Section -->
+  <text x="400" y="525" font-size="18" font-weight="bold" text-anchor="middle" fill="#1a4b91">Key Features</text>
   
-  <rect x="100" y="540" width="130" height="70" class="feature-box" />
+  <rect x="100" y="545" width="130" height="60" class="feature-box" />
   <text x="165" y="565" class="feature-text">Markdown Format</text>
   <text x="165" y="585" class="feature-text">with Bullet Points</text>
   
-  <rect x="250" y="540" width="130" height="70" class="feature-box" />
+  <rect x="250" y="545" width="130" height="60" class="feature-box" />
   <text x="315" y="565" class="feature-text">Logic Preservation</text>
   <text x="315" y="585" class="feature-text">with Indentation</text>
   
-  <rect x="400" y="540" width="130" height="70" class="feature-box" />
+  <rect x="400" y="545" width="130" height="60" class="feature-box" />
   <text x="465" y="565" class="feature-text">Detail Retention</text>
   <text x="465" y="585" class="feature-text">Not High-Level Only</text>
   
-  <rect x="550" y="540" width="130" height="70" class="feature-box" />
+  <rect x="550" y="545" width="130" height="60" class="feature-box" />
   <text x="615" y="565" class="feature-text">Multiple Language</text>
   <text x="615" y="585" class="feature-text">Support</text>
 
-  <!-- Advanced features note with highlight box -->
-  <rect x="250" y="620" width="300" height="22" rx="11" ry="11" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1" />
-  <text x="400" y="635" class="subtitle-text" style="font-style: italic; fill: #1565c0;">Using claude-3-7-sonnet as default model</text>
+  <!-- Model note -->
+  <rect x="250" y="620" width="300" height="22" rx="11" ry="11" fill="#e3f2fd" stroke="#3d7be6" stroke-width="1" />
+  <text x="400" y="635" class="note-text">Using claude-3-7-sonnet as default model</text>
 </svg>
