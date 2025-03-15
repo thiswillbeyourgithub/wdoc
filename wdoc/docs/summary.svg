@@ -144,10 +144,8 @@
   <!-- Circular Process Flow -->
   <circle cx="400" cy="200" r="150" fill="url(#cycleGradient)" stroke="#43a047" stroke-width="2" filter="url(#dropShadow)" />
   
-  <!-- Center icon - document -->
-  <rect x="375" y="175" width="50" height="50" rx="5" ry="5" fill="#f5f5f5" stroke="#43a047" stroke-width="1.5" />
-  <path d="M385,185 h30 M385,195 h30 M385,205 h30 M385,215 h20" class="cycle-icon" />
-  <text x="400" y="240" class="flowchart-text" style="font-size: 14px; font-weight: bold;">Document</text>
+  <!-- Center text - document -->
+  <text x="400" y="200" class="flowchart-text" style="font-size: 16px; font-weight: bold;">Document</text>
   
   <!-- Step 1: Split Document -->
   <circle cx="400" cy="80" r="30" class="flowchart-box box1" />
@@ -158,20 +156,20 @@
   <!-- Step 2: Summarize Chunks -->
   <circle cx="550" cy="150" r="30" class="flowchart-box box2" />
   <text x="550" y="155" class="step-number">2</text>
-  <text x="590" y="135" class="cycle-step">Summarize Each</text>
-  <text x="590" y="150" class="cycle-step" style="font-size: 12px; font-style: italic;">With Context</text>
+  <text x="590" y="135" class="cycle-step">Summarize Chunk +</text>
+  <text x="590" y="150" class="cycle-step" style="font-size: 12px; font-style: italic;">Previous Summary End</text>
   
-  <!-- Step 3: Concatenate -->
-  <circle cx="550" cy="250" r="30" class="flowchart-box box3" />
+  <!-- Step 3: Optional Recursive -->
+  <circle cx="550" cy="250" r="30" class="flowchart-box box4" />
   <text x="550" y="255" class="step-number">3</text>
-  <text x="595" y="250" class="cycle-step">Concatenate</text>
-  <text x="595" y="265" class="cycle-step" style="font-size: 12px; font-style: italic;">Summaries</text>
+  <text x="595" y="250" class="cycle-step">Optional</text>
+  <text x="595" y="265" class="cycle-step" style="font-size: 12px; font-style: italic;">Recursion</text>
   
-  <!-- Step 4: Optional Recursive -->
-  <circle cx="400" cy="320" r="30" class="flowchart-box box4" />
+  <!-- Step 4: Concatenate -->
+  <circle cx="400" cy="320" r="30" class="flowchart-box box3" />
   <text x="400" y="325" class="step-number">4</text>
-  <text x="400" y="360" class="cycle-step">Optional</text>
-  <text x="400" y="375" class="cycle-step" style="font-size: 12px; font-style: italic;">Recursion</text>
+  <text x="400" y="360" class="cycle-step">Concatenate</text>
+  <text x="400" y="375" class="cycle-step" style="font-size: 12px; font-style: italic;">Summaries</text>
   
   <!-- Cycle arrows -->
   <path d="M425,90 Q500,100 540,125" class="cycle-arrow" />
@@ -191,35 +189,24 @@
   
   <path d="M400,350 V430" class="flowchart-arrow" />
   
-  <!-- Document output icon -->
-  <path d="M360,460 h10 v15 h-10 z M365,455 v5 M362,465 h6 M362,470 h6" class="icon" stroke="#00acc1" fill="#e0f7fa" />
-
-  <!-- Key Features Section with Icons -->
+  <!-- Key Features Section without Icons -->
   <text x="400" y="520" class="flowchart-text" style="font-size: 18px; font-weight: bold; fill: #0277bd;">Key Features</text>
   
   <rect x="100" y="540" width="130" height="70" class="feature-box" />
   <text x="165" y="565" class="feature-text">Markdown Format</text>
   <text x="165" y="585" class="feature-text">with Bullet Points</text>
-  <!-- Markdown icon -->
-  <path d="M120,565 h5 v15 h5 l5,-7.5 l5,7.5 h5 v-15" class="icon" stroke="#0277bd" stroke-width="1.5" />
   
   <rect x="250" y="540" width="130" height="70" class="feature-box" />
   <text x="315" y="565" class="feature-text">Logic Preservation</text>
   <text x="315" y="585" class="feature-text">with Indentation</text>
-  <!-- Logic icon -->
-  <path d="M270,565 h5 M270,575 h10 M270,585 h15" class="icon" stroke="#0277bd" stroke-width="1.5" />
   
   <rect x="400" y="540" width="130" height="70" class="feature-box" />
   <text x="465" y="565" class="feature-text">Detail Retention</text>
   <text x="465" y="585" class="feature-text">Not High-Level Only</text>
-  <!-- Detail icon -->
-  <path d="M420,575 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M427,568 v-3 M427,582 v3" class="icon" stroke="#0277bd" stroke-width="1.5" />
   
   <rect x="550" y="540" width="130" height="70" class="feature-box" />
   <text x="615" y="565" class="feature-text">Multiple Language</text>
   <text x="615" y="585" class="feature-text">Support</text>
-  <!-- Language icon -->
-  <path d="M570,575 h10 M580,565 v20 M580,575 h10" class="icon" stroke="#0277bd" stroke-width="1.5" />
 
   <!-- Advanced features note with highlight box -->
   <rect x="250" y="620" width="300" height="22" rx="11" ry="11" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1" />
