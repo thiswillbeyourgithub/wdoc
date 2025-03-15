@@ -173,6 +173,47 @@ def test_summary_tim_urban():
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
 )
+def test_summary_with_out_file():
+    """Test that summary is properly written to output file."""
+    with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+        output_path = tmp.name
+
+    try:
+        # Use same video as the other test since it should be cached
+        _ = wdoc(
+            task="summarize",
+            path="https://www.youtube.com/watch?v=arj7oStGLkU",
+            model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+            query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+            embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+            filetype="auto",
+            debug=False,
+            verbose=False,
+            import_mode=False,
+            out_file=output_path,
+        )
+
+        # Verify the output file
+        assert os.path.exists(output_path)
+        with open(output_path, "r") as f:
+            content = f.read()
+        
+        # Check for expected content in the summary
+        assert len(content) > 0
+        assert "arj7oStGLkU" in content
+        assert "Inside the mind of a master procrastinator" in content or "Tim Urban" in content
+        assert "wdoc version" in content
+    finally:
+        # Cleanup
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
 def test_query_tim_urban():
     """Test query task on Tim Urban's procrastination video."""
     _ = wdoc(
