@@ -149,17 +149,17 @@
   <text x="605" y="145" class="step-label">Summarize Chunks</text>
   <text x="605" y="162" class="step-sublabel">With Previous Context</text>
   
-  <!-- Step 3: Optional Recursive -->
+  <!-- Step 3: Concatenate -->
   <circle cx="530" cy="280" class="step-circle" />
   <text x="530" y="280" class="step-number">3</text>
-  <text x="605" y="280" class="step-label">Optional Recursion</text>
-  <text x="605" y="297" class="step-sublabel">For Large Documents</text>
+  <text x="605" y="280" class="step-label">Concatenate</text>
+  <text x="605" y="297" class="step-sublabel">Summaries</text>
   
-  <!-- Step 4: Concatenate -->
+  <!-- Step 4: Optional Recursive -->
   <circle cx="400" cy="340" class="step-circle" />
   <text x="400" y="340" class="step-number">4</text>
-  <text x="400" y="385" class="step-label">Concatenate</text>
-  <text x="400" y="402" class="step-sublabel">Summaries</text>
+  <text x="400" y="385" class="step-label">Optional Recursion</text>
+  <text x="400" y="402" class="step-sublabel">For Large Documents</text>
   
   <!-- Main process arrows -->
   <path d="M420,120 Q470,130 510,145" class="process-arrow" />
