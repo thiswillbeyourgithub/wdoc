@@ -1,115 +1,222 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="600" viewBox="0 0 800 600">
-  <style>
-    .flowchart-box {
-      fill: #f0f8ff;
-      stroke: #4682b4;
-      stroke-width: 2;
-      rx: 10;
-      ry: 10;
-    }
-    .flowchart-text {
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      fill: #333;
-      text-anchor: middle;
-    }
-    .flowchart-arrow {
-      stroke: #6495ed;
-      stroke-width: 2;
-      fill: none;
-      marker-end: url(#arrowhead);
-    }
-    .title-text {
-      font-family: Arial, sans-serif;
-      font-size: 24px;
-      font-weight: bold;
-      fill: #2c3e50;
-      text-anchor: middle;
-    }
-    .subtitle-text {
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      fill: #7f8c8d;
-      text-anchor: middle;
-    }
-    .feature-box {
-      fill: #e8f4f8;
-      stroke: #3498db;
-      stroke-width: 1;
-      rx: 5;
-      ry: 5;
-    }
-    .feature-text {
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      fill: #2c3e50;
-      text-anchor: middle;
-    }
-  </style>
-
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="650" viewBox="0 0 800 650">
   <defs>
+    <linearGradient id="boxGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e3f2fd" />
+      <stop offset="100%" stop-color="#bbdefb" />
+    </linearGradient>
+    <linearGradient id="boxGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8f5e9" />
+      <stop offset="100%" stop-color="#c8e6c9" />
+    </linearGradient>
+    <linearGradient id="boxGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff3e0" />
+      <stop offset="100%" stop-color="#ffe0b2" />
+    </linearGradient>
+    <linearGradient id="boxGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3e5f5" />
+      <stop offset="100%" stop-color="#e1bee7" />
+    </linearGradient>
+    <linearGradient id="featureGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8f4f8" />
+      <stop offset="100%" stop-color="#d4e6f1" />
+    </linearGradient>
+    <filter id="dropShadow" filterUnits="userSpaceOnUse" width="200%" height="200%">
+      <feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#00000033" />
+    </filter>
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#6495ed" />
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3949ab" />
+    </marker>
+    <marker id="contextArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00897b" />
     </marker>
   </defs>
 
-  <!-- Title -->
-  <text x="400" y="40" class="title-text">wdoc Summary Algorithm</text>
-  <text x="400" y="65" class="subtitle-text">Advanced markdown-based document summarization with context awareness</text>
+  <style>
+    .flowchart-box {
+      filter: url(#dropShadow);
+      stroke-width: 2;
+      rx: 12;
+      ry: 12;
+    }
+    .box1 { fill: url(#boxGradient1); stroke: #1e88e5; }
+    .box2 { fill: url(#boxGradient2); stroke: #43a047; }
+    .box3 { fill: url(#boxGradient3); stroke: #fb8c00; }
+    .box4 { fill: url(#boxGradient4); stroke: #8e24aa; }
+    
+    .flowchart-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      fill: #37474f;
+      text-anchor: middle;
+    }
+    .step-number {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      fill: white;
+      text-anchor: middle;
+    }
+    .flowchart-arrow {
+      stroke: #3949ab;
+      stroke-width: 3;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+    .context-arrow {
+      stroke: #00897b;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-dasharray: 6,3;
+      marker-end: url(#contextArrowhead);
+    }
+    .title-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 28px;
+      font-weight: bold;
+      fill: #1a237e;
+      text-anchor: middle;
+    }
+    .subtitle-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 16px;
+      fill: #455a64;
+      text-anchor: middle;
+    }
+    .feature-box {
+      fill: url(#featureGradient);
+      stroke: #0277bd;
+      stroke-width: 1.5;
+      rx: 8;
+      ry: 8;
+      filter: url(#dropShadow);
+    }
+    .feature-text {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      fill: #263238;
+      text-anchor: middle;
+      font-weight: 500;
+    }
+    .step-circle {
+      fill: #3949ab;
+      stroke: #1a237e;
+      stroke-width: 1;
+    }
+    .icon {
+      fill: none;
+      stroke: #455a64;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
 
-  <!-- Main Flow -->
+  <!-- Title with decorative underline -->
+  <text x="400" y="40" class="title-text">wdoc Summary Algorithm</text>
+  <line x1="250" y1="50" x2="550" y2="50" stroke="#1a237e" stroke-width="3" />
+  <text x="400" y="75" class="subtitle-text">Advanced document summarization with context awareness and markdown formatting</text>
+
+  <!-- Main Flow with Step Numbers -->
   
   <!-- Step 1: Document Splitting -->
-  <rect x="100" y="100" width="150" height="70" class="flowchart-box" />
-  <text x="175" y="135" class="flowchart-text">Split Document</text>
-  <text x="175" y="155" class="flowchart-text">Into Chunks</text>
+  <rect x="100" y="110" width="160" height="90" class="flowchart-box box1" />
+  <circle cx="115" cy="125" r="15" class="step-circle" />
+  <text x="115" y="130" class="step-number">1</text>
+  <text x="180" y="130" class="flowchart-text">Split Document</text>
+  <text x="180" y="155" class="flowchart-text">Into Chunks</text>
+  <text x="180" y="175" class="flowchart-text" style="font-size: 12px; font-style: italic;">Based on token size</text>
+  
+  <!-- Document icon -->
+  <path d="M135,160 h15 v20 h-15 z" class="icon" stroke="#1e88e5" fill="#e3f2fd" />
+  <path d="M140,165 h5 M140,170 h5 M140,175 h5" stroke="#1e88e5" stroke-width="1" />
   
   <!-- Step 2: Per-Chunk Summarization -->
-  <rect x="325" y="100" width="150" height="70" class="flowchart-box" />
-  <text x="400" y="125" class="flowchart-text">Summarize Each Chunk</text>
-  <text x="400" y="145" class="flowchart-text">Using Strong LLM</text>
+  <rect x="320" y="110" width="160" height="90" class="flowchart-box box2" />
+  <circle cx="335" cy="125" r="15" class="step-circle" />
+  <text x="335" y="130" class="step-number">2</text>
+  <text x="400" y="130" class="flowchart-text">Summarize Each</text>
+  <text x="400" y="155" class="flowchart-text">Chunk with LLM</text>
+  <text x="400" y="175" class="flowchart-text" style="font-size: 12px; font-style: italic;">claude-3-7-sonnet</text>
+  
+  <!-- AI icon -->
+  <path d="M355,165 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M363,157 v-5 M363,173 v5 M355,165 h-5 M371,165 h5" class="icon" stroke="#43a047" />
   
   <!-- Step 3: Concatenation -->
-  <rect x="550" y="100" width="150" height="70" class="flowchart-box" />
-  <text x="625" y="135" class="flowchart-text">Concatenate All</text>
-  <text x="625" y="155" class="flowchart-text">Chunk Summaries</text>
+  <rect x="540" y="110" width="160" height="90" class="flowchart-box box3" />
+  <circle cx="555" cy="125" r="15" class="step-circle" />
+  <text x="555" y="130" class="step-number">3</text>
+  <text x="620" y="130" class="flowchart-text">Concatenate All</text>
+  <text x="620" y="155" class="flowchart-text">Chunk Summaries</text>
+  <text x="620" y="175" class="flowchart-text" style="font-size: 12px; font-style: italic;">With structure intact</text>
   
-  <!-- Step 4: Optional Recursive Summarization -->
-  <rect x="325" y="250" width="150" height="70" class="flowchart-box" />
+  <!-- Concat icon -->
+  <path d="M575,160 h5 v5 h5 v-5 h5 v5 h5" class="icon" stroke="#fb8c00" />
+  
+  <!-- Step 4: Optional Recursive Summarization - with highlight -->
+  <rect x="320" y="260" width="160" height="90" class="flowchart-box box4" />
+  <circle cx="335" cy="275" r="15" class="step-circle" />
+  <text x="335" y="280" class="step-number">4</text>
   <text x="400" y="275" class="flowchart-text">Optional Recursive</text>
-  <text x="400" y="295" class="flowchart-text">Summarization</text>
+  <text x="400" y="300" class="flowchart-text">Summarization</text>
+  <text x="400" y="320" class="flowchart-text" style="font-size: 12px; font-style: italic;">For large documents</text>
+  
+  <!-- Recursive icon -->
+  <path d="M355,295 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 M363,287 l5,5 l-5,5" class="icon" stroke="#8e24aa" />
 
-  <!-- Final Output -->
-  <rect x="325" y="400" width="150" height="70" class="flowchart-box" />
-  <text x="400" y="435" class="flowchart-text">Final Summary</text>
+  <!-- Final Output with document icon -->
+  <rect x="320" y="410" width="160" height="70" class="flowchart-box" fill="#e0f7fa" stroke="#00acc1" />
+  <text x="400" y="440" class="flowchart-text">Final Summary</text>
+  <text x="400" y="460" class="flowchart-text" style="font-size: 12px;">Rich Markdown Output</text>
   
-  <!-- Connecting Arrows -->
-  <path d="M250,135 H325" class="flowchart-arrow" />
-  <path d="M475,135 H550" class="flowchart-arrow" />
-  <path d="M625,170 C625,210 450,210 400,250" class="flowchart-arrow" />
-  <path d="M400,320 V400" class="flowchart-arrow" />
-  
-  <!-- Context-aware connector -->
-  <path d="M360,170 C320,190 100,190 100,145 L100,135" class="flowchart-arrow" stroke-dasharray="5,5" />
-  <text x="175" y="200" class="flowchart-text" style="font-size: 12px; font-style: italic;">Previous chunk summary provides context</text>
+  <!-- Document output icon -->
+  <path d="M360,440 h10 v15 h-10 z M365,435 v5 M362,445 h6 M362,450 h6" class="icon" stroke="#00acc1" fill="#e0f7fa" />
 
-  <!-- Feature Boxes -->
-  <rect x="100" y="500" width="120" height="60" class="feature-box" />
-  <text x="160" y="525" class="feature-text">Markdown Format</text>
-  <text x="160" y="545" class="feature-text">with Bullet Points</text>
+  <!-- Connecting Arrows with labels -->
+  <path d="M260,155 H320" class="flowchart-arrow" />
+  <text x="290" y="145" class="flowchart-text" style="font-size: 11px;">Chunk by chunk</text>
   
-  <rect x="240" y="500" width="120" height="60" class="feature-box" />
-  <text x="300" y="525" class="feature-text">Logic Preservation</text>
-  <text x="300" y="545" class="feature-text">with Indentation</text>
+  <path d="M480,155 H540" class="flowchart-arrow" />
+  <text x="510" y="145" class="flowchart-text" style="font-size: 11px;">All chunks</text>
   
-  <rect x="380" y="500" width="120" height="60" class="feature-box" />
-  <text x="440" y="525" class="feature-text">Detail Retention</text>
-  <text x="440" y="545" class="feature-text">Not High-Level Only</text>
+  <path d="M620,200 C620,230 460,230 400,260" class="flowchart-arrow" />
+  <text x="530" y="230" class="flowchart-text" style="font-size: 11px;">If needed</text>
   
-  <rect x="520" y="500" width="120" height="60" class="feature-box" />
-  <text x="580" y="525" class="feature-text">Multiple Language</text>
-  <text x="580" y="545" class="feature-text">Support</text>
+  <path d="M400,350 V410" class="flowchart-arrow" />
+  
+  <!-- Context-aware connector with improved visibility -->
+  <path d="M360,200 C320,220 80,220 100,155" class="context-arrow" />
+  <rect x="180" y="215" width="180" height="22" rx="11" ry="11" fill="#e0f2f1" stroke="#00897b" stroke-width="1" />
+  <text x="270" y="230" class="flowchart-text" style="font-size: 12px; fill: #00695c;">Previous chunk summary provides context</text>
 
-  <!-- Advanced features note -->
-  <text x="400" y="580" class="subtitle-text" style="font-style: italic;">Using claude-3-7-sonnet-20250219 as the default summarization model</text>
+  <!-- Key Features Section with Icons -->
+  <text x="400" y="510" class="flowchart-text" style="font-size: 18px; font-weight: bold; fill: #0277bd;">Key Features</text>
+  
+  <rect x="100" y="530" width="130" height="70" class="feature-box" />
+  <text x="165" y="555" class="feature-text">Markdown Format</text>
+  <text x="165" y="575" class="feature-text">with Bullet Points</text>
+  <!-- Markdown icon -->
+  <path d="M120,555 h5 v15 h5 l5,-7.5 l5,7.5 h5 v-15" class="icon" stroke="#0277bd" stroke-width="1.5" />
+  
+  <rect x="250" y="530" width="130" height="70" class="feature-box" />
+  <text x="315" y="555" class="feature-text">Logic Preservation</text>
+  <text x="315" y="575" class="feature-text">with Indentation</text>
+  <!-- Logic icon -->
+  <path d="M270,555 h5 M270,565 h10 M270,575 h15" class="icon" stroke="#0277bd" stroke-width="1.5" />
+  
+  <rect x="400" y="530" width="130" height="70" class="feature-box" />
+  <text x="465" y="555" class="feature-text">Detail Retention</text>
+  <text x="465" y="575" class="feature-text">Not High-Level Only</text>
+  <!-- Detail icon -->
+  <path d="M420,565 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M427,558 v-3 M427,572 v3" class="icon" stroke="#0277bd" stroke-width="1.5" />
+  
+  <rect x="550" y="530" width="130" height="70" class="feature-box" />
+  <text x="615" y="555" class="feature-text">Multiple Language</text>
+  <text x="615" y="575" class="feature-text">Support</text>
+  <!-- Language icon -->
+  <path d="M570,565 h10 M580,555 v20 M580,565 h10" class="icon" stroke="#0277bd" stroke-width="1.5" />
+
+  <!-- Advanced features note with highlight box -->
+  <rect x="250" y="620" width="300" height="22" rx="11" ry="11" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1" />
+  <text x="400" y="635" class="subtitle-text" style="font-style: italic; fill: #1565c0;">Using claude-3-7-sonnet as default model</text>
 </svg>
