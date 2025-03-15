@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="600" viewBox="0 0 800 600">
+  <style>
+    .flowchart-box {
+      fill: #f0f8ff;
+      stroke: #4682b4;
+      stroke-width: 2;
+      rx: 10;
+      ry: 10;
+    }
+    .flowchart-text {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      fill: #333;
+      text-anchor: middle;
+    }
+    .flowchart-arrow {
+      stroke: #6495ed;
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+    .title-text {
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      fill: #2c3e50;
+      text-anchor: middle;
+    }
+    .subtitle-text {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      fill: #7f8c8d;
+      text-anchor: middle;
+    }
+    .feature-box {
+      fill: #e8f4f8;
+      stroke: #3498db;
+      stroke-width: 1;
+      rx: 5;
+      ry: 5;
+    }
+    .feature-text {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      fill: #2c3e50;
+      text-anchor: middle;
+    }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6495ed" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="40" class="title-text">wdoc Summary Algorithm</text>
+  <text x="400" y="65" class="subtitle-text">Advanced markdown-based document summarization with context awareness</text>
+
+  <!-- Main Flow -->
+  
+  <!-- Step 1: Document Splitting -->
+  <rect x="100" y="100" width="150" height="70" class="flowchart-box" />
+  <text x="175" y="135" class="flowchart-text">Split Document</text>
+  <text x="175" y="155" class="flowchart-text">Into Chunks</text>
+  
+  <!-- Step 2: Per-Chunk Summarization -->
+  <rect x="325" y="100" width="150" height="70" class="flowchart-box" />
+  <text x="400" y="125" class="flowchart-text">Summarize Each Chunk</text>
+  <text x="400" y="145" class="flowchart-text">Using Strong LLM</text>
+  
+  <!-- Step 3: Concatenation -->
+  <rect x="550" y="100" width="150" height="70" class="flowchart-box" />
+  <text x="625" y="135" class="flowchart-text">Concatenate All</text>
+  <text x="625" y="155" class="flowchart-text">Chunk Summaries</text>
+  
+  <!-- Step 4: Optional Recursive Summarization -->
+  <rect x="325" y="250" width="150" height="70" class="flowchart-box" />
+  <text x="400" y="275" class="flowchart-text">Optional Recursive</text>
+  <text x="400" y="295" class="flowchart-text">Summarization</text>
+
+  <!-- Final Output -->
+  <rect x="325" y="400" width="150" height="70" class="flowchart-box" />
+  <text x="400" y="435" class="flowchart-text">Final Summary</text>
+  
+  <!-- Connecting Arrows -->
+  <path d="M250,135 H325" class="flowchart-arrow" />
+  <path d="M475,135 H550" class="flowchart-arrow" />
+  <path d="M625,170 C625,210 450,210 400,250" class="flowchart-arrow" />
+  <path d="M400,320 V400" class="flowchart-arrow" />
+  
+  <!-- Context-aware connector -->
+  <path d="M360,170 C320,190 100,190 100,145 L100,135" class="flowchart-arrow" stroke-dasharray="5,5" />
+  <text x="175" y="200" class="flowchart-text" style="font-size: 12px; font-style: italic;">Previous chunk summary provides context</text>
+
+  <!-- Feature Boxes -->
+  <rect x="100" y="500" width="120" height="60" class="feature-box" />
+  <text x="160" y="525" class="feature-text">Markdown Format</text>
+  <text x="160" y="545" class="feature-text">with Bullet Points</text>
+  
+  <rect x="240" y="500" width="120" height="60" class="feature-box" />
+  <text x="300" y="525" class="feature-text">Logic Preservation</text>
+  <text x="300" y="545" class="feature-text">with Indentation</text>
+  
+  <rect x="380" y="500" width="120" height="60" class="feature-box" />
+  <text x="440" y="525" class="feature-text">Detail Retention</text>
+  <text x="440" y="545" class="feature-text">Not High-Level Only</text>
+  
+  <rect x="520" y="500" width="120" height="60" class="feature-box" />
+  <text x="580" y="525" class="feature-text">Multiple Language</text>
+  <text x="580" y="545" class="feature-text">Support</text>
+
+  <!-- Advanced features note -->
+  <text x="400" y="580" class="subtitle-text" style="font-style: italic;">Using claude-3-7-sonnet-20250219 as the default summarization model</text>
+</svg>
