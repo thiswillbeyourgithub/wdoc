@@ -2041,18 +2041,29 @@ class wdoc:
             final_answer = source_replace(final_answer, output["source_mapping"])
             output["final_answer"] = final_answer
 
+            # if out_file is specified then we write the summary there too.
+            if self.out_file:
+
+                def output_handler(text: str) -> None:
+                    with open(self.out_file, "a") as f:
+                        f.write(text + "\n")
+                    md_printer(text)
+
+            else:
+                output_handler = md_printer
+
             # display sources (i.e. documents used to answer)
-            md_printer("---")
+            output_handler("---")
             if not output["relevant_intermediate_answers"]:
-                md_printer(
+                output_handler(
                     "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
                     color="red",
                 )
-                md_printer(
+                output_handler(
                     "\n\n# No document filtered so no intermediate answers to combine"
                 )
             else:
-                md_printer("\n\n# Intermediate answers for each document:")
+                output_handler("\n\n# Intermediate answers for each document:")
             n = len(output["relevant_intermediate_answers"])
             for counter, (ia, doc) in enumerate(
                 zip(
@@ -2070,14 +2081,14 @@ class wdoc:
                 # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
                 ia = ia["answer"]
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                md_printer(source_replace(to_print, output["source_mapping"]))
+                output_handler(source_replace(to_print, output["source_mapping"]))
 
             # print the final answer
             fa = thinking_answer_parser(output["final_answer"])
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
-            md_printer("---")
-            md_printer(
+            output_handler("---")
+            output_handler(
                 indent(
                     f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "
                 )
