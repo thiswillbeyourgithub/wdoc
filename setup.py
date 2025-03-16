@@ -50,6 +50,24 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when pip updating youtube_dl: '{err}'")
 
+        # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
+        # see https://github.com/ahupp/python-magic/issues/261
+        try:
+            subprocess.check_call(
+                [
+                    sys.executable,
+                    "-m",
+                ]
+                + pip
+                + [
+                    "install",
+                    "-U",
+                    "git+https://github.com/ahupp/python-magic/",
+                ],
+            )
+        except Exception as err:
+            print(f"Error when pip updating python-magic from git: '{err}'")
+
         # do "openparse-download"
         try:
             subprocess.check_call(
