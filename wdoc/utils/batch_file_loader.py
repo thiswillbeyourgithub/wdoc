@@ -148,6 +148,12 @@ def batch_load_doc(
                                 import magic
 
                                 info = magic.from_file(fp).lower()
+                                # # instead of passing the file, pass only the
+                                # # headers of the file because otherwise
+                                # # it seems to have issues with some files
+                                # with open(fp, "rb") as temp:
+                                #     start = temp.read(1024)
+                                # info = magic.from_buffer(start).lower()
                             except Exception as err:
                                 raise Exception(
                                     f"Failed to run python-magic as a last resort heuristic: '{err}'"
