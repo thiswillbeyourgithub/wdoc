@@ -9,6 +9,8 @@ class PostInstallCommand(install):
     def run(self):
         install.run(self)
 
+        pip = ["uv", "pip"] if shutil.which("uv") else ["pip"]
+
         # do "python -m playwright install"
         try:
             subprocess.check_call([sys.executable, "-m", "playwright", "install"])
@@ -21,7 +23,9 @@ class PostInstallCommand(install):
                 [
                     sys.executable,
                     "-m",
-                    "pip",
+                ]
+                + pip
+                + [
                     "install",
                     "git+https://github.com/ytdl-patched/ytdl-patched",
                 ]
@@ -35,7 +39,9 @@ class PostInstallCommand(install):
                 [
                     sys.executable,
                     "-m",
-                    "pip",
+                ]
+                + pip
+                + [
                     "install",
                     "-U",
                     "git+https://github.com/ytdl-org/youtube-dl.git",
