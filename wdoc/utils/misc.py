@@ -21,7 +21,15 @@ from pathlib import Path
 import bs4
 import litellm
 from beartype.door import is_bearable
-from beartype.typing import Callable, List, Literal, Union, get_type_hints
+from beartype.typing import (
+    Callable,
+    List,
+    Literal,
+    Union,
+    get_type_hints,
+    Optional,
+    Any,
+)
 from joblib import Memory
 from joblib import hash as jhash
 from langchain.docstore.document import Document
@@ -1128,3 +1136,46 @@ def log_and_time_fn(fn: Callable) -> Callable:
 
     wrapped = wraps(fn)(wrapper)
     return wrapped
+
+
+@optional_typecheck
+def get_piped_input() -> Optional[Any]:
+    """
+    Read data from stdin/pipes.
+    This is done when importing wdoc, to avoid any issues with parallelism
+    and threads etc.
+    The content is added to the commandline starting wdoc directly in
+    __main__.py.
+    """
+    # Check if data is being piped (stdin is not a terminal)
+    if not sys.stdin.isatty():
+        # Save a copy of the original stdin for debugging
+        original_stdin = sys.stdin
+
+        # Read the piped data
+        piped_input = sys.stdin.buffer.read()
+        try:
+            piped_input = piped_input.decode()
+        except Exception:
+            pass
+
+        # Create a new file descriptor for stdin from /dev/tty if available
+        # This allows breakpoint() to work later
+        try:
+            if os.name != "nt":  # Unix-like systems
+                sys.stdin = open("/dev/tty")
+            else:  # Windows
+                # On Windows this is trickier, consider using a different approach
+                pass
+
+        except:
+            # If we can't reopen stdin, at least return the data
+            pass
+
+        deb("Loaded piped data")
+        return piped_input
+    else:
+        return None
+
+
+piped_input = get_piped_input()

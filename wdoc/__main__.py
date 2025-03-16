@@ -7,7 +7,7 @@ import os
 import re
 import sys
 from pathlib import Path
-
+import tempfile
 import fire
 
 # Just in case: we set the env variable of WDOC_PRIVATE_MODE as early as possible, even before importing wdoc
@@ -15,12 +15,59 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     print("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from .wdoc import is_verbose, wdoc, whi
+from .wdoc import is_verbose, wdoc, whi, deb
+from .utils.misc import piped_input
 
 
 def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier
     shorthands then call wdoc"""
+
+    # if a pipe is used we store it in a file then pass this file as argument.
+    # Either by replacing "-" by its path or appending it at the end of the
+    # command line.
+    if piped_input:
+        sysline = " ".join(sys.argv)
+        if isinstance(piped_input, bytes):
+            if "--filetype" not in sysline:
+                whi(
+                    "When piping binary data it is recommended to use a --filetype argument otherwise python-magic<=0.4.27 often crashes. See https://github.com/ahupp/python-magic/issues/261"
+                )
+            temp_file = tempfile.NamedTemporaryFile(
+                prefix="wdoc_piped_input_",
+                delete=False,
+                mode="wb",
+            )
+            deb(f"Detected binary piped data, storing it in '{temp_file.name}'")
+        elif isinstance(piped_input, str):
+            temp_file = tempfile.NamedTemporaryFile(
+                prefix="wdoc_piped_input_",
+                suffix=".txt",
+                delete=False,
+                mode="w",
+            )
+            deb(f"Detected text piped data, storing it in '{temp_file.name}'")
+            if "--filetype" not in sysline:
+                deb("Setting the filetype as 'txt'")
+                sys.argv.append("--filetype=txt")
+        else:
+            raise ValueError(type(piped_input))
+        temp_file.write(piped_input)
+        temp_file.close()
+
+        # insert the temp_file as path
+        if "-" in sys.argv:
+            for i, x in enumerate(sys.argv):
+                if x == "-":
+                    sys.argv[i] = temp_file.name
+        elif "--path=-" in sys.argv:
+            for i, x in enumerate(sys.argv):
+                if x == "--path=-":
+                    sys.argv[i] = "--path=" + temp_file.name
+        else:
+            sys.argv.append("--path=" + temp_file.name)
+
+    # reload sysline var
     sysline = " ".join(sys.argv)
 
     # turn 'wdoc parse' into 'wdoc_parse_file'

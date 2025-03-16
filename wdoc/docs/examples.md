@@ -198,6 +198,10 @@ wdoc --task=query \
      --query="My new question"
 ```
 
+9. You can even use shell pipes
+
+Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
+
 # Python Script Examples
 
 1. Basic document summarization

@@ -375,4 +375,7 @@ FAQ
 * **Is there a way to use `wdoc` with [Open-WebUI](https://github.com/open-webui/open-webui/)?**
     * Yes! I am maintaining an [official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) which is hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
 
+* **Can I use shell pipes with `wdoc`?**
+    * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
+
 </details>
