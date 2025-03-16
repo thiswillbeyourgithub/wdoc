@@ -36,7 +36,7 @@ import pydub
 import requests
 import uuid6
 import yt_dlp as youtube_dl
-from beartype.typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from beartype.typing import Any, Callable, Dict, List, Optional, Tuple, Union, Literal
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_community.document_loaders import (
@@ -712,7 +712,7 @@ def load_youtube_video(
     loaders_temp_dir: Path,
     youtube_language: Optional[str] = None,
     youtube_translation: Optional[str] = None,
-    youtube_audio_backend: Optional[str] = "youtube",
+    youtube_audio_backend: Literal["youtube", "whisper", "deepgram"] = "youtube",
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
@@ -1764,7 +1764,7 @@ def load_logseq_markdown(
 def load_local_audio(
     path: Union[str, Path],
     file_hash: str,
-    audio_backend: str,
+    audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
     audio_unsilence: Optional[bool] = None,
     whisper_lang: Optional[str] = None,
@@ -1911,7 +1911,7 @@ def load_local_audio(
 def load_local_video(
     path: str,
     file_hash: str,
-    audio_backend: str,
+    audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
     audio_unsilence: Optional[bool] = None,
     whisper_lang: Optional[str] = None,
@@ -2919,7 +2919,7 @@ def find_online_media(
 @doc_loaders_cache.cache(ignore=["path"])
 def load_online_media(
     path: str,
-    audio_backend: str,
+    audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
     audio_unsilence: Optional[bool] = None,
     whisper_lang: Optional[str] = None,
