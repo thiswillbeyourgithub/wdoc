@@ -36,26 +36,26 @@ def cli_launcher() -> None:
         del sys.argv[1]
         sysline = " ".join(sys.argv)
         cli_parse_file()
-        raise SystemExit(0)
+        sys.exit(0)
 
     if " --version" in sysline:
         print(f"wdoc version: {wdoc.VERSION}")
-        raise SystemExit(0)
+        sys.exit(0)
     elif " --help" in sysline or " -h" in sysline:
         print("Showing help")
         wdoc.md_printer(wdoc.__doc__)
-        raise SystemExit(0)
+        sys.exit(0)
     elif " --completion" in sysline:
         if " -- --completion" in sysline:
             fire.Fire(wdoc)
-            raise SystemExit(0)
+            sys.exit(0)
         else:
             raise Exception(
                 "To create completion scripts, use '-- --completion' as arguments."
             )
     elif len(sys.argv) == 1:
         whi("No args shown. Use '--help' to display the help.")
-        raise SystemExit(0)
+        sys.exit(0)
 
     # while we're at it, make it so that
     # "wdoc summary" is parsed like "wdoc --task=summary"
@@ -100,7 +100,7 @@ def cli_parse_file() -> None:
         # help(wdoc.parse_file)
         # print(wdoc.parse_file.__doc__)
         # fire.Fire(wdoc.parse_file)
-        raise SystemExit(0)
+        sys.exit(0)
 
     if "--pipe" in sys_args or "pipe" in sys_args:
         # parse args manually to allow piping
