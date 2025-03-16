@@ -71,9 +71,11 @@
             you must type or paste the string
 
         * `txt`
+            (For text present in a txt file, not to be mistaken with `text`)
             * `--path` is path to a .txt file
 
         * `text`
+            (For text input as argument, not to be mistaken with `txt`)
             * `--path` is directly the text content.
             * Optional:
                 * `--metadata`
