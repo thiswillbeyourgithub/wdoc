@@ -222,7 +222,7 @@ def test_summary_with_out_file():
 )
 def test_query_tim_urban():
     """Test query task on Tim Urban's procrastination video."""
-    _ = wdoc(
+    out = wdoc(
         task="query",
         query="What university did the author go to?",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
@@ -233,7 +233,7 @@ def test_query_tim_urban():
         filetype="auto",
         debug=False,
         verbose=False,
-        import_mode=True,
+        import_mode=False,
     )
 
 
@@ -244,7 +244,7 @@ def test_query_tim_urban():
 )
 def test_whisper_tim_urban():
     """Test summarization of Tim Urban's video using whisper transcription."""
-    _ = wdoc(
+    out = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
@@ -255,7 +255,7 @@ def test_whisper_tim_urban():
         whisper_lang="en",
         debug=False,
         verbose=False,
-        import_mode=True,
+        import_mode=False,
     )
 
 
