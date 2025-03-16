@@ -140,7 +140,7 @@ setup(
         "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
         "scikit-learn >= 1.5.1",  # for semantic reordering
         "scipy >= 1.13.1",  # for semantic reordering
-        # 'python-magic >= 0.4.27',  # for detecting file type  # made optionnal as it can help infer the filetype
+        # 'python-magic >= 0.4.27',  # for detecting file type  # made optional as it can help infer the filetype, and 0.4.28 is necessary for the pipe feature.
         "uuid6",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         # Loaders:
