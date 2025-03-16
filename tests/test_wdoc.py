@@ -197,11 +197,14 @@ def test_summary_with_out_file():
         assert os.path.exists(output_path)
         with open(output_path, "r") as f:
             content = f.read()
-        
+
         # Check for expected content in the summary
         assert len(content) > 0
         assert "arj7oStGLkU" in content
-        assert "Inside the mind of a master procrastinator" in content or "Tim Urban" in content
+        assert (
+            "Inside the mind of a master procrastinator" in content
+            or "Tim Urban" in content
+        )
         assert "wdoc version" in content
     finally:
         # Cleanup
