@@ -80,7 +80,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 
 * Those two tasks, query and summary, can be combined with --task summarize_then_query which will summarize the document but give you a prompt at the end to ask question in case you want to clarify things.
 
-* For more, you can jump to the section [Walkthrough and examples](#walkthrough-and-examples)
+* For more, you can read [examples.md](https://github.com/thiswillbeyourgithub/wdoc/docs/examples.md).
 
 * Note that there is [an official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) that is even simpler to use.
 
@@ -331,7 +331,7 @@ FAQ
 * **What other tasks are supported by `wdoc`?**
     * See [Supported tasks](#Supported-tasks).
 * **Which LLM providers are supported by `wdoc`?**
-    * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [Walkthrough and examples](#Walkthrough-and-examples) section). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
+    * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [examples.md](https://github.com/thiswillbeyourgithub/wdoc/docs/examples.md)). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **What do you use `wdoc` for?**
     * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to `wdoc` I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
     * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
