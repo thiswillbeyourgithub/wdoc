@@ -358,6 +358,7 @@ def test_summary_with_out_file():
         out_file=output_path,
     )
     assert inst.__import_mode__
+    inst.summary_task()
 
     # Verify the output file
     assert os.path.exists(output_path)
