@@ -246,6 +246,36 @@ def test_parse_nytimes():
     assert any(len(d.page_content.strip()) > 0 for d in docs)
 
 
+@pytest.mark.basic
+def test_parse_nytimes_shell():
+    """Test parsing the NYTimes homepage via command line."""
+    result = subprocess.run(
+        [
+            "python",
+            "-m",
+            "wdoc",
+            "parse",
+            "https://www.nytimes.com/",
+            "--format",
+            "text",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    output = result.stdout
+
+    # Check for common news-related terms in the output
+    assert "Times" in output, "Output should contain 'Times'"
+    assert "news" in output.lower(), "Output should contain 'news'"
+    assert (
+        "journal" in output.lower() or "article" in output.lower()
+    ), "Output should contain journalism-related terms"
+
+    # Verify we got substantial content
+    assert len(output) > 1000, "Expected significant text content from NYTimes"
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
@@ -320,13 +350,14 @@ def test_summary_with_out_file():
     with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
         output_path = tmp.name
 
-    _ = wdoc(
+    inst = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         filetype="auto",
         out_file=output_path,
     )
+    assert inst.__import_mode__
 
     # Verify the output file
     assert os.path.exists(output_path)
