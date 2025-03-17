@@ -213,7 +213,6 @@ instance = wdoc(
     task="summary",
     path="document.pdf",
     summary_language="en",  # Optional: specify output language
-    import_mode=True  # Use import mode for scripting
 )
 
 # Get summary results
@@ -234,7 +233,6 @@ instance = wdoc(
     filetype="online_pdf",
     model="openai/gpt-4o",  # Use GPT-4o for summarization
     embed_model="openai/text-embedding-3-large",  # Specify embedding model
-    import_mode=True
 )
 
 results = instance.summary_results
