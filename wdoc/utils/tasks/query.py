@@ -331,7 +331,9 @@ def semantic_batching(
         # at the average number of token in each clusters
         total_mean = 0
         for lab in labels:
-            lt = [texts[int(ind)] for ind in np.argwhere(cluster_labels == lab)]
+            lt = [
+                texts[int(ind.squeeze())] for ind in np.argwhere(cluster_labels == lab)
+            ]
             lsize = sum([text_sizes[t] for t in lt])
             lmean = lsize / len(lt)
             total_mean += lmean
@@ -402,7 +404,7 @@ def semantic_batching(
         assert len(lab_ind) > 1, f"{lab_ind}\n{cluster_labels}"
         assert len(lab_ind) < len(texts), f"{lab_ind}\n{cluster_labels}"
         for clustid in lab_ind:
-            text = texts[int(clustid)]
+            text = texts[int(clustid.squeeze())]
             size = text_sizes[text]
             if (current_tokens + size > max_token) and current_bucket:
                 buckets.append(current_bucket)
