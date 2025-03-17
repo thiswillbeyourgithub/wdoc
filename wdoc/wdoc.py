@@ -45,6 +45,7 @@ from .utils.env import (
     WDOC_DEFAULT_MODEL,
     WDOC_DEFAULT_QUERY_EVAL_MODEL,
     WDOC_EMBED_TESTING,
+    WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS,
     WDOC_LLM_MAX_CONCURRENCY,
     WDOC_OPEN_ANKI,
     WDOC_TYPECHECKING,
@@ -1823,7 +1824,9 @@ class wdoc:
                 "question_to_answer": itemgetter("question_to_answer"),
             }
             answer_each_doc_chain = (
-                prompts.answer | self.llm.bind(max_tokens=4000) | StrOutputParser()
+                prompts.answer
+                | self.llm.bind(max_tokens=WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS)
+                | StrOutputParser()
             )
 
             answer_all_docs = RunnablePassthrough.assign(
