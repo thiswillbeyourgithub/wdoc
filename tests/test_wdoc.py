@@ -148,19 +148,6 @@ def test_parse_online_pdf():
 
 
 @pytest.mark.basic
-def test_ollama_embeddings():
-    emb = load_embeddings_engine(
-        modelname=ModelName(f"ollama/{WDOC_TEST_OLLAMA_EMBED_MODEL}"),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-    _test_embeddings(emb)
-
-
-@pytest.mark.basic
 def test_help_output_shell():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
@@ -397,7 +384,6 @@ def test_query_tim_urban():
         query="What is the allegory used by the speaker",
     )
     final_answer = out["final_answer"]
-
     assert "monkey" in final_answer.lower()
 
 
@@ -421,6 +407,23 @@ def test_whisper_tim_urban():
         verbose=False,
         import_mode=True,
     )
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_ollama_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName(f"ollama/{WDOC_TEST_OLLAMA_EMBED_MODEL}"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    _test_embeddings(emb)
 
 
 @pytest.mark.api
