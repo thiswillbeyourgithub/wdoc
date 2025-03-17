@@ -9,7 +9,7 @@
 
 *(The online documentation can be found [here](https://wdoc.readthedocs.io/en/stable))*
 
-* **Goal and project specifications**: `wdoc` uses [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
+* **Goal and project specifications**: `wdoc` is loosely based on [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
 * **Current status**: **Under active development**
     * Used daily by the developer for several months: but still in alpha. **I would greatly benefit from testing by users as it's the quickest way for me to find the many small bugs that are quick to fix.**
