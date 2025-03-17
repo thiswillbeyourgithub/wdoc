@@ -2135,23 +2135,24 @@ class wdoc:
                 self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
                 + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
             )
-            yel(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
-            )
-
             llmcallback = self.llm.callbacks[0]
             total_cost = (
                 self.llm_price[0] * llmcallback.prompt_tokens
                 + self.llm_price[1] * llmcallback.completion_tokens
             )
             yel(
-                f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
             )
+
             if "cost_before_combine" in locals():
                 combine_cost = total_cost - cost_before_combine
                 yel(
                     f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.5f}"
                 )
+
+            yel(
+                f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+            )
 
             red(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
