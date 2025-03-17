@@ -44,7 +44,8 @@ def test_fail_parse_small_file_text(sample_text_file):
     # should fail because the file is too small
     with pytest.raises(Exception):
         wdoc.parse_file(
-            path=str(sample_text_file), filetype="txt", debug=False, verbose=False
+            path=str(sample_text_file),
+            filetype="txt",
         )
 
 
@@ -58,8 +59,6 @@ def test_parse_file_text(sample_text_file):
     docs = wdoc.parse_file(
         path=str(sample_text_file),
         filetype="txt",
-        debug=False,
-        verbose=False,
         format="langchain",
     )
     assert len(docs) > 0
@@ -77,8 +76,6 @@ def test_parse_file_formats(sample_text_file):
         path=str(sample_text_file),
         filetype="txt",
         format="langchain",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(docs, list), type(docs)
     assert len(docs) == 1, len(docs)
@@ -92,8 +89,6 @@ def test_parse_file_formats(sample_text_file):
         path=str(sample_text_file),
         filetype="txt",
         format="langchain_dict",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(ld, list), type(ld)
     for ldd in ld:
@@ -105,8 +100,6 @@ def test_parse_file_formats(sample_text_file):
         path=str(sample_text_file),
         filetype="txt",
         format="text",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(text, str), type(text)
 
@@ -114,8 +107,6 @@ def test_parse_file_formats(sample_text_file):
         path=str(sample_text_file),
         filetype="txt",
         format="xml",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(xml, str), type(xml)
 
@@ -127,7 +118,8 @@ def test_invalid_filetype():
     """Test that invalid filetype raises an error."""
     with pytest.raises(Exception):
         wdoc.parse_file(
-            path="dummy.txt", filetype="invalid_type", debug=False, verbose=False
+            path="dummy.txt",
+            filetype="invalid_type",
         )
 
 
@@ -138,8 +130,6 @@ def test_parse_online_pdf():
         path="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf",
         filetype="online_pdf",
         format="langchain",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(docs, list)
     assert len(docs) > 0
@@ -227,8 +217,6 @@ def test_parse_docx():
             path=tmp_path,
             # filetype="word",
             format="langchain",
-            debug=False,
-            verbose=False,
         )
 
         # Verify output
@@ -250,8 +238,6 @@ def test_parse_nytimes():
         path="https://www.nytimes.com/",
         filetype="auto",
         format="langchain",
-        debug=False,
-        verbose=False,
     )
     assert isinstance(docs, list)
     assert len(docs) > 0
@@ -319,8 +305,6 @@ def test_summary_tim_urban():
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         # filetype="youtube",
         filetype="auto",
-        debug=False,
-        verbose=False,
     )
     out = inst.summary_task()
     assert "tim urban" in out["summary"].lower()
@@ -341,8 +325,6 @@ def test_summary_with_out_file():
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         filetype="auto",
-        debug=False,
-        verbose=False,
         out_file=output_path,
     )
 
@@ -379,8 +361,6 @@ def test_query_tim_urban():
         # filetype="youtube",
         # youtube_language="en",
         filetype="auto",
-        debug=False,
-        verbose=False,
     )
     out = inst.query_task(
         query="What is the allegory used by the speaker",
@@ -403,8 +383,6 @@ def test_whisper_tim_urban():
         # filetype="youtube",
         youtube_audio_backend="whisper",
         whisper_lang="en",
-        debug=False,
-        verbose=False,
     )
 
 
