@@ -251,7 +251,7 @@ def test_whisper_tim_urban():
         whisper_lang="en",
         debug=False,
         verbose=False,
-        import_mode=False,
+        import_mode=True,
     )
 
 
