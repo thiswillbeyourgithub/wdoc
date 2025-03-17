@@ -185,7 +185,6 @@ def test_summary_with_out_file():
         filetype="auto",
         debug=False,
         verbose=False,
-        import_mode=False,
         out_file=output_path,
     )
 
@@ -199,7 +198,7 @@ def test_summary_with_out_file():
     assert "arj7oStGLkU" in content
     assert (
         "Inside the mind of a master procrastinator" in content
-        or "Tim Urban" in content
+        or "tim urban" in content.lower()
     )
     assert "wdoc version" in content
     if os.path.exists(output_path):
