@@ -212,19 +212,25 @@ def test_summary_with_out_file():
 )
 def test_query_tim_urban():
     """Test query task on Tim Urban's procrastination video."""
-    out = wdoc(
+    inst = wdoc(
         task="query",
-        query="What university did the author go to?",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         # filetype="youtube",
+        # youtube_language="en",
         filetype="auto",
         debug=False,
         verbose=False,
-        import_mode=False,
+        import_mode=True,
     )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+
+    assert "monkey" in final_answer.lower()
 
 
 @pytest.mark.api
