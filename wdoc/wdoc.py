@@ -1497,25 +1497,34 @@ class wdoc:
                 new_c = 0
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
+
+                def _parse_outputs(out) -> List[str]:
+                    reasons = [
+                        gen.generation_info["finish_reason"] for gen in out.generations
+                    ]
+                    outputs = [gen.text for gen in out.generations]
+                    # don't always crash if finish_reason is not stop, because it can sometimes still be parsed.
+                    if not all(r == "stop" for r in reasons):
+                        red(
+                            f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'. Expected 'stop'"
+                        )
+                    assert outputs, "No generations found by query eval llm"
+                    # parse_eval_output will crash if the output is bad anyway
+                    outputs = [parse_eval_output(o) for o in outputs]
+                    return outputs
+
                 try:
                     out = self.eval_llm._generate_with_cache(
                         prompts.evaluate.format_messages(**inputs)
                     )
+                    outputs = _parse_outputs(out)
                 except Exception:  # retry without cache
+                    yel(f"Failed to run eval_llm on an input. Retrying without cache.")
                     out = self.eval_llm._generate(
                         prompts.evaluate.format_messages(**inputs)
                     )
-                reasons = [
-                    gen.generation_info["finish_reason"] for gen in out.generations
-                ]
-                outputs = [gen.text for gen in out.generations]
-                # don't crash if finish_reason is not stop, because it can sometimes still be parsed.
-                if not all(r in ["stop", "length"] for r in reasons):
-                    red(
-                        f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'"
-                    )
-                assert outputs, "No generations found by query eval llm"
-                outputs = [parse_eval_output(o) for o in outputs]
+                    outputs = _parse_outputs(out)
+
                 if out.llm_output:
                     new_p = out.llm_output["token_usage"]["prompt_tokens"]
                     new_c = out.llm_output["token_usage"]["completion_tokens"]
@@ -1533,7 +1542,7 @@ class wdoc:
                         val = await self.eval_llm._agenerate_with_cache(
                             prompts.evaluate.format_messages(**subinputs)
                         )
-                    except Exception:  # retrywithout cache
+                    except Exception:  # retry without cache
                         val = await self.eval_llm._agenerate(
                             prompts.evaluate.format_messages(**subinputs)
                         )
