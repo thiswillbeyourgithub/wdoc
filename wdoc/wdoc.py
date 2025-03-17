@@ -1993,7 +1993,7 @@ class wdoc:
                     n_trial = 3
                     for ia, a in enumerate(batch_result):
                         trial = 0
-                        for trial in range(n_trial):
+                        for trial in range(n_trial + 1):
                             try:
                                 answer_text = a["final_answer"]
                                 o = thinking_answer_parser(
