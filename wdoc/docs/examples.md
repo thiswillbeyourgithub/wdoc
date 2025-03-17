@@ -10,16 +10,57 @@ Note that there is [an official open-webui Tool](https://openwebui.com/t/qqqqqqq
 
 ## Walkthrough
 
-1. Say you want to ask a question about one pdf, that's simple: `wdoc --task="query" --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'`. Note that you could have just let `--filetype="auto"` and it would have worked the same.
+1. Say you want to ask a question about one pdf, that's simple: 
+```bash
+wdoc --task="query" --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
+```
+Note that you could have just let `--filetype="auto"` and it would have worked the same.
 * *Note: By default `wdoc` tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries. This does not always work so use it only after getting comfortable with `wdoc`.*
-2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated : `wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"`. So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that `wdoc` knows what arguments to expect, and specify as recursed_filetype "pdf" so that `wdoc` knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by `wdoc` like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
-3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be : `{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive_paths", "recursed_filetype": "pdf"}`. This way you can use a single json file to specify easily any number of sources. `.toml` files are also supported.
+
+2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated:
+```bash
+wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"
+```
+So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that `wdoc` knows what arguments to expect, and specify as recursed_filetype "pdf" so that `wdoc` knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by `wdoc` like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
+
+3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be:
+```json
+{"path": "my/other_dir", "pattern": "**/*pdf", "filetype": "recursive_paths", "recursed_filetype": "pdf"}
+```
+This way you can use a single json file to specify easily any number of sources. `.toml` files are also supported.
+
 4. You can specify a "source_tag" metadata to help distinguish between documents you imported. It is EXTREMELY recommended to include a source_tag to any document you want to save: especially if using recursive filetypes. This is because after loading all documents `wdoc` use the source_tag to see if it should continue or crash. If you want to load 10_000 pdf in one go as I do, then it makes sense to continue if some failed to crash but not if a whole source_tag is missing.
-5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add `--save_embeds_as=your/saving/path` to save all this index in a file. Then simply do `--load_embeds_from=your/saving/path` to quickly ask queries about it!
-6. To know more about each argument supported by each filetype, `wdoc --help`
+
+5. Now say you do this with many many documents, as I do, you of course can't wait for the indexing to finish every time you have a question (even though the embeddings are cached). You should then add 
+```bash
+--save_embeds_as=your/saving/path
+```
+to save all this index in a file. Then simply do 
+```bash
+--load_embeds_from=your/saving/path
+```
+to quickly ask queries about it!
+
+6. To know more about each argument supported by each filetype, 
+```bash
+wdoc --help
+```
+
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by `wdoc`. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and `wdoc` automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
-8. If you want to only use local models, here's an example with [ollama](https://ollama.com/): `wdoc --model="ollama_chat/gemma:2b" --query_eval_model="ollama_chat/gemma:2b" --embed_model="ollama/bge-m3" my_task`. You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using `--llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434", "embeddings": "http://localhost:1434"}'`.
-9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU): `wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing`:
+
+8. If you want to only use local models, here's an example with [ollama](https://ollama.com/):
+```bash
+wdoc --model="ollama_chat/gemma:2b" --query_eval_model="ollama_chat/gemma:2b" --embed_model="ollama/bge-m3" my_task
+```
+You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using 
+```bash
+--llms_api_bases='{"model": "http://localhost:11434", "query_eval_model": "http://localhost:11434", "embeddings": "http://localhost:1434"}'
+```
+
+9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU):
+```bash
+wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing
+```
 
 <details><summary>Click to see the output</summary>
 
