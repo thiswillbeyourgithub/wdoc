@@ -3,6 +3,7 @@ Miscellanous functions etc.
 """
 
 import hashlib
+from copy import copy
 import platform
 import inspect
 import json
@@ -888,7 +889,7 @@ ANSWE = "</answer>"
 @optional_typecheck
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
-    orig = output.copy()
+    orig = copy(output)
     try:
         # fix </answer> instead of <answer>
         if ANSW not in output and output.count(ANSWE) == 2:
@@ -946,7 +947,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         ):  # otherwise combining answers could snowball into losing lots of text
             raise
         red(
-            f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{output}'\nWill continue if not using --debug"
+            f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nWill continue if not using --debug"
         )
         if is_debug:
             raise
@@ -959,7 +960,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
 The following LLM answer might have had a problem during parsing
 </note>
 <output>
-{output}
+{orig}
 </output>
 """.strip(),
             }
