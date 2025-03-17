@@ -1931,6 +1931,8 @@ class wdoc:
                     result = result.replace(doc_id, f"[{doc_num}]")
                 return result
 
+            all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
+
             if len(output["relevant_intermediate_answers"]) > 1:
                 # next step is to combine the intermediate answers into a single answer
                 final_answer_chain = RunnablePassthrough.assign(
@@ -1955,7 +1957,6 @@ class wdoc:
                 # each batch is at least 2 intermediate answers and maxes at
                 # batch_tkn_size tokens to avoid losing anything because of
                 # the context
-                all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
                 pbar = tqdm(
                     desc="Combining answers",
                     unit="answer",
