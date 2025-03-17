@@ -1306,7 +1306,7 @@ class wdoc:
             ), "Something went wrong when deleting filtered out documents"
 
     @optional_typecheck
-    def query_task(self, query: Optional[str]) -> dict:
+    def query_task(self, query: Optional[str] = None) -> dict:
         if not query:
             if self.oneoff:
                 sys.exit(0)
