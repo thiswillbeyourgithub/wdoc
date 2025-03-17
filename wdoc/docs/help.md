@@ -241,7 +241,7 @@
     when they actually don't. In this can instead of crashing `wdoc` will
     notify you and replicate the received value `n` times.
 
-* `--query_relevancy`: float, default `0.0`
+* `--query_relevancy`: float, default `-0.5`
     * threshold underwhich a document cannot be considered relevant by
     embeddings alone. Keep in mind that the score is a similarity, so
     it goes from -1 (most different) to +1 (most similar), althrough

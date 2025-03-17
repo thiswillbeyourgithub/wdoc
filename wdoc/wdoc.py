@@ -139,7 +139,7 @@ class wdoc:
         query: Optional[str] = None,
         query_retrievers: str = "default_multiquery",
         query_eval_check_number: int = 3,
-        query_relevancy: Union[float, int] = 0.0,
+        query_relevancy: Union[float, int] = -0.5,
         summary_n_recursion: int = 0,
         summary_language: str = "the same language as the document",  # <- the LLM will understand
         llm_verbosity: Union[bool, int] = False,
