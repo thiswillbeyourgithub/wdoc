@@ -18,6 +18,9 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 from .wdoc import is_verbose, wdoc, whi, deb
 from .utils.misc import piped_input
 
+# if __main__ is called, then we are using the cli instead of importing the class from python
+wdoc.__import_mode__ = False
+
 
 def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier

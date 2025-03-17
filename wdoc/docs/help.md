@@ -351,11 +351,6 @@
     information to a remote server, you can use `---private`.
     Note that the values of `llms_api_bases` are whitelisted when using `private`.
 
-* `--import_mode`: bool, default `False`
-    * if True, will return the answer from query instead of printing it.
-    The idea is to use if when you import wdoc instead of running
-    it from the cli.
-
 * `--disable_md_printing`: bool, default `True` if in a pipe and `False` otherwise.
     * if True, instead of using rich to display some information, default to simpler colored prints.
     * Naturally this is disablef if we are in a pipe, for example if you want to
