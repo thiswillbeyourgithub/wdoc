@@ -888,6 +888,7 @@ ANSWE = "</answer>"
 @optional_typecheck
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <thinking> and <answer> tags in an answer"""
+    orig = output.copy()
     try:
         # fix </answer> instead of <answer>
         if ANSW not in output and output.count(ANSWE) == 2:
