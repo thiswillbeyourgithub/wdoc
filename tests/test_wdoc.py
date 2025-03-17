@@ -154,7 +154,7 @@ def test_parse_online_pdf():
 )
 def test_summary_tim_urban():
     """Test summarization of Tim Urban's procrastination video."""
-    _ = wdoc(
+    inst = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
@@ -164,6 +164,8 @@ def test_summary_tim_urban():
         verbose=False,
         import_mode=True,
     )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
 
 
 @pytest.mark.api
