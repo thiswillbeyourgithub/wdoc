@@ -147,131 +147,6 @@ def test_parse_online_pdf():
     assert any("alphago" in d.page_content.lower() for d in docs)
 
 
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_summary_tim_urban():
-    """Test summarization of Tim Urban's procrastination video."""
-    inst = wdoc(
-        task="summarize",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        # filetype="youtube",
-        filetype="auto",
-        debug=False,
-        verbose=False,
-        import_mode=True,
-    )
-    out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_summary_with_out_file():
-    """Test that summary is properly written to output file."""
-    with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
-        output_path = tmp.name
-
-    _ = wdoc(
-        task="summarize",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        filetype="auto",
-        debug=False,
-        verbose=False,
-        out_file=output_path,
-    )
-
-    # Verify the output file
-    assert os.path.exists(output_path)
-    with open(output_path, "r") as f:
-        content = f.read()
-
-    # Check for expected content in the summary
-    assert len(content) > 0
-    assert "arj7oStGLkU" in content
-    assert (
-        "Inside the mind of a master procrastinator" in content
-        or "tim urban" in content.lower()
-    )
-    assert "wdoc version" in content
-    if os.path.exists(output_path):
-        os.unlink(output_path)
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_query_tim_urban():
-    """Test query task on Tim Urban's procrastination video."""
-    inst = wdoc(
-        task="query",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
-        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
-        # filetype="youtube",
-        # youtube_language="en",
-        filetype="auto",
-        debug=False,
-        verbose=False,
-        import_mode=True,
-    )
-    out = inst.query_task(
-        query="What is the allegory used by the speaker",
-    )
-    final_answer = out["final_answer"]
-
-    assert "monkey" in final_answer.lower()
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_whisper_tim_urban():
-    """Test summarization of Tim Urban's video using whisper transcription."""
-    out = wdoc(
-        task="summarize",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
-        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
-        filetype="youtube",
-        youtube_audio_backend="whisper",
-        whisper_lang="en",
-        debug=False,
-        verbose=False,
-        import_mode=True,
-    )
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_openai_embeddings():
-    emb = load_embeddings_engine(
-        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-    _test_embeddings(emb)
-
-
 @pytest.mark.basic
 def test_ollama_embeddings():
     emb = load_embeddings_engine(
@@ -438,6 +313,131 @@ def test_parse_nytimes():
     assert all(isinstance(d, Document) for d in docs)
     # Check that we got some actual content
     assert any(len(d.page_content.strip()) > 0 for d in docs)
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_summary_tim_urban():
+    """Test summarization of Tim Urban's procrastination video."""
+    inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        # filetype="youtube",
+        filetype="auto",
+        debug=False,
+        verbose=False,
+        import_mode=True,
+    )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_summary_with_out_file():
+    """Test that summary is properly written to output file."""
+    with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+        output_path = tmp.name
+
+    _ = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        filetype="auto",
+        debug=False,
+        verbose=False,
+        out_file=output_path,
+    )
+
+    # Verify the output file
+    assert os.path.exists(output_path)
+    with open(output_path, "r") as f:
+        content = f.read()
+
+    # Check for expected content in the summary
+    assert len(content) > 0
+    assert "arj7oStGLkU" in content
+    assert (
+        "Inside the mind of a master procrastinator" in content
+        or "tim urban" in content.lower()
+    )
+    assert "wdoc version" in content
+    if os.path.exists(output_path):
+        os.unlink(output_path)
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_query_tim_urban():
+    """Test query task on Tim Urban's procrastination video."""
+    inst = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        # filetype="youtube",
+        # youtube_language="en",
+        filetype="auto",
+        debug=False,
+        verbose=False,
+        import_mode=True,
+    )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+
+    assert "monkey" in final_answer.lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_whisper_tim_urban():
+    """Test summarization of Tim Urban's video using whisper transcription."""
+    out = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        filetype="youtube",
+        youtube_audio_backend="whisper",
+        whisper_lang="en",
+        debug=False,
+        verbose=False,
+        import_mode=True,
+    )
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_openai_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    _test_embeddings(emb)
 
 
 @pytest.mark.experimental
