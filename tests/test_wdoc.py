@@ -212,48 +212,6 @@ def test_parse_file_help_output_python():
 
 
 @pytest.mark.basic
-def test_semantic_batching():
-    """Test that semantic_batching properly groups related texts."""
-    texts = [
-        "The cat chased the mouse around the house",
-        "Python is a popular programming language",
-        "JavaScript is used for web development",
-        "The dog barked at the mailman yesterday",
-    ]
-
-    embeddings = load_embeddings_engine(
-        modelname=ModelName(WDOC_DEFAULT_EMBED_MODEL),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-
-    batches = semantic_batching(texts, embeddings)
-
-    # Basic validation
-    assert isinstance(batches, list)
-    assert len(batches) >= 1
-    assert all(isinstance(batch, list) for batch in batches)
-
-    # Check all texts are present
-    all_texts = []
-    for batch in batches:
-        all_texts.extend(batch)
-    assert sorted(all_texts) == sorted(texts)
-
-    # Check semantic grouping (programming languages should be together)
-    for batch in batches:
-        if "Python" in batch[0]:
-            assert any("JavaScript" in text for text in batch)
-        elif "JavaScript" in batch[0]:
-            assert any("Python" in text for text in batch)
-
-    assert texts != all_texts and texts != all_texts[::-1], all_texts
-
-
-@pytest.mark.basic
 def test_parse_docx():
     """Test parsing a DOCX file."""
     # Create temporary file and download sample DOCX file
@@ -300,6 +258,48 @@ def test_parse_nytimes():
     assert all(isinstance(d, Document) for d in docs)
     # Check that we got some actual content
     assert any(len(d.page_content.strip()) > 0 for d in docs)
+
+
+@pytest.mark.basic
+def test_semantic_batching():
+    """Test that semantic_batching properly groups related texts."""
+    texts = [
+        "The cat chased the mouse around the house",
+        "Python is a popular programming language",
+        "JavaScript is used for web development",
+        "The dog barked at the mailman yesterday",
+    ]
+
+    embeddings = load_embeddings_engine(
+        modelname=ModelName(WDOC_DEFAULT_EMBED_MODEL),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+
+    batches = semantic_batching(texts, embeddings)
+
+    # Basic validation
+    assert isinstance(batches, list)
+    assert len(batches) >= 1
+    assert all(isinstance(batch, list) for batch in batches)
+
+    # Check all texts are present
+    all_texts = []
+    for batch in batches:
+        all_texts.extend(batch)
+    assert sorted(all_texts) == sorted(texts)
+
+    # Check semantic grouping (programming languages should be together)
+    for batch in batches:
+        if "Python" in batch[0]:
+            assert any("JavaScript" in text for text in batch)
+        elif "JavaScript" in batch[0]:
+            assert any("Python" in text for text in batch)
+
+    assert texts != all_texts and texts != all_texts[::-1], all_texts
 
 
 @pytest.mark.api
