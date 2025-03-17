@@ -1823,7 +1823,7 @@ class wdoc:
                 "question_to_answer": itemgetter("question_to_answer"),
             }
             answer_each_doc_chain = (
-                prompts.answer | self.llm.bind(max_tokens=1000) | StrOutputParser()
+                prompts.answer | self.llm.bind(max_tokens=4000) | StrOutputParser()
             )
 
             answer_all_docs = RunnablePassthrough.assign(
