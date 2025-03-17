@@ -947,7 +947,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         ):  # otherwise combining answers could snowball into losing lots of text
             raise
         red(
-            f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nWill continue if not using --debug"
+            f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nNote: if the output seems fine but ends abruptly instead of by </answer> you might want to tweak the max_token settings.\nWill continue if not using --debug"
         )
         if is_debug:
             raise
