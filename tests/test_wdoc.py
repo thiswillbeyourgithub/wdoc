@@ -260,7 +260,11 @@ def test_parse_nytimes():
     assert any(len(d.page_content.strip()) > 0 for d in docs)
 
 
-@pytest.mark.basic
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
 def test_semantic_batching():
     """Test that semantic_batching properly groups related texts."""
     texts = [
