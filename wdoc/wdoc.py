@@ -914,9 +914,10 @@ class wdoc:
 
             # save to output file
             if self.out_file:
-                assert (
-                    not self.__import_mode__
-                ), "Can't use __import_mode__ with --out_file"
+                if self.__import_mode__:
+                    red(
+                        f"Detected use of out_file arg while in __import_mode__. This is unexpected and might lead to issues."
+                    )
                 for nrecur, sum in recursive_summaries.items():
                     out_file = Path(self.out_file)
                     if len(recursive_summaries) > 1 and nrecur < max(
