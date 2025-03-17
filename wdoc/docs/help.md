@@ -754,6 +754,12 @@
     despite evaluation parsing failures.
     * If False, the system will raise the exception as normal, which typically causes the process to terminate.
 
+* `WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS`, default: `4000`
+    * Sets the maximum number of tokens allowed for each intermediate answer when querying documents. 
+    This controls how much content the LLM generates for each document before these answers are combined 
+    into the final response. Lower values may reduce costs but might lose important details, 
+    while higher values allow for more comprehensive individual document analysis.
+
 * `WDOC_APPLY_ASYNCIO_PATCH`, default: `False`
     * If True, applies the `nest_asyncio` patch to fix the `Event loop closed` error that can occur with Ollama and
     other async-based LLM providers. Set to False if you're experiencing issues with asyncio or if you're
