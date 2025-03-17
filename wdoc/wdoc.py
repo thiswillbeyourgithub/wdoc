@@ -2018,6 +2018,16 @@ class wdoc:
                                 altered_batch["relevant_intermediate_answers"] += "."
                                 a = final_answer_chain.batch([altered_batch])[0]
 
+                    if len(temp_interm_answ) == 0 and trial > 0:
+                        red(
+                            f"Couldn't continue merging documents. This is likely because the intermediate answers got too large. As a cheap workaround I'll concatenate them in semantic order. The latest batch containes {len(batch_result)} intermediate answers. The number of trial was {trial}/{n_trial}."
+                        )
+                        assert batch_result, trial
+                        concat = "\n---\n".join(
+                            [b["final_answer"] for b in batch_result]
+                        )
+                        temp_interm_answ.append(concat)
+
                     all_rlvt_interim_ans.append(temp_interm_answ)
                     pbar.n = pbar.total - len(temp_interm_answ) + 1
                     pbar.update(0)
