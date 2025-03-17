@@ -890,13 +890,13 @@ class wdoc:
                         recursive_summaries[n_recur] = summary_text
 
             best_sum_i = max(list(recursive_summaries.keys()))
+            doc_total_tokens = doc_total_tokens_in + doc_total_tokens_out
             if not self.import_mode:
                 print("\n\n")
                 md_printer("# Summary")
                 md_printer(f"## {path}")
                 md_printer(recursive_summaries[best_sum_i])
 
-                doc_total_tokens = doc_total_tokens_in + doc_total_tokens_out
                 red(
                     f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})"
                 )
