@@ -441,6 +441,23 @@ def test_openai_embeddings():
     _test_embeddings(emb)
 
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_mistral_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName("mistral/mistral-embed"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    _test_embeddings(emb)
+
+
 @pytest.mark.experimental
 @pytest.mark.skipif(
     " -m experimental" not in " ".join(sys.argv),
