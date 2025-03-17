@@ -108,7 +108,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
 * **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. The full help can be found in the file [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation. The complete documentation in a single page is available [on the website](https://wdoc.readthedocs.io/en/latest/all_docs.html).
-* **Scriptable / Extensible**: You can use `wdoc` in other python project using `--import_mode`. Take a look at the scripts [below](#scripts-made-with-wdoc). There is even [an open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool).
+* **Scriptable / Extensible**: You can use `wdoc` as an executable or as a library. Take a look at the scripts [below](#scripts-made-with-wdoc). There is even [an open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool).
 * **Statically typed**: Runtime type checking. Opt out with an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`). Thanks to [beartype](https://beartype.readthedocs.io/en/latest/) it shouldn't even slow down the code!
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
@@ -136,7 +136,6 @@ Click to read more
         - add test for each loader
     - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
-        - be careful to how to use import_mode
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured

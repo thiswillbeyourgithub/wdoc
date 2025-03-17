@@ -76,7 +76,6 @@ class FilteredDeckCreator:
         instance = wdoc(
             query_eval_modelname=query_eval_modelname,
             task=task,
-            import_mode=True,
             query=query,
             **kwargs,
         )

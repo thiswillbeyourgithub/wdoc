@@ -73,7 +73,6 @@ def run_wdoc(query: str, kwargs2: dict) -> Tuple[wdoc, dict]:
     "call to wdoc, optionaly cached"
     instance = wdoc(
         task="query",
-        import_mode=True,
         query=query,
         **kwargs2,
     )

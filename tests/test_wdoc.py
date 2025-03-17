@@ -321,7 +321,6 @@ def test_summary_tim_urban():
         filetype="auto",
         debug=False,
         verbose=False,
-        import_mode=True,
     )
     out = inst.summary_task()
     assert "tim urban" in out["summary"].lower()
@@ -382,7 +381,6 @@ def test_query_tim_urban():
         filetype="auto",
         debug=False,
         verbose=False,
-        import_mode=True,
     )
     out = inst.query_task(
         query="What is the allegory used by the speaker",
@@ -407,7 +405,6 @@ def test_whisper_tim_urban():
         whisper_lang="en",
         debug=False,
         verbose=False,
-        import_mode=True,
     )
 
 

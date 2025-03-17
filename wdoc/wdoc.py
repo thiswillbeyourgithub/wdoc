@@ -122,6 +122,7 @@ class wdoc:
     VERSION: str = "2.8.0"
     allowed_extra_args = extra_args_types
     md_printer = md_printer
+    __import_mode__: bool = True
 
     @optional_typecheck
     @set_func_signature
@@ -154,7 +155,6 @@ class wdoc:
         file_loader_n_jobs: int = -1,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
-        import_mode: Union[bool, int] = False,
         disable_md_printing: bool = is_piped,
         out_file: Optional[Union[str, Path]] = None,
         oneoff: bool = False,
@@ -445,7 +445,6 @@ class wdoc:
         self.file_loader_parallel_backend = file_loader_parallel_backend
         self.file_loader_n_jobs = file_loader_n_jobs
         self.llms_api_bases = llms_api_bases
-        self.import_mode = import_mode
         self.oneoff = oneoff
 
         if disable_llm_cache:
@@ -593,7 +592,7 @@ class wdoc:
         if self.task in ["query", "search", "summary_then_query"]:
             self.prepare_query_task()
 
-        if self.import_mode:
+        if self.__import_mode__:
             deb(
                 "Ready to query or summarize, call your_instance.query_task(your_question)"
             )
@@ -785,7 +784,7 @@ class wdoc:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    if not self.import_mode:
+                    if not self.__import_mode__:
                         red(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
@@ -866,7 +865,7 @@ class wdoc:
                     )
                     if prev_real_text is not MISSING:
                         if real_text == prev_real_text:
-                            if not self.import_mode:
+                            if not self.__import_mode__:
                                 red(
                                     f"Identical summary after {n_recur} "
                                     "recursion, adding more recursion will not "
@@ -878,7 +877,7 @@ class wdoc:
 
                     assert n_recur not in recursive_summaries
                     if summary_text not in recursive_summaries:
-                        if not self.import_mode:
+                        if not self.__import_mode__:
                             red(
                                 f"Identical summary after {n_recur} "
                                 "recursion, adding more recursion will not "
@@ -891,7 +890,7 @@ class wdoc:
 
             best_sum_i = max(list(recursive_summaries.keys()))
             doc_total_tokens = doc_total_tokens_in + doc_total_tokens_out
-            if not self.import_mode:
+            if not self.__import_mode__:
                 print("\n\n")
                 md_printer("# Summary")
                 md_printer(f"## {path}")
@@ -915,7 +914,9 @@ class wdoc:
 
             # save to output file
             if self.out_file:
-                assert not self.import_mode, "Can't use import_mode with --out_file"
+                assert (
+                    not self.__import_mode__
+                ), "Can't use __import_mode__ with --out_file"
                 for nrecur, sum in recursive_summaries.items():
                     out_file = Path(self.out_file)
                     if len(recursive_summaries) > 1 and nrecur < max(
@@ -958,7 +959,7 @@ class wdoc:
             relevant_docs=self.loaded_docs,
         )
 
-        if not self.import_mode:
+        if not self.__import_mode__:
             red(
                 self.ntfy(
                     f"Total cost of those summaries: {results['doc_total_tokens']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"
@@ -1683,7 +1684,7 @@ class wdoc:
                 if len(docs) < self.interaction_settings["top_k"]:
                     red(f"Only found {len(docs)} relevant documents")
 
-            if self.import_mode:
+            if self.__import_mode__:
                 if "unfiltered_docs" in output:
                     red(
                         f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
