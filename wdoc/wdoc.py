@@ -77,7 +77,6 @@ from .utils.logger import (
 from .utils.misc import (  # debug_chain,
     DocDict,
     ModelName,
-    ankiconnect,
     average_word_length,
     check_docs_tkn_length,
     create_langfuse_callback,
@@ -1755,10 +1754,16 @@ class wdoc:
                 elif open_answ in ["y", "yes"]:
                     whi("Opening anki.")
                     query = f"nid:{','.join(anki_nids)}"
-                    ankiconnect(
-                        action="guiBrowse",
-                        query=query,
-                    )
+                    try:
+                        from py_ankiconnect import PyAnkiconnect
+
+                        ankiconnect = PyAnkiconnect()
+                        ankiconnect(
+                            action="guiBrowse",
+                            query=query,
+                        )
+                    except Exception as e:
+                        red(f"Error when trying to open Anki: '{e}'")
             all_filepaths = []
             for doc in docs:
                 if "path" in doc.metadata:
