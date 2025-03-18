@@ -366,6 +366,7 @@ class wdoc:
 
         else:
             os.environ["WDOC_PRIVATE_MODE"] = "false"
+            create_langfuse_callback(f"wdoc_{wdoc.VERSION}")
 
         if (model != TESTING_LLM) and (not llms_api_bases["model"]):
             model = model_name_matcher(model)
@@ -2305,7 +2306,3 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
 
     sys.excepthook = handle_exception
     faulthandler.enable()
-
-
-if not is_private:
-    create_langfuse_callback(f"wdoc_{wdoc.VERSION}")
