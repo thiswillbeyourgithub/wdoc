@@ -36,7 +36,6 @@ from joblib import hash as jhash
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
-from py_ankiconnect import PyAnkiconnect
 
 from .env import (
     WDOC_ALLOW_NO_PRICE,
@@ -51,8 +50,6 @@ from .errors import UnexpectedDocDictArgument
 from .flags import is_debug, is_private, is_verbose
 from .logger import cache_dir, red, whi, yel, deb
 from .typechecker import optional_typecheck
-
-ankiconnect = optional_typecheck(PyAnkiconnect())
 
 # will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
 loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
