@@ -90,8 +90,8 @@ def do_summarize(
 
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
-        # Remove first line if it contains "a deep breath"
-        if output_lines and "a deep breath" in output_lines[0]:
+        # Remove first line if it contains "a deep breath" or starts with "i'll summarize"
+        if output_lines and ("a deep breath" in output_lines[0] or output_lines[0].lower().startswith("i'll summarize")):
             output_lines = output_lines[1:]
 
         for il, ll in enumerate(output_lines):
