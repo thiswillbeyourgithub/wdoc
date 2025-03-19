@@ -91,16 +91,20 @@ def do_summarize(
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
         # Remove first line if:
-        # - it contains "a deep breath" 
+        # - it contains "a deep breath"
         # - it starts with "i'll summarize" (case insensitive)
         # - it's a bullet point containing these phrases
         if output_lines:
             first_line = output_lines[0].lower()
             should_remove = (
-                "a deep breath" in first_line or 
-                first_line.startswith("i'll summarize") or
-                (first_line.strip().startswith("- ") and 
-                 ("a deep breath" in first_line or "i'll summarize" in first_line))
+                "a deep breath" in first_line
+                or first_line.startswith("i'll summarize")
+                or (
+                    first_line.strip().startswith("- ")
+                    and (
+                        "a deep breath" in first_line or "i'll summarize" in first_line
+                    )
+                )
             )
             if should_remove:
                 output_lines = output_lines[1:]
