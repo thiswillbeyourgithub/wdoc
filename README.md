@@ -130,11 +130,11 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
+    - figure out how to use loguru to handle logging sanely, including when it's imported as an external library
     - add more tests
         - add test for the private mode
         - add test for the testing models
         - add test for each loader
-    - the logit bias is wrong for openai models: the token is specific to a given family of model
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
