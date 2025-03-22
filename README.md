@@ -143,6 +143,10 @@ Click to read more
     - understand why it appears that in some cases the sources id is never properly parsed
         - crash if source got lost  + arg to disable
 - ### Features
+    - add an html format output. It would display a nice UI with proper dropdowns for sources etc
+    - add an intermediate step for queries that asks the LLM for appropriate headers for the md output. Then for each intermediate answer attribute it a list of 1 to 3 headers (because a given intermediate answer can  contain several pieces of information), then do the batch merge of intermediate answer per header.
+        - this needs to be scalable and easy to add recursion to (because then we can do this for subheaders and so on)
+        - the end goal is to have a scalable solution to answer queries about extremely large documents for impossibly vast questions
     - use apprise instead of ntfy for the scripts
     - add crawl4ai parser: https://github.com/unclecode/crawl4ai
     - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
