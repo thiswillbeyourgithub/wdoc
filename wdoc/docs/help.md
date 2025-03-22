@@ -733,6 +733,10 @@
 * `WDOC_EMBED_TESTING`, default: `True`
     * If False, will skip the test of the embeddings model on simple sentences to find out if we loaded everything correctly.
 
+* `WDOC_DISABLE_EMBEDDINGS_CACHE`, default: `False`
+    * If True, bypasses the caching mechanism for embeddings and uses the embeddings model directly. This can be useful for debugging or when you want to ensure fresh embeddings are generated for each document.
+    * Note that disabling the cache only affects new queries, new documents, or during semantic batching. It will NOT affect embeddings that are loaded via `load_embeds_from`, as those embeddings are already pre-computed and stored.
+
 * `WDOC_LANGFUSE_PUBLIC_KEY`, default: `None`
     * If present, will replace the env variable `LANGFUSE_PUBLIC_KEY`.
 
