@@ -81,7 +81,7 @@ def load_embeddings_engine(
     embed_kwargs: dict,
     private: bool,
     do_test: bool,
-) -> CacheBackedEmbeddings:
+) -> Embeddings:
     """
     Create the Embeddings class used to compute embeddings. This class is wrapped
     into a CacheBackedEmbeddings to add a caching layer.
