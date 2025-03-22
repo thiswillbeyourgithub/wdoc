@@ -32,6 +32,7 @@ from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import (
     WDOC_DEFAULT_EMBED_DIMENSION,
+    WDOC_DISABLE_EMBEDDINGS_CACHE,
     WDOC_EXPIRE_CACHE_DAYS,
     WDOC_MOD_FAISS_SCORE_FN,
 )
@@ -202,15 +203,18 @@ def load_embeddings_engine(
         name="Embeddings_" + modelname.sanitized,
     )
 
-    cache_content = list(lfs.yield_keys())
-    whi(f"Found {len(cache_content)} embeddings in local cache")
+    if WDOC_DISABLE_EMBEDDINGS_CACHE:
+        whi("Embeddings cache is disabled - using direct embeddings without caching")
+        cached_embeddings = embeddings
+    else:
+        cache_content = list(lfs.yield_keys())
+        whi(f"Found {len(cache_content)} embeddings in local cache")
 
-    # cached_embeddings = embeddings
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-        embeddings,
-        lfs,
-        namespace=modelname.sanitized,
-    )
+        cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
+            embeddings,
+            lfs,
+            namespace=modelname.sanitized,
+        )
 
     if do_test:
         try:
