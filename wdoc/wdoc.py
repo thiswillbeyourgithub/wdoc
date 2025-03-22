@@ -1871,7 +1871,10 @@ class wdoc:
                 doc_ids = list(mapping.keys())
                 for doc_id in doc_ids[::-1]:
                     doc_num = mapping[doc_id]
-                    result = result.replace(doc_id, f"[[{doc_num}]]")
+                    if not (doc_num.startswith("[[") and doc_num.endswith("]]")):
+                        result = result.replace(doc_id, f"[[{doc_num}]]")
+                    else:
+                        result = result.replace(doc_id, doc_num)
                 return result
 
             all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
