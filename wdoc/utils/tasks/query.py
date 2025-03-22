@@ -13,7 +13,7 @@ import sklearn.metrics as metrics
 import sklearn.preprocessing as preprocessing
 from beartype.typing import List, Literal, Tuple, Union
 from langchain.docstore.document import Document
-from langchain.embeddings import CacheBackedEmbeddings
+from langchain_core.embeddings import Embeddings
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.runnables import chain
@@ -195,7 +195,7 @@ def collate_relevant_intermediate_answers(
 @optional_typecheck
 def semantic_batching(
     texts: List[str],
-    embedding_engine: CacheBackedEmbeddings,
+    embedding_engine: Embeddings,
 ) -> List[List[str]]:
     """
     Given a list of text, embed them, do a hierarchical clutering then
