@@ -56,11 +56,12 @@ This is very important to me so if you succeed, I'll pay you up to $2000 dependi
         ),
         HumanMessagePromptTemplate.from_template(
             """
-{recursion_instruction}{metadata}{previous_summary}
+{recursion_instruction}{metadata}
 
 <text_section>
 {text}
 </text_section>
+{previous_summary}
 """.strip()
         ),
     ],
