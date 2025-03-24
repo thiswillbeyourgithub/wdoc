@@ -161,9 +161,10 @@ def do_summarize(
         if verbose:
             whi(output_text)
 
+        assert "{previous_summary}" in PREV_SUMMARY_TEMPLATE
         previous_summary = PREV_SUMMARY_TEMPLATE.replace(
             "{previous_summary}",
-            "...\n" + "\n".join(good_lines[-5:]),
+            "\n".join(good_lines[-10:]),
         )
 
         summaries.append(output_text)
