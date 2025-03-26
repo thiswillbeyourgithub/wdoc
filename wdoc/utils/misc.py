@@ -544,7 +544,7 @@ class ModelName:
                     with open(
                         Path(self.model).resolve().absolute().__str__(), "rb"
                     ) as f:
-                        h = hashlib.sha256(f.read() + str(instruct)).hexdigest()[:15]
+                        h = hashlib.sha256(f.read() + str(self.model)).hexdigest()[:15]
                     self.sanitized = Path(self.model).name + "_" + h
             except Exception:
                 pass
