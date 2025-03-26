@@ -3,6 +3,7 @@ Miscellanous functions etc.
 """
 
 import hashlib
+import re
 from copy import copy
 import platform
 import inspect
@@ -877,10 +878,17 @@ def set_func_signature(func: Callable) -> Callable:
     return new_func
 
 
+# Tag constants
 THIN = "<thinking>"
 THINE = "</thinking>"
 ANSW = "<answer>"
 ANSWE = "</answer>"
+
+# Pre-compiled regex patterns
+_THIN_REGEX = re.compile(f"{re.escape(THIN)}(.*?){re.escape(THINE)}", re.DOTALL)
+_THIN_SUB_REGEX = re.compile(
+    f"{re.escape(THIN)}|{re.escape(THINE)}|{re.escape(ANSW)}|{re.escape(ANSWE)}"
+)
 
 
 @optional_typecheck
@@ -890,9 +898,9 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     try:
         # fix </answer> instead of <answer>
         if ANSW not in output and output.count(ANSWE) == 2:
-            output = output.replace(ANSWE, ANSW, 1)
+            output = re.sub(ANSWE, ANSW, output, count=1)
         if THIN not in output and output.count(THINE) == 2:
-            output = output.replace(THINE, THIN, 1)
+            output = re.sub(THINE, THIN, output, count=1)
 
         if (THIN not in output) and (ANSW not in output):
             assert (
@@ -906,21 +914,18 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
 
         thinking = ""
         if THIN in output and THINE in output:
-            thinking = output.split(THIN, 1)[1].split(THINE, 1)[0].strip()
+            thinking_match = _THIN_REGEX.search(output)
+            if thinking_match:
+                thinking = thinking_match.group(1).strip()
 
         answer = ""
         if ANSW in output and ANSWE in output:
-            answer = (
-                output.replace(thinking, "")
-                # .split(ANSW, 1)[1]
-                # .split(ANSWE, 1)[0]
-                # # actually parsing the answer should remove the thinking only as otherwise it can for example remove the source_id if it was specified outside of the answer.
-                .replace(THIN, "")
-                .replace(THINE, "")
-                .replace(ANSW, "")
-                .replace(ANSWE, "")
-                .strip()
-            )
+            # Create a version without the thinking part
+            answer_text = output
+            if thinking:
+                answer_text = re.sub(re.escape(thinking), "", answer_text)
+            # Remove the tags
+            answer = _THIN_SUB_REGEX.sub("", answer_text).strip()
 
         assert (
             THIN not in answer
