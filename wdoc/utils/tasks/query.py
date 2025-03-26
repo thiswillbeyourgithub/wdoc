@@ -125,6 +125,24 @@ def refilter_docs(inputs: dict) -> List[Document]:
 @log_and_time_fn
 @optional_typecheck
 def parse_eval_output(output: str) -> str:
+    """
+    Parse an LLM's answer about wether a document is relevant or not into an
+    integer from 0 to 10 as str.
+
+    For example, it turns an LLM answer from:
+
+    '''
+    <thinking>
+    I am thinking hard about if the document is reelevant to the user query
+    on a scale of 0 (irrelevant) to 10 (very relevant).
+    ...
+    </thinking>
+
+    <answer>10</answer>
+    '''
+
+    into simply: '10'
+    """
     mess = (
         f"The eval LLM returned an output that can't be parsed as expected: '{output}'"
     )
