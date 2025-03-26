@@ -1870,7 +1870,7 @@ class wdoc:
                 # substitude in reverse order to avoid WDOC_2 replacing WDOC_21
                 doc_ids = list(mapping.keys())
                 for doc_id in doc_ids[::-1]:
-                    doc_num = mapping[doc_id]
+                    doc_num = str(mapping[doc_id])
                     if not (doc_num.startswith("[[") and doc_num.endswith("]]")):
                         result = result.replace(doc_id, f"[[{doc_num}]]")
                     else:
