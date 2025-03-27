@@ -1864,7 +1864,9 @@ class wdoc:
                 ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
 
             @optional_typecheck
-            def source_replace(input: str, mapping: dict) -> str:
+            def source_replace(
+                input: str, mapping: dict = output["source_mapping"]
+            ) -> str:
                 # Make a copy of the input to avoid modifying the original string during iteration
                 result = input
                 # substitude in reverse order to avoid WDOC_2 replacing WDOC_21
@@ -1992,7 +1994,7 @@ class wdoc:
                     missing_mapper.append(v)
 
             # prepare the content of the output
-            final_answer = source_replace(final_answer, output["source_mapping"])
+            final_answer = source_replace(final_answer)
             output["final_answer"] = final_answer
 
             # if out_file is specified then we write the summary there too.
@@ -2035,18 +2037,14 @@ class wdoc:
                 # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
                 ia = ia["answer"]
                 to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                output_handler(source_replace(to_print, output["source_mapping"]))
+                output_handler(source_replace(to_print))
 
             # print the final answer
             fa = thinking_answer_parser(output["final_answer"])
             # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
             fa = fa["answer"]
             output_handler("---")
-            output_handler(
-                indent(
-                    f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "
-                )
-            )
+            output_handler(indent(f"# Answer:\n{source_replace(fa)}\n", "> "))
 
             if missing_mapper:
                 red(
