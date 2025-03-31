@@ -235,9 +235,12 @@ def semantic_batching(
     texts = temp
 
     if len(texts) <= 3:
+        deb(f"Returned texts in semantic_batching because there were only {len(texts)}")
         return [texts]
 
     text_sizes = {t: get_tkn_length(t) for t in texts}
+    itext_sizes = {i: size for i, size in enumerate(texts)}
+    deb(f"Input text sizes in semantic_batching: {itext_sizes}")
 
     # get embeddings
     n_trial = 3
@@ -514,6 +517,11 @@ def semantic_batching(
     assert sorted(unchained) == sorted(
         texts
     ), "There is an issue with semantic_batching"
+
+    deb("Printing size of each bucket in semantic_batching:")
+    for ib, b in enumerate(buckets):
+        sizes = [get_tkn_length(bb) for bb in b]
+        deb(f"{ib}: {sizes}")
 
     return buckets
 
