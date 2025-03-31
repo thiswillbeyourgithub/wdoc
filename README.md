@@ -183,6 +183,7 @@ Click to read more
     - make images an actual filetype
 - ### Enhancements
     - store the available tasks in a single var in misc.py
+    - when querying hard stuff the number of drop documents after batching is non negligible, we should remove those from the list of documents to display and instead store those in another variable
     - check if using html syntax is less costly and confusing to LLMs than markdown with tall those indentation. Or maybe json. It would be simple to turn that into markdown afterwards.
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
