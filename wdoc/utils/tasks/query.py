@@ -224,7 +224,6 @@ def semantic_batching(
     Note that the documents are also sorted inside each batch, so that iterating
     over each document of each batch in order will follow the optimal leaf order.
     """
-    max_token = WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
 
     assert texts, "No input text received"
     assert len(texts) > 1, f"received only one text: {texts}"
@@ -371,7 +370,10 @@ def semantic_batching(
 
     best_clusters = None
     for d, ct in cluster_mean_tkn.items():
-        if ct < max_token and ct >= max_token / 2:
+        if (
+            ct < WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+            and ct >= WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE / 2
+        ):
             best_clusters = cluster_trials[d]
             break
     if best_clusters is None:
@@ -427,7 +429,9 @@ def semantic_batching(
         for clustid in lab_ind:
             text = texts[int(clustid.squeeze())]
             size = text_sizes[text]
-            if (current_tokens + size > max_token) and current_bucket:
+            if (
+                current_tokens + size > WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+            ) and current_bucket:
                 buckets.append(current_bucket)
                 current_bucket = [text]
                 current_tokens = 0
