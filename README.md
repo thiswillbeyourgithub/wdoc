@@ -131,6 +131,10 @@ Click to read more
 <!-- BEGIN_TODO -->
 - ## Most urgent
     - figure out how to use loguru to handle logging sanely, including when it's imported as an external library
+    - figure out a good way to skip merging batches that are too large before trying to merge them
+        - probably means adding an env var to store a max value, document it in the help.md
+        - then check after batch creation if a batch is that large
+        - if it is put it in a separate var, to be concatenated later with the rest of the answers
     - add more tests
         - add test for the private mode
         - add test for the testing models
@@ -143,6 +147,7 @@ Click to read more
     - understand why it appears that in some cases the sources id is never properly parsed
         - crash if source got lost  + arg to disable
 - ### Features
+    - count how many time each source is used, as it can be relevant to infer answer quality
     - add an html format output. It would display a nice UI with proper dropdowns for sources etc
     - add an intermediate step for queries that asks the LLM for appropriate headers for the md output. Then for each intermediate answer attribute it a list of 1 to 3 headers (because a given intermediate answer can  contain several pieces of information), then do the batch merge of intermediate answer per header.
         - this needs to be scalable and easy to add recursion to (because then we can do this for subheaders and so on)
@@ -178,6 +183,7 @@ Click to read more
     - make images an actual filetype
 - ### Enhancements
     - store the available tasks in a single var in misc.py
+    - check if using html syntax is less costly and confusing to LLMs than markdown with tall those indentation. Or maybe json. It would be simple to turn that into markdown afterwards.
     - check that the task search work on things other than anki
     - create a custom custom retriever, derived from multiquery retriever that does actual parallel requests. Right now it's not the case (maybe in async but I don't plan on using async for now). This retriever seems a good part of the slow down.
     - stop using your own youtube timecode parser and instead use langchain's chunk transcript format
