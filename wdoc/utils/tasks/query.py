@@ -513,7 +513,7 @@ def semantic_batching(
     assert all(t in texts for t in unchained), "Some text of buckets were added!"
     assert sorted(unchained) == sorted(
         texts
-    ), f"There is an issue with semantic_batching"
+    ), "There is an issue with semantic_batching"
 
     return buckets
 
