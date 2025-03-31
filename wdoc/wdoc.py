@@ -1927,7 +1927,6 @@ class wdoc:
                     batch_result = final_answer_chain.batch(batch_args)
                     n_trial = 2
                     for ia, a in enumerate(batch_result):
-                        trial = 0
                         for trial in range(n_trial + 1):
                             try:
                                 answer_text = a["final_answer"]
