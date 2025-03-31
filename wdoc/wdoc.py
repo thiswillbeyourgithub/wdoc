@@ -1950,7 +1950,6 @@ class wdoc:
                                 # modify the batch slightly to bypass the cache
                                 altered_batch = batch_args[ia]
                                 altered_batch["question_to_answer"] += "."
-                                altered_batch["relevant_intermediate_answers"] += "."
                                 a = final_answer_chain.batch([altered_batch])[0]
 
                     if len(temp_interm_answ) == 0 and trial > 0:
