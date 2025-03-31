@@ -712,7 +712,7 @@
     for the latter.
     This can also be used to avoid chunking when querying a text if you want the LLM to have the entier text as context instead of chunking.
 
-* `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`, default: `1000`
+* `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`, default: `2000`
     * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
