@@ -1955,7 +1955,7 @@ class wdoc:
 
                     if len(temp_interm_answ) == 0 and trial > 0:
                         red(
-                            f"Couldn't continue merging documents. This is likely because the intermediate answers got too large. As a cheap workaround I'll concatenate them in semantic order. The latest batch containes {len(batch_result)} intermediate answers. The number of trial was {trial}/{n_trial}."
+                            f"Couldn't continue merging documents. This is likely because the intermediate answers got too large. As a cheap workaround I'll concatenate them in semantic order. The latest batch contains {len(batch_result)} intermediate answers. The number of trial was {trial}/{n_trial}."
                         )
                         assert batch_result, trial
                         concat = "\n---\n".join(
