@@ -207,12 +207,12 @@
 * `--query`: str, default `None`
     * if str, will be directly used for the first query if task in `["query", "search", "summarize_then_query"]`
 
-* `--query_retrievers`: str, default `"default_multiquery"`
+* `--query_retrievers`: str, default `"basic_multiquery"`
     * must be a string that specifies which retriever will be used for
     queries depending on which keyword is inside this string.
 
     * Possible values (can be combined if separated by _):
-        * `default`: cosine similarity retriever
+        * `basic`: cosine similarity retriever
         * `multiquery`: retriever that uses the LLM to reformulate your
         query to get different perspectives. This uses the strong LLM
         and, as it requires complex output parsing for now it is
@@ -221,7 +221,7 @@
         * `svm`: svm
         * `parent`: parent chunk
 
-* `--query_eval_model`: str, default to value of WDOC_DEFAULT_QUERY_EVAL_MODEL
+* `--query_eval_model`: str, default to value of `WDOC_DEFAULT_QUERY_EVAL_MODEL`
     * Cheaper and quicker model than model. Used for intermediate
     steps in the RAG, not used in other tasks.
     If the value is not part of the model list of litellm, will use
