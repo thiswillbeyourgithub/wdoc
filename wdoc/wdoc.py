@@ -138,7 +138,7 @@ class wdoc:
         load_embeds_from: Optional[Union[str, Path]] = None,
         top_k: Union[str, int] = "auto_200_500",
         query: Optional[str] = None,
-        query_retrievers: str = "default_multiquery",
+        query_retrievers: str = "basic_multiquery",
         query_eval_check_number: int = 3,
         query_relevancy: Union[float, int] = -0.5,
         summary_n_recursion: int = 0,
@@ -1238,7 +1238,7 @@ class wdoc:
                 sys.exit(0)
             query, self.interaction_settings = ask_user(self.interaction_settings)
         assert all(
-            retriev in ["default", "multiquery", "knn", "svm", "parent"]
+            retriev in ["basic", "multiquery", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
         ), f"Invalid retriever value: {self.interaction_settings['retriever']}"
         retrievers = []
@@ -1285,7 +1285,7 @@ class wdoc:
                 )
             )
 
-        if "default" in self.interaction_settings["retriever"].lower():
+        if "basic" in self.interaction_settings["retriever"].lower():
             retrievers.append(
                 self.loaded_embeddings.as_retriever(
                     search_type="similarity_score_threshold",

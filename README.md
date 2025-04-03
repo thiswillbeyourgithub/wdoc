@@ -52,12 +52,12 @@ Give it to me I am in a hurry!
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
-wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say about alphago?" --query_retrievers='default_multiquery' --top_k=auto_200_500
+wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say about alphago?" --query_retrievers='basic_multiquery' --top_k=auto_200_500
 ```
 * This will:
     1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
     2. cut the text into chunks and create embeddings for each
-    3. Take the user query, create embeddings for it ('default') AND ask the default LLM to generate alternative queries and embed those
+    3. Take the user query, create embeddings for it ('basic') AND ask the default LLM to generate alternative queries and embed those
     4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
     5. Pass each of those documents to the smaller LLM (default: anthropic/claude-3-5-haiku-20241022) to tell us if the document seems appropriate given the user query
     6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
