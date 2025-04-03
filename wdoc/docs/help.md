@@ -221,9 +221,6 @@
         * `svm`: svm
         * `parent`: parent chunk
 
-    if contains `hyde` but if model contains `testing` then `hyde` will
-    be removed.
-
 * `--query_eval_model`: str, default to value of WDOC_DEFAULT_QUERY_EVAL_MODEL
     * Cheaper and quicker model than model. Used for intermediate
     steps in the RAG, not used in other tasks.
