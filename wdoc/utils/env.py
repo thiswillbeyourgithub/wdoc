@@ -198,3 +198,13 @@ for k, v in asdict(env).items():
     # if not k.startswith("WDOC_"):
     #     continue
     assert is_bearable(v, env.__dataclass_fields__[k].type), v
+
+# If langfuse env variables are set AND WDOC_LANGFUSE_PUBLIC_KEY etc are set: we replace langfuse's env variable to make sure any underlyng lib use wdoc's instead
+for k in [
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "LANGFUSE_HOST",
+]:
+    newk = "WDOC_" + k
+    if newk in os.environ and os.environ[newk]:
+        os.environ[k] = os.environ[newk]

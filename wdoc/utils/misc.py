@@ -971,7 +971,7 @@ langfuse_callback_holder = []
 @optional_typecheck
 def create_langfuse_callback(version: str) -> None:
     assert not is_private
-    # replace langfuse's env variable if set for wdoc
+    # replace langfuse's env variable if set for wdoc, this is already done in env.py but doing it here also at runtime
     for k in [
         "LANGFUSE_PUBLIC_KEY",
         "LANGFUSE_SECRET_KEY",
