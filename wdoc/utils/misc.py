@@ -37,11 +37,12 @@ from joblib import hash as jhash
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
+from platformdirs import user_cache_dir
+from loguru import logger
 
 from .env import env
 from .errors import UnexpectedDocDictArgument
 from .flags import is_debug, is_private, is_verbose
-from .logger import cache_dir, red, whi, yel, deb
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
@@ -91,6 +92,9 @@ except Exception as err:
         def language_detector(text: str) -> None:
             return None
 
+
+cache_dir = Path(user_cache_dir(appname="wdoc"))
+cache_dir.mkdir(parents=True, exist_ok=True)
 
 doc_loaders_cache_dir = cache_dir / "doc_loaders"
 doc_loaders_cache_dir.mkdir(exist_ok=True)
