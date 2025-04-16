@@ -27,7 +27,7 @@ from wdoc.utils.embeddings import test_embeddings as _test_embeddings
 from wdoc.utils.tasks.query import semantic_batching
 from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.misc import ModelName
-from wdoc.utils.env import WDOC_DEFAULT_EMBED_MODEL
+from wdoc.utils.env import env
 
 
 @pytest.mark.basic
@@ -290,7 +290,7 @@ def test_semantic_batching():
     ]
 
     embeddings = load_embeddings_engine(
-        modelname=ModelName(WDOC_DEFAULT_EMBED_MODEL),
+        modelname=ModelName(env.WDOC_DEFAULT_EMBED_MODEL),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
