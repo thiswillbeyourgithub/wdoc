@@ -190,6 +190,9 @@ class wdoc:
             sys.excepthook = print_exception
             faulthandler.enable()
 
+        from loguru import logger  # for some reason I have to reimport
+
+        # loguru here otherwise the next line fails!
         logger.warning(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
