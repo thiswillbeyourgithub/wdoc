@@ -39,15 +39,13 @@ from loguru import logger as logger
 from .utils.batch_file_loader import batch_load_doc
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 from .utils.embeddings import create_embeddings, load_embeddings_engine
-from .utils.env import env
+from .utils.env import env, is_piped
 from .utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 
-# just in case: setting the is_private flag as soon as possible to the env variables
-from .utils.flags import is_debug, is_private, is_verbose, is_piped
 from .utils.interact import ask_user
 from .utils.llm import TESTING_LLM, load_llm
 
@@ -172,7 +170,7 @@ class wdoc:
 
         self.ntfy = ntfy
 
-        if debug or env.WDOC_DEBUGGER:
+        if debug or env.WDOC_DEBUGGER or env.WDOC_DEBUG:
             debug_exceptions(instance=self)
 
         elif notification_callback:
@@ -313,7 +311,7 @@ class wdoc:
         assert isinstance(
             private, bool
         ), "private arg should be a boolean, not {private}"
-        assert private == is_private
+        assert private == env.WDOC_PRIVATE_MODE
         if private:
             assert llms_api_bases[
                 "model"
@@ -435,6 +433,11 @@ class wdoc:
         self.file_loader_n_jobs = file_loader_n_jobs
         self.llms_api_bases = llms_api_bases
         self.oneoff = oneoff
+        if debug:
+            os.environ["WDOC_DEBUG"] = True
+            os.environ["WDOC_VERBOSE"] = True
+        elif verbose:
+            os.environ["WDOC_VERBOSE"] = True
 
         if disable_llm_cache:
             self.llm_cache = False
@@ -442,14 +445,14 @@ class wdoc:
             if not private:
                 self.llm_cache = SQLiteCacheFixed(
                     database_path=(cache_dir / "langchain_db").resolve().absolute(),
-                    verbose=is_verbose,
+                    verbose=env.WDOC_VERBOSE,
                 )
             else:
                 self.llm_cache = SQLiteCacheFixed(
                     database_path=(cache_dir / "private_langchain_db")
                     .resolve()
                     .absolute(),
-                    verbose=is_verbose,
+                    verbose=env.WDOC_VERBOSE,
                 )
             set_llm_cache(self.llm_cache)
 
@@ -488,7 +491,7 @@ class wdoc:
                     self.query_eval_model.original
                 )
 
-        if is_verbose:
+        if env.WDOC_VERBOSE:
             set_verbose(True)
             os.environ["LITELLM_LOG"] = "DEBUG"
             litellm._turn_on_debug()
@@ -517,8 +520,8 @@ class wdoc:
                 logger = logging.getLogger(logger_name)
                 logger.setLevel(logging.CRITICAL)
         if debug:
-            assert is_verbose
-            assert is_debug
+            assert env.WDOC_VERBOSE
+            assert env.WDOC_DEBUG
             # os.environ["LANGCHAIN_TRACING_V2"] = "true"
             set_debug(True)
 
@@ -572,7 +575,7 @@ class wdoc:
                 filetype=self.filetype,
                 task=self.task,
                 backend=self.file_loader_parallel_backend,
-                n_jobs=self.file_loader_n_jobs if not is_debug else 1,
+                n_jobs=self.file_loader_n_jobs if not env.WDOC_DEBUG else 1,
                 **filtered_cli_kwargs,
             )
         else:
@@ -994,7 +997,7 @@ class wdoc:
                     self.loaded_embeddings.docstore._dict.values(),
                     desc="gathering metadata keys",
                     unit="doc",
-                    disable=(not is_verbose) or is_piped,
+                    disable=(not env.WDOC_VERBOSE) or is_piped,
                 ):
                     for k in doc.metadata.keys():
                         all_metadata_keys.add(k)
@@ -1188,7 +1191,7 @@ class wdoc:
                 self.loaded_embeddings.docstore._dict.items(),
                 desc="Filtering",
                 unit="docs",
-                disable=(not is_verbose) or is_piped,
+                disable=(not env.WDOC_VERBOSE) or is_piped,
             ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
@@ -1793,7 +1796,7 @@ class wdoc:
                 | pbar_closer(llm=self.llm)
             )
 
-            if is_verbose:
+            if env.WDOC_VERBOSE:
                 rag_chain.get_graph().print_ascii()
 
             chain_time = 0
@@ -1902,7 +1905,7 @@ class wdoc:
                     desc="Combining answers",
                     unit="answer",
                     total=len(output["relevant_intermediate_answers"]),
-                    # disable=not is_verbose,
+                    # disable=not env.WDOC_VERBOSE,
                     disable=is_piped,
                 )
                 temp_interm_answ = output["relevant_intermediate_answers"]

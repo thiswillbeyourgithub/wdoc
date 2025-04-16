@@ -27,8 +27,7 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
 
-from .env import env
-from .flags import is_debug, is_verbose, is_piped
+from .env import env, is_piped
 from .loaders import (
     load_one_doc_wrapped,
     load_youtube_playlist,
@@ -294,7 +293,7 @@ def batch_load_doc(
     doc_hashes = Parallel(
         n_jobs=-1 if len(to_load) > 1 else 1,
         backend=backend,
-        verbose=0 if not is_verbose else 51,
+        verbose=0 if not env.WDOC_VERBOSE else 51,
     )(
         delayed(file_hasher)(doc=doc)
         for doc in tqdm(
@@ -383,7 +382,7 @@ def batch_load_doc(
         ] = "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
     else:
         if backend == "loky":
-            if is_verbose:
+            if env.WDOC_VERBOSE:
                 logger.warning("Using loky backend so not using 'require=sharedmem'")
         else:
             sharedmem = "sharedmem"
@@ -403,7 +402,7 @@ def batch_load_doc(
         generator_doc_lists = Parallel(
             n_jobs=n_jobs,
             backend=backend,
-            verbose=0 if not is_verbose else 51,
+            verbose=0 if not env.WDOC_VERBOSE else 51,
             timeout=loader_max_timeout,
             return_as="generator",  # try to reduce memory footprint
             require=sharedmem,
@@ -458,7 +457,7 @@ def batch_load_doc(
         enumerate(doc_lists),
         total=len(doc_lists),
         desc="Concatenating results",
-        disable=not is_verbose or is_piped,
+        disable=not env.WDOC_VERBOSE or is_piped,
     ):
         if isinstance(d, list):
             docs.extend(d)
@@ -564,7 +563,7 @@ def batch_load_doc(
                         deduped[ch].metadata[k], list
                     ):
                         deduped[ch].metadata[k] += deduped[ch].metadata[k]
-                    elif is_verbose:
+                    elif env.WDOC_VERBOSE:
                         logger.warning(f"UNEXPECTED METADATA TYPE: '{k}:{v}'")
                 docs[idoc] = None
 

@@ -2,7 +2,10 @@
 Sets the default value for environment variables, parse the actual values,
 check their types and finally make them easier to access by other parts of
 wdoc.
+Also set some variables useful to access globally like is_linux for example.
 """
+
+import platform
 
 import os
 import sys
@@ -19,6 +22,12 @@ from .errors import FrozenAttributeCantBeSet
 # must create it because we can't import it from typechecker.py
 warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 
+is_linux = platform.system() == "Linux"
+
+# useful to know if we should use tqdm or not (it can cause broken pipe errors
+# otherwise) and modify the formatting output
+is_piped = sys.stdout.isatty()
+
 
 @dataclass
 class EnvDataclass:
@@ -31,6 +40,8 @@ class EnvDataclass:
 
     __frozen__: bool = False
     WDOC_DUMMY_ENV_VAR: bool = False  # used to test the __frozen__ mechanism
+    WDOC_DEBUG: bool = False
+    WDOC_VERBOSE: bool = False
     WDOC_TYPECHECKING: Literal["disabled", "warn", "crash"] = "warn"
     WDOC_NO_MODELNAME_MATCHING: bool = True
     WDOC_ALLOW_NO_PRICE: bool = False
@@ -229,6 +240,25 @@ if " --help" in " ".join(sys.argv):
     logger.debug("--help so using lazy loading by default")
 
 
+# if --debug -d --verbose or -v are in the command line: we set WDOC_DEBUG and WDOC_VERBOSE accordingly
+def check_kwargs(arg: str, abbrv: str = None) -> bool:
+    cmdline = " ".join(sys.argv[1:])
+    if f" {arg}" in cmdline or f" --{arg}" in cmdline:
+        return True
+    if abbrv and f" -{abbrv}" in cmdline:
+        return True
+    return False
+
+
+if check_kwargs("debug", "d"):
+    logger.debug("Found 'debug' arg, setting WDOC_DEBUG and WDOC_VERBOSE to true")
+    os.environ["WDOC_DEBUG"] = True
+    os.environ["WDOC_VERBOSE"] = True
+elif check_kwargs("verbose", "v"):
+    logger.debug("Found 'verbose' arg, setting WDOC_VERBOSE to true")
+    os.environ["WDOC_VERBOSE"] = True
+
+
 # store the env variable instead of the default values but check their types
 for k in os.environ.keys():
     if not k.lower().startswith("wdoc_"):
@@ -245,6 +275,7 @@ for k in os.environ.keys():
         ), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{env.__dataclass_fields__['k'].type}'"
         v_stored = getattr(env, k)
         setattr(env, k, v)
+
 
 env.__frozen__ = True
 try:

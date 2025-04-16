@@ -270,7 +270,7 @@
     * if True, will print the intermediate reasonning steps of LLMs
     if debug is set, llm_verbosity is also set to True
 
-* `--debug`: bool, default `False`
+* `--debug`: bool, default `False` or `WDOC_DEBUG` if set
     * if True will enable langchain tracing, increase verbosity,
     disable multithreading for summaries and loading files,
     display warning if an error is encountered when loading a file,
@@ -284,7 +284,7 @@
     If you just want to open the debugger in case of issue, see
     below at `WDOC_DEBUGGER`.
 
-* `--verbose`: bool, default `False`
+* `--verbose`: bool, default `False` or `WDOC_VERBOSE` if set
     Increase verbosity. Implied if `--debug` is set.
 
 * `--dollar_limit`: int, default `5`
@@ -623,7 +623,12 @@
 
 # Runtime flags
 
+* `WDOC_DEBUG`
+    * Setting to `true` has the same effects as using `--debug=True`.
 
+* `WDOC_VERBOSE`
+    * Setting to `true` has the same effects as using `--verbose=True`.
+    Always set to `true` if `WDOC_DEBUG` is set to `true`.
 
 * `WDOC_TYPECHECKING`
     * Setting for runtime type checking. Default value is `warn`. The typing is checked

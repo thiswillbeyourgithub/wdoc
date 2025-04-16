@@ -5,7 +5,6 @@ from . import (
     batch_file_loader,
     customs,
     env,
-    flags,
     import_tricks,
     loaders,
     misc,
@@ -14,7 +13,6 @@ from . import (
 )
 
 __all__ = [
-    "flags",
     "env",
     "batch_file_loader",
     "loaders",
