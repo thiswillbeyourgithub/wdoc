@@ -9,10 +9,11 @@ import sys
 from pathlib import Path
 import tempfile
 import fire
+from loguru import logger
 
 # Just in case: we set the env variable of WDOC_PRIVATE_MODE as early as possible, even before importing wdoc
 if re.findall(r"\b--private\b", " ".join(sys.argv)):
-    print("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
+    logger.warning("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
 from .wdoc import is_verbose, wdoc
