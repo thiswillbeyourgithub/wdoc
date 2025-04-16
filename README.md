@@ -130,7 +130,6 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
-    - figure out how to use loguru to handle logging sanely, including when it's imported as an external library
     - figure out a good way to skip merging batches that are too large before trying to merge them
         - probably means adding an env var to store a max value, document it in the help.md
         - then check after batch creation if a batch is that large
@@ -144,9 +143,8 @@ Click to read more
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
     - support other vector databases
-    - understand why it appears that in some cases the sources id is never properly parsed
-        - crash if source got lost  + arg to disable
 - ### Features
+    - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
     - count how many time each source is used, as it can be relevant to infer answer quality
     - add an html format output. It would display a nice UI with proper dropdowns for sources etc
     - add an intermediate step for queries that asks the LLM for appropriate headers for the md output. Then for each intermediate answer attribute it a list of 1 to 3 headers (because a given intermediate answer can  contain several pieces of information), then do the batch merge of intermediate answer per header.
@@ -182,7 +180,10 @@ Click to read more
     - find a way to make it work with llm from simonw
     - make images an actual filetype
 - ### Enhancements
-    - store the available tasks in a single var in misc.py
+    - store the available tasks in a dataclass in misc.py
+    - turn arugments that contain a _ into arguments with a -
+        - in the cli launcher function, manually convert arguments
+    - maybe add support for docling to parse documents?
     - when querying hard stuff the number of drop documents after batching is non negligible, we should remove those from the list of documents to display and instead store those in another variable
     - check if using html syntax is less costly and confusing to LLMs than markdown with tall those indentation. Or maybe json. It would be simple to turn that into markdown afterwards.
     - check that the task search work on things other than anki
