@@ -30,12 +30,7 @@ from tqdm import tqdm
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
-from .env import (
-    WDOC_DEFAULT_EMBED_DIMENSION,
-    WDOC_DISABLE_EMBEDDINGS_CACHE,
-    WDOC_EXPIRE_CACHE_DAYS,
-    WDOC_MOD_FAISS_SCORE_FN,
-)
+from .env import env
 from .flags import is_verbose
 from .logger import red, whi, deb
 from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
@@ -51,27 +46,22 @@ DEFAULT_QUERY_INSTRUCTION = (
 )
 
 
-if WDOC_MOD_FAISS_SCORE_FN:
+def faiss_custom_score_function(distance: float) -> float:
+    """
+    Scoring function for faiss to make sure it's positive.
+    Related issue: https://github.com/langchain-ai/langchain/issues/17333
 
-    def score_function(distance: float) -> float:
-        """
-        Scoring function for faiss to make sure it's positive.
-        Related issue: https://github.com/langchain-ai/langchain/issues/17333
+    In langchain the default value is the euclidean relevance score:
+    return 1.0 - distance / math.sqrt(2)
 
-        In langchain the default value is the euclidean relevance score:
-        return 1.0 - distance / math.sqrt(2)
-
-        The output is a similarity score: it must be [0,1] such that
-        0 is the most dissimilar, 1 is the most similar document.
-        """
-        # To disable it but simply check: uncomment this and add "import math"
-        # assert distance >= 0, distance
-        # return 1.0 - distance / math.sqrt(2)
-        new = 1 - ((1 + distance) / 2)
-        return new
-
-else:
-    score_function = None
+    The output is a similarity score: it must be [0,1] such that
+    0 is the most dissimilar, 1 is the most similar document.
+    """
+    # To disable it but simply check: uncomment this and add "import math"
+    # assert distance >= 0, distance
+    # return 1.0 - distance / math.sqrt(2)
+    new = 1 - ((1 + distance) / 2)
+    return new
 
 
 @optional_typecheck
@@ -99,7 +89,7 @@ def load_embeddings_engine(
         try:
             embeddings = LiteLLMEmbeddings(
                 model=modelname.original,
-                dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
+                dimensions=env.WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
                 api_base=api_base,
                 private=private,
                 **embed_kwargs,
@@ -129,7 +119,7 @@ def load_embeddings_engine(
             model=modelname.model,
             openai_api_key=os.environ["OPENAI_API_KEY"],
             api_base=api_base,
-            dimensions=WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
+            dimensions=env.WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
             **embed_kwargs,
         )
 
@@ -198,12 +188,12 @@ def load_embeddings_engine(
 
     lfs = LocalFileStore(
         database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
-        expiration_days=WDOC_EXPIRE_CACHE_DAYS,
+        expiration_days=env.WDOC_EXPIRE_CACHE_DAYS,
         verbose=is_verbose,
         name="Embeddings_" + modelname.sanitized,
     )
 
-    if WDOC_DISABLE_EMBEDDINGS_CACHE:
+    if env.WDOC_DISABLE_EMBEDDINGS_CACHE:
         whi("Embeddings cache is disabled - using direct embeddings without caching")
         cached_embeddings = embeddings
     else:
@@ -254,7 +244,9 @@ def create_embeddings(
         db = FAISS.load_local(
             str(path),
             cached_embeddings,
-            relevance_score_fn=score_function,
+            relevance_score_fn=(
+                faiss_custom_score_function if env.WDOC_MOD_FAISS_SCORE_FN else None
+            ),
             allow_dangerous_deserialization=True,
         )
         n_doc = len(db.index_to_docstore_id.keys())
@@ -322,7 +314,11 @@ def create_embeddings(
                     batch,
                     cached_embeddings,
                     normalize_L2=True,
-                    relevance_score_fn=score_function,
+                    relevance_score_fn=(
+                        faiss_custom_score_function
+                        if env.WDOC_MOD_FAISS_SCORE_FN
+                        else None
+                    ),
                 )
                 break
             except Exception as e:
@@ -335,7 +331,11 @@ def create_embeddings(
                         batch,
                         cached_embeddings.underlying_embeddings,
                         normalize_L2=True,
-                        relevance_score_fn=score_function,
+                        relevance_score_fn=(
+                            faiss_custom_score_function
+                            if env.WDOC_MOD_FAISS_SCORE_FN
+                            else None
+                        ),
                     )
                     break
                 else:
