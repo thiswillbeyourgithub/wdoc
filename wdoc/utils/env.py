@@ -9,15 +9,18 @@ import platform
 
 import os
 import sys
-from dataclasses import MISSING, dataclass, asdict
+from dataclasses import MISSING, dataclass, asdict, field
 
 from loguru import logger
 
 from beartype import BeartypeConf, beartype
 from beartype.door import is_bearable
-from beartype.typing import Literal, Optional, Union
+from beartype.typing import Literal, Optional, Union, List
 
-from .errors import FrozenAttributeCantBeSet
+try:
+    from .errors import FrozenAttributeCantBeSet
+except ImportError:  # for debugging purposes
+    from errors import FrozenAttributeCantBeSet
 
 # must create it because we can't import it from typechecker.py
 warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
@@ -38,6 +41,8 @@ class EnvDataclass:
     having to restart the python execution or reimporting wdoc.
     """
 
+    # stores the name of env variable that starts by WDOC_ but are not expected by EnvDataclass, to warn user only once
+    __warned_unexpected__: list = field(default_factory=list)
     __frozen__: bool = False
     WDOC_DUMMY_ENV_VAR: bool = False  # used to test the __frozen__ mechanism
     WDOC_DEBUG: bool = False
@@ -106,6 +111,24 @@ class EnvDataclass:
         else:
             return val
 
+    def __check_unexpected_vars__(self) -> None:
+        """
+        Look for env variables that start by WDOC_ but are not defined in
+        EnvDataclass. This would indicate an error in env handling. The message
+        is only printed once per var.
+        """
+        for k in os.environ.keys():
+            if not k.lower().startswith("wdoc_"):
+                continue
+            if (
+                k not in env.__dataclass_fields__.keys()
+                and k not in self.__warned_unexpected__
+            ):
+                self.__warned_unexpected__.append(k)
+                logger.warning(
+                    f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
+                )
+
     def __setattr__(self, name, value):
         """
         Controls attribute assignment for the EnvDataclass.
@@ -156,8 +179,15 @@ class EnvDataclass:
             AssertionError: If a value doesn't conform to its expected type
         """
         # non WDOC env can be gotten right away
-        if name in ["__dataclass_fields__", "__frozen__", "__parse__"]:
+        if name in [
+            "__dataclass_fields__",
+            "__frozen__",
+            "__parse__",
+            "__warned_unexpected__",
+            "__check_unexpected_vars__",
+        ]:
             return super().__getattribute__(name)
+        self.__check_unexpected_vars__()
 
         # get the current value stored in the dataclass
         try:
@@ -224,7 +254,8 @@ class EnvDataclass:
 
 # sanity check for the default values of the dataclass itself
 for k, v in EnvDataclass.__dataclass_fields__.items():
-    assert is_bearable(v.default, v.type), v
+    if k.startswith("WDOC_"):
+        assert is_bearable(v.default, v.type), v
 
 env = EnvDataclass()
 
@@ -265,7 +296,8 @@ for k in os.environ.keys():
         continue
     v = env.__parse__(os.environ[k])
 
-    if k not in env.__dataclass_fields__.keys():
+    if k not in env.__dataclass_fields__.keys() and k not in env.__warned_unexpected__:
+        env.__warned_unexpected__.append(k)
         logger.warning(
             f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
         )
