@@ -22,6 +22,13 @@ warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 
 @dataclass
 class EnvDataclass:
+    """
+    This dataclass holds the env variables used by wdoc. It is frozen when
+    env.py is done.
+    This allows modification of env values to dynamically affect wdoc without
+    having to restart the python execution or reimporting wdoc.
+    """
+
     __frozen__: bool = False
     WDOC_DUMMY_ENV_VAR: bool = False
     WDOC_TYPECHECKING: Literal["disabled", "warn", "crash"] = "warn"
@@ -61,6 +68,22 @@ class EnvDataclass:
 
     @warn_typecheck
     def __parse__(self, val: str) -> Optional[Union[bool, int, str]]:
+        """
+        Parse a string value from environment variables into appropriate Python types.
+
+        This method converts string values to their corresponding Python types:
+        - "true" (case-insensitive) → True (boolean)
+        - "false" (case-insensitive) → False (boolean)
+        - String of digits → int
+        - "none" (case-insensitive) or empty string → None
+        - Any other string remains a string
+
+        Args:
+            val: The string value to parse
+
+        Returns:
+            The parsed value as bool, int, None, or string
+        """
         if val.lower() == "true":
             return True
         elif val.lower() == "false":
@@ -73,9 +96,25 @@ class EnvDataclass:
             return val
 
     def __setattr__(self, name, value):
+        """
+        Controls attribute assignment for the EnvDataclass.
+
+        This method enforces the frozen state of the class once it's been frozen:
+        - Prevents attempts to unfreeze the instance
+        - Allows normal attribute setting only when not frozen
+        - Raises an exception when trying to set attributes on a frozen instance
+
+        Args:
+            name: The attribute name being set
+            value: The value to assign to the attribute
+
+        Raises:
+            Exception: If attempting to unfreeze a frozen instance
+            FrozenAttributeCantBeSet: If attempting to set any attribute on a frozen instance
+        """
         # dont allow unfreezing
         if name == "__frozen__" and self.__frozen__ is True and value is False:
-            raise Exception(f"Cannot unfreeze the frozen EnvDataclass instance")
+            raise Exception("Cannot unfreeze the frozen EnvDataclass instance")
 
         # allow setting variable values only until frozen
         if self.__frozen__ is not True:
@@ -84,6 +123,27 @@ class EnvDataclass:
         raise FrozenAttributeCantBeSet(name, value)
 
     def __getattribute__(self, name):
+        """
+        Controls attribute access for the EnvDataclass.
+
+        This method implements a dynamic environment variable synchronization system:
+        - For special attributes, returns them directly
+        - For normal attributes in a non-frozen state, returns the current value
+        - For attributes in a frozen state, checks the environment variables for runtime changes
+        - Enforces type safety for all values
+        - Has special handling for attributes containing 'private' for security
+
+        Args:
+            name: The attribute name being accessed
+
+        Returns:
+            The attribute value, possibly updated from environment variables
+
+        Raises:
+            Exception: If there's an error getting the attribute from the class
+            AttributeError: If trying to access a security-sensitive attribute that has changed
+            AssertionError: If a value doesn't conform to its expected type
+        """
         # non WDOC env can be gotten right away
         if name in ["__dataclass_fields__", "__frozen__", "__parse__"]:
             return super().__getattribute__(name)
