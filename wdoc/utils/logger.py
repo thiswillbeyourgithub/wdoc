@@ -10,7 +10,7 @@ from textwrap import dedent
 import rtoml
 from beartype.typing import Callable, Dict, List, Optional, Type, Union
 from loguru import logger
-from platformdirs import user_cache_dir, user_log_dir
+from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -19,9 +19,6 @@ from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
-
-cache_dir = Path(user_cache_dir(appname="wdoc"))
-cache_dir.mkdir(parents=True, exist_ok=True)
 
 log_dir = Path(user_log_dir(appname="wdoc"))
 log_dir.mkdir(exist_ok=True, parents=True)

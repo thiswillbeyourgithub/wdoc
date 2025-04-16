@@ -53,7 +53,6 @@ from .utils.llm import TESTING_LLM, load_llm
 
 # import this first because it sets the logging level
 from .utils.logger import (
-    cache_dir,
     log_dir,
     md_printer,
     set_help_md_as_docstring,
