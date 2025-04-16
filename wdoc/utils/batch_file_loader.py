@@ -795,6 +795,13 @@ def parse_youtube_playlist(
         doclist[i] = DocDict(doc_kwargs)
 
     assert doclist, f"No video found in youtube playlist: {path}"
+    for idoc, doc in enumerate(doclist):
+        if "playlist_title" in doc.metadata and doc.metadata["playlist_title"]:
+            if playlist_title not in doc.metadata["playlist_title"]:
+                doc.metadata["playlist_title"] += " - " + playlist_title
+        else:
+            doc.metadata["playlist_title"] = playlist_title
+        doclist[idoc]
     return doclist
 
 
