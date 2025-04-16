@@ -74,7 +74,6 @@ from .misc import (
     hasher,
     html_to_text,
     is_timecode,
-    loaders_temp_dir_file,
     max_token,
     min_lang_prob,
     min_token,
@@ -411,18 +410,7 @@ def load_one_doc(
     The loader is cached"""
     text_splitter = get_splitter(task, modelname=llm_name)
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
-
-    expected_global_dir = loaders_temp_dir_file.read_text().strip()
-    assert (
-        expected_global_dir
-    ), f"Empty loaders_temp_dir_file at {loaders_temp_dir_file}"
-    expected_global_dir = Path(expected_global_dir)
-    assert (
-        expected_global_dir.exists()
-    ), f"File loaders_temp_dir_file not found in {loaders_temp_dir_file} pointing at '{expected_global_dir}'"
-    assert (
-        expected_global_dir == temp_dir
-    ), f"Error handling temp dir: temp_dir is {temp_dir} but loaders_temp_dir is {expected_global_dir}"
+    assert temp_dir.exists(), temp_dir
 
     if filetype == "url":
         docs = load_url(**kwargs)

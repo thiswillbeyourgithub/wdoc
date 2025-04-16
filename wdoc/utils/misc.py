@@ -44,9 +44,6 @@ from .flags import is_debug, is_private, is_verbose
 from .logger import cache_dir, red, whi, yel, deb
 from .typechecker import optional_typecheck
 
-# will be replaced when load_one_doc is called, by the path to the file where the loaders can store temporary file
-loaders_temp_dir_file = cache_dir / "loaders_temp_dir.txt"
-
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
 warnings.filterwarnings(
     "ignore",
