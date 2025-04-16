@@ -32,7 +32,6 @@ from loguru import logger
 from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import env
-from .flags import is_verbose
 from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from .typechecker import optional_typecheck
 
@@ -191,7 +190,7 @@ def load_embeddings_engine(
     lfs = LocalFileStore(
         database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
         expiration_days=env.WDOC_EXPIRE_CACHE_DAYS,
-        verbose=is_verbose,
+        verbose=env.WDOC_VERBOSE,
         name="Embeddings_" + modelname.sanitized,
     )
 
@@ -349,7 +348,7 @@ def create_embeddings(
     temp_dbs = Parallel(
         backend="threading",
         n_jobs=10,
-        verbose=0 if not is_verbose else 51,
+        verbose=0 if not env.WDOC_VERBOSE else 51,
     )(
         delayed(embed_one_batch)(
             batch=docs[batch[0] : batch[1]],
@@ -359,7 +358,7 @@ def create_embeddings(
             enumerate(batches),
             total=len(batches),
             desc="Embedding by batch",
-            # disable=not is_verbose,
+            # disable=not env.WDOC_VERBOSE,
         )
     )
     for temp in temp_dbs:

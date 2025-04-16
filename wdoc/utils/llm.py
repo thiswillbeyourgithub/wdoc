@@ -18,7 +18,6 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 
 from .env import env
-from .flags import is_private
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
 
@@ -137,7 +136,7 @@ def load_llm(
             or os.environ["WDOC_PRIVATE_MODE"] == "false"
         )
 
-    assert private == is_private
+    assert private == env.WDOC_PRIVATE_MODE
 
     if (not private) and (modelname.backend == "openai") and (api_base is None):
         max_tokens = get_model_max_tokens(modelname)

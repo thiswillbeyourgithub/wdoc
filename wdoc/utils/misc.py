@@ -42,7 +42,6 @@ from loguru import logger
 
 from .env import env
 from .errors import UnexpectedDocDictArgument
-from .flags import is_debug, is_private, is_verbose
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
@@ -67,7 +66,7 @@ try:
 
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
-    if is_verbose:
+    if env.WDOC_VERBOSE:
         logger.warning(
             f"Couldn't import optional package 'ftlangdetect' from 'fasttext-langdetect', trying to import langdetect (but it's much slower): '{err}'"
         )
@@ -83,7 +82,7 @@ except Exception as err:
 
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
-        if is_verbose:
+        if env.WDOC_VERBOSE:
             logger.warning(
                 f"Couldn't import optional package 'langdetect' either: '{err}'"
             )
@@ -391,7 +390,7 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
             elif element[:-2] + ">" in html:
                 content.append(element[:-2] + ">")
             else:
-                if is_verbose:
+                if env.WDOC_VERBOSE:
                     temptext = " ".join(filter(None, content))
                     logger.warning(
                         f"Image not properly parsed from bs4:\n{element}\n{temptext}"
@@ -428,7 +427,7 @@ def wrapped_model_name_matcher(model: str) -> str:
             backend = k.split("_API_KEY")[0].lower()
             if (
                 backend not in all_backends
-                and is_verbose
+                and env.WDOC_VERBOSE
                 and not printed_unexpected_api_keys[0]
             ):
                 logger.debug(
@@ -954,7 +953,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         logger.warning(
             f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nNote: if the output seems fine but ends abruptly instead of by </answer> you might want to tweak the max_token settings.\nWill continue if not using --debug"
         )
-        if is_debug:
+        if env.WDOC_DEBUG:
             raise
         else:
             assert output.strip(), "LLM output was empty"
@@ -977,7 +976,7 @@ langfuse_callback_holder = []
 
 @optional_typecheck
 def create_langfuse_callback(version: str) -> None:
-    assert not is_private
+    assert not env.WDOC_PRIVATE_MODE
     # replace langfuse's env variable if set for wdoc, this is already done in env.py but doing it here also at runtime
     for k in [
         "LANGFUSE_PUBLIC_KEY",

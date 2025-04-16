@@ -29,7 +29,6 @@ from ..errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
 )
-from ..flags import is_verbose
 from ..misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
 from ..typechecker import optional_typecheck
 

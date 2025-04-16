@@ -61,9 +61,8 @@ from tqdm import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
 from loguru import logger
 
-from .env import env
+from .env import env, is_linux, is_piped
 from .errors import TimeoutPdfLoaderError
-from .flags import is_debug, is_linux, is_verbose, is_piped
 from .misc import (
     ModelName,
     average_word_length,
@@ -93,7 +92,7 @@ except Exception as e:
 try:
     import pdftotext
 except Exception as err:
-    if is_verbose:
+    if env.WDOC_VERBOSE:
         logger.warning(f"Failed to import optional package 'pdftotext': '{err}'")
         if is_linux:
             logger.warning(
@@ -322,7 +321,7 @@ def debug_return_empty(func: Callable) -> Callable:
 
 
 pdf_loader_max_timeout = env.WDOC_MAX_PDF_LOADER_TIMEOUT
-if is_verbose:
+if env.WDOC_VERBOSE:
     if pdf_loader_max_timeout > 0:
         logger.warning(f"Will use a PDF loader timeout of {pdf_loader_max_timeout}s")
     else:
@@ -383,7 +382,7 @@ def load_one_doc_wrapped(
             )
         if loading_failure == "crash":
             raise Exception(logger.warning(mess)) from err
-        elif loading_failure == "warn" or is_debug:
+        elif loading_failure == "warn" or env.WDOC_DEBUG:
             logger.warning(mess)
             return str(err)
         else:
@@ -443,7 +442,7 @@ def load_one_doc(
 
     elif filetype == "anki":
         docs = load_anki(
-            verbose=is_verbose,
+            verbose=env.WDOC_VERBOSE,
             text_splitter=text_splitter,
             loaders_temp_dir=temp_dir,
             **kwargs,
@@ -751,7 +750,7 @@ def load_youtube_video(
             ],
             # with extension
             "outtmpl": f"{file_name.absolute().resolve()}.%(ext)s",
-            "verbose": is_verbose,
+            "verbose": env.WDOC_VERBOSE,
             "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         }
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -1266,7 +1265,7 @@ def replace_media(
             ]
             images_reg = re.findall(REG_IMG, content)
             if len(images_bs4) != len(images_reg):
-                if is_verbose:
+                if env.WDOC_VERBOSE:
                     logger.warning(
                         f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}"
                     )
@@ -2663,7 +2662,7 @@ def load_pdf(
     for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:
-            if is_debug:
+            if env.WDOC_DEBUG:
                 logger.warning(f"Trying to parse {path} using {loader_name}")
 
             if pdf_loader_max_timeout > 0:
@@ -2759,7 +2758,7 @@ def load_pdf(
 
     max_prob = max([v for v in probs.values()])
 
-    if is_debug:
+    if env.WDOC_DEBUG:
         logger.debug(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
@@ -2967,7 +2966,7 @@ def load_online_media(
             ],
             # with extension
             "outtmpl": f"{file_name.absolute().resolve()}.%(ext)s",
-            "verbose": is_verbose,
+            "verbose": env.WDOC_VERBOSE,
             "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         }
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
