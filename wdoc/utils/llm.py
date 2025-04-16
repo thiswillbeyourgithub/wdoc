@@ -16,8 +16,8 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_openai import ChatOpenAI
 
-from .env import WDOC_PRIVATE_MODE, WDOC_LITELLM_TAGS, WDOC_LITELLM_USER
-from .flags import is_private, is_verbose
+from .env import env
+from .flags import is_private
 from .logger import red, whi, yel, deb
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
@@ -50,7 +50,7 @@ def load_llm(
             if t not in tags:
                 tags.append(t)
 
-    env_tags = WDOC_LITELLM_TAGS
+    env_tags = env.WDOC_LITELLM_TAGS
     if env_tags:
         if isinstance(env_tags, str):
             env_tags = env_tags.split(",")
@@ -90,7 +90,7 @@ def load_llm(
 
     if private:
         assert api_base, "If private is set, api_base must be set too"
-        assert WDOC_PRIVATE_MODE
+        assert env.WDOC_PRIVATE_MODE
         assert (
             "WDOC_PRIVATE_MODE" in os.environ
         ), "Missing env variable WDOC_PRIVATE_MODE"
@@ -131,7 +131,7 @@ def load_llm(
             not langfuse_callback_holder
         ), "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
     else:
-        assert not WDOC_PRIVATE_MODE
+        assert not env.WDOC_PRIVATE_MODE
         assert (
             "WDOC_PRIVATE_MODE" not in os.environ
             or os.environ["WDOC_PRIVATE_MODE"] == "false"
@@ -168,7 +168,7 @@ def load_llm(
             callbacks=[
                 PriceCountingCallback(verbose=llm_verbosity)
             ],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
-            user=WDOC_LITELLM_USER,
+            user=env.WDOC_LITELLM_USER,
             **extra_model_args,
         )
         litellm.drop_params = True

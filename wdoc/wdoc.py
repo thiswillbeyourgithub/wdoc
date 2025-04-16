@@ -38,18 +38,7 @@ from tqdm import tqdm
 from .utils.batch_file_loader import batch_load_doc
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 from .utils.embeddings import create_embeddings, load_embeddings_engine
-from .utils.env import (
-    WDOC_ALLOW_NO_PRICE,
-    WDOC_DEBUGGER,
-    WDOC_DEFAULT_EMBED_MODEL,
-    WDOC_DEFAULT_MODEL,
-    WDOC_DEFAULT_QUERY_EVAL_MODEL,
-    WDOC_EMBED_TESTING,
-    WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS,
-    WDOC_LLM_MAX_CONCURRENCY,
-    WDOC_OPEN_ANKI,
-    WDOC_TYPECHECKING,
-)
+from .utils.env import env
 from .utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
@@ -130,9 +119,9 @@ class wdoc:
         self,
         task: Literal["query", "search", "summarize", "summarize_then_query"],
         filetype: str = "auto",
-        model: str = WDOC_DEFAULT_MODEL,
-        embed_model: str = WDOC_DEFAULT_EMBED_MODEL,
-        query_eval_model: Optional[str] = WDOC_DEFAULT_QUERY_EVAL_MODEL,
+        model: str = env.WDOC_DEFAULT_MODEL,
+        embed_model: str = env.WDOC_DEFAULT_EMBED_MODEL,
+        query_eval_model: Optional[str] = env.WDOC_DEFAULT_QUERY_EVAL_MODEL,
         embed_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, Path] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, Path]] = None,
@@ -187,7 +176,7 @@ class wdoc:
 
         self.ntfy = ntfy
 
-        if debug or WDOC_DEBUGGER:
+        if debug or env.WDOC_DEBUGGER:
             debug_exceptions(instance=self)
 
         elif notification_callback:
@@ -217,7 +206,7 @@ class wdoc:
                 )
 
             # type checking of extra args
-            if WDOC_TYPECHECKING in ["crash", "warn"]:
+            if env.WDOC_TYPECHECKING in ["crash", "warn"]:
                 val = cli_kwargs[k]
                 # curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
@@ -465,7 +454,7 @@ class wdoc:
                 )
             set_llm_cache(self.llm_cache)
 
-        if WDOC_ALLOW_NO_PRICE:
+        if env.WDOC_ALLOW_NO_PRICE:
             red(
                 f"Disabling price computation for {self.model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
             )
@@ -485,7 +474,7 @@ class wdoc:
             self.llm_price = get_model_price(self.model.original)
 
         if self.query_eval_model is not None:
-            if WDOC_ALLOW_NO_PRICE:
+            if env.WDOC_ALLOW_NO_PRICE:
                 red(
                     f"Disabling price computation for {self.query_eval_model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
                 )
@@ -971,7 +960,7 @@ class wdoc:
             api_base=self.llms_api_bases["embeddings"],
             embed_kwargs=self.embed_kwargs,
             private=self.private,
-            do_test=WDOC_EMBED_TESTING,
+            do_test=env.WDOC_EMBED_TESTING,
         )
         self.loaded_embeddings = create_embeddings(
             modelname=self.embed_model,
@@ -1517,7 +1506,9 @@ class wdoc:
             return outputs
 
         # uses in most places to increase concurrency limit
-        multi = {"max_concurrency": WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1}
+        multi = {
+            "max_concurrency": env.WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1
+        }
 
         if self.task == "search":
             if self.query_eval_model is not None:
@@ -1645,7 +1636,7 @@ class wdoc:
                 return output
 
             md_printer("\n\n# Documents")
-            if WDOC_OPEN_ANKI:
+            if env.WDOC_OPEN_ANKI:
                 anki_nids = []
                 to_print = ""
             for id, doc in enumerate(docs):
@@ -1655,7 +1646,7 @@ class wdoc:
                 for k, v in doc.metadata.items():
                     to_print += f"* **{k}**: `{v}`\n"
                 to_print += "\n"
-                if WDOC_OPEN_ANKI and "anki_nid" in doc.metadata:
+                if env.WDOC_OPEN_ANKI and "anki_nid" in doc.metadata:
                     nid_str = str(doc.metadata["anki_nid"]).split(" ")
                     for nid in nid_str:
                         if nid not in anki_nids:
@@ -1669,7 +1660,7 @@ class wdoc:
                     f"Number of documents after query eval filter: {len(output['filtered_docs'])}"
                 )
 
-            if WDOC_OPEN_ANKI and anki_nids:
+            if env.WDOC_OPEN_ANKI and anki_nids:
                 open_answ = input(
                     f"\nAnki notes found, open in anki? (yes/no/debug)\n(nids: {anki_nids})\n> "
                 )
@@ -1755,7 +1746,7 @@ class wdoc:
             }
             answer_each_doc_chain = (
                 prompts.answer
-                | self.llm.bind(max_tokens=WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS)
+                | self.llm.bind(max_tokens=env.WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS)
                 | StrOutputParser()
             )
 

@@ -60,7 +60,7 @@ from prompt_toolkit import prompt
 from tqdm import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
 
-from .env import WDOC_EMPTY_LOADER, WDOC_MAX_PDF_LOADER_TIMEOUT, WDOC_PRIVATE_MODE
+from .env import env
 from .errors import TimeoutPdfLoaderError
 from .flags import is_debug, is_linux, is_verbose, is_piped
 from .logger import logger, red, whi, yel
@@ -299,7 +299,7 @@ sox_effects = [
 
 
 def debug_return_empty(func: Callable) -> Callable:
-    if WDOC_EMPTY_LOADER:
+    if env.WDOC_EMPTY_LOADER:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -322,7 +322,7 @@ def debug_return_empty(func: Callable) -> Callable:
         return func
 
 
-pdf_loader_max_timeout = WDOC_MAX_PDF_LOADER_TIMEOUT
+pdf_loader_max_timeout = env.WDOC_MAX_PDF_LOADER_TIMEOUT
 if is_verbose:
     if pdf_loader_max_timeout > 0:
         red(f"Will use a PDF loader timeout of {pdf_loader_max_timeout}s")
@@ -1979,7 +1979,7 @@ def transcribe_audio_deepgram(
     "Use whisper to transcribe an audio file"
     whi(f"Calling deepgram to transcribe {audio_path}")
     assert (
-        not WDOC_PRIVATE_MODE
+        not env.WDOC_PRIVATE_MODE
     ), "Private mode detected, aborting before trying to use deepgram's API"
     assert (
         "DEEPGRAM_API_KEY" in os.environ
@@ -2050,7 +2050,7 @@ def transcribe_audio_whisper(
     "Use whisper to transcribe an audio file"
     whi(f"Calling openai's whisper to transcribe {audio_path}")
     assert (
-        not WDOC_PRIVATE_MODE
+        not env.WDOC_PRIVATE_MODE
     ), "Private mode detected, aborting before trying to use openai's whisper"
     assert (
         "OPENAI_API_KEY" in os.environ
