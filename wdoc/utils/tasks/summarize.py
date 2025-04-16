@@ -155,7 +155,7 @@ def do_summarize(
 
             output_lines[il] = ll
 
-        good_lines = [li for li in output_lines if li.replace("-", "").strip()]
+        good_lines = [li for li in output_lines if (li and li.replace("-", "").strip())]
         output_text = "\n".join(good_lines)
 
         if verbose:
