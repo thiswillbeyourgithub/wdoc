@@ -344,6 +344,25 @@ def test_summary_tim_urban():
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
 )
+def test_summary_tim_urban_debug():
+    """Test summarization of Tim Urban's procrastination video."""
+    inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        # filetype="youtube",
+        filetype="auto",
+        debug=True,
+    )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
 def test_summary_with_out_file():
     """Test that summary is properly written to output file."""
     with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
