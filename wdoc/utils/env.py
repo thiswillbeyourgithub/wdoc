@@ -266,7 +266,7 @@ for k in os.environ.keys():
     v = env.__parse__(os.environ[k])
 
     if k not in env.__dataclass_fields__.keys():
-        print(
+        logger.warning(
             f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
         )
     else:
