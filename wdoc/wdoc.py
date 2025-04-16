@@ -434,10 +434,10 @@ class wdoc:
         self.llms_api_bases = llms_api_bases
         self.oneoff = oneoff
         if debug:
-            os.environ["WDOC_DEBUG"] = True
-            os.environ["WDOC_VERBOSE"] = True
+            os.environ["WDOC_DEBUG"] = "true"
+            os.environ["WDOC_VERBOSE"] = "true"
         elif verbose:
-            os.environ["WDOC_VERBOSE"] = True
+            os.environ["WDOC_VERBOSE"] = "true"
 
         if disable_llm_cache:
             self.llm_cache = False

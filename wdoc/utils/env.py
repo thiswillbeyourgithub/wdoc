@@ -283,11 +283,11 @@ def check_kwargs(arg: str, abbrv: str = None) -> bool:
 
 if check_kwargs("debug", "d"):
     logger.debug("Found 'debug' arg, setting WDOC_DEBUG and WDOC_VERBOSE to true")
-    os.environ["WDOC_DEBUG"] = True
-    os.environ["WDOC_VERBOSE"] = True
+    os.environ["WDOC_DEBUG"] = "true"
+    os.environ["WDOC_VERBOSE"] = "true"
 elif check_kwargs("verbose", "v"):
     logger.debug("Found 'verbose' arg, setting WDOC_VERBOSE to true")
-    os.environ["WDOC_VERBOSE"] = True
+    os.environ["WDOC_VERBOSE"] = "true"
 
 
 # store the env variable instead of the default values but check their types
