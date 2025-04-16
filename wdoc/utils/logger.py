@@ -34,7 +34,7 @@ logger.add(
     rotation="100MB",
     retention=5,
     format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
-    level="DEBUG",
+    level="DEBUG" if is_debug else "INFO",
     enqueue=True,
     colorize=True,
     backtrace=True if is_debug else None,
