@@ -623,9 +623,12 @@
 
 # Runtime flags
 
+
+
 * `WDOC_TYPECHECKING`
-    * Setting for runtime type checking. Default value is `warn`.     * Possible values:
-    The typing is checked using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
+    * Setting for runtime type checking. Default value is `warn`. The typing is checked
+    using [beartype](https://beartype.readthedocs.io/en/latest/) so shouldn't slow down the runtime.
+    * Possible values:
         * `disabled`: disable typechecking.
         * `warn`: print a red warning if a typechecking fails.
         * `crash`: crash if a typechecking fails in any function.
