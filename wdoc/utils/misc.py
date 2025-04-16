@@ -987,8 +987,21 @@ def create_langfuse_callback(version: str) -> None:
     ):
         deb("Activating langfuse callbacks")
         try:
-            # # use litellm's callbacks for chatlitellm backend
             import langfuse
+        except ImportError as e:
+            if (
+                "WDOC_LANGFUSE_PUBLIC_KEY" in os.environ
+                and "redacted" not in os.environ.get("WDOC_LANGFUSE_PUBLIC_KEY", "")
+            ):
+                raise Exception(
+                    f"Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
+                ) from e
+            else:
+                red(
+                    f"Failed to setup langfuse callback because of ImportError, make sure package 'langfuse' is installed. The error was: '{e}'"
+                )
+        try:
+            # use litellm's callbacks for chatlitellm backend
             import litellm
 
             litellm.success_callback.append("langfuse")
