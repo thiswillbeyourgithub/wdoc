@@ -31,7 +31,6 @@ from .flags import is_debug, is_verbose, is_piped
 from .loaders import (
     load_one_doc_wrapped,
     load_youtube_playlist,
-    loaders_temp_dir_file,
     markdownlink_regex,
     yt_link_regex,
 )
@@ -371,7 +370,6 @@ def batch_load_doc(
             shutil.rmtree(f)
     temp_dir = cache_dir / load_temp_name
     temp_dir.mkdir(exist_ok=False)
-    loaders_temp_dir_file.write_text(str(temp_dir.absolute().resolve()))
 
     loader_max_timeout = env.WDOC_MAX_LOADER_TIMEOUT
     if loader_max_timeout <= 0:
@@ -449,9 +447,6 @@ def batch_load_doc(
         raise Exception(
             red(f"Timed out when loading batch files after {loader_max_timeout}s")
         ) from e
-
-    # erases content that links to the loaders temporary files at startup
-    loaders_temp_dir_file.write_text("")
 
     red(f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s")
     missing_docargs = []
