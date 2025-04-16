@@ -6,7 +6,7 @@ lazyloading or threaded imports
 
 import sys
 
-from .env import WDOC_IMPORT_TYPE
+from .env import env
 
 
 def trick_imports() -> None:
@@ -43,7 +43,7 @@ def trick_imports() -> None:
                     )
                 # print(f"Unlazyloaded module: {first}")
 
-    if WDOC_IMPORT_TYPE == "thread":
+    if env.WDOC_IMPORT_TYPE == "thread":
         q = Queue()
         thread = threading.Thread(
             target=import_worker,
@@ -62,19 +62,19 @@ def trick_imports() -> None:
                 custom_loading(module=module)
             except Exception:
                 return
-        if WDOC_IMPORT_TYPE == "both":
+        if env.WDOC_IMPORT_TYPE == "both":
             lazy_import.lazy_module(module)
             q.put(module)
-        elif WDOC_IMPORT_TYPE == "thread":
+        elif env.WDOC_IMPORT_TYPE == "thread":
             q.put(module)
-        elif WDOC_IMPORT_TYPE == "lazy":
+        elif env.WDOC_IMPORT_TYPE == "lazy":
             if "module" in sys.modules:
                 print(f"{module} already imported")
             lazy_import.lazy_module(module)
             assert module in sys.modules, module
         else:
             raise ValueError(
-                f"Unexpected value for WDOC_IMPORT_TYPE: '{WDOC_IMPORT_TYPE}'"
+                f"Unexpected value for WDOC_IMPORT_TYPE: '{env.WDOC_IMPORT_TYPE}'"
             )
 
     custom_loading("langchain")
@@ -107,9 +107,9 @@ def trick_imports() -> None:
     custom_loading("sklearn.decomposition")
     custom_loading("sklearn.preprocessing")
 
-    if WDOC_IMPORT_TYPE in ["both", "thread"]:
+    if env.WDOC_IMPORT_TYPE in ["both", "thread"]:
         q.put(None)  # kill the import worker
 
 
-if WDOC_IMPORT_TYPE != "native":
+if env.WDOC_IMPORT_TYPE != "native":
     trick_imports()

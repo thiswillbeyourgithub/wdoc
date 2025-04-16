@@ -38,15 +38,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
 
-from .env import (
-    WDOC_ALLOW_NO_PRICE,
-    WDOC_EXPIRE_CACHE_DAYS,
-    WDOC_IMPORT_TYPE,
-    WDOC_MAX_CHUNK_SIZE,
-    WDOC_NO_MODELNAME_MATCHING,
-    WDOC_PRIVATE_MODE,
-    WDOC_STRICT_DOCDICT,
-)
+from .env import env
 from .errors import UnexpectedDocDictArgument
 from .flags import is_debug, is_private, is_verbose
 from .logger import cache_dir, red, whi, yel, deb
@@ -111,10 +103,14 @@ hashdoc_cache = Memory(hashdoc_cache_dir, verbose=0)
 query_eval_cache = Memory(cache_dir / "query_eval_llm", verbose=0)
 
 # remove cache files older than X days
-if WDOC_EXPIRE_CACHE_DAYS:
-    doc_loaders_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
-    hashdoc_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
-    query_eval_cache.reduce_size(age_limit=timedelta(days=int(WDOC_EXPIRE_CACHE_DAYS)))
+if env.WDOC_EXPIRE_CACHE_DAYS:
+    doc_loaders_cache.reduce_size(
+        age_limit=timedelta(days=int(env.WDOC_EXPIRE_CACHE_DAYS))
+    )
+    hashdoc_cache.reduce_size(age_limit=timedelta(days=int(env.WDOC_EXPIRE_CACHE_DAYS)))
+    query_eval_cache.reduce_size(
+        age_limit=timedelta(days=int(env.WDOC_EXPIRE_CACHE_DAYS))
+    )
 
 # for reading length estimation
 wpm = 250
@@ -197,7 +193,7 @@ class DocDict(dict):
         )
     )
     allowed_types: dict = filetype_arg_types
-    __strict__ = WDOC_STRICT_DOCDICT
+    __strict__ = env.WDOC_STRICT_DOCDICT
 
     def __hash__(self):
         "make it hashable, to check for duplicates"
@@ -255,7 +251,7 @@ class DocDict(dict):
                 raise ValueError(strict)
         return True
 
-    def __init__(self, docdict: dict, strict=WDOC_STRICT_DOCDICT) -> None:
+    def __init__(self, docdict: dict, strict=env.WDOC_STRICT_DOCDICT) -> None:
         assert docdict, "Can't give an empty docdict as argument"
         assert strict in [True, False, "strip"], "Unexpected strict value"
         ignore_kwargs = []
@@ -284,7 +280,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
-    if not WDOC_STRICT_DOCDICT:
+    if not env.WDOC_STRICT_DOCDICT:
         return optional_typecheck(func)
     else:
         # find the true function, otherwise func can be a decorated truefunc and might forget the annotations.
@@ -479,7 +475,7 @@ def model_name_matcher(model: str) -> str:
     """
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
-    if WDOC_NO_MODELNAME_MATCHING:
+    if env.WDOC_NO_MODELNAME_MATCHING:
         # deb(f"Bypassing model name matching for model '{model}'")
         return model
 
@@ -496,8 +492,8 @@ def model_name_matcher(model: str) -> str:
 @optional_typecheck
 def get_model_price(model: str) -> List[float]:
     assert (
-        not WDOC_ALLOW_NO_PRICE
-    ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {WDOC_ALLOW_NO_PRICE}"
+        not env.WDOC_ALLOW_NO_PRICE
+    ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {env.WDOC_ALLOW_NO_PRICE}"
     if model in litellm.model_cost:
         return [
             litellm.model_cost[model]["input_cost_per_token"],
@@ -550,7 +546,7 @@ class ModelName:
             except Exception:
                 pass
         self.sanitized = self.sanitized.replace("/", "_")
-        if WDOC_PRIVATE_MODE:
+        if env.WDOC_PRIVATE_MODE:
             self.sanitized = "private_" + self.sanitized
 
     def __hash__(self):
@@ -622,7 +618,7 @@ def get_splitter(
             max_tokens = get_model_max_tokens(modelname)
 
         # don't use overly large chunks anyway
-        max_tokens = min(max_tokens, WDOC_MAX_CHUNK_SIZE)
+        max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
     except Exception as err:
         max_tokens = 4096
         red(f"Failed to get max_tokens limit for model {modelname.original}: '{err}'")
@@ -715,7 +711,7 @@ def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
     who knows what happens when multiprocessing with lazy loaded modules."""
-    if WDOC_IMPORT_TYPE not in ["both", "lazy"]:
+    if env.WDOC_IMPORT_TYPE not in ["both", "lazy"]:
         red("Lazyloading is disabled so not unlazyloading modules.")
         return
 
@@ -726,7 +722,7 @@ def unlazyload_modules():
                 str(v)
             except Exception as e:
                 red(
-                    f"Very weird error when loading a package, consider setting WDOC_IMPORT_TYPE to another value than '{WDOC_IMPORT_TYPE}'. Error message was '{e}'"
+                    f"Very weird error when loading a package, consider setting WDOC_IMPORT_TYPE to another value than '{env.WDOC_IMPORT_TYPE}'. Error message was '{e}'"
                 )
             if "Lazily-loaded" in str(v):
                 try:

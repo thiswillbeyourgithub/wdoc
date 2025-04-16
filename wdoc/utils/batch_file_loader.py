@@ -26,7 +26,7 @@ from joblib import Parallel, delayed
 from langchain.docstore.document import Document
 from tqdm import tqdm
 
-from .env import WDOC_BEHAVIOR_EXCL_INCL_USELESS, WDOC_MAX_LOADER_TIMEOUT
+from .env import env
 from .flags import is_debug, is_verbose, is_piped
 from .loaders import (
     load_one_doc_wrapped,
@@ -48,7 +48,7 @@ from .misc import (
 )
 from .typechecker import optional_typecheck
 
-assert WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
+assert env.WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
     "warn",
     "crash",
 ], "Unexpected value of WDOC_BEHAVIOR_EXCL_INCL_USELESS"
@@ -373,7 +373,7 @@ def batch_load_doc(
     temp_dir.mkdir(exist_ok=False)
     loaders_temp_dir_file.write_text(str(temp_dir.absolute().resolve()))
 
-    loader_max_timeout = WDOC_MAX_LOADER_TIMEOUT
+    loader_max_timeout = env.WDOC_MAX_LOADER_TIMEOUT
     if loader_max_timeout <= 0:
         loader_max_timeout = None
 
@@ -636,9 +636,9 @@ def parse_recursive_paths(
         doclist = [d for d in doclist if any(inc.search(d) for inc in include)]
         if not len(doclist) < ndoclist:
             mess = f"Include rules were useless and didn't filter out anything.\nInclude rules: '{include}'"
-            if WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
+            if env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
                 red(mess)
-            elif WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
+            elif env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
                 raise Exception(red(mess))
 
     if exclude:
@@ -653,9 +653,9 @@ def parse_recursive_paths(
             doclist = [d for d in doclist if not exc.search(d)]
             if not len(doclist) < ndoclist:
                 mess = f"Exclude rule '{exc}' was useless and didn't filter out anything.\nExclude rules: '{exclude}'"
-                if WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
+                if env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
                     red(mess)
-                elif WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
+                elif env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
                     raise Exception(red(mess))
 
     for i, d in enumerate(doclist):

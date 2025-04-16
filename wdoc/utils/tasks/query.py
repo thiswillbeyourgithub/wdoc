@@ -22,7 +22,7 @@ from langchain_openai import ChatOpenAI
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from ..env import WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE, WDOC_CONTINUE_ON_INVALID_EVAL
+from ..env import env
 from ..errors import (
     InvalidDocEvaluationByLLMEval,
     NoDocumentsAfterLLMEvalFiltering,
@@ -148,7 +148,7 @@ def parse_eval_output(output: str) -> str:
     )
     # empty
     if not output.strip():
-        if WDOC_CONTINUE_ON_INVALID_EVAL:
+        if env.WDOC_CONTINUE_ON_INVALID_EVAL:
             red(mess)
             return "5"
         else:
@@ -171,7 +171,7 @@ def parse_eval_output(output: str) -> str:
 
     # contain no digits
     if not digits:
-        if WDOC_CONTINUE_ON_INVALID_EVAL:
+        if env.WDOC_CONTINUE_ON_INVALID_EVAL:
             red(mess)
             return "5"
         else:
@@ -181,7 +181,7 @@ def parse_eval_output(output: str) -> str:
     elif len(digits) == 1:
         return digits[0]
     else:  # ambiguous
-        if WDOC_CONTINUE_ON_INVALID_EVAL:
+        if env.WDOC_CONTINUE_ON_INVALID_EVAL:
             red(mess)
             return "5"
         else:
@@ -371,8 +371,8 @@ def semantic_batching(
     best_clusters = None
     for d, ct in cluster_mean_tkn.items():
         if (
-            ct < WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
-            and ct >= WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE / 2
+            ct < env.WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+            and ct >= env.WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE / 2
         ):
             best_clusters = cluster_trials[d]
             break
@@ -430,7 +430,7 @@ def semantic_batching(
             text = texts[int(clustid.squeeze())]
             size = text_sizes[text]
             if (
-                current_tokens + size > WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+                current_tokens + size > env.WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
             ) and current_bucket:
                 buckets.append(current_bucket)
                 current_bucket = [text]
