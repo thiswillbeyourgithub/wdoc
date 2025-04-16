@@ -11,8 +11,9 @@ from beartype.typing import Any, Tuple
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text import FormattedText
+from loguru import logger
 
-from .logger import md_printer, red, whi
+from .logger import md_printer
 from .misc import cache_dir
 from .typechecker import optional_typecheck
 
@@ -165,7 +166,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
 
     while True:
         if settings["multiline"]:
-            whi("Multiline mode enabled. Use ctrl+D to send.")
+            logger.info("Multiline mode enabled. Use ctrl+D to send.")
         session = PromptSession(
             bottom_toolbar=lambda: get_toolbar_text(settings),
             completer=completer,
@@ -178,24 +179,24 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 multiline=settings["multiline"],
             )
         except KeyboardInterrupt:
-            red("Quitting.")
+            logger.warning("Quitting.")
             raise SystemExit()
         except EOFError:
             if settings["multiline"]:
                 pass
             else:
-                red("Quitting.")
+                logger.warning("Quitting.")
                 raise SystemExit()
         user_input = user_input.strip()
 
         # quit
         if user_input.strip() in ["quit", "Q", "q"]:
-            whi("Quitting.")
+            logger.info("Quitting.")
             raise SystemExit()
         elif user_input == "/debug":
-            whi("Entering debug mode.")
+            logger.info("Entering debug mode.")
             breakpoint()
-            whi("Going back to the prompt.")
+            logger.info("Going back to the prompt.")
             continue
         elif user_input in ["/help", "?"]:
             show_help()
@@ -204,31 +205,37 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         # handle settings
         if user_input.startswith("/settings "):
             if "=" not in user_input:
-                red("Invalid settings syntax: missing '='")
+                logger.warning("Invalid settings syntax: missing '='")
                 show_help()
                 continue
             input_sett = user_input.split(" ")
             if not input_sett[0] == "/settings":
-                red("Invalid settings syntax: does not start with '/settings '")
+                logger.warning(
+                    "Invalid settings syntax: does not start with '/settings '"
+                )
                 show_help()
                 continue
             if not len(input_sett) == 2:
-                red("Invalid settings syntax: too many spaces")
+                logger.warning("Invalid settings syntax: too many spaces")
                 show_help()
                 continue
             input_sett = input_sett[1]
             input_sett = input_sett.split("=")
             if not len(input_sett) == 2:
-                red("Invalid settings syntax: expected one '=' symbol")
+                logger.warning("Invalid settings syntax: expected one '=' symbol")
                 show_help()
                 continue
             sett_k, sett_v = input_sett
             if sett_k not in settings.keys():
-                red("Invalid settings: '{sett_k}' is not a valid setting key")
+                logger.warning(
+                    "Invalid settings: '{sett_k}' is not a valid setting key"
+                )
                 show_help()
                 continue
             if settings[sett_k] == sett_v:
-                red("Invalid settings: '{sett_k}' is already has value '{sett_v}'")
+                logger.warning(
+                    "Invalid settings: '{sett_k}' is already has value '{sett_v}'"
+                )
                 show_help()
                 continue
             try:
@@ -252,17 +259,17 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                     sett_v = bool(sett_v)
                 settings[sett_k] = type(settings[sett_k])(sett_v)
             except Exception as err:
-                red(
+                logger.warning(
                     f"Error: can't set '{sett_k}' to '{sett_v}' because it "
                     f"can't keep the type '{type(settings[sett_k])}'\n"
                     f"Error: '{err}'"
                 )
                 show_help()
                 continue
-            whi(f"Set {sett_k}={sett_v}")
+            logger.info(f"Set {sett_k}={sett_v}")
             continue
         elif "/settings" in user_input:
-            red(f"Detected '/settings' but not at the start, retrying.")
+            logger.warning(f"Detected '/settings' but not at the start, retrying.")
             show_help()
             continue
 

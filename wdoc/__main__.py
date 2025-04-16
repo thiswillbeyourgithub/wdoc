@@ -15,7 +15,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     print("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from .wdoc import is_verbose, wdoc, whi, deb
+from .wdoc import is_verbose, wdoc
 from .utils.misc import piped_input
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
@@ -33,7 +33,7 @@ def cli_launcher() -> None:
         sysline = " ".join(sys.argv)
         if isinstance(piped_input, bytes):
             if "--filetype" not in sysline:
-                whi(
+                logger.info(
                     "When piping binary data it is recommended to use a --filetype argument otherwise python-magic<=0.4.27 often crashes. See https://github.com/ahupp/python-magic/issues/261"
                 )
             temp_file = tempfile.NamedTemporaryFile(
@@ -41,7 +41,9 @@ def cli_launcher() -> None:
                 delete=False,
                 mode="wb",
             )
-            deb(f"Detected binary piped data, storing it in '{temp_file.name}'")
+            logger.debug(
+                f"Detected binary piped data, storing it in '{temp_file.name}'"
+            )
         elif isinstance(piped_input, str):
             temp_file = tempfile.NamedTemporaryFile(
                 prefix="wdoc_piped_input_",
@@ -49,9 +51,9 @@ def cli_launcher() -> None:
                 delete=False,
                 mode="w",
             )
-            deb(f"Detected text piped data, storing it in '{temp_file.name}'")
+            logger.debug(f"Detected text piped data, storing it in '{temp_file.name}'")
             if "--filetype" not in sysline:
-                deb("Setting the filetype as 'txt'")
+                logger.debug("Setting the filetype as 'txt'")
                 sys.argv.append("--filetype=txt")
         else:
             raise ValueError(type(piped_input))
@@ -81,7 +83,7 @@ def cli_launcher() -> None:
         or "__main__.py parse_file  " in sysline
     ):
         if is_verbose:
-            whi("Replacing 'wdoc parse' by 'wdoc_parse_file'")
+            logger.info("Replacing 'wdoc parse' by 'wdoc_parse_file'")
         sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
         del sys.argv[1]
         sysline = " ".join(sys.argv)
@@ -104,7 +106,7 @@ def cli_launcher() -> None:
                 "To create completion scripts, use '-- --completion' as arguments."
             )
     elif len(sys.argv) == 1:
-        whi("No args shown. Use '--help' to display the help.")
+        logger.info("No args shown. Use '--help' to display the help.")
         sys.exit(0)
 
     # while we're at it, make it so that
@@ -122,7 +124,7 @@ def cli_launcher() -> None:
             bef = sys.argv[1]
             aft = arg_replacement_rules[bef]
             if is_verbose:
-                whi(f"Replaced argument '{bef}' to '{aft}'")
+                logger.info(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
     # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
@@ -137,7 +139,7 @@ def cli_launcher() -> None:
         newarg = f"--path={path}"
         sys.argv[2] = newarg
         if is_verbose:
-            whi(f"Replaced '{path}' to '{newarg}'")
+            logger.info(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
 
@@ -197,7 +199,7 @@ def cli_parse_file() -> None:
         ):
             kwargs["path"] = None
         if is_verbose:
-            whi(f"Arguments that will be used for parser: '{kwargs}'")
+            logger.info(f"Arguments that will be used for parser: '{kwargs}'")
         parsed = wdoc.parse_file(**kwargs)
     else:
         parsed = fire.Fire(wdoc.parse_file)

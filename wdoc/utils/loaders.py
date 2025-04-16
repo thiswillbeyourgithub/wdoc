@@ -59,11 +59,11 @@ from langchain_community.document_loaders import (
 from prompt_toolkit import prompt
 from tqdm import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
+from loguru import logger
 
 from .env import env
 from .errors import TimeoutPdfLoaderError
 from .flags import is_debug, is_linux, is_verbose, is_piped
-from .logger import logger, red, whi, yel
 from .misc import (
     ModelName,
     average_word_length,
@@ -88,15 +88,15 @@ try:
     import torchaudio
 except Exception as e:
     # torchaudio can be tricky to install to just in case let's avoid crashing wdoc entirely
-    red(f"Failed to import torchaudio: '{e}'")
+    logger.warning(f"Failed to import torchaudio: '{e}'")
 
 try:
     import pdftotext
 except Exception as err:
     if is_verbose:
-        red(f"Failed to import optional package 'pdftotext': '{err}'")
+        logger.warning(f"Failed to import optional package 'pdftotext': '{err}'")
         if is_linux:
-            red(
+            logger.warning(
                 "On linux, you can try to install pdftotext with :\nsudo "
                 "apt install build-essential libpoppler-cpp-dev pkg-config "
                 "python3-dev\nThen:\nuv pip install pdftotext"
@@ -324,9 +324,9 @@ def debug_return_empty(func: Callable) -> Callable:
 pdf_loader_max_timeout = env.WDOC_MAX_PDF_LOADER_TIMEOUT
 if is_verbose:
     if pdf_loader_max_timeout > 0:
-        red(f"Will use a PDF loader timeout of {pdf_loader_max_timeout}s")
+        logger.warning(f"Will use a PDF loader timeout of {pdf_loader_max_timeout}s")
     else:
-        red("Not using a pdf loader timeout")
+        logger.warning("Not using a pdf loader timeout")
 
 
 @contextmanager
@@ -382,12 +382,12 @@ def load_one_doc_wrapped(
                 f"\nFull traceback:\n{formatted_tb}"
             )
         if loading_failure == "crash":
-            raise Exception(red(mess)) from err
+            raise Exception(logger.warning(mess)) from err
         elif loading_failure == "warn" or is_debug:
-            red(mess)
+            logger.warning(mess)
             return str(err)
         else:
-            red(mess)
+            logger.warning(mess)
             raise ValueError(loading_failure) from err
 
 
@@ -522,7 +522,7 @@ def load_one_doc(
         )
 
     else:
-        raise Exception(red(f"Unsupported filetype: '{filetype}'"))
+        raise Exception(logger.warning(f"Unsupported filetype: '{filetype}'"))
 
     docs = text_splitter.transform_documents(docs)
 
@@ -583,7 +583,7 @@ def load_one_doc(
                 docs[i].metadata["title"] = get_url_title(docs[i].metadata["path"])
                 if not docs[i].metadata["title"]:
                     docs[i].metadata["title"] = "Untitled"
-                    yel(f"Could not get title from url of doc '{kwargs}'")
+                    logger.debug(f"Could not get title from url of doc '{kwargs}'")
         if (
             "title" in kwargs
             and kwargs["title"] != docs[i].metadata["title"]
@@ -712,14 +712,14 @@ def load_youtube_video(
     ], f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
 
     if "\\" in path:
-        red(f"Removed backslash found in '{path}'")
+        logger.warning(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
 
     if not yt_link_regex.search(path):
-        whi(f"Not a youtube link but trying anyway: '{path}'")
+        logger.info(f"Not a youtube link but trying anyway: '{path}'")
 
     if youtube_audio_backend == "youtube":
-        whi(f"Using youtube.com loader: '{path}'")
+        logger.info(f"Using youtube.com loader: '{path}'")
         try:
             docs = cached_yt_loader(
                 path=path,
@@ -736,7 +736,7 @@ def load_youtube_video(
                 f"Error when using yt-dlp. Keep in mind that youtube frequently changed its backend so upgrading yt-dlp to its latest version can often fix issues. Original error was: '{err}'"
             ) from err
     else:
-        whi(f"Downloading audio from url: '{path}'")
+        logger.info(f"Downloading audio from url: '{path}'")
         file_name = (
             loaders_temp_dir / f"youtube_audio_{uuid6.uuid6()}"
         )  # without extension!
@@ -843,7 +843,7 @@ def load_online_pdf(
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
 ) -> List[Document]:
-    whi(f"Loading online pdf: '{path}'")
+    logger.info(f"Loading online pdf: '{path}'")
 
     try:
         response = requests.get(path)
@@ -863,7 +863,7 @@ def load_online_pdf(
         return docs
 
     except Exception as err:
-        red(
+        logger.warning(
             f"Failed parsing online PDF {path} by downloading it and trying to parse because of error '{err}'. Retrying one last time with OnlinePDFLoader."
         )
         loader = OnlinePDFLoader(path)
@@ -914,9 +914,9 @@ def load_anki(
     if not anki_profile:
         original_db = akp.find_db()
         anki_profile = original_db.parent.name
-        whi(f"Detected anki profile: '{anki_profile}'")
+        logger.info(f"Detected anki profile: '{anki_profile}'")
 
-    whi(f"Loading anki profile: '{anki_profile}'")
+    logger.info(f"Loading anki profile: '{anki_profile}'")
     original_db = akp.find_db(user=anki_profile)
     name = f"{anki_profile}".replace(" ", "_")
     random_val = str(uuid6.uuid6())
@@ -1267,7 +1267,7 @@ def replace_media(
             images_reg = re.findall(REG_IMG, content)
             if len(images_bs4) != len(images_reg):
                 if is_verbose:
-                    red(
+                    logger.warning(
                         f"Different images found:\nbs4: {images_bs4}\nregex: {images_reg}\nContent: {content}"
                     )
                 if images_bs4 and not images_reg:
@@ -1281,7 +1281,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                red(err)
+                logger.warning(err)
             for iimg, img in enumerate(images):
                 try:
                     assert (
@@ -1296,7 +1296,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    red(err)
+                    logger.warning(err)
                     images[iimg] = None
             images = [i for i in images if i is not None]
             images = list(set(images))
@@ -1309,7 +1309,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                red(err)
+                logger.warning(err)
             for isound, sound in enumerate(sounds):
                 try:
                     assert sound in content, f"Sound is not in content: {sound}"
@@ -1322,7 +1322,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    red(err)
+                    logger.warning(err)
                     sounds[isound] = None
             sounds = [s for s in sounds if s is not None]
             sounds = list(set(sounds))
@@ -1348,7 +1348,7 @@ def replace_media(
                 except AssertionError as err:
                     if strict:
                         raise
-                    red(err)
+                    logger.warning(err)
                     links[ilink] = None
             links = [li for li in links if li is not None]
             links = list(set(links))
@@ -1382,7 +1382,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                red(f"Failed assert when replacing image: '{err}'")
+                logger.warning(f"Failed assert when replacing image: '{err}'")
                 continue
 
         for i, sound in enumerate(sounds):
@@ -1402,7 +1402,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                red(f"Failed assert when replacing sounds: '{err}'")
+                logger.warning(f"Failed assert when replacing sounds: '{err}'")
                 continue
 
         for i, link in enumerate(links):
@@ -1427,7 +1427,7 @@ def replace_media(
             except AssertionError as err:
                 if strict:
                     raise
-                red(f"Failed assert when replacing links: '{err}'")
+                logger.warning(f"Failed assert when replacing links: '{err}'")
                 continue
 
         # check no media can be found anymore
@@ -1439,19 +1439,19 @@ def replace_media(
                 ), new_content
                 assert "<img" not in new_content, new_content
             elif "<img" in new_content:
-                red(f"AnkiMediaReplacer: Found '<img' in '{new_content}'")
+                logger.warning(f"AnkiMediaReplacer: Found '<img' in '{new_content}'")
         if replace_sounds:
             if strict:
                 assert not re.findall(REG_SOUNDS, new_content), new_content
                 assert "[sound:" not in new_content, new_content
             elif "[sound:" in new_content:
-                red(f"AnkiMediaReplacer: Found '[sound:' in '{new_content}'")
+                logger.warning(f"AnkiMediaReplacer: Found '[sound:' in '{new_content}'")
         if replace_links:
             if strict:
                 assert not re.findall(REG_LINKS, new_content), new_content
                 assert "://" not in new_content, new_content
             elif "://" in new_content:
-                red(f"AnkiMediaReplacer: Found '://' in '{new_content}'")
+                logger.warning(f"AnkiMediaReplacer: Found '://' in '{new_content}'")
 
         # check non empty
         temp = new_content
@@ -1496,7 +1496,7 @@ def replace_media(
 
 @debug_return_empty
 def load_string() -> List[Document]:
-    whi("Loading string")
+    logger.info("Loading string")
     content = prompt(
         "Paste your text content here then press esc+enter or meta+enter:\n>",
         multiline=True,
@@ -1514,7 +1514,7 @@ def load_string() -> List[Document]:
 @debug_return_empty
 @optional_strip_unexp_args
 def load_txt(path: str, file_hash: str) -> List[Document]:
-    whi(f"Loading txt: '{path}'")
+    logger.info(f"Loading txt: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     with open(path) as f:
         content = f.read()
@@ -1529,7 +1529,7 @@ def load_text_input(
     file_hash: str,
     metadata: Optional[Union[str, dict]] = None,
 ) -> List[Document]:
-    whi(f"Loading text input: '{path}'")
+    logger.info(f"Loading text input: '{path}'")
     text = path.strip()
     assert text, "Empty text"
     if metadata is None:
@@ -1554,7 +1554,7 @@ def load_local_html(
     file_hash: str,
     load_functions: Optional[bytes] = None,
 ) -> List[Document]:
-    whi(f"Loading local html: '{path}'")
+    logger.info(f"Loading local html: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
 
     with open(path) as f:
@@ -1629,7 +1629,7 @@ def load_logseq_markdown(
     file_hash: str,
     text_splitter: TextSplitter,
 ) -> List[Document]:
-    whi(f"Loading logseq markdown file: '{path}'")
+    logger.info(f"Loading logseq markdown file: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     try:
         parsed = LogseqMarkdownParser.parse_file(path, verbose=False)
@@ -1732,7 +1732,7 @@ def load_logseq_markdown(
             mess += "\nMissing more than 50% of blocks so crashing"
             raise Exception(mess)
         else:
-            red(mess + "\nBut continuing nonetheless")
+            logger.warning(mess + "\nBut continuing nonetheless")
 
     # sort and deduplicate metadata
     for i, d in enumerate(docs):
@@ -1762,7 +1762,7 @@ def load_local_audio(
     assert Path(path).exists(), f"file not found: '{path}'"
 
     if audio_unsilence:
-        red(f"Removing silence from audio file {path.name}")
+        logger.warning(f"Removing silence from audio file {path.name}")
         waveform, sample_rate = torchaudio.load(path)
 
         dur = waveform.shape[1] / sample_rate
@@ -1774,12 +1774,12 @@ def load_local_audio(
                 sox_effects,
             )
         except Exception as e:
-            red(
+            logger.warning(
                 f"Error when applying sox effects: '{e}'.\nRetrying to apply each filter individually."
             )
             for sef in sox_effects:
                 nfailed = 0
-                whi(f"Applying filter '{sef}'")
+                logger.info(f"Applying filter '{sef}'")
                 try:
                     waveform, sample_rate = torchaudio.sox_effects.apply_effects_tensor(
                         waveform,
@@ -1787,7 +1787,7 @@ def load_local_audio(
                         [sef],
                     )
                 except Exception as err:
-                    red(f"Error when applying sox effects '{sef}': {err}")
+                    logger.warning(f"Error when applying sox effects '{sef}': {err}")
                     nfailed += 1
                 if nfailed == len(sox_effects):
                     raise Exception(
@@ -1805,7 +1805,7 @@ def load_local_audio(
             f"Original duration: {dur:.1f}\n"
             f"New duration: {new_dur:.1f}\n"
         )
-        red(
+        logger.warning(
             f"Removed silence from {path.name}: {dur:.1f} -> {new_dur:.1f} in {elapsed:.1f}s"
         )
 
@@ -1913,12 +1913,14 @@ def load_local_video(
 
     # extract audio from video
     try:
-        whi(f"Exporting audio from {path} to {audio_path} (this can take some time)")
+        logger.info(
+            f"Exporting audio from {path} to {audio_path} (this can take some time)"
+        )
         t = time.time()
         ffmpeg.input(path).output(str(audio_path.resolve().absolute())).run()
-        whi(f"Done extracting audio in {time.time()-t:.2f}s")
+        logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        red(
+        logger.warning(
             f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'"
         )
 
@@ -1926,12 +1928,12 @@ def load_local_video(
             Path(audio_path).unlink(missing_ok=True)
             audio = pydub.AudioSegment.from_file(path)
             # extract audio from video
-            whi(
+            logger.info(
                 f"Extracting audio from {path} to {audio_path} (this can take some time)"
             )
             t = time.time()
             audio.export(audio_path, format="mp3")
-            whi(f"Done extracting audio in {time.time()-t:.2f}s")
+            logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
         except Exception as err:
             raise Exception(
                 f"Error when getting audio from video using ffmpeg: '{err}'"
@@ -1965,7 +1967,7 @@ def transcribe_audio_deepgram(
     deepgram_kwargs: Optional[dict] = None,
 ) -> dict:
     "Use whisper to transcribe an audio file"
-    whi(f"Calling deepgram to transcribe {audio_path}")
+    logger.info(f"Calling deepgram to transcribe {audio_path}")
     assert (
         not env.WDOC_PRIVATE_MODE
     ), "Private mode detected, aborting before trying to use deepgram's API"
@@ -2022,7 +2024,7 @@ def transcribe_audio_deepgram(
         options,
         timeout=httpx.Timeout(300.0, connect=10.0),  # timeout for large files
     )
-    whi(f"Done deepgram transcribing {audio_path} in {int(time.time()-t)}s")
+    logger.info(f"Done deepgram transcribing {audio_path} in {int(time.time()-t)}s")
     d = content.to_dict()
     return d
 
@@ -2036,7 +2038,7 @@ def transcribe_audio_whisper(
     prompt: Optional[str],
 ) -> dict:
     "Use whisper to transcribe an audio file"
-    whi(f"Calling openai's whisper to transcribe {audio_path}")
+    logger.info(f"Calling openai's whisper to transcribe {audio_path}")
     assert (
         not env.WDOC_PRIVATE_MODE
     ), "Private mode detected, aborting before trying to use openai's whisper"
@@ -2057,7 +2059,7 @@ def transcribe_audio_whisper(
                 response_format="verbose_json",
             ).json()
         t2 = time.time()
-        whi(f"Done transcribing {audio_path} in {int(t2-t1)}s")
+        logger.info(f"Done transcribing {audio_path} in {int(t2-t1)}s")
 
     except Exception as e:
         if "Maximum content size limit" in str(e):
@@ -2078,21 +2080,21 @@ def transcribe_audio_whisper(
             if len(transcripts) == 1:
                 return transcripts[0]
 
-            whi(f"Combining {len(transcripts)} audio splits into a single json")
+            logger.info(f"Combining {len(transcripts)} audio splits into a single json")
             ref = transcripts.pop(0)
             if ref["words"] is not None:
-                red(
+                logger.warning(
                     "Warning: the transcript contains a 'words' output, which will be discarded as the combination of word timestamps is not yet supported."
                 )
                 ref["words"] = None
             for itrans, trans in enumerate(transcripts):
                 assert trans["task"] == ref["task"]
                 if trans["language"] != ref["language"]:
-                    red(
+                    logger.warning(
                         f"Warning: the language of the reference split audio ({ref['language']}) is not the same as the language of the current split ({trans['language']})"
                     )
                 if trans["words"] is not None:
-                    red(
+                    logger.warning(
                         "Warning: the transcript contains a 'words' output, which will be discarded as the combination of word timestamps is not yet supported."
                     )
                     trans["words"] = None
@@ -2123,7 +2125,7 @@ def split_too_large_audio(
     outputs
     """
     audio_path = Path(audio_path)
-    whi(
+    logger.info(
         f"Splitting large audio file '{audio_path}' into 30minute segment because it's too long for whisper"
     )
     split_folder = audio_path.parent / (audio_path.stem + "_splits")
@@ -2246,7 +2248,7 @@ def load_word_document(
             docs = content
         check_docs_tkn_length(docs, path)
     except Exception as err:
-        red(
+        logger.warning(
             f"Error when loading word document with docx2txt, trying with unstructured: '{err}'"
         )
         loader = UnstructuredWordDocumentLoader(path)
@@ -2308,7 +2310,7 @@ def load_json_dict(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_url(path: str, title=None) -> List[Document]:
-    whi(f"Loading url: '{path}'")
+    logger.info(f"Loading url: '{path}'")
 
     # even if loading fails the title might be found so trying to keep
     # the first working title across trials
@@ -2342,7 +2344,7 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using jina reader to parse url: '{err}'")
+            logger.warning(f"Exception when using jina reader to parse url: '{err}'")
 
     if not loaded_success:
         try:
@@ -2356,7 +2358,7 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using playwright to parse url: '{err}'")
+            logger.warning(f"Exception when using playwright to parse url: '{err}'")
 
     if not loaded_success:
         try:
@@ -2372,7 +2374,9 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using selenium firefox to parse url: '{err}'")
+            logger.warning(
+                f"Exception when using selenium firefox to parse url: '{err}'"
+            )
 
     if not loaded_success:
         try:
@@ -2388,7 +2392,7 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(
+            logger.warning(
                 f"Exception when using selenium chrome to parse url: '{err}'\nUsing goose as fallback"
             )
 
@@ -2407,7 +2411,7 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using goose to parse url: '{err}'")
+            logger.warning(f"Exception when using goose to parse url: '{err}'")
 
     if not loaded_success:
         try:
@@ -2419,7 +2423,9 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using UnstructuredURLLoader to parse url: '{err}'")
+            logger.warning(
+                f"Exception when using UnstructuredURLLoader to parse url: '{err}'"
+            )
 
     if not loaded_success:
         try:
@@ -2431,7 +2437,9 @@ def load_url(path: str, title=None) -> List[Document]:
             check_docs_tkn_length(docs, path)
             loaded_success = True
         except Exception as err:
-            red(f"Exception when using html as LAST RESORT to parse url: '{err}'")
+            logger.warning(
+                f"Exception when using html as LAST RESORT to parse url: '{err}'"
+            )
 
     # last resort, try to get the title from the most basic loader
     if not title:
@@ -2462,7 +2470,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
             youtube_dl.utils.ExtractorError,
         ) as e:
             raise Exception(
-                red(
+                logger.warning(
                     f"ERROR: Youtube playlist link skipped because : error during information \
         extraction from {playlist_url} : {e}"
                 )
@@ -2475,7 +2483,7 @@ def load_youtube_playlist(playlist_url: str) -> Any:
 def cached_yt_loader(
     path: str, add_video_info: bool, language: List[str], translation: Optional[str]
 ) -> List[Document]:
-    yel(f"Not using cache for youtube {path}")
+    logger.debug(f"Not using cache for youtube {path}")
 
     options = {
         "writesubtitles": True,
@@ -2611,7 +2619,7 @@ def load_pdf(
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
 ) -> List[Document]:
-    whi(f"Loading pdf: '{path}'")
+    logger.info(f"Loading pdf: '{path}'")
     assert Path(path).exists(), f"file not found: '{path}'"
     name = Path(path).name
     if len(name) > 30:
@@ -2640,9 +2648,9 @@ def load_pdf(
 
         info = magic.from_file(path)
     except Exception as err:
-        info = red(f"Failed to run python-magic: '{err}'")
+        info = logger.warning(f"Failed to run python-magic: '{err}'")
     if "pdf" not in info.lower():
-        yel(
+        logger.debug(
             f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}"
         )
 
@@ -2656,7 +2664,7 @@ def load_pdf(
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
         try:
             if is_debug:
-                red(f"Trying to parse {path} using {loader_name}")
+                logger.warning(f"Trying to parse {path} using {loader_name}")
 
             if pdf_loader_max_timeout > 0:
                 with signal_timeout(
@@ -2701,12 +2709,12 @@ def load_pdf(
                 loaded_docs[loader_name] = docs
                 if prob > 0.95:
                     # select this one as its bound to be okay
-                    whi(
+                    logger.info(
                         f"Early stopping of PDF parsing because {loader_name} has prob {prob} for {path}"
                     )
                     break
             else:
-                whi(
+                logger.info(
                     f"Ignore parsing by {loader_name} of '{path}' as it seems of poor quality: prob={prob}"
                 )
                 continue
@@ -2723,7 +2731,7 @@ def load_pdf(
                     pass
             if "content" not in locals():
                 pbar.update(1)
-            yel(
+            logger.debug(
                 f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}"
             )
 
@@ -2736,7 +2744,7 @@ def load_pdf(
                 formatted_tb = "\n".join(
                     [str(li).strip() for li in traceback.format_tb(exc_tb)]
                 )
-                red(
+                logger.warning(
                     f"The same error happens to multiple pdf loader, something is fishy.\nFull traceback:\n{formatted_tb}"
                 )
                 warned_errs.append(str(err))
@@ -2752,7 +2760,7 @@ def load_pdf(
     max_prob = max([v for v in probs.values()])
 
     if is_debug:
-        yel(f"Language probability after parsing {path}: {probs}")
+        logger.debug(f"Language probability after parsing {path}: {probs}")
 
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
 
@@ -2776,8 +2784,8 @@ def find_online_media(
             if crash:
                 raise
             if "p" in locals():
-                red(str(p))
-            red(str(err))
+                logger.warning(str(p))
+            logger.warning(str(err))
             return False
 
     # the media request will be stored in this dict
@@ -2825,7 +2833,7 @@ def find_online_media(
     elif check_browser_installation("chromium"):
         installed = "chromium"
     else:
-        red(
+        logger.warning(
             "Couldn't launch either firefox or chromium using playwright. "
             "Maybe try running 'playwright install'? Retrying to load them on "
             "purpose to make us crash and display the actual error."
@@ -2934,9 +2942,9 @@ def load_online_media(
     ]:
         urls_to_try.extend(extra_media[k])
     urls_to_try = list(set(urls_to_try))
-    whi(f"Found {len(urls_to_try)} urls to try to get the media:")
+    logger.info(f"Found {len(urls_to_try)} urls to try to get the media:")
     for u in urls_to_try:
-        whi(f"  - {u}")
+        logger.info(f"  - {u}")
 
     @optional_typecheck
     def dl_audio_from_url(trial: int, url: str) -> Path:
@@ -2983,7 +2991,7 @@ def load_online_media(
             good_url = url
             break
         except Exception as err:
-            red(
+            logger.warning(
                 f"Failed #{iurl+1}/{len(urls_to_try)} to download a media from url '{url}': '{err}'"
             )
 
@@ -2995,31 +3003,31 @@ def load_online_media(
 
     # extract audio from video (sometimes instead of just the audio the whole video is downloaded)
     try:
-        whi(
+        logger.info(
             f"Exporting audio from {audio_file} to {audio_path} (this can take some time)"
         )
         t = time.time()
         ffmpeg.input(
             audio_file,
         ).output(str(audio_path.resolve().absolute())).run()
-        whi(f"Done extracting audio in {time.time()-t:.2f}s")
+        logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
     except Exception as err:
-        red(
+        logger.warning(
             f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'"
         )
 
         try:
-            yel(f"Audio path: '{audio_path}'")
+            logger.debug(f"Audio path: '{audio_path}'")
             # don't delete it as some users might need it
             # Path(audio_path).unlink(missing_ok=True)
             audio = pydub.AudioSegment.from_file(audio_file)
             # extract audio from video
-            whi(
+            logger.info(
                 f"Extracting audio from {audio_file} to {audio_path} (this can take some time)"
             )
             t = time.time()
             audio.export(audio_path, format="mp3")
-            whi(f"Done extracting audio in {time.time()-t:.2f}s")
+            logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
         except Exception as err:
             raise Exception(
                 f"Error when getting audio from video using ffmpeg: '{err}'"

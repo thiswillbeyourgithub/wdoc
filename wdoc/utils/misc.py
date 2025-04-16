@@ -67,7 +67,7 @@ try:
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
     if is_verbose:
-        red(
+        logger.warning(
             f"Couldn't import optional package 'ftlangdetect' from 'fasttext-langdetect', trying to import langdetect (but it's much slower): '{err}'"
         )
     if "ftlangdetect" in sys.modules:
@@ -83,7 +83,9 @@ except Exception as err:
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
         if is_verbose:
-            red(f"Couldn't import optional package 'langdetect' either: '{err}'")
+            logger.warning(
+                f"Couldn't import optional package 'langdetect' either: '{err}'"
+            )
 
         @optional_typecheck
         def language_detector(text: str) -> None:
@@ -216,10 +218,10 @@ class DocDict(dict):
             if strict is True:
                 raise UnexpectedDocDictArgument(mess)
             elif strict is False:
-                red(mess)
+                logger.warning(mess)
                 return True
             elif strict == "strip":
-                red(mess)
+                logger.warning(mess)
                 return False
             else:
                 raise ValueError(strict)
@@ -239,10 +241,10 @@ class DocDict(dict):
             if strict is True:
                 raise UnexpectedDocDictArgument(mess)
             elif strict is False:
-                red(mess)
+                logger.warning(mess)
                 return True
             elif strict == "strip":
-                red(mess)
+                logger.warning(mess)
                 return False
             else:
                 raise ValueError(strict)
@@ -310,7 +312,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
                 mess = f"Unexpected args or kwargs in func {func}:"
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
-                red(mess)
+                logger.warning(mess)
             assert (
                 kwargs2
             ), f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
@@ -387,14 +389,16 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
             else:
                 if is_verbose:
                     temptext = " ".join(filter(None, content))
-                    red(f"Image not properly parsed from bs4:\n{element}\n{temptext}")
+                    logger.warning(
+                        f"Image not properly parsed from bs4:\n{element}\n{temptext}"
+                    )
         elif isinstance(element, bs4.NavigableString):
             content.append(str(element).strip())
     text = " ".join(filter(None, content))
     while "\n\n" in text:
         text = text.replace("\n\n", "\n")
     if "<img" in text and remove_image:
-        red(f"Failed to remove <img from anki card: {text}")
+        logger.warning(f"Failed to remove <img from anki card: {text}")
     return text
 
 
@@ -403,7 +407,7 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
-        red(str(inputs.keys()))
+        logger.warning(str(inputs.keys()))
     breakpoint()
     return inputs
 
@@ -423,7 +427,7 @@ def wrapped_model_name_matcher(model: str) -> str:
                 and is_verbose
                 and not printed_unexpected_api_keys[0]
             ):
-                yel(
+                logger.debug(
                     f"Found API_KEY for backend {backend} that is not a known backend for litellm."
                 )
             else:
@@ -455,7 +459,7 @@ def wrapped_model_name_matcher(model: str) -> str:
     if match:
         return match[0]
     else:
-        red(
+        logger.warning(
             f"Couldn't match the modelname {model} to any known model. "
             "Continuing but this will probably crash wdoc further "
             "down the code."
@@ -473,12 +477,12 @@ def model_name_matcher(model: str) -> str:
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
-        # deb(f"Bypassing model name matching for model '{model}'")
+        # logger.debug(f"Bypassing model name matching for model '{model}'")
         return model
 
     out = wrapped_model_name_matcher(model)
     if out != model and is_verbose:
-        yel(f"Matched model name {model} to {out}")
+        logger.debug(f"Matched model name {model} to {out}")
     assert (
         out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
     ), f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
@@ -508,7 +512,7 @@ def get_model_price(model: str) -> List[float]:
         ]
     else:
         raise Exception(
-            red(
+            logger.warning(
                 f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
             )
         )
@@ -618,7 +622,9 @@ def get_splitter(
         max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
     except Exception as err:
         max_tokens = 4096
-        red(f"Failed to get max_tokens limit for model {modelname.original}: '{err}'")
+        logger.warning(
+            f"Failed to get max_tokens limit for model {modelname.original}: '{err}'"
+        )
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
@@ -665,14 +671,14 @@ def check_docs_tkn_length(
     size = sum([get_tkn_length(d.page_content) for d in docs])
     nline = len("\n".join([d.page_content for d in docs]).splitlines())
     if size <= min_token:
-        red(
+        logger.warning(
             f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
         )
     if size >= max_token:
-        red(
+        logger.warning(
             f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
         )
         raise Exception(
@@ -696,7 +702,7 @@ def check_docs_tkn_length(
         if str(err).startswith("Low language probability"):
             raise
         else:
-            red(
+            logger.warning(
                 f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document."
             )
             return 1.0
@@ -709,7 +715,7 @@ def unlazyload_modules():
     sure not to loose time and that everything works smoothly. For example
     who knows what happens when multiprocessing with lazy loaded modules."""
     if env.WDOC_IMPORT_TYPE not in ["both", "lazy"]:
-        red("Lazyloading is disabled so not unlazyloading modules.")
+        logger.warning("Lazyloading is disabled so not unlazyloading modules.")
         return
 
     while True:
@@ -718,7 +724,7 @@ def unlazyload_modules():
             try:
                 str(v)
             except Exception as e:
-                red(
+                logger.warning(
                     f"Very weird error when loading a package, consider setting WDOC_IMPORT_TYPE to another value than '{env.WDOC_IMPORT_TYPE}'. Error message was '{e}'"
                 )
             if "Lazily-loaded" in str(v):
@@ -747,7 +753,7 @@ def disable_internet(allowed: dict) -> None:
     --private is used, we overload the socket module to make it only able to
     reach local connection.
     """
-    red(
+    logger.warning(
         "Disabling outgoing internet because private mode is on. "
         "The only allowed IPs from now on are the ones from the "
         "argument llm_api_bases. Note that this permanently filters "
@@ -826,7 +832,7 @@ def disable_internet(allowed: dict) -> None:
         ip = socket.gethostbyname("www.google.com")
         skip = False
     except Exception as err:
-        red(
+        logger.warning(
             "Failed to get IP address of www.google.com to check if it is "
             "indeed blocked. You probably did this on purpose so not "
             f"crashing. Error: '{err}'"
@@ -941,7 +947,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             strict
         ):  # otherwise combining answers could snowball into losing lots of text
             raise
-        red(
+        logger.warning(
             f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nNote: if the output seems fine but ends abruptly instead of by </answer> you might want to tweak the max_token settings.\nWill continue if not using --debug"
         )
         if is_debug:
@@ -982,7 +988,7 @@ def create_langfuse_callback(version: str) -> None:
         and "LANGFUSE_SECRET_KEY" in os.environ
         and "LANGFUSE_HOST" in os.environ
     ):
-        deb("Activating langfuse callbacks")
+        logger.debug("Activating langfuse callbacks")
         try:
             import langfuse
         except ImportError as e:
@@ -994,7 +1000,7 @@ def create_langfuse_callback(version: str) -> None:
                     f"Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
                 ) from e
             else:
-                red(
+                logger.warning(
                     f"Failed to setup langfuse callback because of ImportError, make sure package 'langfuse' is installed. The error was: '{e}'"
                 )
         try:
@@ -1017,7 +1023,7 @@ def create_langfuse_callback(version: str) -> None:
             )
             langfuse_callback_holder.append(langfuse_callback)
         except Exception as e:
-            red(
+            logger.warning(
                 f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: '{e}'"
             )
 
@@ -1131,7 +1137,7 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
             os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
             os.close(fd)
         except Exception as e:
-            # red(f"Failed to cache {file}: {e}")
+            # logger.warning(f"Failed to cache {file}: {e}")
             success = False
 
     return success
@@ -1139,9 +1145,9 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
 
 def log_and_time_fn(fn: Callable) -> Callable:
     def wrapper(*args, **kwargs):
-        deb(f"Enterring {fn}")
+        logger.debug(f"Enterring {fn}")
         val = fn(*args, **kwargs)
-        deb(f"Exiting {fn}")
+        logger.debug(f"Exiting {fn}")
         return val
 
     wrapped = wraps(fn)(wrapper)
@@ -1186,7 +1192,7 @@ def get_piped_input() -> Optional[Any]:
             # If we can't reopen stdin, at least return the data
             pass
 
-        deb("Loaded piped data")
+        logger.debug("Loaded piped data")
         return piped_input
     else:
         return None

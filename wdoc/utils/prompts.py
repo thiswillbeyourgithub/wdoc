@@ -11,8 +11,8 @@ from langchain_core.prompts.chat import (
     SystemMessagePromptTemplate,
 )
 from pydantic import BaseModel, Field, model_validator
+from loguru import logger
 
-from .logger import red, whi
 from .misc import get_tkn_length
 
 # PROMPT FOR SUMMARY TASKS
@@ -332,7 +332,7 @@ class Prompts_class:
             "multiquery",
         ], "Unexpected prompt_key"
 
-        whi(
+        logger.info(
             f"Detected anthropic in llm name so enabling anthropic prompt_caching for {prompt_key} prompt"
         )
         prompt = getattr(self, prompt_key)
@@ -347,7 +347,7 @@ class Prompts_class:
         # exactly like openai
         tkl = get_tkn_length(content)
         if tkl < 750:
-            red(
+            logger.warning(
                 f"System prompt is only {tkl} openai tokens so caching will won't work, not using it."
             )
             return

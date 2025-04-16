@@ -21,6 +21,7 @@ from langchain_core.runnables.base import RunnableLambda
 from langchain_openai import ChatOpenAI
 from numpy.typing import NDArray
 from tqdm import tqdm
+from loguru import logger
 
 from ..env import env
 from ..errors import (
@@ -29,7 +30,6 @@ from ..errors import (
     NoDocumentsRetrieved,
 )
 from ..flags import is_verbose
-from ..logger import red, whi, deb
 from ..misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
 from ..typechecker import optional_typecheck
 
@@ -67,7 +67,7 @@ def sieve_documents(instance) -> RunnableLambda:
         if instance.max_top_k:
             assert instance.max_top_k >= instance.top_k
         if len(inputs) > instance.top_k:
-            red(
+            logger.warning(
                 "Number of documents found via embeddings was "
                 f"'{inputs['unfiltered_docs']}' which is > top_k ({instance.top_k}) "
                 "so we crop"
@@ -106,7 +106,7 @@ def refilter_docs(inputs: dict) -> List[Document]:
             try:
                 a = int(a)
             except Exception as err:
-                red(
+                logger.warning(
                     f"Document was not evaluated with a number: '{err}' for answer '{a}'\nKeeping the document anyway."
                 )
                 a = 5
@@ -149,14 +149,14 @@ def parse_eval_output(output: str) -> str:
     # empty
     if not output.strip():
         if env.WDOC_CONTINUE_ON_INVALID_EVAL:
-            red(mess)
+            logger.warning(mess)
             return "5"
         else:
             raise InvalidDocEvaluationByLLMEval(mess)
 
     parsed = thinking_answer_parser(output)
 
-    deb(f"Eval LLM output: '{output}'")
+    logger.debug(f"Eval LLM output: '{output}'")
 
     answer = parsed["answer"]
     answer = answer.replace("-", "")  # negative ints are not accepted anyway
@@ -172,7 +172,7 @@ def parse_eval_output(output: str) -> str:
     # contain no digits
     if not digits:
         if env.WDOC_CONTINUE_ON_INVALID_EVAL:
-            red(mess)
+            logger.warning(mess)
             return "5"
         else:
             raise InvalidDocEvaluationByLLMEval(mess)
@@ -182,7 +182,7 @@ def parse_eval_output(output: str) -> str:
         return digits[0]
     else:  # ambiguous
         if env.WDOC_CONTINUE_ON_INVALID_EVAL:
-            red(mess)
+            logger.warning(mess)
             return "5"
         else:
             raise InvalidDocEvaluationByLLMEval(mess)
@@ -234,12 +234,14 @@ def semantic_batching(
     texts = temp
 
     if len(texts) <= 3:
-        deb(f"Returned texts in semantic_batching because there were only {len(texts)}")
+        logger.debug(
+            f"Returned texts in semantic_batching because there were only {len(texts)}"
+        )
         return [texts]
 
     text_sizes = {t: get_tkn_length(t) for t in texts}
     itext_sizes = {i: size for i, size in enumerate(texts)}
-    deb(f"Input text sizes in semantic_batching: {itext_sizes}")
+    logger.debug(f"Input text sizes in semantic_batching: {itext_sizes}")
 
     # get embeddings
     n_trial = 3
@@ -248,11 +250,11 @@ def semantic_batching(
             embeds = np.array(embedding_engine.embed_documents(texts)).squeeze()
             break
         except Exception as e:
-            red(
+            logger.warning(
                 f"Error at trial {trial+1}/{n_trial} when trying to embed texts for semantic batching: '{e}'"
             )
             if trial + 1 >= n_trial:
-                red("Too many errors so crashing")
+                logger.warning("Too many errors so crashing")
                 raise
             else:
                 time.sleep(2)
@@ -274,7 +276,9 @@ def semantic_batching(
             assert embeds_reduced.shape[0] == embeds.shape[0]
             vr = np.cumsum(pca.explained_variance_ratio_)[-1]
             if vr <= 0.90:
-                red(f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}")
+                logger.warning(
+                    f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}"
+                )
             assert (
                 vr >= 0.75
             ), f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
@@ -284,7 +288,7 @@ def semantic_batching(
                 data=embeds_reduced,
             )
     except Exception as err:
-        red(
+        logger.warning(
             f"Error when doing dimension reduction for semantic batching. Original shape: {embeds.shape}. Error: '{err}'\nContinuing anyway."
         )
 
@@ -330,7 +334,7 @@ def semantic_batching(
     # assert len(out_texts) == len(texts), "extra out_texts"
     # assert not any(o for o in out_texts if o not in texts)
     # assert not any(t for t in texts if t not in out_texts)
-    # # whi(f"Done in {int(time.time()-start)}s")
+    # # logger.info(f"Done in {int(time.time()-start)}s")
     # assert len(texts) == len(out_texts)
 
     # get each bucket if we were only looking at the number of texts
@@ -363,7 +367,7 @@ def semantic_batching(
 
     if not cluster_trials:
         assert len(labels) == 1
-        red(
+        logger.warning(
             f"The clustering algorithm always found the same cluster for the {len(texts)} texts. Assuming the order won't matter."
         )
         return [texts]
@@ -392,7 +396,7 @@ def semantic_batching(
 
     # make sure no cluster contains only one text
     while not all((cluster_labels == lab).sum() > 1 for lab in labels):
-        deb("Remapping clusters.")
+        logger.debug("Remapping clusters.")
         for lab in labels:
             if (cluster_labels == lab).sum() == 1:
                 t = texts[np.argmax(cluster_labels == lab)]
@@ -406,10 +410,12 @@ def semantic_batching(
                     # better to even them out
                     assert len(labels) == 2, labels
                     cluster_labels[t_closest] = lab
-                    deb(f"Remapped one item from cluster {l_closest} to {lab}")
+                    logger.debug(f"Remapped one item from cluster {l_closest} to {lab}")
                 else:  # good to go
                     cluster_labels[cluster_labels == lab] = l_closest
-                    deb(f"Remapped single item of cluster {lab} to {l_closest}")
+                    logger.debug(
+                        f"Remapped single item of cluster {lab} to {l_closest}"
+                    )
                 break
         labels = np.unique(cluster_labels)
         labels.sort()
@@ -452,7 +458,7 @@ def semantic_batching(
     # now if any bucket contains only one text, that means it has too many
     # tokens itself, so we reequilibrate from the previous buckets
     while not all(len(b) >= 2 for b in buckets):
-        deb(f"Merging sub buckets. Current len: {len(buckets)}")
+        logger.debug(f"Merging sub buckets. Current len: {len(buckets)}")
         for ib, b in enumerate(buckets):
             assert b
             if len(b) == 1:
@@ -483,7 +489,7 @@ def semantic_batching(
                     else:
                         next_id = ib + 1
                 assert buckets[next_id], buckets[next_id]
-                deb(f"Next_id is {next_id}")
+                logger.debug(f"Next_id is {next_id}")
 
                 if len(buckets[next_id]) == 1:  # both texts are big, merge them anyway
                     if next_id > ib:
@@ -522,10 +528,10 @@ def semantic_batching(
         texts
     ), "There is an issue with semantic_batching"
 
-    deb("Printing size of each bucket in semantic_batching:")
+    logger.debug("Printing size of each bucket in semantic_batching:")
     for ib, b in enumerate(buckets):
         sizes = [get_tkn_length(bb) for bb in b]
-        deb(f"{ib}: {sizes}")
+        logger.debug(f"{ib}: {sizes}")
 
     return buckets
 
@@ -551,7 +557,7 @@ def pbar_chain(
             )
         )
         if not llm.callbacks[0].pbar[-1].total:
-            red(f"Empty total for pbar: {llm.callbacks[0].pbar[-1]}")
+            logger.warning(f"Empty total for pbar: {llm.callbacks[0].pbar[-1]}")
 
         return inputs
 
