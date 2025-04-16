@@ -16,7 +16,8 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     logger.warning("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from .wdoc import is_verbose, wdoc
+from .wdoc import wdoc
+from .utils.env import env
 from .utils.misc import piped_input
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
@@ -83,7 +84,7 @@ def cli_launcher() -> None:
         or "__main__.py parse " in sysline
         or "__main__.py parse_file  " in sysline
     ):
-        if is_verbose:
+        if env.WDOC_VERBOSE:
             logger.info("Replacing 'wdoc parse' by 'wdoc_parse_file'")
         sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
         del sys.argv[1]
@@ -124,7 +125,7 @@ def cli_launcher() -> None:
         if sys.argv[1] in arg_replacement_rules:
             bef = sys.argv[1]
             aft = arg_replacement_rules[bef]
-            if is_verbose:
+            if env.WDOC_VERBOSE:
                 logger.info(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
@@ -139,7 +140,7 @@ def cli_launcher() -> None:
         path = sys.argv[2]
         newarg = f"--path={path}"
         sys.argv[2] = newarg
-        if is_verbose:
+        if env.WDOC_VERBOSE:
             logger.info(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
@@ -199,7 +200,7 @@ def cli_parse_file() -> None:
             and "path" not in kwargs
         ):
             kwargs["path"] = None
-        if is_verbose:
+        if env.WDOC_VERBOSE:
             logger.info(f"Arguments that will be used for parser: '{kwargs}'")
         parsed = wdoc.parse_file(**kwargs)
     else:
