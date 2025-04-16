@@ -33,3 +33,10 @@ class UnexpectedDocDictArgument(Exception):
 class TimeoutPdfLoaderError(Exception):
     def __init__(self) -> None:
         super().__init__()
+
+
+class FrozenAttributeCantBeSet(AttributeError):
+    def __init__(self, name, value) -> None:
+        super().__init__(
+            f"Attribute of the wdoc env instance should not be set manually, instead modify os.environ. Attribute name was '{name}'. Value was '{value}'"
+        )
