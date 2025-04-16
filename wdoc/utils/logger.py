@@ -14,7 +14,7 @@ from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .flags import md_printing_disabled, is_debug
+from .env import env
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
@@ -31,11 +31,11 @@ logger.add(
     rotation="100MB",
     retention=5,
     format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
-    level="DEBUG" if is_debug else "INFO",
+    level="DEBUG" if env.WDOC_DEBUG else "INFO",
     enqueue=True,
     colorize=True,
-    backtrace=True if is_debug else None,
-    diagnose=True if is_debug else None,
+    backtrace=True if env.WDOC_DEBUG else None,
+    diagnose=True if env.WDOC_DEBUG else None,
 )
 # delete any additional log file
 # (log_dir / "logs.txt.4").unlink(missing_ok=True)
@@ -47,11 +47,9 @@ console = Console()
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown printing"
     message = dedent(message)
-    if not md_printing_disabled:
-        md = Markdown(message)
-        console.print(md, style=color)
-    else:
-        logger.info(message)
+    md = Markdown(message)
+    console.print(md, style=color)
+    logger.info(message)
     return message
 
 
