@@ -13,7 +13,6 @@ from loguru import logger
 from platformdirs import user_cache_dir, user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
-from tqdm import tqdm
 
 from .flags import md_printing_disabled
 from .typechecker import optional_typecheck
