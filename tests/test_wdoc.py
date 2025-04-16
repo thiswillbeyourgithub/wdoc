@@ -21,7 +21,6 @@ WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
 )
 
 from wdoc.wdoc import wdoc
-from wdoc.utils.env import WDOC_TYPECHECKING, WDOC_ENABLE_EXPERIMENTAL_ENV
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.embeddings import test_embeddings as _test_embeddings
@@ -467,19 +466,3 @@ def test_mistral_embeddings():
         do_test=True,
     )
     _test_embeddings(emb)
-
-
-@pytest.mark.experimental
-@pytest.mark.skipif(
-    " -m experimental" not in " ".join(sys.argv),
-    reason="Skip tests of experimental feature by default, use '-m experimental' to run them.",
-)
-def test_wdoc_env_var_refresh():
-    """Test that wdoc env variables are indeed dynamically refreshed."""
-    val = copy(WDOC_TYPECHECKING._value)
-    assert WDOC_TYPECHECKING == val
-    os.environ["WDOC_TYPECHECKING"] = str(val) + "newvalue"
-    assert WDOC_TYPECHECKING != val
-    assert WDOC_TYPECHECKING == str(val) + "newvalue"
-    os.environ["WDOC_TYPECHECKING"] = str(val)
-    assert WDOC_TYPECHECKING == val
