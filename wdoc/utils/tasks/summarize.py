@@ -7,8 +7,8 @@ from pathlib import Path
 from beartype.typing import Any, List, Tuple, Union
 from langchain.docstore.document import Document
 from tqdm import tqdm
+from loguru import logger
 
-from ..logger import red, whi
 from ..misc import thinking_answer_parser, log_and_time_fn
 from ..prompts import BASE_SUMMARY_PROMPT, PREV_SUMMARY_TEMPLATE, RECURSION_INSTRUCTION
 from ..typechecker import optional_typecheck
@@ -51,7 +51,7 @@ def do_summarize(
             text=rd.page_content,
         )
         if " object at " in llm._get_llm_string():
-            red(
+            logger.warning(
                 "Found llm._get_llm_string() value that potentially "
                 f"invalidates the cache: '{llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
@@ -59,7 +59,9 @@ def do_summarize(
         try:
             output = llm._generate_with_cache(messages)
         except Exception as e:
-            red(f"Error when generating with cache, trying without cache: '{e}'")
+            logger.warning(
+                f"Error when generating with cache, trying without cache: '{e}'"
+            )
             output = llm._generate(messages)
         if output.generations[0].generation_info is None:
             assert "fake-list-chat-model" in llm._get_llm_string()
@@ -86,7 +88,7 @@ def do_summarize(
 
         parsed = thinking_answer_parser(out)
         if verbose and parsed["thinking"]:
-            whi("Thinking: " + parsed["thinking"])
+            logger.info("Thinking: " + parsed["thinking"])
 
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
@@ -159,7 +161,7 @@ def do_summarize(
         output_text = "\n".join(good_lines)
 
         if verbose:
-            whi(output_text)
+            logger.info(output_text)
 
         assert "{previous_summary}" in PREV_SUMMARY_TEMPLATE
         previous_summary = PREV_SUMMARY_TEMPLATE.replace(

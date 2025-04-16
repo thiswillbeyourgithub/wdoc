@@ -15,10 +15,10 @@ from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from langchain_openai import ChatOpenAI
+from loguru import logger
 
 from .env import env
 from .flags import is_private
-from .logger import red, whi, yel, deb
 from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 from .typechecker import optional_typecheck
 
@@ -61,7 +61,7 @@ def load_llm(
     if modelname.backend == "testing":
         assert modelname.original == "testing/testing"
         if llm_verbosity:
-            whi("Loading a fake LLM using the testing/ backend")
+            logger.info("Loading a fake LLM using the testing/ backend")
         lorem_ipsum = (
             "Lorem ipsum dolor sit amet, consectetur adipiscing "
             "elit, sed do eiusmod tempor incididunt ut labore et "
@@ -86,7 +86,7 @@ def load_llm(
     else:
         assert "testing" not in modelname.original.lower()
 
-    deb("Loading model via litellm")
+    logger.debug("Loading model via litellm")
 
     if private:
         assert api_base, "If private is set, api_base must be set too"
@@ -98,7 +98,7 @@ def load_llm(
             os.environ["WDOC_PRIVATE_MODE"] == "true"
         ), "Wrong value for env variable WDOC_PRIVATE_MODE"
     if api_base:
-        red(f"Will use custom api_base {api_base}")
+        logger.warning(f"Will use custom api_base {api_base}")
     if not (
         f"{modelname.backend.upper()}_API_KEY" in os.environ
         and os.environ[f"{modelname.backend.upper()}_API_KEY"]
@@ -108,14 +108,14 @@ def load_llm(
                 f"No environment variable named {modelname.backend.upper()}_API_KEY found"
             )
         else:
-            yel(
+            logger.debug(
                 f"No environment variable named {modelname.backend.upper()}_API_KEY found. Continuing because some setups are fine with this."
             )
 
     # extra check for private mode
     if private:
         assert os.environ["WDOC_PRIVATE_MODE"] == "true"
-        red(
+        logger.warning(
             f"private is on so overwriting {modelname.backend.upper()}_API_KEY from environment variables"
         )
         assert (
@@ -233,11 +233,9 @@ class PriceCountingCallback(BaseCallbackHandler):
         """Run when LLM starts running."""
         self.methods_called.append("on_llm_start")
         if self.verbose:
-            yel("Callback method: on_llm_start")
-            yel(serialized)
-            yel(prompts)
-            yel(kwargs)
-            yel("Callback method end: on_llm_start")
+            logger.debug(serialized)
+            logger.debug(prompts)
+            logger.debug(kwargs)
         self._check_methods_called()
 
     def on_chat_model_start(
@@ -249,25 +247,21 @@ class PriceCountingCallback(BaseCallbackHandler):
         """Run when Chat Model starts running."""
         self.methods_called.append("on_chat_model_start")
         if self.verbose:
-            yel("Callback method: on_chat_model_start")
-            yel(serialized)
-            yel(messages)
-            yel(kwargs)
-            yel("Callback method end: on_chat_model_start")
+            logger.debug(serialized)
+            logger.debug(messages)
+            logger.debug(kwargs)
         self._check_methods_called()
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
         """Run when LLM ends running."""
         self.methods_called.append("on_llm_end")
         if self.verbose:
-            yel("Callback method: on_llm_end")
-            yel(response)
-            yel(kwargs)
-            yel("Callback method end: on_llm_end")
+            logger.debug(response)
+            logger.debug(kwargs)
 
         if response.llm_output is None or response.llm_output["token_usage"] is None:
             if self.verbose:
-                yel("None llm_output, returning.")
+                logger.debug("None llm_output, returning.")
             return
 
         new_p = response.llm_output["token_usage"]["prompt_tokens"]
@@ -284,10 +278,8 @@ class PriceCountingCallback(BaseCallbackHandler):
         """Run when LLM errors."""
         self.methods_called.append("on_llm_error")
         if self.verbose:
-            yel("Callback method: on_llm_error")
-            yel(error)
-            yel(kwargs)
-            yel("Callback method end: on_llm_error")
+            logger.debug(error)
+            logger.debug(kwargs)
         self._check_methods_called()
 
     def on_chain_start(
@@ -295,21 +287,17 @@ class PriceCountingCallback(BaseCallbackHandler):
     ) -> Any:
         """Run when chain starts running."""
         if self.verbose:
-            yel("Callback method: on_chain_start")
-            yel(serialized)
-            yel(inputs)
-            yel(kwargs)
-            yel("Callback method end: on_chain_start")
+            logger.debug(serialized)
+            logger.debug(inputs)
+            logger.debug(kwargs)
         self.methods_called.append("on_chain_start")
         self._check_methods_called()
 
     def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
         """Run when chain ends running."""
         if self.verbose:
-            yel("Callback method: on_chain_end")
-            yel(outputs)
-            yel(kwargs)
-            yel("Callback method end: on_chain_end")
+            logger.debug(outputs)
+            logger.debug(kwargs)
         self.methods_called.append("on_chain_end")
         self._check_methods_called()
         if self.pbar:
@@ -320,10 +308,8 @@ class PriceCountingCallback(BaseCallbackHandler):
     ) -> Any:
         """Run when chain errors."""
         if self.verbose:
-            yel("Callback method: on_chain_error")
-            yel(error)
-            yel(kwargs)
-            yel("Callback method end: on_chain_error")
+            logger.debug(error)
+            logger.debug(kwargs)
         self.methods_called.append("on_chain_error")
         self._check_methods_called()
 

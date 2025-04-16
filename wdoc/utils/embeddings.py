@@ -26,13 +26,13 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 from tqdm import tqdm
+from loguru import logger
 
 # from langchain.storage import LocalFileStore
 from .customs.compressed_embeddings_cacher import LocalFileStore
 from .customs.litellm_embeddings import LiteLLMEmbeddings
 from .env import env
 from .flags import is_verbose
-from .logger import red, whi, deb
 from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from .typechecker import optional_typecheck
 
@@ -77,13 +77,15 @@ def load_embeddings_engine(
     Create the Embeddings class used to compute embeddings. This class is wrapped
     into a CacheBackedEmbeddings to add a caching layer.
     """
-    deb("Loading the embeddings engine")
+    logger.debug("Loading the embeddings engine")
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
     else:
         instruct = False
 
-    deb(f"Selected embedding model '{modelname}' of backend {modelname.backend}")
+    logger.debug(
+        f"Selected embedding model '{modelname}' of backend {modelname.backend}"
+    )
 
     if True:
         try:
@@ -97,7 +99,7 @@ def load_embeddings_engine(
             if do_test:
                 test_embeddings(embeddings)
         except Exception as e:
-            red(
+            logger.warning(
                 f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
             )
 
@@ -163,7 +165,7 @@ def load_embeddings_engine(
 
     elif modelname.backend == "sentencetransformers":
         if private:
-            red(f"Private is set and will use sentencetransformers backend")
+            logger.warning(f"Private is set and will use sentencetransformers backend")
         embed_kwargs.update(
             {
                 "batch_size": 1,
@@ -182,7 +184,7 @@ def load_embeddings_engine(
         try:
             test_embeddings(embeddings)
         except Exception as e:
-            red(
+            logger.warning(
                 f"Error when testing embeddings, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
             )
 
@@ -194,11 +196,13 @@ def load_embeddings_engine(
     )
 
     if env.WDOC_DISABLE_EMBEDDINGS_CACHE:
-        whi("Embeddings cache is disabled - using direct embeddings without caching")
+        logger.info(
+            "Embeddings cache is disabled - using direct embeddings without caching"
+        )
         cached_embeddings = embeddings
     else:
         cache_content = list(lfs.yield_keys())
-        whi(f"Found {len(cache_content)} embeddings in local cache")
+        logger.info(f"Found {len(cache_content)} embeddings in local cache")
 
         cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
             embeddings,
@@ -210,11 +214,11 @@ def load_embeddings_engine(
         try:
             test_embeddings(cached_embeddings)
         except Exception as e:
-            red(
+            logger.warning(
                 f"Error when testing embeddings after loading the cache, something is probably wrong with the backend. Error is '{e}'. Please open a github issue to help the developper"
             )
 
-    deb("Done loading cached embeddings")
+    logger.debug("Done loading cached embeddings")
     return cached_embeddings
 
 
@@ -233,11 +237,11 @@ def create_embeddings(
     computed and present in the cache or ask the CacheBackedEmbeddings class
     to create them and return to wdoc.loaded_embeddings.
     """
-    deb("Creating embeddings")
+    logger.debug("Creating embeddings")
 
     # reload passed embeddings
     if load_embeds_from:
-        red("Reloading documents and embeddings from file")
+        logger.warning("Reloading documents and embeddings from file")
         path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
         cache_file_in_memory(path, recursive=True)
@@ -250,17 +254,17 @@ def create_embeddings(
             allow_dangerous_deserialization=True,
         )
         n_doc = len(db.index_to_docstore_id.keys())
-        red(f"Loaded {n_doc} documents")
+        logger.warning(f"Loaded {n_doc} documents")
         return db
 
     db = None
     ti = time.time()
     docs = loaded_docs
-    whi(f"Docs to embed: {len(docs)}")
+    logger.info(f"Docs to embed: {len(docs)}")
 
     # check price of embedding
     full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
-    whi(f"Total number of tokens in documents: '{full_tkn}'")
+    logger.info(f"Total number of tokens in documents: '{full_tkn}'")
     if modelname.backend in [
         "ollama",
         "huggingface",
@@ -268,10 +272,10 @@ def create_embeddings(
         "sentencetransformers",
     ]:
         price = 0
-        whi("Local embedding model detected, setting the price to 0")
+        logger.info("Local embedding model detected, setting the price to 0")
     else:
         if private:
-            whi("Not checking token price because private is set")
+            logger.info("Not checking token price because private is set")
             price = 0
         elif modelname.original in litellm.model_cost:
             price = litellm.model_cost[modelname.original]["input_cost_per_token"]
@@ -280,17 +284,17 @@ def create_embeddings(
             price = litellm.model_cost[modelname.model]["input_cost_per_token"]
             assert litellm.model_cost[modelname.model]["output_cost_per_token"] == 0
         else:
-            red(
+            logger.warning(
                 f"Couldn't find the price of embedding model {modelname.original}. Assuming the cost is zero"
             )
             price = 0
 
     dol_price = full_tkn * price
-    red(f"Total cost to embed all tokens is ${dol_price:.6f}")
+    logger.warning(f"Total cost to embed all tokens is ${dol_price:.6f}")
     if dol_price > dollar_limit:
         ans = input("Do you confirm you are okay to pay this? (y/n)\n>")
         if ans.lower() not in ["y", "yes"]:
-            red("Quitting.")
+            logger.warning("Quitting.")
             raise SystemExit()
 
     # create a faiss index for batch of documents
@@ -308,7 +312,7 @@ def create_embeddings(
     ) -> VectorStore:
         n_trial = 3
         for trial in range(n_trial):
-            # whi(f"Embedding batch #{ib + 1}")
+            # logger.info(f"Embedding batch #{ib + 1}")
             try:
                 temp = FAISS.from_documents(
                     batch,
@@ -322,11 +326,11 @@ def create_embeddings(
                 )
                 break
             except Exception as e:
-                red(
+                logger.warning(
                     f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}"
                 )
                 if trial + 1 >= n_trial:
-                    red("Too many errors: bypassing the cache:")
+                    logger.warning("Too many errors: bypassing the cache:")
                     temp = FAISS.from_documents(
                         batch,
                         cached_embeddings.underlying_embeddings,
@@ -364,21 +368,21 @@ def create_embeddings(
         else:
             db.merge_from(temp)
 
-    whi(f"Done creating index (total time: {time.time()-ti:.2f}s)")
+    logger.info(f"Done creating index (total time: {time.time()-ti:.2f}s)")
 
     # saving embeddings
-    deb("Saving embeddings to file")
+    logger.debug("Saving embeddings to file")
     db.save_local(save_embeds_as)
-    deb("Done saving embeddings to file")
+    logger.debug("Done saving embeddings to file")
 
-    deb("Done creating embeddings")
+    logger.debug("Done creating embeddings")
     return db
 
 
 @optional_typecheck
 def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
-    deb("Testing embeddings")
+    logger.debug("Testing embeddings")
     vec1 = np.array(embeddings.embed_query("This is a test"))
     vec2 = np.array(embeddings.embed_documents(["This is another test"])[0])
     shape1 = vec1.shape
@@ -388,8 +392,8 @@ def test_embeddings(embeddings: Embeddings) -> None:
     ), f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
     assert not (
         vec1 == vec2
-    ).all(), f"Test vectors 1 and 2 are identical despite different inputs"
+    ).all(), "Test vectors 1 and 2 are identical despite different inputs"
     assert not (
         (vec1 == 0).all() or (vec2 == 0).all()
     ), "Test vectors 1 or 2 or both is only zeroes"
-    deb("Done testing embeddings")
+    logger.debug("Done testing embeddings")
