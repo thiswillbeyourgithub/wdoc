@@ -2,7 +2,6 @@
 easy access for all other files wether we are in verbose mode or not etc
 """
 
-import os
 import platform
 import sys
 
@@ -25,29 +24,7 @@ is_verbose = is_debug or check_kwargs("verbose", "v")
 
 md_printing_disabled = check_kwargs("disable_md_printing")
 
-
-class PrivateSanityChecker(int):
-    "simple class that ALWAYS checks that WDOC_PRIVATE_MODE is appropriate when is_private is compared to anything"
-
-    def __new__(cls, value=False):  # needed to subclass bool
-        return super().__new__(cls, bool(value))
-
-    def __init__(self, value):
-        assert isinstance(value, bool)
-        self.value = value
-
-    def __sanity_check__(self):
-        if self.value:
-            assert str(os.environ["WDOC_PRIVATE_MODE"]).lower() == "true"
-        else:
-            assert str(os.environ["WDOC_PRIVATE_MODE"]).lower() == "false"
-
-    def __eq__(self, other):
-        self.__sanity_check__()
-        return self.value == other
-
-
-is_private = PrivateSanityChecker(check_kwargs("private"))
+is_private = check_kwargs("private")
 
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
 # otherwise) and modify the formatting output
