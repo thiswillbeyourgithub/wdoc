@@ -30,7 +30,7 @@ class EnvDataclass:
     """
 
     __frozen__: bool = False
-    WDOC_DUMMY_ENV_VAR: bool = False
+    WDOC_DUMMY_ENV_VAR: bool = False  # used to test the __frozen__ mechanism
     WDOC_TYPECHECKING: Literal["disabled", "warn", "crash"] = "warn"
     WDOC_NO_MODELNAME_MATCHING: bool = True
     WDOC_ALLOW_NO_PRICE: bool = False
