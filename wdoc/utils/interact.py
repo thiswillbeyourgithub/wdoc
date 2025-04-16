@@ -7,9 +7,9 @@ import time
 from pathlib import Path
 from textwrap import dedent
 
-from beartype.typing import Any, Optional, Tuple
+from beartype.typing import Any, Tuple
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion, WordCompleter
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text import FormattedText
 
 from .logger import md_printer, red, whi
