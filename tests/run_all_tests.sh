@@ -6,9 +6,9 @@ set -u
 
 # cleanup previous
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
-[ -e "temp" ] && trash temp
-[ -e "test_env" ] && trash test_env
-[ -e "__pycache__" ] && trash __pycache__
+[ -e "temp" ] && rm -rv temp
+[ -e "test_env" ] && rm -rv test_env
+[ -e "__pycache__" ] && rm -rv __pycache__
 
 # setup venv
 uv venv test_venv
