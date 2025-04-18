@@ -3,6 +3,7 @@ Code related to loggings, coloured logs, etc.
 """
 
 import json
+import sys
 import warnings
 from pathlib import Path
 from textwrap import dedent
@@ -33,11 +34,21 @@ if env.WDOC_DEBUG:
 if is_piped:
     log_level = "CRITICAL"
 
-# logger
+# logger for the log_file
 logger.add(
     log_file,
     rotation="100MB",
     retention=5,
+    format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
+    level="DEBUG",
+    enqueue=True,
+    colorize=True,
+    backtrace=True,
+    diagnose=True,
+)
+# logger for the user stdout
+logger.add(
+    sys.stdout,
     format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
     level=log_level,
     enqueue=True,
