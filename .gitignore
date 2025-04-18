@@ -15,6 +15,7 @@ obsolete
 dist
 
 # author files
+scripts/NewpipeSummaries
 scripts/NtfySummarizer/TOPICS
 scripts/NtfySummarizer/summaries
 scripts/notfinished_*
