@@ -28,7 +28,7 @@ is_linux = platform.system() == "Linux"
 
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
 # otherwise) and modify the formatting output. Also set the log_level to "CRITICAL"
-is_piped = sys.stdout.isatty()
+is_piped = not sys.stdout.isatty()
 
 
 @dataclass

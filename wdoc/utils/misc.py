@@ -40,7 +40,7 @@ from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
 
-from .env import env
+from .env import env, is_piped
 from .errors import UnexpectedDocDictArgument
 from .typechecker import optional_typecheck
 
@@ -1171,9 +1171,9 @@ def get_piped_input() -> Optional[Any]:
     if "pytest" in sys.modules:
         return None
     # Check if data is being piped (stdin is not a terminal)
-    if not sys.stdin.isatty():
+    if is_piped:
         # Save a copy of the original stdin for debugging
-        original_stdin = sys.stdin
+        # original_stdin = sys.stdin
 
         # Read the piped data
         piped_input = sys.stdin.buffer.read()
