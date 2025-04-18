@@ -37,7 +37,7 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
+    format="{time:YYYY-MM-DD at HH:mm}|{level}|{thread}|{process}|{function}|{line}|{message}",
     level="DEBUG",
     enqueue=True,
     colorize=True,
@@ -47,7 +47,7 @@ logger.add(
 # logger for the user stdout
 logger.add(
     sys.stdout,
-    format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
+    format="{time:HH:SS}|{level}|{thread}|{process}|{function}|{line}|{message}",
     level=log_level,
     enqueue=True,
     colorize=True,
