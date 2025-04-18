@@ -27,7 +27,7 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
 
-from .env import env, is_piped
+from .env import env, is_out_piped
 from .loaders import (
     load_one_doc_wrapped,
     load_youtube_playlist,
@@ -301,7 +301,7 @@ def batch_load_doc(
             desc="Hashing files",
             unit="doc",
             colour="magenta",
-            disable=len(to_load) <= 10_000 or is_piped,
+            disable=len(to_load) <= 10_000 or is_out_piped,
         )
     )
     for i, h in enumerate(doc_hashes):
@@ -418,7 +418,7 @@ def batch_load_doc(
                 desc="Loading",
                 unit="doc",
                 colour="magenta",
-                disable=is_piped,
+                disable=is_out_piped,
             )
         )
         doc_lists = []
@@ -458,7 +458,7 @@ def batch_load_doc(
         enumerate(doc_lists),
         total=len(doc_lists),
         desc="Concatenating results",
-        disable=not env.WDOC_VERBOSE or is_piped,
+        disable=not env.WDOC_VERBOSE or is_out_piped,
     ):
         if isinstance(d, list):
             docs.extend(d)
@@ -538,7 +538,7 @@ def batch_load_doc(
         deduped = {}
         lenbefore = len(docs)
         for idoc, doc in enumerate(
-            tqdm(docs, desc="Deduplicating", unit="doc", disable=is_piped)
+            tqdm(docs, desc="Deduplicating", unit="doc", disable=is_out_piped)
         ):
             ch = doc.metadata["content_hash"]
             if not dupes:

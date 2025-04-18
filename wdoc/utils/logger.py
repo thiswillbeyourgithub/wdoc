@@ -13,7 +13,7 @@ from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .env import env, is_piped
+from .env import env, is_out_piped
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
@@ -29,7 +29,7 @@ if env.WDOC_VERBOSE:
     log_level = "DEBUG"
 if env.WDOC_DEBUG:
     log_level = "DEBUG"
-if is_piped:
+if is_out_piped:
     log_level = "CRITICAL"
 
 # reset the default handler of stderr otherwise the user always see all log levels apparently

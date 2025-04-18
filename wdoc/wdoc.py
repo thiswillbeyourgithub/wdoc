@@ -39,7 +39,7 @@ from loguru import logger as logger
 from .utils.batch_file_loader import batch_load_doc
 from .utils.customs.fix_llm_caching import SQLiteCacheFixed
 from .utils.embeddings import create_embeddings, load_embeddings_engine
-from .utils.env import env, is_piped
+from .utils.env import env, is_out_piped
 from .utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
@@ -996,7 +996,7 @@ class wdoc:
                     self.loaded_embeddings.docstore._dict.values(),
                     desc="gathering metadata keys",
                     unit="doc",
-                    disable=(not env.WDOC_VERBOSE) or is_piped,
+                    disable=(not env.WDOC_VERBOSE) or is_out_piped,
                 ):
                     for k in doc.metadata.keys():
                         all_metadata_keys.add(k)
@@ -1190,7 +1190,7 @@ class wdoc:
                 self.loaded_embeddings.docstore._dict.items(),
                 desc="Filtering",
                 unit="docs",
-                disable=(not env.WDOC_VERBOSE) or is_piped,
+                disable=(not env.WDOC_VERBOSE) or is_out_piped,
             ):
                 checked += 1
                 if filter_meta(doc.metadata) and filter_cont(doc.page_content):
@@ -1905,7 +1905,7 @@ class wdoc:
                     unit="answer",
                     total=len(output["relevant_intermediate_answers"]),
                     # disable=not env.WDOC_VERBOSE,
-                    disable=is_piped,
+                    disable=is_out_piped,
                 )
                 temp_interm_answ = output["relevant_intermediate_answers"]
                 temp_interm_answ = [

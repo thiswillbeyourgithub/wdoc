@@ -27,8 +27,10 @@ warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 is_linux = platform.system() == "Linux"
 
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
-# otherwise) and modify the formatting output. Also set the log_level to "CRITICAL"
-is_piped = not sys.stdout.isatty()
+# otherwise) and modify the formatting output.ArithmeticError
+is_input_piped = not sys.stdin.isatty()
+# Also useful to modify the loglevel
+is_out_piped = not sys.stdout.isatty()
 
 
 @dataclass

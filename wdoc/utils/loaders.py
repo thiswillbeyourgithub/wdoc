@@ -61,7 +61,7 @@ from tqdm import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
 from loguru import logger
 
-from .env import env, is_linux, is_piped
+from .env import env, is_linux, is_out_piped
 from .errors import TimeoutPdfLoaderError
 from .misc import (
     ModelName,
@@ -929,7 +929,7 @@ def load_anki(
     col = akp.Collection(path=new_db_path)
     cards = col.cards.merge_notes()
 
-    if verbose and not is_piped:
+    if verbose and not is_out_piped:
         tqdm.pandas()
 
         def pbar(*x, **y):
@@ -2660,7 +2660,7 @@ def load_pdf(
         total=len(pdf_parsers),
         desc=f"Parsing PDF {name}",
         unit="loader",
-        disable=is_piped,
+        disable=is_out_piped,
     )
     for loader_name in pdf_parsers:
         pbar.desc = f"Parsing PDF {name} with {loader_name}"
