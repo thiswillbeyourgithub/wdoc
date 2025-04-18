@@ -8,6 +8,15 @@ from copy import copy
 import pytest
 from langchain_core.documents.base import Document
 
+from wdoc.wdoc import wdoc
+from wdoc.utils.misc import ModelName
+from wdoc.utils.embeddings import load_embeddings_engine
+from wdoc.utils.embeddings import test_embeddings as _test_embeddings
+from wdoc.utils.tasks.query import semantic_batching
+from wdoc.utils.embeddings import load_embeddings_engine
+from wdoc.utils.misc import ModelName
+from wdoc.utils.env import env
+
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
 # Default model names if not specified in environment
@@ -19,15 +28,6 @@ WDOC_TEST_OPENAI_EVAL_MODEL = os.getenv("WDOC_TEST_OPENAI_EVAL_MODEL", "gpt-4o-m
 WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
     "WDOC_TEST_OPENAI_EMBED_MODEL", "text-embedding-3-small"
 )
-
-from wdoc.wdoc import wdoc
-from wdoc.utils.misc import ModelName
-from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.embeddings import test_embeddings as _test_embeddings
-from wdoc.utils.tasks.query import semantic_batching
-from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.misc import ModelName
-from wdoc.utils.env import env
 
 # add an unexpected env variable to make sure nothing crashes
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE"] = "testing"
