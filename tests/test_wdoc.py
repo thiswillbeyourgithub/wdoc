@@ -29,6 +29,9 @@ from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.misc import ModelName
 from wdoc.utils.env import env
 
+# add an unexpected env variable to make sure nothing crashes
+os.environ["WDOC_TEST_UNEXPECTED_VARIABLE"] = "testing"
+
 
 @pytest.mark.basic
 def test_wdoc_version():
