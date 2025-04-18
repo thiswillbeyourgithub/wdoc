@@ -1,3 +1,4 @@
+publish_all.sh
 *API_KEY.txt
 ggml*bin
 .cache
