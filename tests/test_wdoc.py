@@ -278,6 +278,33 @@ def test_parse_nytimes_shell():
     assert len(output) > 1000, "Expected significant text content from NYTimes"
 
 
+@pytest.mark.basic
+def test_error_message_shell_debug():
+    """check if we get the error message we expect in debug mode"""
+    command = "wdoc --task=summary --path https://lemonde.fr/ --filetype=test --debug"
+    expected_substring = "(Pdb) "
+    try:
+        subprocess.run(
+            command,
+            shell=True,  # Execute command through the shell
+            capture_output=True,  # Capture stdout and stderr
+            text=True,  # Decode stdout/stderr as text (str)
+            check=False,  # Raise CalledProcessError if command returns non-zero exit code
+            timeout=20,
+        )
+        raise Exception("Should not reach this")
+
+    except subprocess.TimeoutExpired as e:
+
+        # Get the standard output
+        stdout_output = str(e.stdout)
+
+        # Assert that the expected substring is present in the standard output
+        assert (
+            expected_substring in stdout_output
+        ), f"Expected '{expected_substring}' not found in command output:\n{stdout_output}"
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
