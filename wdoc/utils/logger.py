@@ -45,7 +45,7 @@ if (
         format="{level} {time: HH:mm}({function}:{line}): {message}",
         level="ERROR",
         enqueue=True,
-        colorize=True,
+        colorize=True if not is_out_piped else False,
         backtrace=True if env.WDOC_DEBUG else None,
         diagnose=True if env.WDOC_DEBUG else None,
     )
@@ -69,7 +69,7 @@ logger.add(
     format="{level} {time: HH:mm}({function}:{line}): {message}",
     level=log_level,
     enqueue=True,
-    colorize=True,
+    colorize=True if is_out_piped else False,
     backtrace=True if env.WDOC_DEBUG else None,
     diagnose=True if env.WDOC_DEBUG else None,
 )
