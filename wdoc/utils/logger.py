@@ -42,8 +42,7 @@ if (
     logger.remove()
     logger.add(
         sys.stderr,
-        format="{time: HH:mm}|{level}|{thread}|{process}|{function}|{line}|{message}",
-        # format="{message}",
+        format="{level} {time: HH:mm}({function}:{line}): {message}",
         level="ERROR",
         enqueue=True,
         colorize=True,
@@ -56,17 +55,18 @@ logger.add(
     log_file,
     rotation="100MB",
     retention=5,
-    format="{time:YYYY-MM-DD at HH:mm}|{level}|{thread}|{process}|{function}|{line}|{message}",
+    format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{thread}|{process}|{function}|{line}|{message}",
     level="DEBUG",
     enqueue=True,
-    colorize=True,
+    colorize=False,
     backtrace=True,
     diagnose=True,
+    serialize=False,
 )
 # logger for the user stdout
 logger.add(
     sys.stdout,
-    format="{time:HH:SS}|{level}|{thread}|{process}|{function}|{line}|{message}",
+    format="{level} {time: HH:mm}({function}:{line}): {message}",
     level=log_level,
     enqueue=True,
     colorize=True,
@@ -74,7 +74,7 @@ logger.add(
     diagnose=True if env.WDOC_DEBUG else None,
 )
 
-logger.debug(f"log_file location: {log_file}")
+logger.info(f"log_file location: {log_file}")
 
 console = Console()
 
