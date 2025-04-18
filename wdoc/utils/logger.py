@@ -32,6 +32,25 @@ if env.WDOC_DEBUG:
 if is_piped:
     log_level = "CRITICAL"
 
+# reset the default handler of stderr otherwise the user always see all log levels apparently
+handlers = logger._core.handlers
+if (
+    len(handlers) == 1
+    and next(iter(handlers.values())).levelno == 10
+    and "<stderr>" in str(next(iter(handlers.values())))
+):
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="{time: HH:mm}|{level}|{thread}|{process}|{function}|{line}|{message}",
+        # format="{message}",
+        level="ERROR",
+        enqueue=True,
+        colorize=True,
+        backtrace=True if env.WDOC_DEBUG else None,
+        diagnose=True if env.WDOC_DEBUG else None,
+    )
+
 # logger for the log_file
 logger.add(
     log_file,
