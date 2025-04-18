@@ -19,4 +19,4 @@ scripts/NtfySummarizer/TOPICS
 scripts/NtfySummarizer/summaries
 scripts/notfinished_*
 scripts/**/*perso*
-latest_release_notes.md
+latest_release_notes_*.md
