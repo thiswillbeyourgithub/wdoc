@@ -381,7 +381,8 @@ def load_one_doc_wrapped(
                 f"\nFull traceback:\n{formatted_tb}"
             )
         if loading_failure == "crash":
-            raise Exception(logger.warning(mess)) from err
+            logger.warning(mess)
+            raise Exception(mess) from err
         elif loading_failure == "warn" or env.WDOC_DEBUG:
             logger.warning(mess)
             return str(err)
@@ -521,7 +522,8 @@ def load_one_doc(
         )
 
     else:
-        raise Exception(logger.warning(f"Unsupported filetype: '{filetype}'"))
+        logger.warning(f"Unsupported filetype: '{filetype}'")
+        raise Exception(f"Unsupported filetype: '{filetype}'")
 
     docs = text_splitter.transform_documents(docs)
 

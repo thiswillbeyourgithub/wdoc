@@ -441,7 +441,8 @@ def batch_load_doc(
             #                     assert isinstance(er, str), er
             #                     mess += f"\n- #{cnt}: {fd}: '{er}'"
             #             mess += f"\nLatest error was: '{o}'"
-            #             raise Exception(logger.warning(mess))
+            #             logger.warning(mess)
+            #             raise Exception(mess)
     except MultiprocessTimeoutError as e:
         raise Exception(
             logger.warning(
@@ -639,7 +640,8 @@ def parse_recursive_paths(
             if env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
                 logger.warning(mess)
             elif env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
-                raise Exception(logger.warning(mess))
+                logger.warning(mess)
+                raise Exception(mess)
 
     if exclude:
         for iexc, exc in enumerate(exclude):
@@ -656,7 +658,8 @@ def parse_recursive_paths(
                 if env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "warn":
                     logger.warning(mess)
                 elif env.WDOC_BEHAVIOR_EXCL_INCL_USELESS == "crash":
-                    raise Exception(logger.warning(mess))
+                    logger.warning(mess)
+                    raise Exception(mess)
 
     for i, d in enumerate(doclist):
         doc_kwargs = cli_kwargs.copy()
