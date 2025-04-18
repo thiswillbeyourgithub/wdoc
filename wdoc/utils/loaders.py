@@ -2642,13 +2642,14 @@ def load_pdf(
     passed_errs = []
     warned_errs = []
 
+    info = None
     try:
         import magic
 
         info = magic.from_file(path)
     except Exception as err:
-        info = logger.warning(f"Failed to run python-magic: '{err}'")
-    if "pdf" not in info.lower():
+        logger.warning(f"Failed to run python-magic: '{err}'")
+    if info and ("pdf" not in info.lower()):
         logger.debug(
             f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}"
         )
