@@ -138,7 +138,6 @@ class wdoc:
         file_loader_n_jobs: int = -1,
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
-        disable_md_printing: bool = is_piped,
         out_file: Optional[Union[str, Path]] = None,
         oneoff: bool = False,
         silent: bool = False,
