@@ -2644,16 +2644,16 @@ def load_pdf(
     passed_errs = []
     warned_errs = []
 
-    info = None
+    info = "magic not run"
     try:
         import magic
 
-        info = magic.from_file(path)
+        info = str(magic.from_file(path))
     except Exception as err:
         logger.warning(f"Failed to run python-magic: '{err}'")
-    if info and ("pdf" not in info.lower()):
+    if "pdf" not in info.lower():
         logger.debug(
-            f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info={info}"
+            f"WARNING: magic says that your PDF is not a PDF:\npath={path}\nMagic info='{info}'"
         )
 
     pbar = tqdm(
@@ -2734,7 +2734,7 @@ def load_pdf(
             if "content" not in locals():
                 pbar.update(1)
             logger.debug(
-                f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info: {info}"
+                f"Error when parsing '{path}' with {loader_name}: {err}\nMagic info='{info}'"
             )
 
             if (
