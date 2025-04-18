@@ -7,6 +7,7 @@ os.environ["USER_AGENT"] = os.environ.get(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
 )
 
+failed = False
 if str(os.environ.get("WDOC_APPLY_ASYNCIO_PATCH", None)).lower() in [
     "1",
     "true",
@@ -21,6 +22,12 @@ if str(os.environ.get("WDOC_APPLY_ASYNCIO_PATCH", None)).lower() in [
         nest_asyncio.apply()
     except Exception as e:
         logger.error(f"Failed to patch asyncio loop using nest_asyncio. Error: '{e}'")
+        failed = str(e)
+
+from .utils import logger  # make sure to setup the logs first
+
+if failed:
+    logger.error(f"Failed to patch asyncio loop using nest_asyncio. Error: '{failed}'")
 
 from . import utils
 from .wdoc import wdoc
