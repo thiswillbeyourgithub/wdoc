@@ -296,11 +296,12 @@ for k in os.environ.keys():
         continue
     v = env.__parse__(os.environ[k])
 
-    if k not in env.__dataclass_fields__.keys() and k not in env.__warned_unexpected__:
-        env.__warned_unexpected__.append(k)
-        logger.warning(
-            f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
-        )
+    if k not in env.__dataclass_fields__.keys():
+        if k not in env.__warned_unexpected__:
+            env.__warned_unexpected__.append(k)
+            logger.warning(
+                f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
+            )
     else:
         assert is_bearable(
             v, env.__dataclass_fields__[k].type
