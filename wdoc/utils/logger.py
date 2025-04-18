@@ -2,14 +2,12 @@
 Code related to loggings, coloured logs, etc.
 """
 
-import json
 import sys
 import warnings
 from pathlib import Path
 from textwrap import dedent
 
-import rtoml
-from beartype.typing import Callable, Dict, List, Optional, Type, Union
+from beartype.typing import Callable, Optional, Type, Union
 from loguru import logger
 from platformdirs import user_log_dir
 from rich.console import Console
