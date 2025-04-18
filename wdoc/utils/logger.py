@@ -81,10 +81,11 @@ console = Console()
 
 @optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
-    "markdown printing"
+    "markdown rendering and printing to console, unless we are in a pipe"
     message = dedent(message)
-    md = Markdown(message)
-    console.print(md, style=color)
+    if not is_out_piped:
+        md = Markdown(message)
+        console.print(md, style=color)
     logger.info(message)
     return message
 
