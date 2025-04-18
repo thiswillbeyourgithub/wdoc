@@ -45,8 +45,6 @@ logger.add(
     backtrace=True if env.WDOC_DEBUG else None,
     diagnose=True if env.WDOC_DEBUG else None,
 )
-# delete any additional log file
-# (log_dir / "logs.txt.4").unlink(missing_ok=True)
 
 console = Console()
 
