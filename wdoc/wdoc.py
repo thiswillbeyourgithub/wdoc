@@ -1830,6 +1830,7 @@ class wdoc:
                         "error": md_printer(
                             f"## No documents were retrieved with query '{query_fe}'",
                             color="red",
+                            log_level="error",
                         )
                     }
                 except NoDocumentsAfterLLMEvalFiltering:
@@ -1837,6 +1838,7 @@ class wdoc:
                         "error": md_printer(
                             f"## No documents remained after query eval LLM filtering using question '{query_an}'",
                             color="red",
+                            log_level="error",
                         )
                     }
             chain_time = time.time() - start_time
@@ -2009,6 +2011,7 @@ class wdoc:
                 output_handler(
                     "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
                     color="red",
+                    log_level="error",
                 )
                 output_handler(
                     "\n\n# No document filtered so no intermediate answers to combine"
