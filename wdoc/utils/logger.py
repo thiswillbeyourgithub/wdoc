@@ -14,7 +14,7 @@ from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .env import env
+from .env import env, is_piped
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
@@ -25,13 +25,21 @@ log_dir.mkdir(exist_ok=True, parents=True)
 log_file = log_dir / "logs.txt"
 log_file.touch(exist_ok=True)
 
+log_level = "INFO"
+if env.WDOC_VERBOSE:
+    log_level = "DEBUG"
+if env.WDOC_DEBUG:
+    log_level = "DEBUG"
+if is_piped:
+    log_level = "CRITICAL"
+
 # logger
 logger.add(
     log_file,
     rotation="100MB",
     retention=5,
     format="{time:YYYY-MM-DD at HH:mm}|{level}|wdoc|{thread}|{process}|{function}|{line}|{message}",
-    level="DEBUG" if env.WDOC_DEBUG else "INFO",
+    level=log_level,
     enqueue=True,
     colorize=True,
     backtrace=True if env.WDOC_DEBUG else None,

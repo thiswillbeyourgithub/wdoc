@@ -1,6 +1,5 @@
 """
 Sets the default value for environment variables, parse the actual values,
-check their types and finally make them easier to access by other parts of
 wdoc.
 Also set some variables useful to access globally like is_linux for example.
 """
@@ -28,7 +27,7 @@ warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 is_linux = platform.system() == "Linux"
 
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
-# otherwise) and modify the formatting output
+# otherwise) and modify the formatting output. Also set the log_level to "CRITICAL"
 is_piped = sys.stdout.isatty()
 
 
