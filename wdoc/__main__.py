@@ -16,7 +16,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     logger.warning("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from .utils import logger as _  # make sure to setup the logs first
+from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
 from .utils.env import env
 from .utils.misc import piped_input
@@ -98,7 +98,7 @@ def cli_launcher() -> None:
         sys.exit(0)
     elif " --help" in sysline or " -h" in sysline:
         print("Showing help")
-        wdoc.md_printer(wdoc.__doc__)
+        importedlogger.md_printer(wdoc.__doc__)
         sys.exit(0)
     elif " --completion" in sysline:
         if " -- --completion" in sysline:
@@ -151,7 +151,7 @@ def cli_parse_file() -> None:
     sys_args = sys.argv
     if "--help" in sys_args:
         print("Showing help")
-        wdoc.md_printer(wdoc.parse_file.__doc__)
+        importedlogger.md_printer(wdoc.parse_file.__doc__)
         # help(wdoc.parse_file)
         # print(wdoc.parse_file.__doc__)
         # fire.Fire(wdoc.parse_file)
