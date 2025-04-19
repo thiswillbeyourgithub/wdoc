@@ -1836,18 +1836,21 @@ class wdoc:
                     self.top_k = new_top_k
                 except NoDocumentsRetrieved:
                     return {
-                        "error": md_printer(
-                            f"## No documents were retrieved with query '{query_fe}'",
-                            color="red",
-                            log_level="error",
+                        "error": logger.error(
+                            md_printer(
+                                f"## No documents were retrieved with query '{query_fe}'",
+                                color="red",
+                            )
                         )
                     }
                 except NoDocumentsAfterLLMEvalFiltering:
                     return {
-                        "error": md_printer(
-                            f"## No documents remained after query eval LLM filtering using question '{query_an}'",
-                            color="red",
-                            log_level="error",
+                        "error": logger.error(
+                            md_printer(
+                                f"## No documents remained after query eval LLM filtering using question '{query_an}'",
+                                color="red",
+                                log_level="error",
+                            )
                         )
                     }
             chain_time = time.time() - start_time
@@ -2009,7 +2012,7 @@ class wdoc:
                 def output_handler(text: str) -> None:
                     with open(self.out_file, "a") as f:
                         f.write(text + "\n")
-                    md_printer(text)
+                    return md_printer(text)
 
             else:
                 output_handler = md_printer
@@ -2017,13 +2020,16 @@ class wdoc:
             # display sources (i.e. documents used to answer)
             output_handler("---")
             if not output["relevant_intermediate_answers"]:
-                output_handler(
-                    "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
-                    color="red",
-                    log_level="error",
+                logger.error(
+                    output_handler(
+                        "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
+                        color="red",
+                    )
                 )
-                output_handler(
-                    "\n\n# No document filtered so no intermediate answers to combine"
+                logger.error(
+                    output_handler(
+                        "\n\n# No document filtered so no intermediate answers to combine"
+                    )
                 )
             else:
                 output_handler("\n\n# Intermediate answers for each document:")
