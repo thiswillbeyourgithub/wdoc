@@ -627,11 +627,20 @@ class wdoc:
             f"Total number of tokens in documents to summarize: '{full_tkn}'"
         )
         # use an heuristic to estimate the price to summarize
-        adj_price = (self.llm_price[0] * 3 + self.llm_price[1] * 2) / 5
-        estimate_dol = full_tkn * adj_price / 100 * 1.2
+        compr_ratio = 0.28
+        prompt_tkn = 1000
+        estimate_dol = (prompt_tkn + full_tkn) * self.llm_price[
+            0
+        ] + full_tkn * compr_ratio * self.llm_price[1]
         if self.summary_n_recursion:
-            for i in range(1, self.summary_n_recursion + 1):
-                estimate_dol += full_tkn * ((2 / 5) ** i) * adj_price / 100 * 1.2
+            for i in range(self.summary_n_recursion):
+                estimate_dol += (prompt_tkn + full_tkn) * (
+                    compr_ratio**i
+                ) * self.llm_price[0] + full_tkn * (
+                    compr_ratio ** (i + 1)
+                ) * self.llm_price[
+                    1
+                ]
         logger.info(
             self.ntfy(
                 f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."
