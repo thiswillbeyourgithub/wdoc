@@ -36,6 +36,7 @@ def do_summarize(
 
     total_tokens = [0, 0]
     total_cost = 0
+    tt_check = 0
 
     metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
 
@@ -74,12 +75,20 @@ def do_summarize(
         if output.llm_output:  # only present if not caching
             new_p = output.llm_output["token_usage"]["prompt_tokens"]
             new_c = output.llm_output["token_usage"]["completion_tokens"]
+            tt_check = output.llm_output["token_usage"]["total_tokens"]
+            logger.debug(
+                "LLM token usage output for that completion: "
+                + str(output.llm_output["token_usage"])
+            )
         else:
             new_p = 0
             new_c = 0
         total_tokens[0] += new_p
         total_tokens[1] += new_c
         total_cost += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
+        assert (
+            sum(total_tokens) == tt_check
+        ), f"Unexpected count of tokens. Mismatch between prompt/completion vs total tokens. Total is either {sum(total_tokens)} or {tt_check}"
 
         # the callback need to be updated manually when _generate is called
         llm.callbacks[0].prompt_tokens += new_p
