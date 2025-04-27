@@ -83,6 +83,14 @@ class PostInstallCommand(install):
                 "For more: see https://github.com/Filimoa/open-parse/"
             )
 
+        # do "import nltk ; nltk.download('punkt_tab')"
+        try:
+            import nltk
+
+            nltk.download("punkt_tab")
+        except Exception as err:
+            print(f"Error when downloading nltk punkt_tab: '{err}'")
+
 
 with open("README.md", "r") as readme:
     long_description = readme.read()
@@ -168,6 +176,7 @@ setup(
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optional as it can help infer the filetype, and 0.4.28 is necessary for the pipe feature.
         "uuid6",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
+        "nltk>=3.8.1",  # needed for punkt_tab download in post-install
         # Loaders:
         "docx2txt >= 0.8",  # word documents
         "pandoc >= 2.3",  # epub
