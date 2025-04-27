@@ -2179,7 +2179,10 @@ class wdoc:
             return (
                 "Parsed documents\n"
                 + "\n".join(
-                    [f"Doc #{i}/{n}\n{d.page_content}\n\n" for i, d in enumerate(out)]
+                    [
+                        f"Doc #{i + 1}/{n}\n{d.page_content}\n\n"
+                        for i, d in enumerate(out)
+                    ]
                 ).rstrip()
             )
         elif format == "xml":
