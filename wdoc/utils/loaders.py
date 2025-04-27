@@ -2880,8 +2880,13 @@ def find_online_media(
         # Try to click on video play buttons
         for trial in [
             '[class*="play-button"]',
+            '[class*="play_button"]',
+            '[class*="playbutton"]',
             '[class*="playback"]',
             '[class*="play-back"]',
+            '[class*="play_back"]',
+            '[class$="play"]',
+            '[class*="play"]',
         ]:
             playback_elements = page.query_selector_all(trial)
             for element in playback_elements:
