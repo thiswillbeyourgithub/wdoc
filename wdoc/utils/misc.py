@@ -718,7 +718,7 @@ def unlazyload_modules():
     sure not to loose time and that everything works smoothly. For example
     who knows what happens when multiprocessing with lazy loaded modules."""
     if env.WDOC_IMPORT_TYPE not in ["both", "lazy"]:
-        logger.warning("Lazyloading is disabled so not unlazyloading modules.")
+        logger.debug("Lazyloading is disabled so not unlazyloading modules.")
         return
 
     while True:
