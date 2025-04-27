@@ -1,5 +1,9 @@
 import os
+import logging
 from loguru import logger
+
+# Suppress faiss INFO logs
+logging.getLogger("faiss").setLevel(logging.WARNING)
 
 # sensible default user agent
 os.environ["USER_AGENT"] = os.environ.get(
