@@ -2885,7 +2885,6 @@ def find_online_media(
             '[class*="playback"]',
             '[class*="play-back"]',
             '[class*="play_back"]',
-            '[class$="play"]',
             '[class*="play"]',
         ]:
             playback_elements = page.query_selector_all(trial)
