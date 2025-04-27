@@ -2877,8 +2877,8 @@ def find_online_media(
         page.wait_for_timeout(1000)  # Wait for X seconds after scrolling
         page.evaluate("window.scrollTo(0, 0)")
 
-        # Try to click on video play buttons
-        for trial in [
+        # Try to click on video play buttons using various selectors
+        play_button_selectors = [
             '[class*="play-button"]',
             '[class*="play_button"]',
             '[class*="playbutton"]',
@@ -2886,21 +2886,6 @@ def find_online_media(
             '[class*="play-back"]',
             '[class*="play_back"]',
             '[class*="play"]',
-        ]:
-            playback_elements = page.query_selector_all(trial)
-            for element in playback_elements:
-                if not element.is_visible():
-                    continue
-                if not element.is_enabled():
-                    continue
-                logger.debug(f"Clickable element: {element}")
-                try:
-                    element.click(timeout=500)
-                    print(f"Clicked element: {element.evaluate('el => el.outerHTML')}")
-                    page.wait_for_timeout(1000)  # Wait for X seconds after each click
-                except Exception:
-                    pass
-        play_button_selectors = [
             '[aria-label="Play"]',
             ".ytp-play-button",
             ".play-button",
@@ -2909,12 +2894,37 @@ def find_online_media(
         ]
         for selector in play_button_selectors:
             try:
-                page.click(selector, timeout=500)
+                # Try clicking directly first (for specific selectors)
+                page.click(selector, timeout=200)
+                logger.debug(f"Clicked element matching selector: {selector}")
+                page.wait_for_timeout(1000)  # Wait after click
+                continue  # Move to next selector if successful
             except Exception:
-                pass
+                # If direct click fails or selector is general (like class*), try querying all
+                try:
+                    playback_elements = page.query_selector_all(selector)
+                    for element in playback_elements:
+                        if not element.is_visible() or not element.is_enabled():
+                            continue
+                        logger.debug(f"Found clickable element via query: {element}")
+                        try:
+                            element.click(timeout=500)
+                            logger.debug(
+                                f"Clicked element: {element.evaluate('el => el.outerHTML')}"
+                            )
+                            page.wait_for_timeout(1000)  # Wait after click
+                            # Don't break here, maybe multiple elements match a general selector
+                        except Exception as click_err:
+                            logger.debug(
+                                f"Failed to click element {element}: {click_err}"
+                            )
+                except Exception as query_err:
+                    logger.debug(
+                        f"Failed to query or click elements for selector {selector}: {query_err}"
+                    )
 
         if not any(v for v in video_urls.values()):
-            # Wait a bit more for any video to start loading
+            # Wait a bit more for any video to start loading if no media URLs found yet
             page.wait_for_timeout(10000)
 
         browser.close()
