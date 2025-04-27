@@ -2885,6 +2885,10 @@ def find_online_media(
         ]:
             playback_elements = page.query_selector_all(trial)
             for element in playback_elements:
+                if not element.is_visible():
+                    continue
+                if not element.is_enabled():
+                    continue
                 try:
                     element.click(timeout=500)
                     print(f"Clicked element: {element.evaluate('el => el.outerHTML')}")
