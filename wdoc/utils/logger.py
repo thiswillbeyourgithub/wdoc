@@ -74,7 +74,7 @@ logger.add(
     diagnose=True if env.WDOC_DEBUG else None,
 )
 
-logger.info(f"log_file location: {log_file}")
+logger.debug(f"log_file location: {log_file}")
 
 console = Console()
 
