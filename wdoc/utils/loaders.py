@@ -2865,7 +2865,12 @@ def find_online_media(
 
         # load page
         page.goto(url)
-        page.wait_for_load_state("networkidle")
+        try:
+            page.wait_for_load_state("networkidle")
+        except Exception as e:
+            logger.debug(
+                f"Ignoring exception on wait_for_load_state('networkidle'): {e}"
+            )
 
         # Scroll the page to trigger lazy-loaded content
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
