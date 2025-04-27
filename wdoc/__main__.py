@@ -222,8 +222,13 @@ def cli_parse_file() -> None:
         assert isinstance(parsed, str)
         out = parsed
 
-    sys.stdout.write(out)
-    sys.stdout.flush()
+    try:
+        sys.stdout.write(out)
+        sys.stdout.flush()
+    except BrokenPipeError as e:
+        logger.debug(
+            f"Encountered a BrokenPipeError, crashing silently because it indicates that the code after the pipe crashed so we should not flood the output: {e}"
+        )
 
 
 if __name__ == "__main__":
