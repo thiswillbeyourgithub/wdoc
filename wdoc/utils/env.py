@@ -126,7 +126,7 @@ class EnvDataclass:
                 and k not in self.__warned_unexpected__
             ):
                 self.__warned_unexpected__.append(k)
-                logger.warning(
+                logger.debug(
                     f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
                 )
 
@@ -300,7 +300,7 @@ for k in os.environ.keys():
     if k not in env.__dataclass_fields__.keys():
         if k not in env.__warned_unexpected__:
             env.__warned_unexpected__.append(k)
-            logger.warning(
+            logger.debug(
                 f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
             )
     else:
