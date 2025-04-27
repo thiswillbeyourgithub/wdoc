@@ -316,6 +316,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 * [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
 * [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by `wdoc`.
 * [Official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool), hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
+* [MediaURLFinder](scripts/MediaURLFinder) simply leverages the `find_online_media` loader helper to use `playwright` and `yt-dlp` to find all the URLs of medias (videos, audio etc). This is especially useful if `yt-dlp` alone is not able to find the URL of a ressource.
 
 ## FAQ
 
