@@ -2894,6 +2894,7 @@ def find_online_media(
                     continue
                 if not element.is_enabled():
                     continue
+                logger.debug(f"Clickable element: {element}")
                 try:
                     element.click(timeout=500)
                     print(f"Clicked element: {element.evaluate('el => el.outerHTML')}")
