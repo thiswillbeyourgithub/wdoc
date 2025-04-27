@@ -2176,15 +2176,18 @@ class wdoc:
         )
         if format == "text":
             n = len(out)
-            return (
-                "Parsed documents\n"
-                + "\n".join(
-                    [
-                        f"Doc #{i + 1}/{n}\n{d.page_content}\n\n"
-                        for i, d in enumerate(out)
-                    ]
-                ).rstrip()
-            )
+            if n > 1:
+                return (
+                    "Parsed documents:\n"
+                    + "\n".join(
+                        [
+                            f"Doc #{i + 1}/{n}\n{d.page_content}\n\n"
+                            for i, d in enumerate(out)
+                        ]
+                    ).rstrip()
+                )
+            else:
+                return f"Parsed document:\n{out[0].page_content.strip()}"
         elif format == "xml":
             return (
                 "<documents>\n"
