@@ -450,7 +450,7 @@ def batch_load_doc(
             )
         ) from e
 
-    logger.warning(
+    logger.info(
         f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s"
     )
     missing_docargs = []
@@ -476,7 +476,7 @@ def batch_load_doc(
         )
         logger.warning(f"Number of failed documents: {len(missing_docargs)}:")
     else:
-        logger.warning("No document failed to load!")
+        logger.debug("No document failed to load!")
 
     if len(missing_docargs) == len(doc_lists):
         raise Exception("All documents failed to load. The errors appear above.")
@@ -528,10 +528,10 @@ def batch_load_doc(
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
     if "summar" not in task and len(docs) > 1:
-        logger.warning("Deduplicating...")
-        logger.info("Getting all hash")
+        logger.debug("Deduplicating...")
+        logger.debug("Getting all hash")
         content_hash = [d.metadata["content_hash"] for d in docs]
-        logger.info("Counting them")
+        logger.debug("Counting them")
         counts = Counter(content_hash)
         dupes = set()
         [dupes.add(h) for h, c in counts.items() if c > 1]
@@ -542,7 +542,7 @@ def batch_load_doc(
         ):
             ch = doc.metadata["content_hash"]
             if not dupes:
-                logger.info("No duplicates!")
+                logger.debug("No duplicates!")
                 break
             if ch in deduped:
                 assert doc.page_content == deduped[ch].page_content
