@@ -2065,13 +2065,13 @@ class wdoc:
                 )
 
             # print the breakdown of documents used and chain time
-            logger.warning(
+            logger.info(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
             )
-            logger.warning(
+            logger.info(
                 f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
             )
-            logger.warning(
+            logger.info(
                 f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
             )
             if len(all_rlvt_interim_ans) > 1:
@@ -2079,10 +2079,10 @@ class wdoc:
                 extra = f"({extra})"
             else:
                 extra = ""
-            logger.warning(
+            logger.debug(
                 f"Number of steps to combine intermediate answers: {len(all_rlvt_interim_ans) - 1} {extra}"
             )
-            logger.warning(f"Time took by the chain: {chain_time:.2f}s")
+            logger.debug(f"Time took by the chain: {chain_time:.2f}s")
 
             evalllmcallback = self.eval_llm.callbacks[0]
             etotal_cost = (
@@ -2108,7 +2108,7 @@ class wdoc:
                 f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
             )
 
-            logger.warning(f"Total cost: ${total_cost + etotal_cost:.5f}")
+            logger.info(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
             self.latest_cost = total_cost + etotal_cost
 
