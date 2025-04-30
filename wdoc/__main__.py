@@ -18,7 +18,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 
 from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
-from .utils.env import env
+from .utils.env import env, is_out_piped
 from .utils.misc import piped_input
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
@@ -98,7 +98,10 @@ def cli_launcher() -> None:
         sys.exit(0)
     elif " --help" in sysline or " -h" in sysline:
         print("Showing help")
-        importedlogger.md_printer(wdoc.__doc__)
+        if is_out_piped:
+            print(wdoc.__doc__)
+        else:
+            importedlogger.md_printer(wdoc.__doc__)
         sys.exit(0)
     elif " --completion" in sysline:
         if " -- --completion" in sysline:
@@ -151,7 +154,10 @@ def cli_parse_file() -> None:
     sys_args = sys.argv
     if "--help" in sys_args:
         print("Showing help")
-        importedlogger.md_printer(wdoc.parse_file.__doc__)
+        if is_out_piped:
+            print(wdoc.parse_file.__doc__)
+        else:
+            importedlogger.md_printer(wdoc.parse_file.__doc__)
         # help(wdoc.parse_file)
         # print(wdoc.parse_file.__doc__)
         # fire.Fire(wdoc.parse_file)
