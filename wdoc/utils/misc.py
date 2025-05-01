@@ -125,6 +125,9 @@ min_token = 20
 max_token = 10_000_000
 min_lang_prob = 0.50
 
+# list of available tasks
+tasks_list = ["query", "summary", "parse", "search", "summary_then_query"]
+
 printed_unexpected_api_keys = [False]  # to print it only once
 
 # loader specific arguments

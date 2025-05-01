@@ -74,6 +74,7 @@ from .utils.misc import (  # debug_chain,
     set_func_signature,
     thinking_answer_parser,
     wpm,
+    tasks_list,
 )
 from .utils.prompts import prompts
 from .utils.retrievers import create_multiquery_retriever, create_parent_retriever
@@ -243,12 +244,7 @@ class wdoc:
             "loaded_embeddings" not in cli_kwargs
         ), "'loaded_embeddings' cannot be an argument as it is used internally"
         task = task.replace("summary", "summarize")
-        assert task in [
-            "query",
-            "search",
-            "summarize",
-            "summarize_then_query",
-        ], "invalid task value"
+        assert task in tasks_list, "invalid task value"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
