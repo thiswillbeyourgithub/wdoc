@@ -307,6 +307,38 @@ def test_error_message_shell_debug():
         ), f"Expected '{expected_substring}' not found in command output:\n{stdout_output}"
 
 
+@pytest.mark.basic
+def test_cli_pipe_summary(sample_text_file):
+    """Test piping wdoc parse output into a wdoc summary command using shell=True."""
+    # Ensure the sample file has enough content for parsing/summarization
+    f = Path(sample_text_file)
+    content = f.read_text()
+    f.write_text(50 * (content + "\n"))
+
+    # Combine the parse and summary commands into a single shell pipeline
+    # Redirect stderr to stdout (2>&1) to capture all output
+    combined_cmd = (
+        f"wdoc parse {str(sample_text_file)} --format text | "
+        "wdoc summarize --pipe --model=testing/testing --oneoff 2>&1"
+    )
+
+    # Run the combined command using shell=True
+    summary_process = subprocess.run(
+        combined_cmd,
+        shell=True,  # Use shell=True as requested
+        timeout=120,  # Add a timeout to prevent hanging
+        capture_output=True,
+        text=True,
+        check=False,  # Don't check return code, we assert on output
+    )
+
+    # Check the combined output of the summary command
+    output = summary_process.stdout
+    assert (
+        "Lorem ipsum dolor sit amet" in output
+    ), f"Output did not contain expected testing string:\nSTDOUT:\n{summary_process.stdout}\nSTDERR:\n{summary_process.stderr}"
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
