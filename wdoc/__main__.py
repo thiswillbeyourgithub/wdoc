@@ -150,18 +150,15 @@ def cli_launcher() -> None:
     # reload sysline var (important after potentially modifying sys.argv)
     sysline = " ".join(sys.argv)
 
-    # turn 'wdoc parse' into 'wdoc_parse_file'
+    # call call_parse_file() if "wdoc parse" is used
     if (
         "wdoc parse " in sysline
         or "wdoc parse_file " in sysline
         or "__main__.py parse " in sysline
         or "__main__.py parse_file  " in sysline
     ):
-        logger.debug("Replacing 'wdoc parse' by 'wdoc_parse_file'")
-        sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
-        del sys.argv[1]
-        sysline = " ".join(sys.argv)
-        cli_parse_file()
+        logger.debug("Calling 'call_parse_file' function")
+        call_parse_file()
         sys.exit(0)
 
     if " --version" in sysline:
@@ -219,7 +216,7 @@ def cli_launcher() -> None:
     fire.Fire(wdoc)
 
 
-def cli_parse_file() -> None:
+def call_parse_file() -> None:
     sys_args = sys.argv
     if "--help" in sys_args:
         print("Showing help")

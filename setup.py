@@ -142,7 +142,6 @@ setup(
     entry_points={
         "console_scripts": [
             "wdoc=wdoc.__main__:cli_launcher",
-            "wdoc_parse_file=wdoc.__main__:cli_parse_file",
         ],
     },
     python_requires=">=3.11, <3.12",
