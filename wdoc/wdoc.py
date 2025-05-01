@@ -221,6 +221,8 @@ class wdoc:
                 if query_eval_model != TESTING_LLM:
                     logger.warning(f"Setting the query_eval_model to {TESTING_LLM} too")
                     query_eval_model = TESTING_LLM
+            query_retrievers = query_retrievers.replace("multiquery", "")
+        query_retrievers = query_retrievers.replace("_", " ").strip().replace(" ", "_")
 
         # checking argument validity
         assert (
@@ -405,11 +407,7 @@ class wdoc:
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
-        self.query_retrievers = (
-            query_retrievers
-            if not self.model.is_testing()
-            else query_retrievers.replace("multiquery", "")
-        )
+        self.query_retrievers = query_retrievers
         self.query_eval_check_number = int(query_eval_check_number)
         self.query_relevancy = query_relevancy
         self.debug = debug
