@@ -250,8 +250,8 @@ def call_parse_file() -> None:
         sys.stdout.write(out)
         sys.stdout.flush()
     except BrokenPipeError as e:
-        logger.debug(
-            f"Encountered a BrokenPipeError, crashing silently because it indicates that the code after the pipe crashed so we should not flood the output: {e}"
+        logger.error(
+            f"wdoc encountered a BrokenPipeError, crashing because it indicates that the code after the pipe crashed so we should not flood the output: {e}"
         )
 
 
