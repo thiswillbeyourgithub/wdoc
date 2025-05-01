@@ -550,14 +550,14 @@ def test_get_piped_input_detection():
 @pytest.mark.basic
 def test_cli_pipe_query(capsys):
     """Test piping wdoc --help output into a wdoc query command using shell=True."""
-    # Combine the help and query commands into a single shell pipeline
+    # Combine the help and query commands into a single shell pipeline, redirecting stderr to stdout for the first command
     combined_cmd = (
-        "wdoc --help | wdoc query "
+        "wdoc --help 2>&1 | wdoc query "
         "--query 'does wdoc have a local html file filetype?' "
         "--model=testing/testing --oneoff"
     )
 
-    # Run the combined command using shell=True
+    # Run the combined command using shell=True, disabling pytest capture
     query_process = subprocess.run(
         combined_cmd,
         shell=True,  # Use shell=True as requested
