@@ -181,6 +181,19 @@ def cli_launcher() -> None:
         print(f"wdoc version: {wdoc.VERSION}")
         sys.exit(0)
 
+    if "help" in kwargs or "h" in kwargs:
+        print("Showing help")
+        if ("task" in kwargs and kwargs["task"] == "parse") or "parse" in args:
+            target = wdoc.parse_file
+        else:
+            target = wdoc
+        doc = getattr(target, "__doc__")
+        if is_out_piped:
+            print(doc)
+        else:
+            importedlogger.md_printer(doc)
+        sys.exit(0)
+
     # turn 'summarize' into 'summary' and 'summarize_then_query' into 'summary_then_query'
     # We need to re-parse args after modifying sys.argv
     needs_reparse = False
@@ -252,13 +265,6 @@ def cli_launcher() -> None:
         call_parse_file()
         sys.exit(0)
 
-    elif "help" in kwargs or "h" in kwargs:
-        print("Showing help")
-        if is_out_piped:
-            print(wdoc.__doc__)
-        else:
-            importedlogger.md_printer(wdoc.__doc__)
-        sys.exit(0)
     elif "completion" in kwargs or "--completion" in sys.argv:
         if " -- --completion" in " ".join(sys.argv):
             fire.Fire(wdoc)
@@ -275,19 +281,8 @@ def cli_launcher() -> None:
 
 
 def call_parse_file() -> None:
-    args, kwargs = parse_args_fire()
-    if "help" in kwargs or "h" in kwargs:
-        print("Showing help")
-        if is_out_piped:
-            print(wdoc.parse_file.__doc__)
-        else:
-            importedlogger.md_printer(wdoc.parse_file.__doc__)
-        # help(wdoc.parse_file)
-        # print(wdoc.parse_file.__doc__)
-        # fire.Fire(wdoc.parse_file)
-        sys.exit(0)
-
     if is_out_piped:
+        args, kwargs = parse_args_fire()
         parsed = wdoc.parse_file(*args, **kwargs)
     else:
         parsed = fire.Fire(wdoc.parse_file)
