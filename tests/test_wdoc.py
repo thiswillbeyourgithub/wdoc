@@ -284,7 +284,7 @@ def test_parse_nytimes_shell():
 @pytest.mark.basic
 def test_error_message_shell_debug():
     """check if we get the error message we expect in debug mode"""
-    command = "wdoc --task=summary --path https://lemonde.fr/ --filetype=test --debug"
+    command = "wdoc --task=summarize --path https://lemonde.fr/ --filetype=test --debug"
     expected_substring = "(Pdb) "
     try:
         subprocess.run(
@@ -309,14 +309,14 @@ def test_error_message_shell_debug():
 
 
 @pytest.mark.basic
-def test_cli_pipe_summary(sample_text_file):
-    """Test piping wdoc parse output into a wdoc summary command using shell=True."""
+def test_cli_pipe_summarize(sample_text_file):
+    """Test piping wdoc parse output into a wdoc summarize command using shell=True."""
     # Ensure the sample file has enough content for parsing/summarization
     f = Path(sample_text_file)
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
 
-    # Combine the parse and summary commands into a single shell pipeline
+    # Combine the parse and summarize commands into a single shell pipeline
     # Redirect stderr to stdout (2>&1) to capture all output
     combined_cmd = (
         f"wdoc parse {str(sample_text_file)} --format text | "

@@ -194,14 +194,14 @@ def cli_launcher() -> None:
             importedlogger.md_printer(doc)
         sys.exit(0)
 
-    # turn 'summarize' into 'summary' and 'summarize_then_query' into 'summary_then_query'
+    # turn 'summary' into 'summarize' etc
     # We need to re-parse args after modifying sys.argv
     needs_reparse = False
-    if "summarize" in args:
-        sys.argv[sys.argv.index("summarize")] = "summary"
+    if "summary" in args:
+        sys.argv[sys.argv.index("summary")] = "summarize"
         needs_reparse = True
-    if "summarize_then_query" in args:
-        sys.argv[sys.argv.index("summarize_then_query")] = "summary_then_query"
+    if "summary_then_query" in args:
+        sys.argv[sys.argv.index("summary_then_query")] = "summarize_then_query"
         needs_reparse = True
 
     if needs_reparse:

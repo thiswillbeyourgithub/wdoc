@@ -244,7 +244,7 @@ class wdoc:
             "loaded_embeddings" not in cli_kwargs
         ), "'loaded_embeddings' cannot be an argument as it is used internally"
         task = task.replace("summary", "summarize")
-        assert task in tasks_list, "invalid task value"
+        assert task in tasks_list, f"invalid task value: {task}"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
         if task in ["query", "search", "summarize_then_query"]:
