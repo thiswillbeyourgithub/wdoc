@@ -1165,11 +1165,7 @@ def get_piped_input() -> Optional[Any]:
     and threads etc.
     The content is added to the commandline starting wdoc directly in
     __main__.py.
-    Nothing is piped if pytest is imported because it conflicts with its
-    capturing mechanism.
     """
-    if "pytest" in sys.modules:
-        return None
     # Check if data is being piped (stdin is not a terminal)
     if not is_input_piped:
         return None
