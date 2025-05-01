@@ -1419,7 +1419,7 @@ class wdoc:
             eval_prompt: str = str(prompts.evaluate.to_json()),
         ) -> List[str]:
             if isinstance(self.eval_llm, FakeListChatModel):
-                outputs = ["1" for i in range(self.query_eval_check_number)]
+                outputs = ["10" for i in range(self.query_eval_check_number)]
                 new_p = 0
                 new_c = 0
 
