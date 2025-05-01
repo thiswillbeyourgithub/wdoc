@@ -50,7 +50,7 @@ wdoc --help
 
 8. If you want to only use local models, here's an example with [ollama](https://ollama.com/):
 ```bash
-wdoc --model="ollama_chat/gemma:2b" --query_eval_model="ollama_chat/gemma:2b" --embed_model="ollama/bge-m3" my_task
+wdoc --model="ollama/gemma:2b" --query_eval_model="ollama/gemma:2b" --embed_model="ollama/bge-m3" my_task
 ```
 You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using 
 ```bash
@@ -160,8 +160,8 @@ wdoc --task=summary \
 
 5. Use local models with Ollama
 ```zsh
-wdoc --model="ollama_chat/gemma:2b" \
-     --query_eval_model="ollama_chat/gemma:2b" \
+wdoc --model="ollama/gemma:2b" \
+     --query_eval_model="ollama/gemma:2b" \
      --embed_model="ollama/bge-m3" \
      my_task
 ```
