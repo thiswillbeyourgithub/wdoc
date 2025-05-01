@@ -755,8 +755,7 @@ class wdoc:
             if self.summary_n_recursion > 0:
                 for n_recur in range(1, self.summary_n_recursion + 1):
                     summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
-                    if not self.__import_mode__:
-                        logger.warning(f"Doing summary check #{n_recur} of {item_name}")
+                    logger.warning(f"Doing summary check #{n_recur} of {item_name}")
 
                     # remove any chunk count that is not needed to summarize
                     sp = summary_text.split("\n")
@@ -836,24 +835,22 @@ class wdoc:
                     )
                     if prev_real_text is not MISSING:
                         if real_text == prev_real_text:
-                            if not self.__import_mode__:
-                                logger.warning(
-                                    f"Identical summary after {n_recur} "
-                                    "recursion, adding more recursion will not "
-                                    "help so stopping here"
-                                )
+                            logger.warning(
+                                f"Identical summary after {n_recur} "
+                                "recursion, adding more recursion will not "
+                                "help so stopping here"
+                            )
                             recursive_summaries[n_recur] = summary_text
                             break
                     prev_real_text = real_text
 
                     assert n_recur not in recursive_summaries
                     if summary_text not in recursive_summaries:
-                        if not self.__import_mode__:
-                            logger.warning(
-                                f"Identical summary after {n_recur} "
-                                "recursion, adding more recursion will not "
-                                "help so stopping here"
-                            )
+                        logger.warning(
+                            f"Identical summary after {n_recur} "
+                            "recursion, adding more recursion will not "
+                            "help so stopping here"
+                        )
                         recursive_summaries[n_recur] = summary_text
                         break
                     else:
@@ -867,9 +864,9 @@ class wdoc:
                 md_printer(f"## {path}")
                 md_printer(recursive_summaries[best_sum_i])
 
-                logger.warning(
-                    f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})"
-                )
+            logger.info(
+                f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})"
+            )
 
             summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
@@ -931,24 +928,16 @@ class wdoc:
             relevant_docs=self.loaded_docs,
         )
 
-        if not self.__import_mode__:
-            logger.warning(
-                self.ntfy(
-                    f"Total cost of those summaries: {results['doc_total_tokens']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"
-                )
-            )
-            logger.warning(
-                self.ntfy(
-                    f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"
-                )
-            )
-        else:
+        logger.info(
             self.ntfy(
-                f"Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f}, estimate was ${estimate_dol:.5f})"
+                f"Total cost of those summaries: {results['doc_total_tokens']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"
             )
+        )
+        logger.info(
             self.ntfy(
                 f"Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes"
             )
+        )
 
         llmcallback = self.llm.callbacks[0]
         total_cost = (
@@ -1625,38 +1614,39 @@ class wdoc:
                 if len(docs) < self.interaction_settings["top_k"]:
                     logger.warning(f"Only found {len(docs)} relevant documents")
 
+            if "unfiltered_docs" in output:
+                logger.info(
+                    f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
+                )
+            if "filtered_docs" in output:
+                logger.info(
+                    f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
+                )
+            if "relevant_filtered_docs" in output:
+                logger.info(
+                    f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
+                )
+
+            evalllmcallback = self.eval_llm.callbacks[0]
+            etotal_cost = (
+                self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
+                + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+            )
+            logger.debug(
+                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
+            )
+
+            llmcallback = self.llm.callbacks[0]
+            total_cost = (
+                self.llm_price[0] * llmcallback.prompt_tokens
+                + self.llm_price[1] * llmcallback.completion_tokens
+            )
+            logger.debug(
+                f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+            )
+            logger.warning(f"Total cost: ${total_cost + etotal_cost:.5f}")
+
             if self.__import_mode__:
-                if "unfiltered_docs" in output:
-                    logger.warning(
-                        f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
-                    )
-                if "filtered_docs" in output:
-                    logger.warning(
-                        f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
-                    )
-                if "relevant_filtered_docs" in output:
-                    logger.warning(
-                        f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
-                    )
-
-                evalllmcallback = self.eval_llm.callbacks[0]
-                etotal_cost = (
-                    self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
-                    + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
-                )
-                logger.debug(
-                    f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
-                )
-
-                llmcallback = self.llm.callbacks[0]
-                total_cost = (
-                    self.llm_price[0] * llmcallback.prompt_tokens
-                    + self.llm_price[1] * llmcallback.completion_tokens
-                )
-                logger.debug(
-                    f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
-                )
-                logger.warning(f"Total cost: ${total_cost + etotal_cost:.5f}")
                 return output
 
             md_printer("\n\n# Documents")
