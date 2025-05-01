@@ -19,7 +19,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
 from .utils.env import env, is_out_piped
-from .utils.misc import piped_input
+from .utils.misc import get_piped_input
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
 wdoc.__import_mode__ = False
@@ -32,6 +32,7 @@ def cli_launcher() -> None:
     # if a pipe is used we store it in a file then pass this file as argument.
     # Either by replacing "-" by its path or appending it at the end of the
     # command line.
+    piped_input = get_piped_input()
     if piped_input:
         sysline = " ".join(sys.argv)
         if isinstance(piped_input, bytes):

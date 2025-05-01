@@ -1171,34 +1171,30 @@ def get_piped_input() -> Optional[Any]:
     if "pytest" in sys.modules:
         return None
     # Check if data is being piped (stdin is not a terminal)
-    if is_input_piped:
-        # Save a copy of the original stdin for debugging
-        # original_stdin = sys.stdin
-
-        # Read the piped data
-        piped_input = sys.stdin.buffer.read()
-        try:
-            piped_input = piped_input.decode()
-        except Exception:
-            pass
-
-        # Create a new file descriptor for stdin from /dev/tty if available
-        # This allows breakpoint() to work later
-        try:
-            if os.name != "nt":  # Unix-like systems
-                sys.stdin = open("/dev/tty")
-            else:  # Windows
-                # On Windows this is trickier, consider using a different approach
-                pass
-
-        except:
-            # If we can't reopen stdin, at least return the data
-            pass
-
-        logger.debug("Loaded piped data")
-        return piped_input
-    else:
+    if not is_input_piped:
         return None
+    # Save a copy of the original stdin for debugging
+    # original_stdin = sys.stdin
 
+    # Read the piped data
+    piped_input = sys.stdin.buffer.read()
+    try:
+        piped_input = piped_input.decode()
+    except Exception:
+        pass
 
-piped_input = get_piped_input()
+    # Create a new file descriptor for stdin from /dev/tty if available
+    # This allows breakpoint() to work later
+    try:
+        if os.name != "nt":  # Unix-like systems
+            sys.stdin = open("/dev/tty")
+        else:  # Windows
+            # On Windows this is trickier, consider using a different approach
+            pass
+
+    except:
+        # If we can't reopen stdin, at least return the data
+        pass
+
+    logger.debug("Loaded piped data")
+    return piped_input
