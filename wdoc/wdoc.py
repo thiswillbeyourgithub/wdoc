@@ -1232,6 +1232,11 @@ class wdoc:
         if not query:
             if self.oneoff:
                 sys.exit(0)
+            if is_out_piped:
+                logger.debug(
+                    "Exited query_task because we don't loop the queries when the output is a shell pipe"
+                )
+                sys.exit(0)
             query, self.interaction_settings = ask_user(self.interaction_settings)
         assert all(
             retriev in ["basic", "multiquery", "knn", "svm", "parent"]
