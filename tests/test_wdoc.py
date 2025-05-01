@@ -562,10 +562,12 @@ def test_cli_pipe_query():
         "does wdoc have a local html file filetype?",
         "--pipe",
         "--model=testing/testing",
+        "--oneoff",  # Ensure the process exits after one query
     ]
     query_process = subprocess.run(
         query_cmd,
         stdin=help_process.stdout,
+        timeout=30,  # Add a timeout to prevent hanging
         capture_output=True,
         text=True,
         check=True,
