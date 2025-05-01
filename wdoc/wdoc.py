@@ -215,13 +215,7 @@ class wdoc:
                     )
 
         if model == TESTING_LLM:
-            if model != TESTING_LLM:
-                logger.warning(
-                    f"Detected 'testing' model in {model}, setting it to '{TESTING_LLM}'"
-                )
-                model = TESTING_LLM
-            else:
-                logger.warning(f"Detected 'testing' model in {model}")
+            logger.warning(f"Detected 'testing' model in {model}")
             if isinstance(query_eval_model, str):
                 if query_eval_model != TESTING_LLM:
                     logger.warning(f"Setting the query_eval_model to {TESTING_LLM} too")
