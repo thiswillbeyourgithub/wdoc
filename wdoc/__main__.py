@@ -11,6 +11,7 @@ from pathlib import Path
 import tempfile
 from typing import Union, Optional
 import fire
+import logging
 from loguru import logger
 import rtoml
 
@@ -22,7 +23,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
 from .utils.env import env, is_out_piped
-from .utils.misc import get_piped_input
+from .utils.misc import get_piped_input, tasks_list
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
 wdoc.__import_mode__ = False
@@ -140,85 +141,117 @@ def cli_launcher() -> None:
     """entry point function, modifies arguments on the fly for easier
     shorthands then call wdoc"""
 
+    # check the args and kwargs manually to make parsing more intuitive until click is used instead of fire
+    args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+
+    # first thing: set the appropriate debug level
+    if "verbose" in kwargs or "v" in args:
+        logging.getLogger("wdoc").setLevel(logging.DEBUG)
+
+    logger.debug(
+        f"Started cli wdoc with sys.argv: '{sys.argv}'. Detected args: '{args}'. Detected kwargs: '{kwargs}'"
+    )
+
+    # crash if no args
+    if len(sys.argv) == 1 or (not (args or kwargs)):
+        logger.info("No args shown. Use '--help' to display the help.")
+        sys.exit(0)
+
+    if "version" in kwargs:
+        print(f"wdoc version: {wdoc.VERSION}")
+        sys.exit(0)
+
+    # turn 'summarize' into 'summary'
+    if "summarize" in args:
+        sys.argv[sys.argv.index("summarize")] = "summary"
+        args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+    if "summarize_then_query" in args:
+        sys.argv[sys.argv.index("summarize_then_query")] = "summary_then_query"
+        args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+
+    # turn "wdoc query" into "wdoc --task=query", same for the other tasks
+    if "task" not in kwargs:
+        matching_tasks = [t for t in args if t in tasks_list]
+        assert (
+            len(matching_tasks) != 0
+        ), f"Found no task in the args: '{args}', wdoc needs one of {tasks_list}"
+        assert (
+            len(matching_tasks) == 1
+        ), f"Found multiple potential tasks in args: '{args}', wdoc needs one of {tasks_list}"
+        task = matching_tasks[0]
+        logger.debug(f"Moving task '{task}' from args to kwargs")
+        args.remove(task)
+        kwargs["task"] = task
+        sys.argv[sys.argv.index(task)] = f"--task={task}"
+
+    # if we are receiving from a pipe, use heuristics to see if we store it to a file or to an arg, or as --path value
     piped_input = get_piped_input()
     if piped_input:
         logger.debug("Processing piped input...")
         new_arg = handle_piped_input(piped_input)
-        logger.debug(f"Adding '{new_arg}' to arguments based on piped input.")
-        sys.argv.append(new_arg)  # Append the new argument
+        if "path" in args:
+            logger.debug(
+                f"Adding '{new_arg}' to --path arguments based on piped input."
+            )
+            args.remove("path")
+            sys.argv[sys.argv.index("path")] = f"--path={new_arg}"
+        else:
+            logger.debug(f"Adding '{new_arg}' to arguments based on piped input.")
+            args.append(new_arg)
+            sys.argv.append(new_arg)  # Append the new argument
 
-    # reload sysline var (important after potentially modifying sys.argv)
-    sysline = " ".join(sys.argv)
+    # if no --path but an arg: use it as path arg
+    if not ("path" in args or "path" in kwargs):
+        if len(args) == 1:
+            sys.argv.remove(args[0])
+            sys.argv.append(f"--path={args[0]}")
+            logger.debug(f"Set the argument '{args[0]}' to a --path argument")
+            kwargs["path"] = args.pop(0)
 
-    # call call_parse_file() if "wdoc parse" is used
-    if (
-        "wdoc parse " in sysline
-        or "wdoc parse_file " in sysline
-        or "__main__.py parse " in sysline
-        or "__main__.py parse_file  " in sysline
-    ):
-        logger.debug("Calling 'call_parse_file' function")
+    # if --path is empty give it the remaining arg
+    if ("path" not in kwargs or isinstance(kwargs["path"], (bool, type(None)))) and len(
+        args
+    ) == 1:
+        sys.argv.remove(args[0])
+        sys.argv.append(f"--path={args[0]}")
+        logger.debug(f"Set the argument '{args[0]}' to a --path argument")
+        kwargs["path"] = args.pop(0)
+
+    # if args is not empty, we have not succesfully parsed everything
+    if args:
+        logger.warning(
+            f"It appears the arguments parsing was not complete: remaining args were not dispatched to kwargs: '{args}'"
+        )
+
+    if kwargs["task"] == "parse":
         call_parse_file()
         sys.exit(0)
 
-    if " --version" in sysline:
-        print(f"wdoc version: {wdoc.VERSION}")
-        sys.exit(0)
-    elif " --help" in sysline or " -h" in sysline:
+    elif "help" in kwargs or "h" in kwargs:
         print("Showing help")
         if is_out_piped:
             print(wdoc.__doc__)
         else:
             importedlogger.md_printer(wdoc.__doc__)
         sys.exit(0)
-    elif " --completion" in sysline:
-        if " -- --completion" in sysline:
+    elif "completion" in kwargs or "--completion" in sys.argv:
+        if " -- --completion" in " ".join(sys.argv):
             fire.Fire(wdoc)
             sys.exit(0)
         else:
             raise Exception(
                 "To create completion scripts, use '-- --completion' as arguments."
             )
-    elif len(sys.argv) == 1:
-        logger.info("No args shown. Use '--help' to display the help.")
-        sys.exit(0)
-
-    # while we're at it, make it so that
-    # "wdoc summary" is parsed like "wdoc --task=summary"
-    if " --task" not in sysline:
-        arg_replacement_rules = {
-            "query": "--task=query",
-            "search": "--task=search",
-            "summarize": "--task=summarize",
-            "summarize_then_query": "--task=summarize_then_query",
-            "summary": "--task=summarize",
-            "summary_then_query": "--task=summarize_then_query",
-        }
-        if sys.argv[1] in arg_replacement_rules:
-            bef = sys.argv[1]
-            aft = arg_replacement_rules[bef]
-            logger.debug(f"Replaced argument '{bef}' to '{aft}'")
-            sys.argv[1] = aft
-
-    # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
-    if (
-        ("--path" not in sysline)
-        and (not re.findall(r"\bstring\b", sysline))
-        and (not re.findall(r"\banki\b", sysline))
-    ):
-        # if string is present that can be because of --filetype=string or
-        # --filetype=anki, in which case 'path' argument is not needed
-        path = sys.argv[2]
-        newarg = f"--path={path}"
-        sys.argv[2] = newarg
-        logger.debug(f"Replaced '{path}' to '{newarg}'")
-
-    fire.Fire(wdoc)
+    else:
+        logger.debug(
+            f"Launching wdoc after arg transformation: Remaining sys.argv: '{sys.argv}'. Detected args: '{args}'. Detected kwargs: '{kwargs}'"
+        )
+        fire.Fire(wdoc)
 
 
 def call_parse_file() -> None:
-    sys_args = sys.argv
-    if "--help" in sys_args:
+    args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+    if "help" in kwargs or "h" in kwargs:
         print("Showing help")
         if is_out_piped:
             print(wdoc.parse_file.__doc__)
@@ -229,7 +262,10 @@ def call_parse_file() -> None:
         # fire.Fire(wdoc.parse_file)
         sys.exit(0)
 
-    parsed = fire.Fire(wdoc.parse_file)
+    if is_out_piped:
+        parsed = wdoc.parse_file(*args, **kwargs)
+    else:
+        parsed = fire.Fire(wdoc.parse_file)
 
     if isinstance(parsed, list):
         if all(not isinstance(d, dict) for d in parsed):

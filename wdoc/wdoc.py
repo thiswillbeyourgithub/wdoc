@@ -2143,6 +2143,11 @@ class wdoc:
         if cli_kwargs is not None:
             default_cli_kwargs.update(cli_kwargs)
 
+        if "task" in kwargs:
+            assert (
+                kwargs["task"] == "parse"
+            ), f"Unexpected task when parsing. Expected 'parse' but got '{kwargs['task']}'"
+            del kwargs["task"]
         assert (
             "task" not in kwargs
         ), "Cannot give --task argument if we are only parsing"
