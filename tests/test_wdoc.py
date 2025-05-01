@@ -548,7 +548,7 @@ def test_get_piped_input_detection():
 
 
 @pytest.mark.basic
-def test_cli_pipe_query():
+def test_cli_pipe_query(capsys):
     """Test piping wdoc --help output into a wdoc query command using shell=True."""
     # Combine the help and query commands into a single shell pipeline
     combined_cmd = (
@@ -575,7 +575,7 @@ def test_cli_pipe_query():
 
 
 @pytest.mark.basic
-def test_cli_pipe_summarize(sample_text_file):
+def test_cli_pipe_summarize(sample_text_file, capsys):
     """Test piping wdoc parse output into a wdoc summarize command using shell=True."""
     # Ensure the sample file has enough content for parsing/summarization
     f = Path(sample_text_file)
