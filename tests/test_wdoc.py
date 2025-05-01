@@ -554,24 +554,25 @@ def test_cli_pipe_query(capsys):
     combined_cmd = (
         "wdoc --help 2>&1 | wdoc query "
         "--query 'does wdoc have a local html file filetype?' "
-        "--model=testing/testing --oneoff"
+        "--model=testing/testing --oneoff 2>&1 | cat"
     )
 
     # Run the combined command using shell=True, disabling pytest capture
-    query_process = subprocess.run(
-        combined_cmd,
-        shell=True,  # Use shell=True as requested
-        timeout=120,  # Add a timeout to prevent hanging
-        capture_output=True,
-        text=True,
-        check=False,  # Don't check return code, we assert on output
-    )
+    with capsys.disabled():
+        query_process = subprocess.run(
+            combined_cmd,
+            shell=True,  # Use shell=True as requested
+            timeout=120,  # Add a timeout to prevent hanging
+            capture_output=True,
+            text=True,
+            check=False,  # Don't check return code, we assert on output
+        )
 
-    # Check the combined output of the query command
-    output = query_process.stdout
-    assert (
-        "Lorem ipsum dolor sit amet" in output
-    ), f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
+        # Check the combined output of the query command
+        output = query_process.stdout + query_process.stderr
+        assert (
+            "Lorem ipsum dolor sit amet" in output
+        ), f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
 
 
 @pytest.mark.basic
@@ -584,8 +585,8 @@ def test_cli_pipe_summarize(sample_text_file, capsys):
 
     # Combine the parse and summarize commands into a single shell pipeline
     combined_cmd = (
-        f"wdoc parse {str(sample_text_file)} --format text | "
-        "wdoc summarize --model=testing/testing --oneoff"
+        f"wdoc parse {str(sample_text_file)} --format text 2>&1 | "
+        "wdoc summarize --model=testing/testing --oneoff 2>&1 "
     )
 
     # Run the combined command using shell=True
