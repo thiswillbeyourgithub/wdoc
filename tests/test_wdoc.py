@@ -549,30 +549,48 @@ def test_get_piped_input_detection():
 
 @pytest.mark.basic
 def test_cli_pipe_query(capsys):
-    """Test piping wdoc --help output into a wdoc query command using shell=True."""
-    # Combine the help and query commands into a single shell pipeline, redirecting stderr to stdout for the first command
-    combined_cmd = (
-        "wdoc --help 2>&1 | wdoc query "
-        "--query 'does wdoc have a local html file filetype?' "
-        "--model=testing/testing --oneoff 2>&1 | cat"
-    )
+    """Test piping wdoc --help output into a wdoc query command using subprocess."""
+    # Command to get help output
+    help_cmd = ["wdoc", "--help"]
+    # Command to query, taking input from pipe
+    query_cmd = [
+        "wdoc",
+        "query",
+        "--query",
+        "does wdoc have a local html file filetype?",
+        "--model=testing/testing",
+        "--oneoff",
+    ]
 
-    # Run the combined command using shell=True, disabling pytest capture
     with capsys.disabled():
-        query_process = subprocess.run(
-            combined_cmd,
-            shell=True,  # Use shell=True as requested
-            timeout=120,  # Add a timeout to prevent hanging
-            capture_output=True,
-            text=True,
-            check=False,  # Don't check return code, we assert on output
+        # Start the help process, redirecting stdout and stderr
+        help_process = subprocess.Popen(
+            help_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
         )
 
-        # Check the combined output of the query command
-        output = query_process.stdout + query_process.stderr
+        # Start the query process, taking stdin from help_process's stdout
+        # Redirect query's stdout and stderr
+        query_process = subprocess.Popen(
+            query_cmd,
+            stdin=help_process.stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        # Allow help_process stdout to be read by query_process
+        help_process.stdout.close()
+
+        # Get the output and error from the query process
+        stdout, stderr = query_process.communicate(timeout=120)
+        return_code = query_process.wait()
+
+        # Combine output for assertion
+        output = stdout + stderr
+
         assert (
             "Lorem ipsum dolor sit amet" in output
-        ), f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
+        ), f"Output did not contain expected testing string:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}\nReturn Code: {return_code}"
 
 
 @pytest.mark.basic
