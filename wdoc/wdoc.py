@@ -1847,7 +1847,6 @@ class wdoc:
                             md_printer(
                                 f"## No documents remained after query eval LLM filtering using question '{query_an}'",
                                 color="red",
-                                log_level="error",
                             )
                         )
                     }
