@@ -705,6 +705,9 @@
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
     Must be an int.
 
+* `WDOC_LLM_REQUEST_TIMEOUT`, default `600`
+    * Sets the timeout in seconds for requests made to the LLM. This helps prevent indefinite hangs if the LLM provider is unresponsive. For example with ollama.
+
 * `WDOC_MAX_CHUNK_SIZE`, default `32_000`
     * When splitting large text into chunks, `wdoc` infers the maximum context size from litellm's models metadata.
     The maximum chunk size is capped by this value, as the maximum advertised context length is usually optimistic

@@ -12,6 +12,7 @@ from loguru import logger
 from ..misc import thinking_answer_parser, log_and_time_fn
 from ..prompts import BASE_SUMMARY_PROMPT, PREV_SUMMARY_TEMPLATE, RECURSION_INSTRUCTION
 from ..typechecker import optional_typecheck
+from ..env import env
 
 HOME = str(Path.home())
 
@@ -58,12 +59,16 @@ def do_summarize(
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
         try:
-            output = llm._generate_with_cache(messages)
+            output = llm._generate_with_cache(
+                messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
+            )
         except Exception as e:
             logger.warning(
                 f"Error when generating with cache, trying without cache: '{e}'"
             )
-            output = llm._generate(messages)
+            output = llm._generate(
+                messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
+            )
         if output.generations[0].generation_info is None:
             assert "fake-list-chat-model" in llm._get_llm_string()
             finish = "stop"

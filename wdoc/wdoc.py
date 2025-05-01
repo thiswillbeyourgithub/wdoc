@@ -1443,7 +1443,8 @@ class wdoc:
 
                 try:
                     out = self.eval_llm._generate_with_cache(
-                        prompts.evaluate.format_messages(**inputs)
+                        prompts.evaluate.format_messages(**inputs),
+                        request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
                     )
                     outputs = _parse_outputs(out)
                 except Exception:  # retry without cache
@@ -1451,7 +1452,8 @@ class wdoc:
                         f"Failed to run eval_llm on an input. Retrying without cache."
                     )
                     out = self.eval_llm._generate(
-                        prompts.evaluate.format_messages(**inputs)
+                        prompts.evaluate.format_messages(**inputs),
+                        request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
                     )
                     outputs = _parse_outputs(out)
 
@@ -1470,11 +1472,13 @@ class wdoc:
                 async def do_eval(subinputs):
                     try:
                         val = await self.eval_llm._agenerate_with_cache(
-                            prompts.evaluate.format_messages(**subinputs)
+                            prompts.evaluate.format_messages(**subinputs),
+                            request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
                         )
                     except Exception:  # retry without cache
                         val = await self.eval_llm._agenerate(
-                            prompts.evaluate.format_messages(**subinputs)
+                            prompts.evaluate.format_messages(**subinputs),
+                            request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
                         )
                     return val
 
