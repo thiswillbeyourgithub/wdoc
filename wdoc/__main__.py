@@ -235,55 +235,7 @@ def cli_parse_file() -> None:
         # fire.Fire(wdoc.parse_file)
         sys.exit(0)
 
-    if "--pipe" in sys_args or "pipe" in sys_args:
-        # parse args manually to allow piping
-        args = []
-        kwargs = {}
-        for val in sys_args:
-            if val == "--pipe" or val == "pipe":
-                continue
-            if val in args or val in kwargs.values():
-                continue
-            if val.startswith("--"):
-                val = val[2:]
-                if "=" in val:
-                    k, v = val.split("=", 1)
-                    kwargs[k] = v
-                    continue
-                args.append(val)
-            else:
-                if args:
-                    kwargs[args.pop(-1)] = val
-        for k, v in kwargs.items():
-            if v == "--pipe" or v == "pipe":
-                continue
-            if k == "--pipe" or k == "pipe":
-                continue
-            if v.startswith('"') and v.endswith('"'):
-                v = v[1:-1]
-                kwargs[k] = v
-            if v.startswith("'") and v.endswith("'"):
-                v = v[1:-1]
-                kwargs[k] = v
-            if str(v).lower() == "false":
-                kwargs[k] = False
-            elif str(v).lower() == "true":
-                kwargs[k] = True
-        for a in args:
-            kwargs[a] = True
-
-        # all loaders need a path arg except anki and string
-        if (
-            "filetype" in kwargs
-            and kwargs["filetype"] in ["anki", "string"]
-            and "path" not in kwargs
-        ):
-            kwargs["path"] = None
-        if env.WDOC_VERBOSE:
-            logger.info(f"Arguments that will be used for parser: '{kwargs}'")
-        parsed = wdoc.parse_file(**kwargs)
-    else:
-        parsed = fire.Fire(wdoc.parse_file)
+    parsed = fire.Fire(wdoc.parse_file)
 
     if isinstance(parsed, list):
         if all(not isinstance(d, dict) for d in parsed):
