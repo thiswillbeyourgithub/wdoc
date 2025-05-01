@@ -104,7 +104,12 @@ def load_llm(
         f"{modelname.backend.upper()}_API_KEY" in os.environ
         and os.environ[f"{modelname.backend.upper()}_API_KEY"]
     ):
-        if not api_base:
+        if modelname.backend == "ollama":
+            logger.debug(
+                "No OLLAMA_API_KEY env var found but ignoring because using ollama"
+            )
+            pass
+        elif not api_base:
             raise Exception(
                 f"No environment variable named {modelname.backend.upper()}_API_KEY found"
             )
