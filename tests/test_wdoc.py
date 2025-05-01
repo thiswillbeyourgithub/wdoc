@@ -8,6 +8,9 @@ from copy import copy
 import pytest
 from langchain_core.documents.base import Document
 
+# add an unexpected env variable to make sure nothing crashes
+os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
+
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
@@ -29,8 +32,8 @@ WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
     "WDOC_TEST_OPENAI_EMBED_MODEL", "text-embedding-3-small"
 )
 
-# add an unexpected env variable to make sure nothing crashes
-os.environ["WDOC_TEST_UNEXPECTED_VARIABLE"] = "testing"
+# the unexpected env var should be tested both before import and before run:
+os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_2"] = "testing"
 
 
 @pytest.mark.basic
