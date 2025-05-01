@@ -157,8 +157,7 @@ def cli_launcher() -> None:
         or "__main__.py parse " in sysline
         or "__main__.py parse_file  " in sysline
     ):
-        if env.WDOC_VERBOSE:
-            logger.info("Replacing 'wdoc parse' by 'wdoc_parse_file'")
+        logger.debug("Replacing 'wdoc parse' by 'wdoc_parse_file'")
         sys.argv[0] = str(Path(sys.argv[0]).parent / "wdoc_parse_file")
         del sys.argv[1]
         sysline = " ".join(sys.argv)
@@ -201,8 +200,7 @@ def cli_launcher() -> None:
         if sys.argv[1] in arg_replacement_rules:
             bef = sys.argv[1]
             aft = arg_replacement_rules[bef]
-            if env.WDOC_VERBOSE:
-                logger.info(f"Replaced argument '{bef}' to '{aft}'")
+            logger.debug(f"Replaced argument '{bef}' to '{aft}'")
             sys.argv[1] = aft
 
     # make it so that 'wdoc --task=query THING' becomes 'wdoc --task=query --path=THING'
@@ -216,8 +214,7 @@ def cli_launcher() -> None:
         path = sys.argv[2]
         newarg = f"--path={path}"
         sys.argv[2] = newarg
-        if env.WDOC_VERBOSE:
-            logger.info(f"Replaced '{path}' to '{newarg}'")
+        logger.debug(f"Replaced '{path}' to '{newarg}'")
 
     fire.Fire(wdoc)
 
