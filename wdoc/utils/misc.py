@@ -435,7 +435,7 @@ def wrapped_model_name_matcher(model: str) -> str:
                 )
             else:
                 backends.append(backend)
-    if env.WDOC_VERBOSE:
+    if is_verbose:
         printed_unexpected_api_keys[0] = True
     assert backends, "No API keys found in environnment"
 
@@ -484,7 +484,7 @@ def model_name_matcher(model: str) -> str:
         return model
 
     out = wrapped_model_name_matcher(model)
-    if out != model and env.WDOC_VERBOSE:
+    if out != model and is_verbose:
         logger.debug(f"Matched model name {model} to {out}")
     assert (
         out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
@@ -1161,3 +1161,42 @@ def log_and_time_fn(fn: Callable) -> Callable:
 
     wrapped = wraps(fn)(wrapper)
     return wrapped
+
+
+@optional_typecheck
+def get_piped_input() -> Optional[Any]:
+    """
+    Read data from stdin/pipes.
+    This is done when importing wdoc, to avoid any issues with parallelism
+    and threads etc.
+    The content is added to the commandline starting wdoc directly in
+    __main__.py.
+    """
+    # Check if data is being piped (stdin is not a terminal)
+    if not is_input_piped:
+        return None
+    # Save a copy of the original stdin for debugging
+    # original_stdin = sys.stdin
+
+    # Read the piped data
+    piped_input = sys.stdin.buffer.read()
+    try:
+        piped_input = piped_input.decode()
+    except Exception:
+        pass
+
+    # Create a new file descriptor for stdin from /dev/tty if available
+    # This allows breakpoint() to work later
+    try:
+        if os.name != "nt":  # Unix-like systems
+            sys.stdin = open("/dev/tty")
+        else:  # Windows
+            # On Windows this is trickier, consider using a different approach
+            pass
+
+    except:
+        # If we can't reopen stdin, at least return the data
+        pass
+
+    logger.debug("Loaded piped data")
+    return piped_input

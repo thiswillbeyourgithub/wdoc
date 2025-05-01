@@ -18,7 +18,8 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 
 from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
-from .utils.env import env, is_out_piped, is_input_piped
+from .utils.env import env, is_out_piped
+from .utils.misc import get_piped_input
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
 wdoc.__import_mode__ = False
@@ -31,34 +32,7 @@ def cli_launcher() -> None:
     # if a pipe is used we store it in a file then pass this file as argument.
     # Either by replacing "-" by its path or appending it at the end of the
     # command line.
-    piped_input = None
-    # Check if data is being piped (stdin is not a terminal)
-    if is_input_piped:
-        # Save a copy of the original stdin for debugging
-        # original_stdin = sys.stdin
-
-        # Read the piped data
-        piped_input = sys.stdin.buffer.read()
-        try:
-            piped_input = piped_input.decode()
-        except Exception:
-            pass
-
-        # Create a new file descriptor for stdin from /dev/tty if available
-        # This allows breakpoint() to work later
-        try:
-            if os.name != "nt":  # Unix-like systems
-                sys.stdin = open("/dev/tty")
-            else:  # Windows
-                # On Windows this is trickier, consider using a different approach
-                pass
-
-        except:
-            # If we can't reopen stdin, at least return the data
-            pass
-
-        logger.debug("Loaded piped data")
-
+    piped_input = get_piped_input()
     if piped_input:
         sysline = " ".join(sys.argv)
         if isinstance(piped_input, bytes):
