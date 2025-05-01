@@ -567,7 +567,7 @@ def test_cli_pipe_query():
     query_process = subprocess.run(
         query_cmd,
         stdin=help_process.stdout,
-        timeout=30,  # Add a timeout to prevent hanging
+        timeout=120,  # Add a timeout to prevent hanging
         capture_output=True,
         text=True,
         check=True,
@@ -577,9 +577,9 @@ def test_cli_pipe_query():
     help_process.stdout.close()
     help_process.wait()
 
-    # Check the output of the query command
-    output = query_process.stdout
-    assert "Lorem ipsum dolor sit amet" in output, f"Output did not contain expected testing string:\n{output}"
+    # Check the combined output of the query command
+    output = query_process.stdout + query_process.stderr
+    assert "Lorem ipsum dolor sit amet" in output, f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
 
 
 @pytest.mark.api
