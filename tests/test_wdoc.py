@@ -320,7 +320,7 @@ def test_cli_pipe_summarize(sample_text_file):
     # Redirect stderr to stdout (2>&1) to capture all output
     combined_cmd = (
         f"wdoc parse {str(sample_text_file)} --format text | "
-        "wdoc summarize --pipe --model=testing/testing --oneoff 2>&1"
+        "wdoc summarize --model=testing/testing --oneoff 2>&1"
     )
 
     # Run the combined command using shell=True
@@ -587,7 +587,7 @@ def test_cli_pipe_query():
     combined_cmd = (
         "wdoc --help | wdoc query "
         "--query 'does wdoc have a local html file filetype?' "
-        "--pipe --model=testing/testing --oneoff 2>&1"
+        "--model=testing/testing --oneoff 2>&1"
     )
 
     # Run the combined command using shell=True
