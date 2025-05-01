@@ -24,9 +24,29 @@ from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
 from .utils.env import env, is_out_piped
 from .utils.misc import get_piped_input, tasks_list
+from typing import Tuple, List, Dict, Any
+import io
 
 # if __main__ is called, then we are using the cli instead of importing the class from python
 wdoc.__import_mode__ = False
+
+
+def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
+    """
+    Parses command-line arguments using fire.Fire without printing its output.
+
+    Temporarily redirects stdout to suppress fire's default output during parsing.
+
+    Returns:
+        A tuple containing the list of positional arguments and a dictionary of keyword arguments.
+    """
+    original_stdout = sys.stdout
+    sys.stdout = io.StringIO()  # Redirect stdout to suppress fire output
+    try:
+        args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+    finally:
+        sys.stdout = original_stdout  # Restore original stdout
+    return args, kwargs
 
 
 def handle_piped_input(piped_data: Union[str, bytes]) -> str:
@@ -142,7 +162,7 @@ def cli_launcher() -> None:
     shorthands then call wdoc"""
 
     # check the args and kwargs manually to make parsing more intuitive until click is used instead of fire
-    args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+    args, kwargs = parse_args_fire()
 
     # first thing: set the appropriate debug level
     if "verbose" in kwargs or "v" in args:
@@ -161,13 +181,18 @@ def cli_launcher() -> None:
         print(f"wdoc version: {wdoc.VERSION}")
         sys.exit(0)
 
-    # turn 'summarize' into 'summary'
+    # turn 'summarize' into 'summary' and 'summarize_then_query' into 'summary_then_query'
+    # We need to re-parse args after modifying sys.argv
+    needs_reparse = False
     if "summarize" in args:
         sys.argv[sys.argv.index("summarize")] = "summary"
-        args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+        needs_reparse = True
     if "summarize_then_query" in args:
         sys.argv[sys.argv.index("summarize_then_query")] = "summary_then_query"
-        args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+        needs_reparse = True
+
+    if needs_reparse:
+        args, kwargs = parse_args_fire()
 
     # turn "wdoc query" into "wdoc --task=query", same for the other tasks
     if "task" not in kwargs:
@@ -250,7 +275,7 @@ def cli_launcher() -> None:
 
 
 def call_parse_file() -> None:
-    args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
+    args, kwargs = parse_args_fire()
     if "help" in kwargs or "h" in kwargs:
         print("Showing help")
         if is_out_piped:
