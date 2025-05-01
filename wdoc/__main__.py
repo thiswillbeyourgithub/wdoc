@@ -60,8 +60,13 @@ def handle_piped_input(piped_data: Union[str, bytes]) -> str:
         if piped_data.startswith("http") and " " not in piped_data:
             logger.debug("Detected URL in piped input.")
             arg_to_add = piped_data
-        # Check for existing path
-        elif Path(piped_data).exists():
+        # Check if it's a path
+        elif (
+            len(piped_data.splitlines()) == 1
+            and len(piped_data) < 150
+            and Path(piped_data).exists()
+        ):
+            # we cap the length because otherwise if the line is very long Path crashes
             logger.debug("Detected existing path in piped input.")
             arg_to_add = piped_data
         else:
