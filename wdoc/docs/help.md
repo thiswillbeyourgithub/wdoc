@@ -155,9 +155,10 @@
 * `--model`: str, default to value of WDOC_DEFAULT_MODEL
     * Keep in mind that given that the default backend used is litellm
     the part of model name before the slash (/) is the backend name (also called provider).
-    If the backend is 'testing/' then it will be parsed as 'testing/testing' and
+    If the backend is `testing/` then it will be parsed as `testing/testing` and
     a fake LLM will be used for debugging purposes. It answers like a normal LLM
-    but costs 0 and makes no sense.
+    but costs 0 and makes no sense. Note that it will automatically set the
+    query_eval_model to `testing/testing` too.
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
 
