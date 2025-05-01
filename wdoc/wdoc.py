@@ -28,7 +28,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain_community.llms import FakeListLLM
+from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, chain
@@ -1418,7 +1418,7 @@ class wdoc:
             eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
             eval_prompt: str = str(prompts.evaluate.to_json()),
         ) -> List[str]:
-            if isinstance(self.eval_llm, FakeListLLM):
+            if isinstance(self.eval_llm, FakeListChatModel):
                 outputs = ["1" for i in range(self.query_eval_check_number)]
                 new_p = 0
                 new_c = 0
