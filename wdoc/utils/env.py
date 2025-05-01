@@ -31,10 +31,6 @@ is_linux = platform.system() == "Linux"
 is_input_piped = not sys.stdin.isatty()
 # Also useful to modify the loglevel
 is_out_piped = not sys.stdout.isatty()
-if is_input_piped:
-    logger.debug("Detected input pipe")
-if is_out_piped:
-    logger.debug("Detected output pipe")
 
 
 @dataclass

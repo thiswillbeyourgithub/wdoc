@@ -13,7 +13,7 @@ from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .env import env, is_out_piped
+from .env import env, is_out_piped, is_input_piped
 from .typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
@@ -75,6 +75,11 @@ logger.add(
 )
 
 logger.debug(f"log_file location: {log_file}")
+
+if is_input_piped:
+    logger.debug("Detected input pipe")
+if is_out_piped:
+    logger.debug("Detected output pipe")
 
 console = Console()
 
