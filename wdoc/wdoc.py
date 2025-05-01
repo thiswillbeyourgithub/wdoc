@@ -217,11 +217,18 @@ class wdoc:
         if model == TESTING_LLM or model == "testing":
             logger.warning(f"Detected 'testing' model in {model}")
             model = TESTING_LLM
-            if isinstance(query_eval_model, str):
-                if query_eval_model != TESTING_LLM:
-                    logger.warning(f"Setting the query_eval_model to {TESTING_LLM} too")
-                    query_eval_model = TESTING_LLM
-            query_retrievers = query_retrievers.replace("multiquery", "")
+            if query_eval_model != TESTING_LLM:
+                logger.warning(f"Setting the query_eval_model to {TESTING_LLM} too")
+                query_eval_model = TESTING_LLM
+            if "multiquery" in query_retrievers:
+                logger.warning(
+                    f"Removing 'multiquery' from the query_retrievers because using {TESTING_LLM}"
+                )
+                query_retrievers = query_retrievers.replace("multiquery", "")
+            logger.warning(
+                f"Setting the query_relevancy to -1.0 because using {TESTING_LLM}"
+            )
+            query_relevancy = -1.0
         query_retrievers = query_retrievers.replace("_", " ").strip().replace(" ", "_")
 
         # checking argument validity
