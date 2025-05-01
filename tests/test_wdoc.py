@@ -17,7 +17,7 @@ from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.embeddings import test_embeddings as _test_embeddings
 from wdoc.utils.tasks.query import semantic_batching
 from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.misc import ModelName
+from wdoc.utils.misc import ModelName, get_piped_input
 from wdoc.utils.env import env
 
 os.environ["WDOC_TYPECHECKING"] = "crash"
@@ -517,6 +517,67 @@ def test_ollama_embeddings():
         do_test=True,
     )
     _test_embeddings(emb)
+
+
+@pytest.mark.basic
+def test_get_piped_input_detection():
+    """Test that get_piped_input correctly detects piped text and bytes."""
+    # Test text piping
+    input_text = "This is test text.\nWith multiple lines."
+    cmd_text = [
+        sys.executable,
+        "-c",
+        "import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.write(data)",
+    ]
+    result_text = subprocess.run(
+        cmd_text, input=input_text, text=True, capture_output=True, check=True
+    )
+    assert result_text.stdout == input_text
+
+    # Test binary piping
+    input_bytes = b"\x01\x02\x03\xff\xfe\x00binary data"
+    cmd_bytes = [
+        sys.executable,
+        "-c",
+        "import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.buffer.write(data)",
+    ]
+    result_bytes = subprocess.run(
+        cmd_bytes, input=input_bytes, capture_output=True, check=True
+    )
+    assert result_bytes.stdout == input_bytes
+
+
+@pytest.mark.basic
+def test_cli_pipe_query():
+    """Test piping wdoc --help output into a wdoc query command."""
+    # Command to get help output
+    help_cmd = ["wdoc", "--help"]
+    help_process = subprocess.Popen(help_cmd, stdout=subprocess.PIPE)
+
+    # Command to run query with piped input
+    query_cmd = [
+        "wdoc",
+        "query",  # Use shorthand for --task=query
+        "--query",
+        "does wdoc have a local html file filetype?",
+        "--pipe",
+        "--model=testing/testing",
+    ]
+    query_process = subprocess.run(
+        query_cmd,
+        stdin=help_process.stdout,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # Allow help_process to receive SIGPIPE and terminate
+    help_process.stdout.close()
+    help_process.wait()
+
+    # Check the output of the query command
+    output = query_process.stdout
+    assert "Lorem ipsum dolor sit amet" in output, f"Output did not contain expected testing string:\n{output}"
 
 
 @pytest.mark.api
