@@ -59,16 +59,14 @@ def handle_piped_input(piped_data: Union[str, bytes]) -> str:
 
     if isinstance(piped_data, str):
         logger.debug("Processing piped input as string.")
+        nline = len(piped_data.splitlines())
+
         # Check for URL
         if piped_data.startswith("http") and " " not in piped_data:
             logger.debug("Detected URL in piped input.")
             arg_to_add = piped_data
         # Check if it's a path
-        elif (
-            len(piped_data.splitlines()) == 1
-            and len(piped_data) < 150
-            and Path(piped_data).exists()
-        ):
+        elif nline == 1 and len(piped_data) < 150 and Path(piped_data).exists():
             # we cap the length because otherwise if the line is very long Path crashes
             logger.debug("Detected existing path in piped input.")
             arg_to_add = piped_data
@@ -119,20 +117,23 @@ def handle_piped_input(piped_data: Union[str, bytes]) -> str:
                     logger.debug("Piped input is not valid TOML.")
                     pass  # Not TOML
 
+            # assume it should be a txt file
+            if arg_to_add is None:
+                logger.debug("Detected .txt in piped input. Writing to temp file.")
+                temp_file = tempfile.NamedTemporaryFile(
+                    prefix="wdoc_piped_input_",
+                    suffix=".txt",
+                    delete=False,
+                    mode="w",
+                    encoding="utf-8",
+                )
+                temp_file.write(piped_data)
+                temp_file.close()
+                arg_to_add = temp_file.name
+
     # Fallback: Write to generic temp file (handles bytes and non-special strings)
     if arg_to_add is None:
-        if isinstance(piped_data, str):
-            logger.debug("Writing generic string piped input to temp file.")
-            temp_file = tempfile.NamedTemporaryFile(
-                prefix="wdoc_piped_input_",
-                delete=False,
-                mode="w",
-                encoding="utf-8",
-            )
-            temp_file.write(piped_data)
-            temp_file.close()
-            arg_to_add = temp_file.name
-        elif isinstance(piped_data, bytes):
+        if isinstance(piped_data, bytes):
             logger.debug("Writing binary piped input to temp file.")
             temp_file = tempfile.NamedTemporaryFile(
                 prefix="wdoc_piped_input_",
@@ -142,6 +143,10 @@ def handle_piped_input(piped_data: Union[str, bytes]) -> str:
             temp_file.write(piped_data)
             temp_file.close()
             arg_to_add = temp_file.name
+        elif isinstance(piped_data, str):
+            raise TypeError(
+                f"Unexpected type for piped_data: it should have been handled:\n{piped_data}."
+            )
         else:
             # Should not happen based on get_piped_input's return type hint, but good to be safe
             raise TypeError(f"Unexpected type for piped_data: {type(piped_data)}")
