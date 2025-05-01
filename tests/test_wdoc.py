@@ -372,6 +372,20 @@ def test_summary_tim_urban():
     assert "tim urban" in out["summary"].lower()
 
 
+@pytest.mark.basic
+def test_summary_tim_urban_testing_model():
+    """Test summarization of Tim Urban's procrastination video with testing model."""
+    inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model="testing",  # Use the special testing model
+        filetype="auto",
+    )
+    out = inst.summary_task()
+    # The 'testing' model should return a fixed string
+    assert "Lorem ipsum dolor sit amet" in out["summary"]
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
