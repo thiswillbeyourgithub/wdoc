@@ -452,6 +452,25 @@ def test_query_tim_urban():
     assert "monkey" in final_answer.lower()
 
 
+@pytest.mark.basic
+def test_query_tim_urban_testing_model():
+    """Test query task on Tim Urban's procrastination video with testing model."""
+    inst = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model="testing",  # Use the special testing model
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}", # Keep eval model for now, might need adjustment if testing model affects eval
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}", # Keep embed model
+        filetype="auto",
+    )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+    # The 'testing' model should return a fixed string
+    assert "Lorem ipsum dolor sit amet" in final_answer
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
