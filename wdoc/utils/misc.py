@@ -553,6 +553,12 @@ class ModelName:
         if env.WDOC_PRIVATE_MODE:
             self.sanitized = "private_" + self.sanitized
 
+    def is_testing(self) -> bool:
+        "Return True if the model is 'testing/testing'."
+        if "testing" in self.original.lower():
+            return True
+        return False
+
     def __hash__(self):
         # necessary for memoizing
         return (str(self.original.__hash__()) + str("ModelName".__hash__())).__hash__()

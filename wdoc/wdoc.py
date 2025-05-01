@@ -214,8 +214,9 @@ class wdoc:
                         f"Cli_kwargs '{k}' is of type '{type(val)}' instead of '{expected_type}'"
                     )
 
-        if model == TESTING_LLM:
+        if model == TESTING_LLM or model == "testing":
             logger.warning(f"Detected 'testing' model in {model}")
+            model = TESTING_LLM
             if isinstance(query_eval_model, str):
                 if query_eval_model != TESTING_LLM:
                     logger.warning(f"Setting the query_eval_model to {TESTING_LLM} too")
@@ -406,7 +407,7 @@ class wdoc:
         self.top_k = top_k
         self.query_retrievers = (
             query_retrievers
-            if model != TESTING_LLM
+            if not self.model.is_testing()
             else query_retrievers.replace("multiquery", "")
         )
         self.query_eval_check_number = int(query_eval_check_number)
@@ -459,9 +460,9 @@ class wdoc:
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
             self.llm_price = [0.0, 0.0]
-        elif self.model.backend == TESTING_LLM:
+        elif self.model.is_testing():
             logger.warning(
-                f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
+                f"Disabling price computation for model because it is a 'testing/testing' model"
             )
             self.llm_price = [0.0, 0.0]
         else:
@@ -476,6 +477,11 @@ class wdoc:
             elif llms_api_bases["query_eval_model"]:
                 logger.warning(
                     "Disabling price computation for query_eval_model because api_base was modified"
+                )
+                self.query_evalllm_price = [0.0, 0.0]
+            elif self.query_eval_model.is_testing():
+                logger.warning(
+                    f"Disabling price computation for query_eval_model because it is a 'testing/testing' model"
                 )
                 self.query_evalllm_price = [0.0, 0.0]
             else:

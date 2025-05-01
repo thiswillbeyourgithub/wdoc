@@ -57,7 +57,7 @@ def load_llm(
         tags.extend(env_tags)
 
     assert "cache" not in extra_model_args
-    if modelname.backend == "testing":
+    if modelname.is_testing():
         assert modelname.original == "testing/testing"
         if llm_verbosity:
             logger.info("Loading a fake LLM using the testing/ backend")
