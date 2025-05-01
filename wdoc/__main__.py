@@ -9,7 +9,7 @@ import re
 import sys
 from pathlib import Path
 import tempfile
-from typing import Union, Optional
+from typing import Union
 import fire
 import logging
 from loguru import logger
