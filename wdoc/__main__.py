@@ -23,6 +23,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 from .utils import logger as importedlogger  # make sure to setup the logs first
 from .wdoc import wdoc
 from .utils.env import env, is_out_piped
+from .utils.typechecker import optional_typecheck
 from .utils.misc import get_piped_input, tasks_list
 from typing import Tuple, List, Dict, Any
 import io
@@ -31,6 +32,7 @@ import io
 wdoc.__import_mode__ = False
 
 
+@optional_typecheck
 def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
     """
     Parses command-line arguments using fire.Fire without printing its output.
@@ -49,6 +51,7 @@ def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
     return args, kwargs
 
 
+@optional_typecheck
 def handle_piped_input(piped_data: Union[str, bytes]) -> str:
     """Processes piped input and returns the appropriate argument string."""
     temp_file = None
@@ -285,6 +288,7 @@ def cli_launcher() -> None:
         fire.Fire(wdoc)
 
 
+@optional_typecheck
 def call_parse_file() -> None:
     if is_out_piped:
         args, kwargs = parse_args_fire()
