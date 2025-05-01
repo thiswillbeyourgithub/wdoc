@@ -595,33 +595,46 @@ def test_cli_pipe_query(capsys):
 
 @pytest.mark.basic
 def test_cli_pipe_summarize(sample_text_file, capsys):
-    """Test piping wdoc parse output into a wdoc summarize command using shell=True."""
+    """Test piping wdoc parse output into a wdoc summarize command using subprocess."""
     # Ensure the sample file has enough content for parsing/summarization
     f = Path(sample_text_file)
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
 
-    # Combine the parse and summarize commands into a single shell pipeline
-    combined_cmd = (
-        f"wdoc parse {str(sample_text_file)} --format text 2>&1 | "
-        "wdoc summarize --model=testing/testing --oneoff 2>&1 "
-    )
+    # Command to parse the file
+    parse_cmd = ["wdoc", "parse", str(sample_text_file), "--format", "text"]
+    # Command to summarize, taking input from pipe
+    summarize_cmd = ["wdoc", "summarize", "--model=testing/testing", "--oneoff"]
 
-    # Run the combined command using shell=True
-    summary_process = subprocess.run(
-        combined_cmd,
-        shell=True,  # Use shell=True as requested
-        timeout=120,  # Add a timeout to prevent hanging
-        capture_output=True,
-        text=True,
-        check=False,  # Don't check return code, we assert on output
-    )
+    with capsys.disabled():
+        # Start the parse process, redirecting stdout and stderr
+        parse_process = subprocess.Popen(
+            parse_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
 
-    # Check the combined output of the summary command
-    output = summary_process.stdout
-    assert (
-        "Lorem ipsum dolor sit amet" in output
-    ), f"Output did not contain expected testing string:\nSTDOUT:\n{summary_process.stdout}\nSTDERR:\n{summary_process.stderr}"
+        # Start the summarize process, taking stdin from parse_process's stdout
+        # Redirect summarize's stdout and stderr
+        summarize_process = subprocess.Popen(
+            summarize_cmd,
+            stdin=parse_process.stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        # Allow parse_process stdout to be read by summarize_process
+        parse_process.stdout.close()
+
+        # Get the output and error from the summarize process
+        stdout, stderr = summarize_process.communicate(timeout=120)
+        return_code = summarize_process.wait()
+
+        # Combine output for assertion
+        output = stdout + stderr
+
+        assert (
+            "Lorem ipsum dolor sit amet" in output
+        ), f"Output did not contain expected testing string:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}\nReturn Code: {return_code}"
 
 
 @pytest.mark.api
