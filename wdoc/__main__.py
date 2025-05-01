@@ -3,13 +3,16 @@ Entry point file
 """
 
 import json
+import json
 import os
 import re
 import sys
 from pathlib import Path
 import tempfile
+from typing import Union, Optional
 import fire
 from loguru import logger
+import rtoml
 
 # Just in case: we set the env variable of WDOC_PRIVATE_MODE as early as possible, even before importing wdoc
 if re.findall(r"\b--private\b", " ".join(sys.argv)):
@@ -25,58 +28,126 @@ from .utils.misc import get_piped_input
 wdoc.__import_mode__ = False
 
 
-def cli_launcher() -> None:
-    """entry point function, modifies arguments on the fly for easier
-    shorthands then call wdoc"""
+def handle_piped_input(piped_data: Union[str, bytes]) -> str:
+    """Processes piped input and returns the appropriate argument string."""
+    temp_file = None
+    arg_to_add = None
 
-    # if a pipe is used we store it in a file then pass this file as argument.
-    # Either by replacing "-" by its path or appending it at the end of the
-    # command line.
-    piped_input = get_piped_input()
-    if piped_input:
-        sysline = " ".join(sys.argv)
-        if isinstance(piped_input, bytes):
-            if "--filetype" not in sysline:
-                logger.info(
-                    "When piping binary data it is recommended to use a --filetype argument otherwise python-magic<=0.4.27 often crashes. See https://github.com/ahupp/python-magic/issues/261"
-                )
+    if isinstance(piped_data, str):
+        logger.debug("Processing piped input as string.")
+        # Check for URL
+        if piped_data.startswith("http") and " " not in piped_data:
+            logger.debug("Detected URL in piped input.")
+            arg_to_add = piped_data
+        # Check for existing path
+        elif Path(piped_data).exists():
+            logger.debug("Detected existing path in piped input.")
+            arg_to_add = piped_data
+        else:
+            # Try JSON
+            try:
+                loaded_json = json.loads(piped_data)
+                if not isinstance(
+                    loaded_json, str
+                ):  # Ensure it's not just a JSON string
+                    logger.debug(
+                        "Detected JSON object in piped input. Writing to temp file."
+                    )
+                    temp_file = tempfile.NamedTemporaryFile(
+                        prefix="wdoc_piped_input_",
+                        suffix=".json",
+                        delete=False,
+                        mode="w",
+                        encoding="utf-8",
+                    )
+                    temp_file.write(piped_data)
+                    temp_file.close()
+                    arg_to_add = temp_file.name
+                else:
+                    logger.debug(
+                        "Piped input is a JSON string, treating as generic text."
+                    )
+            except json.JSONDecodeError:
+                logger.debug("Piped input is not valid JSON.")
+                pass  # Not JSON
+
+            # Try TOML (only if not already handled as JSON or other specific cases)
+            if arg_to_add is None:
+                try:
+                    rtoml.loads(piped_data)  # Just check if it loads
+                    logger.debug("Detected TOML in piped input. Writing to temp file.")
+                    temp_file = tempfile.NamedTemporaryFile(
+                        prefix="wdoc_piped_input_",
+                        suffix=".toml",
+                        delete=False,
+                        mode="w",
+                        encoding="utf-8",
+                    )
+                    temp_file.write(piped_data)
+                    temp_file.close()
+                    arg_to_add = temp_file.name
+                except rtoml.TomlParsingError:
+                    logger.debug("Piped input is not valid TOML.")
+                    pass  # Not TOML
+
+    # Fallback: Write to generic temp file (handles bytes and non-special strings)
+    if arg_to_add is None:
+        if isinstance(piped_data, str):
+            logger.debug("Writing generic string piped input to temp file.")
+            temp_file = tempfile.NamedTemporaryFile(
+                prefix="wdoc_piped_input_",
+                delete=False,
+                mode="w",
+                encoding="utf-8",
+            )
+            temp_file.write(piped_data)
+            temp_file.close()
+            arg_to_add = temp_file.name
+        elif isinstance(piped_data, bytes):
+            logger.debug("Writing binary piped input to temp file.")
             temp_file = tempfile.NamedTemporaryFile(
                 prefix="wdoc_piped_input_",
                 delete=False,
                 mode="wb",
             )
-            logger.debug(
-                f"Detected binary piped data, storing it in '{temp_file.name}'"
-            )
-        elif isinstance(piped_input, str):
-            temp_file = tempfile.NamedTemporaryFile(
-                prefix="wdoc_piped_input_",
-                suffix=".txt",
-                delete=False,
-                mode="w",
-            )
-            logger.debug(f"Detected text piped data, storing it in '{temp_file.name}'")
-            if "--filetype" not in sysline:
-                logger.debug("Setting the filetype as 'txt'")
-                sys.argv.append("--filetype=txt")
+            temp_file.write(piped_data)
+            temp_file.close()
+            arg_to_add = temp_file.name
         else:
-            raise ValueError(type(piped_input))
-        temp_file.write(piped_input)
-        temp_file.close()
+            # Should not happen based on get_piped_input's return type hint, but good to be safe
+            raise TypeError(f"Unexpected type for piped_data: {type(piped_data)}")
 
-        # insert the temp_file as path
-        if "-" in sys.argv:
-            for i, x in enumerate(sys.argv):
-                if x == "-":
-                    sys.argv[i] = temp_file.name
-        elif "--path=-" in sys.argv:
-            for i, x in enumerate(sys.argv):
-                if x == "--path=-":
-                    sys.argv[i] = "--path=" + temp_file.name
-        else:
-            sys.argv.append("--path=" + temp_file.name)
+    # Check for filetype argument presence
+    sysline = " ".join(sys.argv)
+    # Check both --filetype=val and --filetype val patterns
+    if "--filetype" not in sysline and not any(
+        arg.startswith("filetype=") for arg in sys.argv
+    ):
+        logger.warning(
+            "Piped input detected, but no --filetype argument was provided. "
+            "Relying on file content heuristics, which might be unreliable. "
+            "Consider adding --filetype for robustness."
+        )
 
-    # reload sysline var
+    if arg_to_add is None:
+        # This case should ideally not be reached if logic is correct
+        raise RuntimeError("Failed to determine argument to add for piped input.")
+
+    return arg_to_add
+
+
+def cli_launcher() -> None:
+    """entry point function, modifies arguments on the fly for easier
+    shorthands then call wdoc"""
+
+    piped_input = get_piped_input()
+    if piped_input:
+        logger.debug("Processing piped input...")
+        new_arg = handle_piped_input(piped_input)
+        logger.debug(f"Adding '{new_arg}' to arguments based on piped input.")
+        sys.argv.append(new_arg)  # Append the new argument
+
+    # reload sysline var (important after potentially modifying sys.argv)
     sysline = " ".join(sys.argv)
 
     # turn 'wdoc parse' into 'wdoc_parse_file'
