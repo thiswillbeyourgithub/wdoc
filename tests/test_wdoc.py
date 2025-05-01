@@ -549,33 +549,23 @@ def test_get_piped_input_detection():
 
 @pytest.mark.basic
 def test_cli_pipe_query():
-    """Test piping wdoc --help output into a wdoc query command."""
-    # Command to get help output
-    help_cmd = ["wdoc", "--help"]
-    help_process = subprocess.Popen(help_cmd, stdout=subprocess.PIPE)
+    """Test piping wdoc --help output into a wdoc query command using shell=True."""
+    # Combine the help and query commands into a single shell pipeline
+    combined_cmd = (
+        "wdoc --help | wdoc query "
+        "--query 'does wdoc have a local html file filetype?' "
+        "--pipe --model=testing/testing --oneoff"
+    )
 
-    # Command to run query with piped input
-    query_cmd = [
-        "wdoc",
-        "query",  # Use shorthand for --task=query
-        "--query",
-        "does wdoc have a local html file filetype?",
-        "--pipe",
-        "--model=testing/testing",
-        "--oneoff",  # Ensure the process exits after one query
-    ]
+    # Run the combined command using shell=True
     query_process = subprocess.run(
-        query_cmd,
-        stdin=help_process.stdout,
+        combined_cmd,
+        shell=True,  # Use shell=True as requested
         timeout=120,  # Add a timeout to prevent hanging
         capture_output=True,
         text=True,
-        check=False,
+        check=False,  # Don't check return code, we assert on output
     )
-
-    # Allow help_process to receive SIGPIPE and terminate
-    help_process.stdout.close()
-    help_process.wait()
 
     # Check the combined output of the query command
     output = query_process.stdout
