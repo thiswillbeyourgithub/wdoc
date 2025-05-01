@@ -214,7 +214,11 @@ class wdoc:
                         f"Cli_kwargs '{k}' is of type '{type(val)}' instead of '{expected_type}'"
                     )
 
-        if model == TESTING_LLM or model == "testing":
+        if (
+            model == TESTING_LLM
+            or model == "testing"
+            or model.lower().startswith("testing")
+        ):
             logger.warning(f"Detected 'testing' model in {model}")
             model = TESTING_LLM
             if query_eval_model != TESTING_LLM:
