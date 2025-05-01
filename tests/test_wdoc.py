@@ -551,10 +551,11 @@ def test_get_piped_input_detection():
 def test_cli_pipe_query():
     """Test piping wdoc --help output into a wdoc query command using shell=True."""
     # Combine the help and query commands into a single shell pipeline
+    # Combine commands and redirect stderr to stdout (2>&1)
     combined_cmd = (
         "wdoc --help | wdoc query "
         "--query 'does wdoc have a local html file filetype?' "
-        "--pipe --model=testing/testing --oneoff"
+        "--pipe --model=testing/testing --oneoff 2>&1"
     )
 
     # Run the combined command using shell=True
