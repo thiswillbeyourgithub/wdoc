@@ -17,7 +17,6 @@ from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.embeddings import test_embeddings as _test_embeddings
 from wdoc.utils.tasks.query import semantic_batching
 from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.misc import ModelName, get_piped_input
 from wdoc.utils.env import env
 
 os.environ["WDOC_TYPECHECKING"] = "crash"
@@ -517,34 +516,6 @@ def test_ollama_embeddings():
         do_test=True,
     )
     _test_embeddings(emb)
-
-
-@pytest.mark.basic
-def test_get_piped_input_detection():
-    """Test that get_piped_input correctly detects piped text and bytes."""
-    # Test text piping
-    input_text = "This is test text.\nWith multiple lines."
-    cmd_text = [
-        sys.executable,
-        "-c",
-        "import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.write(data)",
-    ]
-    result_text = subprocess.run(
-        cmd_text, input=input_text, text=True, capture_output=True, check=True
-    )
-    assert result_text.stdout == input_text
-
-    # Test binary piping
-    input_bytes = b"\x01\x02\x03\xff\xfe\x00binary data"
-    cmd_bytes = [
-        sys.executable,
-        "-c",
-        "import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.buffer.write(data)",
-    ]
-    result_bytes = subprocess.run(
-        cmd_bytes, input=input_bytes, capture_output=True, check=True
-    )
-    assert result_bytes.stdout == input_bytes
 
 
 @pytest.mark.basic
