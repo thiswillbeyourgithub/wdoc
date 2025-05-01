@@ -501,6 +501,8 @@ def get_model_price(model: str) -> List[float]:
     assert (
         not env.WDOC_ALLOW_NO_PRICE
     ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {env.WDOC_ALLOW_NO_PRICE}"
+    if model.startswith("ollama/"):
+        return [0.0, 0.0]
     if model in litellm.model_cost:
         return [
             litellm.model_cost[model]["input_cost_per_token"],
