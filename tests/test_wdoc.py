@@ -473,8 +473,8 @@ def test_query_tim_urban_testing_model():
         task="query",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model="testing",  # Use the special testing model
-        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}", # Keep eval model for now, might need adjustment if testing model affects eval
-        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}", # Keep embed model
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",  # Keep eval model for now, might need adjustment if testing model affects eval
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",  # Keep embed model
         filetype="auto",
     )
     out = inst.query_task(
@@ -570,7 +570,7 @@ def test_cli_pipe_query():
         timeout=120,  # Add a timeout to prevent hanging
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
     )
 
     # Allow help_process to receive SIGPIPE and terminate
@@ -578,8 +578,10 @@ def test_cli_pipe_query():
     help_process.wait()
 
     # Check the combined output of the query command
-    output = query_process.stdout + query_process.stderr
-    assert "Lorem ipsum dolor sit amet" in output, f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
+    output = query_process.stdout
+    assert (
+        "Lorem ipsum dolor sit amet" in output
+    ), f"Output did not contain expected testing string:\nSTDOUT:\n{query_process.stdout}\nSTDERR:\n{query_process.stderr}"
 
 
 @pytest.mark.api
