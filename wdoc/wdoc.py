@@ -2157,7 +2157,12 @@ class wdoc:
 
             logger.info(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
+            assert total_cost + etotal_cost > self.latest_cost
             self.latest_cost = total_cost + etotal_cost
+
+            output["total_cost"] = self.latest_cost
+            output["total_model_cost"] = total_cost
+            output["total_eval_model_cost"] = etotal_cost
 
             return output
 
