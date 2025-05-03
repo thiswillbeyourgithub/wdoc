@@ -164,9 +164,17 @@ def load_llm(
         max_tokens = get_model_max_tokens(modelname)
         logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
         if "max_tokens" not in extra_model_args:
-            extra_model_args["max_tokens"] = int(
-                max_tokens * 0.9
-            )  # intentionaly limiting max tokens because it can cause bugs
+            # intentionaly limiting max tokens because it can cause bugs
+            if modelname.backend != "ollama":
+                extra_model_args["max_tokens"] = int(max_tokens * 0.9)
+            else:
+                if max_tokens <= 10_000:
+                    extra_model_args["max_tokens"] = int(max_tokens * 0.9)
+                else:
+                    logger.debug(
+                        f"Detected an ollama model with large max_tokens ({max_tokens}), they usually overestimate their context window capabilities so we reduce it if the user does not specify a max_tokens kwarg"
+                    )
+                    extra_model_args["max_tokens"] = int(max(max_tokens * 0.2, 4096))
         logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
         llm = ChatLiteLLM(
             model_name=modelname.original,
