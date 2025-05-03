@@ -519,6 +519,40 @@ def test_ollama_embeddings():
     _test_embeddings(emb)
 
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_openai_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    _test_embeddings(emb)
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_mistral_embeddings():
+    emb = load_embeddings_engine(
+        modelname=ModelName("mistral/mistral-embed"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+    _test_embeddings(emb)
+
+
 @pytest.mark.basic
 def test_get_piped_input_detection():
     """Test that get_piped_input correctly detects piped text and bytes."""
@@ -637,37 +671,3 @@ def test_get_piped_input_detection():
 #         assert (
 #             "Lorem ipsum dolor sit amet" in output
 #         ), f"Output did not contain expected testing string:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}\nReturn Code: {return_code}"
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_openai_embeddings():
-    emb = load_embeddings_engine(
-        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-    _test_embeddings(emb)
-
-
-@pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv),
-    reason="Skip tests using external APIs by default, use '-m api' to run them.",
-)
-def test_mistral_embeddings():
-    emb = load_embeddings_engine(
-        modelname=ModelName("mistral/mistral-embed"),
-        cli_kwargs={},
-        api_base=None,
-        embed_kwargs={},
-        private=False,
-        do_test=True,
-    )
-    _test_embeddings(emb)
