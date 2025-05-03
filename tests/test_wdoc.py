@@ -23,13 +23,31 @@ from wdoc.utils.env import env
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
 # Default model names if not specified in environment
-WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
-    "WDOC_TEST_OLLAMA_EMBED_MODEL", "snowflake-arctic-embed2"
-)
+# openai needs to be specifically tested because it uses the langchain backend ChatOpenai instead of ChatLiteLLM like the others
 WDOC_TEST_OPENAI_MODEL = os.getenv("WDOC_TEST_OPENAI_MODEL", "gpt-4o")
 WDOC_TEST_OPENAI_EVAL_MODEL = os.getenv("WDOC_TEST_OPENAI_EVAL_MODEL", "gpt-4o-mini")
 WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
     "WDOC_TEST_OPENAI_EMBED_MODEL", "text-embedding-3-small"
+)
+
+WDOC_TEST_OPENROUTER_MODEL = os.getenv(
+    "WDOC_TEST_OPENROUTER_MODEL", "openrouter/openai/gpt-4o"
+)
+WDOC_TEST_OPENROUTER_EVAL_MODEL = os.getenv(
+    "WDOC_TEST_OPENROUTER_EVAL_MODEL", "openrouter/openai/gpt-4o-mini"
+)
+
+WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
+    "WDOC_TEST_OLLAMA_EMBED_MODEL", "snowflake-arctic-embed2"
+)
+
+# also make sure the default models work
+WDOC_TEST_DEFAULT_MODEL = os.getenv("WDOC_TEST_DEFAULT_MODEL", env.WDOC_DEFAULT_MODEL)
+WDOC_TEST_DEFAULT_EVAL_MODEL = os.getenv(
+    "WDOC_TEST_DEFAULT_EVAL_MODEL", env.WDOC_DEFAULT_QUERY_EVAL_MODEL
+)
+WDOC_TEST_DEFAULT_EMBED_MODEL = os.getenv(
+    "WDOC_TEST_DEFAULT_EMBED_MODEL", env.WDOC_DEFAULT_EMBED_MODEL
 )
 
 # the unexpected env var should be tested both before import and before run:
@@ -579,6 +597,90 @@ def test_get_piped_input_detection():
         cmd_bytes, input=input_bytes, capture_output=True, check=True
     )
     assert result_bytes.stdout == input_bytes
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_summary_tim_urban_openrouter():
+    """Test summarization of Tim Urban's procrastination video using openrouter model."""
+    inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=WDOC_TEST_OPENROUTER_MODEL,
+        # filetype="youtube",
+        filetype="auto",
+    )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_query_tim_urban_openrouter():
+    """Test query task on Tim Urban's procrastination video using openrouter."""
+    inst = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=WDOC_TEST_OPENROUTER_MODEL,
+        model=WDOC_TEST_OPENROUTER_EVAL_MODEL,
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        # filetype="youtube",
+        # youtube_language="en",
+        filetype="auto",
+    )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+    assert "monkey" in final_answer.lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_summary_tim_urban_default_model():
+    """Test summarization of Tim Urban's procrastination video using the default model."""
+    inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=WDOC_TEST_DEFAULT_MODEL,
+        # filetype="youtube",
+        filetype="auto",
+    )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_query_tim_urban_default_model():
+    """Test query task on Tim Urban's procrastination video using the default model."""
+    inst = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=WDOC_TEST_DEFAULT_MODEL,
+        model=WDOC_TEST_DEFAULT_EVAL_MODEL,
+        embed_model=WDOC_TEST_DEFAULT_EMBED_MODEL,
+        # filetype="youtube",
+        # youtube_language="en",
+        filetype="auto",
+    )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+    assert "monkey" in final_answer.lower()
 
 
 # The pipe query and summaries test are broken. I think the issue is deep within
