@@ -162,6 +162,9 @@
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
 
+* `--model_kwargs`: dict, default `None`
+    * dictionary of keyword arguments to pass to the model. For example `{'temperature': 0}`.
+
 ---
 
 * `--embed_model`: str, default to value of WDOC_DEFAULT_EMBED_MODEL
@@ -228,6 +231,9 @@
     If the value is not part of the model list of litellm, will use
     fuzzy matching to find the best match.
     None to disable.
+
+* `--query_eval_model_kwargs`: dict, default `None`
+    * dictionary of keyword arguments to pass to the query_eval_model. For example `{'temperature': 0}`.
 
 * `--query_eval_check_number`: int, default `3`
     * number of pass to do with the eval llm to check if the document

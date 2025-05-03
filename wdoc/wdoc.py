@@ -114,8 +114,10 @@ class wdoc:
         task: Literal["query", "search", "summarize", "summarize_then_query"],
         filetype: str = "auto",
         model: str = env.WDOC_DEFAULT_MODEL,
-        embed_model: str = env.WDOC_DEFAULT_EMBED_MODEL,
+        model_kwargs: Optional[dict] = None,
         query_eval_model: Optional[str] = env.WDOC_DEFAULT_QUERY_EVAL_MODEL,
+        query_eval_model_kwargs: Optional[dict] = None,
+        embed_model: str = env.WDOC_DEFAULT_EMBED_MODEL,
         embed_model_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, Path] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, Path]] = None,
@@ -270,6 +272,52 @@ class wdoc:
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
                 f"{litellm.models_by_provider.keys()}"
             )
+        assert (
+            query_eval_check_number > 0
+        ), "query_eval_check_number value must be greater than 0"
+
+        # parse the model kwargs
+        if model_kwargs is None:
+            model_kwargs = {}
+        if isinstance(model_kwargs, str):
+            try:
+                model_kwargs = json.loads(model_kwargs)
+            except Exception as err:
+                raise Exception(
+                    f"Failed to parse model_kwargs: '{model_kwargs}'"
+                ) from err
+        assert isinstance(model_kwargs, dict), f"Not a dict but {type(model_kwargs)}"
+        if "tags" not in model_kwargs:
+            model_kwargs["tags"] = ["strong_model"]
+        else:
+            assert isinstance(
+                model_kwargs["tags"], list
+            ), f"Model kwargs 'tags' value must be a list. Got '{model_kwargs['tags']}'"
+            model_kwargs["tags"].append("strong_model")
+        self.model_kwargs = model_kwargs
+        if query_eval_model_kwargs is None:
+            query_eval_model_kwargs = {}
+        if isinstance(query_eval_model_kwargs, str):
+            try:
+                query_eval_model_kwargs = json.loads(query_eval_model_kwargs)
+            except Exception as err:
+                raise Exception(
+                    f"Failed to parse query_eval_model_kwargs: '{query_eval_model_kwargs}'"
+                ) from err
+        assert isinstance(
+            query_eval_model_kwargs, dict
+        ), f"Not a dict but {type(query_eval_model_kwargs)}"
+        assert (
+            "n" not in query_eval_model_kwargs
+        ), "Trying to set the 'n' argument using query_eval_model_kwargs, you should instead use the query_eval_check_number argument"
+        self.query_eval_model_kwargs = query_eval_model_kwargs
+        if "tags" not in query_eval_model_kwargs:
+            query_eval_model_kwargs["tags"] = ["eval_model"]
+        else:
+            assert isinstance(
+                query_eval_model_kwargs["tags"], list
+            ), f"Model kwargs 'tags' value must be a list. Got '{query_eval_model_kwargs['tags']}'"
+            query_eval_model_kwargs["tags"].append("eval_model")
         if embed_model_kwargs is None:
             embed_model_kwargs = {}
         if isinstance(embed_model_kwargs, str):
@@ -282,7 +330,7 @@ class wdoc:
         assert isinstance(
             embed_model_kwargs, dict
         ), f"Not a dict but {type(embed_model_kwargs)}"
-        assert query_eval_check_number > 0, "query_eval_check_number value"
+        self.embed_model_kwargs = embed_model_kwargs
 
         if llms_api_bases is None:
             llms_api_bases = {}
@@ -555,7 +603,7 @@ class wdoc:
             llm_verbosity=self.llm_verbosity,
             api_base=self.llms_api_bases["model"],
             private=self.private,
-            tags=["strong_model"],
+            **self.model_kwargs,
         )
         # if "anthropic" in self.model.lower() or "anthropic" in self.backend.lower():
         #     prompts.enable_prompt_caching("answer")
@@ -1346,6 +1394,7 @@ class wdoc:
             if self.query_eval_model.backend != "openrouter" or failed:
                 self.eval_llm_params = get_supported_model_params(self.query_eval_model)
             eval_args = {}
+            eval_args = self.query_eval_model_kwargs.deepcopy()
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
             elif self.query_eval_check_number > 1:
@@ -1360,7 +1409,6 @@ class wdoc:
                 temperature=0 if self.query_eval_check_number == 1 else 1,
                 api_base=self.llms_api_bases["query_eval_model"],
                 private=self.private,
-                tags=["eval_model"],
                 **eval_args,
             )
             # if "anthropic" in self.query_eval_model.original.lower() or "anthropic" in self.query_eval_model.backend.lower():
