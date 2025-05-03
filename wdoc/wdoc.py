@@ -1388,7 +1388,7 @@ class wdoc:
                     self.eval_llm_params = get_supported_model_params(
                         self.query_eval_model
                     )
-            eval_args = self.query_eval_model_kwargs.deepcopy()
+            eval_args = copy.deepcopy(self.query_eval_model_kwargs)
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
             elif self.query_eval_check_number > 1:
