@@ -776,7 +776,6 @@ class wdoc:
             (
                 summary,
                 n_chunk,
-                doc_total_cost,
                 doc_total_tokens_in,
                 doc_total_tokens_out,
             ) = do_summarize(
@@ -785,7 +784,6 @@ class wdoc:
                 language=self.summary_language,
                 modelbackend=self.model.backend,
                 llm=self.llm,
-                llm_price=self.llm_price,
                 verbose=self.llm_verbosity,
             )
 
@@ -838,7 +836,6 @@ class wdoc:
                     (
                         summary_text,
                         n_chunk,
-                        new_doc_total_cost,
                         new_doc_total_tokens_in,
                         new_doc_total_tokens_out,
                     ) = do_summarize(
@@ -847,13 +844,11 @@ class wdoc:
                         language=self.summary_language,
                         modelbackend=self.model.backend,
                         llm=self.llm,
-                        llm_price=self.llm_price,
                         verbose=self.llm_verbosity,
                         n_recursion=n_recur,
                     )
                     doc_total_tokens_in += new_doc_total_tokens_in
                     doc_total_tokens_out += new_doc_total_tokens_out
-                    doc_total_cost += new_doc_total_cost
 
                     # clean text again to compute the reading length
                     sp = summary_text.split("\n")
@@ -910,6 +905,12 @@ class wdoc:
                 md_printer(f"## {path}")
                 md_printer(recursive_summaries[best_sum_i])
 
+            # the price computation needs to happen as late as possible to avoid
+            # underflow errors
+            doc_total_cost = (
+                doc_total_tokens_in * self.llm_price[0]
+                + doc_total_tokens_out * self.llm_price[1]
+            )
             logger.info(
                 f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})"
             )

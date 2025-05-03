@@ -25,10 +25,9 @@ def do_summarize(
     language: str,
     modelbackend: str,
     llm: Any,
-    llm_price: List[float],
     verbose: bool,
     n_recursion: int = 0,
-) -> Tuple[str, int, Union[float, int], int, int]:
+) -> Tuple[str, int, int, int]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
@@ -36,7 +35,6 @@ def do_summarize(
     llm.bind(verbose=verbose)
 
     total_tokens = [0, 0]
-    total_cost_unadjusted = 0
     tt_check = 0
 
     metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
@@ -90,7 +88,6 @@ def do_summarize(
             new_c = 0
         total_tokens[0] += new_p
         total_tokens[1] += new_c
-        total_cost_unadjusted += (new_p * llm_price[0] + new_c + llm_price[1]) / 1e6
         assert (
             sum(total_tokens) == tt_check
         ), f"Unexpected count of tokens. Mismatch between prompt/completion vs total tokens. Total is either {sum(total_tokens)} or {tt_check}"
@@ -196,7 +193,4 @@ def do_summarize(
     else:
         outtext = "\n".join(summaries)
 
-    # computer the adjusted price now otherwise we can get underflow error
-    total_cost = total_cost_unadjusted / 1e6
-
-    return outtext.rstrip(), n, total_cost, total_tokens[0], total_tokens[1]
+    return outtext.rstrip(), n, total_tokens[0], total_tokens[1]
