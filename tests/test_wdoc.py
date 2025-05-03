@@ -380,8 +380,34 @@ def test_semantic_batching():
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
 )
 def test_summary_tim_urban():
-    """Test summarization of Tim Urban's procrastination video."""
+    """Test summarization of Tim Urban's procrastination video. Three times to make sure the caching and caching disabling works."""
     inst = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=False,
+        # filetype="youtube",
+        filetype="auto",
+    )
+    out = inst.summary_task()
+    assert "tim urban" in out["summary"].lower()
+    assert out["doc_total_cost"] > 0
+
+    inst2 = wdoc(
+        task="summarize",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=False,
+        # filetype="youtube",
+        filetype="auto",
+    )
+    out2 = inst2.summary_task()
+    assert "tim urban" in out2["summary"].lower()
+    assert (
+        out["doc_total_cost"] == 0
+    ), "Normally we should be reusing the cache so cost should be 0"
+
+    inst3 = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
@@ -389,8 +415,11 @@ def test_summary_tim_urban():
         # filetype="youtube",
         filetype="auto",
     )
-    out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
+    out3 = inst3.summary_task()
+    assert "tim urban" in out3["summary"].lower()
+    assert (
+        out["doc_total_cost"] > 0
+    ), "Normally we disabled the cache so cost should be higher than 0"
 
 
 @pytest.mark.basic
@@ -471,8 +500,44 @@ def test_summary_with_out_file():
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
 )
 def test_query_tim_urban():
-    """Test query task on Tim Urban's procrastination video."""
+    """Test query task on Tim Urban's procrastination video. Three times to test the caching."""
     inst = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        disable_llm_cache=False,
+        # filetype="youtube",
+        # youtube_language="en",
+        filetype="auto",
+    )
+    out = inst.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer = out["final_answer"]
+    assert "monkey" in final_answer.lower()
+    assert out["total_cost"] > 0
+
+    inst2 = wdoc(
+        task="query",
+        path="https://www.youtube.com/watch?v=arj7oStGLkU",
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        disable_llm_cache=False,
+        # filetype="youtube",
+        # youtube_language="en",
+        filetype="auto",
+    )
+    out2 = inst2.query_task(
+        query="What is the allegory used by the speaker",
+    )
+    final_answer2 = out2["final_answer"]
+    assert "monkey" in final_answer2.lower()
+    assert out2["total_cost"] == 0
+
+    inst3 = wdoc(
         task="query",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
@@ -483,11 +548,12 @@ def test_query_tim_urban():
         # youtube_language="en",
         filetype="auto",
     )
-    out = inst.query_task(
+    out3 = inst3.query_task(
         query="What is the allegory used by the speaker",
     )
-    final_answer = out["final_answer"]
-    assert "monkey" in final_answer.lower()
+    final_answer3 = out3["final_answer"]
+    assert "monkey" in final_answer3.lower()
+    assert out3["total_cost"] > 0
 
 
 @pytest.mark.basic
