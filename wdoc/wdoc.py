@@ -1007,11 +1007,18 @@ class wdoc:
     @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
-        if "frequency_penalty" in get_supported_model_params(self.model):
+        model_params = get_supported_model_params(self.model)
+        if (
+            "frequency_penalty" in model_params
+            and "frequency_penalty" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in get_supported_model_params(self.model):
+        if (
+            "presence_penalty" in model_params
+            and "presence_penalty" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in get_supported_model_params(self.model):
+        if "temperature" in model_params and "temperature" not in self.model_kwargs:
             self.llm.model_kwargs["temperature"] = 0.0
 
         # load embeddings for querying
