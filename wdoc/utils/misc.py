@@ -924,6 +924,12 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <think> and <answer> tags in an answer"""
     orig = copy(output)
     try:
+        # some models like the geminis don't return their thinking output, sometimes
+        # by mistake they keep thinking anyway so we get THINE without THIN. Let's just add
+        # it at the beginning of output
+        if THINE in output and THIN not in output:
+            output = THIN + output
+
         if (THIN not in output) and (ANSW not in output):
             assert (
                 THINE not in output
