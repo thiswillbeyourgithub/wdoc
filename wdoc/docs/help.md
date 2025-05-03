@@ -164,6 +164,8 @@
 
 * `--model_kwargs`: dict, default `None`
     * dictionary of keyword arguments to pass to the model. For example `{'temperature': 0}`.
+    Note that changing the kwargs will still make the cache be reused,
+    use `disable_llm_cache` to avoid that.
 
 ---
 
@@ -234,6 +236,8 @@
 
 * `--query_eval_model_kwargs`: dict, default `None`
     * dictionary of keyword arguments to pass to the query_eval_model. For example `{'temperature': 0}`.
+    Note that changing the kwargs will still make the cache be reused,
+    use `disable_llm_cache` to avoid that.
 
 * `--query_eval_check_number`: int, default `3`
     * number of pass to do with the eval llm to check if the document
