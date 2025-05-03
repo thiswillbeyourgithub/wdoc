@@ -50,7 +50,7 @@ wdoc --help
 
 8. If you want to only use local models, here's an example with [ollama](https://ollama.com/):
 ```bash
-wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/bge-m3" my_task
+wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/bge-m3" --task summarize --path https://situational-awareness.ai/
 ```
 You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using 
 ```bash
@@ -163,7 +163,7 @@ wdoc --task=summary \
 wdoc --model="ollama/qwen3:8b" \
      --query_eval_model="ollama/qwen3:8b" \
      --embed_model="ollama/bge-m3" \
-     my_task
+     --task summarize --path https://situational-awareness.ai/
 ```
 
 Note: you might find that ollama models are sometimes overly optimistic about their context length. You can pass arguments to lower it like so:
@@ -174,7 +174,7 @@ wdoc --model="ollama/qwen3:8b" \
      --query_eval_model="ollama/qwen3:8b" \
      --query_eval_model_kwargs='{"max_tokens": 4096}' \
      --embed_model="ollama/bge-m3" \
-     my_task
+     --task summarize --path https://situational-awareness.ai/
 ```
 
 6. Parse an Anki deck as text
