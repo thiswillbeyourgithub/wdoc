@@ -4,7 +4,7 @@ Chain (logic) used to summarize a document.
 
 from pathlib import Path
 
-from beartype.typing import Any, List, Tuple, Union
+from beartype.typing import Any, List, Tuple, Dict
 from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
@@ -27,15 +27,14 @@ def do_summarize(
     llm: Any,
     verbose: bool,
     n_recursion: int = 0,
-) -> Tuple[str, int, int, int]:
+) -> Tuple[str, int, Dict[str, int]]:
     "summarize each chunk of a long document"
     summaries = []
     previous_summary = ""
 
     llm.bind(verbose=verbose)
 
-    total_tokens = [0, 0]
-    tt_check = 0
+    token_details = {"prompt": 0, "completion": 0, "internal_reasoning": 0}
 
     metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
 
@@ -78,7 +77,7 @@ def do_summarize(
         if output.llm_output:  # only present if not caching
             new_p = output.llm_output["token_usage"]["prompt_tokens"]
             new_c = output.llm_output["token_usage"]["completion_tokens"]
-            tt_check = output.llm_output["token_usage"]["total_tokens"]
+            new_r = output.llm_output["token_usage"]["total_tokens"] - (new_p + new_c)
             logger.debug(
                 "LLM token usage output for that completion: "
                 + str(output.llm_output["token_usage"])
@@ -86,16 +85,16 @@ def do_summarize(
         else:
             new_p = 0
             new_c = 0
-        total_tokens[0] += new_p
-        total_tokens[1] += new_c
-        assert (
-            sum(total_tokens) == tt_check
-        ), f"Unexpected count of tokens. Mismatch between prompt/completion vs total tokens. Total is either {sum(total_tokens)} or {tt_check}"
+            new_r = 0
+        token_details["prompt"] += new_p
+        token_details["completion"] += new_c
+        token_details["internal_reasoning"] += new_r
 
         # the callback need to be updated manually when _generate is called
         llm.callbacks[0].prompt_tokens += new_p
         llm.callbacks[0].completion_tokens += new_c
-        llm.callbacks[0].total_tokens += new_p + new_c
+        llm.callbacks[0].internal_reasoning_tokens += new_r
+        llm.callbacks[0].total_tokens += new_p + new_c + new_r
 
         parsed = thinking_answer_parser(out)
         if verbose and parsed["thinking"]:
@@ -193,4 +192,4 @@ def do_summarize(
     else:
         outtext = "\n".join(summaries)
 
-    return outtext.rstrip(), n, total_tokens[0], total_tokens[1]
+    return outtext.rstrip(), n, token_details

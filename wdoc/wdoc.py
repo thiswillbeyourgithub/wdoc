@@ -510,24 +510,33 @@ class wdoc:
             logger.warning(
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
             )
-            self.llm_price = [0.0, 0.0]
+            self.llm_price = {"prompt": 0, "completion": 0, "internal_reasoning": 0}
         else:
-            self.llm_price = get_model_price(self.model.original)
-        logger.debug(
-            f"Detected price of '{self.model.original}': Input: {self.llm_price[0]} Output: {self.llm_price[1]}"
-        )
+            self.llm_price = get_model_price(self.model)
+        logger.debug(f"Detected price of '{self.model.original}': {self.llm_price}")
+        assert "prompt" in self.llm_price
+        assert "completion" in self.llm_price
+        assert "internal_reasoning" in self.llm_price
 
         if self.query_eval_model is not None:
             if llms_api_bases["query_eval_model"]:
                 logger.warning(
                     "Disabling price computation for query_eval_model because api_base was modified"
                 )
-                self.query_evalllm_price = [0.0, 0.0]
+                self.query_evalllm_price = {
+                    "prompt": 0,
+                    "completion": 0,
+                    "internal_reasoning": 0,
+                }
             else:
                 self.query_evalllm_price = get_model_price(self.query_eval_model)
             logger.debug(
-                f"Detected price of '{self.query_eval_model.original}': Input: {self.query_evalllm_price[0]} Output: {self.query_evalllm_price[1]}"
+                f"Detected price of '{self.query_eval_model.original}': {self.query_evalllm_price}"
             )
+
+            assert "prompt" in self.query_evalllm_price
+            assert "completion" in self.query_evalllm_price
+            assert "internal_reasoning" in self.query_evalllm_price
 
         if env.WDOC_VERBOSE:
             set_verbose(True)
@@ -660,7 +669,7 @@ class wdoc:
         full_tkn = sum(list(docs_tkn_cost.values()))
         logger.warning("Token price of each document:")
         for k, v in docs_tkn_cost.items():
-            pr = v * (self.llm_price[0] * 4 + self.llm_price[1]) / 5
+            pr = v * (self.llm_price["prompt"] * 4 + self.llm_price["completion"]) / 5
             logger.warning(f"- {v:>6}: {k:>10} - ${pr:04f}")
 
         logger.warning(
@@ -670,16 +679,16 @@ class wdoc:
         compr_ratio = 0.28
         prompt_tkn = 1000
         estimate_dol = (prompt_tkn + full_tkn) * self.llm_price[
-            0
-        ] + full_tkn * compr_ratio * self.llm_price[1]
+            "prompt"
+        ] + full_tkn * compr_ratio * self.llm_price["completion"]
         if self.summary_n_recursion:
             for i in range(self.summary_n_recursion):
                 estimate_dol += (prompt_tkn + full_tkn) * (
                     compr_ratio**i
-                ) * self.llm_price[0] + full_tkn * (
+                ) * self.llm_price["prompt"] + full_tkn * (
                     compr_ratio ** (i + 1)
                 ) * self.llm_price[
-                    1
+                    "completion"
                 ]
         logger.info(
             self.ntfy(
@@ -753,8 +762,7 @@ class wdoc:
             (
                 summary,
                 n_chunk,
-                doc_total_tokens_in,
-                doc_total_tokens_out,
+                doc_total_tokens,
             ) = do_summarize(
                 docs=relevant_docs,
                 metadata=metadata,
@@ -813,8 +821,7 @@ class wdoc:
                     (
                         summary_text,
                         n_chunk,
-                        new_doc_total_tokens_in,
-                        new_doc_total_tokens_out,
+                        new_doc_total_tokens,
                     ) = do_summarize(
                         docs=summary_docs,
                         metadata=metadata,
@@ -824,8 +831,10 @@ class wdoc:
                         verbose=self.llm_verbosity,
                         n_recursion=n_recur,
                     )
-                    doc_total_tokens_in += new_doc_total_tokens_in
-                    doc_total_tokens_out += new_doc_total_tokens_out
+
+                    # aggregate the token count
+                    for k, v in new_doc_total_tokens.items():
+                        doc_total_tokens[k] += v
 
                     # clean text again to compute the reading length
                     sp = summary_text.split("\n")
@@ -875,7 +884,6 @@ class wdoc:
                         recursive_summaries[n_recur] = summary_text
 
             best_sum_i = max(list(recursive_summaries.keys()))
-            doc_total_tokens = doc_total_tokens_in + doc_total_tokens_out
             if not self.__import_mode__:
                 print("\n\n")
                 md_printer("# Summary")
@@ -884,19 +892,20 @@ class wdoc:
 
             # the price computation needs to happen as late as possible to avoid
             # underflow errors
-            doc_total_cost = (
-                doc_total_tokens_in * self.llm_price[0]
-                + doc_total_tokens_out * self.llm_price[1]
-            )
+            doc_total_cost = 0
+            doc_total_tokens_str = ""
+            for k, v in doc_total_tokens.items():
+                if self.llm_price[k]:  # to avoid underflow errors:
+                    doc_total_cost += v * self.llm_price[k]
+                doc_total_tokens_str += f"{k.title()}: {v} "
+            doc_total_tokens_str = doc_total_tokens_str.strip()
             logger.info(
-                f"Tokens used for {path}: '{doc_total_tokens}' (in: {doc_total_tokens_in}, out: {doc_total_tokens_out}, cost: ${doc_total_cost:.5f})"
+                f"Tokens used for {path}: ({doc_total_tokens_str}, cost: ${doc_total_cost:.5f})"
             )
 
             summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
-            header = (
-                f"\n- {item_name}    cost: {doc_total_tokens} (${doc_total_cost:.5f})"
-            )
+            header = f"\n- {item_name}    cost: ${doc_total_cost:.5f} ({doc_total_tokens_str})"
             if doc_reading_length:
                 header += f"    {doc_reading_length:.1f} minutes"
             if author:
@@ -940,6 +949,7 @@ class wdoc:
                 "sum_tkn_length": summary_tkn_length,
                 "doc_reading_length": doc_reading_length,
                 "doc_total_tokens": doc_total_tokens,
+                "doc_total_tokens_str": doc_total_tokens_str,
                 "doc_total_cost": doc_total_cost,
                 "summary": recursive_summaries[best_sum_i],
                 "recursive_summaries": recursive_summaries,
@@ -954,7 +964,7 @@ class wdoc:
 
         logger.info(
             self.ntfy(
-                f"Total cost of those summaries: {results['doc_total_tokens']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"
+                f"Total cost of those summaries: {results['doc_total_tokens_str']} tokens for ${results['doc_total_cost']:.5f} (estimate was ${estimate_dol:.5f})"
             )
         )
         logger.info(
@@ -965,12 +975,12 @@ class wdoc:
 
         llmcallback = self.llm.callbacks[0]
         total_cost = (
-            self.llm_price[0] * llmcallback.prompt_tokens
-            + self.llm_price[1] * llmcallback.completion_tokens
+            self.llm_price["prompt"] * llmcallback.prompt_tokens
+            + self.llm_price["completion"] * llmcallback.completion_tokens
         )
         if llmcallback.total_tokens != results["doc_total_tokens"]:
             logger.warning(
-                f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+                f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' vs in the result: '{results['doc_total_tokens']}' (${total_cost:.5f})"
             )
         self.summary_results = results
         self.latest_cost = total_cost
@@ -1429,6 +1439,7 @@ class wdoc:
                 outputs = ["10" for i in range(self.query_eval_check_number)]
                 new_p = 0
                 new_c = 0
+                new_r = 0
 
             elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
 
@@ -1466,14 +1477,19 @@ class wdoc:
                 if out.llm_output:
                     new_p = out.llm_output["token_usage"]["prompt_tokens"]
                     new_c = out.llm_output["token_usage"]["completion_tokens"]
+                    new_r = (
+                        out.llm_output["token_usage"]["total_tokens"] - new_p - new_c
+                    )
                 else:
                     new_p = 0
                     new_c = 0
+                    new_r = 0
 
             else:
                 outputs = []
                 new_p = 0
                 new_c = 0
+                new_r = 0
 
                 async def do_eval(subinputs):
                     try:
@@ -1508,6 +1524,11 @@ class wdoc:
                     if out.llm_output:
                         new_p += out.llm_output["token_usage"]["prompt_tokens"]
                         new_c += out.llm_output["token_usage"]["completion_tokens"]
+                        new_r += (
+                            out.llm_output["token_usage"]["total_tokens"]
+                            - new_p
+                            - new_c
+                        )
                 assert outputs, "No generations found by query eval llm"
                 outputs = [parse_eval_output(o) for o in outputs]
 
@@ -1524,7 +1545,8 @@ class wdoc:
 
             self.eval_llm.callbacks[0].prompt_tokens += new_p
             self.eval_llm.callbacks[0].completion_tokens += new_c
-            self.eval_llm.callbacks[0].total_tokens += new_p + new_c
+            self.eval_llm.callbacks[0].internal_reasoning_tokens += new_r
+            self.eval_llm.callbacks[0].total_tokens += new_p + new_c + new_r
             if self.eval_llm.callbacks[0].pbar:
                 self.eval_llm.callbacks[0].pbar[-1].update(1)
             return outputs
@@ -1640,8 +1662,11 @@ class wdoc:
 
             evalllmcallback = self.eval_llm.callbacks[0]
             etotal_cost = (
-                self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+                + self.query_evalllm_price["completion"]
+                * evalllmcallback.completion_tokens
+                + self.query_evalllm_price["internal_reasoning"]
+                * evalllmcallback.internal_reasoning_tokens
             )
             logger.debug(
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
@@ -1649,8 +1674,10 @@ class wdoc:
 
             llmcallback = self.llm.callbacks[0]
             total_cost = (
-                self.llm_price[0] * llmcallback.prompt_tokens
-                + self.llm_price[1] * llmcallback.completion_tokens
+                self.llm_price["prompt"] * llmcallback.prompt_tokens
+                + self.llm_price["completion"] * llmcallback.completion_tokens
+                + self.llm_price["internal_reasoning"]
+                * llmcallback.internal_reasoning_tokens
             )
             logger.debug(
                 f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
@@ -1719,8 +1746,11 @@ class wdoc:
 
             evalllmcallback = self.eval_llm.callbacks[0]
             etotal_cost = (
-                self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+                + self.query_evalllm_price["completion"]
+                * evalllmcallback.completion_tokens
+                + self.query_evalllm_price["internal_reasoning"]
+                * evalllmcallback.internal_reasoning_tokens
             )
             logger.debug(
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
@@ -1914,8 +1944,10 @@ class wdoc:
 
                 llmcallback = self.llm.callbacks[0]
                 cost_before_combine = (
-                    self.llm_price[0] * llmcallback.prompt_tokens
-                    + self.llm_price[1] * llmcallback.completion_tokens
+                    self.llm_price["prompt"] * llmcallback.prompt_tokens
+                    + self.llm_price["completion"] * llmcallback.completion_tokens
+                    + self.llm_price["internal_reasoning"]
+                    * llmcallback.internal_reasoning_tokens
                 )
 
                 # group the intermediate answers by batch, then do a batch reduce mapping
@@ -2095,13 +2127,18 @@ class wdoc:
 
             evalllmcallback = self.eval_llm.callbacks[0]
             etotal_cost = (
-                self.query_evalllm_price[0] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price[1] * evalllmcallback.completion_tokens
+                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+                + self.query_evalllm_price["completion"]
+                * evalllmcallback.completion_tokens
+                + self.query_evalllm_price["internal_reasoning"]
+                * evalllmcallback.internal_reasoning_tokens
             )
             llmcallback = self.llm.callbacks[0]
             total_cost = (
-                self.llm_price[0] * llmcallback.prompt_tokens
-                + self.llm_price[1] * llmcallback.completion_tokens
+                self.llm_price["prompt"] * llmcallback.prompt_tokens
+                + self.llm_price["completion"] * llmcallback.completion_tokens
+                + self.llm_price["internal_reasoning"]
+                * llmcallback.internal_reasoning_tokens
             )
             logger.debug(
                 f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"

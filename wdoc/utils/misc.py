@@ -25,6 +25,7 @@ import bs4
 import litellm
 from beartype.door import is_bearable
 from beartype.typing import (
+    Dict,
     Callable,
     List,
     Literal,
@@ -620,38 +621,44 @@ class ModelName:
 
 @memoize
 @optional_typecheck
-def get_model_price(model: ModelName) -> List[float]:
+def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
     if env.WDOC_ALLOW_NO_PRICE:
         logger.warning(
             f"Disabling price computation for {model} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
         )
-        return [0.0, 0.0]
+        return {"prompt": 0, "completion": 0, "internal_reasoning": 0}
 
     if model.backend == "ollama":
-        return [0.0, 0.0]
-    if model.is_testing() == "ollama":
-        return [0.0, 0.0]
+        return {"prompt": 0, "completion": 0, "internal_reasoning": 0}
+    elif model.is_testing():
+        return {"prompt": 0, "completion": 0, "internal_reasoning": 0}
     elif model.backend == "openrouter":
         metadata = get_openrouter_metadata()
-        assert model in metadata, f"Missing {model} from openrouter"
-        pricing = metadata[model]["pricing"]
-        if "request" in pricing:
+        assert model.original in metadata, f"Missing {model} from openrouter"
+        pricing = metadata[model.original]["pricing"]
+        if "request" in pricing and pricing["request"]:
             logger.error(
                 f"Found non 0 request for {model}, this is not supported by wdoc so the price will not be accurate"
             )
-        if "internal_reasoning" in pricing:
-            logger.error(
-                f"Found non 0 internal_reasoning cost for {model}, this is not supported by wdoc so the price will not be accurate."
-            )
-        return [pricing["prompt"], pricing["completion"]]
+        return pricing
 
     for key in ["original", "model", "sanitized"]:
         mod = getattr(model, key)
         if mod in litellm.model_cost:
-            return [
-                litellm.model_cost[mod]["input_cost_per_token"],
-                litellm.model_cost[mod]["output_cost_per_token"],
-            ]
+            pricing = litellm.model_cost[mod]
+            output = {}
+            output["prompt"] = pricing["input_cost_per_token"]
+            output["completion"] = pricing["output_cost_per_token"]
+            if "output_cost_per_reasoning_token" in pricing:
+                output["internal_reasoning"] = pricing[
+                    "output_cost_per_reasoning_token"
+                ]
+            else:
+                output["internal_reasoning"] = 0
+            for k, v in pricing.items():
+                if k not in output:
+                    output[k] = v
+            return output
     raise Exception(
         f"Can't find the price of '{model}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
     )

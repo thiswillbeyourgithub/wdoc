@@ -222,6 +222,7 @@ class PriceCountingCallback(BaseCallbackHandler):
         self.total_tokens = 0
         self.prompt_tokens = 0
         self.completion_tokens = 0
+        self.internal_reasoning_tokens = 0
         self.methods_called = []
         self.authorized_methods = [
             "on_llm_start",
@@ -292,10 +293,16 @@ class PriceCountingCallback(BaseCallbackHandler):
 
         new_p = response.llm_output["token_usage"]["prompt_tokens"]
         new_c = response.llm_output["token_usage"]["completion_tokens"]
+        new_r = response.llm_output["token_usage"]["total_tokens"] - new_p - new_c
         self.prompt_tokens += new_p
         self.completion_tokens += new_c
-        self.total_tokens += new_p + new_c
-        assert self.total_tokens == self.prompt_tokens + self.completion_tokens
+        self.total_tokens += new_p + new_c + new_r
+        assert (
+            self.total_tokens
+            == self.prompt_tokens
+            + self.completion_tokens
+            + self.internal_reasoning_tokens
+        )
         self._check_methods_called()
 
     def on_llm_error(
