@@ -892,8 +892,8 @@ def set_func_signature(func: Callable) -> Callable:
 
 
 # Tag constants
-THIN = "<thinking>"
-THINE = "</thinking>"
+THIN = "<think>"
+THINE = "</think>"
 ANSW = "<answer>"
 ANSWE = "</answer>"
 
@@ -906,7 +906,7 @@ _THIN_SUB_REGEX = re.compile(
 
 @optional_typecheck
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
-    """separate the <thinking> and <answer> tags in an answer"""
+    """separate the <think> and <answer> tags in an answer"""
     orig = copy(output)
     try:
         # fix </answer> instead of <answer>

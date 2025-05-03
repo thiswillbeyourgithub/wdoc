@@ -131,11 +131,11 @@ def parse_eval_output(output: str) -> str:
     For example, it turns an LLM answer from:
 
     '''
-    <thinking>
+    <think>
     I am thinking hard about if the document is reelevant to the user query
     on a scale of 0 (irrelevant) to 10 (very relevant).
     ...
-    </thinking>
+    </think>
 
     <answer>10</answer>
     '''
