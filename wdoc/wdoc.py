@@ -1380,20 +1380,23 @@ class wdoc:
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
-            failed = False
             if self.query_eval_model.backend == "openrouter":
                 try:
                     self.eval_llm_params = get_supported_model_params(
                         self.query_eval_model
                     )
                 except Exception as err:
-                    failed = True
-                    logger.warning(
-                        f"Failed to get query_eval_model parameters information bypassing openrouter: '{err}'"
+                    bypassmodel = self.query_eval_model.original.replace(
+                        f"openrouter/", ""
                     )
-            if self.query_eval_model.backend != "openrouter" or failed:
-                self.eval_llm_params = get_supported_model_params(self.query_eval_model)
-            eval_args = {}
+                    logger.warning(
+                        f"Failed to get query_eval_model parameters information for model '{self.query_eval_model}'. We will try to bypass openrouter to get them by using '{bypassmodel}'. Error was '{err}'"
+                    )
+                    self.eval_llm_params = get_supported_model_params(bypassmodel)
+                else:
+                    self.eval_llm_params = get_supported_model_params(
+                        self.query_eval_model
+                    )
             eval_args = self.query_eval_model_kwargs.deepcopy()
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
