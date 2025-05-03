@@ -535,9 +535,7 @@ def get_model_price(model: str) -> List[float]:
         ]
     else:
         raise Exception(
-            logger.warning(
-                f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
-            )
+            f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
         )
 
 
