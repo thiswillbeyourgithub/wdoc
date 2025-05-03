@@ -13,6 +13,7 @@ import sys
 import time
 import traceback
 from dataclasses import MISSING
+from datetime import date
 from operator import itemgetter
 from pathlib import Path
 from textwrap import indent
@@ -750,6 +751,7 @@ class wdoc:
             if "yt_chapters" in relevant_docs[0].metadata:
                 chapters = json.dumps(relevant_docs[0].metadata["yt_chapters"])
                 metadata.append(f"<youtube_chapters>\n{chapters}\n</youtube_chapters>")
+            metadata.append(f"<today>\n{date.today().isoformat()}\n</today>")
 
             if metadata:
                 metadata = "<text_metadata>\n" + "\n".join(metadata) + "\n"
@@ -911,7 +913,7 @@ class wdoc:
             if author:
                 header += f"    by '{author}'"
             header += f"    original path: '{path}'"
-            header += f"    wdoc version {self.VERSION} with model {self.model}"
+            header += f"    wdoc version {self.VERSION} with model {self.model} on {date.today().isoformat()}"
 
             # save to output file
             if self.out_file:
