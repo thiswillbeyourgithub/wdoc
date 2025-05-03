@@ -50,7 +50,7 @@ WDOC_TEST_DEFAULT_EMBED_MODEL = os.getenv(
     "WDOC_TEST_DEFAULT_EMBED_MODEL", env.WDOC_DEFAULT_EMBED_MODEL
 )
 
-os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = True
+os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 # the unexpected env var should be tested both before import and before run:
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_2"] = "testing"
@@ -404,7 +404,7 @@ def test_summary_tim_urban():
     out2 = inst2.summary_task()
     assert "tim urban" in out2["summary"].lower()
     assert (
-        out["doc_total_cost"] == 0
+        out2["doc_total_cost"] == 0
     ), "Normally we should be reusing the cache so cost should be 0"
 
     inst3 = wdoc(
@@ -418,7 +418,7 @@ def test_summary_tim_urban():
     out3 = inst3.summary_task()
     assert "tim urban" in out3["summary"].lower()
     assert (
-        out["doc_total_cost"] > 0
+        out3["doc_total_cost"] > 0
     ), "Normally we disabled the cache so cost should be higher than 0"
 
 
@@ -703,7 +703,7 @@ def test_query_tim_urban_openrouter():
         task="query",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=WDOC_TEST_OPENROUTER_MODEL,
-        model=WDOC_TEST_OPENROUTER_EVAL_MODEL,
+        query_eval_model=WDOC_TEST_OPENROUTER_EVAL_MODEL,
         disable_llm_cache=True,
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         # filetype="youtube",
@@ -747,7 +747,7 @@ def test_query_tim_urban_default_model():
         task="query",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=WDOC_TEST_DEFAULT_MODEL,
-        model=WDOC_TEST_DEFAULT_EVAL_MODEL,
+        query_eval_model=WDOC_TEST_DEFAULT_EVAL_MODEL,
         embed_model=WDOC_TEST_DEFAULT_EMBED_MODEL,
         disable_llm_cache=True,
         # filetype="youtube",
