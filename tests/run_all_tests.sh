@@ -26,7 +26,7 @@ mkdir temp
 # start tests
 cd temp
 python -m pytest ../test_wdoc.py -n auto -v && \
-python -m pytest ../test_wdoc.py -m api -v
+python -m pytest ../test_wdoc.py -m api -v -x
 
 # also check if we can install those then redo some of the tests
 cd ..
