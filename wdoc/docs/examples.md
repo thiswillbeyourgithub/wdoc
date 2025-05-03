@@ -179,13 +179,14 @@ wdoc --model="ollama/qwen3:8b" \
 
 6. Parse an Anki deck as text
 ```zsh
-wdoc_parse_file --filetype "anki" \
-                --anki_profile "Main" \
-                --anki_deck "mydeck::subdeck1" \
-                --anki_notetype "my_notetype" \
-                --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" \
-                --anki_tag_filter "a::tag::regex::.*something.*" \
-                --format=langchain_dict
+wdoc parse \
+    --filetype "anki" \
+    --anki_profile "Main" \
+    --anki_deck "mydeck::subdeck1" \
+    --anki_notetype "my_notetype" \
+    --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" \
+    --anki_tag_filter "a::tag::regex::.*something.*" \
+    --format=langchain_dict
 ```
 
 7. Query an online PDF
