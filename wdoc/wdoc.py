@@ -1373,29 +1373,14 @@ class wdoc:
 
         # answer 0 or 1 if the document is related
         if not hasattr(self, "eval_llm"):
-            if self.query_eval_model.backend == "openrouter":
-                try:
-                    self.eval_llm_params = get_supported_model_params(
-                        self.query_eval_model
-                    )
-                except Exception as err:
-                    bypassmodel = self.query_eval_model.original.replace(
-                        f"openrouter/", ""
-                    )
-                    logger.warning(
-                        f"Failed to get query_eval_model parameters information for model '{self.query_eval_model}'. We will try to bypass openrouter to get them by using '{bypassmodel}'. Error was '{err}'"
-                    )
-                    self.eval_llm_params = get_supported_model_params(bypassmodel)
-            else:
-                self.eval_llm_params = get_supported_model_params(self.query_eval_model)
+            self.eval_llm_params = get_supported_model_params(self.query_eval_model)
             eval_args = copy.deepcopy(self.query_eval_model_kwargs)
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
-            elif self.query_eval_check_number > 1:
+            if self.query_eval_check_number > 1:
                 logger.warning(
                     f"Model {self.query_eval_model.original} does not support parameter 'n' so will be called multiple times instead. This might cost more."
                 )
-                assert self.query_eval_model.backend != "openai"
             self.eval_llm = load_llm(
                 modelname=self.query_eval_model,
                 llm_cache=False,  # disables caching because another caching is used on top

@@ -3,6 +3,7 @@ Miscellanous functions etc.
 """
 
 import hashlib
+import requests
 import re
 from copy import copy
 import platform
@@ -512,12 +513,90 @@ def model_name_matcher(model: str) -> str:
 
 @memoize
 @optional_typecheck
+def get_openrouter_metadata() -> dict:
+    """fetch the metadata from openrouter, because litellm takes always too much time to add new models."""
+    url = "https://openrouter.ai/api/v1/models"
+    response = requests.get(url)
+    rep = response.json()
+    # put it in a suitable format
+    data = {}
+    for info in rep["data"]:
+        modelid = "openrouter/" + info["id"]
+        assert modelid not in data, modelid
+        del info["id"]
+        pricing = info["pricing"]  # fix pricing is a str originally
+        for k, v in pricing.items():
+            pricing[k] = float(v)
+        data[modelid] = info
+
+        # for models that for example end with ":free", make them appear
+        # under their full name too
+        while ":" in modelid:
+            modelid = modelid[::-1].split(":")[0][::-1]
+            if modelid not in data:
+                data[modelid] = info
+
+    # Example of output:
+    # {'id': 'microsoft/phi-4-reasoning-plus:free',
+    #  'name': 'Microsoft: Phi 4 Reasoning Plus (free)',
+    #  'created': 1746130961,
+    #  'description': REMOVED
+    #  'context_length': 32768,
+    #  'architecture': {'modality': 'text->text',
+    #   'input_modalities': ['text'],
+    #   'output_modalities': ['text'],
+    #   'tokenizer': 'Other',
+    #   'instruct_type': None},
+    #  'pricing': {'prompt': '0',
+    #   'completion': '0',
+    #   'request': '0',
+    #   'image': '0',
+    #   'web_search': '0',
+    #   'internal_reasoning': '0'},
+    #  'top_provider': {'context_length': 32768,
+    #   'max_completion_tokens': None,
+    #   'is_moderated': False},
+    #  'per_request_limits': None,
+    #  'supported_parameters': ['max_tokens',
+    #   'temperature',
+    #   'top_p',
+    #   'reasoning',
+    #   'include_reasoning',
+    #   'stop',
+    #   'frequency_penalty',
+    #   'presence_penalty',
+    #   'seed',
+    #   'top_k',
+    #   'min_p',
+    #   'repetition_penalty',
+    #   'logprobs',
+    #   'logit_bias',
+    #   'top_logprobs']}
+    return data
+
+
+@memoize
+@optional_typecheck
 def get_model_price(model: str) -> List[float]:
     assert (
         not env.WDOC_ALLOW_NO_PRICE
     ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {env.WDOC_ALLOW_NO_PRICE}"
     if model.startswith("ollama/"):
         return [0.0, 0.0]
+    elif model.startswith(f"openrouter/"):
+        metadata = get_openrouter_metadata()
+        assert model in metadata, f"Missing {model} from openrouter"
+        pricing = metadata[model]["pricing"]
+        if "request" in pricing:
+            logger.error(
+                f"Found non 0 request for {model}, this is not supported by wdoc so the price will not be accurate"
+            )
+        if "internal_reasoning" in pricing:
+            logger.error(
+                f"Found non 0 internal_reasoning cost for {model}, this is not supported by wdoc so the price will not be accurate."
+            )
+        return [pricing["prompt"], pricing["completion"]]
+
     if model in litellm.model_cost:
         return [
             litellm.model_cost[model]["input_cost_per_token"],
@@ -586,13 +665,12 @@ class ModelName:
 @optional_typecheck
 def get_model_max_tokens(modelname: ModelName) -> int:
     if modelname.backend == "openrouter":
-        # openrouter and litellm can have outdated or plain wrong parameters
-        submodel = ModelName(modelname.original.replace(f"openrouter/", ""))
-        try:
-            sub_price = get_model_max_tokens(submodel)
-            return sub_price
-        except Exception:
-            pass
+        openrouter_data = get_openrouter_metadata()
+        assert (
+            modelname.original in openrouter_data
+        ), f"Missing model {modelname.original} from openrouter metadata"
+        return openrouter_data[modelname.original]["context_length"]
+
     if modelname.original in litellm.model_cost:
         return litellm.model_cost[modelname.original]["max_tokens"]
     elif (trial := modelname.model) in litellm.model_cost:
@@ -1132,11 +1210,12 @@ def get_supported_model_params(modelname: ModelName) -> list:
     if modelname.backend == "testing":
         return []
     if modelname.backend == "openrouter":
-        # openrouter and litellm can have outdated or plain wrong parameters
-        submodel = ModelName(modelname.original.replace(f"openrouter/", ""))
-        sub_params = get_supported_model_params(submodel)
-        if sub_params:
-            return sub_params
+        metadata = get_openrouter_metadata()
+        assert (
+            modelname.original in metadata
+        ), f"Missing {modelname.original} from openrouter"
+        return metadata[modelname.original]["supported_parameters"]
+
     for test in [
         modelname.original,
         modelname.model,
