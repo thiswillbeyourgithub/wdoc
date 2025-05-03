@@ -898,7 +898,7 @@ ANSW = "<answer>"
 ANSWE = "</answer>"
 
 # Pre-compiled regex patterns
-_THIN_REGEX = re.compile(f"{re.escape(THIN)}(.*?){re.escape(THINE)}", re.DOTALL)
+_THIN_REGEX = re.compile(f"{re.escape(THIN)}(.*){re.escape(THINE)}", re.DOTALL)
 _THIN_SUB_REGEX = re.compile(
     f"{re.escape(THIN)}|{re.escape(THINE)}|{re.escape(ANSW)}|{re.escape(ANSWE)}"
 )
