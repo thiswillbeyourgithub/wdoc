@@ -716,11 +716,17 @@ class wdoc:
                 )
 
         llm_params = get_supported_model_params(self.model)
-        if "frequency_penalty" in llm_params:
+        if (
+            "frequency_penalty" in llm_params
+            and "frequency_penalty" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if "presence_penalty" in llm_params:
+        if (
+            "presence_penalty" in llm_params
+            and "presence_penalty" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in llm_params:
+        if "temperature" in llm_params and "temperature" not in self.model_kwargs:
             self.llm.model_kwargs["temperature"] = 0.0
 
         @optional_typecheck
