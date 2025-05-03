@@ -92,7 +92,22 @@ except Exception as err:
             return None
 
 
-cache_dir = Path(user_cache_dir(appname="wdoc"))
+if (
+    "OVERRIDE_USER_DIR_PYTEST_WDOC" in os.environ
+    and os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] == "true"
+):
+    cache_dir = Path.cwd() / "wdoc_user_cache_dir"
+    if cache_dir.exists():
+        logger.debug(
+            f"PYTEST detected so using cache_dir '{cache_dir.absolute()}' (already exists)"
+        )
+    else:
+        logger.debug(
+            f"PYTEST detected so using cache_dir '{cache_dir.absolute()}' (does not exists)"
+        )
+else:
+    cache_dir = Path(user_cache_dir(appname="wdoc"))
+
 cache_dir.mkdir(parents=True, exist_ok=True)
 
 doc_loaders_cache_dir = cache_dir / "doc_loaders"
