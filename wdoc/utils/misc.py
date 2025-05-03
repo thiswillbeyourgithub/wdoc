@@ -909,36 +909,67 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <think> and <answer> tags in an answer"""
     orig = copy(output)
     try:
-        # fix </answer> instead of <answer>
-        if ANSW not in output and output.count(ANSWE) == 2:
-            output = re.sub(ANSWE, ANSW, output, count=1)
-        if THIN not in output and output.count(THINE) == 2:
-            output = re.sub(THINE, THIN, output, count=1)
-
         if (THIN not in output) and (ANSW not in output):
             assert (
                 THINE not in output
-            ), f"Output contains unexpected {THINE}:\n'''\n{output}\n'''"
+            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {THINE}:\n'''\n{output}\n'''"
             assert (
                 ANSWE not in output
-            ), f"Output contains unexpected {ANSWE}:\n'''\n{output}\n'''"
+            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {ANSWE}:\n'''\n{output}\n'''"
 
+            logger.debug(f"LLM output contained neither {THIN} nor {ANSW}")
             return {"thinking": "", "answer": output}
 
         thinking = ""
-        if THIN in output and THINE in output:
+        if (
+            THIN in output and THINE in output
+        ):  # meaning we found the expected <think> </think> block
             thinking_match = _THIN_REGEX.search(output)
             if thinking_match:
-                thinking = thinking_match.group(1).strip()
+                thinking = thinking_match.group(1)
+                if not (THIN not in thinking and THINE not in thinking):
+                    logger.warning(
+                        f"Found {THINK} or {THINE} inside the thinking block, we don't expect nested thinkings but will proceed anyway."
+                    )
+        else:
+            # check we don't have only one of the xml sides
+            assert (
+                THIN not in output and THINE not in output
+            ), f"Found only one of '{THIN}' or '{THINE}' in LLM output"
+            logger.debug("LLM output contained no thinking block")
 
         answer = ""
-        if ANSW in output and ANSWE in output:
+        if (
+            ANSW in output and ANSWE in output
+        ):  # meaning we found the expected <answer> </answer> block
             # Create a version without the thinking part
             answer_text = output
             if thinking:
                 answer_text = re.sub(re.escape(thinking), "", answer_text)
-            # Remove the tags
-            answer = _THIN_SUB_REGEX.sub("", answer_text).strip()
+            # Remove the xml sides
+            answer = _THIN_SUB_REGEX.sub("", answer_text)
+            logger.debug("LLM output contained answer block")
+        else:
+            # check we don't have only one of the xml sides
+            assert (
+                ANSW not in output and ANSWE not in output
+            ), f"Found only one of '{ANSW}' or '{ANSWE}' in LLM output"
+            if thinking:
+                logger.debug(
+                    "LLM output contained no answer block, assuming it's all but the thinking"
+                )
+                answer = (
+                    output.replace(thinking, "").replace(THIN, "").replace(THINE, "")
+                )
+            else:
+                logger.debug(
+                    "LLM output contained no answer block, assuming it's all the output"
+                )
+                answer = output
+
+        output = output.strip()
+        thinking = thinking.strip()
+        answer = answer.rstrip()
 
         assert (
             THIN not in answer
@@ -946,6 +977,12 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         assert (
             THINE not in answer
         ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert (
+            THIN not in thinking
+        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
+        assert (
+            THINE not in thinking
+        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
         assert (
             ANSW not in answer
         ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
