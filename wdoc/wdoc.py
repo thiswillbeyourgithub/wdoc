@@ -1384,10 +1384,8 @@ class wdoc:
                         f"Failed to get query_eval_model parameters information for model '{self.query_eval_model}'. We will try to bypass openrouter to get them by using '{bypassmodel}'. Error was '{err}'"
                     )
                     self.eval_llm_params = get_supported_model_params(bypassmodel)
-                else:
-                    self.eval_llm_params = get_supported_model_params(
-                        self.query_eval_model
-                    )
+            else:
+                self.eval_llm_params = get_supported_model_params(self.query_eval_model)
             eval_args = copy.deepcopy(self.query_eval_model_kwargs)
             if "n" in self.eval_llm_params:
                 eval_args["n"] = self.query_eval_check_number
