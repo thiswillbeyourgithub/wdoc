@@ -18,7 +18,7 @@ Below the table of content is the content of the `README.md`, followed by the co
    help
    parse_file_help
    api
-   all_docs
+   link_to_single_page_doc
 
 .. include:: readme.md
    :parser: myst_parser.sphinx_

@@ -1,4 +1,4 @@
-Single Page Documentation
+Full Documentation
 ==================
 
 This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_ in a single page, for easy LLM parsing.
