@@ -11,13 +11,12 @@
 
 * **Goal and project specifications**: `wdoc` is loosely based on [LangChain](https://python.langchain.com/) to process and analyze documents. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes a tailored summary feature to help users efficiently keep up with large amounts of information.
 
-* **Current status**: **Under active development**
-    * Used daily by the developer for several months: but still in alpha. **I would greatly benefit from testing by users as it's the quickest way for me to find the many small bugs that are quick to fix.**
-    * May have some instabilities, but issues can usually be resolved quickly
-    * The main branch is more stable than the dev branch, which offers more features
-    * Open to feature requests and pull requests
-    * All feedbacks, including reports of typos, are highly appreciated
-    * Please open an issue before making a PR, as there may be ongoing improvements in the pipeline
+* **Current status**: **Usabled, tested, still under active development**
+    * **I would greatly benefit from testing by users as it's the quickest way for me to find the many small bugs that are quick to fix.**
+    * May have some instabilities, but issues can usually be resolved quickly.
+    * The main branch is more stable than the dev branch, which in turns offers more features.
+    * Open to feature requests and pull requests. All feedbacks, including reports of typos, are highly appreciated
+    * Please open an issue before making a PR, as there may be ongoing improvements in the pipeline.
 
 * **Key Features**:
     * Aims to **support *any* filetypes** and query from all of them at the same time (**15+** are already implemented!)
@@ -343,7 +342,7 @@ FAQ
 * **Why can `wdoc` also produce summaries?**
     * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
 * **What other tasks are supported by `wdoc`?**
-    * See [Supported tasks](#Supported-tasks).
+    * See [Supported tasks](#Supported-tasks)single_page_doc
 * **Which LLM providers are supported by `wdoc`?**
     * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **What do you use `wdoc` for?**
