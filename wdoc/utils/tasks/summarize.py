@@ -109,13 +109,12 @@ def do_summarize(
         if output_lines:
             first_line = output_lines[0].lower()
             should_remove = (
-                "a deep breath" in first_line
-                or first_line.startswith("i'll summarize")
+                ("deep breath" in first_line and len(first_line) < 20)
+                or (first_line.startswith("i'll summarize") and len(first_line) < 20)
                 or (
                     first_line.strip().startswith("- ")
-                    and (
-                        "a deep breath" in first_line or "i'll summarize" in first_line
-                    )
+                    and ("deep breath" in first_line or "i'll summarize" in first_line)
+                    and (len(first_line) < 20)
                 )
             )
             if should_remove:
