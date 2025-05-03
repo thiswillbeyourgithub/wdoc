@@ -383,6 +383,7 @@ def test_summary_tim_urban():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=True,
         # filetype="youtube",
         filetype="auto",
     )
@@ -415,6 +416,7 @@ def test_summary_tim_urban_debug():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=True,
         # filetype="youtube",
         filetype="auto",
         debug=True,
@@ -437,6 +439,7 @@ def test_summary_with_out_file():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=True,
         filetype="auto",
         out_file=output_path,
     )
@@ -473,6 +476,7 @@ def test_query_tim_urban():
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        disable_llm_cache=True,
         # filetype="youtube",
         # youtube_language="en",
         filetype="auto",
@@ -493,6 +497,7 @@ def test_query_tim_urban_testing_model():
         model="testing",  # Use the special testing model
         query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",  # Keep eval model for now, might need adjustment if testing model affects eval
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",  # Keep embed model
+        disable_llm_cache=True,
         filetype="auto",
     )
     out = inst.query_task(
@@ -514,6 +519,7 @@ def test_whisper_tim_urban():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        disable_llm_cache=True,
         # filetype="youtube",
         youtube_audio_backend="whisper",
         whisper_lang="en",
@@ -610,6 +616,7 @@ def test_summary_tim_urban_openrouter():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=WDOC_TEST_OPENROUTER_MODEL,
+        disable_llm_cache=True,
         # filetype="youtube",
         filetype="auto",
     )
@@ -629,6 +636,7 @@ def test_query_tim_urban_openrouter():
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=WDOC_TEST_OPENROUTER_MODEL,
         model=WDOC_TEST_OPENROUTER_EVAL_MODEL,
+        disable_llm_cache=True,
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
         # filetype="youtube",
         # youtube_language="en",
@@ -652,6 +660,7 @@ def test_summary_tim_urban_default_model():
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
         model=WDOC_TEST_DEFAULT_MODEL,
+        disable_llm_cache=True,
         # filetype="youtube",
         filetype="auto",
     )
@@ -672,6 +681,7 @@ def test_query_tim_urban_default_model():
         model=WDOC_TEST_DEFAULT_MODEL,
         model=WDOC_TEST_DEFAULT_EVAL_MODEL,
         embed_model=WDOC_TEST_DEFAULT_EMBED_MODEL,
+        disable_llm_cache=True,
         # filetype="youtube",
         # youtube_language="en",
         filetype="auto",
