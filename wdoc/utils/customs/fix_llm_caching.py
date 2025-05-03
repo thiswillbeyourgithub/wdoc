@@ -64,3 +64,10 @@ class SQLiteCacheFixed(BaseCache):
         "get the list of keys present in the db"
         for k in self.pdi.keys():
             yield k
+
+    # __repr__ and __str__ are needed otherwise they contain " object at [address]" so the cache bypasses itself
+    def __repr__(self) -> str:
+        return "SQLiteCacheFixed"
+
+    def __str__(self) -> str:
+        return "SQLiteCacheFixed"
