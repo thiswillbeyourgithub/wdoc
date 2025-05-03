@@ -25,7 +25,7 @@ from wdoc.utils.env import env
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
 # Default model names if not specified in environment
-# openai needs to be specifically tested because it uses the langchain backend ChatOpenai instead of ChatLiteLLM like the others
+# we are testing different providers just in case there are unexpected backend issues
 WDOC_TEST_OPENAI_MODEL = os.getenv("WDOC_TEST_OPENAI_MODEL", "gpt-4o")
 WDOC_TEST_OPENAI_EVAL_MODEL = os.getenv("WDOC_TEST_OPENAI_EVAL_MODEL", "gpt-4o-mini")
 WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(

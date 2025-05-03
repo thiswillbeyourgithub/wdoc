@@ -14,7 +14,6 @@ from langchain_core.caches import BaseCache
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
-from langchain_openai import ChatOpenAI
 from loguru import logger
 
 from .env import env
@@ -46,7 +45,7 @@ def load_llm(
     private: bool,
     tags: List[str],
     **extra_model_args,
-) -> Union[ChatLiteLLM, ChatOpenAI, FakeListChatModel]:
+) -> Union[ChatLiteLLM, FakeListChatModel]:
     """load language model"""
     if extra_model_args is None:
         extra_model_args = {}
@@ -145,50 +144,35 @@ def load_llm(
 
     assert private == env.WDOC_PRIVATE_MODE
 
-    if (not private) and (modelname.backend == "openai") and (api_base is None):
-        max_tokens = get_model_max_tokens(modelname)
-        logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
-        if "max_tokens" not in extra_model_args:
+    max_tokens = get_model_max_tokens(modelname)
+    logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
+    if "max_tokens" not in extra_model_args:
+        # intentionaly limiting max tokens because it can cause bugs
+        if modelname.backend != "ollama":
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
-        logger.debug(f"Using ChatOpenAI backend for model {modelname.original}")
-        llm = ChatOpenAI(
-            model_name=modelname.model,
-            cache=llm_cache,
-            disable_streaming=True,  # Not needed and might break cache
-            verbose=llm_verbosity,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
-            + langfuse_callback_holder,  # use langchain's callback to langfuse
-            **extra_model_args,
-        )
-    else:
-        max_tokens = get_model_max_tokens(modelname)
-        logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
-        if "max_tokens" not in extra_model_args:
-            # intentionaly limiting max tokens because it can cause bugs
-            if modelname.backend != "ollama":
+        else:
+            if max_tokens <= 10_000:
                 extra_model_args["max_tokens"] = int(max_tokens * 0.9)
             else:
-                if max_tokens <= 10_000:
-                    extra_model_args["max_tokens"] = int(max_tokens * 0.9)
-                else:
-                    logger.debug(
-                        f"Detected an ollama model with large max_tokens ({max_tokens}), they usually overestimate their context window capabilities so we reduce it if the user does not specify a max_tokens kwarg"
-                    )
-                    extra_model_args["max_tokens"] = int(max(max_tokens * 0.2, 4096))
-        logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
-        llm = ChatLiteLLM(
-            model_name=modelname.original,
-            disable_streaming=True,  # Not needed and might break cache
-            api_base=api_base,
-            cache=llm_cache,
-            verbose=llm_verbosity,
-            tags=tags,
-            callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
-            + langfuse_callback_holder,
-            user=env.WDOC_LITELLM_USER,
-            **extra_model_args,
-        )
-        litellm.drop_params = True
+                logger.debug(
+                    f"Detected an ollama model with large max_tokens ({max_tokens}), they usually overestimate their context window capabilities so we reduce it if the user does not specify a max_tokens kwarg"
+                )
+                extra_model_args["max_tokens"] = int(max(max_tokens * 0.2, 4096))
+    logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
+    llm = ChatLiteLLM(
+        model_name=modelname.original,
+        disable_streaming=True,  # Not needed and might break cache
+        api_base=api_base,
+        cache=llm_cache,
+        verbose=llm_verbosity,
+        tags=tags,
+        callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
+        + langfuse_callback_holder,
+        user=env.WDOC_LITELLM_USER,
+        **extra_model_args,
+    )
+    litellm.drop_params = True
+
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
         assert (
