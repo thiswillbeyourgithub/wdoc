@@ -21,3 +21,4 @@ scripts/NtfySummarizer/summaries
 scripts/notfinished_*
 scripts/**/*perso*
 latest_release_notes_*.md
+wdoc_user_cache_dir/
