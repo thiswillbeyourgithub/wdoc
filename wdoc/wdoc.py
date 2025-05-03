@@ -482,6 +482,7 @@ class wdoc:
         self.file_loader_n_jobs = file_loader_n_jobs
         self.llms_api_bases = llms_api_bases
         self.oneoff = oneoff
+        self.latest_cost = 0  # used to keep track of the costs overall
         if debug:
             os.environ["WDOC_DEBUG"] = "true"
             os.environ["WDOC_VERBOSE"] = "true"
@@ -2155,7 +2156,7 @@ class wdoc:
 
             logger.info(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
-            assert total_cost + etotal_cost > self.latest_cost
+            assert total_cost + etotal_cost >= self.latest_cost
             self.latest_cost = total_cost + etotal_cost
 
             output["total_cost"] = self.latest_cost
