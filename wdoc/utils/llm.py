@@ -185,10 +185,12 @@ def load_llm(
         ), "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
 
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
+    # Simply turning '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at 0x72cd5a6d4050>' into '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at REDACTED>'
     if llm.cache:
         cur = str(llm.cache)
-        llm.cache.__class__.__repr__ = lambda x=None: cur.split(" at ")[0]
-        llm.cache.__class__.__str__ = lambda x=None: cur.split(" at ")[0]
+        fixed = cur.split(" at ")[0] + "REDACTED"
+        llm.cache.__class__.__repr__ = lambda x=None: fixed
+        llm.cache.__class__.__str__ = lambda x=None: fixed
     return llm
 
 
