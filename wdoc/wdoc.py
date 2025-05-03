@@ -716,25 +716,6 @@ class wdoc:
                     "Cost estimate > limit but the api_base was modified so not crashing."
                 )
 
-        if (
-            "frequency_penalty" in self.model_supported_params
-            and "frequency_penalty" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if (
-            "presence_penalty" in self.model_supported_params
-            and "presence_penalty" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["presence_penalty"] = 0.0
-        if (
-            "temperature" in self.model_supported_params
-            and "temperature" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["temperature"] = 0.0
-        logger.debug(
-            f"Model parameters after setting task specific adjustments: '{self.llm.model_kwargs}'"
-        )
-
         @optional_typecheck
         def summarize_documents(
             path: Any,
@@ -1012,26 +993,6 @@ class wdoc:
 
     @optional_typecheck
     def prepare_query_task(self) -> None:
-        # set argument that are better suited for querying
-        if (
-            "frequency_penalty" in self.model_supported_params
-            and "frequency_penalty" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["frequency_penalty"] = 0.0
-        if (
-            "presence_penalty" in self.model_supported_params
-            and "presence_penalty" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["presence_penalty"] = 0.0
-        if (
-            "temperature" in self.model_supported_params
-            and "temperature" not in self.model_kwargs
-        ):
-            self.llm.model_kwargs["temperature"] = 0.0
-        logger.debug(
-            f"Model parameters after setting task specific adjustments: '{self.llm.model_kwargs}'"
-        )
-
         # load embeddings for querying
         self.embedding_engine = load_embeddings_engine(
             modelname=self.embed_model,
