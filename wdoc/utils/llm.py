@@ -147,10 +147,10 @@ def load_llm(
 
     if (not private) and (modelname.backend == "openai") and (api_base is None):
         max_tokens = get_model_max_tokens(modelname)
-        logger.debug(f"Detected max token for model {modelname}: {max_tokens}")
+        logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
-        logger.debug(f"Using ChatOpenAI backend for model {modelname}")
+        logger.debug(f"Using ChatOpenAI backend for model {modelname.original}")
         llm = ChatOpenAI(
             model_name=modelname.model,
             cache=llm_cache,
@@ -162,12 +162,12 @@ def load_llm(
         )
     else:
         max_tokens = get_model_max_tokens(modelname)
-        logger.debug(f"Detected max token for model {modelname}: {max_tokens}")
+        logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
         if "max_tokens" not in extra_model_args:
             extra_model_args["max_tokens"] = int(
                 max_tokens * 0.9
             )  # intentionaly limiting max tokens because it can cause bugs
-        logger.debug(f"Using ChatLiteLLM backend for model {modelname}")
+        logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
         llm = ChatLiteLLM(
             model_name=modelname.original,
             disable_streaming=True,  # Not needed and might break cache
@@ -195,7 +195,7 @@ def load_llm(
         llm.cache.__class__.__repr__ = lambda x=None: fixed
         llm.cache.__class__.__str__ = lambda x=None: fixed
     logger.debug(
-        f"Extra model args there were used for {modelname}: '{extra_model_args}'"
+        f"Extra model args there were used for {modelname.original}: '{extra_model_args}'"
     )
     return llm
 

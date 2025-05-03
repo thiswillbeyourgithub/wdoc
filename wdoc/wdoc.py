@@ -523,6 +523,9 @@ class wdoc:
             self.llm_price = [0.0, 0.0]
         else:
             self.llm_price = get_model_price(self.model.original)
+        logger.debug(
+            f"Detected price of '{self.model.original}': Input: {self.llm_price[0]} Output: {self.llm_price[1]}"
+        )
 
         if self.query_eval_model is not None:
             if env.WDOC_ALLOW_NO_PRICE:
@@ -544,6 +547,9 @@ class wdoc:
                 self.query_evalllm_price = get_model_price(
                     self.query_eval_model.original
                 )
+            logger.debug(
+                f"Detected price of '{self.query_eval_model.original}': Input: {self.query_evalllm_price[0]} Output: {self.query_evalllm_price[1]}"
+            )
 
         if env.WDOC_VERBOSE:
             set_verbose(True)
