@@ -175,9 +175,8 @@ def load_llm(
             cache=llm_cache,
             verbose=llm_verbosity,
             tags=tags,
-            callbacks=[
-                PriceCountingCallback(verbose=llm_verbosity)
-            ],  # + langfuse_callback_holder,  # do not use langchain's callback as chatlitellm seems buggy: we use directly litellm's backend instead
+            callbacks=[PriceCountingCallback(verbose=llm_verbosity)]
+            + langfuse_callback_holder,
             user=env.WDOC_LITELLM_USER,
             **extra_model_args,
         )
