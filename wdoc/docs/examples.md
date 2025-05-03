@@ -166,6 +166,17 @@ wdoc --model="ollama/gemma:2b" \
      my_task
 ```
 
+Note: you might find that ollama models are sometimes overly optimistic about their context length. You can pass arguments to lower it like so:
+```zsh
+wdoc --model="ollama/gemma:2b" \
+     --query_eval_model="ollama/gemma:2b" \
+     --model_kwargs='{"max_tokens": 4096}' \
+     --query_eval_model="ollama/gemma:2b" \
+     --query_eval_model_kwargs='{"max_tokens": 4096}' \
+     --embed_model="ollama/bge-m3" \
+     my_task
+```
+
 6. Parse an Anki deck as text
 ```zsh
 wdoc_parse_file --filetype "anki" \
