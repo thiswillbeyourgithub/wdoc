@@ -146,10 +146,12 @@ Click to read more
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
     - support other vector databases
+    - learn how to set a github action for test code coverage 
 - ### Features
     - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
     - count how many time each source is used, as it can be relevant to infer answer quality
     - add an html format output. It would display a nice UI with proper dropdowns for sources etc
+    - if a model supports structured output we should make use of it to get the thinking and answer part. Opt in because some models hide their thoughts.
     - add an intermediate step for queries that asks the LLM for appropriate headers for the md output. Then for each intermediate answer attribute it a list of 1 to 3 headers (because a given intermediate answer can  contain several pieces of information), then do the batch merge of intermediate answer per header.
         - this needs to be scalable and easy to add recursion to (because then we can do this for subheaders and so on)
         - the end goal is to have a scalable solution to answer queries about extremely large documents for impossibly vast questions
