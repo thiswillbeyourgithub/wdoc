@@ -506,20 +506,9 @@ class wdoc:
                 )
             set_llm_cache(self.llm_cache)
 
-        if env.WDOC_ALLOW_NO_PRICE:
-            logger.warning(
-                f"Disabling price computation for {self.model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
-            )
-            self.llm_price = [0.0, 0.0]
-
-        elif llms_api_bases["model"]:
+        if llms_api_bases["model"]:
             logger.warning(
                 f"Disabling price computation for model because api_base for 'model' was modified to {llms_api_bases['model']}"
-            )
-            self.llm_price = [0.0, 0.0]
-        elif self.model.is_testing():
-            logger.warning(
-                f"Disabling price computation for model because it is a 'testing/testing' model"
             )
             self.llm_price = [0.0, 0.0]
         else:
@@ -529,25 +518,13 @@ class wdoc:
         )
 
         if self.query_eval_model is not None:
-            if env.WDOC_ALLOW_NO_PRICE:
-                logger.warning(
-                    f"Disabling price computation for {self.query_eval_model.original} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
-                )
-                self.query_evalllm_price = [0.0, 0.0]
-            elif llms_api_bases["query_eval_model"]:
+            if llms_api_bases["query_eval_model"]:
                 logger.warning(
                     "Disabling price computation for query_eval_model because api_base was modified"
                 )
                 self.query_evalllm_price = [0.0, 0.0]
-            elif self.query_eval_model.is_testing():
-                logger.warning(
-                    f"Disabling price computation for query_eval_model because it is a 'testing/testing' model"
-                )
-                self.query_evalllm_price = [0.0, 0.0]
             else:
-                self.query_evalllm_price = get_model_price(
-                    self.query_eval_model.original
-                )
+                self.query_evalllm_price = get_model_price(self.query_eval_model)
             logger.debug(
                 f"Detected price of '{self.query_eval_model.original}': Input: {self.query_evalllm_price[0]} Output: {self.query_evalllm_price[1]}"
             )

@@ -575,49 +575,6 @@ def get_openrouter_metadata() -> dict:
     return data
 
 
-@memoize
-@optional_typecheck
-def get_model_price(model: str) -> List[float]:
-    assert (
-        not env.WDOC_ALLOW_NO_PRICE
-    ), f"Unexpected value for WDOC_ALLOW_NO_PRICE: {env.WDOC_ALLOW_NO_PRICE}"
-    if model.startswith("ollama/"):
-        return [0.0, 0.0]
-    elif model.startswith(f"openrouter/"):
-        metadata = get_openrouter_metadata()
-        assert model in metadata, f"Missing {model} from openrouter"
-        pricing = metadata[model]["pricing"]
-        if "request" in pricing:
-            logger.error(
-                f"Found non 0 request for {model}, this is not supported by wdoc so the price will not be accurate"
-            )
-        if "internal_reasoning" in pricing:
-            logger.error(
-                f"Found non 0 internal_reasoning cost for {model}, this is not supported by wdoc so the price will not be accurate."
-            )
-        return [pricing["prompt"], pricing["completion"]]
-
-    if model in litellm.model_cost:
-        return [
-            litellm.model_cost[model]["input_cost_per_token"],
-            litellm.model_cost[model]["output_cost_per_token"],
-        ]
-    elif (trial := model.split("/", 1)[1]) in litellm.model_cost:
-        return [
-            litellm.model_cost[trial]["input_cost_per_token"],
-            litellm.model_cost[trial]["output_cost_per_token"],
-        ]
-    elif (trial2 := model.split("/")[-1]) in litellm.model_cost:
-        return [
-            litellm.model_cost[trial2]["input_cost_per_token"],
-            litellm.model_cost[trial2]["output_cost_per_token"],
-        ]
-    else:
-        raise Exception(
-            f"Can't find the price of '{model}' nor '{trial}' or '{trial2}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
-        )
-
-
 @dataclass
 class ModelName:
     "Simply stores the different way to phrase a model name"
@@ -659,6 +616,45 @@ class ModelName:
     def __hash__(self):
         # necessary for memoizing
         return (str(self.original.__hash__()) + str("ModelName".__hash__())).__hash__()
+
+
+@memoize
+@optional_typecheck
+def get_model_price(model: ModelName) -> List[float]:
+    if env.WDOC_ALLOW_NO_PRICE:
+        logger.warning(
+            f"Disabling price computation for {model} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
+        )
+        return [0.0, 0.0]
+
+    if model.backend == "ollama":
+        return [0.0, 0.0]
+    if model.is_testing() == "ollama":
+        return [0.0, 0.0]
+    elif model.backend == "openrouter":
+        metadata = get_openrouter_metadata()
+        assert model in metadata, f"Missing {model} from openrouter"
+        pricing = metadata[model]["pricing"]
+        if "request" in pricing:
+            logger.error(
+                f"Found non 0 request for {model}, this is not supported by wdoc so the price will not be accurate"
+            )
+        if "internal_reasoning" in pricing:
+            logger.error(
+                f"Found non 0 internal_reasoning cost for {model}, this is not supported by wdoc so the price will not be accurate."
+            )
+        return [pricing["prompt"], pricing["completion"]]
+
+    for key in ["original", "model", "sanitized"]:
+        mod = getattr(model, key)
+        if mod in litellm.model_cost:
+            return [
+                litellm.model_cost[mod]["input_cost_per_token"],
+                litellm.model_cost[mod]["output_cost_per_token"],
+            ]
+    raise Exception(
+        f"Can't find the price of '{model}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
+    )
 
 
 @memoize
