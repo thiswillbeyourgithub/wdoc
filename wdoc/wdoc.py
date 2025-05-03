@@ -103,7 +103,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "3.2.0"
+    VERSION: str = "3.2.1"
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 
