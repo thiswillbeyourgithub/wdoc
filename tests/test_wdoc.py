@@ -50,6 +50,8 @@ WDOC_TEST_DEFAULT_EMBED_MODEL = os.getenv(
     "WDOC_TEST_DEFAULT_EMBED_MODEL", env.WDOC_DEFAULT_EMBED_MODEL
 )
 
+os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = True
+
 # the unexpected env var should be tested both before import and before run:
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_2"] = "testing"
 
