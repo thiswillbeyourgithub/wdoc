@@ -191,9 +191,29 @@ def load_llm(
     # Simply turning '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at 0x72cd5a6d4050>' into '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at REDACTED>'
     if llm.cache:
         cur = str(llm.cache)
-        fixed = cur.split(" at ")[0] + "REDACTED"
-        llm.cache.__class__.__repr__ = lambda x=None: fixed
-        llm.cache.__class__.__str__ = lambda x=None: fixed
+        if "object at " in cur:
+            logger.debug(
+                "The SQLiteCache of langchain is broken so we will modify ths __repr__ and __str__ of its class"
+            )
+            fixed = cur.split(" at ")[0] + "REDACTED"
+            llm.cache.__class__.__repr__ = lambda _=None: fixed
+            llm.cache.__class__.__str__ = lambda _=None: fixed
+
+        # also try to make it so that setting extra model params does not reuse the cache
+        if extra_model_args:
+            cur_string = llm._get_llm_string()
+            alt_string = llm._get_llm_string(extra_model_args)
+            if cur_string != alt_string:
+                logger.debug(
+                    "Modifying the llm._get_llm_string because langchain broke it over a year ago..."
+                )
+                llm._get_llm_string = lambda *args, **kwargs: alt_string
+                cur = str(llm._get_llm_string)
+                if "object at " in cur:
+                    fixed = cur.split(" at ")[0] + "REDACTED"
+                    llm._get_llm_string.__class__.__repr__ = lambda _=None: fixed
+                    llm._get_llm_string.__class__.__str__ = lambda _=None: fixed
+
     logger.debug(
         f"Extra model args there were used for {modelname.original}: '{extra_model_args}'"
     )
