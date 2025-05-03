@@ -453,6 +453,7 @@ class wdoc:
 
         # storing as attributes
         self.model = ModelName(model)
+        self.model_supported_params = get_supported_model_params(self.model)
         if query_eval_model is not None:
             self.query_eval_model = ModelName(query_eval_model)
         else:
@@ -715,19 +716,24 @@ class wdoc:
                     "Cost estimate > limit but the api_base was modified so not crashing."
                 )
 
-        llm_params = get_supported_model_params(self.model)
         if (
-            "frequency_penalty" in llm_params
+            "frequency_penalty" in self.model_supported_params
             and "frequency_penalty" not in self.model_kwargs
         ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
         if (
-            "presence_penalty" in llm_params
+            "presence_penalty" in self.model_supported_params
             and "presence_penalty" not in self.model_kwargs
         ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in llm_params and "temperature" not in self.model_kwargs:
+        if (
+            "temperature" in self.model_supported_params
+            and "temperature" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["temperature"] = 0.0
+        logger.debug(
+            f"Model parameters after setting task specific adjustments: '{self.llm.model_kwargs}'"
+        )
 
         @optional_typecheck
         def summarize_documents(
@@ -1007,19 +1013,24 @@ class wdoc:
     @optional_typecheck
     def prepare_query_task(self) -> None:
         # set argument that are better suited for querying
-        model_params = get_supported_model_params(self.model)
         if (
-            "frequency_penalty" in model_params
+            "frequency_penalty" in self.model_supported_params
             and "frequency_penalty" not in self.model_kwargs
         ):
             self.llm.model_kwargs["frequency_penalty"] = 0.0
         if (
-            "presence_penalty" in model_params
+            "presence_penalty" in self.model_supported_params
             and "presence_penalty" not in self.model_kwargs
         ):
             self.llm.model_kwargs["presence_penalty"] = 0.0
-        if "temperature" in model_params and "temperature" not in self.model_kwargs:
+        if (
+            "temperature" in self.model_supported_params
+            and "temperature" not in self.model_kwargs
+        ):
             self.llm.model_kwargs["temperature"] = 0.0
+        logger.debug(
+            f"Model parameters after setting task specific adjustments: '{self.llm.model_kwargs}'"
+        )
 
         # load embeddings for querying
         self.embedding_engine = load_embeddings_engine(
