@@ -116,7 +116,7 @@ class wdoc:
         model: str = env.WDOC_DEFAULT_MODEL,
         embed_model: str = env.WDOC_DEFAULT_EMBED_MODEL,
         query_eval_model: Optional[str] = env.WDOC_DEFAULT_QUERY_EVAL_MODEL,
-        embed_kwargs: Optional[dict] = None,
+        embed_model_kwargs: Optional[dict] = None,
         save_embeds_as: Union[str, Path] = "{user_cache}/latest_docs_and_embeddings",
         load_embeds_from: Optional[Union[str, Path]] = None,
         top_k: Union[str, int] = "auto_200_500",
@@ -270,16 +270,18 @@ class wdoc:
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
                 f"{litellm.models_by_provider.keys()}"
             )
-        if embed_kwargs is None:
-            embed_kwargs = {}
-        if isinstance(embed_kwargs, str):
+        if embed_model_kwargs is None:
+            embed_model_kwargs = {}
+        if isinstance(embed_model_kwargs, str):
             try:
-                embed_kwargs = json.loads(embed_kwargs)
+                embed_model_kwargs = json.loads(embed_model_kwargs)
             except Exception as err:
                 raise Exception(
-                    f"Failed to parse embed_kwargs: '{embed_kwargs}'"
+                    f"Failed to parse embed_model_kwargs: '{embed_model_kwargs}'"
                 ) from err
-        assert isinstance(embed_kwargs, dict), f"Not a dict but {type(embed_kwargs)}"
+        assert isinstance(
+            embed_model_kwargs, dict
+        ), f"Not a dict but {type(embed_model_kwargs)}"
         assert query_eval_check_number > 0, "query_eval_check_number value"
 
         if llms_api_bases is None:
@@ -410,7 +412,7 @@ class wdoc:
         self.task = task
         self.filetype = filetype
         self.embed_model = ModelName(embed_model)
-        self.embed_kwargs = embed_kwargs
+        self.embed_model_kwargs = embed_model_kwargs
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
@@ -963,7 +965,7 @@ class wdoc:
             modelname=self.embed_model,
             cli_kwargs=self.cli_kwargs,
             api_base=self.llms_api_bases["embeddings"],
-            embed_kwargs=self.embed_kwargs,
+            embed_kwargs=self.embed_model_kwargs,
             private=self.private,
             do_test=env.WDOC_EMBED_TESTING,
         )
