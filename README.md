@@ -61,7 +61,7 @@ wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say
     4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
     5. Pass each of those documents to the smaller LLM (default: openrouter/google/gemini-2.0-flash-001) to tell us if the document seems appropriate given the user query
     6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-2.5-pro-preview-03-25) to extract relevant info and give one answer.
+    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-2.5-pro-preview-03-25) to extract relevant info and give one answer per relevant document.
     8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers) and each batch is combined into a single answer.
     9. Rinse and repeat steps 7+8 until we have only one answer, that is returned to the user.
 
