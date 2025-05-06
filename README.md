@@ -11,19 +11,18 @@
 
 * **Goal and project specifications**: `wdoc`'s  goal is to create **perfectly useful** summaries and **perfectly useful** sourced answers to questions on heterogeneous corpus. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes an opinionated summary feature to help users efficiently keep up with large amounts of information. It uses mostly [LangChain](https://python.langchain.com/) and [LiteLLM](https://docs.litellm.ai/docs/) as backends.
 
-* **Current status**: **Usable, tested, still under active development, tens of planned features**
+* **Current status**: **usable, tested, still under active development, tens of planned features**
     * I don't plan on stopping to read anytime soon so if you find it promising, stick around as I have many improvements planned (see roadmap section).
     * **I would greatly benefit from testing by users as it's the quickest way for me to find the many minor quick-to-fix bugs.**
-    * May have some instabilities, but issues can usually be resolved quickly.
     * The main branch is more stable than the dev branch, which in turns offers more features.
     * Open to feature requests and pull requests. All feedbacks, including reports of typos, are highly appreciated
     * Please open an issue before making a PR, as there may be ongoing improvements in the pipeline.
 
 * **Key Features**:
-    * Aims to **support *any* filetypes** and query from all of them at the same time (**15+** are already implemented!)
     * **High recall and specificity**: it was made to find A LOT of documents using carefully designed embedding search then carefully aggregate gradually each answer using semantic batch to produce a single answer that mentions the source pointing to the exact portion of the source document.
+        * Use both an expensive and cheap LLM to make recall as high as possible because we can afford fetching a lot of documents per query (via embeddings)
     * Supports **virtually any LLM providers**, including local ones, and even with extra layers of security for super secret stuff.
-    * Use both an expensive and cheap LLM to make recall as high as possible because we can afford fetching a lot of documents per query (via embeddings)
+    * Aims to **support *any* filetypes** and query from all of them at the same time (**15+** are already implemented!)
     * **Actually *useful* AI powered summary**: get the thought process of the author instead of nebulous takeaways.
     * **Actually *useful* AI powered queries**: get the **sourced** indented markdown answer yo your questions instead of hallucinated nonsense.
     * **Extensible**, this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool)
