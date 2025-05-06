@@ -140,12 +140,13 @@ Click to read more
     - add more tests
         - add test for the private mode
         - add test for the testing models
+        - add test for the recursive loader functions
         - add test for each loader
     - rewrite the python API to make it more useable. (also related to https://github.com/thiswillbeyourgithub/wdoc/issues/13)
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
-    - support other vector databases
+    - support other vector databases (important to bridge it to [karakeep](https://github.com/karakeep-app/karakeep/issues/1359)!)
     - learn how to set a github action for test code coverage 
 - ### Features
     - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
@@ -156,6 +157,7 @@ Click to read more
         - this needs to be scalable and easy to add recursion to (because then we can do this for subheaders and so on)
         - the end goal is to have a scalable solution to answer queries about extremely large documents for impossibly vast questions
     - use apprise instead of ntfy for the scripts
+    - refactor the loader to make a much lighter install, that rely on external parser or docling or crawl4ai etc
     - add crawl4ai parser: https://github.com/unclecode/crawl4ai
     - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
         - default value is "author" "page" title"
