@@ -50,7 +50,7 @@ wdoc --help
 
 8. If you want to only use local models, here's an example with [ollama](https://ollama.com/):
 ```bash
-wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/bge-m3" --task summarize --path https://situational-awareness.ai/
+wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/snowflake-arctic-embed2" --task summarize --path https://situational-awareness.ai/
 ```
 You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using 
 ```bash
@@ -162,7 +162,7 @@ wdoc --task=summary \
 ```zsh
 wdoc --model="ollama/qwen3:8b" \
      --query_eval_model="ollama/qwen3:8b" \
-     --embed_model="ollama/bge-m3" \
+     --embed_model="ollama/snowflake-arctic-embed2" \
      --task summarize --path https://situational-awareness.ai/
 ```
 
@@ -173,7 +173,7 @@ wdoc --model="ollama/qwen3:8b" \
      --model_kwargs='{"max_tokens": 4096}' \
      --query_eval_model="ollama/qwen3:8b" \
      --query_eval_model_kwargs='{"max_tokens": 4096}' \
-     --embed_model="ollama/bge-m3" \
+     --embed_model="ollama/snowflake-arctic-embed2" \
      --task summarize --path https://situational-awareness.ai/
 ```
 
