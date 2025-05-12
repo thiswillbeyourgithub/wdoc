@@ -188,17 +188,22 @@
 
 * `--save_embeds_as`: str, default `"{user_dir}/latest_docs_and_embeddings"`
     * only used if task is query
-    save the latest 'inputs' to a file. Can be loaded again with
-    --load_embeds_from to speed up loading time. This loads both the
-    split documents and embeddings but will not update itself if the
-    original files have changed.
-    {user_dir} is automatically replaced by the path to the usual
-    cache folder for the current user.
-    Should not specified at the same time as `--load_embeds_from`
+    Saves the loaded documents and embeddings to a file in the specified
+    directory. This then be loaded again with `--load_embeds_from` to
+    avoid recomputing embeddings.
+    Both the document splits and their embeddings are saved there,
+    and always overwrite the location (i.e. no 'updating' of the previously
+    saved documents and embeddings).
+    In the default value, "{user_dir}" is automatically replaced by
+    the path to the default cache folder for the current user. This
+    way it always speeds up the previous session if `--load_embeds_from`.
+    Should not be specified at the same time as `--load_embeds_from`
     as `--load_embeds_from` will take priority.
 
 * `--load_embeds_from`: str, default `None`
     * path to the file saved using `--save_embeds_as`
+    If loading the embeddings fails, `wdoc` will crash instead of
+    creating new embeddings, out of safety.
     Should not be specified at the same time as `--save_embeds_as`
     as `--load_embeds_from` will take priority.
 
