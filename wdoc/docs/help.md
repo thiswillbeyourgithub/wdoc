@@ -193,15 +193,19 @@
     split documents and embeddings but will not update itself if the
     original files have changed.
     {user_dir} is automatically replaced by the path to the usual
-    cache folder for the current user
+    cache folder for the current user.
+    Should not specified at the same time as `--load_embeds_from`
+    as `--load_embeds_from` will take priority.
 
 * `--load_embeds_from`: str, default `None`
     * path to the file saved using `--save_embeds_as`
+    Should not be specified at the same time as `--save_embeds_as`
+    as `--load_embeds_from` will take priority.
 
 * `--top_k`: Union[int, str], default `auto_200_500`
     * number of chunks to look for when querying. It is high because the
     eval model is used to refilter the document after the embeddings
-    first pass.
+    first pass.e
     If top_k is a string, the format assumed is "auto_N_m" where N is the
     starting top_k and M is the max top_k value. If the number of filtered
     document is more than 90% of top_k, top_k will gradually increase up to M
