@@ -737,6 +737,11 @@ def get_splitter(
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
     if task in ["query", "search"]:
+        if max_tokens > 7000:
+            logger.warning(
+                f"Setting max_tokens for model {modelname} to 7000 instead of {max_tokens} because the embeddings models rarely can do more."
+            )
+        max_tokens = min(max_tokens, 7000)
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
