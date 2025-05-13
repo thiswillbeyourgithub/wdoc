@@ -455,7 +455,7 @@ def wrapped_model_name_matcher(model: str) -> str:
                 )
             else:
                 backends.append(backend)
-    if is_verbose:
+    if env.WDOC_VERBOE:
         printed_unexpected_api_keys[0] = True
     assert backends, "No API keys found in environnment"
 
@@ -504,7 +504,7 @@ def model_name_matcher(model: str) -> str:
         return model
 
     out = wrapped_model_name_matcher(model)
-    if out != model and is_verbose:
+    if out != model and env.WDOC_VERBOSE:
         logger.debug(f"Matched model name {model} to {out}")
     assert (
         out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
