@@ -90,9 +90,10 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
     message = dedent(message)
     if not is_out_piped:
         md = Markdown(message)
+        logger.debug(message)
         console.print(md, style=color)
     else:
-        logger.info(message)
+        logger.info(message)  # always shown
     return message
 
 

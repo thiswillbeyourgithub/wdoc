@@ -2053,12 +2053,16 @@ class wdoc:
             if self.out_file:
 
                 def output_handler(text: str) -> None:
+                    # the raw markdown is written to the file
+                    # and the rendered markdown is printed on screen
                     with open(self.out_file, "a") as f:
                         f.write(text + "\n")
                     return md_printer(text)
 
             else:
-                output_handler = md_printer
+
+                def output_handler(text: str) -> None:
+                    return md_printer(text)
 
             # display sources (i.e. documents used to answer)
             output_handler("---")
