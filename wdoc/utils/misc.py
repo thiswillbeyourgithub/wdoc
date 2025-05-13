@@ -732,21 +732,21 @@ def get_splitter(
             f"Failed to get max_tokens limit for model {modelname.original}: '{err}'"
         )
 
-    # don't use overly large chunks anyway
+    # Cap context sizes
+    if task in ["query", "search"] and max_tokens > env.WDOC_MAX_EMBED_CONTEXT:
+        logger.warning(
+            f"Capping max_tokens for model {modelname} to WDOC_MAX_EMBED_CONTEXT ({env.WDOC_MAX_EMBED_CONTEXT} instead of {max_tokens}) because in query mode and we can only guess the context size of the embedding model."
+        )
+        max_tokens = min(max_tokens, env.WDOC_MAX_EMBED_CONTEXT)
     if max_tokens > env.WDOC_MAX_CHUNK_SIZE:
         logger.debug(
-            f"Setting max_tokens for model {modelname} to the WDOC_MAX_CHUNK_SIZE value ({env.WDOC_MAX_CHUNK_SIZE} instead of {max_tokens})."
+            f"Capping max_tokens for model {modelname} to the WDOC_MAX_CHUNK_SIZE value ({env.WDOC_MAX_CHUNK_SIZE} instead of {max_tokens})."
         )
-    max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
+        max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
     if task in ["query", "search"]:
-        if max_tokens > 7000:
-            logger.warning(
-                f"Setting max_tokens for model {modelname} to 7000 instead of {max_tokens} because the embeddings models rarely can do more."
-            )
-        max_tokens = min(max_tokens, 7000)
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
