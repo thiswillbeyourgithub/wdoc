@@ -726,13 +726,18 @@ def get_splitter(
         else:
             max_tokens = get_model_max_tokens(modelname)
 
-        # don't use overly large chunks anyway
-        max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
     except Exception as err:
         max_tokens = 4096
         logger.warning(
             f"Failed to get max_tokens limit for model {modelname.original}: '{err}'"
         )
+
+    # don't use overly large chunks anyway
+    if max_tokens > env.WDOC_MAX_CHUNK_SIZE:
+        logger.debug(
+            f"Setting max_tokens for model {modelname} to the WDOC_MAX_CHUNK_SIZE value ({env.WDOC_MAX_CHUNK_SIZE} instead of {max_tokens})."
+        )
+    max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
