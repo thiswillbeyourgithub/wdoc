@@ -728,6 +728,11 @@
     for the latter.
     This can also be used to avoid chunking when querying a text if you want the LLM to have the entier text as context instead of chunking.
 
+* `WDOC_MAX_EMBED_CONTEXT`, default: `7_000`
+    * This variable sets the maximum token_size for document chunks when the task is `query` or `search`.
+    This is necessary because some large language models (LLMs) might have a larger context window than their corresponding embedding models.
+    The actual maximum chunk size will be the minimum of `WDOC_MAX_CHUNK_SIZE` and `WDOC_MAX_EMBED_CONTEXT`.
+
 * `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`, default: `2000`
     * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
