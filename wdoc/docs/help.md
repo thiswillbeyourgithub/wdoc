@@ -734,7 +734,7 @@
     The actual maximum chunk size will be the minimum of `WDOC_MAX_CHUNK_SIZE` and `WDOC_MAX_EMBED_CONTEXT`.
 
 * `WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE`, default: `2000`
-    * GPT-3.5 token size considered maximum for a batch when doing semantic batching.
+    * Token size considered maximum for a single batch when doing semantic batching. The tokenizer used is the one from `gpt-4o-mini` as we don't have access to most models' tokenizers.
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
 

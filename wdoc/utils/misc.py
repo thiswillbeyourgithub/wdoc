@@ -692,7 +692,7 @@ def get_model_max_tokens(modelname: ModelName) -> int:
 @optional_typecheck
 def get_tkn_length(
     tosplit: str,
-    modelname: Union[str, ModelName] = "gpt-3.5-turbo",
+    modelname: Union[str, ModelName] = "gpt-4o-mini",
 ) -> int:
     if isinstance(modelname, ModelName):
         modelname = modelname.original
@@ -702,7 +702,7 @@ def get_tkn_length(
 
 text_splitters = {}
 
-DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-3.5-turbo")
+DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
 
 
 @optional_typecheck
@@ -721,7 +721,8 @@ def get_splitter(
         return get_splitter(task=task, modelname=DEFAULT_SPLITTER_MODELNAME)
 
     try:
-        if modelname.model == "gpt-3.5-turbo":
+        if modelname.model == "gpt-4o-mini":
+            # this is not the true limit of 4o-mini but a good placeholder for if we are using the default model anyway, see get_tkn_length above
             max_tokens = 4096
         else:
             max_tokens = get_model_max_tokens(modelname)
