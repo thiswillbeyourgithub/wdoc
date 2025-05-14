@@ -18,7 +18,7 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
-        # do "python -m pip install git+https://github.com/ytdl-patched/ytdl-patched"
+        # do pip install --force-reinstall "yt-dlp[default] @ https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz" --user
         try:
             subprocess.check_call(
                 [
@@ -28,28 +28,15 @@ class PostInstallCommand(install):
                 + pip
                 + [
                     "install",
-                    "git+https://github.com/ytdl-patched/ytdl-patched",
+                    "--force-reinstall",
+                    "yt-dlp[default] @ https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz",
+                    "--user",
                 ]
             )
         except Exception as err:
-            print(f"Error when installing youtube_dl_patched from git: '{err}'")
-
-        # do "python -m pip install -U git+https://github.com/ytdl-org/youtube-dl.git"
-        try:
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    "-m",
-                ]
-                + pip
-                + [
-                    "install",
-                    "-U",
-                    "git+https://github.com/ytdl-org/youtube-dl.git",
-                ],
+            print(
+                f"Error when installing yt-dlp from the latest master from git: '{err}'"
             )
-        except Exception as err:
-            print(f"Error when pip updating youtube_dl: '{err}'")
 
         # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
         # see https://github.com/ahupp/python-magic/issues/261
@@ -183,10 +170,8 @@ setup(
         "ankipandas>=0.3.15",  # anki
         "tldextract>=5.1.2",  # url
         "goose3 >= 3.1.19",  # url
-        "youtube_dl",  # youtube_dl, we try to install yt_dl_patched using PostInstallCommand as it's not in pypi but we install yt_dl anyway just in case. Also the latest version will try to be installed from the git repo directly using the PostInstallCommand function above.
         "youtube-transcript-api >= 0.6.2",  # youtube
         # "pytube >= 15.0.0",  # youtube
-        "yt-dlp >= 2024.11.2.232942.dev0",  # youtube
         "LogseqMarkdownParser >= 3.3",  # logseq files (I'm the dev behind it)
         "deepgram-sdk >= 3.2.7",  # audio transcription
         "httpx >= 0.27.0",  # to increase deepgram timeout
