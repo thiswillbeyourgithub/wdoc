@@ -36,6 +36,12 @@ class TimeoutPdfLoaderError(Exception):
 
 
 class FrozenAttributeCantBeSet(AttributeError):
+    """
+    The attributes of EnvDataclass are frozen on purpose
+    to avoid race condition as accessing an attribute loads
+    the value dynamically from the environment.
+    """
+
     def __init__(self, name, value) -> None:
         super().__init__(
             f"Attribute of the wdoc env instance should not be set manually, instead modify os.environ. Attribute name was '{name}'. Value was '{value}'"
@@ -43,5 +49,11 @@ class FrozenAttributeCantBeSet(AttributeError):
 
 
 class NoInferrableFiletype(Exception):
+    """
+    Occurs when the 'filetype' argument of a file
+    was left by the user to 'auto' but wdoc failed to
+    find the appropriate loader for it.
+    """
+
     def __init__(self, message: str) -> None:
         super().__init__(message)
