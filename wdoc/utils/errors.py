@@ -40,3 +40,8 @@ class FrozenAttributeCantBeSet(AttributeError):
         super().__init__(
             f"Attribute of the wdoc env instance should not be set manually, instead modify os.environ. Attribute name was '{name}'. Value was '{value}'"
         )
+
+
+class NoInferrableFiletype(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
