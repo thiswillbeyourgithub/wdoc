@@ -25,6 +25,7 @@ from wdoc.wdoc import wdoc
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.misc import get_piped_input, tasks_list
+from wdoc.utils.batch_file_loader import infer_filetype, NoInferrableFiletype
 from typing import Tuple, List, Dict, Any
 import io
 
@@ -251,22 +252,36 @@ def cli_launcher() -> None:
             args.append(new_arg)
             sys.argv.append(new_arg)  # Append the new argument
 
-    # if no --path but an arg: use it as path arg
-    if not ("path" in args or "path" in kwargs):
-        if len(args) == 1:
-            sys.argv.remove(args[0])
-            sys.argv.append(f"--path={args[0]}")
-            logger.debug(f"Set the argument '{args[0]}' to a --path argument")
-            kwargs["path"] = args.pop(0)
+    # if there are remaining args, use the infer_filetype function to see if they are the missing path or the query
+    if args:
+        candidates = []
+        for arg in args:
+            # if we can't infer the filetype then it's probably the implicit --query of the user
+            infered = None
+            try:
+                infered = infer_filetype(arg)
+            except NoInferrableFiletype:
+                if "query" in kwargs["task"]:
+                    infered = "user_query"
+            candidates.append(infered)
 
-    # if --path is empty give it the remaining arg
-    if ("path" not in kwargs or isinstance(kwargs["path"], (bool, type(None)))) and len(
-        args
-    ) == 1:
-        sys.argv.remove(args[0])
-        sys.argv.append(f"--path={args[0]}")
-        logger.debug(f"Set the argument '{args[0]}' to a --path argument")
-        kwargs["path"] = args.pop(0)
+        if "query" in kwargs["task"] and (
+            "query" not in kwargs or not isinstance(kwargs["query"], str)
+        ):
+            if len([c for c in candidates if c == "user_query"]) == 1:
+                query_index = candidates.index("user_query")
+                kwargs["query"] = args.pop(query_index)
+                sys.argv.append(f"--query='{kwargs['query']}'")
+                candidates.pop(query_index)
+
+        if (
+            args
+            and not ("path" in args or "path" in kwargs)
+            and len(candidates) == 1
+            and candidates[0]
+        ):
+            kwargs["path"] = args.pop(0)
+            sys.argv.append(f"--path='{kwargs['path']}'")
 
     # if args is not empty, we have not succesfully parsed everything
     if args:
