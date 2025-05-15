@@ -52,19 +52,13 @@ extensions = [
 ]
 
 # Autodoc settings
-autodoc_default_options = {
-    "members": True,
-    "undoc-members": True,
-    "special-members": False,
-    "show-inheritance": True,
-    "imported-members": True,
-}
+autodoc_default_options = {}
 
-autodoc_member_order = "bysource"
-autodoc_typehints = "description"
-autodoc_preserve_defaults = True
+autodoc_member_order = "groupwise"
+autodoc_typehints = "signature"
+# autodoc_preserve_defaults = True
 autodoc_inherit_docstrings = True
-autodoc_docstring_signature = True
+# autodoc_docstring_signature = True
 
 # Napoleon settings
 napoleon_google_docstring = True
