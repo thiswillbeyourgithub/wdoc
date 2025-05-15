@@ -13,7 +13,6 @@ Below the table of content is the content of the `README.md`, followed by the co
 .. toctree::
    :maxdepth: 2
 
-   readme
    examples
    help
    parse_file_help
