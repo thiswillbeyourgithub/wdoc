@@ -87,7 +87,6 @@ source_suffix = {
 
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
-    "flyout_display": "attached",
     "language_selector": False,
     "style_external_links": True,
     "prev_next_buttons_location": "both",
