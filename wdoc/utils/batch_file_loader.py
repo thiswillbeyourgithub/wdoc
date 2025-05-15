@@ -100,6 +100,7 @@ def infer_filetype(path: str) -> str:
     for k, v in inference_rules.items():
         for vv in inference_rules[k]:
             if vv.search(path):
+                logger.debug(f"Regex infered that path '{path}' is of filetype '{k}'")
                 return k
     fp = Path(path)
     if not fp.exists():
@@ -121,10 +122,13 @@ def infer_filetype(path: str) -> str:
             f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'"
         ) from err
     if "pdf" in info:
+        logger.debug(f"Magic infered that path '{path}' is of filetype 'pdf'")
         return "pdf"
     elif "mpeg" in info or "mp3" in info:
+        logger.debug(f"Magic infered that path '{path}' is of filetype 'local_audio'")
         return "local_audio"
     elif "epub" in info:
+        logger.debug(f"Magic infered that path '{path}' is of filetype 'epub'")
         return "epub"
     else:
         raise NoInferrableFiletype(
