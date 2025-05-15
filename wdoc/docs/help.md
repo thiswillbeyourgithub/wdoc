@@ -629,7 +629,7 @@
     per document if a recursive_paths filetype is used.
     If using `wdoc_parse_file` it is by default set to `crash`.
 
-# Runtime flags
+# Environment variables
 
 * `WDOC_DEBUG`
     * Setting to `true` has the same effects as using `--debug=True`.

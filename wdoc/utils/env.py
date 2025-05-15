@@ -5,7 +5,8 @@ Also set some variables useful to access globally like is_linux for example.
 """
 
 import platform
-
+from textwrap import indent, dedent
+from pathlib import Path
 import os
 import sys
 from dataclasses import MISSING, dataclass, asdict, field
@@ -188,6 +189,7 @@ class EnvDataclass:
             "__parse__",
             "__warned_unexpected__",
             "__check_unexpected_vars__",
+            "__doc__",
         ]:
             return super().__getattribute__(name)
         self.__check_unexpected_vars__()
@@ -259,6 +261,30 @@ class EnvDataclass:
 for k, v in EnvDataclass.__dataclass_fields__.items():
     if k.startswith("WDOC_"):
         assert is_bearable(v.default, v.type), v
+
+
+# add the actual documentation of each env var to the __doc__ of EnvDataclass
+help_content = (Path(__file__).parent / Path("../docs/help.md")).read_text()
+env_list = [
+    e for e in dir(EnvDataclass) if e.startswith("WDOC_") and e != "WDOC_DUMMY_ENV_VAR"
+]
+# check that it's properly documented to begin with
+for e in env_list:
+    if not f"* `{e}`" in help_content:
+        logger.error(
+            f"The env variable '{e}' seems to be missing from the help.md page"
+        )
+help_sections = help_content.split("# Environment variables")
+assert len(help_sections) == 2
+doc = EnvDataclass.__doc__
+indentation = len(doc.splitlines(keepends=True)[0].rstrip()) - len(
+    doc.splitlines(keepends=True)[0].strip()
+)
+EnvDataclass.__doc__ = dedent(EnvDataclass.__doc__)
+EnvDataclass.__doc__ += (
+    f"\n\n## Documentation of each environment variables:\n{help_sections[1]}"
+)
+EnvDataclass.__doc__ = indent(EnvDataclass.__doc__, indentation * " ")
 
 env = EnvDataclass()
 
