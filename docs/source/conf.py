@@ -87,7 +87,6 @@ exclude_patterns = []
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
-    ".css": "css",
 }
 
 
@@ -110,5 +109,3 @@ html_theme_options = {
     "show_nav_level": 6,
     "collapse_navigation": False,
 }
-html_static_path = ["_static"]
-# html_css_files = ["custom.css"]
