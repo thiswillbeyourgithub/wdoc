@@ -400,6 +400,6 @@ FAQ
     * Sort of. Actually when importing `wdoc`, code in `wdoc/utils/env.py` creates a dataclass that holds the environment variables used by `wdoc`. This is done primarily to ensure runtime type checking and to ensure that when an env variable is accessed inside wdoc's code (through the dataclass) it is always compared to the environment one. If you decide to change env variables throughout the code, this change new value will be used inside `wdoc`. But that's somewhat brittle because some env variables are used to store the *default* value of some function or class and hence are only used when importing code so will be out of sync. Additionaly, `wdoc` will intentionaly crash if it suspects the `WDOC_PRIVATE_MODE` env var is out of sync, just to be safe. Also note that if env vars like `WDOC_LANGFUSE_PUBLIC_KEY` are found, `wdoc` will overwrite `LANGFUSE_PUBLIC_KEY` with it. This is because `litellm` (maybe others) looks for this env variable to enable `langfuse` callbacks. This whole contraption allows to set env variable for a specific user of when using the `open-webui` `wdoc` tool. Feedback is much welcome for this feature.
 
 * **How can I build the autodoc using sphinx?**
-    * The command I've been using is `sphinx-apidoc -o docs/source/ wdoc --force --ext-autodoc --private --full --separate`, to call from the root of this repository.
+    * The command I've been using is `sphinx-apidoc -o docs/source/ wdoc --force --ext-autodoc --full --separate`, to call from the root of this repository.
 
 </details>
