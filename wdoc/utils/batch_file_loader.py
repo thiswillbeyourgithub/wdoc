@@ -45,6 +45,7 @@ from wdoc.utils.misc import (
     unlazyload_modules,
 )
 from wdoc.utils.typechecker import optional_typecheck
+from wdoc.utils.errors import NoInferrableFiletype
 
 assert env.WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
     "warn",
@@ -102,7 +103,7 @@ def infer_filetype(path: str) -> str:
                 return k
     fp = Path(path)
     if not fp.exists():
-        raise Exception(
+        raise NoInferrableFiletype(
             f"Failed to detect 'auto' filetype for '{fp}' with regex, and it's not a file (does not exist)"
         )
     try:
@@ -116,7 +117,7 @@ def infer_filetype(path: str) -> str:
         #     start = temp.read(1024)
         # info = magic.from_buffer(start).lower()
     except Exception as err:
-        raise Exception(
+        raise NoInferrableFiletype(
             f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'"
         ) from err
     if "pdf" in info:
@@ -126,7 +127,9 @@ def infer_filetype(path: str) -> str:
     elif "epub" in info:
         return "epub"
     else:
-        raise Exception(f"No more python magic heuristics to try for path '{path}'")
+        raise NoInferrableFiletype(
+            f"No more python magic heuristics to try for path '{path}'"
+        )
 
 
 @optional_typecheck
