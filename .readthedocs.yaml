@@ -4,6 +4,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+  jobs:
+    pre_build:
+      - "sphinx-apidoc -o docs/source wdoc --force"
 
 sphinx:
   configuration: docs/source/conf.py
