@@ -13,7 +13,7 @@ from langchain_core.prompts.chat import (
 from pydantic import BaseModel, Field, model_validator
 from loguru import logger
 
-from .misc import get_tkn_length
+from wdoc.utils.misc import get_tkn_length
 
 # PROMPT FOR SUMMARY TASKS
 BASE_SUMMARY_PROMPT = ChatPromptTemplate(

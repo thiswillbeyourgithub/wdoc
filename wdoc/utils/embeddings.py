@@ -29,11 +29,11 @@ from tqdm import tqdm
 from loguru import logger
 
 # from langchain.storage import LocalFileStore
-from .customs.compressed_embeddings_cacher import LocalFileStore
-from .customs.litellm_embeddings import LiteLLMEmbeddings
-from .env import env
-from .misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
-from .typechecker import optional_typecheck
+from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
+from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
+from wdoc.utils.env import env
+from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
+from wdoc.utils.typechecker import optional_typecheck
 
 
 (cache_dir / "faiss_embeddings").mkdir(exist_ok=True)

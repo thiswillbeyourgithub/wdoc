@@ -27,14 +27,14 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
 
-from .env import env, is_out_piped
-from .loaders import (
+from wdoc.utils.env import env, is_out_piped
+from wdoc.utils.loaders import (
     load_one_doc_wrapped,
     load_youtube_playlist,
     markdownlink_regex,
     yt_link_regex,
 )
-from .misc import (
+from wdoc.utils.misc import (
     DocDict,
     ModelName,
     cache_dir,
@@ -44,7 +44,7 @@ from .misc import (
     min_token,
     unlazyload_modules,
 )
-from .typechecker import optional_typecheck
+from wdoc.utils.typechecker import optional_typecheck
 
 assert env.WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
     "warn",

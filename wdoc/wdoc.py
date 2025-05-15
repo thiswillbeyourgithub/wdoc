@@ -37,27 +37,27 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm import tqdm
 from loguru import logger as logger
 
-from .utils.batch_file_loader import batch_load_doc
-from .utils.customs.fix_llm_caching import SQLiteCacheFixed
-from .utils.embeddings import create_embeddings, load_embeddings_engine
-from .utils.env import env, is_out_piped
-from .utils.errors import (
+from wdoc.utils.batch_file_loader import batch_load_doc
+from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
+from wdoc.utils.embeddings import create_embeddings, load_embeddings_engine
+from wdoc.utils.env import env, is_out_piped
+from wdoc.utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 
-from .utils.interact import ask_user
-from .utils.llm import TESTING_LLM, load_llm
+from wdoc.utils.interact import ask_user
+from wdoc.utils.llm import TESTING_LLM, load_llm
 
 # import this first because it sets the logging level
-from .utils.logger import (
+from wdoc.utils.logger import (
     log_dir,
     md_printer,
     set_help_md_as_docstring,
     set_parse_file_help_md_as_docstring,
 )
-from .utils.misc import (  # debug_chain,
+from wdoc.utils.misc import (  # debug_chain,
     cache_dir,
     DocDict,
     ModelName,
@@ -77,9 +77,9 @@ from .utils.misc import (  # debug_chain,
     wpm,
     tasks_list,
 )
-from .utils.prompts import prompts
-from .utils.retrievers import create_multiquery_retriever, create_parent_retriever
-from .utils.tasks.query import (
+from wdoc.utils.prompts import prompts
+from wdoc.utils.retrievers import create_multiquery_retriever, create_parent_retriever
+from wdoc.utils.tasks.query import (
     check_intermediate_answer,
     collate_relevant_intermediate_answers,
     parse_eval_output,
@@ -89,8 +89,8 @@ from .utils.tasks.query import (
     semantic_batching,
     sieve_documents,
 )
-from .utils.tasks.summarize import do_summarize
-from .utils.typechecker import optional_typecheck
+from wdoc.utils.tasks.summarize import do_summarize
+from wdoc.utils.typechecker import optional_typecheck
 
 logger.info("Starting wdoc")
 

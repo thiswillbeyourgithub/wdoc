@@ -13,9 +13,9 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.formatted_text import FormattedText
 from loguru import logger
 
-from .logger import md_printer
-from .misc import cache_dir
-from .typechecker import optional_typecheck
+from wdoc.utils.logger import md_printer
+from wdoc.utils.misc import cache_dir
+from wdoc.utils.typechecker import optional_typecheck
 
 
 @optional_typecheck

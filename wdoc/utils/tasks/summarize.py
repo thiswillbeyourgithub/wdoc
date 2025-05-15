@@ -9,10 +9,14 @@ from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
 
-from ..misc import thinking_answer_parser, log_and_time_fn
-from ..prompts import BASE_SUMMARY_PROMPT, PREV_SUMMARY_TEMPLATE, RECURSION_INSTRUCTION
-from ..typechecker import optional_typecheck
-from ..env import env
+from wdoc.utils.misc import thinking_answer_parser, log_and_time_fn
+from wdoc.utils.prompts import (
+    BASE_SUMMARY_PROMPT,
+    PREV_SUMMARY_TEMPLATE,
+    RECURSION_INSTRUCTION,
+)
+from wdoc.utils.typechecker import optional_typecheck
+from wdoc.utils.env import env
 
 HOME = str(Path.home())
 

@@ -20,11 +20,11 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     logger.warning("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from .utils import logger as importedlogger  # make sure to setup the logs first
-from .wdoc import wdoc
-from .utils.env import env, is_out_piped
-from .utils.typechecker import optional_typecheck
-from .utils.misc import get_piped_input, tasks_list
+from wdoc.utils import logger as importedlogger  # make sure to setup the logs first
+from wdoc.wdoc import wdoc
+from wdoc.utils.env import env, is_out_piped
+from wdoc.utils.typechecker import optional_typecheck
+from wdoc.utils.misc import get_piped_input, tasks_list
 from typing import Tuple, List, Dict, Any
 import io
 

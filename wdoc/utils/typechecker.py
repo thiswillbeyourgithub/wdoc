@@ -7,7 +7,7 @@ to "warn" to just print the error.
 from beartype import BeartypeConf, beartype
 from beartype.typing import Callable
 
-from .env import env
+from wdoc.utils.env import env
 
 if env.WDOC_TYPECHECKING == "crash":
     optional_typecheck = beartype

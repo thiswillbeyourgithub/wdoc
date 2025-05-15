@@ -11,10 +11,10 @@ from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_core.retrievers import BaseRetriever
 
-from .misc import cache_dir, get_splitter
-from .prompts import multiquery_parser, prompts
-from .typechecker import optional_typecheck
-from .customs.compressed_embeddings_cacher import LocalFileStore
+from wdoc.utils.misc import cache_dir, get_splitter
+from wdoc.utils.prompts import multiquery_parser, prompts
+from wdoc.utils.typechecker import optional_typecheck
+from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 
 
 @optional_typecheck

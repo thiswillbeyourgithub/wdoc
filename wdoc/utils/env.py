@@ -17,7 +17,7 @@ from beartype.door import is_bearable
 from beartype.typing import Literal, Optional, Union, List
 
 try:
-    from .errors import FrozenAttributeCantBeSet
+    from wdoc.utils.errors import FrozenAttributeCantBeSet
 except ImportError:  # for debugging purposes
     from errors import FrozenAttributeCantBeSet
 

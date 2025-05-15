@@ -31,13 +31,13 @@ if str(os.environ.get("WDOC_APPLY_ASYNCIO_PATCH", None)).lower() in [
 # set default logging log level to info
 logging.getLogger("wdoc").setLevel(logging.INFO)
 
-from .utils import logger  # make sure to setup the logs first
+from wdoc.utils import logger  # make sure to setup the logs first
 
 if failed:
     logger.error(f"Failed to patch asyncio loop using nest_asyncio. Error: '{failed}'")
 
-from . import utils
-from .wdoc import wdoc
+from wdoc import utils
+from wdoc.wdoc import wdoc
 
 __VERSION__ = wdoc.VERSION
 

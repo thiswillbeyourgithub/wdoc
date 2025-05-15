@@ -16,9 +16,9 @@ from langchain_core.messages.base import BaseMessage
 from langchain_core.outputs.llm_result import LLMResult
 from loguru import logger
 
-from .env import env
-from .misc import ModelName, get_model_max_tokens, langfuse_callback_holder
-from .typechecker import optional_typecheck
+from wdoc.utils.env import env
+from wdoc.utils.misc import ModelName, get_model_max_tokens, langfuse_callback_holder
+from wdoc.utils.typechecker import optional_typecheck
 
 TESTING_LLM = "testing/testing"
 

@@ -6,7 +6,7 @@ lazyloading or threaded imports
 
 import sys
 
-from .env import env
+from wdoc.utils.env import env
 
 
 def trick_imports() -> None:

@@ -13,8 +13,8 @@ from platformdirs import user_log_dir
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .env import env, is_out_piped, is_input_piped
-from .typechecker import optional_typecheck
+from wdoc.utils.env import env, is_out_piped, is_input_piped
+from wdoc.utils.typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module="bs4")

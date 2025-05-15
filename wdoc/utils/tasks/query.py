@@ -22,14 +22,14 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 from loguru import logger
 
-from ..env import env
-from ..errors import (
+from wdoc.utils.env import env
+from wdoc.utils.errors import (
     InvalidDocEvaluationByLLMEval,
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
 )
-from ..misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
-from ..typechecker import optional_typecheck
+from wdoc.utils.misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
+from wdoc.utils.typechecker import optional_typecheck
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 

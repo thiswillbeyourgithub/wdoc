@@ -61,9 +61,9 @@ from tqdm import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
 from loguru import logger
 
-from .env import env, is_linux, is_out_piped
-from .errors import TimeoutPdfLoaderError
-from .misc import (
+from wdoc.utils.env import env, is_linux, is_out_piped
+from wdoc.utils.errors import TimeoutPdfLoaderError
+from wdoc.utils.misc import (
     ModelName,
     average_word_length,
     check_docs_tkn_length,
@@ -81,7 +81,7 @@ from .misc import (
     timecode_to_second,
     wpm,
 )
-from .typechecker import optional_typecheck
+from wdoc.utils.typechecker import optional_typecheck
 
 try:
     import torchaudio

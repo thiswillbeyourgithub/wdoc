@@ -42,9 +42,9 @@ from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
 
-from .env import env, is_input_piped
-from .errors import UnexpectedDocDictArgument
-from .typechecker import optional_typecheck
+from wdoc.utils.env import env, is_input_piped
+from wdoc.utils.errors import UnexpectedDocDictArgument
+from wdoc.utils.typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
 warnings.filterwarnings(
