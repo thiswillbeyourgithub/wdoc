@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-wdoc documentation
-==================
+wdoc
+====
 
 This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_, a sophisticated RAG system made by `Olicorne, a medical student <https://github.com/thiswillbeyourgithub>`_.
 
