@@ -107,5 +107,5 @@ html_theme_options = {
     # # specific to pydata theme
     # # source: https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/navigation.html
     "show_nav_level": 6,
-    "collapse_navigation": False,
+    "collapse_navigation": True,
 }
