@@ -190,7 +190,11 @@ class EnvDataclass:
             "__warned_unexpected__",
             "__check_unexpected_vars__",
             "__doc__",
+            "__class__",
         ]:
+            return super().__getattribute__(name)
+        elif name.startswith("__") and name.ends_with("__"):
+            logger.debug(f"Unexpected attribute of EnvDataclass was accessed: '{name}'")
             return super().__getattribute__(name)
         self.__check_unexpected_vars__()
 
