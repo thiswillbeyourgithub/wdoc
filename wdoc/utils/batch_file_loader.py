@@ -92,6 +92,44 @@ for k, v in inference_rules.items():
 
 
 @optional_typecheck
+def infer_filetype(path: str) -> str:
+    """
+    Heuristics to infer the 'filetype' argument of a --path given to wdoc.
+    """
+    for k, v in inference_rules.items():
+        for vv in inference_rules[k]:
+            if vv.search(path):
+                return k
+    fp = Path(path)
+    if not fp.exists():
+        raise Exception(
+            f"Failed to detect 'auto' filetype for '{fp}' with regex, and it's not a file (does not exist)"
+        )
+    try:
+        import magic
+
+        info = magic.from_file(fp).lower()
+        # # instead of passing the file, pass only the
+        # # headers of the file because otherwise
+        # # it seems to have issues with some files
+        # with open(fp, "rb") as temp:
+        #     start = temp.read(1024)
+        # info = magic.from_buffer(start).lower()
+    except Exception as err:
+        raise Exception(
+            f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'"
+        ) from err
+    if "pdf" in info:
+        return "pdf"
+    elif "mpeg" in info or "mp3" in info:
+        return "local_audio"
+    elif "epub" in info:
+        return "epub"
+    else:
+        raise Exception(f"No more python magic heuristics to try for path '{path}'")
+
+
+@optional_typecheck
 def batch_load_doc(
     llm_name: ModelName,
     filetype: str,
@@ -129,54 +167,14 @@ def batch_load_doc(
                 continue
             load_filetype = load_kwargs["filetype"]
 
-            # auto parse filetype if infer
+            # guess the appropriate 'filetype' argument based on the path because
+            # the user gave us filetype='auto'
             if load_filetype == "auto":
-                for k, v in inference_rules.items():
-                    for vv in inference_rules[k]:
-                        if vv.search(load_kwargs["path"]):
-                            load_filetype = k
-                            break
-                    if load_filetype != "auto":
-                        break
-                if load_filetype == "auto":
-                    try:
-                        fp = Path(load_kwargs["path"])
-                        if fp.exists():
-                            try:
-                                import magic
-
-                                info = magic.from_file(fp).lower()
-                                # # instead of passing the file, pass only the
-                                # # headers of the file because otherwise
-                                # # it seems to have issues with some files
-                                # with open(fp, "rb") as temp:
-                                #     start = temp.read(1024)
-                                # info = magic.from_buffer(start).lower()
-                            except Exception as err:
-                                raise Exception(
-                                    f"Failed to run python-magic as a last resort heuristic: '{err}'"
-                                ) from err
-                            if "pdf" in info:
-                                load_filetype = "pdf"
-                                break
-                            elif "mpeg" in info:
-                                load_filetype = "local_audio"
-                                break
-                            elif "epub" in info:
-                                load_filetype = "epub"
-                                break
-                            else:
-                                raise Exception(
-                                    "No more python magic heuristics to try"
-                                )
-                    except Exception as err:
-                        logger.warning(
-                            f"Failed to detect 'auto' filetype for '{fp}' with regex and even python-magic. Error: '{err}'"
-                        )
+                load_filetype = infer_filetype(load_kwargs["path"])
 
                 assert (
                     load_filetype != "auto"
-                ), f"Could not infer filetype of {load_kwargs['path']}. Use the 'filetype' argument."
+                ), f"Could not infer the filetype of '{load_kwargs['path']}', please specify a value for the 'filetype' argument."
                 if load_filetype not in recursive_types:
                     to_load[ild]["filetype"] = load_filetype
 
