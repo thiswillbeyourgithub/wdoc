@@ -36,7 +36,7 @@ def setup(app):
 
 
 project = "wdoc"
-copyright = "2024, thiswillbeyourgithub"
+copyright = "2025, thiswillbeyourgithub"
 author = "thiswillbeyourgithub"
 release = "3.2.3"
 
