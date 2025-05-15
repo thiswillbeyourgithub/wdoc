@@ -82,7 +82,6 @@ napoleon_use_rtype = True
 napoleon_attr_annotations = True
 napoleon_preprocess_types = True
 
-templates_path = ["_templates"]
 exclude_patterns = []
 source_suffix = {
     ".rst": "restructuredtext",
