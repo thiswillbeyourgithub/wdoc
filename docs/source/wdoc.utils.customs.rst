@@ -4,16 +4,34 @@ wdoc.utils.customs package
 Submodules
 ----------
 
-.. toctree::
-   :maxdepth: 4
+wdoc.utils.customs.compressed\_embeddings\_cacher module
+--------------------------------------------------------
 
-   wdoc.utils.customs.compressed_embeddings_cache
-   wdoc.utils.customs.fix_llm_caching
+.. automodule:: wdoc.utils.customs.compressed_embeddings_cacher
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+wdoc.utils.customs.fix\_llm\_caching module
+-------------------------------------------
+
+.. automodule:: wdoc.utils.customs.fix_llm_caching
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+wdoc.utils.customs.litellm\_embeddings module
+---------------------------------------------
+
+.. automodule:: wdoc.utils.customs.litellm_embeddings
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: wdoc.utils.customs
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
