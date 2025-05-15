@@ -187,6 +187,7 @@ setup(
         "pdfplumber >= 0.11.1",
         "pdf2image >= 1.17.0",
         "openparse[ml] >= 0.5.7",  # pdf with table support
+        "yt-dlp >= 2025.04.30",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
     ],
     extra_require={
         "fasttext": [
