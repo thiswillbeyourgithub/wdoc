@@ -93,7 +93,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="wdoc",
-    version="3.2.4",
+    version="3.2.5",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
