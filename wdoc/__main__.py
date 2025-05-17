@@ -271,7 +271,9 @@ def cli_launcher() -> None:
             if len([c for c in candidates if c == "user_query"]) == 1:
                 query_index = candidates.index("user_query")
                 kwargs["query"] = args.pop(query_index)
-                sys.argv.append(f"--query='{kwargs['query']}'")
+                sys.argv[sys.argv.index(kwargs["query"])] = (
+                    f"--query='{kwargs['query']}'"
+                )
                 candidates.pop(query_index)
 
         if (
@@ -281,7 +283,7 @@ def cli_launcher() -> None:
             and candidates[0]
         ):
             kwargs["path"] = args.pop(0)
-            sys.argv.append(f"--path='{kwargs['path']}'")
+            sys.argv[sys.argv.index(kwargs["path"])] = f"--path='{kwargs['path']}'"
 
     # if args is not empty, we have not succesfully parsed everything
     if args:
