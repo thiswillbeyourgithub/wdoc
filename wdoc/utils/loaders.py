@@ -2145,24 +2145,26 @@ def split_too_large_audio(
 
 
 @optional_typecheck
-def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
-    # turn the json into vtt, then reuse the code used for youtube chapters
-    buffer = ""
-    for seg in transcript["segments"]:
-        start = seconds_to_timecode(seg["start"])
-        end = seconds_to_timecode(seg["end"])
-        text = seg["text"]
-        buffer += f"\n\n{start}.0 --> {end}\n{text}"
-
-    buffer = buffer.strip()
-
-    # reduce greatly the number of token in the subtitles by removing some less important formatting
-    lines = buffer.splitlines()
+def process_vtt_content_for_llm(vtt_content: str, remove_hour_prefix: bool = True) -> str:
+    """
+    Process VTT content to make it more suitable for LLMs by reducing timecodes
+    and removing unnecessary formatting.
+    
+    Args:
+        vtt_content: The VTT content to process
+        remove_hour_prefix: Whether to remove "00:" hour prefix if all content is under 99 minutes
+        
+    Returns:
+        Processed text content optimized for LLM consumption
+    """
+    # Reduce greatly the number of token in the subtitles by removing some less important formatting
+    lines = vtt_content.splitlines()
     timecode_pattern = re.compile(
         r"(?:\d{2}:\d{2}:\d{2}\.\d{3})|(?:<\d{2}:\d{2}:\d{2}\.\d{3}>)|(?:</?c>)"
     )
     latest_tc = -1  # store the timecode once every Xs
     newlines = []
+    
     for li in lines:
         if " --> " in li:
             li = re.sub(r"\.\d+ -->.*", "", li).strip()
@@ -2176,16 +2178,45 @@ def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
         else:
             li = timecode_pattern.sub("", li).strip()
 
+        # We need at least one line
+        if not newlines:
+            newlines.append(li)
+            continue
+
+        # Check no consecutive timecodes (for cached_yt_loader compatibility)
+        if len(newlines) >= 2:
+            if is_timecode(li) and is_timecode(newlines[-1]):
+                # Skip consecutive timecodes to avoid VTT format issues
+                continue
+
         if is_timecode(li):
-            newlines.append(li + "\n")
-        elif not newlines:
-            newlines.append(li)
+            newlines.append(li + " ")
         elif is_timecode(newlines[-1]):
-            newlines.append(li)
+            newlines[-1] += li.strip()
         elif li not in newlines[-1]:
-            newlines[-1] = newlines[-1].strip() + " " + li.strip()
+            newlines[-1] += " " + li.strip() if newlines[-1].strip() else li.strip()
+
+    # If the total length is less than 99 minutes, we remove the hour mark
+    if remove_hour_prefix and newlines and newlines[-1].startswith("00:"):
+        newlines = [nl[3:] if nl.startswith("00:") else nl for nl in newlines]
 
     content = "\n".join(newlines)
+    return content
+
+
+@optional_typecheck
+def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
+    # turn the json into vtt, then reuse the code used for youtube chapters
+    buffer = ""
+    for seg in transcript["segments"]:
+        start = seconds_to_timecode(seg["start"])
+        end = seconds_to_timecode(seg["end"])
+        text = seg["text"]
+        buffer += f"\n\n{start}.0 --> {end}\n{text}"
+
+    buffer = buffer.strip()
+
+    content = process_vtt_content_for_llm(buffer, remove_hour_prefix=False)
     return content
 
 
@@ -2557,49 +2588,8 @@ def cached_yt_loader(
         meta["yt_chapters"] = json.dumps(chap, ensure_ascii=False)
 
     assert sub, "The found subtitles are empty. Try running that command again."
-    # reduce greatly the number of token in the subtitles by removing some less important formatting
-    lines = sub.splitlines()
-    timecode_pattern = re.compile(
-        r"(?:\d{2}:\d{2}:\d{2}\.\d{3})|(?:<\d{2}:\d{2}:\d{2}\.\d{3}>)|(?:</?c>)"
-    )
-    latest_tc = -1  # store the timecode once every Xs
-    newlines = []
-    for li in lines:
-        if " --> " in li:
-            li = re.sub(r"\.\d+ -->.*", "", li).strip()
-
-            # remove duplicate timecodes:
-            tc = timecode_to_second(li)
-            if tc - latest_tc < 15:
-                li = ""
-            else:
-                latest_tc = tc
-        else:
-            li = timecode_pattern.sub("", li).strip()
-
-        # we need at least one line
-        if not newlines:
-            newlines.append(li)
-            continue
-
-        # check no consecutive timecodes
-        if len(newlines) >= 2:
-            assert not (
-                is_timecode(li) and is_timecode(newlines[-1])
-            ), f"Apparently encountered consecutive timecodes. This is unexpected in vtt format. Newlines:\n{newlines}"
-
-        if is_timecode(li):
-            newlines.append(li + " ")
-        elif is_timecode(newlines[-1]):
-            newlines[-1] += li.strip()
-        elif li not in newlines[-1]:
-            newlines[-1] += li.strip()
-
-    # if the total length is less than 99 minutes, we remove the hour mark
-    if newlines[-1].startswith("00:"):
-        newlines = [nl[3:] for nl in newlines]
-
-    content = "\n".join(newlines)
+    
+    content = process_vtt_content_for_llm(sub, remove_hour_prefix=True)
 
     docs = [
         Document(
