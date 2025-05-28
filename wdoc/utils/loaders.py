@@ -2556,6 +2556,7 @@ def cached_yt_loader(
 
         meta["yt_chapters"] = json.dumps(chap, ensure_ascii=False)
 
+    assert sub, "The found subtitles are empty. Try running that command again."
     # reduce greatly the number of token in the subtitles by removing some less important formatting
     lines = sub.splitlines()
     timecode_pattern = re.compile(
@@ -2576,14 +2577,27 @@ def cached_yt_loader(
         else:
             li = timecode_pattern.sub("", li).strip()
 
+        # we need at least one line
+        if not newlines:
+            newlines.append(li)
+            continue
+
+        # check no consecutive timecodes
+        if len(newlines) >= 2:
+            assert not (
+                is_timecode(li) and is_timecode(newlines[-1])
+            ), f"Apparently encountered consecutive timecodes. This is unexpected in vtt format. Newlines:\n{newlines}"
+
         if is_timecode(li):
-            newlines.append(li + "\n")
-        elif not newlines:
-            newlines.append(li)
+            newlines.append(li + " ")
         elif is_timecode(newlines[-1]):
-            newlines.append(li)
+            newlines[-1] += li.strip()
         elif li not in newlines[-1]:
-            newlines[-1] = newlines[-1].strip() + " " + li.strip()
+            newlines[-1] += li.strip()
+
+    # if the total length is less than 99 minutes, we remove the hour mark
+    if newlines[-1].startswith("00:"):
+        newlines = [nl[3:] for nl in newlines]
 
     content = "\n".join(newlines)
 
