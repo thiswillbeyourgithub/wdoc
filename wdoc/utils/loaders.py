@@ -726,9 +726,7 @@ def load_youtube_video(
                 path=path,
                 add_video_info=True,
                 language=(
-                    [youtube_language]
-                    if youtube_language
-                    else ["fr-FR", "fr", "en", "en-US", "en-UK"]
+                    [youtube_language] if youtube_language else ["en", "en-US", "en-UK"]
                 ),
                 translation=youtube_translation if youtube_translation else None,
             )
