@@ -622,6 +622,9 @@ class ModelName:
 @memoize
 @optional_typecheck
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
+    assert (
+        "cli_parser" not in model.backend
+    ), f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
     if env.WDOC_ALLOW_NO_PRICE:
         logger.warning(
             f"Disabling price computation for {model} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
@@ -717,6 +720,15 @@ def get_splitter(
     if modelname.original in text_splitters[task]:
         return text_splitters[task][modelname.original]
 
+    # if task is parse but we let the model as testing: assume we want a single super large document with no splitting
+    if task == "parse" and modelname.original == "cli_parser/cli_parser":
+        return RecursiveCharacterTextSplitter(
+            separators=recur_separator,
+            chunk_size=1e7,
+            chunk_overlap=0,
+            length_function=get_tkn_length,
+        )
+
     if modelname.original == "testing/testing":
         return get_splitter(task=task, modelname=DEFAULT_SPLITTER_MODELNAME)
 
@@ -747,7 +759,7 @@ def get_splitter(
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
-    if task in ["query", "search"]:
+    if task in ["query", "search", "parse"]:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=int(3 / 4 * max_tokens),  # default 4000

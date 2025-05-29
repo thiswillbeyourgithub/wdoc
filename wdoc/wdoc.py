@@ -2193,8 +2193,7 @@ class wdoc:
             "langchain_dict",
         ], f"Unexpected --format value: '{format}'"
         default_cli_kwargs = {
-            "llm_name": ModelName("testing/testing"),
-            "task": "query",
+            "llm_name": ModelName("cliparser/cliparser"),
             "backend": "loky",  # doesn't matter because n_jobs is 1 anyway
             "n_jobs": 1,
             "loading_failure": "crash",
@@ -2232,6 +2231,7 @@ class wdoc:
                 kwargs["path"] = path
 
         out = batch_load_doc(
+            task="parse",
             filetype=filetype,
             **default_cli_kwargs,
             **kwargs,
