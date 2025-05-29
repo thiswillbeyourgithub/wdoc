@@ -2145,15 +2145,17 @@ def split_too_large_audio(
 
 
 @optional_typecheck
-def process_vtt_content_for_llm(vtt_content: str, remove_hour_prefix: bool = True) -> str:
+def process_vtt_content_for_llm(
+    vtt_content: str, remove_hour_prefix: bool = True
+) -> str:
     """
     Process VTT content to make it more suitable for LLMs by reducing timecodes
     and removing unnecessary formatting.
-    
+
     Args:
         vtt_content: The VTT content to process
         remove_hour_prefix: Whether to remove "00:" hour prefix if all content is under 99 minutes
-        
+
     Returns:
         Processed text content optimized for LLM consumption
     """
@@ -2164,7 +2166,7 @@ def process_vtt_content_for_llm(vtt_content: str, remove_hour_prefix: bool = Tru
     )
     latest_tc = -1  # store the timecode once every Xs
     newlines = []
-    
+
     for li in lines:
         if " --> " in li:
             li = re.sub(r"\.\d+ -->.*", "", li).strip()
@@ -2178,23 +2180,28 @@ def process_vtt_content_for_llm(vtt_content: str, remove_hour_prefix: bool = Tru
         else:
             li = timecode_pattern.sub("", li).strip()
 
-        # We need at least one line
+        is_tc = is_timecode(li)
+
+        # We need at least one line, but skeep the lines before the first timecode
         if not newlines:
-            newlines.append(li)
+            if is_tc:
+                newlines.append(li)
             continue
 
         # Check no consecutive timecodes (for cached_yt_loader compatibility)
-        if len(newlines) >= 2:
-            if is_timecode(li) and is_timecode(newlines[-1]):
+        elif len(newlines) >= 2:
+            if is_tc and is_timecode(newlines[-1]):
                 # Skip consecutive timecodes to avoid VTT format issues
                 continue
 
-        if is_timecode(li):
+        if is_tc:
             newlines.append(li + " ")
         elif is_timecode(newlines[-1]):
-            newlines[-1] += li.strip()
+            newlines[-1] += " " + li.strip()
         elif li not in newlines[-1]:
             newlines[-1] += " " + li.strip() if newlines[-1].strip() else li.strip()
+
+    newlines = [nl.strip() for nl in newlines]
 
     # If the total length is less than 99 minutes, we remove the hour mark
     if remove_hour_prefix and newlines and newlines[-1].startswith("00:"):
@@ -2588,7 +2595,7 @@ def cached_yt_loader(
         meta["yt_chapters"] = json.dumps(chap, ensure_ascii=False)
 
     assert sub, "The found subtitles are empty. Try running that command again."
-    
+
     content = process_vtt_content_for_llm(sub, remove_hour_prefix=True)
 
     docs = [
