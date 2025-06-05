@@ -905,6 +905,14 @@ class wdoc:
                 f"Tokens used for {path}: ({doc_total_tokens_str}, cost: ${doc_total_cost:.5f})"
             )
 
+            doc_total_tokens_sum = sum(
+                [
+                    number
+                    for number in doc_total_tokens.values()
+                    if str(number).isdigit()
+                ]
+            )
+
             summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
 
             header = f"\n- {item_name}    cost: ${doc_total_cost:.5f} ({doc_total_tokens_str})"
@@ -951,6 +959,7 @@ class wdoc:
                 "sum_tkn_length": summary_tkn_length,
                 "doc_reading_length": doc_reading_length,
                 "doc_total_tokens": doc_total_tokens,
+                "doc_total_tokens_sum": doc_total_tokens_sum,
                 "doc_total_tokens_str": doc_total_tokens_str,
                 "doc_total_cost": doc_total_cost,
                 "summary": recursive_summaries[best_sum_i],
@@ -980,9 +989,9 @@ class wdoc:
             self.llm_price["prompt"] * llmcallback.prompt_tokens
             + self.llm_price["completion"] * llmcallback.completion_tokens
         )
-        if llmcallback.total_tokens != results["doc_total_tokens"]:
+        if llmcallback.total_tokens != results["doc_total_tokens_sum"]:
             logger.warning(
-                f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' vs in the result: '{results['doc_total_tokens']}' (${total_cost:.5f})"
+                f"Cost discrepancy? Tokens used according to the callback: '{llmcallback.total_tokens}' vs in the result: '{results['doc_total_tokens_sum']}' (${total_cost:.5f})"
             )
         self.summary_results = results
         self.latest_cost = total_cost
