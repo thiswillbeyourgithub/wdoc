@@ -1773,6 +1773,10 @@ def load_local_audio(
                 sox_effects,
             )
         except Exception as e:
+            if "libsox.so" in str(e).lower():
+                logger.exception(
+                    "The error hints at not being able to find libsox.so, on linux this can be solved by installing libsox-dev"
+                )
             logger.warning(
                 f"Error when applying sox effects: '{e}'.\nRetrying to apply each filter individually."
             )
