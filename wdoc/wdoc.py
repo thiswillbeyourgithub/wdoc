@@ -907,7 +907,7 @@ class wdoc:
 
             doc_total_tokens_sum = sum(
                 [
-                    number
+                    int(number)
                     for number in doc_total_tokens.values()
                     if str(number).isdigit()
                 ]
@@ -929,7 +929,7 @@ class wdoc:
                     logger.warning(
                         f"Detected use of out_file arg while in __import_mode__. This is unexpected and might lead to issues."
                     )
-                for nrecur, sum in recursive_summaries.items():
+                for nrecur, summary in recursive_summaries.items():
                     out_file = Path(self.out_file)
                     if len(recursive_summaries) > 1 and nrecur < max(
                         list(recursive_summaries.keys())
@@ -948,7 +948,7 @@ class wdoc:
                                 f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}"
                             )
 
-                        for bulletpoint in sum.split("\n"):
+                        for bulletpoint in summary.split("\n"):
                             f.write("\n")
                             bulletpoint = bulletpoint.rstrip()
                             f.write(f"    {bulletpoint}")
