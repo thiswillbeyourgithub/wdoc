@@ -1794,6 +1794,13 @@ def load_local_audio(
                     )
         elapsed = time.time() - start
         new_dur = waveform.shape[1] / sample_rate
+
+        if new_dur == dur:
+            logger.warning(
+                f"Duration of audio has not changed when trying to remove silence, something probably went wrong. Duration: {new_dur}"
+            )
+            # will crash anyway at the folling line because the assert is strict
+
         assert new_dur < dur, (
             f"Failed to remove silence for {path.name}:\n"
             f"Original duration: {dur:.1f}\n"
