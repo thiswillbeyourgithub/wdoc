@@ -785,6 +785,12 @@
     into the final response. Lower values may reduce costs but might lose important details, 
     while higher values allow for more comprehensive individual document analysis.
 
+* `WDOC_WHISPER_PARALLEL_SPLITS`, default: `True`
+    * If True, when audio files need to be split for whisper transcription (due to size limits), the splits will be processed in parallel using joblib. 
+    This can significantly speed up transcription of large audio files when using remote whisper services.
+    * If False, audio splits will be processed sequentially. It is recommended to set this to False when using a local whisper instance 
+    to avoid overwhelming the local system with concurrent requests.
+
 * `WDOC_APPLY_ASYNCIO_PATCH`, default: `False`
     * If True, applies the `nest_asyncio` patch to fix the `Event loop closed` error that can occur with Ollama and
     other async-based LLM providers. Set to False if you're experiencing issues with asyncio or if you're

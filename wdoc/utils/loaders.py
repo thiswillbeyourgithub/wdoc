@@ -19,6 +19,8 @@ from functools import cache as memoize
 from functools import partial, wraps
 from pathlib import Path
 
+import joblib
+
 import ankipandas as akp
 import bs4
 import deepgram
@@ -2077,15 +2079,40 @@ def transcribe_audio_whisper(
 
             # reconstitute appropriate durations
             transcripts = []
-            for f in audio_splits:
-                h = file_hasher({"path": f})
-                temp = transcribe_audio_whisper(
-                    audio_path=f,
-                    audio_hash=h,
-                    language=language,
-                    prompt=prompt,
+
+            if env.WDOC_WHISPER_PARALLEL_SPLITS:
+                logger.info(f"Processing {len(audio_splits)} audio splits in parallel")
+
+                @optional_typecheck
+                def process_audio_split(f: Path) -> dict:
+                    """Process a single audio split file."""
+                    h = file_hasher({"path": f})
+                    return transcribe_audio_whisper(
+                        audio_path=f,
+                        audio_hash=h,
+                        language=language,
+                        prompt=prompt,
+                    )
+
+                # Process splits in parallel using joblib
+                transcripts = joblib.Parallel(
+                    n_jobs=-1,
+                    backend="threading",
+                )(joblib.delayed(process_audio_split)(f) for f in audio_splits)
+            else:
+                logger.warning(
+                    "Using sequential processing for whisper over audio splits"
                 )
-                transcripts.append(temp)
+
+                for f in audio_splits:
+                    h = file_hasher({"path": f})
+                    temp = transcribe_audio_whisper(
+                        audio_path=f,
+                        audio_hash=h,
+                        language=language,
+                        prompt=prompt,
+                    )
+                    transcripts.append(temp)
 
             if len(transcripts) == 1:
                 return transcripts[0]

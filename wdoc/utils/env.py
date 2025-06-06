@@ -85,6 +85,7 @@ class EnvDataclass:
     WDOC_LITELLM_USER: str = "wdoc_llm"
     WDOC_APPLY_ASYNCIO_PATCH: bool = False
     WDOC_CONTINUE_ON_INVALID_EVAL: bool = True
+    WDOC_WHISPER_PARALLEL_SPLITS: bool = True
 
     @warn_typecheck
     def __parse__(self, val: str) -> Optional[Union[bool, int, str]]:
