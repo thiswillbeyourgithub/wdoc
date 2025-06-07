@@ -4,6 +4,7 @@ load each document.
 """
 
 import copy
+import inspect
 import json
 import os
 import re
@@ -107,6 +108,27 @@ except Exception as err:
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 STR_IMAGE_OCR = "{image_ocr_alt}"
+
+# Mapping of filetypes to their corresponding loader function names
+FILETYPE_TO_LOADER = {
+    "url": "load_url",
+    "youtube": "load_youtube_video", 
+    "pdf": "load_pdf",
+    "online_pdf": "load_online_pdf",
+    "anki": "load_anki",
+    "string": "load_string",
+    "txt": "load_txt", 
+    "text": "load_text_input",
+    "local_html": "load_local_html",
+    "logseq_markdown": "load_logseq_markdown", 
+    "local_audio": "load_local_audio",
+    "local_video": "load_local_video",
+    "online_media": "load_online_media",
+    "epub": "load_epub",
+    "powerpoint": "load_powerpoint",
+    "word": "load_word_document",
+    "json_dict": "load_json_dict",
+}
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
@@ -384,8 +406,6 @@ def load_one_doc_wrapped(
             )
         if loading_failure == "crash":
             logger.warning(mess)
-            if "wrong number of arguments" in str(err).lower():
-                raise DocLoadMissingArguments() from err
             raise Exception(mess) from err
         elif loading_failure == "warn" or env.WDOC_DEBUG:
             logger.warning(mess)
@@ -416,118 +436,63 @@ def load_one_doc(
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
     assert temp_dir.exists(), temp_dir
 
-    if filetype == "url":
-        docs = load_url(**kwargs)
-
-    elif filetype == "youtube":
-        docs = load_youtube_video(
-            loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "pdf":
-        docs = load_pdf(
-            text_splitter=text_splitter,
-            file_hash=file_hash,
-            doccheck_min_lang_prob=doccheck_min_lang_prob,
-            doccheck_min_token=doccheck_min_token,
-            doccheck_max_token=doccheck_max_token,
-            **kwargs,
-        )
-
-    elif filetype == "online_pdf":
-        docs = load_online_pdf(
-            text_splitter=text_splitter,
-            file_hash=file_hash,
-            doccheck_min_lang_prob=doccheck_min_lang_prob,
-            doccheck_min_token=doccheck_min_token,
-            doccheck_max_token=doccheck_max_token,
-            **kwargs,
-        )
-
-    elif filetype == "anki":
-        docs = load_anki(
-            verbose=env.WDOC_VERBOSE,
-            text_splitter=text_splitter,
-            loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "string":
-        docs = load_string()
-
-    elif filetype == "txt":
-        docs = load_txt(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "text":
-        docs = load_text_input(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "local_html":
-        docs = load_local_html(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "logseq_markdown":
-        docs = load_logseq_markdown(
-            file_hash=file_hash,
-            text_splitter=text_splitter,
-            **kwargs,
-        )
-
-    elif filetype == "local_audio":
-        docs = load_local_audio(
-            file_hash=file_hash,
-            loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "local_video":
-        docs = load_local_video(
-            file_hash=file_hash,
-            loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "online_media":
-        docs = load_online_media(
-            loaders_temp_dir=temp_dir,
-            **kwargs,
-        )
-
-    elif filetype == "epub":
-        docs = load_epub(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "powerpoint":
-        docs = load_powerpoint(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "word":
-        docs = load_word_document(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    elif filetype == "json_dict":
-        docs = load_json_dict(
-            file_hash=file_hash,
-            **kwargs,
-        )
-
-    else:
+    # Check if filetype is supported
+    if filetype not in FILETYPE_TO_LOADER:
         logger.warning(f"Unsupported filetype: '{filetype}'")
         raise Exception(f"Unsupported filetype: '{filetype}'")
+    
+    # Get the loader function name and retrieve the actual function
+    loader_func_name = FILETYPE_TO_LOADER[filetype]
+    loader_func = locals().get(loader_func_name) or globals().get(loader_func_name)
+    
+    if loader_func is None:
+        raise Exception(f"Loader function '{loader_func_name}' not found for filetype '{filetype}'")
+    
+    # Get function signature to determine what arguments to pass
+    sig = inspect.signature(loader_func)
+    
+    # Available arguments from this function's context
+    available_args = {
+        'task': task,
+        'llm_name': llm_name,
+        'temp_dir': temp_dir,
+        'filetype': filetype,
+        'file_hash': file_hash,
+        'source_tag': source_tag,
+        'doccheck_min_lang_prob': doccheck_min_lang_prob,
+        'doccheck_min_token': doccheck_min_token,
+        'doccheck_max_token': doccheck_max_token,
+        'recur_parent_id': recur_parent_id,
+        'text_splitter': text_splitter,
+        'loaders_temp_dir': temp_dir,
+        'verbose': env.WDOC_VERBOSE,
+        **kwargs
+    }
+    
+    # Build arguments to pass to the loader function
+    args_to_pass = {}
+    missing_required_args = []
+    
+    for param_name, param in sig.parameters.items():
+        if param_name in available_args:
+            args_to_pass[param_name] = available_args[param_name]
+        elif param.default is param.empty:
+            # Required parameter that we don't have
+            missing_required_args.append(param_name)
+    
+    # Check for missing required arguments
+    if missing_required_args:
+        expected_args = [p.name for p in sig.parameters.values() if p.default is p.empty]
+        available_arg_names = list(available_args.keys())
+        raise DocLoadMissingArguments(
+            f"Loader function '{loader_func_name}' for filetype '{filetype}' "
+            f"is missing required arguments: {missing_required_args}. "
+            f"Expected required arguments: {expected_args}. "
+            f"Available arguments: {available_arg_names}"
+        )
+    
+    # Call the loader function with the appropriate arguments
+    docs = loader_func(**args_to_pass)
 
     docs = text_splitter.transform_documents(docs)
 
@@ -3130,3 +3095,15 @@ def load_online_media(
         parsed_audio[ipa].metadata["online_media_url"] = str(good_url)
 
     return parsed_audio
+
+
+# Validation: Check that all loader functions exist
+def _validate_loader_functions():
+    """Validate that all loader functions referenced in FILETYPE_TO_LOADER exist."""
+    current_module = sys.modules[__name__]
+    for filetype, func_name in FILETYPE_TO_LOADER.items():
+        if not hasattr(current_module, func_name):
+            raise Exception(f"Loader function '{func_name}' for filetype '{filetype}' not found in module")
+
+# Run validation when module is imported
+_validate_loader_functions()
