@@ -64,7 +64,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 from loguru import logger
 
 from wdoc.utils.env import env, is_linux, is_out_piped
-from wdoc.utils.errors import TimeoutPdfLoaderError
+from wdoc.utils.errors import TimeoutPdfLoaderError, DocLoadMissingArguments
 from wdoc.utils.misc import (
     ModelName,
     average_word_length,
@@ -384,6 +384,8 @@ def load_one_doc_wrapped(
             )
         if loading_failure == "crash":
             logger.warning(mess)
+            if "wrong number of arguments" in str(err).lower():
+                raise DocLoadMissingArguments() from err
             raise Exception(mess) from err
         elif loading_failure == "warn" or env.WDOC_DEBUG:
             logger.warning(mess)
