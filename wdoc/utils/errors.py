@@ -48,13 +48,15 @@ class FrozenAttributeCantBeSet(AttributeError):
         )
 
 
-class DocLoadMissingArguments(Exception):
+class MissingDocdictArguments(Exception):
     """
     Raised when a document loader is called with the wrong number of arguments
     or missing required arguments.
     """
 
-    def __init__(self, message: str = "Document loader called with missing arguments") -> None:
+    def __init__(
+        self, message: str = "Document loader called with missing arguments"
+    ) -> None:
         super().__init__(message)
 
 

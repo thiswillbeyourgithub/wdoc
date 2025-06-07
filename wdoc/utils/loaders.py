@@ -65,7 +65,7 @@ from unstructured.cleaners.core import clean_extra_whitespace
 from loguru import logger
 
 from wdoc.utils.env import env, is_linux, is_out_piped
-from wdoc.utils.errors import TimeoutPdfLoaderError, DocLoadMissingArguments
+from wdoc.utils.errors import TimeoutPdfLoaderError, MissingDocdictArguments
 from wdoc.utils.misc import (
     ModelName,
     average_word_length,
@@ -394,7 +394,7 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
 
             # those crashes can rise right away without more details
             if loading_failure == "crash":
-                if isinstance(err, (DocLoadMissingArguments, TimeoutPdfLoaderError)):
+                if isinstance(err, (MissingDocdictArguments, TimeoutPdfLoaderError)):
                     raise
 
             filetype = kwargs.get("filetype", "unknown")
@@ -513,11 +513,14 @@ def load_one_doc(
     for user_arg in user_args.keys():
         if user_arg not in sig.parameters:
             unexpected_user_args.append(user_arg)
-    
+
     if unexpected_user_args:
-        valid_params = [param_name for param_name in sig.parameters.keys() 
-                       if param_name not in runtime_param_names]
-        raise DocLoadMissingArguments(
+        valid_params = [
+            param_name
+            for param_name in sig.parameters.keys()
+            if param_name not in runtime_param_names
+        ]
+        raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"received unexpected arguments: {unexpected_user_args}\n"
             f"Valid user arguments for this loader are: {valid_params}\n"
@@ -552,7 +555,7 @@ def load_one_doc(
         user_arg_names = list(user_args.keys()) if user_args else []
         formatted_runtime_args = format_args_with_types(missing_runtime_args)
         formatted_user_args = format_args_with_types(missing_user_args)
-        raise DocLoadMissingArguments(
+        raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"is missing required arguments from both wdoc runtime and user input:\n"
             f"- Missing runtime arguments (wdoc bug): {formatted_runtime_args}\n"
@@ -564,8 +567,12 @@ def load_one_doc(
     elif missing_runtime_args:
         # Only runtime args are missing (wdoc bug)
         formatted_runtime_args = format_args_with_types(missing_runtime_args)
-        optional_msg = f"\n- Optional arguments available: {formatted_optional_args}" if formatted_optional_args else ""
-        raise DocLoadMissingArguments(
+        optional_msg = (
+            f"\n- Optional arguments available: {formatted_optional_args}"
+            if formatted_optional_args
+            else ""
+        )
+        raise MissingDocdictArguments(
             f"\n\nnInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
             f"is missing required runtime arguments: {formatted_runtime_args}.{optional_msg}\n"
             f"This appears to be a wdoc bug - please create a GitHub issue at "
@@ -575,8 +582,12 @@ def load_one_doc(
         # Only user args are missing (user error)
         user_arg_names = list(user_args.keys()) if user_args else []
         formatted_user_args = format_args_with_types(missing_user_args)
-        optional_msg = f"\n- Optional arguments available: {formatted_optional_args}" if formatted_optional_args else ""
-        raise DocLoadMissingArguments(
+        optional_msg = (
+            f"\n- Optional arguments available: {formatted_optional_args}"
+            if formatted_optional_args
+            else ""
+        )
+        raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"is still missing required user arguments: {formatted_user_args}.{optional_msg}"
             f"\nYou provided these arguments: {user_arg_names}.\n"
