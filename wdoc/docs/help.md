@@ -493,7 +493,7 @@
     Not taken into account for the filetype "youtube".
     Taken into account if filetype if "local_audio" or "local_video"
 
-* `--audio_unsilence`: bool
+* `--audio_unsilence`: bool, default to `True`.
     * When processing audio files, remove silence before transcribing.
 
 * `--whisper_lang`: str

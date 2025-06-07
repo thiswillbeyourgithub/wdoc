@@ -522,7 +522,7 @@ def load_one_doc(
             if param:
                 # Build the argument description
                 parts = [f"- {arg_name}"]
-                
+
                 # Add type hint if available
                 if param.annotation != param.empty:
                     type_hint = param.annotation
@@ -530,15 +530,15 @@ def load_one_doc(
                     # like Literal["whisper", "deepgram"] instead of just "Literal"
                     type_str = str(type_hint)
                     parts.append(f": {type_str}")
-                
+
                 # Add default value if not required
                 if param.default != param.empty:
                     parts.append(f" (default: {param.default})")
-                
+
                 formatted_lines.append("".join(parts))
             else:
                 formatted_lines.append(f"- {arg_name}")
-        
+
         return "\n".join(formatted_lines) if formatted_lines else ""
 
     if unexpected_user_args:
@@ -1838,7 +1838,7 @@ def load_local_audio(
     file_hash: str,
     audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
-    audio_unsilence: Optional[bool] = None,
+    audio_unsilence: bool = True,
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
@@ -1996,7 +1996,7 @@ def load_local_video(
     file_hash: str,
     audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
-    audio_unsilence: Optional[bool] = None,
+    audio_unsilence: bool = True,
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
@@ -3073,7 +3073,7 @@ def load_online_media(
     path: str,
     audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
-    audio_unsilence: Optional[bool] = None,
+    audio_unsilence: bool = True,
     whisper_lang: Optional[str] = None,
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
