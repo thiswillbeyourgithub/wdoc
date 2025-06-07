@@ -514,20 +514,6 @@ def load_one_doc(
         if user_arg not in sig.parameters:
             unexpected_user_args.append(user_arg)
 
-    if unexpected_user_args:
-        valid_params = [
-            param_name
-            for param_name in sig.parameters.keys()
-            if param_name not in wdoc_global_param_names
-        ]
-        formatted_valid_params = format_args_with_types(valid_params)
-        raise MissingDocdictArguments(
-            f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
-            f"received unexpected arguments: {unexpected_user_args}\n"
-            f"Valid user arguments for this loader are: {formatted_valid_params}\n"
-            f"Please check the documentation for the correct arguments for this filetype."
-        )
-
     # Helper function to format arguments with their type hints
     def format_args_with_types(arg_names: List[str]) -> List[str]:
         formatted = []
@@ -542,6 +528,20 @@ def load_one_doc(
             else:
                 formatted.append(arg_name)
         return formatted
+
+    if unexpected_user_args:
+        valid_params = [
+            param_name
+            for param_name in sig.parameters.keys()
+            if param_name not in wdoc_global_param_names
+        ]
+        formatted_valid_params = format_args_with_types(valid_params)
+        raise MissingDocdictArguments(
+            f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"received unexpected arguments: {unexpected_user_args}\n"
+            f"Valid user arguments for this loader are: {formatted_valid_params}\n"
+            f"Please check the documentation for the correct arguments for this filetype."
+        )
 
     # Get optional arguments with their types for better error messages
     optional_args = []
