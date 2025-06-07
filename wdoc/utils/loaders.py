@@ -520,10 +520,11 @@ def load_one_doc(
             for param_name in sig.parameters.keys()
             if param_name not in wdoc_global_param_names
         ]
+        formatted_valid_params = format_args_with_types(valid_params)
         raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"received unexpected arguments: {unexpected_user_args}\n"
-            f"Valid user arguments for this loader are: {valid_params}\n"
+            f"Valid user arguments for this loader are: {formatted_valid_params}\n"
             f"Please check the documentation for the correct arguments for this filetype."
         )
 
