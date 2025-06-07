@@ -2190,6 +2190,7 @@ class wdoc:
         format: str = "text",
         debug: bool = False,
         verbose: bool = False,
+        out_file: Optional[Union[str, Path]] = None,
         **kwargs,
     ) -> Union[List[Document], str, List[dict]]:
         """
@@ -2297,6 +2298,40 @@ class wdoc:
             ]
         else:
             raise ValueError(format)
+        
+        # Handle writing to output file if specified
+        if out_file:
+            out_file_path = Path(out_file)
+            
+            # Check if file exists and is binary
+            if out_file_path.exists():
+                try:
+                    # Try to read as text to check if it's binary
+                    with open(out_file_path, 'r', encoding='utf-8') as f:
+                        f.read(1)  # Just read one character to test
+                except (UnicodeDecodeError, UnicodeError):
+                    raise ValueError(f"Output file '{out_file_path}' exists and appears to be binary. Cannot append to binary files.")
+            
+            # Prepare output text for file writing
+            if format == "langchain":
+                # Convert to JSON for file output
+                file_content = json.dumps([
+                    {"page_content": doc.page_content, "metadata": doc.metadata}
+                    for doc in out
+                ], indent=2, ensure_ascii=False)
+            elif format == "langchain_dict":
+                file_content = json.dumps(out, indent=2, ensure_ascii=False)
+            else:
+                # For "text" and "xml" formats, out is already a string
+                file_content = out
+            
+            # Append to file
+            with open(out_file_path, 'a', encoding='utf-8') as f:
+                if out_file_path.exists() and out_file_path.stat().st_size > 0:
+                    f.write('\n')  # Add newline separator if file is not empty
+                f.write(file_content)
+        
+        return out
 
 
 def debug_exceptions(instance: Optional[wdoc] = None) -> None:

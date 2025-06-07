@@ -31,6 +31,12 @@ use it to quickly parse anything to send to [@simonw's](https://github.com/simon
 - `verbose`: bool, default `False`
     - Same as for wdoc
 
+- `out_file`: str or Path, default `None`
+    - If specified, writes the output to the given file path.
+    - If the file exists and is binary, the function will crash.
+    - Otherwise, the output will be appended to the file (no overwrite).
+    - The output is still returned normally for programmatic use.
+
 - `**kwargs`
     - Remaning keyword arguments are assumed to be DocDict arguments,
     the full list is at wdoc.utils.misc.filetype_arg_types

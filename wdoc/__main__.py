@@ -315,9 +315,16 @@ def call_parse_file() -> None:
     if is_out_piped:
         args, kwargs = parse_args_fire()
         parsed = wdoc.parse_file(*args, **kwargs)
+        # Check if out_file was used - if so, don't print to stdout
+        if 'out_file' in kwargs and kwargs['out_file']:
+            return
     else:
         parsed = fire.Fire(wdoc.parse_file)
+        # For fire.Fire, we need to check sys.argv for out_file
+        if '--out_file' in ' '.join(sys.argv) or any(arg.startswith('out_file=') for arg in sys.argv):
+            return
 
+    # Only print to stdout if not writing to file
     if isinstance(parsed, list):
         if all(not isinstance(d, dict) for d in parsed):
             parsed_d = [
@@ -333,14 +340,7 @@ def call_parse_file() -> None:
         assert isinstance(parsed, str)
         out = parsed
 
-    print(parsed)
-    # try:
-    #     sys.stdout.write(out)
-    #     sys.stdout.flush()
-    # except BrokenPipeError as e:
-    #     logger.error(
-    #         f"wdoc encountered a BrokenPipeError, crashing because it indicates that the code after the pipe crashed so we should not flood the output: {e}"
-    #     )
+    print(out)
 
 
 if __name__ == "__main__":
