@@ -515,15 +515,9 @@ def load_one_doc(
             param = sig.parameters.get(arg_name)
             if param and param.annotation != param.empty:
                 type_hint = param.annotation
-                # Format the type hint nicely
-                if hasattr(type_hint, "__name__"):
-                    type_str = type_hint.__name__
-                elif hasattr(type_hint, "_name"):
-                    type_str = (
-                        str(type_hint._name) if type_hint._name else str(type_hint)
-                    )
-                else:
-                    type_str = str(type_hint)
+                # Always use the full string representation to show complete type hints
+                # like Literal["whisper", "deepgram"] instead of just "Literal"
+                type_str = str(type_hint)
                 formatted.append(f"{arg_name}: {type_str}")
             else:
                 formatted.append(arg_name)
