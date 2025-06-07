@@ -18,7 +18,7 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
-        # do pip install --force-reinstall "yt-dlp[default] @ https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz" --user
+        # do pip install --user -U --pre yt-dlp
         try:
             subprocess.check_call(
                 [
@@ -28,14 +28,15 @@ class PostInstallCommand(install):
                 + pip
                 + [
                     "install",
-                    "--force-reinstall",
-                    "yt-dlp[default] @ https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz",
                     "--user",
+                    "-U",
+                    "--pre",
+                    "yt-dlp",
                 ]
             )
         except Exception as err:
             print(
-                f"Error when installing yt-dlp from the latest master from git: '{err}'"
+                f"Error when installing yt-dlp pre-release: '{err}'"
             )
 
         # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
