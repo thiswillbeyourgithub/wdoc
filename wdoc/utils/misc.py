@@ -684,12 +684,15 @@ def get_model_max_tokens(modelname: ModelName) -> int:
     elif (trial2 := modelname.model.split("/")[-1]) in litellm.model_cost:
         return litellm.model_cost[trial2]["max_tokens"]
     else:
-        try:
-            return litellm.get_model_info(modelname.original)["max_tokens"]
-        except Exception:
-            return litellm.get_model_info(modelname.name)[
-                "max_tokens"
-            ]  # crash if still not found
+        hailmary = [
+            at for at in dir(modelname) if not (at.startswith("_") or at.endswith("_"))
+        ]
+        for trial3 in hailmary:
+            try:
+                return litellm.get_model_info(getattr(modelname, trial3))["max_tokens"]
+            except Exception:
+                if trial3 == hailmary[-1]:
+                    raise
 
 
 @optional_typecheck
