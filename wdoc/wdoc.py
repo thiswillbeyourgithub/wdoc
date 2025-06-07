@@ -2250,10 +2250,12 @@ class wdoc:
             **cli_kwargs,
             **docdict_kwargs,
         )
+        
+        # Process format and prepare the result
         if format == "text":
             n = len(out)
             if n > 1:
-                return (
+                result = (
                     "Parsed documents:\n"
                     + "\n".join(
                         [
@@ -2263,9 +2265,9 @@ class wdoc:
                     ).rstrip()
                 )
             else:
-                return f"Parsed document:\n{out[0].page_content.strip()}"
+                result = f"Parsed document:\n{out[0].page_content.strip()}"
         elif format == "xml":
-            return (
+            result = (
                 "<documents>\n"
                 + "\n".join(
                     [
@@ -2276,9 +2278,9 @@ class wdoc:
                 + "\n</documents>"
             )
         elif format == "langchain":
-            return out
+            result = out
         elif format == "langchain_dict":
-            return [
+            result = [
                 {"page_content": doc.page_content, "metadata": doc.metadata}
                 for doc in out
             ]
@@ -2306,16 +2308,16 @@ class wdoc:
                 file_content = json.dumps(
                     [
                         {"page_content": doc.page_content, "metadata": doc.metadata}
-                        for doc in out
+                        for doc in result
                     ],
                     indent=2,
                     ensure_ascii=False,
                 )
             elif format == "langchain_dict":
-                file_content = json.dumps(out, indent=2, ensure_ascii=False)
+                file_content = json.dumps(result, indent=2, ensure_ascii=False)
             else:
-                # For "text" and "xml" formats, out is already a string
-                file_content = out
+                # For "text" and "xml" formats, result is already a string
+                file_content = result
 
             # Append to file
             with open(out_file_path, "a", encoding="utf-8") as f:
@@ -2323,7 +2325,7 @@ class wdoc:
                     f.write("\n")  # Add newline separator if file is not empty
                 f.write(file_content)
 
-        return out
+        return result
 
 
 def debug_exceptions(instance: Optional[wdoc] = None) -> None:
