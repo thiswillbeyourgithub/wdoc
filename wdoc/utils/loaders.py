@@ -489,7 +489,7 @@ def load_one_doc(
 
     # Get the parameter names of load_one_doc to distinguish runtime vs user args
     load_one_doc_sig = inspect.signature(load_one_doc)
-    runtime_param_names = set(load_one_doc_sig.parameters.keys())
+    runtime_param_names = set(runtime_args.keys())
 
     # Build arguments to pass to the loader function
     args_to_pass = {}
