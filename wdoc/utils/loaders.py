@@ -497,33 +497,56 @@ def load_one_doc(
                 # This should be provided by the user
                 missing_user_args.append(param_name)
 
+    # Helper function to format arguments with their type hints
+    def format_args_with_types(arg_names: List[str]) -> List[str]:
+        formatted = []
+        for arg_name in arg_names:
+            param = sig.parameters.get(arg_name)
+            if param and param.annotation != param.empty:
+                type_hint = param.annotation
+                # Format the type hint nicely
+                if hasattr(type_hint, '__name__'):
+                    type_str = type_hint.__name__
+                elif hasattr(type_hint, '_name'):
+                    type_str = str(type_hint._name) if type_hint._name else str(type_hint)
+                else:
+                    type_str = str(type_hint)
+                formatted.append(f"{arg_name}: {type_str}")
+            else:
+                formatted.append(arg_name)
+        return formatted
+
     # Check for missing arguments
     if missing_runtime_args and missing_user_args:
         # Both runtime and user args are missing
         user_arg_names = list(user_args.keys()) if user_args else []
+        formatted_runtime_args = format_args_with_types(missing_runtime_args)
+        formatted_user_args = format_args_with_types(missing_user_args)
         raise DocLoadMissingArguments(
             f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"is missing required arguments from both wdoc runtime and user input:\n"
-            f"- Missing runtime arguments (wdoc bug): {missing_runtime_args}\n"
-            f"- Missing user arguments: {missing_user_args}\n"
+            f"- Missing runtime arguments (wdoc bug): {formatted_runtime_args}\n"
+            f"- Missing user arguments: {formatted_user_args}\n"
             f"You provided these arguments: {user_arg_names}. "
             f"Please check the documentation for the required arguments for this filetype and "
             f"create a GitHub issue at https://github.com/wdoc-ai/wdoc/issues with this error message."
         )
     elif missing_runtime_args:
         # Only runtime args are missing (wdoc bug)
+        formatted_runtime_args = format_args_with_types(missing_runtime_args)
         raise DocLoadMissingArguments(
             f"\nInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required runtime arguments: {missing_runtime_args}. "
+            f"is missing required runtime arguments: {formatted_runtime_args}. "
             f"This appears to be a wdoc bug - please create a GitHub issue at "
             f"https://github.com/wdoc-ai/wdoc/issues with this error message and your command."
         )
     elif missing_user_args:
         # Only user args are missing (user error)
         user_arg_names = list(user_args.keys()) if user_args else []
+        formatted_user_args = format_args_with_types(missing_user_args)
         raise DocLoadMissingArguments(
             f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required user arguments: {missing_user_args}. "
+            f"is missing required user arguments: {formatted_user_args}. "
             f"You provided these arguments: {user_arg_names}. "
             f"Please check the documentation for the required arguments for this filetype."
         )
