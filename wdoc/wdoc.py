@@ -2250,7 +2250,7 @@ class wdoc:
             **cli_kwargs,
             **docdict_kwargs,
         )
-        
+
         # Process format and prepare the result
         if format == "text":
             n = len(out)
