@@ -497,17 +497,29 @@ def load_one_doc(
                 # This should be provided by the user
                 missing_user_args.append(param_name)
 
-    # Check for missing runtime arguments (wdoc bug)
-    if missing_runtime_args:
+    # Check for missing arguments
+    if missing_runtime_args and missing_user_args:
+        # Both runtime and user args are missing
+        user_arg_names = list(user_args.keys()) if user_args else []
+        raise DocLoadMissingArguments(
+            f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"is missing required arguments from both wdoc runtime and user input:\n"
+            f"- Missing runtime arguments (wdoc bug): {missing_runtime_args}\n"
+            f"- Missing user arguments: {missing_user_args}\n"
+            f"You provided these arguments: {user_arg_names}. "
+            f"Please check the documentation for the required arguments for this filetype and "
+            f"create a GitHub issue at https://github.com/wdoc-ai/wdoc/issues with this error message."
+        )
+    elif missing_runtime_args:
+        # Only runtime args are missing (wdoc bug)
         raise DocLoadMissingArguments(
             f"\nInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
             f"is missing required runtime arguments: {missing_runtime_args}. "
             f"This appears to be a wdoc bug - please create a GitHub issue at "
             f"https://github.com/wdoc-ai/wdoc/issues with this error message and your command."
         )
-
-    # Check for missing user arguments (user error)
-    if missing_user_args:
+    elif missing_user_args:
+        # Only user args are missing (user error)
         user_arg_names = list(user_args.keys()) if user_args else []
         raise DocLoadMissingArguments(
             f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
