@@ -464,8 +464,8 @@ def load_one_doc(
     # Get function signature to determine what arguments to pass
     sig = inspect.signature(loader_func)
 
-    # Runtime arguments (created by wdoc internally) - these are parameters of load_one_doc
-    runtime_args = {
+    # wdoc_global arguments (created by wdoc internally) - these are parameters of load_one_doc
+    wdoc_global_args = {
         "task": task,
         "llm_name": llm_name,
         "temp_dir": temp_dir,
@@ -485,25 +485,25 @@ def load_one_doc(
     user_args = kwargs
 
     # All available arguments
-    available_args = {**runtime_args, **user_args}
+    available_args = {**wdoc_global_args, **user_args}
 
-    # Get the parameter names of load_one_doc to distinguish runtime vs user args
+    # Get the parameter names of load_one_doc to distinguish wdoc_global vs user args
     load_one_doc_sig = inspect.signature(load_one_doc)
-    runtime_param_names = set(runtime_args.keys())
+    wdoc_global_param_names = set(wdoc_global_args.keys())
 
     # Build arguments to pass to the loader function
     args_to_pass = {}
     missing_user_args = []
-    missing_runtime_args = []
+    missing_wdoc_global_args = []
 
     for param_name, param in sig.parameters.items():
         if param_name in available_args:
             args_to_pass[param_name] = available_args[param_name]
         elif param.default is param.empty:
-            # Required parameter that we don't have - determine if it's runtime or user arg
-            if param_name in runtime_param_names:
-                # This should be provided by wdoc runtime - indicates a bug
-                missing_runtime_args.append(param_name)
+            # Required parameter that we don't have - determine if it's wdoc_global or user arg
+            if param_name in wdoc_global_param_names:
+                # This should be provided by wdoc wdoc_global - indicates a bug
+                missing_wdoc_global_args.append(param_name)
             else:
                 # This should be provided by the user
                 missing_user_args.append(param_name)
@@ -518,7 +518,7 @@ def load_one_doc(
         valid_params = [
             param_name
             for param_name in sig.parameters.keys()
-            if param_name not in runtime_param_names
+            if param_name not in wdoc_global_param_names
         ]
         raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
@@ -550,23 +550,23 @@ def load_one_doc(
     formatted_optional_args = format_args_with_types(optional_args)
 
     # Check for missing arguments
-    if missing_runtime_args and missing_user_args:
-        # Both runtime and user args are missing
+    if missing_wdoc_global_args and missing_user_args:
+        # Both wdoc_global and user args are missing
         user_arg_names = list(user_args.keys()) if user_args else []
-        formatted_runtime_args = format_args_with_types(missing_runtime_args)
+        formatted_wdoc_global_args = format_args_with_types(missing_wdoc_global_args)
         formatted_user_args = format_args_with_types(missing_user_args)
         raise MissingDocdictArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required arguments from both wdoc runtime and user input:\n"
-            f"- Missing runtime arguments (wdoc bug): {formatted_runtime_args}\n"
+            f"is missing required arguments from both wdoc wdoc_global and user input:\n"
+            f"- Missing wdoc_global arguments (wdoc bug): {formatted_wdoc_global_args}\n"
             f"- Missing user arguments: {formatted_user_args}\n"
             f"You provided these arguments: {user_arg_names}.\n"
             f"Please check the documentation for the required arguments for this filetype and "
             f"create a GitHub issue at https://github.com/wdoc-ai/wdoc/issues with this error message."
         )
-    elif missing_runtime_args:
-        # Only runtime args are missing (wdoc bug)
-        formatted_runtime_args = format_args_with_types(missing_runtime_args)
+    elif missing_wdoc_global_args:
+        # Only wdoc_global args are missing (wdoc bug)
+        formatted_wdoc_global_args = format_args_with_types(missing_wdoc_global_args)
         optional_msg = (
             f"\n- Optional arguments available: {formatted_optional_args}"
             if formatted_optional_args
@@ -574,7 +574,7 @@ def load_one_doc(
         )
         raise MissingDocdictArguments(
             f"\n\nnInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required runtime arguments: {formatted_runtime_args}.{optional_msg}\n"
+            f"is missing required wdoc_global arguments: {formatted_wdoc_global_args}.{optional_msg}\n"
             f"This appears to be a wdoc bug - please create a GitHub issue at "
             f"https://github.com/wdoc-ai/wdoc/issues with this error message and your command."
         )
