@@ -523,6 +523,13 @@ def load_one_doc(
                 formatted.append(arg_name)
         return formatted
 
+    # Get optional arguments with their types for better error messages
+    optional_args = []
+    for param_name, param in sig.parameters.items():
+        if param.default is not param.empty and param_name not in available_args:
+            optional_args.append(param_name)
+    formatted_optional_args = format_args_with_types(optional_args)
+
     # Check for missing arguments
     if missing_runtime_args and missing_user_args:
         # Both runtime and user args are missing
@@ -541,9 +548,10 @@ def load_one_doc(
     elif missing_runtime_args:
         # Only runtime args are missing (wdoc bug)
         formatted_runtime_args = format_args_with_types(missing_runtime_args)
+        optional_msg = f"\n- Optional arguments available: {formatted_optional_args}" if formatted_optional_args else ""
         raise DocLoadMissingArguments(
             f"\n\nnInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required runtime arguments: {formatted_runtime_args}.\n"
+            f"is missing required runtime arguments: {formatted_runtime_args}.{optional_msg}\n"
             f"This appears to be a wdoc bug - please create a GitHub issue at "
             f"https://github.com/wdoc-ai/wdoc/issues with this error message and your command."
         )
@@ -551,9 +559,10 @@ def load_one_doc(
         # Only user args are missing (user error)
         user_arg_names = list(user_args.keys()) if user_args else []
         formatted_user_args = format_args_with_types(missing_user_args)
+        optional_msg = f"\n- Optional arguments available: {formatted_optional_args}" if formatted_optional_args else ""
         raise DocLoadMissingArguments(
             f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is still missing required user arguments: {formatted_user_args}. "
+            f"is still missing required user arguments: {formatted_user_args}.{optional_msg}"
             f"\nYou provided these arguments: {user_arg_names}.\n"
             f"Please add the missing aguments or check the documentation for the required arguments for this filetype."
         )
