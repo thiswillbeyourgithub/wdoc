@@ -382,18 +382,25 @@ def signal_timeout(timeout: int, exception: Exception):
 @optional_typecheck
 def wrapper_load_one_doc(func: Callable) -> Callable:
     """Decorator to wrap doc_loader to catch errors cleanly"""
+
     @wraps(func)
     def wrapper(*args, **kwargs) -> Union[List[Document], str]:
         # Extract loading_failure from kwargs, default to "warn"
         loading_failure = kwargs.pop("loading_failure", "warn")
-        
+
         try:
             return func(*args, **kwargs)
         except Exception as err:
+
+            # those crashes can rise right away without more details
+            if loading_failure == "crash":
+                if isinstance(err, (DocLoadMissingArguments, TimeoutPdfLoaderError)):
+                    raise
+
             filetype = kwargs.get("filetype", "unknown")
             exc_type, exc_obj, exc_tb = sys.exc_info()
             formatted_tb = "\n".join(traceback.format_tb(exc_tb))
-            if "No pdf parser succeeded to parse " in str(err):
+            if "pdf parser" in str(err).lower() and "to parse" in str(err).lower():
                 mess = (
                     f"Error when loading doc with filetype {filetype}: '{err}'. "
                     f"Arguments: {kwargs}"
@@ -414,6 +421,7 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
             else:
                 logger.exception(mess)
                 raise ValueError(loading_failure) from err
+
     return wrapper
 
 
@@ -508,10 +516,12 @@ def load_one_doc(
             if param and param.annotation != param.empty:
                 type_hint = param.annotation
                 # Format the type hint nicely
-                if hasattr(type_hint, '__name__'):
+                if hasattr(type_hint, "__name__"):
                     type_str = type_hint.__name__
-                elif hasattr(type_hint, '_name'):
-                    type_str = str(type_hint._name) if type_hint._name else str(type_hint)
+                elif hasattr(type_hint, "_name"):
+                    type_str = (
+                        str(type_hint._name) if type_hint._name else str(type_hint)
+                    )
                 else:
                     type_str = str(type_hint)
                 formatted.append(f"{arg_name}: {type_str}")
@@ -526,11 +536,11 @@ def load_one_doc(
         formatted_runtime_args = format_args_with_types(missing_runtime_args)
         formatted_user_args = format_args_with_types(missing_user_args)
         raise DocLoadMissingArguments(
-            f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
             f"is missing required arguments from both wdoc runtime and user input:\n"
             f"- Missing runtime arguments (wdoc bug): {formatted_runtime_args}\n"
             f"- Missing user arguments: {formatted_user_args}\n"
-            f"You provided these arguments: {user_arg_names}. "
+            f"You provided these arguments: {user_arg_names}.\n"
             f"Please check the documentation for the required arguments for this filetype and "
             f"create a GitHub issue at https://github.com/wdoc-ai/wdoc/issues with this error message."
         )
@@ -538,8 +548,8 @@ def load_one_doc(
         # Only runtime args are missing (wdoc bug)
         formatted_runtime_args = format_args_with_types(missing_runtime_args)
         raise DocLoadMissingArguments(
-            f"\nInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required runtime arguments: {formatted_runtime_args}. "
+            f"\n\nnInternal error: Loader function '{loader_func_name}' for filetype '{filetype}' "
+            f"is missing required runtime arguments: {formatted_runtime_args}.\n"
             f"This appears to be a wdoc bug - please create a GitHub issue at "
             f"https://github.com/wdoc-ai/wdoc/issues with this error message and your command."
         )
@@ -548,10 +558,10 @@ def load_one_doc(
         user_arg_names = list(user_args.keys()) if user_args else []
         formatted_user_args = format_args_with_types(missing_user_args)
         raise DocLoadMissingArguments(
-            f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required user arguments: {formatted_user_args}. "
-            f"You provided these arguments: {user_arg_names}. "
-            f"Please check the documentation for the required arguments for this filetype."
+            f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"is still missing required user arguments: {formatted_user_args}. "
+            f"\nYou provided these arguments: {user_arg_names}.\n"
+            f"Please add the missing aguments or check the documentation for the required arguments for this filetype."
         )
 
     # Call the loader function with the appropriate arguments
