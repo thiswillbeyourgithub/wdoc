@@ -721,7 +721,7 @@ def get_splitter(
         return text_splitters[task][modelname.original]
 
     # if task is parse but we let the model as testing: assume we want a single super large document with no splitting
-    if task == "parse" and modelname.original == "cli_parser/cli_parser":
+    if task == "parse" and modelname.original == "cliparser/cliparser":
         return RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=1e7,
