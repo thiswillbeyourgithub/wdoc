@@ -10,11 +10,6 @@ use it to quickly parse anything to send to [@simonw's](https://github.com/simon
 
 ## Arguments
 
-- `path`: str
-    - Same as for wdoc (can be None, for example if filetype is `anki`).
-    - Can also be a web URL (e.g. "https://www.nytimes.com/") which will be
-      parsed according to the specified filetype.
-
 - `filetype`: str
     - Same as for wdoc
 
@@ -40,6 +35,7 @@ use it to quickly parse anything to send to [@simonw's](https://github.com/simon
 - `**kwargs`
     - Remaning keyword arguments are assumed to be DocDict arguments,
     the full list is at wdoc.utils.misc.filetype_arg_types
+    or in the "DocDict arguments" section of `wdoc --help`.
 
 ## Return value
 - Either the document's page_content as a string, or a list of

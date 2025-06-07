@@ -2185,7 +2185,6 @@ class wdoc:
     @optional_typecheck
     @set_parse_file_help_md_as_docstring
     def parse_file(
-        path: Optional[Union[str, Path]] = None,
         filetype: str = "auto",
         format: str = "text",
         debug: bool = False,
@@ -2245,19 +2244,6 @@ class wdoc:
             if k not in cli_kwargs:
                 cli_kwargs[k] = v
 
-        # all loaders need a path arg except anki
-        if filetype == "anki" and path:
-            logger.warning(
-                "You supplied a --path argument even though the filetype is `anki`, we must ignore `path` in that case."
-            )
-        else:
-            if not path:
-                logger.warning(
-                    "You did not specify a --path argument, this will probably cause issues."
-                )
-            else:
-                kwargs["path"] = path
-
         out = batch_load_doc(
             task="parse",
             filetype=filetype,
@@ -2298,39 +2284,45 @@ class wdoc:
             ]
         else:
             raise ValueError(format)
-        
+
         # Handle writing to output file if specified
         if out_file:
             out_file_path = Path(out_file)
-            
+
             # Check if file exists and is binary
             if out_file_path.exists():
                 try:
                     # Try to read as text to check if it's binary
-                    with open(out_file_path, 'r', encoding='utf-8') as f:
+                    with open(out_file_path, "r", encoding="utf-8") as f:
                         f.read(1)  # Just read one character to test
                 except (UnicodeDecodeError, UnicodeError):
-                    raise ValueError(f"Output file '{out_file_path}' exists and appears to be binary. Cannot append to binary files.")
-            
+                    raise ValueError(
+                        f"Output file '{out_file_path}' exists and appears to be binary. Cannot append to binary files."
+                    )
+
             # Prepare output text for file writing
             if format == "langchain":
                 # Convert to JSON for file output
-                file_content = json.dumps([
-                    {"page_content": doc.page_content, "metadata": doc.metadata}
-                    for doc in out
-                ], indent=2, ensure_ascii=False)
+                file_content = json.dumps(
+                    [
+                        {"page_content": doc.page_content, "metadata": doc.metadata}
+                        for doc in out
+                    ],
+                    indent=2,
+                    ensure_ascii=False,
+                )
             elif format == "langchain_dict":
                 file_content = json.dumps(out, indent=2, ensure_ascii=False)
             else:
                 # For "text" and "xml" formats, out is already a string
                 file_content = out
-            
+
             # Append to file
-            with open(out_file_path, 'a', encoding='utf-8') as f:
+            with open(out_file_path, "a", encoding="utf-8") as f:
                 if out_file_path.exists() and out_file_path.stat().st_size > 0:
-                    f.write('\n')  # Add newline separator if file is not empty
+                    f.write("\n")  # Add newline separator if file is not empty
                 f.write(file_content)
-        
+
         return out
 
 
