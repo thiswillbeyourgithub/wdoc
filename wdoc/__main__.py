@@ -32,6 +32,10 @@ import io
 # if __main__ is called, then we are using the cli instead of importing the class from python
 wdoc.__import_mode__ = False
 
+# fix fire always opening pager
+# Source: https://github.com/google/python-fire/issues/188
+fire.core.Display = lambda lines, out: out.write("\n".join(lines) + "\n")
+
 
 @optional_typecheck
 def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
@@ -316,12 +320,14 @@ def call_parse_file() -> None:
         args, kwargs = parse_args_fire()
         parsed = wdoc.parse_file(*args, **kwargs)
         # Check if out_file was used - if so, don't print to stdout
-        if 'out_file' in kwargs and kwargs['out_file']:
+        if "out_file" in kwargs and kwargs["out_file"]:
             return
     else:
         parsed = fire.Fire(wdoc.parse_file)
         # For fire.Fire, we need to check sys.argv for out_file
-        if '--out_file' in ' '.join(sys.argv) or any(arg.startswith('out_file=') for arg in sys.argv):
+        if "--out_file" in " ".join(sys.argv) or any(
+            arg.startswith("out_file=") for arg in sys.argv
+        ):
             return
 
     # Only print to stdout if not writing to file
