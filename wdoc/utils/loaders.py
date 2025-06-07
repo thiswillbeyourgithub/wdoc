@@ -514,20 +514,32 @@ def load_one_doc(
         if user_arg not in sig.parameters:
             unexpected_user_args.append(user_arg)
 
-    # Helper function to format arguments with their type hints
-    def format_args_with_types(arg_names: List[str]) -> List[str]:
-        formatted = []
+    # Helper function to format arguments with their type hints and default values
+    def format_args_with_types(arg_names: List[str]) -> str:
+        formatted_lines = []
         for arg_name in arg_names:
             param = sig.parameters.get(arg_name)
-            if param and param.annotation != param.empty:
-                type_hint = param.annotation
-                # Always use the full string representation to show complete type hints
-                # like Literal["whisper", "deepgram"] instead of just "Literal"
-                type_str = str(type_hint)
-                formatted.append(f"{arg_name}: {type_str}")
+            if param:
+                # Build the argument description
+                parts = [f"- {arg_name}"]
+                
+                # Add type hint if available
+                if param.annotation != param.empty:
+                    type_hint = param.annotation
+                    # Always use the full string representation to show complete type hints
+                    # like Literal["whisper", "deepgram"] instead of just "Literal"
+                    type_str = str(type_hint)
+                    parts.append(f": {type_str}")
+                
+                # Add default value if not required
+                if param.default != param.empty:
+                    parts.append(f" (default: {param.default})")
+                
+                formatted_lines.append("".join(parts))
             else:
-                formatted.append(arg_name)
-        return formatted
+                formatted_lines.append(f"- {arg_name}")
+        
+        return "\n".join(formatted_lines) if formatted_lines else ""
 
     if unexpected_user_args:
         valid_params = [
