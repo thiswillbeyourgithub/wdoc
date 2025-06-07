@@ -25,11 +25,6 @@ use it to quickly parse anything to send to [@simonw's](https://github.com/simon
     - if `langchain_dict`: return a list of langchain Documents as
         python dicts (easy to json parse, and metadata are included)
 
-- `cli_kwargs`: dict, default `None`
-    - Dict containing keyword arguments destined to the function
-    `batch_load_doc` and not about a specific document per say.
-    e.g. "file_loader_n_jobs", etc.
-
 - `debug`: bool, default `False`
     - Same as for wdoc
 

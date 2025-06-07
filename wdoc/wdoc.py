@@ -5,6 +5,7 @@ Main class.
 import asyncio
 import copy
 import faulthandler
+import inspect
 import json
 import os
 import pdb
@@ -2187,7 +2188,6 @@ class wdoc:
         path: Optional[Union[str, Path]] = None,
         filetype: str = "auto",
         format: str = "text",
-        cli_kwargs: Optional[dict] = None,
         debug: bool = False,
         verbose: bool = False,
         **kwargs,
@@ -2211,9 +2211,6 @@ class wdoc:
         if debug:
             debug_exceptions()
 
-        if cli_kwargs is not None:
-            default_cli_kwargs.update(cli_kwargs)
-
         if "task" in kwargs:
             assert (
                 kwargs["task"] == "parse"
@@ -2223,8 +2220,29 @@ class wdoc:
             "task" not in kwargs
         ), "Cannot give --task argument if we are only parsing"
 
-        if kwargs:
-            kwargs = DocDict(kwargs)
+        docdict_kwargs = {}
+        cli_kwargs = {}
+        for k, v in kwargs.items():
+            if k in DocDict.allowed_keys:
+                docdict_kwargs[k] = v
+            else:
+                cli_kwargs[k] = v
+
+        # Check if any cli_kwargs arguments are part of wdoc.__init__ signature
+        wdoc_init_signature = inspect.signature(wdoc.__init__)
+        wdoc_init_params = set(wdoc_init_signature.parameters.keys()) - {"self"}
+
+        conflicting_args = set(cli_kwargs.keys()) & wdoc_init_params
+        if conflicting_args:
+            raise ValueError(
+                f"The following arguments are not allowed when using the parser only: {', '.join(sorted(conflicting_args))}. "
+                f"These arguments are expected by wdoc.__init__ and can only be used when running the full wdoc workflow. "
+                f"Run 'wdoc parse --help' to see available parsing arguments, or 'wdoc --help' for more information."
+            )
+
+        for k, v in default_cli_kwargs.items():
+            if k not in cli_kwargs:
+                cli_kwargs[k] = v
 
         # all loaders need a path arg except anki
         if filetype == "anki" and path:
@@ -2242,8 +2260,8 @@ class wdoc:
         out = batch_load_doc(
             task="parse",
             filetype=filetype,
-            **default_cli_kwargs,
-            **kwargs,
+            **cli_kwargs,
+            **docdict_kwargs,
         )
         if format == "text":
             n = len(out)
