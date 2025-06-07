@@ -2291,7 +2291,7 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
             def p(message: str) -> None:
                 "print error, in red if possible"
                 if instance:
-                    logger.warning(instance.ntfy(message))
+                    logger.exception(instance.ntfy(message))
                 else:
                     try:
                         logger.warning(message)
