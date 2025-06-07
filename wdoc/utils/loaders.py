@@ -112,15 +112,15 @@ STR_IMAGE_OCR = "{image_ocr_alt}"
 # Mapping of filetypes to their corresponding loader function names
 FILETYPE_TO_LOADER = {
     "url": "load_url",
-    "youtube": "load_youtube_video", 
+    "youtube": "load_youtube_video",
     "pdf": "load_pdf",
     "online_pdf": "load_online_pdf",
     "anki": "load_anki",
     "string": "load_string",
-    "txt": "load_txt", 
+    "txt": "load_txt",
     "text": "load_text_input",
     "local_html": "load_local_html",
-    "logseq_markdown": "load_logseq_markdown", 
+    "logseq_markdown": "load_logseq_markdown",
     "local_audio": "load_local_audio",
     "local_video": "load_local_video",
     "online_media": "load_online_media",
@@ -455,20 +455,20 @@ def load_one_doc(
 
     # Available arguments from this function's context
     available_args = {
-        'task': task,
-        'llm_name': llm_name,
-        'temp_dir': temp_dir,
-        'filetype': filetype,
-        'file_hash': file_hash,
-        'source_tag': source_tag,
-        'doccheck_min_lang_prob': doccheck_min_lang_prob,
-        'doccheck_min_token': doccheck_min_token,
-        'doccheck_max_token': doccheck_max_token,
-        'recur_parent_id': recur_parent_id,
-        'text_splitter': text_splitter,
-        'loaders_temp_dir': temp_dir,
-        'verbose': env.WDOC_VERBOSE,
-        **kwargs
+        "task": task,
+        "llm_name": llm_name,
+        "temp_dir": temp_dir,
+        "filetype": filetype,
+        "file_hash": file_hash,
+        "source_tag": source_tag,
+        "doccheck_min_lang_prob": doccheck_min_lang_prob,
+        "doccheck_min_token": doccheck_min_token,
+        "doccheck_max_token": doccheck_max_token,
+        "recur_parent_id": recur_parent_id,
+        "text_splitter": text_splitter,
+        "loaders_temp_dir": temp_dir,
+        "verbose": env.WDOC_VERBOSE,
+        **kwargs,
     }
 
     # Build arguments to pass to the loader function
