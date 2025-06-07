@@ -29,7 +29,7 @@ from loguru import logger
 
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.loaders import (
-    load_one_doc_wrapped,
+    load_one_doc,
     load_youtube_playlist,
     markdownlink_regex,
     yt_link_regex,
@@ -412,7 +412,7 @@ def batch_load_doc(
             return_as="generator",  # try to reduce memory footprint
             require=sharedmem,
         )(
-            delayed(load_one_doc_wrapped)(
+            delayed(load_one_doc)(
                 llm_name=llm_name,
                 task=task,
                 temp_dir=temp_dir,

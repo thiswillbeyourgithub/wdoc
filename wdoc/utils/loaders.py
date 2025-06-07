@@ -380,42 +380,45 @@ def signal_timeout(timeout: int, exception: Exception):
 
 
 @optional_typecheck
-def load_one_doc_wrapped(
-    loading_failure: str = "warn",
-    **doc_kwargs,
-) -> Union[List[Document], str]:
-    """wrap doc_loader to cach errors cleanly"""
-    try:
-        out = load_one_doc(**doc_kwargs)
-        return out
-    except Exception as err:
-        filetype = doc_kwargs["filetype"]
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        formatted_tb = "\n".join(traceback.format_tb(exc_tb))
-        if "No pdf parser succeeded to parse " in str(err):
-            mess = (
-                f"Error when loading doc with filetype {filetype}: '{err}'. "
-                f"Arguments: {doc_kwargs}"
-            )
-        else:
-            mess = (
-                f"Error when loading doc with filetype {filetype}: '{err}'. "
-                f"Arguments: {doc_kwargs}"
-                f"\nLine number: {exc_tb.tb_lineno}"
-                f"\nFull traceback:\n{formatted_tb}"
-            )
-        if loading_failure == "crash":
-            logger.exception(mess)
-            raise Exception(mess) from err
-        elif loading_failure == "warn" or env.WDOC_DEBUG:
-            logger.warning(mess)
-            return str(err)
-        else:
-            logger.exception(mess)
-            raise ValueError(loading_failure) from err
+def wrapper_load_one_doc(func: Callable) -> Callable:
+    """Decorator to wrap doc_loader to catch errors cleanly"""
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> Union[List[Document], str]:
+        # Extract loading_failure from kwargs, default to "warn"
+        loading_failure = kwargs.pop("loading_failure", "warn")
+        
+        try:
+            return func(*args, **kwargs)
+        except Exception as err:
+            filetype = kwargs.get("filetype", "unknown")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            formatted_tb = "\n".join(traceback.format_tb(exc_tb))
+            if "No pdf parser succeeded to parse " in str(err):
+                mess = (
+                    f"Error when loading doc with filetype {filetype}: '{err}'. "
+                    f"Arguments: {kwargs}"
+                )
+            else:
+                mess = (
+                    f"Error when loading doc with filetype {filetype}: '{err}'. "
+                    f"Arguments: {kwargs}"
+                    f"\nLine number: {exc_tb.tb_lineno}"
+                    f"\nFull traceback:\n{formatted_tb}"
+                )
+            if loading_failure == "crash":
+                logger.exception(mess)
+                raise Exception(mess) from err
+            elif loading_failure == "warn" or env.WDOC_DEBUG:
+                logger.warning(mess)
+                return str(err)
+            else:
+                logger.exception(mess)
+                raise ValueError(loading_failure) from err
+    return wrapper
 
 
 @optional_typecheck
+@wrapper_load_one_doc
 def load_one_doc(
     task: str,
     llm_name: ModelName,
