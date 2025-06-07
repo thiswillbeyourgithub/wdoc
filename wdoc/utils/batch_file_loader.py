@@ -162,7 +162,15 @@ def batch_load_doc(
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype.lower()
     new_doc_to_load = []
+    loop_counter = 0
     while any(d["filetype"] in recursive_types for d in to_load):
+        loop_counter += 1
+        if loop_counter > 5:
+            culprit_elements = [d for d in to_load if d["filetype"] in recursive_types]
+            raise Exception(
+                f"Infinite loop detected in recursive file type processing after {loop_counter} iterations. "
+                f"Culprit elements still in to_load: {culprit_elements}"
+            )
         for ild, load_kwargs in enumerate(to_load):
 
             if "source_tag" in load_kwargs:
