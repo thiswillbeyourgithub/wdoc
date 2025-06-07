@@ -2,7 +2,7 @@
 
 ### Table of contents
 - [Global arguments](#global-arguments)
-- [Loader specific arguments](#loader-specific-arguments).
+- [DocDict arguments](#docdict-arguments).
 - [Other specific arguments](#other-specific-arguments)
 - [Runtime flags / environment variables](#runtime-flags)
 
@@ -375,7 +375,16 @@
     Any unrecognized key or inappropriate value type will result in a crash. 
 
 
-# Loader specific arguments
+# DocDict arguments
+    Also refered to as "loader specific arguments", these are
+    expected by a subset of loader functions. For example only loader
+    functions expecting audio files in their `path` argument can
+    receive a `audio_backend` argument.
+    Those arguments are validated by a `DocDict` object that allows
+    to check which argument is expected by loader functions instead of
+    wdoc. For example `--out_file` is not expected by any loader but by
+    `wdoc`'s `__init__` method.
+
     Those arguments can be set at cli time but can also be used
     when using recursive_paths filetype combination to have arguments specific
     to a loader. They apply depending on the value of `--filetype`.
@@ -673,7 +682,7 @@
     Default is `False`.
 
 * `WDOC_MAX_LOADER_TIMEOUT`
-    * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDicts).
+    * Number of seconds to wait before giving up on loading a document (this does not include recursive types, only the DocDict arguments).
     Default is `-1` to disable.
     Disabled if <= 0.
 
