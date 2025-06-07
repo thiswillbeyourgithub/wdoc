@@ -833,7 +833,7 @@ def check_docs_tkn_length(
         if str(err).startswith("Low language probability"):
             raise
         else:
-            logger.warning(
+            logger.exception(
                 f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document."
             )
             return 1.0
@@ -1121,7 +1121,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             strict
         ):  # otherwise combining answers could snowball into losing lots of text
             raise
-        logger.warning(
+        logger.exception(
             f"Error when parsing LLM output to get thinking and answer part.\nError: '{err}'\nOriginal output: '{orig}'\nNote: if the output seems fine but ends abruptly instead of by </answer> you might want to tweak the max_token settings.\nWill continue if not using --debug"
         )
         if env.WDOC_DEBUG:

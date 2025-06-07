@@ -405,13 +405,13 @@ def load_one_doc_wrapped(
                 f"\nFull traceback:\n{formatted_tb}"
             )
         if loading_failure == "crash":
-            logger.warning(mess)
+            logger.exception(mess)
             raise Exception(mess) from err
         elif loading_failure == "warn" or env.WDOC_DEBUG:
             logger.warning(mess)
             return str(err)
         else:
-            logger.warning(mess)
+            logger.exception(mess)
             raise ValueError(loading_failure) from err
 
 
@@ -440,17 +440,19 @@ def load_one_doc(
     if filetype not in FILETYPE_TO_LOADER:
         logger.warning(f"Unsupported filetype: '{filetype}'")
         raise Exception(f"Unsupported filetype: '{filetype}'")
-    
+
     # Get the loader function name and retrieve the actual function
     loader_func_name = FILETYPE_TO_LOADER[filetype]
     loader_func = locals().get(loader_func_name) or globals().get(loader_func_name)
-    
+
     if loader_func is None:
-        raise Exception(f"Loader function '{loader_func_name}' not found for filetype '{filetype}'")
-    
+        raise Exception(
+            f"Loader function '{loader_func_name}' not found for filetype '{filetype}'"
+        )
+
     # Get function signature to determine what arguments to pass
     sig = inspect.signature(loader_func)
-    
+
     # Available arguments from this function's context
     available_args = {
         'task': task,
@@ -468,29 +470,30 @@ def load_one_doc(
         'verbose': env.WDOC_VERBOSE,
         **kwargs
     }
-    
+
     # Build arguments to pass to the loader function
     args_to_pass = {}
     missing_required_args = []
-    
+
     for param_name, param in sig.parameters.items():
         if param_name in available_args:
             args_to_pass[param_name] = available_args[param_name]
         elif param.default is param.empty:
             # Required parameter that we don't have
             missing_required_args.append(param_name)
-    
+
     # Check for missing required arguments
     if missing_required_args:
-        expected_args = [p.name for p in sig.parameters.values() if p.default is p.empty]
+        expected_args = [
+            p.name for p in sig.parameters.values() if p.default is p.empty
+        ]
         available_arg_names = list(available_args.keys())
         raise DocLoadMissingArguments(
-            f"Loader function '{loader_func_name}' for filetype '{filetype}' "
-            f"is missing required arguments: {missing_required_args}. "
-            f"Expected required arguments: {expected_args}. "
-            f"Available arguments: {available_arg_names}"
+            f"\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"is missing required arguments: {missing_required_args}."
+            f"\nExpected required arguments: {expected_args}. "
         )
-    
+
     # Call the loader function with the appropriate arguments
     docs = loader_func(**args_to_pass)
 
@@ -3103,7 +3106,10 @@ def _validate_loader_functions():
     current_module = sys.modules[__name__]
     for filetype, func_name in FILETYPE_TO_LOADER.items():
         if not hasattr(current_module, func_name):
-            raise Exception(f"Loader function '{func_name}' for filetype '{filetype}' not found in module")
+            raise Exception(
+                f"Loader function '{func_name}' for filetype '{filetype}' not found in module"
+            )
+
 
 # Run validation when module is imported
 _validate_loader_functions()
