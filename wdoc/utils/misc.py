@@ -234,8 +234,9 @@ class DocDict(dict):
     def __check_values__(self, key, value, strict) -> bool:
         if key not in self.allowed_keys:
             mess = (
-                f"Cannot set key '{key}' in a DocDict. Allowed keys are "
-                f"'{','.join(self.allowed_keys)}'\nYou can use the env "
+                f"Cannot set key '{key}' in a DocDict. Allowed keys are:\n-"
+                + "\n-".join(sorted(self.allowed_keys))
+                + "\nYou can use the env "
                 "variable WDOC_STRICT_DOCDICT to avoid this issue."
             )
             if strict is True:
