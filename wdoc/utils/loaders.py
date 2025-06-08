@@ -2684,7 +2684,7 @@ def cached_yt_loader(
                     if not sub:
                         continue
                     break
-        if sub is None:
+        if not sub:
             available = list(set(list(good_subs.keys()) + list(auto_subs.keys())))
             raise Exception(
                 f"Subtitles found but not for the languages '{language}' nor '{translation}' for youtube video entitled '{title}' at link '{path}'\nAvailable languages were: '{available}'"
