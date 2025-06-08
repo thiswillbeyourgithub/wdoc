@@ -70,20 +70,20 @@ def test_fail_parse_small_file_text(sample_text_file):
     """Test that a too small text file parsing fails."""
     # should fail because the file is too small
     with pytest.raises(Exception):
-        wdoc.parse_file(
+        wdoc.parse_doc(
             path=str(sample_text_file),
             filetype="txt",
         )
 
 
 @pytest.mark.basic
-def test_parse_file_text(sample_text_file):
+def test_parse_doc_text(sample_text_file):
     """Test basic text file parsing."""
     # make a bigger text file
     f = Path(sample_text_file)
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
-    docs = wdoc.parse_file(
+    docs = wdoc.parse_doc(
         path=str(sample_text_file),
         filetype="txt",
         format="langchain",
@@ -94,12 +94,12 @@ def test_parse_file_text(sample_text_file):
 
 
 @pytest.mark.basic
-def test_parse_file_formats(sample_text_file):
-    """Test text-only output from parse_file."""
+def test_parse_doc_formats(sample_text_file):
+    """Test text-only output from parse_doc."""
     f = Path(sample_text_file)
     content = f.read_text()
     f.write_text(50 * (content + "\n"))
-    docs = wdoc.parse_file(
+    docs = wdoc.parse_doc(
         path=str(sample_text_file),
         filetype="txt",
         format="langchain",
@@ -112,7 +112,7 @@ def test_parse_file_formats(sample_text_file):
     assert doc.page_content.startswith("This is a test document"), doc
     assert "multiple lines" in doc.page_content, doc.page_content
 
-    ld = wdoc.parse_file(
+    ld = wdoc.parse_doc(
         path=str(sample_text_file),
         filetype="txt",
         format="langchain_dict",
@@ -123,14 +123,14 @@ def test_parse_file_formats(sample_text_file):
         assert "page_content" in ldd, ldd
         assert "metadata" in ldd, ldd
 
-    text = wdoc.parse_file(
+    text = wdoc.parse_doc(
         path=str(sample_text_file),
         filetype="txt",
         format="text",
     )
     assert isinstance(text, str), type(text)
 
-    xml = wdoc.parse_file(
+    xml = wdoc.parse_doc(
         path=str(sample_text_file),
         filetype="txt",
         format="xml",
@@ -144,7 +144,7 @@ def test_parse_file_formats(sample_text_file):
 def test_invalid_filetype():
     """Test that invalid filetype raises an error."""
     with pytest.raises(Exception):
-        wdoc.parse_file(
+        wdoc.parse_doc(
             path="dummy.txt",
             filetype="invalid_type",
         )
@@ -153,7 +153,7 @@ def test_invalid_filetype():
 @pytest.mark.basic
 def test_parse_online_pdf():
     """Test parsing an online PDF about situational awareness."""
-    docs = wdoc.parse_file(
+    docs = wdoc.parse_doc(
         path="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf",
         filetype="online_pdf",
         format="langchain",
@@ -198,21 +198,21 @@ def test_help_output_python():
 
 
 @pytest.mark.basic
-def test_parse_file_help_output_shell():
+def test_parse_doc_help_output_shell():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
         ["wdoc", "parse", "--help"], capture_output=True, text=True, check=False
     )
     output = result.stdout + result.stderr
     assert (
-        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
+        "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"
         not in output
     )
-    assert "Content of wdoc/docs/parse_file_help.md" in output
+    assert "Content of wdoc/docs/parse_doc_help.md" in output
 
 
 @pytest.mark.basic
-def test_parse_file_help_output_python():
+def test_parse_doc_help_output_python():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
         ["python", "-m", "wdoc", "parse", "--help"],
@@ -222,10 +222,10 @@ def test_parse_file_help_output_python():
     )
     output = result.stdout + result.stderr
     assert (
-        "This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md"
+        "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"
         not in output
     )
-    assert "Content of wdoc/docs/parse_file_help.md" in output
+    assert "Content of wdoc/docs/parse_doc_help.md" in output
 
 
 @pytest.mark.basic
@@ -240,7 +240,7 @@ def test_parse_docx():
 
     try:
         # Parse the file
-        docs = wdoc.parse_file(
+        docs = wdoc.parse_doc(
             path=tmp_path,
             # filetype="word",
             format="langchain",
@@ -261,7 +261,7 @@ def test_parse_docx():
 @pytest.mark.basic
 def test_parse_nytimes():
     """Test parsing the NYTimes homepage."""
-    docs = wdoc.parse_file(
+    docs = wdoc.parse_doc(
         path="https://www.nytimes.com/",
         filetype="auto",
         format="langchain",

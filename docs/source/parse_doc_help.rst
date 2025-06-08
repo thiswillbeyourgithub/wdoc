@@ -1,7 +1,7 @@
 .. toctree::
    :maxdepth: 2
 
-   parse_file_help
+   parse_doc_help
 
-.. include:: parse_file_help.md
+.. include:: parse_doc_help.md
    :parser: myst_parser.sphinx_

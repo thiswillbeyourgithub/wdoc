@@ -12,7 +12,7 @@ This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub
    readme
    examples
    help
-   parse_file_help
+   parse_doc_help
    api
 
 .. include:: readme.md
@@ -24,5 +24,5 @@ This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub
 .. include:: help.md
    :parser: myst_parser.sphinx_
 
-.. include:: parse_file_help.md
+.. include:: parse_doc_help.md
    :parser: myst_parser.sphinx_

@@ -1,3 +1,3 @@
 include wdoc/docs/examples.md
 include wdoc/docs/help.md
-include wdoc/docs/parse_file_help.md
+include wdoc/docs/parse_doc_help.md

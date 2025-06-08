@@ -56,7 +56,7 @@ from wdoc.utils.logger import (
     log_dir,
     md_printer,
     set_help_md_as_docstring,
-    set_parse_file_help_md_as_docstring,
+    set_parse_doc_help_md_as_docstring,
 )
 from wdoc.utils.misc import (  # debug_chain,
     cache_dir,
@@ -2183,8 +2183,8 @@ class wdoc:
 
     @staticmethod
     @optional_typecheck
-    @set_parse_file_help_md_as_docstring
-    def parse_file(
+    @set_parse_doc_help_md_as_docstring
+    def parse_doc(
         filetype: str = "auto",
         format: str = "text",
         debug: bool = False,
@@ -2193,7 +2193,7 @@ class wdoc:
         **kwargs,
     ) -> Union[List[Document], str, List[dict]]:
         """
-        This docstring is dynamically updated with the content of wdoc/docs/parse_file_help.md
+        This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md
         """
         assert format in [
             "text",

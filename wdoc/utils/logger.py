@@ -120,20 +120,20 @@ def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable
 
 
 @optional_typecheck
-def set_parse_file_help_md_as_docstring(
+def set_parse_doc_help_md_as_docstring(
     obj: Union[Type, Callable],
 ) -> Union[Type, Callable]:
-    "set the docstring of wdoc.parse_file to wdoc/docs/parse_file_help.md's content"
-    parsefilehelp_file = Path(__file__).parent.parent / "docs/parse_file_help.md"
-    if not parsefilehelp_file.exists():
+    "set the docstring of wdoc.parse_doc to wdoc/docs/parse_doc_help.md's content"
+    parsedochelp_file = Path(__file__).parent.parent / "docs/parse_doc_help.md"
+    if not parsedochelp_file.exists():
         logger.warning(
-            f"Couldn't find parse_file_help.md file as '{parsefilehelp_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/parse_file_help.md"
+            f"Couldn't find parse_doc_help.md file as '{parsedochelp_file}'. You can read it at this URL instead: https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/parse_doc_help.md"
         )
-        parsefilehelp = "Parse file help documentation not found. Please refer to online documentation."
+        parsedochelp = "Parse doc help documentation not found. Please refer to online documentation."
     else:
-        parsefilehelp = parsefilehelp_file.read_text().strip()
-        if not parsefilehelp:
-            logger.warning("Parse file help documentation is empty")
-            parsefilehelp = "Parse file help documentation is empty. Please refer to online documentation."
-    obj.__doc__ = "# Content of wdoc/docs/parse_file_help.md\n\n" + parsefilehelp
+        parsedochelp = parsedochelp_file.read_text().strip()
+        if not parsedochelp:
+            logger.warning("Parse doc help documentation is empty")
+            parsedochelp = "Parse doc help documentation is empty. Please refer to online documentation."
+    obj.__doc__ = "# Content of wdoc/docs/parse_doc_help.md\n\n" + parsedochelp
     return obj

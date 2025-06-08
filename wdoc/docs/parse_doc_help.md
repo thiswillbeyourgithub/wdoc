@@ -1,8 +1,8 @@
-# Parse file
+# Parse Doc
 
 ## Description
 
-`parse_file` is the function called when you do `wdoc parse_file --path=my_path`.
+`parse_doc` is the function called when you do `wdoc parse_doc --path=my_path`.
 It takes as argument basically the file related arguments of wdoc and completely
 bypasses anything related to summarising, querying, LLM etc. Hence it is meant
 to be used as an utility that parses any input to text. You can for example

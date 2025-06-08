@@ -367,7 +367,7 @@ FAQ
     * If you want the document using python:
         ``` python
         from wdoc import wdoc
-        list_of_docs = Wdoc.parse_file(path=my_path)
+        list_of_docs = wdoc.parse_doc(path=my_path)
         ```
     * Another example would be to use wdoc to parse an anki deck: `wdoc parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
 * **What should I do if my PDF are encrypted?**

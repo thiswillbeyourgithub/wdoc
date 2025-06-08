@@ -202,7 +202,7 @@ def cli_launcher() -> None:
     if "help" in kwargs or "h" in kwargs:
         print("Showing help")
         if ("task" in kwargs and kwargs["task"] == "parse") or "parse" in args:
-            target = wdoc.parse_file
+            target = wdoc.parse_doc
         else:
             target = wdoc
         doc = getattr(target, "__doc__")
@@ -296,7 +296,7 @@ def cli_launcher() -> None:
         )
 
     if kwargs["task"] == "parse":
-        call_parse_file()
+        call_parse_doc()
         sys.exit(0)
 
     elif "completion" in kwargs or "--completion" in sys.argv:
@@ -315,15 +315,15 @@ def cli_launcher() -> None:
 
 
 @optional_typecheck
-def call_parse_file() -> None:
+def call_parse_doc() -> None:
     if is_out_piped:
         args, kwargs = parse_args_fire()
-        parsed = wdoc.parse_file(*args, **kwargs)
+        parsed = wdoc.parse_doc(*args, **kwargs)
         # Check if out_file was used - if so, don't print to stdout
         if "out_file" in kwargs and kwargs["out_file"]:
             return
     else:
-        parsed = fire.Fire(wdoc.parse_file)
+        parsed = fire.Fire(wdoc.parse_doc)
         # For fire.Fire, we need to check sys.argv for out_file
         if "--out_file" in " ".join(sys.argv) or any(
             arg.startswith("out_file=") for arg in sys.argv
