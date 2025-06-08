@@ -2681,6 +2681,8 @@ def cached_yt_loader(
                     sub_url = [s for s in subs[lang] if s["ext"] == "vtt"][0]["url"]
                     sub = requests.get(sub_url).content
                     sub = ftfy.fix_text(sub.decode()).strip()
+                    if not sub:
+                        continue
                     break
         if sub is None:
             available = list(set(list(good_subs.keys()) + list(auto_subs.keys())))
