@@ -35,9 +35,7 @@ class PostInstallCommand(install):
                 ]
             )
         except Exception as err:
-            print(
-                f"Error when installing yt-dlp pre-release: '{err}'"
-            )
+            print(f"Error when installing yt-dlp pre-release: '{err}'")
 
         # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
         # see https://github.com/ahupp/python-magic/issues/261
