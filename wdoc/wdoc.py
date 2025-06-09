@@ -375,7 +375,11 @@ class wdoc:
             ], "private is set but llms_api_bases['query_eval_model'] is not set"
             os.environ["WDOC_PRIVATE_MODE"] = "true"
             for k in dict(os.environ):
-                if k.endswith("_API_KEY") or k.endswith("_API_KEYS"):
+                if (
+                    k.endswith("_API_KEY")
+                    or k.endswith("_API_KEYS")
+                    and (not k.startswith("WDOC_"))
+                ):
                     logger.warning(
                         f"private mode enabled: overwriting '{k}' from environment variables just in case"
                     )
