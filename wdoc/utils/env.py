@@ -339,7 +339,7 @@ for k in os.environ.keys():
     else:
         assert is_bearable(
             v, env.__dataclass_fields__[k].type
-        ), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{env.__dataclass_fields__['k'].type}'"
+        ), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{env.__dataclass_fields__[k].type}'"
         v_stored = getattr(env, k)
         setattr(env, k, v)
 
