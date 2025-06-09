@@ -2145,14 +2145,28 @@ def transcribe_audio_whisper(
     try:
         t1 = time.time()
         with open(audio_path, "rb") as audio_file:
-            transcript = litellm.transcription(
-                model="whisper-1",
-                file=audio_file,
-                prompt=prompt,
-                language=language,
-                temperature=0,
-                response_format="verbose_json",
-            ).json()
+            # Prepare transcription arguments
+            transcription_kwargs = {
+                "model": env.WDOC_WHISPER_MODEL,
+                "file": audio_file,
+                "prompt": prompt,
+                "language": language,
+                "temperature": 0,
+                "response_format": "verbose_json",
+            }
+
+            # Add custom endpoint and API key if provided
+            if env.WDOC_WHISPER_ENDPOINT:
+                transcription_kwargs["api_base"] = env.WDOC_WHISPER_ENDPOINT
+                logger.debug(
+                    f"Using custom whisper endpoint: {env.WDOC_WHISPER_ENDPOINT}"
+                )
+
+            if env.WDOC_WHISPER_API_KEY:
+                transcription_kwargs["api_key"] = env.WDOC_WHISPER_API_KEY
+                logger.debug("Using custom whisper API key")
+
+            transcript = litellm.transcription(**transcription_kwargs).json()
         t2 = time.time()
         logger.info(f"Done transcribing {audio_path} in {int(t2-t1)}s")
 

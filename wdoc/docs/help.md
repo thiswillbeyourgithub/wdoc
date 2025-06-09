@@ -800,6 +800,20 @@
     * If False, audio splits will be processed sequentially. It is recommended to set this to False when using a local whisper instance 
     to avoid overwhelming the local system with concurrent requests.
 
+* `WDOC_WHISPER_ENDPOINT`, default: `""`
+    * If provided, sets a custom API endpoint for Whisper transcription services. This allows you to use local Whisper instances 
+    or alternative Whisper-compatible services instead of OpenAI's default endpoint.
+    * When empty, uses the default OpenAI Whisper endpoint.
+
+* `WDOC_WHISPER_API_KEY`, default: `""`
+    * If provided, sets a custom API key for Whisper transcription services. This is useful when using alternative 
+    Whisper-compatible services that require their own authentication.
+    * When empty, uses the default OPENAI_API_KEY environment variable.
+
+* `WDOC_WHISPER_MODEL`, default: `"whisper-1"`
+    * Specifies which Whisper model to use for audio transcription. This can be any model supported by your Whisper endpoint.
+    * Common values include "whisper-1" for OpenAI's service, or model names like "base", "small", "medium", "large" for local instances.
+
 * `WDOC_APPLY_ASYNCIO_PATCH`, default: `False`
     * If True, applies the `nest_asyncio` patch to fix the `Event loop closed` error that can occur with Ollama and
     other async-based LLM providers. Set to False if you're experiencing issues with asyncio or if you're
