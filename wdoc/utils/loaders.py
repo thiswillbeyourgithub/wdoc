@@ -2173,7 +2173,47 @@ def transcribe_audio_whisper(
                 transcription_kwargs["api_key"] = env.WDOC_WHISPER_API_KEY
                 logger.debug("Using custom whisper API key")
 
-            transcript = litellm.transcription(**transcription_kwargs).json()
+            try:
+                transcript = litellm.transcription(**transcription_kwargs).json()
+            except Exception as litellm_err:
+                logger.warning(
+                    f"litellm.transcription failed with error: {litellm_err}. "
+                    f"Falling back to direct requests call to whisper endpoint."
+                )
+
+                # Fallback to direct requests call
+                if not env.WDOC_WHISPER_ENDPOINT:
+                    raise Exception(
+                        "litellm failed and no WDOC_WHISPER_ENDPOINT set for fallback"
+                    ) from litellm_err
+
+                # Prepare the multipart form data
+                files = {"file": audio_file}
+                data = {
+                    "model": env.WDOC_WHISPER_MODEL,
+                    "response_format": "verbose_json",
+                    "temperature": 0,
+                }
+
+                if prompt:
+                    data["prompt"] = prompt
+                if language:
+                    data["language"] = language
+
+                headers = {}
+                if env.WDOC_WHISPER_API_KEY:
+                    headers["Authorization"] = f"Bearer {env.WDOC_WHISPER_API_KEY}"
+
+                # Make the request
+                endpoint_url = (
+                    env.WDOC_WHISPER_ENDPOINT.rstrip("/") + "/v1/audio/transcriptions"
+                )
+                response = requests.post(
+                    endpoint_url, files=files, data=data, headers=headers
+                )
+                response.raise_for_status()
+                transcript = response.json()
+
         t2 = time.time()
         logger.info(f"Done transcribing {audio_path} in {int(t2-t1)}s")
 
