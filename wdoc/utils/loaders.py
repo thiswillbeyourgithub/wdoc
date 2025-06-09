@@ -1597,11 +1597,11 @@ def load_string() -> List[Document]:
 
 @debug_return_empty
 @optional_strip_unexp_args
-def load_txt(path: str, file_hash: str) -> List[Document]:
+def load_txt(path: Union[str, Path], file_hash: str) -> List[Document]:
+    path = Path(path)
     logger.info(f"Loading txt: '{path}'")
-    assert Path(path).exists(), f"file not found: '{path}'"
-    with open(path) as f:
-        content = f.read()
+    assert path.exists(), f"file not found: '{path}'"
+    content = path.read_text()
     docs = [Document(page_content=content, metadata={})]
     return docs
 
@@ -1634,15 +1634,15 @@ def load_text_input(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_html(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
     load_functions: Optional[bytes] = None,
 ) -> List[Document]:
+    path = Path(path)
     logger.info(f"Loading local html: '{path}'")
-    assert Path(path).exists(), f"file not found: '{path}'"
+    assert path.exists(), f"file not found: '{path}'"
 
-    with open(path) as f:
-        content = f.read()
+    content = path.read_text()
 
     if load_functions:
         # the functions must be pickled because joblib can't
@@ -1709,12 +1709,13 @@ def eval_load_functions(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_logseq_markdown(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
     text_splitter: TextSplitter,
 ) -> List[Document]:
+    path = Path(path)
     logger.info(f"Loading logseq markdown file: '{path}'")
-    assert Path(path).exists(), f"file not found: '{path}'"
+    assert path.exists(), f"file not found: '{path}'"
     try:
         parsed = LogseqMarkdownParser.parse_file(path, verbose=False)
     except Exception as err:
@@ -1843,7 +1844,8 @@ def load_local_audio(
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
 
     if audio_unsilence:
         logger.warning(f"Removing silence from audio file {path.name}")
@@ -1992,7 +1994,7 @@ def load_local_audio(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_local_video(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
     audio_backend: Literal["whisper", "deepgram"],
     loaders_temp_dir: Path,
@@ -2001,7 +2003,8 @@ def load_local_video(
     whisper_prompt: Optional[str] = None,
     deepgram_kwargs: Optional[dict] = None,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
 
     audio_path = loaders_temp_dir / f"audio_from_video_{uuid6.uuid6()}.mp3"
     assert not audio_path.exists()
@@ -2411,10 +2414,11 @@ def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_epub(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
     loader = UnstructuredEPubLoader(path)
     content = loader.load()
 
@@ -2431,10 +2435,11 @@ def load_epub(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_powerpoint(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
     loader = UnstructuredPowerPointLoader(path)
     content = loader.load()
 
@@ -2451,10 +2456,11 @@ def load_powerpoint(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_word_document(
-    path: str,
+    path: Union[str, Path],
     file_hash: str,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
     try:
         loader = Docx2txtLoader(path)
         content = loader.load()
@@ -2489,13 +2495,14 @@ def load_word_document(
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
 def load_json_dict(
-    path: str,
+    path: Union[str, Path],
     json_dict_template: str,
     file_hash: str,
     metadata: Optional[Union[str, dict]] = None,
     json_dict_exclude_keys: Optional[List[str]] = None,
 ) -> List[Document]:
-    assert Path(path).exists(), f"file not found: '{path}'"
+    path = Path(path)
+    assert path.exists(), f"file not found: '{path}'"
 
     assert "{key}" in json_dict_template, "json_dict_template must contain '{key}'"
     assert "{value}" in json_dict_template, "json_dict_template must contain '{value}'"
@@ -2805,7 +2812,7 @@ def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
 @debug_return_empty
 @optional_strip_unexp_args
 def load_pdf(
-    path: str,
+    path: Union[str, Path],
     text_splitter: TextSplitter,
     file_hash: str,
     pdf_parsers: Union[str, List[str]] = "pymupdf",
@@ -2813,9 +2820,10 @@ def load_pdf(
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
 ) -> List[Document]:
+    path = Path(path)
     logger.info(f"Loading pdf: '{path}'")
-    assert Path(path).exists(), f"file not found: '{path}'"
-    name = Path(path).name
+    assert path.exists(), f"file not found: '{path}'"
+    name = path.name
     if len(name) > 30:
         name = name[:15] + "..." + name[-15:]
 
@@ -2866,7 +2874,7 @@ def load_pdf(
                     timeout=pdf_loader_max_timeout,
                     exception=TimeoutPdfLoaderError,
                 ):
-                    docs = _pdf_loader(loader_name, path, file_hash)
+                    docs = _pdf_loader(loader_name, str(path), file_hash)
                 try:
                     signal.alarm(0)  # disable alarm again just in case
                 except Exception:
