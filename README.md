@@ -152,6 +152,7 @@ Click to read more
     - learn how to set a github action for test code coverage 
 - ### Features
     - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
+    - use [chonkie](https://docs.chonkie.ai/python-sdk/chunkers/semantic-chunker) for better chunking instead of the ones included in langchain
     - count how many time each source is used, as it can be relevant to infer answer quality
     - add an html format output. It would display a nice UI with proper dropdowns for sources etc
     - if a model supports structured output we should make use of it to get the thinking and answer part. Opt in because some models hide their thoughts.
