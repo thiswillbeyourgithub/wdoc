@@ -230,6 +230,19 @@ def cli_launcher() -> None:
     if needs_reparse:
         args, kwargs = parse_args_fire()
 
+    if "completion" in kwargs or "--completion" in sys.argv:
+        if " -- --completion" in " ".join(sys.argv):
+            if " parse " in " ".join(sys.argv):
+                sys.argv.remove("parse")
+                fire.Fire(wdoc.parse_doc)
+            else:
+                fire.Fire(wdoc)
+            sys.exit(0)
+        else:
+            raise Exception(
+                "To create completion scripts, use '-- --completion' as arguments."
+            )
+
     # turn "wdoc query" into "wdoc --task=query", same for the other tasks
     if "task" not in kwargs:
         matching_tasks = [t for t in args if t in tasks_list]
@@ -304,14 +317,6 @@ def cli_launcher() -> None:
         call_parse_doc()
         sys.exit(0)
 
-    elif "completion" in kwargs or "--completion" in sys.argv:
-        if " -- --completion" in " ".join(sys.argv):
-            fire.Fire(wdoc)
-            sys.exit(0)
-        else:
-            raise Exception(
-                "To create completion scripts, use '-- --completion' as arguments."
-            )
     else:
         logger.debug(
             f"Launching wdoc after arg transformation: Remaining sys.argv: '{sys.argv}'. Detected args: '{args}'. Detected kwargs: '{kwargs}'"
