@@ -11,503 +11,17 @@ _complete-wdoc()
   lastcommand=$(get_lastcommand)
 
   opts=""
-  GLOBAL_OPTIONS="--youtube-translation --online-media-url-regex --youtube-language --file-loader-parallel-backend --query --dollar-limit --include --whisper-lang --load-functions --task --audio-unsilence --anki-deck --loading-failure --query-retrievers --path --llm-verbosity --json-dict-exclude-keys --exclude --filetype --embed-model --anki-tag-render-filter --summary-language --summary-n-recursion --source-tag --deepgram-kwargs --doccheck-max-token --modelname --doccheck-min-lang-prob --query-eval-check-number --youtube-audio-backend --private --filter-metadata --json-dict-template --silent --file-loader-n-jobs --embed-kwargs --version --doccheck-min-token --anki-tag-filter --load-embeds-from --anki-template --import-mode --online-media-resourcetype-regex --anki-notetype --verbose --oneoff --embed-instruct --pdf-parsers --llms-api-bases --disable-llm-cache --query-eval-modelname --out-file --DIY-rolling-window-embedding --disable-md-printing --audio-backend --whisper-prompt --query-relevancy --notification-callback --debug --save-embeds-as --top-k --filter-content --anki-profile"
+  GLOBAL_OPTIONS="--oneoff --doccheck-min-token --embed-model --embed-model-kwargs --summary-language --version --embed-instruct --whisper-lang --notification-callback --json-dict-template --file-loader-n-jobs --query --doccheck-max-token --verbose --exclude --anki-deck --json-dict-exclude-keys --deepgram-kwargs --youtube-language --online-media-url-regex --dollar-limit --filter-metadata --top-k --anki-notetype --anki-profile --youtube-audio-backend --doccheck-min-lang-prob --loading-failure --audio-backend --summary-n-recursion --audio-unsilence --online-media-resourcetype-regex --query-eval-model --filetype --llms-api-bases --out-file --include --save-embeds-as --source-tag --model --query-eval-model-kwargs --query-retrievers --llm-verbosity --query-relevancy --anki-tag-render-filter --task --path --pattern --load-functions --filter-content --load-embeds-from --whisper-prompt --youtube-translation --model-kwargs --recursed-filetype --pdf-parsers --anki-tag-filter --debug --query-eval-check-number --private --disable-llm-cache --silent --anki-template --file-loader-parallel-backend"
 
 
   case "${lastcommand}" in
   
-    anki-notetype)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    expandtabs)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --tabsize ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isspace)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    lstrip)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--chars --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    islower)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    include)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    removesuffix)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --suffix ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    translate)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --table ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    conjugate)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    whisper-lang)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    query-task)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--query --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    zfill)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --width ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    center)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--fillchar --self --width ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    join)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--iterable --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    pdf-parsers)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    summary-task)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    path)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    hex)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    rstrip)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--chars --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    replace)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--count --new --old --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    youtube-language)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    wdoc)
-      
-      opts="VERSION allowed-extra-args md-printer parse-file prepare-query-task query-task summary-task ${GLOBAL_OPTIONS}" 
-      opts=$(filter_options $opts)
-    ;;
-
-    json-dict-exclude-keys)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="append clear copy copy-with count extend index insert pop remove reverse sort ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isprintable)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    deepgram-kwargs)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="clear copy fromkeys get items keys pop popitem setdefault update values ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    copy-with)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--args --params ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    capitalize)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    partition)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --sep ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    doccheck-min-token)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
     anki-template)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
         opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    allowed-extra-args)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="anki-deck anki-notetype anki-profile anki-tag-filter anki-tag-render-filter anki-template audio-backend audio-unsilence deepgram-kwargs doccheck-max-token doccheck-min-lang-prob doccheck-min-token embed-instruct exclude filter-content filter-metadata include json-dict-exclude-keys json-dict-template load-functions loading-failure online-media-resourcetype-regex online-media-url-regex out-file path pdf-parsers source-tag whisper-lang whisper-prompt youtube-audio-backend youtube-language youtube-translation ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    lower)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    copy)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    rpartition)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --sep ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isupper)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    insert)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--index --object --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    anki-deck)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    doccheck-max-token)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    upper)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    as-integer-ratio)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isalpha)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    anki-profile)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    ljust)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--fillchar --self --width ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    append)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--object --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    removeprefix)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--prefix --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    istitle)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    rsplit)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--maxsplit --self --sep ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    audio-backend)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    md-printer)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--color --message ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isalnum)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -522,252 +36,12 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    VERSION)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isnumeric)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    extend)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--iterable --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    filter-metadata)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    load-functions)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="append clear copy copy-with count extend index insert pop remove reverse sort ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    strip)
+    rstrip)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
         opts="--chars --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isdigit)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    get)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--default --key --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    exclude)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    loading-failure)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isdecimal)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    doccheck-min-lang-prob)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--x as-integer-ratio conjugate fromhex hex imag is-integer real ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    casefold)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    encode)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--encoding --errors --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    popitem)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    clear)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    to-bytes)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--byteorder --length --self --signed ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    source-tag)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    bit-count)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    bit-length)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    is-integer)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    sort)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--key --reverse --self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    fromhex)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--string ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    anki-tag-filter)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    online-media-url-regex)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -782,157 +56,7 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    anki-tag-render-filter)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    fromkeys)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--iterable --value ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    from-bytes)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--byteorder --bytes --signed ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    online-media-resourcetype-regex)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    filter-content)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    swapcase)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    embed-instruct)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    json-dict-template)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    audio-unsilence)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    out-file)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    prepare-query-task)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isidentifier)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    reverse)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    remove)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="--self --value ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    youtube-audio-backend)
-      
-      if is_prev_global; then
-        opts="${GLOBAL_OPTIONS}"
-      else
-        opts="copy-with ${GLOBAL_OPTIONS}"
-      fi
-      opts=$(filter_options $opts)
-    ;;
-
-    isascii)
+    clear)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
@@ -952,7 +76,327 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    title)
+    doccheck-max-token)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    bit-count)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isascii)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    audio-backend)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isspace)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isidentifier)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isupper)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    summary-task)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    load-functions)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable append clear copy count extend index insert pop remove reverse sort ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    include)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isnumeric)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    split)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--maxsplit --self --sep ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    istitle)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    VERSION)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    get)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--default --key --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    setdefault)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--default --key --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    is-integer)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    ljust)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--fillchar --self --width ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    loading-failure)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    capitalize)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    zfill)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --width ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    conjugate)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    count)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --value ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    strip)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--chars --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    exclude)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    pdf-parsers)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    recursed-filetype)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    sort)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--key --reverse --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    query-task)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--query --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    expandtabs)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --tabsize ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    join)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    filter-content)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    islower)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
@@ -972,6 +416,202 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
+    bit-length)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    extend)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    title)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    anki-profile)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    partition)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --sep ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    json-dict-template)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    upper)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    path)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    online-media-resourcetype-regex)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    json-dict-exclude-keys)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable append clear copy count extend index insert pop remove reverse sort ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    prepare-query-task)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    copy-with)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--args --params ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isalnum)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    remove)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --value ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    filter-metadata)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isdigit)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    lower)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    append)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--object --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    wdoc)
+      
+      opts="VERSION allowed-extra-args parse-doc prepare-query-task query-task summary-task ${GLOBAL_OPTIONS}" 
+      opts=$(filter_options $opts)
+    ;;
+
+    online-media-url-regex)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
     rjust)
       
       if is_prev_global; then
@@ -982,7 +622,197 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    split)
+    doccheck-min-token)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    removesuffix)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --suffix ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    pattern)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    deepgram-kwargs)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="clear copy fromkeys get items keys pop popitem setdefault update values ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    allowed-extra-args)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="anki-deck anki-notetype anki-profile anki-tag-filter anki-tag-render-filter anki-template audio-backend audio-unsilence deepgram-kwargs doccheck-max-token doccheck-min-lang-prob doccheck-min-token embed-instruct exclude filter-content filter-metadata include json-dict-exclude-keys json-dict-template load-functions loading-failure online-media-resourcetype-regex online-media-url-regex path pattern pdf-parsers recursed-filetype source-tag whisper-lang whisper-prompt youtube-audio-backend youtube-language youtube-translation ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    insert)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--index --object --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    removeprefix)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--prefix --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    fromkeys)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--iterable --value ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    hex)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    parse-doc)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--debug --filetype --format --out-file --verbose ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    youtube-audio-backend)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="copy-with ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    source-tag)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    swapcase)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    rpartition)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --sep ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    anki-notetype)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    audio-unsilence)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="as-integer-ratio bit-count bit-length conjugate denominator from-bytes imag numerator real to-bytes ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    translate)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self --table ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    reverse)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isprintable)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    rsplit)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
@@ -992,12 +822,112 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    setdefault)
+    anki-deck)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--default --key --self ${GLOBAL_OPTIONS}"
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    whisper-lang)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    doccheck-min-lang-prob)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--x as-integer-ratio conjugate fromhex hex imag is-integer real ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    copy)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    from-bytes)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--byteorder --bytes --signed ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    encode)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--encoding --errors --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isdecimal)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    popitem)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    embed-instruct)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    anki-tag-filter)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    lstrip)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--chars --self ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
@@ -1012,22 +942,92 @@ _complete-wdoc()
       opts=$(filter_options $opts)
     ;;
 
-    parse-file)
+    center)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--cli-kwargs --debug --filetype --only-text --path --verbose ${GLOBAL_OPTIONS}"
+        opts="--fillchar --self --width ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
 
-    count)
+    to-bytes)
       
       if is_prev_global; then
         opts="${GLOBAL_OPTIONS}"
       else
-        opts="--self --value ${GLOBAL_OPTIONS}"
+        opts="--byteorder --length --self --signed ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    anki-tag-render-filter)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    isalpha)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    fromhex)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--string ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    youtube-language)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="capitalize casefold center count encode endswith expandtabs find format format-map index isalnum isalpha isascii isdecimal isdigit isidentifier islower isnumeric isprintable isspace istitle isupper join ljust lower lstrip maketrans partition removeprefix removesuffix replace rfind rindex rjust rpartition rsplit rstrip split splitlines startswith strip swapcase title translate upper zfill ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    as-integer-ratio)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    replace)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--count --new --old --self ${GLOBAL_OPTIONS}"
+      fi
+      opts=$(filter_options $opts)
+    ;;
+
+    casefold)
+      
+      if is_prev_global; then
+        opts="${GLOBAL_OPTIONS}"
+      else
+        opts="--self ${GLOBAL_OPTIONS}"
       fi
       opts=$(filter_options $opts)
     ;;
