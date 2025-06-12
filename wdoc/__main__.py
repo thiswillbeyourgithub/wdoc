@@ -47,12 +47,17 @@ def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
     Returns:
         A tuple containing the list of positional arguments and a dictionary of keyword arguments.
     """
+    # fix issue when using " -- --completion"
+    argline = sys.argv.copy()
+    if "--" in argline:
+        sys.argv.remove("--")
     original_stdout = sys.stdout
     sys.stdout = io.StringIO()  # Redirect stdout to suppress fire output
     try:
         args, kwargs = fire.Fire(lambda *args, **kwargs: (list(args), kwargs))
     finally:
         sys.stdout = original_stdout  # Restore original stdout
+    sys.argv = argline
     return args, kwargs
 
 
