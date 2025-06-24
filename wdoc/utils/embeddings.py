@@ -16,13 +16,13 @@ import numpy as np
 from beartype.typing import Any, Callable, List, Optional, Tuple, Union
 from joblib import Parallel, delayed
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
     HuggingFaceInstructEmbeddings,
     SentenceTransformerEmbeddings,
 )
 from langchain_core.vectorstores.base import VectorStore
-from langchain_community.vectorstores import FAISS as nonbinaryFAISS
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 from tqdm import tqdm
@@ -31,7 +31,7 @@ from loguru import logger
 # from langchain.storage import LocalFileStore
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
-from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
+from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS, CompressedFAISS
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from wdoc.utils.typechecker import optional_typecheck
@@ -54,10 +54,16 @@ def __get_faiss_vectorstore__():
     if env.WDOC_MOD_FAISS_BINARY:
         assert (
             not env.WDOC_MOD_FAISS_SCORE_FN
-        ), "You can use the env variable WDOC_MOD_FAISS_SCORE_FN and WDOC_MOD_FAISS_BINARY at the same time."
+        ), "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_MOD_FAISS_BINARY=true at the same time."
+        assert (
+            env.WDOC_MOD_FAISS_COMPRESSION
+        ), "You can't use the env variable WDOC_MOD_FAISS_BINARY=true and WDOC_MOD_FAISS_COMPRESSION=false at the same time."
         return BinaryFAISS
     else:
-        return nonbinaryFAISS
+        if env.WDOC_MOD_FAISS_COMPRESSION:
+            return CompressedFAISS
+        else:
+            return FAISS
 
 
 def faiss_custom_score_function(distance: float) -> float:

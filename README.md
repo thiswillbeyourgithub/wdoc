@@ -404,4 +404,7 @@ FAQ
 * **How can I build the autodoc using sphinx?**
     * The command I've been using is `sphinx-apidoc -o docs/source/ wdoc --force`, to call from the root of this repository.
 
+* **Why can't I load the vectorstores in other langchain projects?**
+    * In `wdoc/utils/customs/binary_faiss_vectorstore.py`, we create `BinaryFAISS` and `CompressedFAISS`. The latter is just like FAISS but with zlib compression to the pickled index and the former adds on top binary embeddings, resulting in faster and more compact embeddings. If you want to disable compression alltogether, use the env variable `WDOC_MOD_FAISS_COMPRESSION=false`.
+
 </details>
