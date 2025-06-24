@@ -471,8 +471,8 @@ class BinaryFAISS(FAISS):
         faiss = dependable_faiss_import()
 
         # Create binary index - for binary embeddings, we use IndexBinaryFlat
-        # The dimension should be in bits, so multiply by 8 if embeddings are in bytes
-        embedding_dim_bits = len(embeddings[0]) * 8  # Assuming embeddings are bytes
+        # The dimension should be in bits, so multiply by 8 since _vec_to_binary returns bytes
+        embedding_dim_bits = BinaryFAISS._vec_to_binary(embeddings).shape[1] * 8
         index = faiss.IndexBinaryFlat(embedding_dim_bits)
 
         docstore = kwargs.pop("docstore", InMemoryDocstore())
