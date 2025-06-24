@@ -265,6 +265,10 @@ class BinaryFAISS(FAISS):
                 f"adding items, which {self.docstore} does not"
             )
 
+        # Binary embeddings don't support L2 normalization
+        if self._normalize_L2:
+            raise ValueError("L2 normalization is not supported for binary embeddings.")
+
         _len_check_if_sized(texts, metadatas, "texts", "metadatas")
 
         ids = ids or [str(uuid.uuid4()) for _ in texts]
@@ -284,10 +288,6 @@ class BinaryFAISS(FAISS):
         # Convert to binary format for FAISS
         # Binary embeddings should be uint8 arrays
         vector = np.array(embeddings, dtype=np.uint8)
-
-        # Binary embeddings don't support L2 normalization
-        if self._normalize_L2:
-            raise ValueError("L2 normalization is not supported for binary embeddings.")
 
         self.index.add(vector)
 
