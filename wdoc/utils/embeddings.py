@@ -344,7 +344,14 @@ def create_embeddings(
                     f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}"
                 )
                 if trial + 1 >= n_trial:
-                    logger.warning("Too many errors: bypassing the cache:")
+                    if env.WDOC_DISABLE_EMBEDDINGS_CACHE:
+                        logger.exception(
+                            "Too many errors when asking provider for embeddings but no cache to bypass so crashing"
+                        )
+                        raise
+                    logger.warning(
+                        "Too many errors when asking provider for embeddings so try bypassing the embeddings cache"
+                    )
                     temp = __get_faiss_vectorstore__().from_documents(
                         batch,
                         cached_embeddings.underlying_embeddings,
