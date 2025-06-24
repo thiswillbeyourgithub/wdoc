@@ -172,7 +172,7 @@ class BinaryFAISS(FAISS):
         return self._vec_to_binary(embeddings)
 
     @beartype
-    def _vec_to_binary(self, vectors: np.array) -> np.array:
+    def _vec_to_binary(self, vectors: np.ndarray) -> np.ndarray:
         """Convert vectors to binary format"""
         binary_vectors = vectors > 0
         if len(binary_vectors.shape) == 1:
