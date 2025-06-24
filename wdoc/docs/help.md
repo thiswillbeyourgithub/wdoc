@@ -723,6 +723,11 @@
 
 * `WDOC_MOD_FAISS_BINARY`, default `False`
     * If True, use a custom langchain vectorstore mimicking [FAISS](https://python.langchain.com/api_reference/_modules/langchain_community/vectorstores/faiss.html#FAISS) but using [binary embeddings](https://simonwillison.net/2024/Mar/26/binary-vector-search/), resulting in a 32x compression ratio and faster search hurting performance too much.
+    Note that binary indexes of FAISS [only support embeddings with dimensions multiple of 8](https://github.com/facebookresearch/faiss/wiki/Binary-indexes)
+    so if that happens we add null dimensions.
+    Note that if you switch this value between the index creation and index usage, you'll probably encounter errors and should rather set it once
+    then recreate your vectorstores.
+
 
 * `WDOC_LLM_MAX_CONCURRENCY`, default `1`
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
