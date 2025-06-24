@@ -205,8 +205,8 @@ def load_embeddings_engine(
         logger.info(f"Found {len(cache_content)} embeddings in local cache")
 
         cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-            embeddings,
-            lfs,
+            underlying_embeddings=embeddings,
+            document_embedding_cache=lfs,
             namespace=modelname.sanitized,
         )
 
