@@ -155,6 +155,11 @@ class BinaryFAISS(FAISS):
         )
         self._original_embedding_function = embedding_function
 
+        # Ensure Hamming score function is used by default for binary embeddings
+        # when no custom relevance_score_fn is provided
+        if relevance_score_fn is None:
+            self.override_relevance_score_fn = self._hamming_relevance_score_fn
+
     def embedding_function(self, texts):
         """Override to convert embeddings to binary"""
         # Get original embeddings
