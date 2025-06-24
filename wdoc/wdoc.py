@@ -658,9 +658,23 @@ class wdoc:
                 "search",
                 "summary_then_query",
             ], f"Invalid task: {self.task}"
-            while True:
+            if self.oneoff:
                 self.query_task(query=query)
-                query = None
+            elif is_out_piped:
+                self.query_task(query=query)
+                logger.debug(
+                    "Exited query_task because we don't loop the queries when the output is a shell pipe"
+                )
+            else:
+                if not query:
+                    query, self.interaction_settings = ask_user(
+                        self.interaction_settings
+                    )
+                while True:
+                    self.query_task(query=query)
+                    query, self.interaction_settings = ask_user(
+                        self.interaction_settings
+                    )
 
     @optional_typecheck
     def summary_task(self) -> dict:
@@ -1274,16 +1288,8 @@ class wdoc:
             ), "Something went wrong when deleting filtered out documents"
 
     @optional_typecheck
-    def query_task(self, query: Optional[str] = None) -> dict:
-        if not query:
-            if self.oneoff:
-                sys.exit(0)
-            if is_out_piped:
-                logger.debug(
-                    "Exited query_task because we don't loop the queries when the output is a shell pipe"
-                )
-                sys.exit(0)
-            query, self.interaction_settings = ask_user(self.interaction_settings)
+    def query_task(self, query: str) -> dict:
+        assert query.strip(), "Cannot accept empty query"
         assert all(
             retriev in ["basic", "multiquery", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
