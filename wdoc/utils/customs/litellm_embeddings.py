@@ -37,6 +37,10 @@ class LiteLLMEmbeddings(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
+        assert not any(
+            not t.strip() for t in texts
+        ), f"The texts to embed include an empty string, which usually errors out providers. Texts={texts}"
+
         # https://docs.litellm.ai/docs/embedding/supported_embedding
         vecs = litellm.embedding(
             model=self.model,
