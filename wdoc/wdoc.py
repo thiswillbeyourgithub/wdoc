@@ -1371,6 +1371,8 @@ class wdoc:
             query_an = sp[1].strip()
         else:
             query_fe, query_an = copy.copy(query), copy.copy(query)
+
+        assert query.strip(), "Received empty 'query'"
         logger.debug(f"Query for the embeddings: {query_fe}")
         logger.debug(f"Question to answer: {query_an}")
 
