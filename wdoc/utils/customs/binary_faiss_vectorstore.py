@@ -286,8 +286,7 @@ class BinaryFAISS(FAISS):
             raise ValueError("Duplicate ids found in the ids list.")
 
         # Convert to binary format for FAISS
-        # Binary embeddings should be uint8 arrays
-        vector = np.array(embeddings, dtype=np.uint8)
+        vector = self._vec_to_binary(embeddings)
 
         self.index.add(vector)
 
@@ -328,7 +327,7 @@ class BinaryFAISS(FAISS):
                 "Binary embeddings must contain only integers in range [0, 255]."
             )
 
-        vector = np.array([embedding], dtype=np.uint8)
+        vector = self._vec_to_binary(embeddings)
 
         # Binary embeddings don't support L2 normalization
         if self._normalize_L2:
