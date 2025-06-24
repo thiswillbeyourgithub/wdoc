@@ -65,7 +65,7 @@ class EnvDataclass:
     WDOC_IMPORT_TYPE: Literal["native", "lazy", "thread", "both"] = (
         "native" if " --help" not in " ".join(sys.argv) else "lazy"
     )
-    WDOC_MOD_FAISS_SCORE_FN: bool = False
+    WDOC_MOD_FAISS_SCORE_FN: bool = True
     WDOC_MOD_FAISS_BINARY: bool = False
     WDOC_LLM_MAX_CONCURRENCY: int = 1
     WDOC_LLM_REQUEST_TIMEOUT: int = 600

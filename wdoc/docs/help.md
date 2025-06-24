@@ -718,7 +718,7 @@
     * If `both`, will try to use both.
     All other than `native` are experimental as they rely on weird python tricks that may cause issues.
 
-* `WDOC_MOD_FAISS_SCORE_FN`, default `False`
+* `WDOC_MOD_FAISS_SCORE_FN`, default `True`
     * If True, modify on the fly the FAISS vectorstores to change their scoring function to go from 0 to 1 instead of -1 to 1. This was  inspired by [this langchain issue where users claim the default scoring function is wrong](https://github.com/langchain-ai/langchain/issues/17333)
 
 * `WDOC_MOD_FAISS_BINARY`, default `False`
