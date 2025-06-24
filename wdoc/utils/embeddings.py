@@ -48,19 +48,19 @@ DEFAULT_QUERY_INSTRUCTION = (
 
 def __get_faiss_vectorstore__():
     """Returns either the FAISS vectorstore class or the custom BinaryFAISS.
-    This way we can modify the env variable WDOC_MOD_FAISS_BINARY after
+    This way we can modify the env variable WDOC_FAISS_BINARY after
     importing wdoc.
     """
-    if env.WDOC_MOD_FAISS_BINARY:
+    if env.WDOC_FAISS_BINARY:
         assert (
             not env.WDOC_MOD_FAISS_SCORE_FN
-        ), "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_MOD_FAISS_BINARY=true at the same time."
+        ), "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_FAISS_BINARY=true at the same time."
         assert (
-            env.WDOC_MOD_FAISS_COMPRESSION
-        ), "You can't use the env variable WDOC_MOD_FAISS_BINARY=true and WDOC_MOD_FAISS_COMPRESSION=false at the same time."
+            env.WDOC_FAISS_COMPRESSION
+        ), "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
         return BinaryFAISS
     else:
-        if env.WDOC_MOD_FAISS_COMPRESSION:
+        if env.WDOC_FAISS_COMPRESSION:
             return CompressedFAISS
         else:
             return FAISS
@@ -337,7 +337,7 @@ def create_embeddings(
                 temp = __get_faiss_vectorstore__().from_documents(
                     batch,
                     cached_embeddings,
-                    normalize_L2=False if env.WDOC_MOD_FAISS_BINARY else True,
+                    normalize_L2=False if env.WDOC_FAISS_BINARY else True,
                     relevance_score_fn=(
                         faiss_custom_score_function
                         if env.WDOC_MOD_FAISS_SCORE_FN
@@ -361,7 +361,7 @@ def create_embeddings(
                     temp = __get_faiss_vectorstore__().from_documents(
                         batch,
                         cached_embeddings.underlying_embeddings,
-                        normalize_L2=False if env.WDOC_MOD_FAISS_BINARY else True,
+                        normalize_L2=False if env.WDOC_FAISS_BINARY else True,
                         relevance_score_fn=(
                             faiss_custom_score_function
                             if env.WDOC_MOD_FAISS_SCORE_FN
