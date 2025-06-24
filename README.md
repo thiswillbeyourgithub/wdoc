@@ -257,7 +257,6 @@ Click to read more
     - add a "try_all" filetype that will try each filetype and keep the first that works
     - add bespoke-minicheck from ollama to fact check when using RAG: https://ollama.com/library/bespoke-minicheck
         - or via their API directly : https://docs.bespokelabs.ai/bespoke-minicheck/api but they don't seem to properly disclose what they do with the data
-    - add a way to use binary faiss index as its as efficient but faster and way more compact
 <!-- END_TODO -->
 
 </details>
