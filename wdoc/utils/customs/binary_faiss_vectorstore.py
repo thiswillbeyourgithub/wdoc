@@ -171,6 +171,7 @@ class BinaryFAISS(FAISS):
 
         return self._vec_to_binary(embeddings)
 
+    @classmethod
     @beartype
     def _vec_to_binary(self, vectors: np.ndarray) -> np.ndarray:
         """Convert vectors to binary format"""
@@ -489,7 +490,7 @@ class BinaryFAISS(FAISS):
         """Construct BinaryFAISS from raw documents with binary embeddings."""
         embeddings = embedding.embed_documents(texts)
 
-        binary_embeddings = self._vec_to_binary(embeddings)
+        binary_embeddings = BinaryFAISS._vec_to_binary(embeddings)
 
         return cls.__from(
             texts,
@@ -512,7 +513,7 @@ class BinaryFAISS(FAISS):
         """Construct BinaryFAISS from raw documents with binary embeddings asynchronously."""
         embeddings = await embedding.aembed_documents(texts)
 
-        binary_embeddings = self._vec_to_binary(embeddings)
+        binary_embeddings = BinaryFAISS._vec_to_binary(embeddings)
 
         return cls.__from(
             texts,
