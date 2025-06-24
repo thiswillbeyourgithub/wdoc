@@ -8,7 +8,6 @@ https://github.com/facebookresearch/faiss/wiki/Binary-indexes
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import logging
 import uuid
@@ -186,7 +185,6 @@ class BinaryFAISS(FAISS):
         return self._vec_to_binary(embeddings)
 
     @classmethod
-    @beartype
     def _vec_to_binary(
         self, vectors: Union[np.ndarray, List[float], List[List[float]]]
     ) -> np.ndarray:
