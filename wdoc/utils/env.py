@@ -66,6 +66,7 @@ class EnvDataclass:
         "native" if " --help" not in " ".join(sys.argv) else "lazy"
     )
     WDOC_MOD_FAISS_SCORE_FN: bool = False
+    WDOC_MOD_FAISS_BINARY: bool = False
     WDOC_LLM_MAX_CONCURRENCY: int = 1
     WDOC_LLM_REQUEST_TIMEOUT: int = 600
     WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE: int = 2000

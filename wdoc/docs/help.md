@@ -721,6 +721,9 @@
 * `WDOC_MOD_FAISS_SCORE_FN`, default `False`
     * If True, modify on the fly the FAISS vectorstores to change their scoring function to go from 0 to 1 instead of -1 to 1. This was  inspired by [this langchain issue where users claim the default scoring function is wrong](https://github.com/langchain-ai/langchain/issues/17333)
 
+* `WDOC_MOD_FAISS_BINARY`, default `False`
+    * If True, use a custom langchain vectorstore mimicking [FAISS](https://python.langchain.com/api_reference/_modules/langchain_community/vectorstores/faiss.html#FAISS) but using [binary embeddings](https://simonwillison.net/2024/Mar/26/binary-vector-search/), resulting in a 32x compression ratio and faster search hurting performance too much.
+
 * `WDOC_LLM_MAX_CONCURRENCY`, default `1`
     * Set the max_concurrency limit to give langchain. If debug is used, it is overriden and set to 1.
     Must be an int.

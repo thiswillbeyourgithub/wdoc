@@ -22,7 +22,7 @@ from langchain_community.embeddings import (
     SentenceTransformerEmbeddings,
 )
 from langchain_core.vectorstores.base import VectorStore
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS as nonbinaryFAISS
 from langchain_core.embeddings import Embeddings
 from langchain_openai import OpenAIEmbeddings
 from tqdm import tqdm
@@ -31,10 +31,10 @@ from loguru import logger
 # from langchain.storage import LocalFileStore
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
+from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 from wdoc.utils.typechecker import optional_typecheck
-
 
 embeddings_cache_dir = cache_dir / "CacheEmbedding"
 embeddings_cache_dir.mkdir(exist_ok=True)
@@ -44,6 +44,20 @@ DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
 DEFAULT_QUERY_INSTRUCTION = (
     "Represent the question for retrieving supporting documents: "
 )
+
+
+def __get_faiss_vectorstore__():
+    """Returns either the FAISS vectorstore class or the custom BinaryFAISS.
+    This way we can modify the env variable WDOC_MOD_FAISS_BINARY after
+    importing wdoc.
+    """
+    if env.WDOC_MOD_FAISS_BINARY:
+        assert (
+            not env.WDOC_MOD_FAISS_SCORE_FN
+        ), "You can use the env variable WDOC_MOD_FAISS_SCORE_FN and WDOC_MOD_FAISS_BINARY at the same time."
+        return BinaryFAISS
+    else:
+        return nonbinaryFAISS
 
 
 def faiss_custom_score_function(distance: float) -> float:
@@ -245,7 +259,7 @@ def create_embeddings(
         path = Path(load_embeds_from)
         assert path.exists(), f"file not found at '{path}'"
         cache_file_in_memory(path, recursive=True)
-        db = FAISS.load_local(
+        db = __get_faiss_vectorstore__().load_local(
             str(path),
             cached_embeddings,
             relevance_score_fn=(
@@ -314,10 +328,10 @@ def create_embeddings(
         for trial in range(n_trial):
             # logger.info(f"Embedding batch #{ib + 1}")
             try:
-                temp = FAISS.from_documents(
+                temp = __get_faiss_vectorstore__().from_documents(
                     batch,
                     cached_embeddings,
-                    normalize_L2=True,
+                    normalize_L2=False if env.WDOC_MOD_FAISS_BINARY else True,
                     relevance_score_fn=(
                         faiss_custom_score_function
                         if env.WDOC_MOD_FAISS_SCORE_FN
@@ -331,10 +345,10 @@ def create_embeddings(
                 )
                 if trial + 1 >= n_trial:
                     logger.warning("Too many errors: bypassing the cache:")
-                    temp = FAISS.from_documents(
+                    temp = __get_faiss_vectorstore__().from_documents(
                         batch,
                         cached_embeddings.underlying_embeddings,
-                        normalize_L2=True,
+                        normalize_L2=False if env.WDOC_MOD_FAISS_BINARY else True,
                         relevance_score_fn=(
                             faiss_custom_score_function
                             if env.WDOC_MOD_FAISS_SCORE_FN
