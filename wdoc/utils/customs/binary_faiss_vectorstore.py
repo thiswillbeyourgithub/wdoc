@@ -143,6 +143,38 @@ class BinaryFAISS(FAISS):
             normalize_L2=normalize_L2,
             distance_strategy=distance_strategy,
         )
+        self._original_embedding_function = embedding_function
+
+    def embedding_function(self, texts):
+        """Override to convert embeddings to binary"""
+        # Get original embeddings
+        embeddings = self._original_embedding_function(texts)
+
+        # make sure we have a properly formatted array
+        embeddings = np.array(embeddings).squeeze()
+
+        return self._vec_to_binary(embeddings)
+
+    def _vec_to_binary(self, vectors: np.array) -> np.array:
+        """Convert vectors to binary format"""
+        binary_vectors = vectors > 0
+        if len(binary_vectors.shape) == 1:
+            d = binary_vectors.shape[0]
+        elif len(binary_vectors.shape) == 2:
+            d = binary_vectors.shape[1]
+        else:
+            raise Exception(
+                f"Unexpected dimension of embeddings to turn to binary: {binary_vectors.shape}"
+            )
+
+        # faiss only supports dimensions multiple of 8 so we add if necessary
+        # source: https://github.com/facebookresearch/faiss/wiki/Binary-indexes
+        if d % 8 != 0:
+            padding = 8 - (d % 8)
+            binary_vectors = np.pad(
+                binary_vectors, ((0, 0), (0, padding)), mode="constant"
+            )
+        return np.packbits(binary_vectors, axis=1)
 
     def _embed_documents(self, texts: List[str]) -> List[List[int]]:
         """Embed documents and ensure they are in binary format."""
@@ -150,17 +182,6 @@ class BinaryFAISS(FAISS):
             embeddings = self.embedding_function.embed_documents(texts)
         else:
             embeddings = [self.embedding_function(text) for text in texts]
-
-        # Validate that embeddings are binary (integers/bytes)
-        for i, embedding in enumerate(embeddings):
-            if not all(
-                isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
-            ):
-                raise ValueError(
-                    f"Embedding {i} contains non-binary values. "
-                    f"Binary embeddings must contain only integers in range [0, 255] "
-                    f"representing packed bits."
-                )
 
         return embeddings
 
@@ -478,17 +499,11 @@ class BinaryFAISS(FAISS):
         """Construct BinaryFAISS from raw documents with binary embeddings."""
         embeddings = embedding.embed_documents(texts)
 
-        # Validate that the embeddings are binary
-        for i, emb in enumerate(embeddings):
-            if not all(isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in emb):
-                raise ValueError(
-                    f"Embedding {i} from embedding function contains non-binary values. "
-                    f"BinaryFAISS requires embeddings with only integers in range [0, 255]."
-                )
+        binary_embeddings = self._vec_to_binary(embeddings)
 
         return cls.__from(
             texts,
-            embeddings,
+            binary_embeddings,
             embedding,
             metadatas=metadatas,
             ids=ids,
@@ -507,17 +522,11 @@ class BinaryFAISS(FAISS):
         """Construct BinaryFAISS from raw documents with binary embeddings asynchronously."""
         embeddings = await embedding.aembed_documents(texts)
 
-        # Validate that the embeddings are binary
-        for i, emb in enumerate(embeddings):
-            if not all(isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in emb):
-                raise ValueError(
-                    f"Embedding {i} from embedding function contains non-binary values. "
-                    f"BinaryFAISS requires embeddings with only integers in range [0, 255]."
-                )
+        binary_embeddings = self._vec_to_binary(embeddings)
 
         return cls.__from(
             texts,
-            embeddings,
+            binary_embeddings,
             embedding,
             metadatas=metadatas,
             ids=ids,
