@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 class CompressedFAISS(FAISS):
     """FAISS vector store with compressed storage.
-    
+
     This subclass adds zlib compression to the save_local and load_local methods
     to reduce storage size of the docstore and index mappings.
     """
@@ -651,4 +651,3 @@ class BinaryFAISS(CompressedFAISS):
         # Clamp to ensure we don't get negative scores if distance > max_distance
         normalized_distance = min(distance / max_distance, 1.0)
         return 1.0 - normalized_distance
-
