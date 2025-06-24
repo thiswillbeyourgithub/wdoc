@@ -173,8 +173,11 @@ class BinaryFAISS(FAISS):
 
     @classmethod
     @beartype
-    def _vec_to_binary(self, vectors: np.ndarray) -> np.ndarray:
+    def _vec_to_binary(
+        self, vectors: Union[np.ndarray, List[float], List[List[float]]]
+    ) -> np.ndarray:
         """Convert vectors to binary format"""
+        vectors = np.array(vectors)
         binary_vectors = vectors > 0
         if len(binary_vectors.shape) == 1:
             d = binary_vectors.shape[0]
