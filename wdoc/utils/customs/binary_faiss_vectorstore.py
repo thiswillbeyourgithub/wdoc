@@ -1,3 +1,12 @@
+"""
+Inherit from FAISS vectorstore from langchain but using binary embeddings from faiss.
+
+
+Source:
+https://python.langchain.com/api_reference/_modules/langchain_community/vectorstores/faiss.html#FAISS
+https://github.com/facebookresearch/faiss/wiki/Binary-indexes
+"""
+
 from __future__ import annotations
 from beartype import beartype
 
