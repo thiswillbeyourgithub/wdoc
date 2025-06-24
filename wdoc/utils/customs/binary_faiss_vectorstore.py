@@ -458,14 +458,6 @@ class BinaryFAISS(FAISS):
 
         faiss = dependable_faiss_import()
 
-        # Validate embeddings are binary
-        for i, emb in enumerate(embeddings):
-            if not all(isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in emb):
-                raise ValueError(
-                    f"Embedding {i} contains non-binary values. "
-                    f"Binary embeddings must contain only integers in range [0, 255]."
-                )
-
         # Create binary index - for binary embeddings, we use IndexBinaryFlat
         # The dimension should be in bits, so multiply by 8 if embeddings are in bytes
         embedding_dim_bits = len(embeddings[0]) * 8  # Assuming embeddings are bytes
