@@ -36,7 +36,8 @@ from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_
 from wdoc.utils.typechecker import optional_typecheck
 
 
-(cache_dir / "faiss_embeddings").mkdir(exist_ok=True)
+embeddings_cache_dir = cache_dir / "CacheEmbedding"
+embeddings_cache_dir.mkdir(exist_ok=True)
 
 # Source: https://api.python.langchain.com/en/latest/_modules/langchain_community/embeddings/huggingface.html#HuggingFaceEmbeddings
 DEFAULT_EMBED_INSTRUCTION = "Represent the document for retrieval: "
@@ -188,7 +189,7 @@ def load_embeddings_engine(
             )
 
     lfs = LocalFileStore(
-        database_path=cache_dir / "CacheEmbeddings" / modelname.sanitized,
+        database_path=embeddings_cache_dir / modelname.sanitized,
         expiration_days=env.WDOC_EXPIRE_CACHE_DAYS,
         verbose=env.WDOC_VERBOSE,
         name="Embeddings_" + modelname.sanitized,
