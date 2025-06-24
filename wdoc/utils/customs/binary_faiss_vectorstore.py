@@ -1,4 +1,5 @@
 from __future__ import annotations
+from beartype import beartype
 
 import logging
 import uuid
@@ -155,6 +156,22 @@ class BinaryFAISS(FAISS):
 
         return self._vec_to_binary(embeddings)
 
+    async def aembedding_function(self, texts):
+        """Override to convert embeddings to binary for async operations"""
+        # Get original embeddings asynchronously
+        if isinstance(self._original_embedding_function, Embeddings):
+            embeddings = await self._original_embedding_function.aembed_documents(texts)
+        else:
+            raise Exception(
+                "`embedding_function` is expected to be an Embeddings object for async operations"
+            )
+
+        # make sure we have a properly formatted array
+        embeddings = np.array(embeddings).squeeze()
+
+        return self._vec_to_binary(embeddings)
+
+    @beartype
     def _vec_to_binary(self, vectors: np.array) -> np.array:
         """Convert vectors to binary format"""
         binary_vectors = vectors > 0
@@ -178,22 +195,11 @@ class BinaryFAISS(FAISS):
 
     def _embed_documents(self, texts: List[str]) -> List[List[int]]:
         """Embed documents and ensure they are in binary format."""
-        if isinstance(self.embedding_function, Embeddings):
-            embeddings = self.embedding_function.embed_documents(texts)
-        else:
-            embeddings = [self.embedding_function(text) for text in texts]
-
-        return embeddings
+        return self.embedding_function(texts)
 
     async def _aembed_documents(self, texts: List[str]) -> List[List[int]]:
         """Embed documents asynchronously and ensure they are in binary format."""
-        if isinstance(self.embedding_function, Embeddings):
-            embeddings = await self.embedding_function.aembed_documents(texts)
-        else:
-            raise Exception(
-                "`embedding_function` is expected to be an Embeddings object for async operations, "
-                "support for passing in a function will soon be removed."
-            )
+        embeddings = await self.aembedding_function(texts)
 
         # Validate that embeddings are binary
         for i, embedding in enumerate(embeddings):
@@ -210,10 +216,7 @@ class BinaryFAISS(FAISS):
 
     def _embed_query(self, text: str) -> List[int]:
         """Embed query and ensure it is in binary format."""
-        if isinstance(self.embedding_function, Embeddings):
-            embedding = self.embedding_function.embed_query(text)
-        else:
-            embedding = self.embedding_function(text)
+        embedding = self.embedding_function([text])[0]
 
         # Validate that embedding is binary
         if not all(
@@ -229,13 +232,8 @@ class BinaryFAISS(FAISS):
 
     async def _aembed_query(self, text: str) -> List[int]:
         """Embed query asynchronously and ensure it is in binary format."""
-        if isinstance(self.embedding_function, Embeddings):
-            embedding = await self.embedding_function.aembed_query(text)
-        else:
-            raise Exception(
-                "`embedding_function` is expected to be an Embeddings object for async operations, "
-                "support for passing in a function will soon be removed."
-            )
+        embeddings = await self.aembedding_function([text])
+        embedding = embeddings[0]
 
         # Validate that embedding is binary
         if not all(
