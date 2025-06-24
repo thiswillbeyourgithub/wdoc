@@ -724,6 +724,7 @@
 * `WDOC_MOD_FAISS_COMPRESSION`, default `True`
     * If True, zlib compression is applied around the pickling stage (=save_local/load_local) of the faiss index. Disable this if you want to use your faiss indexes with other softwares without using wdoc's custom classes.
     If False, `WDOC_MOD_FAISS_BINARY` must also be `False`.
+    Note that you can switch value between run, as the uncompressed loading is used as fallback.
 
 * `WDOC_MOD_FAISS_BINARY`, default `False`
     * If True, use a custom langchain vectorstore mimicking [FAISS](https://python.langchain.com/api_reference/_modules/langchain_community/vectorstores/faiss.html#FAISS) but using [binary embeddings](https://simonwillison.net/2024/Mar/26/binary-vector-search/), resulting in a 32x compression ratio and faster search hurting performance too much.

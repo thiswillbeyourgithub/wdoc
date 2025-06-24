@@ -114,16 +114,30 @@ class CompressedFAISS(FAISS):
         index = faiss.read_index(str(path / f"{index_name}.faiss"))
 
         # load docstore and index_to_docstore_id with zlib decompression
+        # fallback to uncompressed loading if decompression fails
         with open(path / f"{index_name}.pkl", "rb") as f:
-            compressed_data = f.read()
+            file_data = f.read()
 
-        pickle_data = zlib.decompress(compressed_data)
-        (
-            docstore,
-            index_to_docstore_id,
-        ) = pickle.loads(
-            pickle_data
-        )  # ignore[pickle]: explicit-opt-in
+        try:
+            # Try loading with zlib decompression first
+            pickle_data = zlib.decompress(file_data)
+            (
+                docstore,
+                index_to_docstore_id,
+            ) = pickle.loads(
+                pickle_data
+            )  # ignore[pickle]: explicit-opt-in
+        except (zlib.error, pickle.UnpicklingError) as e:
+            # Fallback: try loading without decompression (backwards compatibility)
+            logger.info(
+                f"Failed to load compressed data ({e}), trying uncompressed format"
+            )
+            (
+                docstore,
+                index_to_docstore_id,
+            ) = pickle.loads(
+                file_data
+            )  # ignore[pickle]: explicit-opt-in
 
         return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
 
