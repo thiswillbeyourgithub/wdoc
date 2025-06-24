@@ -2041,6 +2041,12 @@ class wdoc:
 
                 final_answer = all_rlvt_interim_ans[-1][0]
                 output["all_relevant_intermediate_answers"] = all_rlvt_interim_ans
+
+            elif not len(output["relevant_intermediate_answers"]):
+                raise Exception(
+                    f"No 'relevant_intermediate_answers' found. Output was: '{str(output)[:1000]}...'"
+                )
+
             else:
                 final_answer = output["relevant_intermediate_answers"][0]
 
