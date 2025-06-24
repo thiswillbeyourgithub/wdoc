@@ -299,4 +299,8 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     pp_file.unlink(missing_ok=True)
     temp_file.rename(pp_file)
 
+    if not user_input.strip():
+        logger.exception("Query cannot be empty, retrying")
+        return ask_user(settings)
+
     return user_input, settings
