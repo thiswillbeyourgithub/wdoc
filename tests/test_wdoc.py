@@ -13,6 +13,9 @@ os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
 
 os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] = "true"
 
+# test binary embeddings
+os.environ["WDOC_MOD_FAISS_BINARY"] = "true"
+
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
