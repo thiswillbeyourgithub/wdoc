@@ -16,6 +16,7 @@ from loguru import logger
 from wdoc.utils.logger import md_printer
 from wdoc.utils.misc import cache_dir
 from wdoc.utils.typechecker import optional_typecheck
+from wdoc.utils.env import is_out_piped
 
 
 @optional_typecheck
@@ -135,6 +136,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
     """
+    assert (
+        not is_out_piped
+    ), "Trying to load the CLI even though we are in a piped script. Crashing."
     md_printer("# wdoc Prompt")
 
     # loading history from files
