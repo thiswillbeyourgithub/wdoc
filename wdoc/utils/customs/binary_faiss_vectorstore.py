@@ -44,7 +44,91 @@ from langchain_community.vectorstores.faiss import (
 logger = logging.getLogger(__name__)
 
 
-class BinaryFAISS(FAISS):
+class CompressedFAISS(FAISS):
+    """FAISS vector store with compressed storage.
+    
+    This subclass adds zlib compression to the save_local and load_local methods
+    to reduce storage size of the docstore and index mappings.
+    """
+
+    def save_local(self, folder_path: str, index_name: str = "index") -> None:
+        """Save FAISS index, docstore, and index_to_docstore_id to disk with compression.
+
+        Args:
+            folder_path: folder path to save index, docstore,
+                and index_to_docstore_id to.
+            index_name: for saving with a specific index file name
+        """
+        path = Path(folder_path)
+        path.mkdir(exist_ok=True, parents=True)
+
+        # save index separately since it is not picklable
+        faiss = dependable_faiss_import()
+        faiss.write_index(self.index, str(path / f"{index_name}.faiss"))
+
+        # save docstore and index_to_docstore_id with zlib compression
+        pickle_data = pickle.dumps((self.docstore, self.index_to_docstore_id))
+        compressed_data = zlib.compress(pickle_data)
+        with open(path / f"{index_name}.pkl", "wb") as f:
+            f.write(compressed_data)
+
+    @classmethod
+    def load_local(
+        cls,
+        folder_path: str,
+        embeddings: Embeddings,
+        index_name: str = "index",
+        *,
+        allow_dangerous_deserialization: bool = False,
+        **kwargs: Any,
+    ) -> "CompressedFAISS":
+        """Load FAISS index, docstore, and index_to_docstore_id from disk with decompression.
+
+        Args:
+            folder_path: folder path to load index, docstore,
+                and index_to_docstore_id from.
+            embeddings: Embeddings to use when generating queries
+            index_name: for saving with a specific index file name
+            allow_dangerous_deserialization: whether to allow deserialization
+                of the data which involves loading a pickle file.
+                Pickle files can be modified by malicious actors to deliver a
+                malicious payload that results in execution of
+                arbitrary code on your machine.
+        """
+        if not allow_dangerous_deserialization:
+            raise ValueError(
+                "The de-serialization relies loading a pickle file. "
+                "Pickle files can be modified to deliver a malicious payload that "
+                "results in execution of arbitrary code on your machine."
+                "You will need to set `allow_dangerous_deserialization` to `True` to "
+                "enable deserialization. If you do this, make sure that you "
+                "trust the source of the data. For example, if you are loading a "
+                "file that you created, and know that no one else has modified the "
+                "file, then this is safe to do. Do not set this to `True` if you are "
+                "loading a file from an untrusted source (e.g., some random site on "
+                "the internet.)."
+            )
+        path = Path(folder_path)
+        # load index separately since it is not picklable
+        faiss = dependable_faiss_import()
+        index = faiss.read_index(str(path / f"{index_name}.faiss"))
+
+        # load docstore and index_to_docstore_id with zlib decompression
+        with open(path / f"{index_name}.pkl", "rb") as f:
+            compressed_data = f.read()
+
+        pickle_data = zlib.decompress(compressed_data)
+        (
+            docstore,
+            index_to_docstore_id,
+        ) = pickle.loads(
+            pickle_data
+        )  # ignore[pickle]: explicit-opt-in
+
+        return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
+
+
+class BinaryFAISS(CompressedFAISS):
     """FAISS vector store integration for binary embeddings.
 
     This subclass is specifically designed for binary embeddings that use
@@ -568,78 +652,3 @@ class BinaryFAISS(FAISS):
         normalized_distance = min(distance / max_distance, 1.0)
         return 1.0 - normalized_distance
 
-    def save_local(self, folder_path: str, index_name: str = "index") -> None:
-        """Save FAISS index, docstore, and index_to_docstore_id to disk.
-
-        Args:
-            folder_path: folder path to save index, docstore,
-                and index_to_docstore_id to.
-            index_name: for saving with a specific index file name
-        """
-        path = Path(folder_path)
-        path.mkdir(exist_ok=True, parents=True)
-
-        # save index separately since it is not picklable
-        faiss = dependable_faiss_import()
-        faiss.write_index(self.index, str(path / f"{index_name}.faiss"))
-
-        # save docstore and index_to_docstore_id with zlib compression
-        pickle_data = pickle.dumps((self.docstore, self.index_to_docstore_id))
-        compressed_data = zlib.compress(pickle_data)
-        with open(path / f"{index_name}.pkl", "wb") as f:
-            f.write(compressed_data)
-
-    @classmethod
-    def load_local(
-        cls,
-        folder_path: str,
-        embeddings: Embeddings,
-        index_name: str = "index",
-        *,
-        allow_dangerous_deserialization: bool = False,
-        **kwargs: Any,
-    ) -> FAISS:
-        """Load FAISS index, docstore, and index_to_docstore_id from disk.
-
-        Args:
-            folder_path: folder path to load index, docstore,
-                and index_to_docstore_id from.
-            embeddings: Embeddings to use when generating queries
-            index_name: for saving with a specific index file name
-            allow_dangerous_deserialization: whether to allow deserialization
-                of the data which involves loading a pickle file.
-                Pickle files can be modified by malicious actors to deliver a
-                malicious payload that results in execution of
-                arbitrary code on your machine.
-        """
-        if not allow_dangerous_deserialization:
-            raise ValueError(
-                "The de-serialization relies loading a pickle file. "
-                "Pickle files can be modified to deliver a malicious payload that "
-                "results in execution of arbitrary code on your machine."
-                "You will need to set `allow_dangerous_deserialization` to `True` to "
-                "enable deserialization. If you do this, make sure that you "
-                "trust the source of the data. For example, if you are loading a "
-                "file that you created, and know that no one else has modified the "
-                "file, then this is safe to do. Do not set this to `True` if you are "
-                "loading a file from an untrusted source (e.g., some random site on "
-                "the internet.)."
-            )
-        path = Path(folder_path)
-        # load index separately since it is not picklable
-        faiss = dependable_faiss_import()
-        index = faiss.read_index(str(path / f"{index_name}.faiss"))
-
-        # load docstore and index_to_docstore_id with zlib decompression
-        with open(path / f"{index_name}.pkl", "rb") as f:
-            compressed_data = f.read()
-
-        pickle_data = zlib.decompress(compressed_data)
-        (
-            docstore,
-            index_to_docstore_id,
-        ) = pickle.loads(
-            pickle_data
-        )  # ignore[pickle]: explicit-opt-in
-
-        return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
