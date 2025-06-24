@@ -116,6 +116,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Good PDF parsing** PDF parsers are notoriously unreliable, so 15 (!) different loaders are used, and the best according to a parsing scorer is kept. Including table support via [openparse](https://github.com/Filimoa/open-parse/) (no GPU needed by default) or via [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/).
 * **Langfuse support**: If you set the appropriate langfuse environment variables they will be used. See [this guide](https://langfuse.com/docs/integrations/langchain/tracing) or [this one](https://langfuse.com/docs/integrations/litellm/tracing) to learn more (Note: this is disabled if using private_mode to avoid any leaks).
 * **Document filtering**: based on regex for document content or metadata.
+* **Binary embeddings support**: Custom langchain VectorStore to use binary embeddings, leading to [~32x better compression ratio, faster search and usually negligible accuracy loss](https://simonwillison.net/2024/Mar/26/binary-vector-search/).
 * **Fast**: Parallel document loading, parsing, embeddings, querying, etc.
 * **Shell autocompletion** using [python-fire](https://github.com/google/python-fire/blob/master/docs/using-cli.md#completion-flag)
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
