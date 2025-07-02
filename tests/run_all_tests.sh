@@ -11,7 +11,7 @@ set -u
 [ -e "__pycache__" ] && rm -rv __pycache__
 
 # setup venv
-uv venv test_venv
+uv venv test_venv --python 3.12.11
 source test_venv/bin/activate
 sleep 1
 

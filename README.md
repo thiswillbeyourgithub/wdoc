@@ -406,4 +406,7 @@ FAQ
 * **Why can't I load the vectorstores in other langchain projects?**
     * In `wdoc/utils/customs/binary_faiss_vectorstore.py`, we create `BinaryFAISS` and `CompressedFAISS`. The latter is just like FAISS but with zlib compression to the pickled index and the former adds on top binary embeddings, resulting in faster and more compact embeddings. If you want to disable compression alltogether, use the env variable `WDOC_MOD_FAISS_COMPRESSION=false`.
 
+* **Which python version is used in the test suite?**
+    * The recommended python version is `3.12.11`.
+
 </details>
