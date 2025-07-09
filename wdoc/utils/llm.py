@@ -7,7 +7,7 @@ import os
 
 import litellm
 from beartype.typing import Any, Dict, List, Optional, Union
-from langchain_community.chat_models import ChatLiteLLM
+from langchain_litellm import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.caches import BaseCache

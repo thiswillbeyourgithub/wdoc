@@ -8,7 +8,7 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.retrievers.multi_query import MultiQueryRetriever
 
 # from langchain.storage import LocalFileStore
-from langchain_community.chat_models import ChatLiteLLM
+from langchain_litellm import ChatLiteLLM
 from langchain_core.retrievers import BaseRetriever
 
 from wdoc.utils.misc import cache_dir, get_splitter

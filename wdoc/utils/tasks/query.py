@@ -14,7 +14,7 @@ import sklearn.preprocessing as preprocessing
 from beartype.typing import List, Literal, Tuple, Union
 from langchain.docstore.document import Document
 from langchain_core.embeddings import Embeddings
-from langchain_community.chat_models import ChatLiteLLM
+from langchain_litellm import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
