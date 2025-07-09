@@ -64,7 +64,11 @@ class CompressedFAISS(FAISS):
 
         # save index separately since it is not picklable
         faiss = dependable_faiss_import()
-        faiss.write_index(self.index, str(path / f"{index_name}.faiss"))
+        p = str(path / f"{index_name}.faiss")
+        if "IndexBinaryFlat" in str(self.index):
+            faiss.write_index_binary(self.index, p)
+        else:
+            faiss.write_index(self.index, p)
 
         # save docstore and index_to_docstore_id with zlib compression
         pickle_data = pickle.dumps((self.docstore, self.index_to_docstore_id))
@@ -111,7 +115,11 @@ class CompressedFAISS(FAISS):
         path = Path(folder_path)
         # load index separately since it is not picklable
         faiss = dependable_faiss_import()
-        index = faiss.read_index(str(path / f"{index_name}.faiss"))
+        p = str(path / f"{index_name}.faiss")
+        try:
+            index = faiss.read_index(p)
+        except TypeError:
+            index = faiss.read_index_binary(p)
 
         # load docstore and index_to_docstore_id with zlib decompression
         # fallback to uncompressed loading if decompression fails
