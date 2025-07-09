@@ -2,10 +2,12 @@ import os
 import sys
 import subprocess
 import tempfile
+import hashlib
 from pathlib import Path
 from copy import copy
 
 import pytest
+import requests
 from langchain_core.documents.base import Document
 
 # add an unexpected env variable to make sure nothing crashes
@@ -239,7 +241,22 @@ def test_parse_docx():
         tmp_path = tmp.name
 
     url = "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_500KB_DOCX.docx"
-    subprocess.run(["wget", "-q", url, "-O", tmp_path], check=True)
+
+    # Download file using requests
+    response = requests.get(url)
+    response.raise_for_status()
+
+    # Write content to temporary file
+    with open(tmp_path, "wb") as f:
+        f.write(response.content)
+
+    # Verify SHA512 checksum
+    expected_hash = "64b73b409688cc5b5675c07d9df4b83d353fa85026a9d686d6725e50f388930e1d57c56cc6cfebd5f2cecc06d7ef89ae7495bd5411ca0eac4b0df63a7d6c82dc"
+    with open(tmp_path, "rb") as f:
+        file_hash = hashlib.sha512(f.read()).hexdigest()
+    assert (
+        file_hash == expected_hash
+    ), f"File hash {file_hash} does not match expected {expected_hash}"
 
     try:
         # Parse the file
