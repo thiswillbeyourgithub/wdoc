@@ -271,7 +271,7 @@ class BinaryFAISS(CompressedFAISS):
     def embedding_function(self, texts):
         """Override to convert embeddings to binary"""
         # Get original embeddings
-        embeddings = self._original_embedding_function(texts)
+        embeddings = self._original_embedding_function.embed_documents(texts)
 
         # make sure we have a properly formatted array
         embeddings = np.array(embeddings).squeeze()
