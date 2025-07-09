@@ -2477,15 +2477,15 @@ def load_word_document(
             f"Error when loading word document with docx2txt, trying with unstructured: '{err}'"
         )
         loader = UnstructuredWordDocumentLoader(path)
-        content = loader.load()
-        docs = [Document(page_content=content)]
-        if isinstance(content, str):
-            docs = [Document(page_content=content)]
+        content2 = loader.load()
+        docs = [Document(page_content=content2)]
+        if isinstance(content2, str):
+            docs = [Document(page_content=content2)]
         else:
-            assert isinstance(content, List) and all(
-                isinstance(c, Document) for c in content
-            ), f"unexpected type of content: {str(content)[:1000]}"
-            docs = content
+            assert isinstance(content2, List) and all(
+                isinstance(c, Document) for c in content2
+            ), f"unexpected type of content: {str(content2)[:1000]}"
+            docs = content2
         check_docs_tkn_length(docs, path)
 
     return docs
