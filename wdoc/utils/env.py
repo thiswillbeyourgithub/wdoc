@@ -131,10 +131,11 @@ class EnvDataclass:
             if not k.lower().startswith("wdoc_"):
                 continue
             if (
-                k not in env.__dataclass_fields__.keys()
-                and k not in self.__warned_unexpected__
+                k.upper()
+                not in [key.upper() for key in env.__dataclass_fields__.keys()]
+                and k.upper() not in self.__warned_unexpected__
             ):
-                self.__warned_unexpected__.append(k)
+                self.__warned_unexpected__.append(k.upper())
                 logger.debug(
                     f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
                 )
@@ -335,9 +336,9 @@ for k in os.environ.keys():
         continue
     v = env.__parse__(os.environ[k])
 
-    if k not in env.__dataclass_fields__.keys():
-        if k not in env.__warned_unexpected__:
-            env.__warned_unexpected__.append(k)
+    if k.upper() not in [k.upper() for k in env.__dataclass_fields__.keys()]:
+        if k.upper() not in env.__warned_unexpected__:
+            env.__warned_unexpected__.append(k.upper())
             logger.debug(
                 f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
             )
