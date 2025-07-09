@@ -302,8 +302,11 @@ class BinaryFAISS(CompressedFAISS):
         """Convert vectors to binary format"""
         vectors = np.array(vectors)
         binary_vectors = vectors > 0
+
+        # Handle 1D case by reshaping to 2D (single embedding)
         if len(binary_vectors.shape) == 1:
-            d = binary_vectors.shape[0]
+            binary_vectors = binary_vectors.reshape(1, -1)
+            d = binary_vectors.shape[1]
         elif len(binary_vectors.shape) == 2:
             d = binary_vectors.shape[1]
         else:
@@ -450,7 +453,7 @@ class BinaryFAISS(CompressedFAISS):
                 "Binary embeddings must contain only integers in range [0, 255]."
             )
 
-        vector = self._vec_to_binary(embeddings)
+        vector = self._vec_to_binary(embedding)
 
         # Binary embeddings don't support L2 normalization
         if self._normalize_L2:
