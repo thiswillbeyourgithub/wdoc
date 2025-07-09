@@ -17,6 +17,9 @@ os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] = "true"
 
 # test binary embeddings
 os.environ["WDOC_MOD_FAISS_BINARY"] = "true"
+os.environ["WDOC_MOD_FAISS_SCORE_FN"] = (
+    "false"  # needs to be disabled for BINARY to work
+)
 
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import ModelName
