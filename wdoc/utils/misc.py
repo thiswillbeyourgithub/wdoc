@@ -794,7 +794,7 @@ def get_splitter(
 @optional_typecheck
 def check_docs_tkn_length(
     docs: List[Document],
-    identifier: str,
+    identifier: Any,
     min_token: int = min_token,
     max_token: int = max_token,
     min_lang_prob: float = min_lang_prob,
@@ -803,6 +803,7 @@ def check_docs_tkn_length(
     """checks that the number of tokens in the document is high enough,
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
+    identifier = str(identifier)
     size = sum([get_tkn_length(d.page_content) for d in docs])
     nline = len("\n".join([d.page_content for d in docs]).splitlines())
     if size <= min_token:
