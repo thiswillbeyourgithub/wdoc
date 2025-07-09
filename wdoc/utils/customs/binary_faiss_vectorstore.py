@@ -268,7 +268,9 @@ class BinaryFAISS(CompressedFAISS):
         if relevance_score_fn is None:
             self.override_relevance_score_fn = self._hamming_relevance_score_fn
 
-    def embedding_function(self, texts):
+        self.embedding_function = self.new_embedding_function
+
+    def new_embedding_function(self, texts):
         """Override to convert embeddings to binary"""
         # Get original embeddings
         embeddings = self._original_embedding_function.embed_documents(texts)
