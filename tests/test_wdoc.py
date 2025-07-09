@@ -242,8 +242,11 @@ def test_parse_docx():
 
     url = "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_500KB_DOCX.docx"
 
-    # Download file using requests
-    response = requests.get(url)
+    # Download file using requests with proper headers to avoid 403 error
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
 
     # Write content to temporary file
