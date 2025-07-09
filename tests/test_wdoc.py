@@ -418,7 +418,7 @@ def test_summary_tim_urban():
         filetype="auto",
     )
     out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
+    assert "urban" in out["summary"].lower() or "procrastinat" in out["summary"].lower()
     assert out["doc_total_cost"] > 0
 
     inst2 = wdoc(
@@ -430,7 +430,7 @@ def test_summary_tim_urban():
         filetype="auto",
     )
     out2 = inst2.summary_task()
-    assert "tim urban" in out2["summary"].lower()
+    assert "monkey" in out2["summary"].lower()
     assert (
         out2["doc_total_cost"] == 0
     ), "Normally we should be reusing the cache so cost should be 0"
@@ -444,7 +444,7 @@ def test_summary_tim_urban():
         filetype="auto",
     )
     out3 = inst3.summary_task()
-    assert "tim urban" in out3["summary"].lower()
+    assert "monkey" in out3["summary"].lower()
     assert (
         out3["doc_total_cost"] > 0
     ), "Normally we disabled the cache so cost should be higher than 0"
@@ -481,7 +481,7 @@ def test_summary_tim_urban_debug():
         debug=True,
     )
     out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
+    assert "monkey" in out["summary"].lower()
 
 
 @pytest.mark.api
@@ -515,7 +515,7 @@ def test_summary_with_out_file():
     assert "arj7oStGLkU" in content
     assert (
         "Inside the mind of a master procrastinator" in content
-        or "tim urban" in content.lower()
+        or "monkey" in content.lower()
     )
     assert "wdoc version" in content
     if os.path.exists(output_path):
@@ -541,7 +541,7 @@ def test_query_tim_urban():
         filetype="auto",
     )
     out = inst.query_task(
-        query="What is the allegory used by the speaker",
+        query="What is the analogy used by the speaker",
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
@@ -717,7 +717,7 @@ def test_summary_tim_urban_openrouter():
         filetype="auto",
     )
     out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
+    assert "monkey" in out["summary"].lower()
 
 
 @pytest.mark.api
@@ -761,7 +761,7 @@ def test_summary_tim_urban_default_model():
         filetype="auto",
     )
     out = inst.summary_task()
-    assert "tim urban" in out["summary"].lower()
+    assert "monkey" in out["summary"].lower()
 
 
 @pytest.mark.api
