@@ -516,7 +516,8 @@ class BinaryFAISS(CompressedFAISS):
                 "Binary embeddings must contain only integers in range [0, 255]."
             )
 
-        vector = self._vec_to_binary(embedding)
+        # embedding is already binary (packed bits), use directly
+        vector = np.array([embedding], dtype=np.uint8)
         scores, indices = self.index.search(
             vector,
             fetch_k if filter is None else fetch_k * 2,
@@ -546,7 +547,8 @@ class BinaryFAISS(CompressedFAISS):
         if not embeddings:
             return []
 
-        # Convert to float for MMR calculation, then back to binary for distance calculations
+        # Convert packed binary embeddings to float for MMR calculation
+        # Both query and document embeddings need to be in the same format
         embeddings_float = [embedding.astype(np.float32) for embedding in embeddings]
         query_embedding_float = np.array(embedding, dtype=np.float32)
 
