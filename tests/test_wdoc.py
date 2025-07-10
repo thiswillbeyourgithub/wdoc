@@ -812,6 +812,127 @@ def test_compressed_faiss_functionality():
         assert len(search_results) == 1
 
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_binary_faiss_functionality():
+    """Test that BinaryFAISS preserves semantic relationships with binary embeddings."""
+    from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
+    from langchain_core.documents import Document
+    from wdoc.utils.misc import ModelName
+    from wdoc.utils.embeddings import load_embeddings_engine
+    import numpy as np
+
+    # Create test words: 4 related programming words + 1 completely unrelated word
+    related_words = ["python", "programming", "algorithm", "software"]
+    outlier_word = "banana"
+    all_words = related_words + [outlier_word]
+
+    # Create test documents
+    test_docs = [
+        Document(page_content=word, metadata={"source": f"test_{word}"})
+        for word in all_words
+    ]
+
+    # Use mistral embeddings for a more realistic test
+    mistral_embedding = load_embeddings_engine(
+        modelname=ModelName("mistral/mistral-embed"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+
+    # Create temporary directory for saving
+    with tempfile.TemporaryDirectory() as temp_dir:
+        binary_faiss_path = os.path.join(temp_dir, "binary_faiss")
+
+        # Create binary FAISS vectorstore
+        binary_faiss = BinaryFAISS.from_documents(test_docs, mistral_embedding)
+        binary_faiss.save_local(binary_faiss_path)
+
+        # Load the vectorstore
+        loaded_binary = BinaryFAISS.load_local(
+            binary_faiss_path,
+            mistral_embedding,
+            allow_dangerous_deserialization=True,
+        )
+
+        # Test that we have the correct number of documents
+        assert len(loaded_binary.index_to_docstore_id) == len(test_docs)
+
+        # Calculate all pairwise distances within the related group
+        related_distances = []
+        for i, word1 in enumerate(related_words):
+            for j, word2 in enumerate(related_words):
+                if i < j:  # Only compute each pair once
+                    results1 = loaded_binary.similarity_search_with_score(word1, k=5)
+                    # Find the distance to word2
+                    for doc, distance in results1:
+                        if doc.page_content == word2:
+                            related_distances.append(distance)
+                            break
+
+        # Calculate distances from outlier to each related word
+        outlier_distances = []
+        outlier_results = loaded_binary.similarity_search_with_score(outlier_word, k=5)
+        for doc, distance in outlier_results:
+            if doc.page_content in related_words:
+                outlier_distances.append(distance)
+
+        # Verify we got the expected number of distances
+        assert (
+            len(related_distances) == 6
+        ), f"Expected 6 related distances, got {len(related_distances)}"  # C(4,2) = 6 pairs
+        assert (
+            len(outlier_distances) == 4
+        ), f"Expected 4 outlier distances, got {len(outlier_distances)}"  # 4 related words
+
+        # The key test: minimum distance from outlier should be greater than maximum distance within related group
+        max_related_distance = max(related_distances)
+        min_outlier_distance = min(outlier_distances)
+
+        assert min_outlier_distance > max_related_distance, (
+            f"Binary embeddings failed to preserve semantic relationships: "
+            f"minimum outlier distance ({min_outlier_distance}) should be greater than "
+            f"maximum related distance ({max_related_distance}). "
+            f"Related distances: {related_distances}, "
+            f"Outlier distances: {outlier_distances}"
+        )
+
+        # Test that we can still do similarity search properly
+        search_results = loaded_binary.similarity_search("programming", k=3)
+        assert len(search_results) == 3
+
+        # The first result should be the exact match
+        assert search_results[0].page_content == "programming"
+
+        # Other results should be related programming terms, not the outlier
+        result_contents = [doc.page_content for doc in search_results]
+        assert (
+            outlier_word not in result_contents[:3]
+        ), f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+
+        # Test similarity search with scores
+        search_with_scores = loaded_binary.similarity_search_with_score(
+            "algorithm", k=2
+        )
+        assert len(search_with_scores) == 2
+
+        # Verify that scores are reasonable for binary embeddings (Hamming distances)
+        for doc, score in search_with_scores:
+            assert score == 0 or isinstance(score, (float, np.float32))
+            assert score >= 0, f"Distance should be non-negative, got {score}"
+            # For Hamming distance, the maximum possible distance is the number of bits
+            # which should be reasonable (not astronomically large)
+            assert (
+                score <= 10000
+            ), f"Distance seems unreasonably large for Hamming distance: {score}"
+
+
 @pytest.mark.basic
 def test_get_piped_input_detection():
     """Test that get_piped_input correctly detects piped text and bytes."""
