@@ -304,20 +304,27 @@ class BinaryFAISS(CompressedFAISS):
     def _vec_to_binary(
         self, vectors: Union[np.ndarray, List[float], List[List[float]]]
     ) -> np.ndarray:
-        """Convert vectors to binary format"""
+        """Convert vectors to binary format using dimension-wise median thresholding.
+
+        This method uses the median of each dimension across all vectors as the threshold,
+        which better preserves semantic relationships compared to using zero as threshold.
+        """
         vectors = np.array(vectors)
-        binary_vectors = vectors > 0
 
         # Handle 1D case by reshaping to 2D (single embedding)
-        if len(binary_vectors.shape) == 1:
-            binary_vectors = binary_vectors.reshape(1, -1)
-            d = binary_vectors.shape[1]
-        elif len(binary_vectors.shape) == 2:
-            d = binary_vectors.shape[1]
-        else:
+        if len(vectors.shape) == 1:
+            vectors = vectors.reshape(1, -1)
+        elif len(vectors.shape) != 2:
             raise Exception(
-                f"Unexpected dimension of embeddings to turn to binary: {binary_vectors.shape}"
+                f"Unexpected dimension of embeddings to turn to binary: {vectors.shape}"
             )
+
+        # Use dimension-wise median as threshold for better semantic preservation
+        # This ensures each dimension contributes equally to the binary representation
+        medians = np.median(vectors, axis=0)
+        binary_vectors = vectors > medians
+
+        d = binary_vectors.shape[1]
 
         # faiss only supports dimensions multiple of 8 so we add if necessary
         # source: https://github.com/facebookresearch/faiss/wiki/Binary-indexes
