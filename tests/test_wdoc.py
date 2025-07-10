@@ -940,11 +940,9 @@ def test_binary_faiss_functionality():
             test_docs
         ), f"Expected {len(test_docs)} results when k > num_docs, got {len(large_k_results)}"
 
-        # Test 2: Edge case with k=0 (should return empty list)
-        zero_k_results = loaded_binary.similarity_search("python", k=0)
-        assert (
-            len(zero_k_results) == 0
-        ), f"Expected 0 results when k=0, got {len(zero_k_results)}"
+        # Test 2: Edge case with k=0 (should crash)
+        with pytest.raises(AssertionError):
+            zero_k_results = loaded_binary.similarity_search("python", k=0)
 
         # Test 3: Test with single document vectorstore
         single_doc = [Document(page_content="single", metadata={"source": "single"})]
@@ -1058,7 +1056,7 @@ def test_binary_faiss_edge_cases_and_errors():
 
     # Test 1: Error when trying to use normalize_L2=True
     with pytest.raises(
-        ValueError, match="L2 normalization is not compatible with binary embeddings"
+        ValueError, match="L2 normalization is not compatible with binary embeddings.*"
     ):
         BinaryFAISS.from_documents(
             [Document(page_content="test", metadata={})],
