@@ -516,8 +516,9 @@ class BinaryFAISS(CompressedFAISS):
                 "Binary embeddings must contain only integers in range [0, 255]."
             )
 
+        vector = self._vec_to_binary(embedding)
         scores, indices = self.index.search(
-            np.array([embedding], dtype=np.uint8),
+            vector,
             fetch_k if filter is None else fetch_k * 2,
         )
 
