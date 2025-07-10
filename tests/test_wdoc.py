@@ -679,6 +679,139 @@ def test_mistral_embeddings():
     _test_embeddings(emb)
 
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_compressed_faiss_functionality():
+    """Test that CompressedFAISS works as well as native FAISS with compression."""
+    from wdoc.utils.customs.binary_faiss_vectorstore import CompressedFAISS
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+    from wdoc.utils.misc import ModelName
+    from wdoc.utils.embeddings import load_embeddings_engine
+    import numpy as np
+
+    # Create test documents
+    test_docs = [
+        Document(page_content="The cat sat on the mat.", metadata={"source": "test1"}),
+        Document(
+            page_content="Python is a programming language.",
+            metadata={"source": "test2"},
+        ),
+        Document(
+            page_content="Machine learning uses algorithms.",
+            metadata={"source": "test3"},
+        ),
+        Document(
+            page_content="Natural language processing analyzes text.",
+            metadata={"source": "test4"},
+        ),
+        Document(
+            page_content="Artificial intelligence mimics human behavior.",
+            metadata={"source": "test5"},
+        ),
+    ]
+
+    # Use mistral embeddings for a more realistic test
+    mistral_embedding = load_embeddings_engine(
+        modelname=ModelName("mistral/mistral-embed"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+
+    # Create temporary directories for saving
+    with tempfile.TemporaryDirectory() as temp_dir:
+        regular_faiss_path = os.path.join(temp_dir, "regular_faiss")
+        compressed_faiss_path = os.path.join(temp_dir, "compressed_faiss")
+
+        # Create regular FAISS vectorstore
+        regular_faiss = FAISS.from_documents(test_docs, mistral_embedding)
+        regular_faiss.save_local(regular_faiss_path)
+
+        # Create compressed FAISS vectorstore
+        compressed_faiss = CompressedFAISS.from_documents(test_docs, mistral_embedding)
+        compressed_faiss.save_local(compressed_faiss_path)
+
+        # Load both vectorstores
+        loaded_regular = FAISS.load_local(
+            regular_faiss_path, mistral_embedding, allow_dangerous_deserialization=True
+        )
+        loaded_compressed = CompressedFAISS.load_local(
+            compressed_faiss_path,
+            mistral_embedding,
+            allow_dangerous_deserialization=True,
+        )
+
+        # Test that both have the same number of documents
+        assert len(loaded_regular.index_to_docstore_id) == len(test_docs)
+        assert len(loaded_compressed.index_to_docstore_id) == len(test_docs)
+        assert len(loaded_regular.index_to_docstore_id) == len(
+            loaded_compressed.index_to_docstore_id
+        )
+
+        # Test similarity search on both
+        query = "programming and algorithms"
+
+        regular_results = loaded_regular.similarity_search(query, k=3)
+        compressed_results = loaded_compressed.similarity_search(query, k=3)
+
+        # Both should return the same number of results
+        assert len(regular_results) == len(compressed_results)
+        assert len(regular_results) == 3
+
+        # Results should contain the same documents (though order might vary slightly)
+        regular_contents = {doc.page_content for doc in regular_results}
+        compressed_contents = {doc.page_content for doc in compressed_results}
+        assert regular_contents == compressed_contents
+
+        # Test similarity search with scores
+        regular_results_with_scores = loaded_regular.similarity_search_with_score(
+            query, k=2
+        )
+        compressed_results_with_scores = loaded_compressed.similarity_search_with_score(
+            query, k=2
+        )
+
+        assert len(regular_results_with_scores) == 2
+        assert len(compressed_results_with_scores) == 2
+
+        # Verify that scores are reasonable (between 0 and some reasonable upper bound)
+        for doc, score in regular_results_with_scores:
+            assert isinstance(score, np.float32)
+            assert score >= 0
+
+        for doc, score in compressed_results_with_scores:
+            assert isinstance(score, np.float32)
+            assert score >= 0
+
+        # Test that compressed files exist and are valid
+        assert os.path.exists(os.path.join(compressed_faiss_path, "index.faiss"))
+        assert os.path.exists(os.path.join(compressed_faiss_path, "index.pkl"))
+
+        # Check that the compressed pickle file is potentially smaller due to compression
+        # (This is hard to guarantee with small test data, but we can at least verify it loads)
+        with open(os.path.join(compressed_faiss_path, "index.pkl"), "rb") as f:
+            compressed_data = f.read()
+        assert len(compressed_data) > 0  # Should have some content
+
+        # Test that we can add documents to the loaded compressed FAISS
+        new_doc = Document(
+            page_content="New document about vectors.", metadata={"source": "test6"}
+        )
+        original_count = len(loaded_compressed.index_to_docstore_id)
+        loaded_compressed.add_documents([new_doc])
+        assert len(loaded_compressed.index_to_docstore_id) == original_count + 1
+
+        # Test search still works after adding documents
+        search_results = loaded_compressed.similarity_search("vectors", k=1)
+        assert len(search_results) == 1
+
+
 @pytest.mark.basic
 def test_get_piped_input_detection():
     """Test that get_piped_input correctly detects piped text and bytes."""
