@@ -237,7 +237,7 @@ class BinaryFAISS(CompressedFAISS):
         # Validate binary-incompatible options
         if normalize_L2:
             raise ValueError(
-                "L2 normalization is not compatible with binary embeddings. "
+                "L2 normalization is not supported for binary embeddings. "
                 "Set normalize_L2=False."
             )
 
