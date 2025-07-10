@@ -304,11 +304,11 @@ class BinaryFAISS(CompressedFAISS):
     def _vec_to_binary(
         self, vectors: Union[np.ndarray, List[float], List[List[float]]]
     ) -> np.ndarray:
-        """Convert vectors to binary format using zero-centered thresholding.
+        """Convert vectors to binary format using per-vector mean thresholding.
 
-        This method first centers the vectors around zero (by subtracting the mean)
-        and then uses zero as the threshold. This approach better preserves semantic
-        relationships compared to using raw thresholds.
+        This method uses each vector's own mean as its threshold, which better preserves
+        the relative relationships between semantically similar and dissimilar vectors
+        compared to using global statistics across batches.
         """
         vectors = np.array(vectors)
 
@@ -320,12 +320,11 @@ class BinaryFAISS(CompressedFAISS):
                 f"Unexpected dimension of embeddings to turn to binary: {vectors.shape}"
             )
 
-        # Center the vectors by subtracting the mean across all dimensions
-        # This ensures that the zero threshold is meaningful
-        centered_vectors = vectors - np.mean(vectors)
-
-        # Use zero as threshold after centering
-        binary_vectors = centered_vectors > 0
+        # Use per-vector mean as threshold - this preserves relative relationships
+        # Each vector is compared against its own mean, maintaining the vector's
+        # internal structure while making it binary
+        vector_means = np.mean(vectors, axis=1, keepdims=True)
+        binary_vectors = vectors > vector_means
 
         d = binary_vectors.shape[1]
 
