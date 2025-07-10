@@ -409,6 +409,7 @@ def test_semantic_batching():
 )
 def test_summary_tim_urban():
     """Test summarization of Tim Urban's procrastination video. Three times to make sure the caching and caching disabling works."""
+    os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "false"
     inst = wdoc(
         task="summarize",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
@@ -448,6 +449,7 @@ def test_summary_tim_urban():
     assert (
         out3["doc_total_cost"] > 0
     ), "Normally we disabled the cache so cost should be higher than 0"
+    os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 
 @pytest.mark.basic
@@ -529,6 +531,7 @@ def test_summary_with_out_file():
 )
 def test_query_tim_urban():
     """Test query task on Tim Urban's procrastination video. Three times to test the caching."""
+    os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "false"
     inst = wdoc(
         task="query",
         path="https://www.youtube.com/watch?v=arj7oStGLkU",
@@ -582,6 +585,7 @@ def test_query_tim_urban():
     final_answer3 = out3["final_answer"]
     assert "monkey" in final_answer3.lower()
     assert out3["total_cost"] > 0
+    os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 
 @pytest.mark.basic
