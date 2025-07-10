@@ -932,8 +932,108 @@ def test_binary_faiss_functionality():
                 score <= 10000
             ), f"Distance seems unreasonably large for Hamming distance: {score}"
 
+        # EDGE CASE TESTS
 
-@pytest.mark.api  
+        # Test 1: Edge case with k larger than available documents
+        large_k_results = loaded_binary.similarity_search("python", k=10)
+        assert len(large_k_results) == len(
+            test_docs
+        ), f"Expected {len(test_docs)} results when k > num_docs, got {len(large_k_results)}"
+
+        # Test 2: Edge case with k=0 (should return empty list)
+        zero_k_results = loaded_binary.similarity_search("python", k=0)
+        assert (
+            len(zero_k_results) == 0
+        ), f"Expected 0 results when k=0, got {len(zero_k_results)}"
+
+        # Test 3: Test with single document vectorstore
+        single_doc = [Document(page_content="single", metadata={"source": "single"})]
+        single_faiss = BinaryFAISS.from_documents(single_doc, mistral_embedding)
+        single_results = single_faiss.similarity_search("single", k=1)
+        assert len(single_results) == 1
+        assert single_results[0].page_content == "single"
+
+        # Test 4: Test with empty query (should still work)
+        empty_query_results = loaded_binary.similarity_search("", k=2)
+        assert len(empty_query_results) == 2, "Empty query should still return results"
+
+        # Test 5: Test with duplicate documents
+        duplicate_docs = [
+            Document(page_content="duplicate", metadata={"source": "dup1"}),
+            Document(page_content="duplicate", metadata={"source": "dup2"}),
+            Document(page_content="unique", metadata={"source": "unique"}),
+        ]
+        dup_faiss = BinaryFAISS.from_documents(duplicate_docs, mistral_embedding)
+        dup_results = dup_faiss.similarity_search_with_score("duplicate", k=3)
+        assert len(dup_results) == 3
+        # The duplicate documents should have very similar (ideally identical) scores
+        duplicate_scores = [
+            score for doc, score in dup_results if doc.page_content == "duplicate"
+        ]
+        assert len(duplicate_scores) == 2, "Should find both duplicate documents"
+        # Allow for small floating point differences
+        assert (
+            abs(duplicate_scores[0] - duplicate_scores[1]) < 1e-6
+        ), f"Duplicate documents should have nearly identical scores: {duplicate_scores}"
+
+        # Test 6: Test with very short and very long content
+        extreme_docs = [
+            Document(page_content="a", metadata={"source": "short"}),  # Very short
+            Document(page_content="x" * 1000, metadata={"source": "long"}),  # Very long
+            Document(
+                page_content="medium length content here", metadata={"source": "medium"}
+            ),
+        ]
+        extreme_faiss = BinaryFAISS.from_documents(extreme_docs, mistral_embedding)
+        short_results = extreme_faiss.similarity_search("a", k=1)
+        long_results = extreme_faiss.similarity_search(
+            "x" * 500, k=1
+        )  # Query with long text
+        assert len(short_results) == 1
+        assert len(long_results) == 1
+
+        # Test 7: Test score_threshold parameter
+        threshold_results = loaded_binary.similarity_search_with_score(
+            "programming", k=5, score_threshold=max_related_distance
+        )
+        # All results should have scores <= threshold
+        for doc, score in threshold_results:
+            assert (
+                score <= max_related_distance
+            ), f"Score {score} exceeds threshold {max_related_distance}"
+
+        # Test 8: Test that distances are consistent (same query should give same results)
+        results1 = loaded_binary.similarity_search_with_score("python", k=3)
+        results2 = loaded_binary.similarity_search_with_score("python", k=3)
+        assert len(results1) == len(results2)
+        for (doc1, score1), (doc2, score2) in zip(results1, results2):
+            assert doc1.page_content == doc2.page_content
+            assert (
+                abs(score1 - score2) < 1e-10
+            ), f"Scores should be identical for same query: {score1} vs {score2}"
+
+        # Test 9: Test that all returned documents are actually from our original set
+        all_search_results = loaded_binary.similarity_search(
+            "test query", k=len(test_docs)
+        )
+        returned_contents = {doc.page_content for doc in all_search_results}
+        original_contents = {doc.page_content for doc in test_docs}
+        assert (
+            returned_contents == original_contents
+        ), "All returned documents should be from original set"
+
+        # Test 10: Verify binary embedding properties
+        # Get raw embeddings to check they're actually binary
+        test_embeddings = loaded_binary._embed_documents(["test"])
+        assert len(test_embeddings) == 1
+        embedding = test_embeddings[0]
+        # Should be uint8 values (0-255)
+        assert all(
+            isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
+        ), "Binary embeddings should be uint8 values"
+
+
+@pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
@@ -957,29 +1057,36 @@ def test_binary_faiss_edge_cases_and_errors():
     )
 
     # Test 1: Error when trying to use normalize_L2=True
-    with pytest.raises(ValueError, match="L2 normalization is not compatible with binary embeddings"):
+    with pytest.raises(
+        ValueError, match="L2 normalization is not compatible with binary embeddings"
+    ):
         BinaryFAISS.from_documents(
             [Document(page_content="test", metadata={})],
             mistral_embedding,
-            normalize_L2=True
+            normalize_L2=True,
         )
 
     # Test 2: Error when trying to use unsupported distance strategy
     from langchain_community.vectorstores.utils import DistanceStrategy
-    with pytest.raises(ValueError, match="Distance strategy .* is not supported for binary embeddings"):
+
+    with pytest.raises(
+        ValueError, match="Distance strategy .* is not supported for binary embeddings"
+    ):
         BinaryFAISS.from_documents(
             [Document(page_content="test", metadata={})],
             mistral_embedding,
-            distance_strategy=DistanceStrategy.COSINE
+            distance_strategy=DistanceStrategy.COSINE,
         )
 
     # Test 3: Test with documents that have no content (empty strings)
     empty_content_docs = [
         Document(page_content="", metadata={"source": "empty1"}),
-        Document(page_content="   ", metadata={"source": "whitespace"}),  # Just whitespace
+        Document(
+            page_content="   ", metadata={"source": "whitespace"}
+        ),  # Just whitespace
         Document(page_content="actual content", metadata={"source": "content"}),
     ]
-    
+
     # This should work without crashing
     empty_faiss = BinaryFAISS.from_documents(empty_content_docs, mistral_embedding)
     empty_results = empty_faiss.similarity_search("test", k=2)
@@ -988,11 +1095,11 @@ def test_binary_faiss_edge_cases_and_errors():
     # Test 4: Test with special characters and unicode
     special_docs = [
         Document(page_content="café résumé naïve", metadata={"source": "unicode"}),
-        Document(page_content="🚀🎉💻", metadata={"source": "emoji"}),  
+        Document(page_content="🚀🎉💻", metadata={"source": "emoji"}),
         Document(page_content="@#$%^&*()", metadata={"source": "symbols"}),
         Document(page_content="\n\t\r", metadata={"source": "whitespace_chars"}),
     ]
-    
+
     special_faiss = BinaryFAISS.from_documents(special_docs, mistral_embedding)
     special_results = special_faiss.similarity_search("café", k=1)
     assert len(special_results) == 1
@@ -1003,7 +1110,7 @@ def test_binary_faiss_edge_cases_and_errors():
         Document(page_content="b" * 100, metadata={"source": "medium_repeat"}),
         Document(page_content="c" * 1000, metadata={"source": "long_repeat"}),
     ]
-    
+
     rep_faiss = BinaryFAISS.from_documents(repetitive_docs, mistral_embedding)
     rep_results = rep_faiss.similarity_search("aaa", k=1)
     assert len(rep_results) == 1
@@ -1011,25 +1118,35 @@ def test_binary_faiss_edge_cases_and_errors():
     # Test 6: Test that we can handle documents with identical metadata
     identical_meta_docs = [
         Document(page_content="content1", metadata={"type": "test", "id": 1}),
-        Document(page_content="content2", metadata={"type": "test", "id": 1}),  # Same metadata
-        Document(page_content="content3", metadata={"type": "test", "id": 1}),  # Same metadata
+        Document(
+            page_content="content2", metadata={"type": "test", "id": 1}
+        ),  # Same metadata
+        Document(
+            page_content="content3", metadata={"type": "test", "id": 1}
+        ),  # Same metadata
     ]
-    
+
     meta_faiss = BinaryFAISS.from_documents(identical_meta_docs, mistral_embedding)
     meta_results = meta_faiss.similarity_search("content", k=3)
     assert len(meta_results) == 3
 
     # Test 7: Test maximum marginal relevance with edge cases
-    mmr_docs = [Document(page_content=f"document {i}", metadata={"id": i}) for i in range(5)]
+    mmr_docs = [
+        Document(page_content=f"document {i}", metadata={"id": i}) for i in range(5)
+    ]
     mmr_faiss = BinaryFAISS.from_documents(mmr_docs, mistral_embedding)
-    
+
     # Test MMR with k larger than fetch_k
     mmr_results = mmr_faiss.max_marginal_relevance_search("document", k=3, fetch_k=2)
     assert len(mmr_results) <= 2  # Should be limited by fetch_k
-    
+
     # Test MMR with lambda_mult edge values
-    mmr_results_0 = mmr_faiss.max_marginal_relevance_search("document", k=2, lambda_mult=0.0)
-    mmr_results_1 = mmr_faiss.max_marginal_relevance_search("document", k=2, lambda_mult=1.0)
+    mmr_results_0 = mmr_faiss.max_marginal_relevance_search(
+        "document", k=2, lambda_mult=0.0
+    )
+    mmr_results_1 = mmr_faiss.max_marginal_relevance_search(
+        "document", k=2, lambda_mult=1.0
+    )
     assert len(mmr_results_0) == 2
     assert len(mmr_results_1) == 2
 
@@ -1040,89 +1157,10 @@ def test_binary_faiss_edge_cases_and_errors():
         Document(page_content="word123", metadata={"source": "mixed"}),
         Document(page_content="", metadata={"source": "empty"}),
     ]
-    
+
     numeric_faiss = BinaryFAISS.from_documents(numeric_docs, mistral_embedding)
     numeric_results = numeric_faiss.similarity_search("123", k=2)
     assert len(numeric_results) == 2
-
-
-        # EDGE CASE TESTS
-
-        # Test 1: Edge case with k larger than available documents
-        large_k_results = loaded_binary.similarity_search("python", k=10)
-        assert len(large_k_results) == len(test_docs), f"Expected {len(test_docs)} results when k > num_docs, got {len(large_k_results)}"
-
-        # Test 2: Edge case with k=0 (should return empty list)
-        zero_k_results = loaded_binary.similarity_search("python", k=0)
-        assert len(zero_k_results) == 0, f"Expected 0 results when k=0, got {len(zero_k_results)}"
-
-        # Test 3: Test with single document vectorstore
-        single_doc = [Document(page_content="single", metadata={"source": "single"})]
-        single_faiss = BinaryFAISS.from_documents(single_doc, mistral_embedding)
-        single_results = single_faiss.similarity_search("single", k=1)
-        assert len(single_results) == 1
-        assert single_results[0].page_content == "single"
-
-        # Test 4: Test with empty query (should still work)
-        empty_query_results = loaded_binary.similarity_search("", k=2)
-        assert len(empty_query_results) == 2, "Empty query should still return results"
-
-        # Test 5: Test with duplicate documents
-        duplicate_docs = [
-            Document(page_content="duplicate", metadata={"source": "dup1"}),
-            Document(page_content="duplicate", metadata={"source": "dup2"}),
-            Document(page_content="unique", metadata={"source": "unique"}),
-        ]
-        dup_faiss = BinaryFAISS.from_documents(duplicate_docs, mistral_embedding)
-        dup_results = dup_faiss.similarity_search_with_score("duplicate", k=3)
-        assert len(dup_results) == 3
-        # The duplicate documents should have very similar (ideally identical) scores
-        duplicate_scores = [score for doc, score in dup_results if doc.page_content == "duplicate"]
-        assert len(duplicate_scores) == 2, "Should find both duplicate documents"
-        # Allow for small floating point differences
-        assert abs(duplicate_scores[0] - duplicate_scores[1]) < 1e-6, f"Duplicate documents should have nearly identical scores: {duplicate_scores}"
-
-        # Test 6: Test with very short and very long content
-        extreme_docs = [
-            Document(page_content="a", metadata={"source": "short"}),  # Very short
-            Document(page_content="x" * 1000, metadata={"source": "long"}),  # Very long
-            Document(page_content="medium length content here", metadata={"source": "medium"}),
-        ]
-        extreme_faiss = BinaryFAISS.from_documents(extreme_docs, mistral_embedding)
-        short_results = extreme_faiss.similarity_search("a", k=1)
-        long_results = extreme_faiss.similarity_search("x" * 500, k=1)  # Query with long text
-        assert len(short_results) == 1
-        assert len(long_results) == 1
-
-        # Test 7: Test score_threshold parameter
-        threshold_results = loaded_binary.similarity_search_with_score(
-            "programming", k=5, score_threshold=max_related_distance
-        )
-        # All results should have scores <= threshold
-        for doc, score in threshold_results:
-            assert score <= max_related_distance, f"Score {score} exceeds threshold {max_related_distance}"
-
-        # Test 8: Test that distances are consistent (same query should give same results)
-        results1 = loaded_binary.similarity_search_with_score("python", k=3)
-        results2 = loaded_binary.similarity_search_with_score("python", k=3)
-        assert len(results1) == len(results2)
-        for (doc1, score1), (doc2, score2) in zip(results1, results2):
-            assert doc1.page_content == doc2.page_content
-            assert abs(score1 - score2) < 1e-10, f"Scores should be identical for same query: {score1} vs {score2}"
-
-        # Test 9: Test that all returned documents are actually from our original set
-        all_search_results = loaded_binary.similarity_search("test query", k=len(test_docs))
-        returned_contents = {doc.page_content for doc in all_search_results}
-        original_contents = {doc.page_content for doc in test_docs}
-        assert returned_contents == original_contents, "All returned documents should be from original set"
-
-        # Test 10: Verify binary embedding properties
-        # Get raw embeddings to check they're actually binary
-        test_embeddings = loaded_binary._embed_documents(["test"])
-        assert len(test_embeddings) == 1
-        embedding = test_embeddings[0]
-        # Should be uint8 values (0-255)
-        assert all(isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding), "Binary embeddings should be uint8 values"
 
 
 @pytest.mark.basic
