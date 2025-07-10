@@ -188,6 +188,7 @@ setup(
         "pdf2image >= 1.17.0",
         "openparse[ml] >= 0.5.7",  # pdf with table support
         "yt-dlp >= 2025.04.30",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
+        "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
     ],
     extra_require={
         "fasttext": [
