@@ -932,6 +932,120 @@ def test_binary_faiss_functionality():
                 score <= 10000
             ), f"Distance seems unreasonably large for Hamming distance: {score}"
 
+
+@pytest.mark.api  
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_binary_faiss_edge_cases_and_errors():
+    """Test BinaryFAISS error conditions and edge cases."""
+    from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
+    from langchain_core.documents import Document
+    from wdoc.utils.misc import ModelName
+    from wdoc.utils.embeddings import load_embeddings_engine
+    import numpy as np
+
+    # Use mistral embeddings for testing
+    mistral_embedding = load_embeddings_engine(
+        modelname=ModelName("mistral/mistral-embed"),
+        cli_kwargs={},
+        api_base=None,
+        embed_kwargs={},
+        private=False,
+        do_test=True,
+    )
+
+    # Test 1: Error when trying to use normalize_L2=True
+    with pytest.raises(ValueError, match="L2 normalization is not compatible with binary embeddings"):
+        BinaryFAISS.from_documents(
+            [Document(page_content="test", metadata={})],
+            mistral_embedding,
+            normalize_L2=True
+        )
+
+    # Test 2: Error when trying to use unsupported distance strategy
+    from langchain_community.vectorstores.utils import DistanceStrategy
+    with pytest.raises(ValueError, match="Distance strategy .* is not supported for binary embeddings"):
+        BinaryFAISS.from_documents(
+            [Document(page_content="test", metadata={})],
+            mistral_embedding,
+            distance_strategy=DistanceStrategy.COSINE
+        )
+
+    # Test 3: Test with documents that have no content (empty strings)
+    empty_content_docs = [
+        Document(page_content="", metadata={"source": "empty1"}),
+        Document(page_content="   ", metadata={"source": "whitespace"}),  # Just whitespace
+        Document(page_content="actual content", metadata={"source": "content"}),
+    ]
+    
+    # This should work without crashing
+    empty_faiss = BinaryFAISS.from_documents(empty_content_docs, mistral_embedding)
+    empty_results = empty_faiss.similarity_search("test", k=2)
+    assert len(empty_results) <= 3  # Should not crash
+
+    # Test 4: Test with special characters and unicode
+    special_docs = [
+        Document(page_content="café résumé naïve", metadata={"source": "unicode"}),
+        Document(page_content="🚀🎉💻", metadata={"source": "emoji"}),  
+        Document(page_content="@#$%^&*()", metadata={"source": "symbols"}),
+        Document(page_content="\n\t\r", metadata={"source": "whitespace_chars"}),
+    ]
+    
+    special_faiss = BinaryFAISS.from_documents(special_docs, mistral_embedding)
+    special_results = special_faiss.similarity_search("café", k=1)
+    assert len(special_results) == 1
+
+    # Test 5: Test with extremely repetitive content
+    repetitive_docs = [
+        Document(page_content="a" * 10, metadata={"source": "short_repeat"}),
+        Document(page_content="b" * 100, metadata={"source": "medium_repeat"}),
+        Document(page_content="c" * 1000, metadata={"source": "long_repeat"}),
+    ]
+    
+    rep_faiss = BinaryFAISS.from_documents(repetitive_docs, mistral_embedding)
+    rep_results = rep_faiss.similarity_search("aaa", k=1)
+    assert len(rep_results) == 1
+
+    # Test 6: Test that we can handle documents with identical metadata
+    identical_meta_docs = [
+        Document(page_content="content1", metadata={"type": "test", "id": 1}),
+        Document(page_content="content2", metadata={"type": "test", "id": 1}),  # Same metadata
+        Document(page_content="content3", metadata={"type": "test", "id": 1}),  # Same metadata
+    ]
+    
+    meta_faiss = BinaryFAISS.from_documents(identical_meta_docs, mistral_embedding)
+    meta_results = meta_faiss.similarity_search("content", k=3)
+    assert len(meta_results) == 3
+
+    # Test 7: Test maximum marginal relevance with edge cases
+    mmr_docs = [Document(page_content=f"document {i}", metadata={"id": i}) for i in range(5)]
+    mmr_faiss = BinaryFAISS.from_documents(mmr_docs, mistral_embedding)
+    
+    # Test MMR with k larger than fetch_k
+    mmr_results = mmr_faiss.max_marginal_relevance_search("document", k=3, fetch_k=2)
+    assert len(mmr_results) <= 2  # Should be limited by fetch_k
+    
+    # Test MMR with lambda_mult edge values
+    mmr_results_0 = mmr_faiss.max_marginal_relevance_search("document", k=2, lambda_mult=0.0)
+    mmr_results_1 = mmr_faiss.max_marginal_relevance_search("document", k=2, lambda_mult=1.0)
+    assert len(mmr_results_0) == 2
+    assert len(mmr_results_1) == 2
+
+    # Test 8: Test with numeric strings and mixed content
+    numeric_docs = [
+        Document(page_content="123", metadata={"source": "numeric"}),
+        Document(page_content="12.34", metadata={"source": "decimal"}),
+        Document(page_content="word123", metadata={"source": "mixed"}),
+        Document(page_content="", metadata={"source": "empty"}),
+    ]
+    
+    numeric_faiss = BinaryFAISS.from_documents(numeric_docs, mistral_embedding)
+    numeric_results = numeric_faiss.similarity_search("123", k=2)
+    assert len(numeric_results) == 2
+
+
         # EDGE CASE TESTS
 
         # Test 1: Edge case with k larger than available documents
