@@ -280,7 +280,7 @@ class BinaryFAISS(CompressedFAISS):
 
         return self._vec_to_binary(embeddings)
 
-    async def aembedding_function(self, texts):
+    async def new_aembedding_function(self, texts):
         """Override to convert embeddings to binary for async operations"""
         # Get original embeddings asynchronously
         if isinstance(self._original_embedding_function, Embeddings):
@@ -325,11 +325,11 @@ class BinaryFAISS(CompressedFAISS):
 
     def _embed_documents(self, texts: List[str]) -> List[List[int]]:
         """Embed documents and ensure they are in binary format."""
-        return self.embedding_function(texts)
+        return self.new_embedding_function(texts)
 
     async def _aembed_documents(self, texts: List[str]) -> List[List[int]]:
         """Embed documents asynchronously and ensure they are in binary format."""
-        embeddings = await self.aembedding_function(texts)
+        embeddings = await self.new_aembedding_function(texts)
 
         # Validate that embeddings are binary
         for i, embedding in enumerate(embeddings):
@@ -346,7 +346,7 @@ class BinaryFAISS(CompressedFAISS):
 
     def _embed_query(self, text: str) -> List[int]:
         """Embed query and ensure it is in binary format."""
-        embedding = self.embedding_function([text])[0]
+        embedding = self.new_embedding_function([text])[0]
 
         # Validate that embedding is binary
         if not all(
@@ -362,7 +362,7 @@ class BinaryFAISS(CompressedFAISS):
 
     async def _aembed_query(self, text: str) -> List[int]:
         """Embed query asynchronously and ensure it is in binary format."""
-        embeddings = await self.aembedding_function([text])
+        embeddings = await self.new_aembedding_function([text])
         embedding = embeddings[0]
 
         # Validate that embedding is binary
