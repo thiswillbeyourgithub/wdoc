@@ -118,7 +118,12 @@ class CompressedFAISS(FAISS):
         p = str(path / f"{index_name}.faiss")
         try:
             index = faiss.read_index(p)
-        except TypeError:
+        except RuntimeError as e:
+            if (
+                not "index type" in str(e).lower()
+                and " not recognized" in str(e).lower()
+            ):
+                raise
             index = faiss.read_index_binary(p)
 
         # load docstore and index_to_docstore_id with zlib decompression
