@@ -65,6 +65,8 @@ os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 # the unexpected env var should be tested both before import and before run:
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_2"] = "testing"
 
+ANALOGY_QUESTION = "What is the analogy used by the speaker"
+
 
 @pytest.mark.basic
 def test_wdoc_version():
@@ -544,7 +546,7 @@ def test_query_tim_urban():
         filetype="auto",
     )
     out = inst.query_task(
-        query="What is the analogy used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
@@ -562,7 +564,7 @@ def test_query_tim_urban():
         filetype="auto",
     )
     out2 = inst2.query_task(
-        query="What is the allegory used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer2 = out2["final_answer"]
     assert "monkey" in final_answer2.lower()
@@ -580,7 +582,7 @@ def test_query_tim_urban():
         filetype="auto",
     )
     out3 = inst3.query_task(
-        query="What is the allegory used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer3 = out3["final_answer"]
     assert "monkey" in final_answer3.lower()
@@ -601,7 +603,7 @@ def test_query_tim_urban_testing_model():
         filetype="auto",
     )
     out = inst.query_task(
-        query="What is the allegory used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer = out["final_answer"]
     # The 'testing' model should return a fixed string
@@ -743,7 +745,7 @@ def test_query_tim_urban_openrouter():
         filetype="auto",
     )
     out = inst.query_task(
-        query="What is the allegory used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
@@ -787,7 +789,7 @@ def test_query_tim_urban_default_model():
         filetype="auto",
     )
     out = inst.query_task(
-        query="What is the allegory used by the speaker",
+        query=ANALOGY_QUESTION,
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
