@@ -25,15 +25,15 @@ mkdir temp
 
 # start tests
 cd temp
-python -m pytest ../test_wdoc.py -n auto -v && \
-python -m pytest ../test_wdoc.py -m api -v
+python -m pytest ../test_wdoc.py -n auto && \
+python -m pytest ../test_wdoc.py -m api
 
 # also check if we can install those then redo some of the tests
 cd ..
 uv pip install -e "..[fasttext]"
 uv pip install -e "..[pdftotextt]"
 cd temp
-python -m pytest ../test_wdoc.py -n auto -v && \
+python -m pytest ../test_wdoc.py -n auto && \
 
 # check if we can install the dev test
 cd ..
