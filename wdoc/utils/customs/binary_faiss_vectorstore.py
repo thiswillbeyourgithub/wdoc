@@ -416,8 +416,8 @@ class BinaryFAISS(CompressedFAISS):
         if ids and len(ids) != len(set(ids)):
             raise ValueError("Duplicate ids found in the ids list.")
 
-        # Convert to binary format for FAISS
-        vector = self._vec_to_binary(embeddings)
+        # embeddings are already in binary format for FAISS
+        vector = np.array(embeddings, dtype=np.uint8)
 
         self.index.add(vector)
 
@@ -458,7 +458,8 @@ class BinaryFAISS(CompressedFAISS):
                 "Binary embeddings must contain only integers in range [0, 255]."
             )
 
-        vector = self._vec_to_binary(embedding)
+        # embedding is already in binary format (packed bytes)
+        vector = np.array([embedding], dtype=np.uint8)
 
         # Binary embeddings don't support L2 normalization
         if self._normalize_L2:
@@ -596,8 +597,9 @@ class BinaryFAISS(CompressedFAISS):
         faiss = dependable_faiss_import()
 
         # Create binary index - for binary embeddings, we use IndexBinaryFlat
-        # The dimension should be in bits, so multiply by 8 since _vec_to_binary returns bytes
-        embedding_dim_bits = BinaryFAISS._vec_to_binary(embeddings).shape[1] * 8
+        # embeddings are already binary (packed bytes), so dimension in bits is shape[1] * 8
+        embeddings_array = np.array(embeddings)
+        embedding_dim_bits = embeddings_array.shape[1] * 8
         index = faiss.IndexBinaryFlat(embedding_dim_bits)
 
         docstore = kwargs.pop("docstore", InMemoryDocstore())
