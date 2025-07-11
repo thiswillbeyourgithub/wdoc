@@ -714,9 +714,9 @@ def test_compressed_faiss_functionality():
         ),
     ]
 
-    # Use mistral embeddings for a more realistic test
-    mistral_embedding = load_embeddings_engine(
-        modelname=ModelName("mistral/mistral-embed"),
+    # Use OpenAI embeddings for a more reliable test
+    openai_embedding = load_embeddings_engine(
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
@@ -851,13 +851,13 @@ def test_binary_faiss_functionality():
         binary_faiss_path = os.path.join(temp_dir, "binary_faiss")
 
         # Create binary FAISS vectorstore
-        binary_faiss = BinaryFAISS.from_documents(test_docs, mistral_embedding)
+        binary_faiss = BinaryFAISS.from_documents(test_docs, openai_embedding)
         binary_faiss.save_local(binary_faiss_path)
 
         # Load the vectorstore
         loaded_binary = BinaryFAISS.load_local(
             binary_faiss_path,
-            mistral_embedding,
+            openai_embedding,
             allow_dangerous_deserialization=True,
         )
 
@@ -946,7 +946,7 @@ def test_binary_faiss_functionality():
 
         # Test 3: Test with single document vectorstore
         single_doc = [Document(page_content="single", metadata={"source": "single"})]
-        single_faiss = BinaryFAISS.from_documents(single_doc, mistral_embedding)
+        single_faiss = BinaryFAISS.from_documents(single_doc, openai_embedding)
         single_results = single_faiss.similarity_search("single", k=1)
         assert len(single_results) == 1
         assert single_results[0].page_content == "single"
@@ -961,7 +961,7 @@ def test_binary_faiss_functionality():
             Document(page_content="duplicate", metadata={"source": "dup2"}),
             Document(page_content="unique", metadata={"source": "unique"}),
         ]
-        dup_faiss = BinaryFAISS.from_documents(duplicate_docs, mistral_embedding)
+        dup_faiss = BinaryFAISS.from_documents(duplicate_docs, openai_embedding)
         dup_results = dup_faiss.similarity_search_with_score("duplicate", k=3)
         assert len(dup_results) == 3
         # The duplicate documents should have very similar (ideally identical) scores
@@ -982,7 +982,7 @@ def test_binary_faiss_functionality():
                 page_content="medium length content here", metadata={"source": "medium"}
             ),
         ]
-        extreme_faiss = BinaryFAISS.from_documents(extreme_docs, mistral_embedding)
+        extreme_faiss = BinaryFAISS.from_documents(extreme_docs, openai_embedding)
         short_results = extreme_faiss.similarity_search("a", k=1)
         long_results = extreme_faiss.similarity_search(
             "x" * 500, k=1
@@ -1044,9 +1044,9 @@ def test_binary_faiss_edge_cases_and_errors():
     from wdoc.utils.embeddings import load_embeddings_engine
     import numpy as np
 
-    # Use mistral embeddings for testing
-    mistral_embedding = load_embeddings_engine(
-        modelname=ModelName("mistral/mistral-embed"),
+    # Use OpenAI embeddings for testing
+    openai_embedding = load_embeddings_engine(
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
@@ -1060,7 +1060,7 @@ def test_binary_faiss_edge_cases_and_errors():
     ):
         BinaryFAISS.from_documents(
             [Document(page_content="test", metadata={})],
-            mistral_embedding,
+            openai_embedding,
             normalize_L2=True,
         )
 
@@ -1072,7 +1072,7 @@ def test_binary_faiss_edge_cases_and_errors():
     ):
         BinaryFAISS.from_documents(
             [Document(page_content="test", metadata={})],
-            mistral_embedding,
+            openai_embedding,
             distance_strategy=DistanceStrategy.COSINE,
         )
 
@@ -1087,7 +1087,7 @@ def test_binary_faiss_edge_cases_and_errors():
 
     # This should crash
     with pytest.raises(AssertionError):
-        empty_faiss = BinaryFAISS.from_documents(empty_content_docs, mistral_embedding)
+        empty_faiss = BinaryFAISS.from_documents(empty_content_docs, openai_embedding)
 
     # Test 4: Test with special characters and unicode
     special_docs = [
@@ -1097,7 +1097,7 @@ def test_binary_faiss_edge_cases_and_errors():
         Document(page_content="\n\tò\r", metadata={"source": "whitespace_chars"}),
     ]
 
-    special_faiss = BinaryFAISS.from_documents(special_docs, mistral_embedding)
+    special_faiss = BinaryFAISS.from_documents(special_docs, openai_embedding)
     special_results = special_faiss.similarity_search("café", k=1)
     assert len(special_results) == 1
 
@@ -1108,7 +1108,7 @@ def test_binary_faiss_edge_cases_and_errors():
         Document(page_content="c" * 1000, metadata={"source": "long_repeat"}),
     ]
 
-    rep_faiss = BinaryFAISS.from_documents(repetitive_docs, mistral_embedding)
+    rep_faiss = BinaryFAISS.from_documents(repetitive_docs, openai_embedding)
     rep_results = rep_faiss.similarity_search("aaa", k=1)
     assert len(rep_results) == 1
 
@@ -1123,7 +1123,7 @@ def test_binary_faiss_edge_cases_and_errors():
         ),  # Same metadata
     ]
 
-    meta_faiss = BinaryFAISS.from_documents(identical_meta_docs, mistral_embedding)
+    meta_faiss = BinaryFAISS.from_documents(identical_meta_docs, openai_embedding)
     meta_results = meta_faiss.similarity_search("content", k=3)
     assert len(meta_results) == 3
 
@@ -1131,7 +1131,7 @@ def test_binary_faiss_edge_cases_and_errors():
     mmr_docs = [
         Document(page_content=f"document {i}", metadata={"id": i}) for i in range(5)
     ]
-    mmr_faiss = BinaryFAISS.from_documents(mmr_docs, mistral_embedding)
+    mmr_faiss = BinaryFAISS.from_documents(mmr_docs, openai_embedding)
 
     # Test MMR with k larger than fetch_k
     mmr_results = mmr_faiss.max_marginal_relevance_search("document", k=3, fetch_k=2)
@@ -1154,7 +1154,7 @@ def test_binary_faiss_edge_cases_and_errors():
         Document(page_content="word123", metadata={"source": "mixed"}),
     ]
 
-    numeric_faiss = BinaryFAISS.from_documents(numeric_docs, mistral_embedding)
+    numeric_faiss = BinaryFAISS.from_documents(numeric_docs, openai_embedding)
     numeric_results = numeric_faiss.similarity_search("1 2 3", k=2)
     assert len(numeric_results) == 2
 

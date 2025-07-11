@@ -300,15 +300,16 @@ class BinaryFAISS(CompressedFAISS):
 
         return self._vec_to_binary(embeddings)
 
-    @classmethod
+    @staticmethod
     def _vec_to_binary(
-        self, vectors: Union[np.ndarray, List[float], List[List[float]]]
+        vectors: Union[np.ndarray, List[float], List[List[float]]],
     ) -> np.ndarray:
-        """Convert vectors to binary format using per-vector mean thresholding.
+        """Convert vectors to binary format using global zero threshold.
 
-        This method uses each vector's own mean as its threshold, which better preserves
-        the relative relationships between semantically similar and dissimilar vectors
-        compared to using global statistics across batches.
+        This method uses zero as the global threshold for all vectors, which better
+        preserves semantic relationships by maintaining consistent thresholding
+        across all embeddings. This sign-based approach is standard for binary
+        embeddings and avoids bias from per-vector statistics.
         """
         vectors = np.array(vectors)
 
@@ -320,11 +321,10 @@ class BinaryFAISS(CompressedFAISS):
                 f"Unexpected dimension of embeddings to turn to binary: {vectors.shape}"
             )
 
-        # Use per-vector mean as threshold - this preserves relative relationships
-        # Each vector is compared against its own mean, maintaining the vector's
-        # internal structure while making it binary
-        vector_means = np.mean(vectors, axis=1, keepdims=True)
-        binary_vectors = vectors > vector_means
+        # Use global zero threshold - this preserves semantic relationships
+        # by maintaining consistent thresholding across all vectors
+        # Positive values become 1, negative/zero values become 0
+        binary_vectors = vectors > 0
 
         d = binary_vectors.shape[1]
 
