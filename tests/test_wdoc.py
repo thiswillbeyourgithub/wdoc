@@ -730,20 +730,20 @@ def test_compressed_faiss_functionality():
         compressed_faiss_path = os.path.join(temp_dir, "compressed_faiss")
 
         # Create regular FAISS vectorstore
-        regular_faiss = FAISS.from_documents(test_docs, mistral_embedding)
+        regular_faiss = FAISS.from_documents(test_docs, openai_embedding)
         regular_faiss.save_local(regular_faiss_path)
 
         # Create compressed FAISS vectorstore
-        compressed_faiss = CompressedFAISS.from_documents(test_docs, mistral_embedding)
+        compressed_faiss = CompressedFAISS.from_documents(test_docs, openai_embedding)
         compressed_faiss.save_local(compressed_faiss_path)
 
         # Load both vectorstores
         loaded_regular = FAISS.load_local(
-            regular_faiss_path, mistral_embedding, allow_dangerous_deserialization=True
+            regular_faiss_path, openai_embedding, allow_dangerous_deserialization=True
         )
         loaded_compressed = CompressedFAISS.load_local(
             compressed_faiss_path,
-            mistral_embedding,
+            openai_embedding,
             allow_dangerous_deserialization=True,
         )
 
@@ -836,9 +836,9 @@ def test_binary_faiss_functionality():
         for word in all_words
     ]
 
-    # Use mistral embeddings for a more realistic test
-    mistral_embedding = load_embeddings_engine(
-        modelname=ModelName("mistral/mistral-embed"),
+    # Use OpenAI embeddings for a more reliable test
+    openai_embedding = load_embeddings_engine(
+        modelname=ModelName(f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}"),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},
