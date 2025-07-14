@@ -329,10 +329,12 @@ class BinaryFAISS(CompressedFAISS):
                 f"Unexpected dimension of embeddings to turn to binary: {vectors.shape}"
             )
 
-        # Use global zero threshold - this preserves semantic relationships
-        # by maintaining consistent thresholding across all vectors
-        # Positive values become 1, negative/zero values become 0
-        binary_vectors = vectors > 0
+        # Use global zero threshold with small tolerance to handle floating point precision
+        # This preserves semantic relationships by maintaining consistent thresholding
+        # across all vectors while being robust to floating point precision issues
+        # Values above small tolerance become 1, others become 0
+        tolerance = 1e-10
+        binary_vectors = vectors > tolerance
 
         d = binary_vectors.shape[1]
 
