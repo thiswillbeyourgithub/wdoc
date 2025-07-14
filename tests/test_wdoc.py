@@ -924,7 +924,7 @@ def test_binary_faiss_functionality():
 
         # Verify that scores are reasonable for binary embeddings (Hamming distances)
         for doc, score in search_with_scores:
-            assert score == 0 or isinstance(score, (float, np.float32))
+            assert isinstance(score, (float, np.float32, np.int32))
             assert score >= 0, f"Distance should be non-negative, got {score}"
             # For Hamming distance, the maximum possible distance is the number of bits
             # which should be reasonable (not astronomically large)
