@@ -280,8 +280,12 @@ class BinaryFAISS(CompressedFAISS):
         # Get original embeddings
         embeddings = self._original_embedding_function.embed_documents(texts)
 
-        # make sure we have a properly formatted array
-        embeddings = np.array(embeddings).squeeze()
+        # Ensure we have a properly formatted 2D array
+        embeddings = np.array(embeddings)
+        if len(embeddings.shape) == 1:
+            embeddings = embeddings.reshape(1, -1)
+        elif len(embeddings.shape) != 2:
+            raise Exception(f"Unexpected dimension of embeddings: {embeddings.shape}")
 
         return self._vec_to_binary(embeddings)
 
@@ -295,8 +299,12 @@ class BinaryFAISS(CompressedFAISS):
                 "`embedding_function` is expected to be an Embeddings object for async operations"
             )
 
-        # make sure we have a properly formatted array
-        embeddings = np.array(embeddings).squeeze()
+        # Ensure we have a properly formatted 2D array
+        embeddings = np.array(embeddings)
+        if len(embeddings.shape) == 1:
+            embeddings = embeddings.reshape(1, -1)
+        elif len(embeddings.shape) != 2:
+            raise Exception(f"Unexpected dimension of embeddings: {embeddings.shape}")
 
         return self._vec_to_binary(embeddings)
 
