@@ -950,6 +950,15 @@ def test_binary_faiss_functionality():
             outlier_word not in result_contents[:3]
         ), f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
 
+        # also test for regular embeddings
+        search_results = loaded_regular.similarity_search("programming", k=3)
+        assert len(search_results) == 3
+        assert search_results[0].page_content == "programming"
+        result_contents = [doc.page_content for doc in search_results]
+        assert (
+            outlier_word not in result_contents[:3]
+        ), f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+
         # Test similarity search with scores
         search_with_scores = loaded_binary.similarity_search_with_score(
             "algorithm", k=2
@@ -1055,7 +1064,48 @@ def test_binary_faiss_functionality():
             returned_contents == original_contents
         ), "All returned documents should be from original set"
 
-        # Test 10: Verify binary embedding properties
+        # Test 10: Verify that binary and regular FAISS produce different distances
+        # This confirms that binary conversion actually changes the distance calculations
+        regular_python_results = loaded_regular.similarity_search_with_score(
+            "python", k=5
+        )
+        binary_python_results = loaded_binary.similarity_search_with_score(
+            "python", k=5
+        )
+
+        # Find the distance to "programming" in both vectorstores
+        regular_python_to_programming_distance = None
+        binary_python_to_programming_distance = None
+
+        for doc, distance in regular_python_results:
+            if doc.page_content == "programming":
+                regular_python_to_programming_distance = distance
+                break
+
+        for doc, distance in binary_python_results:
+            if doc.page_content == "programming":
+                binary_python_to_programming_distance = distance
+                break
+
+        # Both distances should be found
+        assert (
+            regular_python_to_programming_distance is not None
+        ), "Could not find 'programming' in regular FAISS results for 'python' query"
+        assert (
+            binary_python_to_programming_distance is not None
+        ), "Could not find 'programming' in binary FAISS results for 'python' query"
+
+        # The distances should be different, confirming binary conversion affects calculations
+        assert (
+            regular_python_to_programming_distance
+            != binary_python_to_programming_distance
+        ), (
+            f"Regular FAISS and BinaryFAISS should produce different distances between 'python' and 'programming'. "
+            f"Regular: {regular_python_to_programming_distance}, Binary: {binary_python_to_programming_distance}. "
+            f"If they are the same, the binary conversion may not be working correctly."
+        )
+
+        # Test 11: Verify binary embedding properties
         # Get raw embeddings to check they're actually binary
         test_embeddings = loaded_binary._embed_documents(["test"])
         assert len(test_embeddings) == 1
