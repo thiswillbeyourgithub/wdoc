@@ -820,6 +820,7 @@ def test_compressed_faiss_functionality():
 def test_binary_faiss_functionality():
     """Test that BinaryFAISS preserves semantic relationships with binary embeddings."""
     from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
+    from langchain_community.vectorstores import FAISS
     from langchain_core.documents import Document
     from wdoc.utils.misc import ModelName
     from wdoc.utils.embeddings import load_embeddings_engine
@@ -846,11 +847,75 @@ def test_binary_faiss_functionality():
         do_test=True,
     )
 
+    def test_semantic_relationships(vectorstore, store_name):
+        """Helper function to test semantic relationships in any vectorstore."""
+        # Calculate all pairwise distances within the related group
+        related_distances = []
+        for i, word1 in enumerate(related_words):
+            for j, word2 in enumerate(related_words):
+                if i < j:  # Only compute each pair once
+                    results1 = vectorstore.similarity_search_with_score(word1, k=5)
+                    # Find the distance to word2
+                    for doc, distance in results1:
+                        if doc.page_content == word2:
+                            related_distances.append(distance)
+                            break
+
+        # Calculate distances from outlier to each related word
+        outlier_distances = []
+        outlier_results = vectorstore.similarity_search_with_score(outlier_word, k=5)
+        for doc, distance in outlier_results:
+            if doc.page_content in related_words:
+                outlier_distances.append(distance)
+
+        # Verify we got the expected number of distances
+        assert (
+            len(related_distances) == 6
+        ), f"Expected 6 related distances for {store_name}, got {len(related_distances)}"  # C(4,2) = 6 pairs
+        assert (
+            len(outlier_distances) == 4
+        ), f"Expected 4 outlier distances for {store_name}, got {len(outlier_distances)}"  # 4 related words
+
+        # The key test: minimum distance from outlier should be greater than maximum distance within related group
+        max_related_distance = max(related_distances)
+        min_outlier_distance = min(outlier_distances)
+
+        assert min_outlier_distance > max_related_distance, (
+            f"{store_name} failed to preserve semantic relationships: "
+            f"minimum outlier distance ({min_outlier_distance}) should be greater than "
+            f"maximum related distance ({max_related_distance}). "
+            f"Related distances: {related_distances}, "
+            f"Outlier distances: {outlier_distances}"
+        )
+
+        return (
+            max_related_distance,
+            min_outlier_distance,
+            related_distances,
+            outlier_distances,
+        )
+
     # Create temporary directory for saving
     with tempfile.TemporaryDirectory() as temp_dir:
+        regular_faiss_path = os.path.join(temp_dir, "regular_faiss")
         binary_faiss_path = os.path.join(temp_dir, "binary_faiss")
 
-        # Create binary FAISS vectorstore
+        # SANITY CHECK: First test with regular FAISS to ensure embeddings preserve semantic relationships
+        regular_faiss = FAISS.from_documents(test_docs, openai_embedding)
+        regular_faiss.save_local(regular_faiss_path)
+        loaded_regular = FAISS.load_local(
+            regular_faiss_path, openai_embedding, allow_dangerous_deserialization=True
+        )
+
+        # Test semantic relationships on regular FAISS
+        (
+            regular_max_related,
+            regular_min_outlier,
+            regular_related_distances,
+            regular_outlier_distances,
+        ) = test_semantic_relationships(loaded_regular, "Regular FAISS")
+
+        # Now test with BinaryFAISS - it should preserve the same semantic relationships
         binary_faiss = BinaryFAISS.from_documents(test_docs, openai_embedding)
         binary_faiss.save_local(binary_faiss_path)
 
@@ -864,44 +929,13 @@ def test_binary_faiss_functionality():
         # Test that we have the correct number of documents
         assert len(loaded_binary.index_to_docstore_id) == len(test_docs)
 
-        # Calculate all pairwise distances within the related group
-        related_distances = []
-        for i, word1 in enumerate(related_words):
-            for j, word2 in enumerate(related_words):
-                if i < j:  # Only compute each pair once
-                    results1 = loaded_binary.similarity_search_with_score(word1, k=5)
-                    # Find the distance to word2
-                    for doc, distance in results1:
-                        if doc.page_content == word2:
-                            related_distances.append(distance)
-                            break
-
-        # Calculate distances from outlier to each related word
-        outlier_distances = []
-        outlier_results = loaded_binary.similarity_search_with_score(outlier_word, k=5)
-        for doc, distance in outlier_results:
-            if doc.page_content in related_words:
-                outlier_distances.append(distance)
-
-        # Verify we got the expected number of distances
-        assert (
-            len(related_distances) == 6
-        ), f"Expected 6 related distances, got {len(related_distances)}"  # C(4,2) = 6 pairs
-        assert (
-            len(outlier_distances) == 4
-        ), f"Expected 4 outlier distances, got {len(outlier_distances)}"  # 4 related words
-
-        # The key test: minimum distance from outlier should be greater than maximum distance within related group
-        max_related_distance = max(related_distances)
-        min_outlier_distance = min(outlier_distances)
-
-        assert min_outlier_distance > max_related_distance, (
-            f"Binary embeddings failed to preserve semantic relationships: "
-            f"minimum outlier distance ({min_outlier_distance}) should be greater than "
-            f"maximum related distance ({max_related_distance}). "
-            f"Related distances: {related_distances}, "
-            f"Outlier distances: {outlier_distances}"
-        )
+        # Test semantic relationships on BinaryFAISS
+        (
+            binary_max_related,
+            binary_min_outlier,
+            binary_related_distances,
+            binary_outlier_distances,
+        ) = test_semantic_relationships(loaded_binary, "BinaryFAISS")
 
         # Test that we can still do similarity search properly
         search_results = loaded_binary.similarity_search("programming", k=3)
@@ -992,13 +1026,13 @@ def test_binary_faiss_functionality():
 
         # Test 7: Test score_threshold parameter
         threshold_results = loaded_binary.similarity_search_with_score(
-            "programming", k=5, score_threshold=max_related_distance
+            "programming", k=5, score_threshold=binary_max_related
         )
         # All results should have scores <= threshold
         for doc, score in threshold_results:
             assert (
-                score <= max_related_distance
-            ), f"Score {score} exceeds threshold {max_related_distance}"
+                score <= binary_max_related
+            ), f"Score {score} exceeds threshold {binary_max_related}"
 
         # Test 8: Test that distances are consistent (same query should give same results)
         results1 = loaded_binary.similarity_search_with_score("python", k=3)
