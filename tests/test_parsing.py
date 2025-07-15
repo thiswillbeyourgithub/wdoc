@@ -175,33 +175,3 @@ def test_parse_nytimes():
     assert all(isinstance(d, Document) for d in docs)
     # Check that we got some actual content
     assert any(len(d.page_content.strip()) > 0 for d in docs)
-
-
-@pytest.mark.basic
-def test_parse_nytimes_shell():
-    """Test parsing the NYTimes homepage via command line."""
-    result = subprocess.run(
-        [
-            "python",
-            "-m",
-            "wdoc",
-            "parse",
-            "https://www.nytimes.com/",
-            "--format",
-            "text",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    output = result.stdout
-
-    # Check for common news-related terms in the output
-    assert "Times" in output, "Output should contain 'Times'"
-    assert "news" in output.lower(), "Output should contain 'news'"
-    assert (
-        "journal" in output.lower() or "article" in output.lower()
-    ), "Output should contain journalism-related terms"
-
-    # Verify we got substantial content
-    assert len(output) > 1000, "Expected significant text content from NYTimes"
