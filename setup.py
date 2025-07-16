@@ -194,12 +194,12 @@ setup(
         "duckduckgo-search >= 8.1.1",
     ],
     extra_require={
-        "fasttext": [
+        "with-fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
             "fasttext-langdetect >= 1.0.5",
             "langdetect >= 1.0.9",
         ],
-        "pdftotext": [
+        "with-pdftotext": [
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
         ],
