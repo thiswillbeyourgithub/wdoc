@@ -28,6 +28,7 @@
     * **Actually *useful* AI powered summary**: get the thought process of the author instead of nebulous takeaways.
     * **Actually *useful* AI powered queries**: get the **sourced** indented markdown answer yo your questions instead of hallucinated nonsense.
     * **Extensible**: this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool)
+    * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
@@ -89,7 +90,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 </details>
 
 ## Features
-* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too!
+* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
 * **100+ LLMs and many embeddings**: Supports any LLM by OpenAI, Mistral, Claude, Ollama, Openrouter, etc. thanks to [litellm](https://docs.litellm.ai/). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
@@ -101,6 +102,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     `Eve the Evaluator`, `Anna the Answerer` and `Carl the Combiner` are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step. There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query.
     5. Each document is identified by a unique hash and the answers are sourced, meaning you know from which document comes each information of the answer.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
+* **Web Search**: Preliminary support for web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). Just do `wdoc web "How is Nvidia today this month?"`
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
@@ -282,6 +284,7 @@ Click to read more
 * **json_dict**: a text file containing a single json dict.
 
 * **Recursive types**
+    * **ddg**: does an online web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). This is not an agent search, we only use `wdoc` over the urls fetched by DuckDuckGo and return the result. Only supported by `query` tasks.
     * **youtube playlists**: get the link for each video then process as **youtube**
     * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
     * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
@@ -318,7 +321,8 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
     * Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. 
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
-5. For more: read the documentation at `wdoc --help`
+5. To do an online search, the idea is `wdoc --task=query --path='How is NVidia doing this month?' --query='How is NVidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is NVidia doing this month?'`.
+6. For more: read the documentation at `wdoc --help`
 
 ## Scripts made with wdoc
 * *More to come in [the scripts folder](./scripts/)*.
@@ -408,5 +412,8 @@ FAQ
 
 * **Which python version is used in the test suite?**
     * The recommended python version is `3.12.11`.
+
+* **Why does the online search only supports the 'query' task?**
+    * The way `wdoc` works for summaries is to take the "whole document", chunk it into sequential "documents" and iteratively create the summary. But if we start with several documents (say difference web pages) then the "sequence" wouldn't make sense.
 
 </details>
