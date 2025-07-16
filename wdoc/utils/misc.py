@@ -58,6 +58,7 @@ warnings.filterwarnings(
 warnings.filterwarnings(
     "ignore", module="litellm", message=".*Counting tokens for OpenAI model=.*"
 )
+warnings.filterwarnings("ignore", module="httpx", message="Use 'content=.*")
 
 try:
     import ftlangdetect
