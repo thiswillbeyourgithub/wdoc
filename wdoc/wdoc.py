@@ -251,6 +251,8 @@ class wdoc:
         assert task in tasks_list, f"invalid task value: {task}"
         if task in ["summarize", "summarize_then_query"]:
             assert not load_embeds_from, "can't use load_embeds_from if task is summary"
+        if filetype == "ddg":
+            assert task == "query", f"Only 'query' task is supported for 'ddg' filetype"
         if task in ["query", "search", "summarize_then_query"]:
             assert (
                 query_eval_model is not None
