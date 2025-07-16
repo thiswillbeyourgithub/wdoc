@@ -6,6 +6,7 @@ This list is then processed in loaders.py, multithreading or multiprocessing
 is used.
 """
 
+import inspect
 import json
 import random
 import re
@@ -201,6 +202,19 @@ def batch_load_doc(
                     cli_kwargs=cli_kwargs,
                     **load_kwargs,
                 )
+
+                # remove the arguments that were expected by the recursive parsing function and are returned unchanged. For example arguments like ddg_max_result
+                the_func_kwargs = dict(inspect.signature(func_to_use).parameters)
+                logger.warning(str(to_add))
+                for inewdoc, newdoc in enumerate(to_add):
+                    for k, v in newdoc.copy().items():
+                        if (
+                            k in the_func_kwargs
+                            and cli_kwargs[k] == load_kwargs[k]
+                            and cli_kwargs[k] == v
+                        ):
+                            del to_add[inewdoc][k]
+                logger.warning(str(to_add))
                 new_doc_to_load.extend(to_add)
                 break
 
