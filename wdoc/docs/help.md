@@ -24,39 +24,6 @@
 
     * Supported values and available arguments:
         *For the details of each argument, [see below](#loader-specific-arguments)*
-        * `auto`: will guess the appropriate filetype based on `--path`.
-            Irrelevant for some filetypes, eg if `--filetype`=anki
-
-        * `url`
-            * `--path` must be a valid http(s) link
-            * Optional:
-                * `--title`, otherwise we try to detect it ourselves.
-
-        * `youtube`
-            * `--path` must link to a youtube video
-            * Optional:
-                * `--youtube_language`
-                * `--youtube_translations`
-                * `--youtube_audio_backend`
-                * `--whisper_prompt`
-                * `--whisper_lang`
-                * `--deepgram_kwargs`
-
-        * `pdf`
-            * `--path` is the filepath to pdf
-            * Optional:
-                * `--pdf_parsers`
-                * `--doccheck_min_lang_prob`
-                * `--doccheck_min_token`
-                * `--doccheck_max_token`
-
-        * `online_pdf`
-            * Same arguments as for `--filetype=pdf`
-                Note that the way `online_pdf` are handled is a bit
-                different than `pdf`: we first try to download it then
-                parse it with `filetype=pdf` and as a last resort we
-                use langchain's integrated OnlinePDFLoader as it's
-                far slower.
 
         * `anki`
             * Optional:
@@ -67,26 +34,18 @@
                 * `--anki_tag_filter`
                 * `--anki_tag_render_filter`
 
-        * `string`: no parameters needed, will provide a field where
-            you must type or paste the string
+        * `auto`: will guess the appropriate filetype based on `--path`.
+            Irrelevant for some filetypes, eg if `--filetype`=anki
 
-        * `txt`
-            (For text present in a txt file, not to be mistaken with `text`)
-            * `--path` is path to a .txt file
+        * `epub`
+            * `--path` to a .epub file
 
-        * `text`
-            (For text input as argument, not to be mistaken with `txt`)
-            * `--path` is directly the text content.
+        * `json_dict`
+            * `--path` to a text file containing a single json dict
+            * `--json_dict_template`
             * Optional:
+                * `--json_dict_exclude_keys`
                 * `--metadata`
-
-        * `local_html`
-            * `--path` must points to a .html file
-            * Optional:
-                * `--load_functions`
-
-        * `logseq_markdown`
-            * `--path` path to the markdown file
 
         * `local_audio`
             * `--path`
@@ -97,6 +56,11 @@
                 * `--whisper_lang`
                 * `--deepgram_kwargs`
 
+        * `local_html`
+            * `--path` must points to a .html file
+            * Optional:
+                * `--load_functions`
+
         * `local_video`
             * `--path`
             * `--audio_backend`
@@ -106,6 +70,9 @@
                 * `--whisper_prompt`
                 * `--deepgram_kwargs`
 
+        * `logseq_markdown`
+            * `--path` path to the markdown file
+
         * `online_media`: load the url using youtube_dl to download a media
             (video or audio) then treat it as `filetype=local_audio`.
             * If youtube_dl failed to find the media, try using playwright browser
@@ -114,18 +81,56 @@
             * Same arguments as `local_audio` with extra arguments:
                 * `--online_media_url_regex`
                 * `--online_media_resourcetype_regex`
-        * `epub`
-            * `--path` to a .epub file
+
+        * `online_pdf`
+            * Same arguments as for `--filetype=pdf`
+                Note that the way `online_pdf` are handled is a bit
+                different than `pdf`: we first try to download it then
+                parse it with `filetype=pdf` and as a last resort we
+                use langchain's integrated OnlinePDFLoader as it's
+                far slower.
+
+        * `pdf`
+            * `--path` is the filepath to pdf
+            * Optional:
+                * `--pdf_parsers`
+                * `--doccheck_min_lang_prob`
+                * `--doccheck_min_token`
+                * `--doccheck_max_token`
+
+        * `powerpoint`
+            * `--path` to a .doc, .docx etc
+
+        * `string`: no parameters needed, will provide a field where
+            you must type or paste the string
+
+        * `text`
+            (For text input as argument, not to be mistaken with `txt`)
+            * `--path` is directly the text content.
+            * Optional:
+                * `--metadata`
+
+        * `txt`
+            (For text present in a txt file, not to be mistaken with `text`)
+            * `--path` is path to a .txt file
+
+        * `url`
+            * `--path` must be a valid http(s) link
+            * Optional:
+                * `--title`, otherwise we try to detect it ourselves.
 
         * `word`
             * `--path` to a .doc, .docx etc
 
-        * `json_dict`
-            * `--path` to a text file containing a single json dict
-            * `--json_dict_template`
+        * `youtube`
+            * `--path` must link to a youtube video
             * Optional:
-                * `--json_dict_exclude_keys`
-                * `--metadata`
+                * `--youtube_language`
+                * `--youtube_translations`
+                * `--youtube_audio_backend`
+                * `--whisper_prompt`
+                * `--whisper_lang`
+                * `--deepgram_kwargs`
 
     * **Recursive types**:
         * `ddg`
