@@ -27,7 +27,7 @@
     * Aims to **support *any* filetypes** and query from all of them at the same time (**15+** are already implemented!)
     * **Actually *useful* AI powered summary**: get the thought process of the author instead of nebulous takeaways.
     * **Actually *useful* AI powered queries**: get the **sourced** indented markdown answer yo your questions instead of hallucinated nonsense.
-    * **Extensible**, this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool)
+    * **Extensible**: this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool)
 
 ### Table of contents
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
