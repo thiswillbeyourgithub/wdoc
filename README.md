@@ -262,32 +262,32 @@ Click to read more
 </details>
 
 ### Supported filetypes
-* **auto**: default, guess the filetype for you
-* **url**: try many ways to load a webpage, with heuristics to find the better parsed one
-* **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram. Note that youtube subtitles are downloaded with the timecode (so you can ask 'when does the author talks about such and such) but at a lower sampling frequency (instead of one timecode per second, only one per 15s). Youtube chapters are also given as context to the LLM when summarizing, which probably help it a lot.
-* **pdf**: 15 default loaders are implemented, heuristics are used to keep the best one and stop early. Table support via [openparse](https://github.com/Filimoa/open-parse/) or [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/). Easy to add more.
-* **online_pdf**: via URL then treated as a **pdf** (see above)
 * **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db. `alt` and `title` of images can be shown to the LLM, meaning that if you used [the ankiOCR addon](https://github.com/cfculhane/AnkiOCR) this information will help contextualize the note for the LLM.
-* **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
-* **txt**: .txt, markdown, etc
-* **text**: send a text content directly as path
-* **local_html**: useful for website dumps
-* **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
-* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)'s Nova-3 model. Supports automatically removing silence etc. Note: audio that are too large for whisper (usually >25mb) are automatically split into smaller files, transcribed, then combined. Also, audio transcripts are converted to text containing timestamps at regular intervals, making it possible to ask the LLM when something was said.
-* **local_video**: extract the audio then treat it as **local_audio**
-* **online_media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
+* **auto**: default, guess the filetype for you
 * **epub**: barely tested because epub is in general a poorly defined format
-* **powerpoint**: .ppt, .pptx, .odp, ...
-* **word**: .doc, .docx, .odt, ...
 * **json_dict**: a text file containing a single json dict.
+* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)'s Nova-3 model. Supports automatically removing silence etc. Note: audio that are too large for whisper (usually >25mb) are automatically split into smaller files, transcribed, then combined. Also, audio transcripts are converted to text containing timestamps at regular intervals, making it possible to ask the LLM when something was said.
+* **local_html**: useful for website dumps
+* **local_video**: extract the audio then treat it as **local_audio**
+* **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
+* **online_media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
+* **online_pdf**: via URL then treated as a **pdf** (see above)
+* **pdf**: 15 default loaders are implemented, heuristics are used to keep the best one and stop early. Table support via [openparse](https://github.com/Filimoa/open-parse/) or [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/). Easy to add more.
+* **powerpoint**: .ppt, .pptx, .odp, ...
+* **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
+* **text**: send a text content directly as path
+* **txt**: .txt, markdown, etc
+* **url**: try many ways to load a webpage, with heuristics to find the better parsed one
+* **word**: .doc, .docx, .odt, ...
+* **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram. Note that youtube subtitles are downloaded with the timecode (so you can ask 'when does the author talks about such and such) but at a lower sampling frequency (instead of one timecode per second, only one per 15s). Youtube chapters are also given as context to the LLM when summarizing, which probably help it a lot.
 
 * **Recursive types**
     * **ddg**: does an online web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). This is not an agent search, we only use `wdoc` over the urls fetched by DuckDuckGo and return the result. Only supported by `query` tasks.
-    * **youtube playlists**: get the link for each video then process as **youtube**
-    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
-    * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
     * **json_entries**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `docs/json_entries_example.json`.
+    * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
+    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
     * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
+    * **youtube playlists**: get the link for each video then process as **youtube**
 
 ### Supported tasks
 * **query** give documents and asks questions about it.
