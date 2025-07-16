@@ -421,11 +421,11 @@ class wdoc:
             else:
                 query_eval_model = model_name_matcher(query_eval_model)
 
-        if query is True:
+        if isinstance(query, bool) and query is True:
             # otherwise specifying --query and forgetting to add text fails
             query = None
 
-        if isinstance(query, str):
+        elif isinstance(query, str):
             query = query.strip() or None
         assert file_loader_parallel_backend in [
             "loky",
