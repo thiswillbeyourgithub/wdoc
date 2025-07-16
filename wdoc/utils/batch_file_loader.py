@@ -912,12 +912,12 @@ def parse_ddg_search(
         doc_kwargs["recur_parent_id"] = recur_parent_id
 
         # Add DuckDuckGo search metadata
-        doc_kwargs["ddg_search_query"] = query
-        doc_kwargs["ddg_search_rank"] = i + 1
-        if "title" in result:
-            doc_kwargs["ddg_title"] = result["title"]
-        if "snippet" in result:
-            doc_kwargs["ddg_snippet"] = result["snippet"]
+        # doc_kwargs["ddg_search_query"] = query
+        # doc_kwargs["ddg_search_rank"] = i + 1
+        # if "title" in result:
+        #     doc_kwargs["ddg_title"] = result["title"]
+        # if "snippet" in result:
+        #     doc_kwargs["ddg_snippet"] = result["snippet"]
 
         # Apply any extra arguments
         doc_kwargs.update(extra_args)
