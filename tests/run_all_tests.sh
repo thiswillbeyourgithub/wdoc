@@ -25,8 +25,8 @@ mkdir temp
 
 # start tests
 cd temp
-python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ..
-python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ..
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ..
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ..
 
 # also check if we can install those then redo some of the tests
 cd ..
