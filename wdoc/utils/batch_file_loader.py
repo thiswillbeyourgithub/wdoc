@@ -24,6 +24,8 @@ import uuid6
 from beartype.typing import List, Optional, Tuple, Union
 from joblib import Parallel, delayed
 from langchain.docstore.document import Document
+from langchain_community.tools import DuckDuckGoSearchResults
+from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from tqdm import tqdm
 from loguru import logger
 
@@ -83,6 +85,7 @@ recursive_types = [
     "toml_entries",
     "link_file",
     "youtube_playlist",
+    "ddg",
     "auto",
 ]
 
@@ -227,6 +230,12 @@ def batch_load_doc(
             elif load_filetype == "youtube_playlist":
                 new_doc_to_load.extend(
                     parse_youtube_playlist(cli_kwargs=cli_kwargs, **load_kwargs)
+                )
+                break
+
+            elif load_filetype == "ddg":
+                new_doc_to_load.extend(
+                    parse_ddg_search(cli_kwargs=cli_kwargs, **load_kwargs)
                 )
                 break
 
@@ -823,6 +832,103 @@ def parse_youtube_playlist(
         else:
             doc.metadata["playlist_title"] = playlist_title
         doclist[idoc]
+    return doclist
+
+
+@optional_typecheck
+def parse_ddg_search(
+    cli_kwargs: dict,
+    path: Union[str, Path],
+    ddg_max_results: int = 50,
+    ddg_region: str = "us-US",
+    ddg_safesearch: str = "off",
+    **extra_args,
+) -> List[DocDict]:
+    """
+    Perform a DuckDuckGo search and return URLs as documents to be processed.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The search query string
+        ddg_max_results: Maximum number of search results to return
+        ddg_region: DuckDuckGo search region
+        ddg_safesearch: SafeSearch setting ("on", "moderate", "off")
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each representing a URL from search results
+    """
+    query = str(path).strip()
+    logger.info(f"Performing DuckDuckGo search: '{query}'")
+
+    # Set up DuckDuckGo search
+    wrapper = DuckDuckGoSearchAPIWrapper(
+        max_results=ddg_max_results,
+        safesearch=ddg_safesearch,
+        source="text",
+        region=ddg_region,
+    )
+
+    tool = DuckDuckGoSearchResults(
+        api_wrapper=wrapper,
+        response_format="content_and_artifact",
+        output_format="list",
+        max_results=ddg_max_results,
+        region=ddg_region,
+    )
+    tool.max_results = ddg_max_results
+
+    # Perform the search
+    try:
+        search_results = tool.invoke(query)
+    except Exception as err:
+        raise Exception(f"DuckDuckGo search failed for query '{query}': {err}") from err
+
+    if not search_results:
+        logger.warning(f"No search results found for query: '{query}'")
+        return []
+
+    logger.info(f"Found {len(search_results)} search results for: '{query}'")
+
+    # Create a unique parent ID for tracking this search batch
+    recur_parent_id = str(uuid.uuid4())
+
+    doclist = []
+    for i, result in enumerate(search_results):
+        if "link" not in result:
+            logger.warning(f"Search result #{i+1} missing 'link' field: {result}")
+            continue
+
+        url = result["link"].strip()
+        if not url or not url.startswith("http"):
+            logger.warning(f"Invalid URL in search result #{i+1}: '{url}'")
+            continue
+
+        # Create document kwargs
+        doc_kwargs = cli_kwargs.copy()
+        doc_kwargs["path"] = url
+        doc_kwargs["subitem_link"] = url
+        doc_kwargs["filetype"] = "auto"  # Let wdoc auto-detect the URL content type
+        doc_kwargs["recur_parent_id"] = recur_parent_id
+
+        # Add DuckDuckGo search metadata
+        doc_kwargs["ddg_search_query"] = query
+        doc_kwargs["ddg_search_rank"] = i + 1
+        if "title" in result:
+            doc_kwargs["ddg_title"] = result["title"]
+        if "snippet" in result:
+            doc_kwargs["ddg_snippet"] = result["snippet"]
+
+        # Apply any extra arguments
+        doc_kwargs.update(extra_args)
+
+        doclist.append(DocDict(doc_kwargs))
+
+    if not doclist:
+        raise Exception(
+            f"No valid URLs found in DuckDuckGo search results for query: '{query}'"
+        )
+
     return doclist
 
 

@@ -173,6 +173,9 @@ filetype_arg_types = {
     "online_media_url_regex": str,
     "online_media_resourcetype_regex": str,
     "loading_failure": str,
+    "ddg_max_results": int,
+    "ddg_region": int,
+    "ddg_safesearch": str,
 }
 
 # extra arguments supported when instanciating wdoc
