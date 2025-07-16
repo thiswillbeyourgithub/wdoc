@@ -819,7 +819,7 @@ def parse_ddg_search(
     cli_kwargs: dict,
     path: Union[str, Path],
     ddg_max_results: int = 50,
-    ddg_region: str = "us-US",
+    ddg_region: str = "",
     ddg_safesearch: str = "off",
     **extra_args,
 ) -> List[DocDict]:
