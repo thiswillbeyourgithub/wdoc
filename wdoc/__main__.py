@@ -307,6 +307,21 @@ def cli_launcher() -> None:
             kwargs["path"] = args.pop(0)
             sys.argv[sys.argv.index(kwargs["path"])] = f"--path='{kwargs['path']}'"
 
+    # when using web search, make sure to make query and path match the other by default
+    if "filetype" in kwargs and kwargs["filetype"] == "ddg":
+        if "path" in kwargs and "query" not in kwargs:
+            logger.debug(
+                f"Detected DDG search with 'path' but no 'query' argument, duplicating the 'path' to 'query' then."
+            )
+            kwargs["query"] = kwargs["path"]
+            sys.argv.append(f"--query={kwargs['path']}")
+        elif "path" not in kwargs and "query" in kwargs:
+            logger.debug(
+                f"Detected DDG search with 'query' but no 'path' argument, duplicating the 'query' to 'path' then."
+            )
+            kwargs["path"] = kwargs["query"]
+            sys.argv.append(f"--path={kwargs['query']}")
+
     # if args is not empty, we have not succesfully parsed everything
     if args:
         logger.warning(
