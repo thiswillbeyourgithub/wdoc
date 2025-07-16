@@ -438,6 +438,7 @@ def load_one_doc(
     doccheck_min_token: int = min_token,
     doccheck_max_token: int = max_token,
     recur_parent_id: str = None,  # just used to keep track of which document comes from which recursive filetype
+    subitem_link: str = None,
     **kwargs,
 ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -656,8 +657,8 @@ def load_one_doc(
             docs[i].metadata["filetype"] = filetype
         if "path" not in docs[i].metadata and "path" in kwargs:
             docs[i].metadata["path"] = kwargs["path"]
-        if "subitem_link" in kwargs and "subitem_link" not in docs[i].metadata:
-            docs[i].metadata["subitem_link"] = kwargs["subitem_link"]
+        if subitem_link and "subitem_link" not in docs[i].metadata:
+            docs[i].metadata["subitem_link"] = subitem_link
         if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
             if "title" in kwargs and kwargs["title"] and kwargs["title"] != "Untitled":
                 docs[i].metadata["title"] = kwargs["title"]
