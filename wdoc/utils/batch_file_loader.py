@@ -79,16 +79,6 @@ inference_rules = {
     "toml_entries": [".*.toml"],
 }
 
-recursive_types = [
-    "recursive_paths",
-    "json_entries",
-    "toml_entries",
-    "link_file",
-    "youtube_playlist",
-    "ddg",
-    "auto",
-]
-
 # compile the inference rules as regex
 for k, v in inference_rules.items():
     for i, vv in enumerate(v):
@@ -166,10 +156,12 @@ def batch_load_doc(
     to_load[-1]["filetype"] = filetype.lower()
     new_doc_to_load = []
     loop_counter = 0
-    while any(d["filetype"] in recursive_types for d in to_load):
+    while any(d["filetype"] in recursive_types_func_mapping for d in to_load):
         loop_counter += 1
         if loop_counter > 5:
-            culprit_elements = [d for d in to_load if d["filetype"] in recursive_types]
+            culprit_elements = [
+                d for d in to_load if d["filetype"] in recursive_types_func_mapping
+            ]
             raise Exception(
                 f"Infinite loop detected in recursive file type processing after {loop_counter} iterations. "
                 f"Culprit elements still in to_load: {culprit_elements}"
@@ -193,50 +185,23 @@ def batch_load_doc(
                 assert (
                     load_filetype != "auto"
                 ), f"Could not infer the filetype of '{load_kwargs['path']}', please specify a value for the 'filetype' argument."
-                if load_filetype not in recursive_types:
+                if load_filetype not in recursive_types_func_mapping:
                     to_load[ild]["filetype"] = load_filetype
 
-            if load_filetype not in recursive_types:
+            if load_filetype not in recursive_types_func_mapping:
                 continue
             del load_kwargs["filetype"]
 
-            if load_filetype == "recursive_paths":
-                new_doc_to_load.extend(
-                    parse_recursive_paths(cli_kwargs=cli_kwargs, **load_kwargs)
+            if (
+                load_filetype in recursive_types_func_mapping
+                and load_filetype != "auto"
+            ):
+                func_to_use = recursive_types_func_mapping[load_filetype]
+                to_add = func_to_use(
+                    cli_kwargs=cli_kwargs,
+                    **load_kwargs,
                 )
-                break
-
-            elif load_filetype == "json_entries":
-                new_doc_to_load.extend(
-                    parse_json_entries(cli_kwargs=cli_kwargs, **load_kwargs)
-                )
-                break
-
-            elif load_filetype == "toml_entries":
-                new_doc_to_load.extend(
-                    parse_toml_entries(cli_kwargs=cli_kwargs, **load_kwargs)
-                )
-                break
-
-            elif load_filetype == "link_file":
-                new_doc_to_load.extend(
-                    parse_link_file(
-                        cli_kwargs=cli_kwargs,
-                        **load_kwargs,
-                    )
-                )
-                break
-
-            elif load_filetype == "youtube_playlist":
-                new_doc_to_load.extend(
-                    parse_youtube_playlist(cli_kwargs=cli_kwargs, **load_kwargs)
-                )
-                break
-
-            elif load_filetype == "ddg":
-                new_doc_to_load.extend(
-                    parse_ddg_search(cli_kwargs=cli_kwargs, **load_kwargs)
-                )
+                new_doc_to_load.extend(to_add)
                 break
 
         if new_doc_to_load:
@@ -245,7 +210,7 @@ def batch_load_doc(
                     ndtl
                 ), f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
 
-            assert load_filetype in recursive_types
+            assert load_filetype in recursive_types_func_mapping
             to_load.remove(to_load[ild])
             to_load.extend(new_doc_to_load)
             new_doc_to_load = []
@@ -689,7 +654,7 @@ def parse_recursive_paths(
         doc_kwargs["filetype"] = recursed_filetype
         doc_kwargs.update(extra_args)
         doc_kwargs["recur_parent_id"] = recur_parent_id
-        if doc_kwargs["filetype"] not in recursive_types:
+        if doc_kwargs["filetype"] not in recursive_types_func_mapping:
             doclist[i] = DocDict(doc_kwargs)
         else:
             doclist[i] = doc_kwargs
@@ -721,7 +686,7 @@ def parse_json_entries(
             del meta["path"]
         meta.update(extra_args)
         meta["recur_parent_id"] = recur_parent_id
-        if meta["filetype"] not in recursive_types:
+        if meta["filetype"] not in recursive_types_func_mapping:
             doclist[i] = DocDict(meta)
         else:
             doclist[i] = meta
@@ -754,7 +719,7 @@ def parse_toml_entries(
             del meta["path"]
         meta.update(extra_args)
         meta["recur_parent_id"] = recur_parent_id
-        if meta["filetype"] not in recursive_types:
+        if meta["filetype"] not in recursive_types_func_mapping:
             doclist[i] = DocDict(meta)
         else:
             doclist[i] = meta
@@ -949,3 +914,14 @@ def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = tuple(load_functions)
     pickled = dill.dumps(load_functions)
     return pickled
+
+
+recursive_types_func_mapping = {
+    "recursive_paths": parse_recursive_paths,
+    "json_entries": parse_json_entries,
+    "toml_entries": parse_toml_entries,
+    "link_file": parse_link_file,
+    "youtube_playlist": parse_youtube_playlist,
+    "ddg": parse_ddg_search,
+    "auto": None,
+}
