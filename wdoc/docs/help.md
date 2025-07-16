@@ -128,6 +128,11 @@
                 * `--metadata`
 
     * **Recursive types**:
+        * `ddg`
+            * `--path` is the search query for DuckDuckGo.
+            * `--ddg_max_results`
+            * `--ddg_region`, for example `us-US`
+            * `--ddg_safesearch`
         * `json_entries`
             * `--path` is path to a text file that contains a json
                 for each line containing at least a filetype and a path key/value
@@ -602,6 +607,15 @@
     specify lambda functions that modify the text before running
     BeautifulSoup. Useful to decode html stored in .js files.
     Do tell me if you want more of this.
+
+* `--ddg_max_results`: int, default `50`
+    * Number of result to ask from DuckDuckGo when using `--filetype=ddg`.
+
+* `--ddg_region`: str, default `""` (empty, meaning no specific region)
+    * Region to ask DuckDuckGo result from. For example `us-US`.
+
+* `--ddg_safesearch`: str, default `off`
+    * Either `on`, `moderate` or `off`.
 
 * `--doccheck_min_lang_prob`: float, default `0.5`
     * float between 0 and 1 that sets the threshold under which to
