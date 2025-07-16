@@ -213,6 +213,7 @@ class DocDict(dict):
                 "file_hash",
                 "source_tag",
                 "recur_parent_id",
+                "subitem_link",
             ]
             + list(filetype_arg_types.keys())
         )
