@@ -306,6 +306,22 @@ def cli_launcher() -> None:
             args.append(new_arg)
             sys.argv.append(new_arg)  # Append the new argument
 
+    # replace frequently mystyped argument
+    if "ddg_max_result" in kwargs and "ddg_max_result" not in kwargs:
+        logger.debug("Replacing wrong arg ddg_max_result by ddg_max_result")
+        kwargs["ddg_max_results"] = kwargs["ddg_max_result"]
+        del kwargs["ddg_max_result"]
+        sys.argv = " ".join(
+            [
+                (
+                    elem
+                    if "ddg_max_result" not in elem
+                    else elem.replace("ddg_max_result", "ddg_max_results")
+                )
+                for elem in sys.argv
+            ]
+        )
+
     # if there are remaining args, use the infer_filetype function to see if they are the missing path or the query
     if args:
         candidates = []
