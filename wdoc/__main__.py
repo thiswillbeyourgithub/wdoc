@@ -230,6 +230,38 @@ def cli_launcher() -> None:
     if needs_reparse:
         args, kwargs = parse_args_fire()
 
+    if "web" in args:
+        logger.debug(f"Detected 'web' in args, setting 'task' to 'query'")
+        args.pop(args.index("web"))
+        sys.argv.pop(sys.argv.index("web"))
+        kwargs["task"] = "query"
+        sys.argv.append(f"--task='query'")
+
+        if "filetype" not in kwargs:
+            logger.debug("Web search: specifying that 'filetype' is 'ddg'")
+            kwargs["filetype"] = "ddg"
+            sys.argv.append("--filetype=ddg")
+        elif kwargs["filetype"] != "ddg":
+            logger.warning("Web search: forcing argument 'filetype' to be 'ddg'")
+            kwargs["filetype"] = "ddg"
+            sys.argv.append("--filetype=ddg")
+
+        if "query" not in kwargs and "path" not in kwargs:
+            if len(args) == 1:
+                logger.debug(
+                    f"Web search task without 'query' nor 'path' but with positional arg: using it as query and path"
+                )
+                temp = args.pop(0)
+                sys.argv.pop(sys.argv.index(temp))
+                kwargs["path"] = temp
+                sys.argv.append(f"--path={temp}")
+                kwargs["query"] = temp
+                sys.argv.append(f"--query={temp}")
+            else:
+                logger.warning(
+                    f"Web search task with no 'query' nor 'path' but several positional arg: expecting only one to treat it as query and path"
+                )
+
     if "completion" in kwargs or "--completion" in sys.argv:
         if " -- --completion" in " ".join(sys.argv):
             if " parse " in " ".join(sys.argv):
