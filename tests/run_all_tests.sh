@@ -30,8 +30,8 @@ python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=y
 
 # also check if we can install those then redo some of the tests
 cd ..
-uv pip install -e "..[with-fasttext]"
-uv pip install -e "..[with-pdftotext]"
+uv pip install -e "..[fasttext]"
+uv pip install -e "..[pdftotext]"
 cd temp
 python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic
 
