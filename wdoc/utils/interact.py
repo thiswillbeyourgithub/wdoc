@@ -145,7 +145,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
     prev_questions = []
     pp_file = cache_dir / "query_history.json"
     if pp_file.exists():
-        pp_list = json.load(pp_file.open("r"))
+        pp_list = json.loads(pp_file.read_text())
         assert isinstance(pp_list, list), "Invalid cache type"
         for i, pp in enumerate(pp_list):
             assert isinstance(pp, dict), "Invalid item in cache"
