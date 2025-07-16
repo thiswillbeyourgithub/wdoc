@@ -829,9 +829,9 @@ def parse_ddg_search(
     Args:
         cli_kwargs: Base CLI arguments to inherit
         path: The search query string
-        ddg_max_results: Maximum number of search results to return
-        ddg_region: DuckDuckGo search region
-        ddg_safesearch: SafeSearch setting ("on", "moderate", "off")
+        ddg_max_results: Maximum number of search results to return, default=50
+        ddg_region: DuckDuckGo search region, default=''
+        ddg_safesearch: SafeSearch setting ("on", "moderate", "off"), default='off'
         **extra_args: Additional arguments to pass to each document
 
     Returns:
