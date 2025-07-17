@@ -29,6 +29,11 @@ cd temp
 echo "\nTesting CLI (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_cli.py
 echo "Done with CLI (basic)"
+
+echo "\nTesting CLI (api)"
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_cli.py
+echo "Done with CLI (api)"
+
 echo "\nTesting parsing (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_parsing.py
 echo "Done with parsing (basic)"
