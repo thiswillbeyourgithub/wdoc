@@ -22,14 +22,19 @@ uv pip install -e ".."
 uv pip install pytest pytest-xdist
 sleep 1
 
-# start tests
 mkdir temp
 cd temp
-python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ..
-python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ..
+
+# start tests
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_cli.py
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_parsing.py
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
+python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_wdoc.py
+
+cd ..
 
 # also check if we can install those then redo some of the tests
-cd ..
 uv pip install -e "..[fasttext]"
 uv pip install -e "..[pdftotext]"
 cd temp
