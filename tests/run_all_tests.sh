@@ -28,14 +28,23 @@ cd temp
 # start tests
 echo "\nTesting CLI (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_cli.py
+echo "Done with CLI (basic)"
 echo "\nTesting parsing (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_parsing.py
+echo "Done with parsing (basic)"
+
 echo "\nTesting wdoc (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
+echo "Done with wdoc (basic)"
+
 echo "\nTesting vectorstores (api)"
 python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
+echo "Done with vectorstores (api)"
+
 echo "\nTesting wdoc (api)"
 python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_wdoc.py
+echo "Done with wdoc (api)"
+
 echo "\nDone with first round of pytest!"
 
 cd ..
