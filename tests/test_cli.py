@@ -176,6 +176,8 @@ def test_ddg_search_nvidia():
             "--filetype=ddg",
             "--ddg_max_result=3",
             "--model=testing/testing",
+            "--loading_failure=warn",
+            "--oneoff",
         ],
         capture_output=True,
         text=True,
