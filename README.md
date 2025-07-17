@@ -319,7 +319,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
     * Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. 
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
-5. To do an online search, the idea is `wdoc --task=query --path='How is NVidia doing this month?' --query='How is NVidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is NVidia doing this month?'`.
+5. To do an online search, the idea is `wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is Nvidia doing this month?'`.
 6. For more: read the documentation at `wdoc --help`
 
 ## Scripts made with wdoc
