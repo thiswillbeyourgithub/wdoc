@@ -135,7 +135,17 @@ def batch_load_doc(
     n_jobs: int,
     **cli_kwargs,
 ) -> List[Document]:
-    """load the input"""
+    """
+    Receives the arguments from the wdoc instanciation. Here we turn the input
+    arguments into a list of DocDict. Then `load_one_doc` is called on each DocDict to
+    get the (langchain) Documents expected by LLMs.
+    A simple example of such DocDict could be '{path: some/file.pdf, filetype: pdf}'
+    Note that if the `filetype` value is a recursive_filetype, one of the
+    parser_* function is called on it to replace it with multiple DocDict.
+    For example '{path: some/file.json, filetype: json_entries}' will trigger
+    a call to `parse_json_entries` to load the dict stored in `some/file.json`,
+    cast them as DocDict then send them to `load_one_doc`.
+    """
 
     # just in case, make sure all modules are loaded
     unlazyload_modules()
