@@ -33,7 +33,7 @@ pytest_ongoing = True if _pytest_check == "true" else False
 
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
 # otherwise) and modify the formatting output.ArithmeticError
-is_input_piped = not sys.stdin.isatty() if not pytest_ongoing else False
+is_input_piped = not sys.stdin.isatty()
 # Also useful to modify the loglevel
 is_out_piped = not sys.stdout.isatty() if not pytest_ongoing else False
 

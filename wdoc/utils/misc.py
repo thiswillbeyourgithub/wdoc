@@ -1354,9 +1354,6 @@ def get_piped_input() -> Optional[Any]:
     # Check if data is being piped (stdin is not a terminal)
     if not is_input_piped:
         return None
-    assert (
-        not pytest_ongoing
-    ), f"Pytest seems to be running right now but get_piped_input should not have executed this far!"
 
     # Save a copy of the original stdin for debugging
     # original_stdin = sys.stdin
