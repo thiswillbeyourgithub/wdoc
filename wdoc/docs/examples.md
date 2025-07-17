@@ -214,6 +214,11 @@ wdoc --task=query \
 
 Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
 
+10. You can also search the web for results using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo):
+
+It's implemented like if `ddg` was a `recursive_filetype`. Hence, the idea is to use `wdoc --task=query --path='How is NVidia doing this month?' --query='How is NVidia doing this month' --filetype=ddg` (remember: `path` specifies the document and `query` the question to ask about the documents). To make it more natural, if any of `path` or `query` is missing, we replace it by the value of the other one. It can be shortened to: `wdoc web 'How is NVidia doing this month?'`. With `--ddg_max_result=5` you can specify the maximum number of results to get, use `--ddg_region=us-US` to get US only result, `--ddg_safesearch=on` to filter out NSFW results.
+
+
 # Python Script Examples
 
 1. Basic document summarization
