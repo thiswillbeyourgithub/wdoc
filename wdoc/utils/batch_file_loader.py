@@ -327,27 +327,10 @@ def batch_load_doc(
                 bins[d["filetype"]] = 1
             else:
                 bins[d["filetype"]] += 1
-        sorted_filetypes = sorted(bins.keys(), key=lambda x: bins[x])
-
-        @optional_typecheck
-        def deterministic_sorter(doc_dict: DocDict) -> int:
-            """
-            Assign a number to each DocDict to "randomize" the order of parsing
-            but in a hash-based deterministic way. That way, running wdoc several
-            times in a row with many DocDicts will crash at the same time, making
-            it easier to debug.
-            """
-            h = doc_dict["file_hash"]
-            h2 = "".join(filter(str.isdigit, h))
-            h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
-            h_ordered = h_ints * (
-                10 ** (sorted_filetypes.index(doc_dict["filetype"]) + 1)
-            )
-            return h_ordered
 
         to_load = sorted(
             to_load,
-            key=deterministic_sorter,
+            key=lambda d: hash(d["file_hash"]),
         )
 
     # load_functions are slow to load so loading them here in advance for every file
