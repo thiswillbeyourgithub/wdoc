@@ -383,6 +383,8 @@ def cli_launcher() -> None:
             f"Launching wdoc after arg transformation: Remaining sys.argv: '{sys.argv}'. Detected args: '{args}'. Detected kwargs: '{kwargs}'"
         )
         fire.Fire(wdoc)
+        # fire can be a bit finicky so let's try instead using the args and kwargs directly:
+        # _ = wdoc(*args, **kwargs)
 
 
 @optional_typecheck
