@@ -35,7 +35,9 @@
                 * `--anki_tag_render_filter`
 
         * `auto`: will guess the appropriate filetype based on `--path`.
-            Irrelevant for some filetypes, eg if `--filetype`=anki
+            Irrelevant for some filetypes, eg if `--filetype`=anki.
+            It can also infer recursive filetypes, for example if the `path`
+            leads to a `.toml` file.
 
         * `epub`
             * `--path` to a .epub file
