@@ -193,7 +193,7 @@ setup(
         "ddgs >= 9.0.0",
         "duckduckgo-search >= 8.1.1",
     ],
-    extra_require={
+    extras_require={
         "fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
             "fasttext-langdetect >= 1.0.5",
