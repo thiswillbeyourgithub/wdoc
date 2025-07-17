@@ -33,9 +33,9 @@ python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=y
 echo "\nTesting wdoc (basic)"
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
 echo "\nTesting vectorstores (api)"
-python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
+python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
 echo "\nTesting wdoc (api)"
-python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_wdoc.py
+python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_wdoc.py
 echo "\nDone with first round of pytest!"
 
 cd ..
