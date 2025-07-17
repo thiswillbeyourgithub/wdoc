@@ -21,9 +21,9 @@ uv pip install -e ".."
 # install test suite
 uv pip install pytest pytest-xdist
 sleep 1
-mkdir temp
 
 # start tests
+mkdir temp
 cd temp
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ..
 python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ..
