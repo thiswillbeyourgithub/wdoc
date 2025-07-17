@@ -600,6 +600,10 @@ def parse_recursive_paths(
     exclude: Optional[List[str]] = None,
     **extra_args,
 ) -> List[Union[DocDict, dict]]:
+    """
+    Turn a DocDict that has `filetype==recursive_paths` into the DocDict of
+    individual files in that path.
+    """
     logger.info(f"Parsing recursive load_filetype: '{path}'")
     assert recursed_filetype not in [
         "recursive_paths",
@@ -676,6 +680,10 @@ def parse_json_entries(
     path: Union[str, Path],
     **extra_args,
 ) -> List[Union[DocDict, dict]]:
+    """
+    Turn a DocDict that has `filetype==json_entries` into the individual
+    DocDict mentionned inside the json file.
+    """
     logger.info(f"Loading json_entries: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
     doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
@@ -708,6 +716,10 @@ def parse_toml_entries(
     path: Union[str, Path],
     **extra_args,
 ) -> List[Union[DocDict, dict]]:
+    """
+    Turn a DocDict that has `filetype==toml_entries` into the individual
+    DocDict mentionned inside the toml file.
+    """
     logger.info(f"Loading toml_entries: '{path}'")
     content = rtoml.load(toml=Path(path))
     assert isinstance(content, dict)
@@ -741,6 +753,13 @@ def parse_link_file(
     path: Union[str, Path],
     **extra_args,
 ) -> List[DocDict]:
+    """
+    Turn a DocDict that has `filetype==link_file` into the individual
+    DocDict of each url, where there is one url per line inside the
+    `link_file` file. Note that bullet points are stripped (i.e. "- [the url]" is
+    treated the same as "the url"), and commented lines (i.e. starting with "#")
+    are ignored.
+    """
     logger.info(f"Loading link_file: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
     doclist = [p[1:].strip() if p.startswith("-") else p.strip() for p in doclist]
@@ -774,6 +793,10 @@ def parse_youtube_playlist(
     path: Union[str, Path],
     **extra_args,
 ) -> List[DocDict]:
+    """
+    Turn a DocDict that has `filetype==youtube_playlist` into the individual
+    DocDict of each youtube video part of that playlist.
+    """
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
@@ -819,7 +842,9 @@ def parse_ddg_search(
     **extra_args,
 ) -> List[DocDict]:
     """
-    Perform a DuckDuckGo search and return URLs as documents to be processed.
+    Turn a DocDict that has `filetype==ddg` into the individual
+    DocDict of the webpage of each DuckDuckGo search result, treating the
+    `path` as a search query.
 
     Args:
         cli_kwargs: Base CLI arguments to inherit
