@@ -307,7 +307,7 @@ def cli_launcher() -> None:
             sys.argv.append(new_arg)  # Append the new argument
 
     # replace frequently mystyped argument
-    if "ddg_max_result" in kwargs and "ddg_max_result" not in kwargs:
+    if "ddg_max_result" in kwargs and "ddg_max_results" not in kwargs:
         logger.debug("Replacing wrong arg ddg_max_result by ddg_max_result")
         kwargs["ddg_max_results"] = kwargs["ddg_max_result"]
         del kwargs["ddg_max_result"]
