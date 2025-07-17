@@ -15,6 +15,8 @@ os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
 
 os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] = "true"
 
+os.environ["PYTEST_IS_TESTING_WDOC"] = "true"
+
 # test binary embeddings
 os.environ["WDOC_MOD_FAISS_BINARY"] = "true"
 os.environ["WDOC_MOD_FAISS_SCORE_FN"] = (

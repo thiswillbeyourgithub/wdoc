@@ -27,11 +27,15 @@ warn_typecheck = beartype(conf=BeartypeConf(violation_type=UserWarning))
 
 is_linux = platform.system() == "Linux"
 
+# if wdoc is executed in a pytest scenario, some things related to piping must be modified
+_pytest_check = os.environ.get("PYTEST_IS_TESTING_WDOC", "false")
+pytest_ongoing = True if _pytest_check == "true" else False
+
 # useful to know if we should use tqdm or not (it can cause broken pipe errors
 # otherwise) and modify the formatting output.ArithmeticError
-is_input_piped = not sys.stdin.isatty()
+is_input_piped = not sys.stdin.isatty() if not pytest_ongoing else False
 # Also useful to modify the loglevel
-is_out_piped = not sys.stdout.isatty()
+is_out_piped = not sys.stdout.isatty() if not pytest_ongoing else False
 
 
 @dataclass

@@ -42,7 +42,7 @@ from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
 
-from wdoc.utils.env import env, is_input_piped
+from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
 from wdoc.utils.typechecker import optional_typecheck
 
@@ -99,6 +99,9 @@ if (
     "OVERRIDE_USER_DIR_PYTEST_WDOC" in os.environ
     and os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] == "true"
 ):
+    assert (
+        pytest_ongoing
+    ), "Detected env var OVERRIDE_USER_DIR_PYTEST_WDOC but not detecting a pytest environment!"
     cache_dir = Path.cwd() / "wdoc_user_cache_dir"
     if cache_dir.exists():
         logger.debug(
@@ -1376,3 +1379,7 @@ def get_piped_input() -> Optional[Any]:
 
     logger.debug("Loaded piped data")
     return piped_input
+
+
+if pytest_ongoing:
+    logger.warning("Detected that wdoc is run in a pytest environment")
