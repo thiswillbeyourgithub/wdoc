@@ -160,6 +160,45 @@ def test_parse_nytimes_shell():
     assert len(output) > 1000, "Expected significant text content from NYTimes"
 
 
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_ddg_search_nvidia():
+    """Test DuckDuckGo search functionality with NVIDIA query."""
+    result = subprocess.run(
+        [
+            "python",
+            "-m",
+            "wdoc",
+            "--task=query",
+            "--path=How is NVidia doing this month?",
+            "--query=How is NVidia doing this month?",
+            "--filetype=ddg",
+            "--ddg_max_result=3",
+            "--model=testing/testing",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+    )
+    
+    output = result.stdout + result.stderr
+    
+    # Check that we got some output and no major errors
+    assert len(output) > 100, f"Expected substantial output from DDG search, got: {output}"
+    
+    # Should contain the testing model's standard response
+    assert (
+        "Lorem ipsum dolor sit amet" in output
+    ), f"Output did not contain expected testing string: {output}"
+    
+    # Should not contain error messages about DDG functionality
+    assert "Error" not in output or "error" not in output.lower(), f"Unexpected error in DDG search: {output}"
+
+
 # The pipe query and summaries test are broken. I think the issue is deep within
 # pytest as it works fine in the shell. They are kept below for legacy documentation
 # @pytest.mark.basic
