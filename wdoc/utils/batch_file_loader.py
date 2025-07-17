@@ -331,6 +331,12 @@ def batch_load_doc(
 
         @optional_typecheck
         def deterministic_sorter(doc_dict: DocDict) -> int:
+            """
+            Assign a number to each DocDict to "randomize" the order of parsing
+            but in a hash-based deterministic way. That way, running wdoc several
+            times in a row with many DocDicts will crash at the same time, making
+            it easier to debug.
+            """
             h = doc_dict["file_hash"]
             h2 = "".join(filter(str.isdigit, h))
             h_ints = int(h2) if h2.isdigit() else int(random.random() * 1000)
