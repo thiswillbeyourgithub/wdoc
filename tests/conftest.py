@@ -2,6 +2,8 @@ import os
 import tempfile
 from pathlib import Path
 
+os.environ["PYTEST_IS_TESTING_WDOC"] = "true"
+
 import pytest
 
 # apply the patch to make ollama work
