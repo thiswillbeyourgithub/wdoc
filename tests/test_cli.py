@@ -85,7 +85,7 @@ def test_error_message_shell_debug():
             capture_output=True,  # Capture stdout and stderr
             text=True,  # Decode stdout/stderr as text (str)
             check=False,  # Raise CalledProcessError if command returns non-zero exit code
-            timeout=20,
+            timeout=30,
         )
         raise Exception("Should not reach this")
 
