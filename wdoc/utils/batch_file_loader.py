@@ -603,6 +603,18 @@ def parse_recursive_paths(
     """
     Turn a DocDict that has `filetype==recursive_paths` into the DocDict of
     individual files in that path.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The directory path to search recursively
+        pattern: Glob pattern to match files (e.g., "*.pdf", "**/*.txt")
+        recursed_filetype: The filetype to assign to found files
+        include: Optional list of regex patterns to include files, default=None
+        exclude: Optional list of regex patterns to exclude files, default=None
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict or dict objects, each representing a found file
     """
     logger.info(f"Parsing recursive load_filetype: '{path}'")
     assert recursed_filetype not in [
@@ -683,6 +695,14 @@ def parse_json_entries(
     """
     Turn a DocDict that has `filetype==json_entries` into the individual
     DocDict mentionned inside the json file.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The path to the JSON file containing document entries
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict or dict objects, each representing an entry from the JSON file
     """
     logger.info(f"Loading json_entries: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
@@ -719,6 +739,14 @@ def parse_toml_entries(
     """
     Turn a DocDict that has `filetype==toml_entries` into the individual
     DocDict mentionned inside the toml file.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The path to the TOML file containing document entries
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict or dict objects, each representing an entry from the TOML file
     """
     logger.info(f"Loading toml_entries: '{path}'")
     content = rtoml.load(toml=Path(path))
@@ -759,6 +787,14 @@ def parse_link_file(
     `link_file` file. Note that bullet points are stripped (i.e. "- [the url]" is
     treated the same as "the url"), and commented lines (i.e. starting with "#")
     are ignored.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The path to the link file containing URLs
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each representing a URL from the link file
     """
     logger.info(f"Loading link_file: '{path}'")
     doclist = str(Path(path).read_text()).splitlines()
@@ -796,6 +832,14 @@ def parse_youtube_playlist(
     """
     Turn a DocDict that has `filetype==youtube_playlist` into the individual
     DocDict of each youtube video part of that playlist.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The YouTube playlist URL
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each representing a YouTube video from the playlist
     """
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
