@@ -184,19 +184,23 @@ def test_ddg_search_nvidia():
         check=False,
         timeout=120,
     )
-    
+
     output = result.stdout + result.stderr
-    
+
     # Check that we got some output and no major errors
-    assert len(output) > 100, f"Expected substantial output from DDG search, got: {output}"
-    
+    assert (
+        len(output) > 100
+    ), f"Expected substantial output from DDG search, got: {output}"
+
     # Should contain the testing model's standard response
     assert (
         "Lorem ipsum dolor sit amet" in output
     ), f"Output did not contain expected testing string: {output}"
-    
+
     # Should not contain error messages about DDG functionality
-    assert "Error" not in output or "error" not in output.lower(), f"Unexpected error in DDG search: {output}"
+    assert (
+        "Error" not in output or "error" not in output.lower()
+    ), f"Unexpected error in DDG search: {output}"
 
 
 # The pipe query and summaries test are broken. I think the issue is deep within
