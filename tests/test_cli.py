@@ -8,8 +8,6 @@ import pytest
 os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] = "true"
 os.environ["WDOC_TYPECHECKING"] = "crash"
 
-from wdoc.utils.misc import get_piped_input
-
 
 @pytest.mark.basic
 def test_help_output_shell():
