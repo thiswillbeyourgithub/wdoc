@@ -11,7 +11,6 @@ import json
 import random
 import re
 import shutil
-import sys
 import time
 import uuid
 from collections import Counter
@@ -41,10 +40,7 @@ from wdoc.utils.misc import (
     DocDict,
     ModelName,
     cache_dir,
-    doc_loaders_cache,
     file_hasher,
-    get_tkn_length,
-    min_token,
     unlazyload_modules,
 )
 from wdoc.utils.typechecker import optional_typecheck
