@@ -21,7 +21,7 @@ from pathlib import Path
 import dill
 import rtoml
 import uuid6
-from beartype.typing import List, Optional, Tuple, Union
+from beartype.typing import List, Optional, Tuple, Union, Literal
 from joblib import Parallel, delayed
 from langchain.docstore.document import Document
 from langchain_community.tools import DuckDuckGoSearchResults
@@ -882,7 +882,7 @@ def parse_ddg_search(
     path: Union[str, Path],
     ddg_max_results: int = 50,
     ddg_region: str = "",
-    ddg_safesearch: str = "off",
+    ddg_safesearch: Literal["on", "off", "moderate"] = "off",
     **extra_args,
 ) -> List[DocDict]:
     """
