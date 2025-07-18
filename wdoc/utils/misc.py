@@ -176,10 +176,10 @@ filetype_arg_types = {
     "doccheck_min_lang_prob": float,
     "online_media_url_regex": str,
     "online_media_resourcetype_regex": str,
-    "loading_failure": str,
+    "loading_failure": Literal["crash", "warn"],
     "ddg_max_results": int,
     "ddg_region": int,
-    "ddg_safesearch": str,
+    "ddg_safesearch": Literal["on", "off", "moderate"],
 }
 
 # extra arguments supported when instanciating wdoc
