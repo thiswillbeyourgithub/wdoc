@@ -176,6 +176,7 @@ def test_ddg_search_nvidia():
             "--query='How is Nvidia doing this month?'",
             "--filetype=ddg",
             "--ddg_max_result=3",
+            "--ddg_region=us-US",
             "--model=testing/testing",
             "--loading_failure=warn",
             "--oneoff",
