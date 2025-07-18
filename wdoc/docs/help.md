@@ -658,6 +658,7 @@
     exceptions happening when loading a document. This can be set
     per document if a recursive_paths filetype is used.
     If using `wdoc_doc_file` it is by default set to `crash`.
+    When using `wdoc parse`, the default value is `crash`.
 
 # Environment variables
 
