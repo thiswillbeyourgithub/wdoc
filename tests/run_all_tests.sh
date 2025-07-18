@@ -31,7 +31,7 @@ python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=y
 echo "Done with CLI (basic)"
 
 echo "\nTesting CLI (api)"
-python -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_cli.py
+python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_cli.py
 echo "Done with CLI (api)"
 
 echo "\nTesting parsing (basic)"
