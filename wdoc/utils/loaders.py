@@ -383,6 +383,7 @@ def signal_timeout(timeout: int, exception: Exception):
 def wrapper_load_one_doc(func: Callable) -> Callable:
     """Decorator to wrap doc_loader to catch errors cleanly"""
 
+    @optional_typecheck
     @wraps(func)
     def wrapper(*args, **kwargs) -> Union[List[Document], str]:
         # Extract loading_failure from kwargs, default to "warn"
@@ -425,8 +426,8 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
     return wrapper
 
 
-@optional_typecheck
 @wrapper_load_one_doc
+@optional_typecheck
 def load_one_doc(
     task: str,
     llm_name: ModelName,
