@@ -178,7 +178,7 @@ filetype_arg_types = {
     "online_media_resourcetype_regex": str,
     "loading_failure": Literal["crash", "warn"],
     "ddg_max_results": int,
-    "ddg_region": int,
+    "ddg_region": str,
     "ddg_safesearch": Literal["on", "off", "moderate"],
 }
 
