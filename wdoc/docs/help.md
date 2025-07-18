@@ -348,6 +348,8 @@
     refers to multithreading.
     The number of jobs can be specified with `--file_loader_n_jobs`
     but it's a loader specific kwargs.
+    To use neither `multiprocessing` nor `threading`, you can
+    set `--file_loader_n_jobs=1`.
 
 * `--file_loader_n_jobs`: int, default `-1`
     * number of jobs to use when loading files in parallel (threads or process,
