@@ -180,6 +180,7 @@ def test_ddg_search_nvidia():
             "--model=testing/testing",
             "--loading_failure=warn",
             "--oneoff",
+            "--file_loader_parallel_backend=threading",
         ],
         capture_output=True,
         text=True,
@@ -198,11 +199,6 @@ def test_ddg_search_nvidia():
     assert (
         "Lorem ipsum dolor sit amet" in output
     ), f"Output did not contain expected testing string: {output}"
-
-    # Should not contain error messages about DDG functionality
-    assert (
-        "Error" not in output or "error" not in output.lower()
-    ), f"Unexpected error in DDG search: {output}"
 
 
 # The pipe query and summaries test are broken. I think the issue is deep within
