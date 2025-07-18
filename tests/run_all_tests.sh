@@ -58,7 +58,10 @@ cd ..
 uv pip install -e "..[fasttext]"
 uv pip install -e "..[pdftotext]"
 cd temp
-python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic
+
+echo "\nTesting wdoc (basic)"
+python -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
+echo "Done with wdoc (basic)"
 
 # check if we can install the dev test
 cd ..
