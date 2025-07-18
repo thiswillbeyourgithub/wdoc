@@ -388,7 +388,7 @@ FAQ
         environment variable `WDOC_LLM_MAX_CONCURRENCY` to a lower value.
 
 * **How can I run the tests?**
-    * Try `python -m pytest tests/test_wdoc.py -v -m basic` to run the basic tests, and `python -m pytest tests/test_wdoc.py -v -m api` to run the test that use external APIs. To install the needed packages you can do `uv pip install wdoc[dev]`.
+    * Take a look at the files `./tests/run_all_tests.sh`.
 
 * **How can I query a text but without chunking? / How can I query a text with the full text as context?**
     * If you set the environment variable `WDOC_MAX_CHUNK_SIZE` to a very high value and use a model with enough context according to litellm's metadata, then no chunking will happen and the LLM will have the full text as context.
