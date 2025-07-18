@@ -315,6 +315,8 @@
     It implies `--verbose=True`
     If you just want to open the debugger in case of issue, see
     below at `WDOC_DEBUGGER`.
+    When in debugging mode, the default `loading_failure` is `warn`,
+    but if you specify `loading_failure=crash` it will be honored.
 
 * `--verbose`: bool, default `False` or `WDOC_VERBOSE` if set
     Increase verbosity. Implied if `--debug` is set.
