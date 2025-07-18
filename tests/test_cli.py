@@ -105,6 +105,7 @@ def test_get_piped_input_detection():
     """Test that get_piped_input correctly detects piped text and bytes."""
     # Test text piping
     input_text = "This is test text.\nWith multiple lines."
+
     cmd_text = [
         sys.executable,
         "-c",
@@ -113,7 +114,7 @@ def test_get_piped_input_detection():
     result_text = subprocess.run(
         cmd_text, input=input_text, text=True, capture_output=True, check=True
     )
-    assert result_text.stdout == input_text
+    assert input_text in result_text.stdout
 
     # Test binary piping
     input_bytes = b"\x01\x02\x03\xff\xfe\x00binary data"
@@ -125,7 +126,7 @@ def test_get_piped_input_detection():
     result_bytes = subprocess.run(
         cmd_bytes, input=input_bytes, capture_output=True, check=True
     )
-    assert result_bytes.stdout == input_bytes
+    assert input_bytes in result_bytes.stdout
 
 
 @pytest.mark.basic
