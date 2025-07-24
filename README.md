@@ -7,7 +7,9 @@
 > *I'm wdoc. I solve RAG problems.*
 > - wdoc, imitating Winston "The Wolf" Wolf
 
-`wdoc` is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources. Created by a medical student who needed a better way to search through diverse knowledge sources (lectures, Anki cards, PDFs, EPUBs, etc.), this tool was born from frustration with existing RAG solutions for querying and summarizing.
+`wdoc` is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources.
+
+Created by a medical student who needed a way to get a definitive answer from multiple sources at the same time (audio recordings, video lectures, [Anki flashcards](https://apps.ankiweb.net/), PDFs, EPUBs, etc.). `wdoc` was born from frustration with existing RAG solutions for querying and summarizing.
 
 *(The online documentation can be found [here](https://wdoc.readthedocs.io/en/stable))*
 
