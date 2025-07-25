@@ -963,6 +963,9 @@ def parse_ddg_search(
             f"No valid URLs found in DuckDuckGo search results for query: '{query}'"
         )
 
+    # it seems sometimes ddg returns duplicate result
+    assert len(doclist) == len(set(doclist)), f"Duplicate elements: {doclist}"
+
     return doclist
 
 
