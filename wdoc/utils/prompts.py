@@ -13,6 +13,7 @@ from langchain_core.prompts.chat import (
 from pydantic import BaseModel, Field, model_validator
 from loguru import logger
 
+from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.misc import get_tkn_length
 
 # PROMPT FOR SUMMARY TASKS
@@ -311,6 +312,7 @@ Answerer and Carl the Combiner. They can sometimes be useful to expand the queri
 )
 
 
+@optional_typecheck
 class Prompts_class:
     evaluate: ChatPromptTemplate
     answer: ChatPromptTemplate
