@@ -14,7 +14,7 @@ import logging
 import pickle
 import uuid
 import zlib
-from typing import (
+from beartype.typing import (
     Any,
     Callable,
     Dict,
@@ -404,7 +404,7 @@ class BinaryFAISS(CompressedFAISS):
     def __add(
         self,
         texts: Iterable[str],
-        embeddings: Iterable[List[int]],
+        embeddings: Union[Iterable[List[int]], np.ndarray],
         metadatas: Optional[Iterable[dict]] = None,
         ids: Optional[List[str]] = None,
     ) -> List[str]:
@@ -595,7 +595,7 @@ class BinaryFAISS(CompressedFAISS):
     def __from(
         cls,
         texts: Iterable[str],
-        embeddings: List[List[int]],
+        embeddings: Union[List[List[int]], np.ndarray],
         embedding: Embeddings,
         metadatas: Optional[Iterable[dict]] = None,
         ids: Optional[List[str]] = None,
