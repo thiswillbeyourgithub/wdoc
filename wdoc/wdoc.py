@@ -38,6 +38,7 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm import tqdm
 from loguru import logger as logger
 
+from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
 from wdoc.utils.embeddings import create_embeddings, load_embeddings_engine
@@ -1428,6 +1429,7 @@ class wdoc:
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
 
+        @callable_chain
         @chain
         @optional_typecheck
         def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
@@ -1452,6 +1454,7 @@ class wdoc:
                     )
             return filtered_docs
 
+        @callable_chain
         @chain
         @optional_typecheck
         @eval_cache_wrapper
@@ -1585,6 +1588,7 @@ class wdoc:
         if self.task == "search":
             if self.query_eval_model is not None:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+                @callable_chain
                 @chain
                 @optional_typecheck
                 def retrieve_documents(inputs):
@@ -1787,6 +1791,7 @@ class wdoc:
 
         else:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+            @callable_chain
             @chain
             @optional_typecheck
             def retrieve_documents(inputs):

@@ -22,6 +22,7 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 from loguru import logger
 
+from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.env import env
 from wdoc.utils.errors import (
     InvalidDocEvaluationByLLMEval,
@@ -54,6 +55,7 @@ def sieve_documents(instance) -> RunnableLambda:
     we can end up with a lot more document!
     """
 
+    @callable_chain
     @chain
     @optional_typecheck
     def _sieve(inputs: dict) -> dict:
@@ -76,6 +78,7 @@ def sieve_documents(instance) -> RunnableLambda:
     return _sieve
 
 
+@callable_chain
 @chain
 @log_and_time_fn
 @optional_typecheck
@@ -542,6 +545,7 @@ def pbar_chain(
 ) -> RunnableLambda:
     "create a chain that just sets a tqdm progress bar"
 
+    @callable_chain
     @chain
     def actual_pbar_chain(
         inputs: Union[dict, List],
@@ -568,6 +572,7 @@ def pbar_closer(
 ) -> RunnableLambda:
     "close a pbar created by pbar_chain"
 
+    @callable_chain
     @chain
     def actual_pbar_closer(
         inputs: Union[dict, List],

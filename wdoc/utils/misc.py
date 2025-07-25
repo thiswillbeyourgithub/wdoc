@@ -42,6 +42,7 @@ from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
 
+from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
 from wdoc.utils.typechecker import optional_typecheck
@@ -434,6 +435,7 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     return text
 
 
+@callable_chain
 @chain
 @optional_typecheck
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
