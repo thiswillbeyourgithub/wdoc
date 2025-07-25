@@ -45,8 +45,9 @@ from langchain_community.vectorstores.faiss import (
 
 logger = logging.getLogger(__name__)
 
-UInt8Array: TypeAlias = npt.NDArray[np.uint8]  # 2D
-UInt8Vector: TypeAlias = npt.NDArray[np.uint8]  # 1D
+NDArray = npt.NDArray  # required for beartype
+UInt8Array: TypeAlias = NDArray[np.uint8]  # 2D
+UInt8Vector: TypeAlias = NDArray[np.uint8]  # 1D
 
 
 class CompressedFAISS(FAISS):
@@ -315,7 +316,7 @@ class BinaryFAISS(CompressedFAISS):
 
     @staticmethod
     def _vec_to_binary(
-        vectors: Union[np.ndarray[np.float32], List[float], List[List[float]]],
+        vectors: Union[NDArray[np.float32], List[float], List[List[float]]],
     ) -> UInt8Array:
         """Convert vectors to binary format using global zero threshold.
 
