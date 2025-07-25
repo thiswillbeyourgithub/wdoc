@@ -18,7 +18,6 @@ from langchain_litellm import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
-from numpy.typing import NDArray
 from tqdm import tqdm
 from loguru import logger
 
@@ -310,14 +309,16 @@ def semantic_batching(
     pd_dist = pd_dist.add(pd_dist.T).div(2)
 
     # get the hierarchichal semantic sorting order
-    dist: NDArray[Union[float, int]] = scipy.spatial.distance.squareform(
+    dist: np.ndarray = scipy.spatial.distance.squareform(
         pd_dist.values
     )  # convert to condensed format
-    Z: NDArray[Tuple[Union[float, int], Literal[4]]] = scipy.cluster.hierarchy.linkage(
+    Z: np.ndarray = scipy.cluster.hierarchy.linkage(
         dist, method="ward", optimal_ordering=True
     )
+    assert len(Z.shape) == 2 and Z.shape[1] == 4, f"Unexpected Z shape: {Z.shape}"
 
-    order: NDArray[int] = scipy.cluster.hierarchy.leaves_list(Z)
+    order: np.typing.NDArray[np.integer] = scipy.cluster.hierarchy.leaves_list(Z)
+    assert len(order.shape) == 1
 
     # TODO: if <= 6 texts we should make 2 or 3 batch just using the order
 
