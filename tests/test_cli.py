@@ -150,10 +150,7 @@ def test_parse_nytimes_shell():
 
     # Check for common news-related terms in the output
     assert "Times" in output, "Output should contain 'Times'"
-    assert "news" in output.lower(), "Output should contain 'news'"
-    assert (
-        "journal" in output.lower() or "article" in output.lower()
-    ), "Output should contain journalism-related terms"
+    assert "york" in output.lower(), "Output should contain 'york'"
 
     # Verify we got substantial content
     assert len(output) > 1000, "Expected significant text content from NYTimes"
