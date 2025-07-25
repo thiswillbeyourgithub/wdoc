@@ -543,8 +543,9 @@ class wdoc:
 
         if env.WDOC_VERBOSE:
             set_verbose(True)
-            os.environ["LITELLM_LOG"] = "DEBUG"
-            litellm._turn_on_debug()
+            # litellm is way too verbose
+            # os.environ["LITELLM_LOG"] = "DEBUG"
+            # litellm._turn_on_debug()
 
             llm_verbosity = True
             logger.info(f"Cache location: {cache_dir.absolute()}")
