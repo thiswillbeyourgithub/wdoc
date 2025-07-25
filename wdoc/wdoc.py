@@ -2067,7 +2067,7 @@ class wdoc:
             # if out_file is specified then we write the summary there too.
             if self.out_file:
 
-                def output_handler(text: str) -> None:
+                def output_handler(text: str) -> str:
                     # the raw markdown is written to the file
                     # and the rendered markdown is printed on screen
                     with open(self.out_file, "a") as f:
@@ -2076,7 +2076,7 @@ class wdoc:
 
             else:
 
-                def output_handler(text: str) -> None:
+                def output_handler(text: str) -> str:
                     return md_printer(text)
 
             # display sources (i.e. documents used to answer)
