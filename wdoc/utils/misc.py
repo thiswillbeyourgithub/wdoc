@@ -1022,6 +1022,16 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         if THINE in output and THIN not in output:
             output = THIN + output
 
+        # some models can consider that <answer> implies </thinking> so we
+        # add it manually
+        if (
+            THIN in output
+            and ANSW in output
+            and ANSWE in output
+            and THINE not in output
+        ):
+            output = output.replace(ANSW, THINE + "\n" + ANSW)
+
         if (THIN not in output) and (ANSW not in output):
             assert (
                 THINE not in output
