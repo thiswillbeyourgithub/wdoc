@@ -484,3 +484,38 @@ def test_query_tim_urban_default_model():
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
+
+
+@pytest.mark.api
+@pytest.mark.skipif(
+    " -m api" not in " ".join(sys.argv),
+    reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+def test_query_duckduckgo_search():
+    """Test DuckDuckGo search functionality."""
+    inst = wdoc(
+        task="query",
+        path="How is nvidia doing this month",
+        query="How is nvidia doing this month",
+        filetype="ddg",
+        ddg_max_result=3,
+        ddg_region=us - US,
+        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+        query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
+        embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
+        disable_llm_cache=True,
+        debug=True,
+        verbose=True,
+        file_loader_parallel_backend="threading",
+        loading_failure="warn",
+    )
+    out = inst.query_task(
+        query="How is nvidia doing this month",
+    )
+
+    # Basic validation that the function runs without crashing
+    assert isinstance(out, dict)
+    assert "final_answer" in out
+    assert isinstance(out["final_answer"], str)
+    assert len(out["final_answer"]) > 0
+    # Don't check the content deeply as requested, just ensure it returns something
