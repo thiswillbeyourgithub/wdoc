@@ -378,7 +378,12 @@ def signal_timeout(timeout: int, exception: Exception):
 def wrapper_load_one_doc(func: Callable) -> Callable:
     """Decorator to wrap doc_loader to catch errors cleanly"""
 
-    @wraps(func)
+    # # load_one_doc wrapped can also return a str, the error message,
+    # # wraps(func) removes it so we readd it:
+    newfunc = copy.copy(func)
+    newfunc.__annotations__["return"] = Union[List[Document], str]
+
+    @wraps(newfunc)
     def wrapper(*args, **kwargs) -> Union[List[Document], str]:
         # Extract loading_failure from kwargs, default to "warn"
         loading_failure = kwargs.pop("loading_failure", "warn")
