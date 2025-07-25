@@ -592,7 +592,7 @@ class BinaryFAISS(CompressedFAISS):
             doc = self.docstore.search(_id)
             if not isinstance(doc, Document):
                 raise ValueError(f"Could not find document for id {_id}, got {doc}")
-            docs_and_scores.append((doc, scores[0][i]))
+            docs_and_scores.append((doc, float(scores[0][i])))
 
         return docs_and_scores
 
