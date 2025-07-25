@@ -321,7 +321,7 @@ class Prompts_class:
 
     def __init__(
         self,
-        **prompts: dict[str, ChatPromptTemplate],
+        **prompts: ChatPromptTemplate,
     ) -> None:
         for key, pr in prompts.items():
             setattr(self, key, pr)
