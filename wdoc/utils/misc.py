@@ -42,7 +42,6 @@ from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
 
-from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
 
@@ -425,14 +424,15 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
     return text
 
 
-@callable_chain
-@chain
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
         logger.warning(str(inputs.keys()))
     breakpoint()
     return inputs
+
+
+debug_chain = chain(debug_chain)
 
 
 def wrapped_model_name_matcher(model: str) -> str:

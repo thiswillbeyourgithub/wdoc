@@ -38,7 +38,6 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm import tqdm
 from loguru import logger as logger
 
-from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
 from wdoc.utils.embeddings import create_embeddings, load_embeddings_engine
@@ -1415,8 +1414,6 @@ class wdoc:
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
 
-        @callable_chain
-        @chain
         def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
             if not self.max_top_k:
                 return filtered_docs
@@ -1439,8 +1436,8 @@ class wdoc:
                     )
             return filtered_docs
 
-        @callable_chain
-        @chain
+        autoincrease_top_k = chain(autoincrease_top_k)
+
         @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
@@ -1564,6 +1561,8 @@ class wdoc:
                 self.eval_llm.callbacks[0].pbar[-1].update(1)
             return outputs
 
+        evaluate_doc_chain = chain(evaluate_doc_chain)
+
         # uses in most places to increase concurrency limit
         multi = {
             "max_concurrency": env.WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1
@@ -1572,8 +1571,6 @@ class wdoc:
         if self.task == "search":
             if self.query_eval_model is not None:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-                @callable_chain
-                @chain
                 def retrieve_documents(inputs):
                     return {
                         "unfiltered_docs": retriever.invoke(
@@ -1582,6 +1579,8 @@ class wdoc:
                         "question_to_answer": inputs["question_to_answer"],
                     }
                     return inputs
+
+                retrieve_documents = chain(retrieve_documents)
 
                 meta_refilter_docs = {
                     "filtered_docs": (
@@ -1774,8 +1773,6 @@ class wdoc:
 
         else:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-            @callable_chain
-            @chain
             def retrieve_documents(inputs):
                 return {
                     "unfiltered_docs": retriever.invoke(
@@ -1784,6 +1781,8 @@ class wdoc:
                     "question_to_answer": inputs["question_to_answer"],
                 }
                 return inputs
+
+            retrieve_documents = chain(retrieve_documents)
 
             meta_refilter_docs = {
                 "filtered_docs": (

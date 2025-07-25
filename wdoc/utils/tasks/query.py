@@ -22,7 +22,6 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 from loguru import logger
 
-from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.env import env
 from wdoc.utils.errors import (
     InvalidDocEvaluationByLLMEval,
@@ -52,8 +51,6 @@ def sieve_documents(instance) -> RunnableLambda:
     we can end up with a lot more document!
     """
 
-    @callable_chain
-    @chain
     def _sieve(inputs: dict) -> dict:
         assert "question_to_answer" in inputs, inputs.keys()
         assert "unfiltered_docs" in inputs, inputs.keys()
@@ -71,11 +68,11 @@ def sieve_documents(instance) -> RunnableLambda:
         inputs["unfiltered_docs"] = inputs["unfiltered_docs"][: instance.top_k]
         return inputs
 
+    _sieve = chain(_sieve)
+
     return _sieve
 
 
-@callable_chain
-@chain
 @log_and_time_fn
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents fond via RAG based on the digit answered by the eval llm"
@@ -116,6 +113,9 @@ def refilter_docs(inputs: dict) -> List[Document]:
             "No document remained after filtering with the query"
         )
     return filtered_docs
+
+
+refilter_docs = chain(refilter_docs)
 
 
 @log_and_time_fn
@@ -536,8 +536,6 @@ def pbar_chain(
 ) -> RunnableLambda:
     "create a chain that just sets a tqdm progress bar"
 
-    @callable_chain
-    @chain
     def actual_pbar_chain(
         inputs: Union[dict, List],
         llm: Union[ChatLiteLLM, FakeListChatModel] = llm,
@@ -554,6 +552,8 @@ def pbar_chain(
 
         return inputs
 
+    actual_pbar_chain = chain(actual_pbar_chain)
+
     return actual_pbar_chain
 
 
@@ -562,8 +562,6 @@ def pbar_closer(
 ) -> RunnableLambda:
     "close a pbar created by pbar_chain"
 
-    @callable_chain
-    @chain
     def actual_pbar_closer(
         inputs: Union[dict, List],
         llm: Union[ChatLiteLLM, FakeListChatModel] = llm,
@@ -574,5 +572,7 @@ def pbar_closer(
         pbar.close()
 
         return inputs
+
+    actual_pbar_closer = chain(actual_pbar_closer)
 
     return actual_pbar_closer
