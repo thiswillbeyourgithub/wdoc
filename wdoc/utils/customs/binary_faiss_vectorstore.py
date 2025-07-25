@@ -23,9 +23,11 @@ from beartype.typing import (
     Optional,
     Tuple,
     Union,
+    TypeAlias,
 )
 
 import numpy as np
+import numpy.typing as npt
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
@@ -42,6 +44,9 @@ from langchain_community.vectorstores.faiss import (
 )
 
 logger = logging.getLogger(__name__)
+
+UInt8Array: TypeAlias = npt.NDArray[np.uint8]  # 2D
+UInt8Vector: TypeAlias = npt.NDArray[np.uint8]  # 1D
 
 
 class CompressedFAISS(FAISS):
@@ -275,7 +280,7 @@ class BinaryFAISS(CompressedFAISS):
 
         self.embedding_function = self.new_embedding_function
 
-    def new_embedding_function(self, texts: List[str]) -> np.typing.NDArray[np.integer]:
+    def new_embedding_function(self, texts: List[str]) -> UInt8Array:
         """Override to convert embeddings to binary"""
         # Get original embeddings
         embeddings = self._original_embedding_function.embed_documents(texts)
@@ -289,9 +294,7 @@ class BinaryFAISS(CompressedFAISS):
 
         return self._vec_to_binary(embeddings)
 
-    async def new_aembedding_function(
-        self, texts: List[str]
-    ) -> np.typing.NDArray[np.integer]:
+    async def new_aembedding_function(self, texts: List[str]) -> UInt8Array:
         """Override to convert embeddings to binary for async operations"""
         # Get original embeddings asynchronously
         if isinstance(self._original_embedding_function, Embeddings):
@@ -312,8 +315,8 @@ class BinaryFAISS(CompressedFAISS):
 
     @staticmethod
     def _vec_to_binary(
-        vectors: Union[np.ndarray, List[float], List[List[float]]],
-    ) -> np.ndarray:
+        vectors: Union[np.ndarray[np.float32], List[float], List[List[float]]],
+    ) -> UInt8Array:
         """Convert vectors to binary format using global zero threshold.
 
         This method uses zero as the global threshold for all vectors, which better
@@ -349,18 +352,18 @@ class BinaryFAISS(CompressedFAISS):
             )
         return np.packbits(binary_vectors, axis=1)
 
-    def _embed_documents(self, texts: List[str]) -> List[List[int]]:
+    def _embed_documents(self, texts: List[str]) -> UInt8Array:
         """Embed documents and ensure they are in binary format."""
         return self.new_embedding_function(texts)
 
-    async def _aembed_documents(self, texts: List[str]) -> List[List[int]]:
+    async def _aembed_documents(self, texts: List[str]) -> UInt8Array:
         """Embed documents asynchronously and ensure they are in binary format."""
         embeddings = await self.new_aembedding_function(texts)
 
         # Validate that embeddings are binary
         for i, embedding in enumerate(embeddings):
             if not all(
-                isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
+                isinstance(x, (int, np.uint8)) and 0 <= x <= 255 for x in embedding
             ):
                 raise ValueError(
                     f"Embedding {i} contains non-binary values. "
@@ -370,14 +373,12 @@ class BinaryFAISS(CompressedFAISS):
 
         return embeddings
 
-    def _embed_query(self, text: str) -> List[int]:
+    def _embed_query(self, text: str) -> UInt8Vector:
         """Embed query and ensure it is in binary format."""
         embedding = self.new_embedding_function([text])[0]
 
         # Validate that embedding is binary
-        if not all(
-            isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
-        ):
+        if not all(isinstance(x, (int, np.uint8)) and 0 <= x <= 255 for x in embedding):
             raise ValueError(
                 "Query embedding contains non-binary values. "
                 "Binary embeddings must contain only integers in range [0, 255] "
@@ -386,15 +387,13 @@ class BinaryFAISS(CompressedFAISS):
 
         return embedding
 
-    async def _aembed_query(self, text: str) -> List[int]:
+    async def _aembed_query(self, text: str) -> UInt8Vector:
         """Embed query asynchronously and ensure it is in binary format."""
         embeddings = await self.new_aembedding_function([text])
         embedding = embeddings[0]
 
         # Validate that embedding is binary
-        if not all(
-            isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
-        ):
+        if not all(isinstance(x, (int, np.uint8)) and 0 <= x <= 255 for x in embedding):
             raise ValueError(
                 "Query embedding contains non-binary values. "
                 "Binary embeddings must contain only integers in range [0, 255] "
@@ -406,7 +405,7 @@ class BinaryFAISS(CompressedFAISS):
     def __add(
         self,
         texts: Iterable[str],
-        embeddings: Union[Iterable[List[int]], np.ndarray],
+        embeddings: UInt8Array,
         metadatas: Optional[Iterable[dict]] = None,
         ids: Optional[List[str]] = None,
     ) -> List[str]:
@@ -451,13 +450,16 @@ class BinaryFAISS(CompressedFAISS):
 
     def similarity_search_with_score_by_vector(
         self,
-        embedding: List[int],
+        embedding: UInt8Vector,
         k: int = 4,
         filter: Optional[Union[Callable, Dict[str, Any]]] = None,
         fetch_k: int = 20,
         **kwargs: Any,
     ) -> List[Tuple[Document, float]]:
         """Return docs most similar to binary embedding vector.
+
+        Note: In BinaryFAISS, we return floats instead of the original int,
+        just in case it would break langchain.
 
         Args:
             embedding: Binary embedding vector to look up documents similar to.
@@ -471,9 +473,7 @@ class BinaryFAISS(CompressedFAISS):
             in float for each. Lower score represents more similarity.
         """
         # Validate binary embedding
-        if not all(
-            isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
-        ):
+        if not all(isinstance(x, (int, np.uint8)) and 0 <= x <= 255 for x in embedding):
             raise ValueError(
                 "Query embedding contains non-binary values. "
                 "Binary embeddings must contain only integers in range [0, 255]."
@@ -502,9 +502,9 @@ class BinaryFAISS(CompressedFAISS):
                 raise ValueError(f"Could not find document for id {_id}, got {doc}")
             if filter is not None:
                 if filter_func(doc.metadata):
-                    docs.append((doc, scores[0][j]))
+                    docs.append((doc, float(scores[0][j])))
             else:
-                docs.append((doc, scores[0][j]))
+                docs.append((doc, float(scores[0][j])))
 
         score_threshold = kwargs.get("score_threshold")
         if score_threshold is not None:
@@ -518,7 +518,7 @@ class BinaryFAISS(CompressedFAISS):
 
     def max_marginal_relevance_search_with_score_by_vector(
         self,
-        embedding: List[int],
+        embedding: UInt8Vector,
         *,
         k: int = 4,
         fetch_k: int = 20,
@@ -527,12 +527,13 @@ class BinaryFAISS(CompressedFAISS):
     ) -> List[Tuple[Document, float]]:
         """Return docs selected using maximal marginal relevance for binary embeddings.
 
+        Note: In BinaryFAISS, we return floats instead of the original int,
+        just in case it would break langchain.
+
         Note: MMR for binary embeddings uses Hamming distance calculations.
         """
         # Validate binary embedding
-        if not all(
-            isinstance(x, (int, np.integer)) and 0 <= x <= 255 for x in embedding
-        ):
+        if not all(isinstance(x, (int, np.uint8)) and 0 <= x <= 255 for x in embedding):
             raise ValueError(
                 "Query embedding contains non-binary values. "
                 "Binary embeddings must contain only integers in range [0, 255]."
@@ -597,7 +598,7 @@ class BinaryFAISS(CompressedFAISS):
     def __from(
         cls,
         texts: Iterable[str],
-        embeddings: Union[List[List[int]], np.ndarray],
+        embeddings: UInt8Array,
         embedding: Embeddings,
         metadatas: Optional[Iterable[dict]] = None,
         ids: Optional[List[str]] = None,
