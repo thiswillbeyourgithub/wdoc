@@ -43,7 +43,6 @@ from wdoc.utils.misc import (
     file_hasher,
     unlazyload_modules,
 )
-from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.errors import NoInferrableFiletype
 
 assert env.WDOC_BEHAVIOR_EXCL_INCL_USELESS in [
@@ -82,7 +81,6 @@ for k, v in inference_rules.items():
         inference_rules[k][i] = re.compile(vv)
 
 
-@optional_typecheck
 def infer_filetype(path: str) -> str:
     """
     Heuristics to infer the 'filetype' argument of a --path given to wdoc.
@@ -126,7 +124,6 @@ def infer_filetype(path: str) -> str:
         )
 
 
-@optional_typecheck
 def batch_load_doc(
     llm_name: ModelName,
     filetype: str,
@@ -590,7 +587,6 @@ def batch_load_doc(
     return docs
 
 
-@optional_typecheck
 def parse_recursive_paths(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -686,7 +682,6 @@ def parse_recursive_paths(
     return doclist
 
 
-@optional_typecheck
 def parse_json_entries(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -730,7 +725,6 @@ def parse_json_entries(
     return doclist
 
 
-@optional_typecheck
 def parse_toml_entries(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -775,7 +769,6 @@ def parse_toml_entries(
     return doclist
 
 
-@optional_typecheck
 def parse_link_file(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -823,7 +816,6 @@ def parse_link_file(
     return doclist
 
 
-@optional_typecheck
 def parse_youtube_playlist(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -876,7 +868,6 @@ def parse_youtube_playlist(
     return doclist
 
 
-@optional_typecheck
 def parse_ddg_search(
     cli_kwargs: dict,
     path: Union[str, Path],
@@ -975,7 +966,6 @@ def parse_ddg_search(
     return doclist
 
 
-@optional_typecheck
 @memoizer
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)

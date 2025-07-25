@@ -15,14 +15,12 @@ from wdoc.utils.prompts import (
     PREV_SUMMARY_TEMPLATE,
     RECURSION_INSTRUCTION,
 )
-from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.env import env
 
 HOME = str(Path.home())
 
 
 @log_and_time_fn
-@optional_typecheck
 def do_summarize(
     docs: List[Document],
     metadata: str,

@@ -15,11 +15,9 @@ from loguru import logger
 
 from wdoc.utils.logger import md_printer
 from wdoc.utils.misc import cache_dir
-from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.env import is_out_piped
 
 
-@optional_typecheck
 def get_toolbar_text(settings: dict) -> Any:
     """Parse settings for display in the prompt toolbar.
 
@@ -41,7 +39,6 @@ def get_toolbar_text(settings: dict) -> Any:
 
 
 class SettingsCompleter(Completer):
-    @optional_typecheck
     def __init__(
         self, wdocCliSettings, wdocHistoryPrompts, wdocHistoryWords, *args, **kwargs
     ):
@@ -50,7 +47,6 @@ class SettingsCompleter(Completer):
         self.wdocHistoryPrompts = wdocHistoryPrompts
         self.wdocHistoryWords = wdocHistoryWords
 
-    @optional_typecheck
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if not text.strip():
@@ -88,7 +84,6 @@ class SettingsCompleter(Completer):
                     yield Completion(hist, start_position=-len(text))
 
 
-@optional_typecheck
 def show_help() -> None:
     """Display CLI help information.
 
@@ -101,7 +96,6 @@ def show_help() -> None:
     md_printer(dedent(ask_user.__doc__).strip())
 
 
-@optional_typecheck
 def ask_user(settings: dict) -> Tuple[str, dict]:
     """
     ## Command line manual

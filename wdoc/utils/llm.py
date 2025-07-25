@@ -18,7 +18,6 @@ from loguru import logger
 
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, get_model_max_tokens, langfuse_callback_holder
-from wdoc.utils.typechecker import optional_typecheck
 
 TESTING_LLM = "testing/testing"
 
@@ -36,7 +35,6 @@ LOREM_IPSUM = (
 )
 
 
-@optional_typecheck
 def load_llm(
     modelname: ModelName,
     llm_verbosity: bool,
@@ -212,7 +210,6 @@ def load_llm(
     return llm
 
 
-@optional_typecheck
 class PriceCountingCallback(BaseCallbackHandler):
     "source: https://python.langchain.com/docs/modules/callbacks/"
 

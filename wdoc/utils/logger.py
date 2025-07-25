@@ -14,7 +14,6 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from wdoc.utils.env import env, is_out_piped, is_input_piped
-from wdoc.utils.typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup
 warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
@@ -84,7 +83,6 @@ if is_out_piped:
 console = Console()
 
 
-@optional_typecheck
 def md_printer(message: str, color: Optional[str] = None) -> str:
     "markdown rendering and printing to console, unless we are in a pipe"
     message = dedent(message)
@@ -97,7 +95,6 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
     return message
 
 
-@optional_typecheck
 def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable]:
     "set the docstring of wdoc class to wdoc/docs/help.md's content"
     help_file = Path(__file__).parent.parent / "docs/help.md"
@@ -119,7 +116,6 @@ def set_help_md_as_docstring(obj: Union[Type, Callable]) -> Union[Type, Callable
     return obj
 
 
-@optional_typecheck
 def set_parse_doc_help_md_as_docstring(
     obj: Union[Type, Callable],
 ) -> Union[Type, Callable]:

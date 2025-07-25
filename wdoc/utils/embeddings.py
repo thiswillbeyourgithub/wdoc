@@ -34,7 +34,6 @@ from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
 from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS, CompressedFAISS
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
-from wdoc.utils.typechecker import optional_typecheck
 
 embeddings_cache_dir = cache_dir / "CacheEmbedding"
 embeddings_cache_dir.mkdir(exist_ok=True)
@@ -84,7 +83,6 @@ def faiss_custom_score_function(distance: float) -> float:
     return new
 
 
-@optional_typecheck
 def load_embeddings_engine(
     modelname: ModelName,
     cli_kwargs: dict,
@@ -242,7 +240,6 @@ def load_embeddings_engine(
     return cached_embeddings
 
 
-@optional_typecheck
 def create_embeddings(
     modelname: ModelName,
     cached_embeddings: Embeddings,
@@ -325,7 +322,6 @@ def create_embeddings(
         for i in range(len(docs) // batch_size + 1)
     ]
 
-    @optional_typecheck
     def embed_one_batch(
         batch: List,
         ib: int,
@@ -406,7 +402,6 @@ def create_embeddings(
     return db
 
 
-@optional_typecheck
 def test_embeddings(embeddings: Embeddings) -> None:
     "Simple testing of embeddings to know early if something seems wrong"
     logger.debug("Testing embeddings")

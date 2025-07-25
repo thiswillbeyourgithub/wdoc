@@ -13,11 +13,9 @@ from langchain_core.retrievers import BaseRetriever
 
 from wdoc.utils.misc import cache_dir, get_splitter
 from wdoc.utils.prompts import multiquery_parser, prompts
-from wdoc.utils.typechecker import optional_typecheck
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 
 
-@optional_typecheck
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM],
     retriever: BaseRetriever,
@@ -41,7 +39,6 @@ def create_multiquery_retriever(
     return mqr
 
 
-@optional_typecheck
 def create_parent_retriever(
     task: str,
     loaded_embeddings: Any,

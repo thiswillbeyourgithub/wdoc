@@ -92,14 +92,12 @@ from wdoc.utils.tasks.query import (
     sieve_documents,
 )
 from wdoc.utils.tasks.summarize import do_summarize
-from wdoc.utils.typechecker import optional_typecheck
 
 logger.info("Starting wdoc")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
-@optional_typecheck
 @set_help_md_as_docstring
 class wdoc:
     """
@@ -110,7 +108,6 @@ class wdoc:
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 
-    @optional_typecheck
     @set_func_signature
     def __init__(
         self,
@@ -157,7 +154,6 @@ class wdoc:
             return
         if notification_callback is not None:
 
-            @optional_typecheck
             def ntfy(text: str) -> str:
                 out = notification_callback(text)
                 assert (
@@ -168,7 +164,6 @@ class wdoc:
             ntfy("Starting wdoc")
         else:
 
-            @optional_typecheck
             def ntfy(text: str) -> str:
                 return text
 
@@ -679,7 +674,6 @@ class wdoc:
                         self.interaction_settings
                     )
 
-    @optional_typecheck
     def summary_task(self) -> dict:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
@@ -732,7 +726,6 @@ class wdoc:
                     "Cost estimate > limit but the api_base was modified so not crashing."
                 )
 
-        @optional_typecheck
         def summarize_documents(
             path: Any,
             relevant_docs: List,
@@ -1019,7 +1012,6 @@ class wdoc:
         self.latest_cost = total_cost
         return results
 
-    @optional_typecheck
     def prepare_query_task(self) -> None:
         # load embeddings for querying
         self.embedding_engine = load_embeddings_engine(
@@ -1156,7 +1148,6 @@ class wdoc:
                         k.match(str(key)) for key in all_metadata_keys
                     ), f"Key {k} didn't match any key in the metadata"
 
-                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     # match keys
                     for inc in filters_k_plus:
@@ -1198,7 +1189,6 @@ class wdoc:
 
             else:
 
-                @optional_typecheck
                 def filter_meta(meta: dict) -> bool:
                     return True
 
@@ -1233,7 +1223,6 @@ class wdoc:
                 filters_cont_plus = tuple(filters_cont_plus)
                 filters_cont_minus = tuple(filters_cont_minus)
 
-                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     if not all(inc.match(cont) for inc in filters_cont_plus):
                         return False
@@ -1243,7 +1232,6 @@ class wdoc:
 
             else:
 
-                @optional_typecheck
                 def filter_cont(cont: str) -> bool:
                     return True
 
@@ -1290,7 +1278,6 @@ class wdoc:
                 self.loaded_embeddings.index_to_docstore_id
             ), "Something went wrong when deleting filtered out documents"
 
-    @optional_typecheck
     def query_task(self, query: str) -> dict:
         assert query.strip(), "Cannot accept empty query"
         assert all(
@@ -1412,7 +1399,6 @@ class wdoc:
             eval_cache_wrapper = query_eval_cache.cache
         else:
 
-            @optional_typecheck
             def eval_cache_wrapper(func: Callable) -> Callable:
                 return func
 
@@ -1431,7 +1417,6 @@ class wdoc:
 
         @callable_chain
         @chain
-        @optional_typecheck
         def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
             if not self.max_top_k:
                 return filtered_docs
@@ -1456,7 +1441,6 @@ class wdoc:
 
         @callable_chain
         @chain
-        @optional_typecheck
         @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
@@ -1590,7 +1574,6 @@ class wdoc:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
                 @callable_chain
                 @chain
-                @optional_typecheck
                 def retrieve_documents(inputs):
                     return {
                         "unfiltered_docs": retriever.invoke(
@@ -1793,7 +1776,6 @@ class wdoc:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             @callable_chain
             @chain
-            @optional_typecheck
             def retrieve_documents(inputs):
                 return {
                     "unfiltered_docs": retriever.invoke(
@@ -1944,7 +1926,6 @@ class wdoc:
                     ifd
                 ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
 
-            @optional_typecheck
             def source_replace(
                 input: str, mapping: dict = output["source_mapping"]
             ) -> str:
@@ -2207,7 +2188,6 @@ class wdoc:
             return output
 
     @staticmethod
-    @optional_typecheck
     @set_parse_doc_help_md_as_docstring
     def parse_doc(
         filetype: str = "auto",
@@ -2359,7 +2339,6 @@ def debug_exceptions(instance: Optional[wdoc] = None) -> None:
     def handle_exception(exc_type, exc_value, exc_traceback):
         if not issubclass(exc_type, KeyboardInterrupt):
 
-            @optional_typecheck
             def p(message: str) -> None:
                 "print error, in red if possible"
                 if instance:

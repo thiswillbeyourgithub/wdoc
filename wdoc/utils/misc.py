@@ -45,7 +45,6 @@ from loguru import logger
 from wdoc.utils.customs.callable_runnable import callable_chain
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
-from wdoc.utils.typechecker import optional_typecheck
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
 warnings.filterwarnings(
@@ -64,7 +63,6 @@ warnings.filterwarnings("ignore", module="httpx", message="Use 'content=.*")
 try:
     import ftlangdetect
 
-    @optional_typecheck
     def language_detector(text: str) -> float:
         return ftlangdetect.detect(text.lower())["score"]
 
@@ -80,7 +78,6 @@ except Exception as err:
     try:
         import langdetect
 
-        @optional_typecheck
         def language_detector(text: str) -> float:
             return langdetect.detect_langs(text.lower())[0].prob
 
@@ -91,7 +88,6 @@ except Exception as err:
                 f"Couldn't import optional package 'langdetect' either: '{err}'"
             )
 
-        @optional_typecheck
         def language_detector(text: str) -> None:
             return None
 
@@ -307,13 +303,12 @@ class DocDict(dict):
         super().__setitem__(key, value)
 
 
-@optional_typecheck
 def optional_strip_unexp_args(func: Callable) -> Callable:
     """if the environment variable WDOC_STRICT_DOCDICT is set to 'true'
     then this automatically removes any unexpected argument before calling a
     loader function for a specific filetype."""
     if not env.WDOC_STRICT_DOCDICT:
-        return optional_typecheck(func)
+        return func
     else:
         # find the true function, otherwise func can be a decorated truefunc and might forget the annotations.
         if hasattr(func, "func"):
@@ -323,7 +318,6 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
         while hasattr(truefunc, "func"):
             truefunc = truefunc.func
 
-        @optional_typecheck
         @wraps(truefunc)
         def wrapper(*args, **kwargs):
             assert (
@@ -355,14 +349,12 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
         return wrapper
 
 
-@optional_typecheck
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
     return hashlib.sha256(text.encode()).hexdigest()[:20]
 
 
-@optional_typecheck
 def file_hasher(doc: dict) -> str:
     """used to hash a file's content, as describe by a dict
     A caching mechanism is used to avoid recomputing hash of file that
@@ -394,14 +386,12 @@ def file_hasher(doc: dict) -> str:
         return hasher(json.dumps(doc, ensure_ascii=False))
 
 
-@optional_typecheck
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
     with open(abs_path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()[:20]
 
 
-@optional_typecheck
 def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
@@ -437,7 +427,6 @@ def html_to_text(html: str, remove_image: bool = False) -> str:
 
 @callable_chain
 @chain
-@optional_typecheck
 def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     "use it between | pipes | in a chain to open the debugger"
     if hasattr(inputs, "keys"):
@@ -446,7 +435,6 @@ def debug_chain(inputs: Union[dict, List]) -> Union[dict, List]:
     return inputs
 
 
-@optional_typecheck
 def wrapped_model_name_matcher(model: str) -> str:
     "find the best match for a modelname (wrapped to make some check)"
     # find the currently set api keys to avoid matching models from
@@ -502,7 +490,6 @@ def wrapped_model_name_matcher(model: str) -> str:
 
 
 @memoize
-@optional_typecheck
 def model_name_matcher(model: str) -> str:
     """find the best match for a modelname (wrapper that checks if the matched
     model has a known cost and print the matched name)
@@ -524,7 +511,6 @@ def model_name_matcher(model: str) -> str:
 
 
 @memoize
-@optional_typecheck
 def get_openrouter_metadata() -> dict:
     """fetch the metadata from openrouter, because litellm takes always too much time to add new models."""
     url = "https://openrouter.ai/api/v1/models"
@@ -631,7 +617,6 @@ class ModelName:
 
 
 @memoize
-@optional_typecheck
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
     assert (
         "cli_parser" not in model.backend
@@ -679,7 +664,6 @@ def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
 
 
 @memoize
-@optional_typecheck
 def get_model_max_tokens(modelname: ModelName) -> int:
     if modelname.backend == "openrouter":
         openrouter_data = get_openrouter_metadata()
@@ -706,7 +690,6 @@ def get_model_max_tokens(modelname: ModelName) -> int:
                     raise
 
 
-@optional_typecheck
 def get_tkn_length(
     tosplit: str,
     modelname: Union[str, ModelName] = "gpt-4o-mini",
@@ -722,7 +705,6 @@ text_splitters = {}
 DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
 
 
-@optional_typecheck
 def get_splitter(
     task: str,
     modelname: ModelName = DEFAULT_SPLITTER_MODELNAME,
@@ -801,7 +783,6 @@ def get_splitter(
     return text_splitter
 
 
-@optional_typecheck
 def check_docs_tkn_length(
     docs: List[Document],
     identifier: Any,
@@ -855,7 +836,6 @@ def check_docs_tkn_length(
     return prob
 
 
-@optional_typecheck
 def unlazyload_modules():
     """make sure no modules are lazy loaded. Useful when we wan't to make
     sure not to loose time and that everything works smoothly. For example
@@ -892,7 +872,6 @@ def unlazyload_modules():
             break
 
 
-@optional_typecheck
 def disable_internet(allowed: dict) -> None:
     """
     To be extra sure that no connection goes out of the computer when
@@ -933,7 +912,6 @@ def disable_internet(allowed: dict) -> None:
     ]
 
     @memoize
-    @optional_typecheck
     def is_private(ip: str) -> bool:
         "detect if the connection would go to our computer or to a remote server"
         if ip in allowed_IPs:
@@ -950,7 +928,6 @@ def disable_internet(allowed: dict) -> None:
                 return True
         return False
 
-    @optional_typecheck
     def create_connection(address, *args, **kwargs):
         "overload socket.create_connection to forbid outgoing connections"
         ip = socket.gethostbyname(address[0])
@@ -990,7 +967,6 @@ def disable_internet(allowed: dict) -> None:
         ), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
 
 
-@optional_typecheck
 def set_func_signature(func: Callable) -> Callable:
     """dynamically set the extra args of wdoc.__init__ so that
     instead of **cli_kwargs the signature indicates all allowed arguments.
@@ -1036,7 +1012,6 @@ _THIN_SUB_REGEX = re.compile(
 )
 
 
-@optional_typecheck
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <think> and <answer> tags in an answer"""
     orig = copy(output)
@@ -1160,7 +1135,6 @@ The following LLM answer might have had a problem during parsing
 langfuse_callback_holder = []
 
 
-@optional_typecheck
 def create_langfuse_callback(version: str) -> None:
     assert not env.WDOC_PRIVATE_MODE
     # replace langfuse's env variable if set for wdoc, this is already done in env.py but doing it here also at runtime
@@ -1217,7 +1191,6 @@ def create_langfuse_callback(version: str) -> None:
             )
 
 
-@optional_typecheck
 def seconds_to_timecode(inp: Union[str, float, int]) -> str:
     "used for vtt subtitle conversion"
     second = float(inp)
@@ -1229,14 +1202,12 @@ def seconds_to_timecode(inp: Union[str, float, int]) -> str:
     return f"{hour:02d}:{minute:02d}:{second:02d}"
 
 
-@optional_typecheck
 def timecode_to_second(inp: str) -> int:
     "turns a vtt timecode into seconds"
     hour, minute, second = map(int, inp.split(":"))
     return hour * 3600 + minute * 60 + second
 
 
-@optional_typecheck
 def is_timecode(inp: Union[float, str]) -> bool:
     try:
         timecode_to_second(inp)
@@ -1246,7 +1217,6 @@ def is_timecode(inp: Union[float, str]) -> bool:
 
 
 @memoize
-@optional_typecheck
 def get_supported_model_params(modelname: ModelName) -> list:
     if modelname.backend == "testing":
         return []
@@ -1288,7 +1258,6 @@ def get_supported_model_params(modelname: ModelName) -> list:
     return []
 
 
-@optional_typecheck
 def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
     """
     Advise the Linux kernel to cache the given file in memory.
@@ -1344,7 +1313,6 @@ def log_and_time_fn(fn: Callable) -> Callable:
     return wrapped
 
 
-@optional_typecheck
 def get_piped_input() -> Optional[Any]:
     """
     Read data from stdin/pipes.

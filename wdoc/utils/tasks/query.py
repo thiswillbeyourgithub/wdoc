@@ -30,13 +30,11 @@ from wdoc.utils.errors import (
     NoDocumentsRetrieved,
 )
 from wdoc.utils.misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
-from wdoc.utils.typechecker import optional_typecheck
 
 irrelevant_regex = re.compile(r"\bIRRELEVANT\b")
 
 
 @log_and_time_fn
-@optional_typecheck
 def check_intermediate_answer(ans: str) -> bool:
     "filters out the intermediate answers that are deemed irrelevant."
     if "<answer>IRRELEVANT</answer>" in ans:
@@ -49,7 +47,6 @@ def check_intermediate_answer(ans: str) -> bool:
 
 
 @log_and_time_fn
-@optional_typecheck
 def sieve_documents(instance) -> RunnableLambda:
     """cap the number of retrieved documents as if multiple retrievers are used
     we can end up with a lot more document!
@@ -57,7 +54,6 @@ def sieve_documents(instance) -> RunnableLambda:
 
     @callable_chain
     @chain
-    @optional_typecheck
     def _sieve(inputs: dict) -> dict:
         assert "question_to_answer" in inputs, inputs.keys()
         assert "unfiltered_docs" in inputs, inputs.keys()
@@ -81,7 +77,6 @@ def sieve_documents(instance) -> RunnableLambda:
 @callable_chain
 @chain
 @log_and_time_fn
-@optional_typecheck
 def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents fond via RAG based on the digit answered by the eval llm"
     unfiltered_docs = inputs["unfiltered_docs"]
@@ -124,7 +119,6 @@ def refilter_docs(inputs: dict) -> List[Document]:
 
 
 @log_and_time_fn
-@optional_typecheck
 def parse_eval_output(output: str) -> str:
     """
     Parse an LLM's answer about wether a document is relevant or not into an
@@ -190,7 +184,6 @@ def parse_eval_output(output: str) -> str:
 
 
 @log_and_time_fn
-@optional_typecheck
 def collate_relevant_intermediate_answers(
     list_ia: List[str],
 ) -> str:
@@ -211,7 +204,6 @@ def collate_relevant_intermediate_answers(
 
 
 @log_and_time_fn
-@optional_typecheck
 def semantic_batching(
     texts: List[str],
     embedding_engine: Embeddings,
@@ -537,7 +529,6 @@ def semantic_batching(
     return buckets
 
 
-@optional_typecheck
 def pbar_chain(
     llm: Union[ChatLiteLLM, FakeListChatModel],
     len_func: str,
@@ -566,7 +557,6 @@ def pbar_chain(
     return actual_pbar_chain
 
 
-@optional_typecheck
 def pbar_closer(
     llm: Union[ChatLiteLLM, FakeListChatModel],
 ) -> RunnableLambda:

@@ -84,7 +84,6 @@ from wdoc.utils.misc import (
     timecode_to_second,
     wpm,
 )
-from wdoc.utils.typechecker import optional_typecheck
 
 try:
     import torchaudio
@@ -140,7 +139,6 @@ markdownimage_regex = re.compile(
 )
 
 
-@optional_typecheck
 def md_shorten_image_name(md_image: re.Match) -> str:
     "turn a markdown image link into just the name"
     name = md_image.group(1)
@@ -160,7 +158,6 @@ linebreak_before_letter = re.compile(
 anki_replacements_regex = re.compile(r"\{([^}]*)\}")
 
 
-@optional_typecheck
 class OpenparseDocumentParser:
     def __init__(
         self,
@@ -286,7 +283,6 @@ pdf_loaders = {
 # only if it's correctly imported
 if "pdftotext" in sys.modules:
 
-    @optional_typecheck
     class pdftotext_loader_class:
         "simple wrapper for pdftotext to make it load by pdf_loader"
 
@@ -379,11 +375,9 @@ def signal_timeout(timeout: int, exception: Exception):
             signal.alarm(0)
 
 
-@optional_typecheck
 def wrapper_load_one_doc(func: Callable) -> Callable:
     """Decorator to wrap doc_loader to catch errors cleanly"""
 
-    @optional_typecheck
     @wraps(func)
     def wrapper(*args, **kwargs) -> Union[List[Document], str]:
         # Extract loading_failure from kwargs, default to "warn"
@@ -427,7 +421,6 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
 
 
 @wrapper_load_one_doc
-@optional_typecheck
 def load_one_doc(
     task: str,
     llm_name: ModelName,
@@ -760,7 +753,6 @@ def load_one_doc(
 
 
 @memoize
-@optional_typecheck
 def get_url_title(url: str) -> Union[str, type(None)]:
     """if the title of the url is not loaded from the loader, trying as last
     resort with this one"""
@@ -772,7 +764,6 @@ def get_url_title(url: str) -> Union[str, type(None)]:
         return None
 
 
-@optional_typecheck
 def cloze_stripper(clozed: str) -> str:
     clozed = clozeregex.sub(" ", clozed)
     return clozed
@@ -1132,7 +1123,6 @@ def load_anki(
     else:
         usetags = False
 
-    @optional_typecheck
     def placeholder_replacer(row: pd.Series) -> Tuple[str, dict]:
         text = anki_template
 
@@ -1289,7 +1279,6 @@ REG_LINKS = re.compile(
 )
 
 
-@optional_typecheck
 def replace_media(
     content: str,
     media: Union[None, Dict],
@@ -1687,7 +1676,6 @@ def load_local_html(
     return docs
 
 
-@optional_typecheck
 @doc_loaders_cache.cache
 def eval_load_functions(
     load_functions: str,
@@ -2059,7 +2047,6 @@ def load_local_video(
     )
 
 
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_deepgram(
     audio_path: Union[str, Path],
@@ -2129,7 +2116,6 @@ def transcribe_audio_deepgram(
     return d
 
 
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["audio_path"])
 def transcribe_audio_whisper(
     audio_path: Union[Path, str],
@@ -2232,7 +2218,6 @@ def transcribe_audio_whisper(
             if env.WDOC_WHISPER_PARALLEL_SPLITS:
                 logger.info(f"Processing {len(audio_splits)} audio splits in parallel")
 
-                @optional_typecheck
                 def process_audio_split(f: Path) -> dict:
                     """Process a single audio split file."""
                     h = file_hasher({"path": f})
@@ -2302,7 +2287,6 @@ def transcribe_audio_whisper(
     return transcript
 
 
-@optional_typecheck
 def split_too_large_audio(
     audio_path: Union[Path, str],
 ) -> List[Path]:
@@ -2329,7 +2313,6 @@ def split_too_large_audio(
     return split_files
 
 
-@optional_typecheck
 def process_vtt_content_for_llm(
     vtt_content: str, remove_hour_prefix: bool = True
 ) -> str:
@@ -2396,7 +2379,6 @@ def process_vtt_content_for_llm(
     return content
 
 
-@optional_typecheck
 def convert_verbose_json_to_timestamped_text(transcript: dict) -> str:
     # turn the json into vtt, then reuse the code used for youtube chapters
     buffer = ""
@@ -2706,7 +2688,6 @@ def load_youtube_playlist(playlist_url: str) -> Any:
     return loaded
 
 
-@optional_typecheck
 @doc_loaders_cache.cache
 def cached_yt_loader(
     path: str, add_video_info: bool, language: List[str], translation: Optional[str]
@@ -2799,7 +2780,6 @@ def cached_yt_loader(
     return docs
 
 
-@optional_typecheck
 @doc_loaders_cache.cache(ignore=["path"])
 def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
@@ -2970,7 +2950,6 @@ def load_pdf(
     return loaded_docs[[name for name in probs if probs[name] == max_prob][0]]
 
 
-@optional_typecheck
 def find_online_media(
     url: str,
     online_media_url_regex: Optional[str] = None,
@@ -2978,7 +2957,6 @@ def find_online_media(
     headless: bool = True,
 ) -> dict:
 
-    @optional_typecheck
     def check_browser_installation(browser_type: str, crash: bool = False) -> bool:
         try:
             with playwright.sync_api.sync_playwright() as p:
@@ -3009,7 +2987,6 @@ def find_online_media(
         online_media_resourcetype_regex = re.compile(online_media_resourcetype_regex)
     nonmedia_urls = []
 
-    @optional_typecheck
     def request_filter(req) -> None:
         if online_media_url_regex is not None and online_media_url_regex.match(req.url):
             video_urls["url_regex"].append(req.url)
@@ -3175,7 +3152,6 @@ def load_online_media(
     for u in urls_to_try:
         logger.info(f"  - {u}")
 
-    @optional_typecheck
     def dl_audio_from_url(trial: int, url: str) -> Path:
         file_name = (
             loaders_temp_dir / f"online_media_{uuid6.uuid6()}"
