@@ -434,10 +434,7 @@ def load_one_doc(
     recur_parent_id: str = None,  # just used to keep track of which document comes from which recursive filetype
     subitem_link: str = None,
     **kwargs,
-    # ) -> List[Document]:
-) -> Union[List[Document], str]:
-    # load_one_doc returns only List[Document]
-    # but the wrapper uses @wraps so we have to add str in case of errors
+) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
