@@ -275,7 +275,7 @@ class BinaryFAISS(CompressedFAISS):
 
         self.embedding_function = self.new_embedding_function
 
-    def new_embedding_function(self, texts):
+    def new_embedding_function(self, texts: List[str]) -> np.typing.NDArray[np.integer]:
         """Override to convert embeddings to binary"""
         # Get original embeddings
         embeddings = self._original_embedding_function.embed_documents(texts)
@@ -289,7 +289,9 @@ class BinaryFAISS(CompressedFAISS):
 
         return self._vec_to_binary(embeddings)
 
-    async def new_aembedding_function(self, texts):
+    async def new_aembedding_function(
+        self, texts: List[str]
+    ) -> np.typing.NDArray[np.integer]:
         """Override to convert embeddings to binary for async operations"""
         # Get original embeddings asynchronously
         if isinstance(self._original_embedding_function, Embeddings):
