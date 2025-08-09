@@ -199,6 +199,7 @@ def load_llm(
 
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
     # Simply turning '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at 0x72cd5a6d4050>' into '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at REDACTED>'
+    # edit: normally should be fixed as of https://github.com/langchain-ai/langchain/pull/32156/files
     if llm.cache:
         cur = str(llm.cache)
         if "object at " in cur:
