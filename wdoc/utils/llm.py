@@ -156,6 +156,26 @@ def load_llm(
                     f"Detected an ollama model with large max_tokens ({max_tokens}), they usually overestimate their context window capabilities so we reduce it if the user does not specify a max_tokens kwarg"
                 )
                 extra_model_args["max_tokens"] = int(max(max_tokens * 0.2, 4096))
+
+    # if using openrouter, prioritise groq for speed and sort by throughput
+    # source: https://openrouter.ai/docs/features/provider-routing#ordering-specific-providers
+    if modelname.backend == "openrouter":
+        ort_model_kwargs = extra_model_args.get("model_kwargs", {})
+        ort_provider_kwargs = ort_model_kwargs.get("provider", {})
+
+        ort_order = ort_provider_kwargs.get("order", [])
+        ort_order = ort_order if ort_order else ["groq"]
+        ort_sort = ort_provider_kwargs.get("sort", "")
+        ort_sort = ort_sort if ort_sort else "throughput"
+
+        ort_provider_kwargs["order"] = ort_order
+        ort_provider_kwargs["sort"] = ort_sort
+        ort_model_kwargs["provider"] = ort_provider_kwargs
+        extra_model_args["model_kwargs"] = ort_model_kwargs
+        logger.debug(
+            f"Using openrouter so sorting models by throughput and prioritizing groq out of principle"
+        )
+
     logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
     llm = ChatLiteLLM(
         model_name=modelname.original,
