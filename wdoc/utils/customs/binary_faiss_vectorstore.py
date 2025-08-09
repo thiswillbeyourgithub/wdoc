@@ -24,7 +24,9 @@ from beartype.typing import (
     Tuple,
     Union,
     TypeAlias,
+    Annotated,
 )
+from beartype.vale import IsAttr, IsEqual, Is
 
 import numpy as np
 import numpy.typing as npt
@@ -47,8 +49,21 @@ logger = logging.getLogger(__name__)
 
 NDArray = npt.NDArray  # required for beartype
 ArrayLike = npt.ArrayLike  # required for beartype
-UInt8Array: TypeAlias = NDArray[np.uint8]  # 2D
-UInt8Vector: TypeAlias = NDArray[np.uint8]  # 1D
+UInt8Array: TypeAlias = Annotated[
+    NDArray[np.uint8],
+    IsAttr["ndim", IsEqual[2]] & IsAttr["dtype", IsEqual[np.dtype(np.uint8)]],
+]  # 2D binary array with uint8 dtype
+UInt8Vector: TypeAlias = Annotated[
+    NDArray[np.uint8],
+    IsAttr["ndim", IsEqual[1]] & IsAttr["dtype", IsEqual[np.dtype(np.uint8)]],
+]  # 1D binary vector with uint8 dtype
+
+# Type alias for numeric input arrays that will be converted to binary
+NumericArrayLike: TypeAlias = Annotated[
+    Union[ArrayLike, List[float], List[List[float]]],
+    Is[lambda x: len(np.array(x).shape) <= 2]  # Max 2D
+    & Is[lambda x: np.issubdtype(np.array(x).dtype, np.number)],  # Numeric values only
+]
 
 
 class CompressedFAISS(FAISS):
@@ -317,7 +332,7 @@ class BinaryFAISS(CompressedFAISS):
 
     @staticmethod
     def _vec_to_binary(
-        vectors: Union[ArrayLike, List[float], List[List[float]]],
+        vectors: NumericArrayLike,
     ) -> UInt8Array:
         """Convert vectors to binary format using global zero threshold.
 
