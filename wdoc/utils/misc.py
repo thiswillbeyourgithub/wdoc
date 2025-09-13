@@ -1200,31 +1200,6 @@ def create_langfuse_callback(version: str) -> None:
             )
 
 
-def seconds_to_timecode(inp: Union[str, float, int]) -> str:
-    "used for vtt subtitle conversion"
-    second = float(inp)
-    minute = second // 60
-    second = second % 60
-    hour = minute // 60
-    minute = minute % 60
-    hour, minute, second = int(hour), int(minute), int(second)
-    return f"{hour:02d}:{minute:02d}:{second:02d}"
-
-
-def timecode_to_second(inp: str) -> int:
-    "turns a vtt timecode into seconds"
-    hour, minute, second = map(int, inp.split(":"))
-    return hour * 3600 + minute * 60 + second
-
-
-def is_timecode(inp: Union[float, str]) -> bool:
-    try:
-        timecode_to_second(inp)
-        return True
-    except Exception:
-        return False
-
-
 @memoize
 def get_supported_model_params(modelname: ModelName) -> list:
     if modelname.backend == "testing":
@@ -1305,7 +1280,7 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
             os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
             os.close(fd)
         except Exception as e:
-            # logger.warning(f"Failed to cache {file}: {e}")
+            logger.warning(f"Failed to cache {file}: {e}")
             success = False
 
     return success
