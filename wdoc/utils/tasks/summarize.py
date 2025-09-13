@@ -15,6 +15,7 @@ import tldextract
 from langchain_litellm import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 import copy
+from dataclasses import dataclass, asdict
 
 from wdoc.utils.logger import (
     md_printer,
@@ -38,6 +39,86 @@ from wdoc.utils.prompts import (
 from wdoc.utils.env import env
 
 HOME = str(Path.home())
+
+
+@dataclass
+class wdocSummary:
+    """
+    Container for document summarization results with dict-like access.
+
+    This dataclass encapsulates all outputs from the document summarization process,
+    including metrics, costs, and the summary text itself. It provides dict-like
+    access for backward compatibility while offering better type safety and cleaner
+    code structure.
+
+    Attributes
+    ----------
+    path : str
+        Original document path or URL that was summarized.
+    summary : str
+        Final summary text from the best recursion pass.
+    recursive_summaries : Dict[int, str]
+        Mapping of recursion level to summary text for each pass.
+    sum_reading_length : float
+        Estimated reading time in minutes for the final summary.
+    sum_tkn_length : int
+        Token count of the final summary text.
+    doc_reading_length : float
+        Original document reading time in minutes.
+    doc_total_tokens : Dict[str, int]
+        Token usage breakdown by type (prompt, completion, internal_reasoning).
+    doc_total_tokens_sum : int
+        Total tokens used across all operations.
+    doc_total_tokens_str : str
+        Human-readable string representation of token usage.
+    doc_total_cost : float
+        Total cost in dollars for LLM usage.
+    author : Optional[str]
+        Document author if available in metadata.
+    n_chunk : int
+        Number of document chunks that were processed.
+    """
+
+    path: str
+    summary: str
+    recursive_summaries: Dict[int, str]
+    sum_reading_length: float
+    sum_tkn_length: int
+    doc_reading_length: float
+    doc_total_tokens: Dict[str, int]
+    doc_total_tokens_sum: int
+    doc_total_tokens_str: str
+    doc_total_cost: float
+    author: Optional[str]
+    n_chunk: int
+
+    def __getitem__(self, key: str):
+        """Allow dict-like access for backward compatibility."""
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value):
+        """Allow dict-like assignment for backward compatibility."""
+        setattr(self, key, value)
+
+    def __contains__(self, key: str) -> bool:
+        """Support 'in' operator for dict-like behavior."""
+        return hasattr(self, key)
+
+    def keys(self):
+        """Return field names like dict.keys()."""
+        return asdict(self).keys()
+
+    def values(self):
+        """Return field values like dict.values()."""
+        return asdict(self).values()
+
+    def items(self):
+        """Return field name-value pairs like dict.items()."""
+        return asdict(self).items()
+
+    def get(self, key: str, default=None):
+        """Get value with default like dict.get()."""
+        return getattr(self, key, default)
 
 
 def summarize_documents(
@@ -95,19 +176,9 @@ def summarize_documents(
 
     Returns
     -------
-    dict
-        Comprehensive summary results containing:
-        - 'path': Original document path
-        - 'summary': Best summary text from final recursion pass
-        - 'recursive_summaries': Dict mapping recursion level to summary text
-        - 'sum_reading_length': Estimated reading time in minutes for summary
-        - 'sum_tkn_length': Token count of final summary
-        - 'doc_reading_length': Original document reading time
-        - 'doc_total_tokens': Token usage breakdown by type
-        - 'doc_total_tokens_sum': Total tokens used across all operations
-        - 'doc_total_cost': Total cost in dollars for LLM usage
-        - 'author': Document author if available
-        - 'n_chunk': Number of document chunks processed
+    wdocSummary
+        Comprehensive summary results containing all metrics, costs, and summary text.
+        Can be accessed as a dict for backward compatibility.
 
     Raises
     ------
@@ -351,20 +422,20 @@ def summarize_documents(
                     bulletpoint = bulletpoint.rstrip()
                     f.write(f"    {bulletpoint}")
 
-    return {
-        "path": path,
-        "sum_reading_length": sum_reading_length,
-        "sum_tkn_length": summary_tkn_length,
-        "doc_reading_length": doc_reading_length,
-        "doc_total_tokens": doc_total_tokens,
-        "doc_total_tokens_sum": doc_total_tokens_sum,
-        "doc_total_tokens_str": doc_total_tokens_str,
-        "doc_total_cost": doc_total_cost,
-        "summary": recursive_summaries[best_sum_i],
-        "recursive_summaries": recursive_summaries,
-        "author": author,
-        "n_chunk": n_chunk,
-    }
+    return wdocSummary(
+        path=path,
+        summary=recursive_summaries[best_sum_i],
+        recursive_summaries=recursive_summaries,
+        sum_reading_length=sum_reading_length,
+        sum_tkn_length=summary_tkn_length,
+        doc_reading_length=doc_reading_length,
+        doc_total_tokens=doc_total_tokens,
+        doc_total_tokens_sum=doc_total_tokens_sum,
+        doc_total_tokens_str=doc_total_tokens_str,
+        doc_total_cost=doc_total_cost,
+        author=author,
+        n_chunk=n_chunk,
+    )
 
 
 @log_and_time_fn
