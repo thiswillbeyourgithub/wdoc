@@ -450,7 +450,7 @@ def load_one_doc(
 if env.WDOC_LOADER_LAZY_LOADING:
     from wdoc.utils.loaders.anki import load_anki
     from wdoc.utils.loaders.epub import load_epub
-    from wdoc.utils.loaders.html import load_html
+    from wdoc.utils.loaders.local_html import load_local_html
     from wdoc.utils.loaders.json_dict import load_json_dict
     from wdoc.utils.loaders.local_audio import load_local_audio
     from wdoc.utils.loaders.local_video import load_local_video
