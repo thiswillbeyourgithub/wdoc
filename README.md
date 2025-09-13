@@ -137,6 +137,7 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
+    - store the available tasks names as a dataclass
     - move the query task and summary task to their own file instead of having a giant wdoc.py
         - clean up the python api to make it a more intuitive workflow
         - then switch from fire.Fire to using click
@@ -153,9 +154,16 @@ Click to read more
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
+    - write an `llm` (cf simonw) plugin
     - support other vector databases (important to bridge it to [karakeep](https://github.com/karakeep-app/karakeep/issues/1359)!)
-    - learn how to set a github action for test code coverage 
+    - learn how to set a github action for test code coverage
+    - allow anki to use anki type queries
+    - refactor the tasks to use langgraph, as it seems easier to do complex recursive tasks with it
+    - use async for the langchain chains
 - ### Features
+    -  use clusters of semantic ordering instead of just the order you dumbass
+    - ability to cap the search documents capped by a number of tokens instead of a number of documents
+    - Add prompt caching for claude
     - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
     - use [chonkie](https://docs.chonkie.ai/python-sdk/chunkers/semantic-chunker) for better chunking instead of the ones included in langchain
     - count how many time each source is used, as it can be relevant to infer answer quality
@@ -172,11 +180,21 @@ Click to read more
         - pay attention to avoid including personnal info (for example use relative paths instead of absolute paths)
     - add a /save PATH command to save the chat and metadata to a json file
     - add image support printing via icat or via the other lib you found last time, would be useful for summaries etc
+    - add wdoc to tldr pages
     - add an audio backend to use the subtitles from a video file directly
     - store the anki images as 'imagekeys' as the idea works for other parsers too
+    - investigate asking the LLM to add leading emojis to the bullet point for improved reading
+    - add a key/val arg to specify the trust we have in a doc, call it context
+    - add a way to open the documents automatically, based on platform dirs etc. For ex if okular is installed, open pdfs directly at the right page
+        - the best way would be to create opener.py that does a bit like loader but for all filetypes and platforms
+        - use a cli selector like in mnemonics creator
+            - add shortcut to sort by score or by name
+            - display metadata and score in a previewer
     - add an argument --whole_text to avoid chunking (this would just increase the chunk size to a super large number I guess)
     - add apprise callback support
     - add a filetype "custom_parser" and an argument "--custom_parser" containing a path to a python file. Must receive a docdict and a few other things and return a list of documents
+    - add bespoke-minicheck from ollama to fact check when using RAG: https://ollama.com/library/bespoke-minicheck
+        - or via their API directly : https://docs.bespokelabs.ai/bespoke-minicheck/api but they don't seem to properly disclose what they do with the data
     - add a langchain code loader that uses aider to get the repomap
         - https://github.com/paul-gauthier/aider/issues/1043#issuecomment-2278486840
         - https://aider.chat/docs/scripting.html
@@ -257,6 +275,8 @@ Click to read more
     - ability to cap the search documents capped by a number of tokens instead of a number of documents
     - for anki, allow using a query instead of loading with ankipandas
     - add a "try_all" filetype that will try each filetype and keep the first that works
+    - add textract extractor : https://textract.readthedocs.io/en/stable/
+    - write a langchain compatible tool for agents
     - add bespoke-minicheck from ollama to fact check when using RAG: https://ollama.com/library/bespoke-minicheck
         - or via their API directly : https://docs.bespokelabs.ai/bespoke-minicheck/api but they don't seem to properly disclose what they do with the data
 <!-- END_TODO -->

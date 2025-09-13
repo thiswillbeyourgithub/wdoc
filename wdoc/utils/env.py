@@ -69,6 +69,7 @@ class EnvDataclass:
     WDOC_IMPORT_TYPE: Literal["native", "lazy", "thread", "both"] = (
         "native" if " --help" not in " ".join(sys.argv) else "lazy"
     )
+    WDOC_LOADER_LAZY_LOADING: bool = False
     WDOC_MOD_FAISS_SCORE_FN: bool = True
     WDOC_FAISS_COMPRESSION: bool = True
     WDOC_FAISS_BINARY: bool = False

@@ -32,10 +32,9 @@ from loguru import logger
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.loaders import (
     load_one_doc,
-    load_youtube_playlist,
     markdownlink_regex,
-    yt_link_regex,
 )
+from wdoc.utils.loaders.youtube import load_youtube_playlist, yt_link_regex
 from wdoc.utils.misc import (
     DocDict,
     ModelName,

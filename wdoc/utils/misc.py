@@ -796,7 +796,6 @@ def check_docs_tkn_length(
     otherwise something probably went wrong."""
     identifier = str(identifier)
     size = sum([get_tkn_length(d.page_content) for d in docs])
-    nline = len("\n".join([d.page_content for d in docs]).splitlines())
     if size <= min_token:
         logger.warning(
             f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
@@ -1052,7 +1051,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
                 thinking = thinking_match.group(1)
                 if not (THIN not in thinking and THINE not in thinking):
                     logger.warning(
-                        f"Found {THINK} or {THINE} inside the thinking block, we don't expect nested thinkings but will proceed anyway."
+                        f"Found {THIN} or {THINE} inside the thinking block, we don't expect nested thinkings but will proceed anyway."
                     )
         else:
             # check we don't have only one of the xml sides
@@ -1170,7 +1169,7 @@ def create_langfuse_callback(version: str) -> None:
                 and "redacted" not in os.environ.get("WDOC_LANGFUSE_PUBLIC_KEY", "")
             ):
                 raise Exception(
-                    f"Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
+                    "Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
                 ) from e
             else:
                 logger.warning(
@@ -1199,31 +1198,6 @@ def create_langfuse_callback(version: str) -> None:
             logger.warning(
                 f"Failed to setup langfuse callback, make sure package 'langfuse' is installed. The error was: '{e}'"
             )
-
-
-def seconds_to_timecode(inp: Union[str, float, int]) -> str:
-    "used for vtt subtitle conversion"
-    second = float(inp)
-    minute = second // 60
-    second = second % 60
-    hour = minute // 60
-    minute = minute % 60
-    hour, minute, second = int(hour), int(minute), int(second)
-    return f"{hour:02d}:{minute:02d}:{second:02d}"
-
-
-def timecode_to_second(inp: str) -> int:
-    "turns a vtt timecode into seconds"
-    hour, minute, second = map(int, inp.split(":"))
-    return hour * 3600 + minute * 60 + second
-
-
-def is_timecode(inp: Union[float, str]) -> bool:
-    try:
-        timecode_to_second(inp)
-        return True
-    except Exception:
-        return False
 
 
 @memoize
@@ -1306,7 +1280,7 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
             os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
             os.close(fd)
         except Exception as e:
-            # logger.warning(f"Failed to cache {file}: {e}")
+            logger.warning(f"Failed to cache {file}: {e}")
             success = False
 
     return success
