@@ -194,10 +194,11 @@ class wdoc:
         # make sure the extra args are valid
         for k in cli_kwargs:
             if k not in self.allowed_extra_args:
+                logger.exception(
+                    f"Found unexpected keyword argument: '{k}'\nThe allowed arguments are {','.join(self.allowed_extra_args)}"
+                )
                 raise Exception(
-                    logger.warning(
-                        f"Found unexpected keyword argument: '{k}'\nThe allowed arguments are {','.join(self.allowed_extra_args)}"
-                    )
+                    f"Found unexpected keyword argument: '{k}'\nThe allowed arguments are {','.join(self.allowed_extra_args)}"
                 )
 
             # type checking of extra args
