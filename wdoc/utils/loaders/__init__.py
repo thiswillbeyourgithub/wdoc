@@ -5,6 +5,7 @@ load each document.
 
 import copy
 import inspect
+import playwright
 import json
 import os
 import re
@@ -60,7 +61,7 @@ from wdoc.utils.misc import (
     wpm,
 )
 from wdoc.utils.errors import TimeoutPdfLoaderError
-from .shared import debug_return_empty, markdownimage_regex
+from .shared import debug_return_empty, markdownimage_regex, get_url_title
 
 try:
     import torchaudio
