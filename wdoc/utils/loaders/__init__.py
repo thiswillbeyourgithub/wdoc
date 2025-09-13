@@ -72,22 +72,16 @@ except Exception as e:
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-# import all loader functions
-if not env.WDOC_LOADER_LAZY_LOADING:
-    from .pdf import load_pdf, load_online_pdf
-    from .anki import load_anki
-    from .url import load_url
-
 # Mapping of filetypes to their corresponding loader function names
 LOADABLE_FILETYPE = {
     "url": "load_url",
-    "youtube": "load_youtube_video",
+    "youtube": "load_youtube",
     "pdf": "load_pdf",
     "online_pdf": "load_online_pdf",
     "anki": "load_anki",
     "string": "load_string",
     "txt": "load_txt",
-    "text": "load_text_input",
+    "text": "load_text",
     "local_html": "load_local_html",
     "logseq_markdown": "load_logseq_markdown",
     "local_audio": "load_local_audio",
@@ -95,14 +89,13 @@ LOADABLE_FILETYPE = {
     "online_media": "load_online_media",
     "epub": "load_epub",
     "powerpoint": "load_powerpoint",
-    "word": "load_word_document",
+    "word": "load_word",
     "json_dict": "load_json_dict",
 }
 
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 # to replace markdown links by their text
 # to remove image from jina reader that take a lot of tokens but are not yet used
-
 
 
 # to check that a youtube link is valid
@@ -214,7 +207,7 @@ def load_one_doc(
 
     if loader_func is None:
         raise Exception(
-            f"Loader function '{loader_func_name}' not found for filetype '{filetype}'"
+            f"Loader function 'load_{filetype}' not found for filetype '{filetype}'"
         )
 
     # Get function signature to determine what arguments to pass
@@ -515,7 +508,7 @@ def load_one_doc(
 
 @debug_return_empty
 @optional_strip_unexp_args
-def load_youtube_video(
+def load_youtube(
     path: str,
     loaders_temp_dir: Path,
     youtube_language: Optional[str] = None,
@@ -679,7 +672,7 @@ def load_txt(path: Union[str, Path], file_hash: str) -> List[Document]:
 
 @debug_return_empty
 @optional_strip_unexp_args
-def load_text_input(
+def load_text(
     path: str,
     file_hash: str,
     metadata: Optional[Union[str, dict]] = None,
@@ -1519,7 +1512,7 @@ def load_powerpoint(
 @debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
-def load_word_document(
+def load_word(
     path: Union[str, Path],
     file_hash: str,
 ) -> List[Document]:
@@ -1594,7 +1587,6 @@ def load_json_dict(
     assert docs, "No document found in json_dict"
 
     return docs
-
 
 
 @debug_return_empty
@@ -2022,16 +2014,21 @@ def load_online_media(
     return parsed_audio
 
 
-# Validation: Check that all loader functions exist
-def _validate_loader_functions():
-    """Validate that all loader functions referenced in LOADABLE_FILETYPE exist."""
-    current_module = sys.modules[__name__]
-    for filetype, func_name in LOADABLE_FILETYPE.items():
-        if not hasattr(current_module, func_name):
-            raise Exception(
-                f"Loader function '{func_name}' for filetype '{filetype}' not found in module"
-            )
+# import all loader functions
+if env.WDOC_LOADER_LAZY_LOADING:
+    from .pdf import load_pdf, load_online_pdf
+    from .anki import load_anki
+    from .url import load_url
 
+    # Validation: Check that all loader functions exist
+    def _validate_loader_functions():
+        """Validate that all loader functions referenced in LOADABLE_FILETYPE exist."""
+        current_module = sys.modules[__name__]
+        for filetype in LOADABLE_FILETYPE:
+            if not hasattr(current_module, f"load_{filetype}"):
+                raise Exception(
+                    f"Loader function 'load_{filetype}' not found in module"
+                )
 
-# Run validation when module is imported
-_validate_loader_functions()
+    # Run validation when module is imported
+    _validate_loader_functions()
