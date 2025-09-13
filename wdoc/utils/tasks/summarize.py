@@ -2,14 +2,34 @@
 Chain (logic) used to summarize a document.
 """
 
+from datetime import date
 from pathlib import Path
-
-from beartype.typing import Any, List, Tuple, Dict
+import re
+from dataclasses import MISSING
+import json
+from beartype.typing import List, Tuple, Dict, Optional, Union
 from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
+import tldextract
+from langchain_litellm import ChatLiteLLM
+from langchain_community.chat_models.fake import FakeListChatModel
+import copy
 
-from wdoc.utils.misc import thinking_answer_parser, log_and_time_fn
+from wdoc.utils.logger import (
+    md_printer,
+)
+from wdoc.utils.misc import (
+    # debug_chain,
+    ModelName,
+    average_word_length,
+    check_docs_tkn_length,
+    get_splitter,
+    get_tkn_length,
+    log_and_time_fn,
+    thinking_answer_parser,
+    wpm,
+)
 from wdoc.utils.prompts import (
     BASE_SUMMARY_PROMPT,
     PREV_SUMMARY_TEMPLATE,
@@ -26,7 +46,7 @@ def do_summarize(
     metadata: str,
     language: str,
     modelbackend: str,
-    llm: Any,
+    llm: Union[ChatLiteLLM, FakeListChatModel],
     verbose: bool,
     n_recursion: int = 0,
 ) -> Tuple[str, int, Dict[str, int]]:
@@ -194,3 +214,258 @@ def do_summarize(
         outtext = "\n".join(summaries)
 
     return outtext.rstrip(), n, token_details
+
+
+def summarize_documents(
+    path: Union[str, Path],
+    relevant_docs: List,
+    summary_language: str,
+    model: ModelName,
+    llm: Union[ChatLiteLLM, FakeListChatModel],
+    llm_verbosity: bool,
+    summary_n_recursion: int,
+    llm_price: dict,
+    in_import_mode: bool,
+    out_file: Optional[str],
+    wdoc_version: str,
+) -> dict:
+    assert relevant_docs, "Empty relevant_docs!"
+
+    # parse metadata from the doc
+    metadata = []
+    if "http" in path:
+        item_name = tldextract.extract(path).registered_domain
+    elif "/" in path and Path(path).exists():
+        item_name = Path(path).name
+    else:
+        item_name = path
+
+    if "title" in relevant_docs[0].metadata:
+        item_name = f"{relevant_docs[0].metadata['title'].strip()} - {item_name}"
+    else:
+        metadata.append(f"<title>\n{item_name.strip()}\n</title>")
+
+    # replace # in title as it would be parsed as a tag
+    item_name = item_name.replace("#", r"\#")
+
+    if "doc_reading_time" in relevant_docs[0].metadata:
+        doc_reading_length = relevant_docs[0].metadata["doc_reading_time"]
+        metadata.append(
+            f"<reading_length>\n{doc_reading_length:.1f} minutes\n</reading_length>"
+        )
+    else:
+        doc_reading_length = 0
+    if "author" in relevant_docs[0].metadata:
+        author = relevant_docs[0].metadata["author"].strip()
+        metadata.append(f"<author>\n{author}\n</author>")
+    else:
+        author = None
+    if "yt_chapters" in relevant_docs[0].metadata:
+        chapters = json.dumps(relevant_docs[0].metadata["yt_chapters"])
+        metadata.append(f"<youtube_chapters>\n{chapters}\n</youtube_chapters>")
+    metadata.append(f"<today>\n{date.today().isoformat()}\n</today>")
+
+    if metadata:
+        metadata = "<text_metadata>\n" + "\n".join(metadata) + "\n"
+        metadata += "<section_number>\n[PROGRESS]\n</section_number>\n"
+        metadata += "</text_metadata>"
+    else:
+        metadata = (
+            "<text_metadata><section_number>[PROGRESS]</section_number></text_metadata>"
+        )
+
+    # summarize each chunk of the link and return one text
+    (
+        summary,
+        n_chunk,
+        doc_total_tokens,
+    ) = do_summarize(
+        docs=relevant_docs,
+        metadata=metadata,
+        language=summary_language,
+        modelbackend=model.backend,
+        llm=llm,
+        verbose=llm_verbosity,
+    )
+
+    # get reading length of the summary
+    real_text = "".join([letter for letter in list(summary) if letter.isalpha()])
+    sum_reading_length = len(real_text) / average_word_length / wpm
+    logger.info(f"{item_name} reading length is {sum_reading_length:.1f}")
+
+    recursive_summaries = {0: summary}
+    prev_real_text = MISSING
+    if summary_n_recursion > 0:
+        for n_recur in range(1, summary_n_recursion + 1):
+            summary_text = copy.deepcopy(recursive_summaries[n_recur - 1])
+            logger.warning(f"Doing summary check #{n_recur} of {item_name}")
+
+            # remove any chunk count that is not needed to summarize
+            sp = summary_text.split("\n")
+            for i, l in enumerate(sp):
+                if l.strip() == "- ---":
+                    sp[i] = None
+                elif re.search(r"- Chunk \d+/\d+", l):
+                    sp[i] = None
+                elif l.strip().startswith("- BEFORE RECURSION #"):
+                    for new_i in range(i, len(sp)):
+                        sp[new_i] = None
+                    break
+            summary_text = "\n".join([s.rstrip() for s in sp if s])
+            assert "- ---" not in summary_text, "Found chunk separator"
+            assert "- Chunk " not in summary_text, "Found chunk marker"
+            assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
+
+            splitter = get_splitter(
+                "recursive_summary",
+                modelname=model,
+            )
+            summary_docs = [Document(page_content=summary_text)]
+            summary_docs = splitter.transform_documents(summary_docs)
+            assert summary_docs != relevant_docs
+            try:
+                check_docs_tkn_length(summary_docs, item_name)
+            except Exception as err:
+                logger.warning(
+                    f"Exception when checking if {item_name} could be recursively summarized for the #{n_recur} time: {err}"
+                )
+                break
+            (
+                summary_text,
+                n_chunk,
+                new_doc_total_tokens,
+            ) = do_summarize(
+                docs=summary_docs,
+                metadata=metadata,
+                language=summary_language,
+                modelbackend=model.backend,
+                llm=llm,
+                verbose=llm_verbosity,
+                n_recursion=n_recur,
+            )
+
+            # aggregate the token count
+            for k, v in new_doc_total_tokens.items():
+                doc_total_tokens[k] += v
+
+            # clean text again to compute the reading length
+            sp = summary_text.split("\n")
+            for i, l in enumerate(sp):
+                if l.strip() == "- ---":
+                    sp[i] = None
+                elif re.search(r"- Chunk \d+/\d+", l):
+                    sp[i] = None
+                elif l.strip().startswith("- BEFORE RECURSION #"):
+                    for new_i in range(i, len(sp)):
+                        sp[new_i] = None
+                    break
+            real_text = "\n".join([s.rstrip() for s in sp if s])
+            assert "- ---" not in real_text, "Found chunk separator"
+            assert "- Chunk " not in real_text, "Found chunk marker"
+            assert "- BEFORE RECURSION # " not in real_text, "Found recursion block"
+            real_text = "".join(
+                [letter for letter in list(real_text) if letter.isalpha()]
+            )
+            sum_reading_length = len(real_text) / average_word_length / wpm
+            logger.info(
+                f"{item_name} reading length after recursion #{n_recur} is {sum_reading_length:.1f}"
+            )
+            if prev_real_text is not MISSING:
+                if real_text == prev_real_text:
+                    logger.warning(
+                        f"Identical summary after {n_recur} "
+                        "recursion, adding more recursion will not "
+                        "help so stopping here"
+                    )
+                    recursive_summaries[n_recur] = summary_text
+                    break
+            prev_real_text = real_text
+
+            assert n_recur not in recursive_summaries
+            if summary_text not in recursive_summaries:
+                logger.warning(
+                    f"Identical summary after {n_recur} "
+                    "recursion, adding more recursion will not "
+                    "help so stopping here"
+                )
+                recursive_summaries[n_recur] = summary_text
+                break
+            else:
+                recursive_summaries[n_recur] = summary_text
+
+    best_sum_i = max(list(recursive_summaries.keys()))
+    if not in_import_mode:
+        print("\n\n")
+        md_printer("# Summary")
+        md_printer(f"## {path}")
+        md_printer(recursive_summaries[best_sum_i])
+
+    # the price computation needs to happen as late as possible to avoid
+    # underflow errors
+    doc_total_cost = 0
+    doc_total_tokens_str = ""
+    for k, v in doc_total_tokens.items():
+        if llm_price[k]:  # to avoid underflow errors:
+            doc_total_cost += v * llm_price[k]
+        doc_total_tokens_str += f"{k.title()}: {v} "
+    doc_total_tokens_str = doc_total_tokens_str.strip()
+    logger.info(
+        f"Tokens used for {path}: ({doc_total_tokens_str}, cost: ${doc_total_cost:.5f})"
+    )
+
+    doc_total_tokens_sum = sum(
+        [int(number) for number in doc_total_tokens.values() if str(number).isdigit()]
+    )
+
+    summary_tkn_length = get_tkn_length(recursive_summaries[best_sum_i])
+
+    header = f"\n- {item_name}    cost: ${doc_total_cost:.5f} ({doc_total_tokens_str})"
+    if doc_reading_length:
+        header += f"    {doc_reading_length:.1f} minutes"
+    if author:
+        header += f"    by '{author}'"
+    header += f"    original path: '{path}'"
+    header += f"    wdoc version {wdoc_version} with model {model} on {date.today().isoformat()}"
+
+    # save to output file
+    if out_file:
+        if in_import_mode:
+            logger.warning(
+                "Detected use of out_file arg while in __import_mode__. This is unexpected and might lead to issues."
+            )
+        for nrecur, summary in recursive_summaries.items():
+            out_file = Path(out_file)
+            if len(recursive_summaries) > 1 and nrecur < max(
+                list(recursive_summaries.keys())
+            ):
+                # also store intermediate summaries if present
+                out_file = out_file.parent / (out_file.stem + f".{nrecur + 1}.md")
+
+            with open(str(out_file), "a") as f:
+                if out_file.exists() and out_file.read_text().strip():
+                    f.write("\n\n\n")
+                f.write(header)
+                if len(recursive_summaries) > 1:
+                    f.write(
+                        f"\n    Recursive summary pass: {nrecur + 1}/{len(recursive_summaries)}"
+                    )
+
+                for bulletpoint in summary.split("\n"):
+                    f.write("\n")
+                    bulletpoint = bulletpoint.rstrip()
+                    f.write(f"    {bulletpoint}")
+
+    return {
+        "path": path,
+        "sum_reading_length": sum_reading_length,
+        "sum_tkn_length": summary_tkn_length,
+        "doc_reading_length": doc_reading_length,
+        "doc_total_tokens": doc_total_tokens,
+        "doc_total_tokens_sum": doc_total_tokens_sum,
+        "doc_total_tokens_str": doc_total_tokens_str,
+        "doc_total_cost": doc_total_cost,
+        "summary": recursive_summaries[best_sum_i],
+        "recursive_summaries": recursive_summaries,
+        "author": author,
+        "n_chunk": n_chunk,
+    }
