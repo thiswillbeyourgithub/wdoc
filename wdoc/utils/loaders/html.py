@@ -13,7 +13,7 @@ from wdoc.utils.misc import doc_loaders_cache, optional_strip_unexp_args
 @debug_return_empty
 @optional_strip_unexp_args
 @doc_loaders_cache.cache(ignore=["path"])
-def load_local_html(
+def load_html(
     path: Union[str, Path],
     file_hash: str,
     load_functions: Optional[bytes] = None,
