@@ -499,7 +499,7 @@ def test_query_duckduckgo_search():
         query="How is nvidia doing this month",
         filetype="ddg",
         ddg_max_result=3,
-        ddg_region=us - US,
+        ddg_region="us - US",
         model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
         query_eval_model=f"openai/{WDOC_TEST_OPENAI_EVAL_MODEL}",
         embed_model=f"openai/{WDOC_TEST_OPENAI_EMBED_MODEL}",
