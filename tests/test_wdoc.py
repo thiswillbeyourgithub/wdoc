@@ -50,7 +50,7 @@ WDOC_TEST_OPENROUTER_EVAL_MODEL = os.getenv(
 )
 
 WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
-    "WDOC_TEST_OLLAMA_EMBED_MODEL", "snowflake-arctic-embed2:Q4_K_M"
+    "WDOC_TEST_OLLAMA_EMBED_MODEL", "embeddinggemma:latest"
 )
 
 # also make sure the default models work
