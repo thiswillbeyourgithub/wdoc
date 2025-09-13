@@ -22,12 +22,7 @@ from beartype.door import is_bearable
 from beartype.typing import Callable, List, Literal, Optional, Union
 from langchain.docstore.document import Document
 from langchain.globals import set_debug, set_llm_cache, set_verbose
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import DocumentCompressorPipeline
-from langchain.retrievers.merger_retriever import MergerRetriever
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
 from langchain_community.chat_models.fake import FakeListChatModel
-from langchain_community.retrievers import KNNRetriever, SVMRetriever
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.runnables.base import RunnableEach
@@ -72,7 +67,7 @@ from wdoc.utils.misc import (  # debug_chain,
     tasks_list,
 )
 from wdoc.utils.prompts import prompts
-from wdoc.utils.retrievers import create_multiquery_retriever, create_parent_retriever
+from wdoc.utils.retrievers import create_retrievers
 from wdoc.utils.tasks.query import (
     check_intermediate_answer,
     collate_relevant_intermediate_answers,
@@ -798,79 +793,10 @@ class wdoc:
             retriev in ["basic", "multiquery", "knn", "svm", "parent"]
             for retriev in self.interaction_settings["retriever"].split("_")
         ), f"Invalid retriever value: {self.interaction_settings['retriever']}"
-        retrievers = []
-        if "multiquery" in self.interaction_settings["retriever"].lower():
-            retrievers.append(
-                create_multiquery_retriever(
-                    llm=self.llm,
-                    retriever=self.loaded_embeddings.as_retriever(
-                        search_type="similarity_score_threshold",
-                        search_kwargs={
-                            "k": self.interaction_settings["top_k"],
-                            "score_threshold": self.interaction_settings["relevancy"],
-                        },
-                    ),
-                )
-            )
 
-        if "knn" in self.interaction_settings["retriever"].lower():
-            retrievers.append(
-                KNNRetriever.from_texts(
-                    self.all_texts,
-                    self.embedding_engine,
-                    relevancy_threshold=self.interaction_settings["relevancy"],
-                    k=self.interaction_settings["top_k"],
-                )
-            )
-        if "svm" in self.interaction_settings["retriever"].lower():
-            retrievers.append(
-                SVMRetriever.from_texts(
-                    self.all_texts,
-                    self.embedding_engine,
-                    relevancy_threshold=self.interaction_settings["relevancy"],
-                    k=self.interaction_settings["top_k"],
-                )
-            )
-        if "parent" in self.interaction_settings["retriever"].lower():
-            retrievers.append(
-                create_parent_retriever(
-                    task=self.task,
-                    loaded_embeddings=self.loaded_embeddings,
-                    loaded_docs=self.loaded_docs,
-                    top_k=self.interaction_settings["top_k"],
-                    relevancy=self.interaction_settings["relevancy"],
-                )
-            )
-
-        if "basic" in self.interaction_settings["retriever"].lower():
-            retrievers.append(
-                self.loaded_embeddings.as_retriever(
-                    search_type="similarity_score_threshold",
-                    search_kwargs={
-                        "k": self.interaction_settings["top_k"],
-                        "score_threshold": self.interaction_settings["relevancy"],
-                    },
-                )
-            )
-
-        assert (
-            retrievers
-        ), "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
-
-        if len(retrievers) == 1:
-            retriever = retrievers[0]
-        else:
-            merge_retriever = MergerRetriever(retrievers=retrievers)
-
-            # remove redundant results from the merged retrievers:
-            filtered = EmbeddingsRedundantFilter(
-                embeddings=self.embedding_engine,
-                similarity_threshold=0.999,
-            )
-            filter_pipeline = DocumentCompressorPipeline(transformers=[filtered])
-            retriever = ContextualCompressionRetriever(
-                base_compressor=filter_pipeline, base_retriever=merge_retriever
-            )
+        retriever = create_retrievers(
+            **self.interaction_settings,
+        )
 
         if ">>>>" in query:
             sp = query.split(">>>>")
@@ -1700,18 +1626,6 @@ class wdoc:
             output["total_eval_model_cost"] = etotal_cost
 
             return output
-
-    @property
-    def all_texts(self) -> List[str]:
-        """
-        Lazily create and cache all_texts from loaded_embeddings.
-        This property is only computed when needed by specific retrievers (KNN, SVM).
-        """
-        if not hasattr(self, "_all_texts"):
-            self._all_texts = [
-                v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()
-            ]
-        return self._all_texts
 
     @staticmethod
     @set_parse_doc_help_md_as_docstring
