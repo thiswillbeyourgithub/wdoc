@@ -203,10 +203,11 @@ def load_one_doc(
     if filetype not in LOADABLE_FILETYPE:
         logger.warning(f"Unsupported filetype: '{filetype}'")
         raise Exception(f"Unsupported filetype: '{filetype}'")
+    loader_func_name = f"load_{filetype}"
 
     # Lazy loading the document loader function
-    exec(f"from .{filetype} import load_{filetype}")
-    loader_func = locals()[f"load_{filetype}"] or globals()[f"load_{filetype}"] or None
+    exec(f"from .{filetype} import {loader_func_name}")
+    loader_func = locals()[loader_func_name] or globals()[loader_func_name] or None
 
     if loader_func is None:
         raise Exception(
@@ -301,7 +302,7 @@ def load_one_doc(
         ]
         formatted_valid_params = format_args_with_types(valid_params)
         raise MissingDocdictArguments(
-            f"\n\nLoader function '{loader_func_name}' for filetype '{filetype}' "
+            f"\n\nLoader function 'l{loader_func_name}' for filetype '{filetype}' "
             f"received unexpected arguments: {unexpected_user_args}\n"
             f"Valid user arguments for this loader are: {formatted_valid_params}\n"
             f"Please check the documentation for the correct arguments for this filetype."
