@@ -786,9 +786,6 @@ class wdoc:
             "task": self.task,
             "relevancy": self.query_relevancy,
         }
-        self.all_texts = [
-            v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()
-        ]
 
         # parse filters as callable for faiss filtering
         if "filter_metadata" in self.cli_kwargs or "filter_content" in self.cli_kwargs:
