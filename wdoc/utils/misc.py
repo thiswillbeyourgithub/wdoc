@@ -1051,7 +1051,7 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
                 thinking = thinking_match.group(1)
                 if not (THIN not in thinking and THINE not in thinking):
                     logger.warning(
-                        f"Found {THINK} or {THINE} inside the thinking block, we don't expect nested thinkings but will proceed anyway."
+                        f"Found {THIN} or {THINE} inside the thinking block, we don't expect nested thinkings but will proceed anyway."
                     )
         else:
             # check we don't have only one of the xml sides
