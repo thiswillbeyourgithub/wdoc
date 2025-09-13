@@ -32,7 +32,7 @@ def test_help_output_shell():
 def test_help_output_python():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
-        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=False
+        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=True
     )
     output = result.stdout + result.stderr
     assert (
