@@ -1,15 +1,16 @@
-from pathlib import Path
-from loguru import logger
-from beartype.typing import List, Union, Optional, Literal
-import uuid6
-from langchain.docstore.document import Document
 import time
+from pathlib import Path
+
 import ffmpeg
 import pydub
+import uuid6
+from beartype.typing import List, Literal, Optional, Union
+from langchain.docstore.document import Document
+from loguru import logger
 
 from wdoc.utils.loaders.audio import load_local_audio
 from wdoc.utils.loaders.shared import debug_return_empty
-from wdoc.utils.misc import doc_loaders_cache, optional_strip_unexp_args, file_hasher
+from wdoc.utils.misc import doc_loaders_cache, file_hasher, optional_strip_unexp_args
 
 
 @debug_return_empty

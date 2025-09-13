@@ -1,7 +1,6 @@
 from beartype.typing import List
-
-from loguru import logger
 from langchain.docstore.document import Document
+from loguru import logger
 from prompt_toolkit import prompt
 
 from wdoc.utils.loaders.shared import debug_return_empty

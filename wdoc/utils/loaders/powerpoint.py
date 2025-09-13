@@ -1,10 +1,11 @@
-from beartype.typing import List, Union
 from pathlib import Path
-from langchain.docstore.document import Document
 
+from beartype.typing import List, Union
+from langchain.docstore.document import Document
 from langchain_community.document_loaders import UnstructuredPowerPointLoader
+
+from wdoc.utils.loaders.misc import doc_loaders_cache, optional_strip_unexp_args
 from wdoc.utils.loaders.shared import debug_return_empty
-from wdoc.utils.loaders.misc import optional_strip_unexp_args, doc_loaders_cache
 
 
 @debug_return_empty

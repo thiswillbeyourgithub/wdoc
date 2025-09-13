@@ -1,23 +1,20 @@
-from pathlib import Path
-from loguru import logger
-import time
-import ffmpeg
-import uuid6
-import pydub
-from beartype.typing import Optional, List, Literal
-import yt_dlp as youtube_dl
-from langchain.docstore.document import Document
-import playwright
 import re
+import time
+from pathlib import Path
 
-from wdoc.utils.loaders.shared import debug_return_empty
-from wdoc.utils.loaders.local_audio import load_local_audio
+import ffmpeg
+import playwright
+import pydub
+import uuid6
+import yt_dlp as youtube_dl
+from beartype.typing import List, Literal, Optional
+from langchain.docstore.document import Document
+from loguru import logger
+
 from wdoc.utils.env import env
-from wdoc.utils.misc import (
-    doc_loaders_cache,
-    file_hasher,
-    optional_strip_unexp_args,
-)
+from wdoc.utils.loaders.local_audio import load_local_audio
+from wdoc.utils.loaders.shared import debug_return_empty
+from wdoc.utils.misc import doc_loaders_cache, file_hasher, optional_strip_unexp_args
 
 
 def find_online_media(

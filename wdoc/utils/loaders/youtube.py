@@ -1,30 +1,27 @@
 import json
-import requests
-import ftfy
-import uuid6
-from beartype.typing import Optional, Literal, List
-from pathlib import Path
-from loguru import logger
-import yt_dlp as youtube_dl
 import re
+from pathlib import Path
+
+import ftfy
+import requests
+import uuid6
+import yt_dlp as youtube_dl
+from beartype.typing import List, Literal, Optional
 from langchain.docstore.document import Document
+from loguru import logger
 
 from wdoc.utils.env import env
-from wdoc.utils.misc import (
-    file_hasher,
-    optional_strip_unexp_args,
-    doc_loaders_cache,
+from wdoc.utils.loaders.local_audio import (
+    transcribe_audio_deepgram,
+    transcribe_audio_whisper,
 )
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.loaders.shared_audio import (
-    process_vtt_content_for_llm,
     convert_verbose_json_to_timestamped_text,
+    process_vtt_content_for_llm,
     seconds_to_timecode,
 )
-from wdoc.utils.loaders.local_audio import (
-    transcribe_audio_whisper,
-    transcribe_audio_deepgram,
-)
+from wdoc.utils.misc import doc_loaders_cache, file_hasher, optional_strip_unexp_args
 
 yt_link_regex = re.compile("youtube.*watch")
 

@@ -13,15 +13,16 @@ import time
 import traceback
 from functools import wraps
 from pathlib import Path
-from loguru import logger
 
 import bs4
 import ftfy
 from beartype.typing import Callable, List, Optional, Union
 from langchain.docstore.document import Document
+from loguru import logger
 
 from wdoc.utils.env import env
-from wdoc.utils.errors import MissingDocdictArguments
+from wdoc.utils.errors import MissingDocdictArguments, TimeoutPdfLoaderError
+from wdoc.utils.loaders.shared import get_url_title
 from wdoc.utils.misc import (
     ModelName,
     average_word_length,
@@ -33,9 +34,6 @@ from wdoc.utils.misc import (
     min_token,
     wpm,
 )
-from wdoc.utils.errors import TimeoutPdfLoaderError
-from wdoc.utils.loaders.shared import get_url_title
-
 
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
@@ -458,7 +456,7 @@ if env.WDOC_LOADER_LAZY_LOADING:
     from wdoc.utils.loaders.local_video import load_local_video
     from wdoc.utils.loaders.logseq_markdown import load_logseq_markdown
     from wdoc.utils.loaders.online_media import load_online_media
-    from wdoc.utils.loaders.pdf import load_pdf, load_online_pdf
+    from wdoc.utils.loaders.pdf import load_online_pdf, load_pdf
     from wdoc.utils.loaders.powerpoint import load_powerpoint
     from wdoc.utils.loaders.string import load_string
     from wdoc.utils.loaders.text import load_text

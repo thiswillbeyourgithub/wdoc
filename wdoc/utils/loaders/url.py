@@ -1,7 +1,7 @@
 import re
+
 import goose3
 from beartype.typing import List
-from loguru import logger
 from langchain.docstore.document import Document
 from langchain_community.document_loaders import (
     PlaywrightURLLoader,
@@ -9,6 +9,7 @@ from langchain_community.document_loaders import (
     UnstructuredURLLoader,
     WebBaseLoader,
 )
+from loguru import logger
 
 from wdoc.utils.loaders.shared import (
     debug_return_empty,
@@ -16,9 +17,9 @@ from wdoc.utils.loaders.shared import (
     markdownimage_regex,
 )
 from wdoc.utils.misc import (
+    check_docs_tkn_length,
     doc_loaders_cache,
     optional_strip_unexp_args,
-    check_docs_tkn_length,
 )
 
 markdownlinkparser_regex = re.compile(r"\[([^\]]+)\]\(http[s]?://[^)]+\)")

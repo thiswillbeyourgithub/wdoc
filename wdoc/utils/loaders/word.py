@@ -1,11 +1,12 @@
-from beartype.typing import Union, List
 from pathlib import Path
-from loguru import logger
+
+from beartype.typing import List, Union
 from langchain.docstore.document import Document
 from langchain_community.document_loaders import (
     Docx2txtLoader,
     UnstructuredWordDocumentLoader,
 )
+from loguru import logger
 
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.misc import (

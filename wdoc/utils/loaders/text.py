@@ -1,12 +1,11 @@
-from beartype.typing import List, Union, Optional
 import json
-from loguru import logger
-from langchain.docstore.document import Document
 
-from wdoc.utils.misc import (
-    optional_strip_unexp_args,
-)
+from beartype.typing import List, Optional, Union
+from langchain.docstore.document import Document
+from loguru import logger
+
 from wdoc.utils.loaders.shared import debug_return_empty
+from wdoc.utils.misc import optional_strip_unexp_args
 
 
 @debug_return_empty

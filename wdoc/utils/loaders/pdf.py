@@ -1,18 +1,16 @@
+import signal
+import sys
 import tempfile
 import traceback
-import requests
+from functools import partial
+from pathlib import Path
+
 import ftfy
 import openparse
-import sys
-from unstructured.cleaners.core import clean_extra_whitespace
-from functools import partial
-from langchain.text_splitter import TextSplitter
-from tqdm import tqdm
-from pathlib import Path
-from beartype.typing import List, Union, Optional
+import requests
+from beartype.typing import List, Optional, Union
 from langchain.docstore.document import Document
-from loguru import logger
-import signal
+from langchain.text_splitter import TextSplitter
 from langchain_community.document_loaders import (
     OnlinePDFLoader,
     PDFMinerLoader,
@@ -22,10 +20,13 @@ from langchain_community.document_loaders import (
     PyPDFLoader,
     UnstructuredPDFLoader,
 )
+from loguru import logger
+from tqdm import tqdm
+from unstructured.cleaners.core import clean_extra_whitespace
 
 from wdoc.utils.env import env, is_linux, is_out_piped
-from wdoc.utils.loaders.shared import signal_timeout, debug_return_empty
 from wdoc.utils.errors import TimeoutPdfLoaderError
+from wdoc.utils.loaders.shared import debug_return_empty, signal_timeout
 from wdoc.utils.misc import (
     check_docs_tkn_length,
     doc_loaders_cache,

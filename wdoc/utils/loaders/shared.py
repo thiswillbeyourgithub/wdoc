@@ -1,11 +1,12 @@
+import re
+import signal
+from contextlib import contextmanager
+from functools import cache as memoize
+from functools import wraps
+
 import uuid6
 from beartype.typing import Callable, Union
-import signal
-from functools import wraps
-from contextlib import contextmanager
 from langchain.docstore.document import Document
-import re
-from functools import cache as memoize
 from langchain_community.document_loaders import WebBaseLoader
 
 from wdoc.utils.env import env

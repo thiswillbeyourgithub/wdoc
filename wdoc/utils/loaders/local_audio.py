@@ -1,10 +1,11 @@
 import time
 from pathlib import Path
-from beartype.typing import Optional, Literal, Union, List
-from loguru import logger
-import uuid6
+
 import ffmpeg
+import uuid6
+from beartype.typing import List, Literal, Optional, Union
 from langchain.docstore.document import Document
+from loguru import logger
 
 try:
     import torchaudio
@@ -14,15 +15,11 @@ except Exception as e:
 
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.loaders.shared_audio import (
-    transcribe_audio_whisper,
-    transcribe_audio_deepgram,
     convert_verbose_json_to_timestamped_text,
+    transcribe_audio_deepgram,
+    transcribe_audio_whisper,
 )
-from wdoc.utils.misc import (
-    doc_loaders_cache,
-    file_hasher,
-    optional_strip_unexp_args,
-)
+from wdoc.utils.misc import doc_loaders_cache, file_hasher, optional_strip_unexp_args
 
 # unsilence audio
 sox_effects = [

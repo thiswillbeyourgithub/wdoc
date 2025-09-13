@@ -1,25 +1,22 @@
-import ankipandas as akp
-import pandas as pd
-import re
-import bs4
 import json
-from beartype.typing import Dict, Optional, Tuple, Union, List
-from loguru import logger
-from pathlib import Path
-from tqdm import tqdm
+import re
 import shutil
-import uuid6
 import warnings
+from pathlib import Path
+
+import ankipandas as akp
+import bs4
+import pandas as pd
+import uuid6
+from beartype.typing import Dict, List, Optional, Tuple, Union
 from langchain.docstore.document import Document
 from langchain.text_splitter import TextSplitter
+from loguru import logger
+from tqdm import tqdm
 
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.loaders.shared import debug_return_empty
-from wdoc.utils.misc import (
-    file_hasher,
-    html_to_text,
-    optional_strip_unexp_args,
-)
+from wdoc.utils.misc import file_hasher, html_to_text, optional_strip_unexp_args
 
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 anki_replacements_regex = re.compile(r"\{([^}]*)\}")

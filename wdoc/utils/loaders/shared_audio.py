@@ -1,21 +1,19 @@
-import litellm
-import joblib
-import httpx
-import time
-import deepgram
-import re
 import os
-import requests
-import ffmpeg
-from beartype.typing import Optional, Union, List
+import re
+import time
 from pathlib import Path
+
+import deepgram
+import ffmpeg
+import httpx
+import joblib
+import litellm
+import requests
+from beartype.typing import List, Optional, Union
 from loguru import logger
 
 from wdoc.utils.env import env
-from wdoc.utils.misc import (
-    file_hasher,
-    doc_loaders_cache,
-)
+from wdoc.utils.misc import doc_loaders_cache, file_hasher
 
 
 def seconds_to_timecode(inp: Union[str, float, int]) -> str:
