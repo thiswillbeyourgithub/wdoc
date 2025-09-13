@@ -1860,7 +1860,7 @@ class wdoc:
 
 
 def debug_exceptions(instance: Optional[wdoc] = None) -> None:
-    "open a debugger is --debug is set"
+    "open a debugger if --debug is set"
 
     def handle_exception(exc_type, exc_value, exc_traceback):
         if not issubclass(exc_type, KeyboardInterrupt):
