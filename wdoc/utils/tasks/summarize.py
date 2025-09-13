@@ -133,7 +133,7 @@ def summarize_documents(
     in_import_mode: bool,
     out_file: Optional[str],
     wdoc_version: str,
-) -> dict:
+) -> wdocSummary:
     """
     Orchestrate the complete document summarization process with optional recursion.
 
