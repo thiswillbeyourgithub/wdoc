@@ -72,26 +72,28 @@ except Exception as e:
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-# Mapping of filetypes to their corresponding loader function names
-LOADABLE_FILETYPE = {
-    "url": "load_url",
-    "youtube": "load_youtube",
-    "pdf": "load_pdf",
-    "online_pdf": "load_online_pdf",
-    "anki": "load_anki",
-    "string": "load_string",
-    "txt": "load_txt",
-    "text": "load_text",
-    "local_html": "load_local_html",
-    "logseq_markdown": "load_logseq_markdown",
-    "local_audio": "load_local_audio",
-    "local_video": "load_local_video",
-    "online_media": "load_online_media",
-    "epub": "load_epub",
-    "powerpoint": "load_powerpoint",
-    "word": "load_word",
-    "json_dict": "load_json_dict",
-}
+# Name of all the filetype than can be loaded. They each correspond to a function
+# named `load_{filetype}` (e.g. `load_logseq_markdown`) inside the
+# wdoc/utils/loaders directory
+LOADABLE_FILETYPE = [
+    "url",
+    "youtube",
+    "pdf",
+    "online_pdf",
+    "anki",
+    "string",
+    "txt",
+    "text",
+    "local_html",
+    "logseq_markdown",
+    "local_audio",
+    "local_video",
+    "online_media",
+    "epub",
+    "powerpoint",
+    "word",
+    "json_dict",
+]
 
 markdownlink_regex = re.compile(r"\[.*?\]\((.*?)\)")  # to find markdown links
 # to replace markdown links by their text
