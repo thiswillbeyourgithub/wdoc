@@ -8,7 +8,7 @@ from beartype.typing import List, Literal, Optional, Union
 from langchain.docstore.document import Document
 from loguru import logger
 
-from wdoc.utils.loaders.audio import load_local_audio
+from wdoc.utils.loaders.local_audio import load_local_audio
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.misc import doc_loaders_cache, file_hasher, optional_strip_unexp_args
 
