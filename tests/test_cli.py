@@ -1,12 +1,16 @@
 import os
 import sys
 import subprocess
+import shutil
 
 import pytest
 
 # Environment setup for CLI tests
 os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] = "true"
 os.environ["WDOC_TYPECHECKING"] = "crash"
+
+# Store the venv python path to ensure we use it consistently
+PYTHON_EXEC = shutil.which("python") or sys.executable
 
 
 @pytest.mark.basic
@@ -32,7 +36,10 @@ def test_help_output_shell():
 def test_help_output_python():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
-        ["python", "-m", "wdoc", "--help"], capture_output=True, text=True, check=True
+        [PYTHON_EXEC, "-m", "wdoc", "--help"],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     output = result.stdout + result.stderr
     assert (
@@ -60,7 +67,7 @@ def test_parse_doc_help_output_shell():
 def test_parse_doc_help_output_python():
     """Test that --help output contains expected docstring."""
     result = subprocess.run(
-        ["python", "-m", "wdoc", "parse", "--help"],
+        [PYTHON_EXEC, "-m", "wdoc", "parse", "--help"],
         capture_output=True,
         text=True,
         check=False,
@@ -134,7 +141,7 @@ def test_parse_nytimes_shell():
     """Test parsing the NYTimes homepage via command line."""
     result = subprocess.run(
         [
-            "python",
+            PYTHON_EXEC,
             "-m",
             "wdoc",
             "parse",
@@ -165,7 +172,7 @@ def test_ddg_search_nvidia():
     """Test DuckDuckGo search functionality with NVIDIA query."""
     result = subprocess.run(
         [
-            "python",
+            PYTHON_EXEC,
             "-m",
             "wdoc",
             "--task=query",
