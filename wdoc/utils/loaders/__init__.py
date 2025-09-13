@@ -79,8 +79,11 @@ except Exception as e:
 # needed in case of buggy unstructured install
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-from .pdf import load_pdf, load_online_pdf
-from .anki import load_anki
+# import all loader functions
+if not env.WDOC_LOADER_LAZY_LOADING:
+    from .pdf import load_pdf, load_online_pdf
+    from .anki import load_anki
+    from .url import load_url
 
 # Mapping of filetypes to their corresponding loader function names
 LOADABLE_FILETYPE = {
