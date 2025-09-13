@@ -4,6 +4,9 @@ Code related to loggings, coloured logs, etc.
 
 import sys
 import warnings
+import pdb
+import traceback
+import faulthandler
 from pathlib import Path
 from textwrap import dedent
 
@@ -133,3 +136,46 @@ def set_parse_doc_help_md_as_docstring(
             parsedochelp = "Parse doc help documentation is empty. Please refer to online documentation."
     obj.__doc__ = "# Content of wdoc/docs/parse_doc_help.md\n\n" + parsedochelp
     return obj
+
+
+def debug_exceptions(instance: Optional["wdoc"] = None) -> None:
+    "open a debugger if --debug is set"
+
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if not issubclass(exc_type, KeyboardInterrupt):
+
+            def p(message: str) -> None:
+                "print error, in red if possible"
+                if instance:
+                    logger.exception(instance.ntfy(message))
+                else:
+                    try:
+                        logger.warning(message)
+                    except Exception:
+                        print(message)
+
+            p(
+                "\n--verbose was used so opening debug console at the "
+                "appropriate frame. Press 'c' to continue to the frame "
+                "of this print."
+            )
+            p(
+                "Please open an issue on github and include the trace. It's "
+                "tremendously useful for me as there are many small bugs that "
+                "can be quickly squashed if users just told me about it :)"
+            )
+            [p(line) for line in traceback.format_tb(exc_traceback)]
+            p(str(exc_type) + " : " + str(exc_value))
+            if hasattr(exc_value, "__cause__") and hasattr(
+                exc_value.__cause__, "__traceback__"
+            ):
+                p("Detected a cause to the exception, opening the cause first")
+                pdb.post_mortem(exc_value.__cause__.__traceback__)
+                p("Out of the __cause__, now debugging the higher traceback:")
+            pdb.post_mortem(exc_traceback)
+            p("You are now in the exception handling frame.")
+            breakpoint()
+            sys.exit(1)
+
+    sys.excepthook = handle_exception
+    faulthandler.enable()
