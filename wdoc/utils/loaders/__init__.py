@@ -83,7 +83,7 @@ from .pdf import load_pdf, load_online_pdf
 from .anki import load_anki
 
 # Mapping of filetypes to their corresponding loader function names
-FILETYPE_TO_LOADER = {
+LOADABLE_FILETYPE = {
     "url": "load_url",
     "youtube": "load_youtube_video",
     "pdf": "load_pdf",
@@ -220,13 +220,13 @@ def load_one_doc(
     assert temp_dir.exists(), temp_dir
 
     # Check if filetype is supported
-    if filetype not in FILETYPE_TO_LOADER:
+    if filetype not in LOADABLE_FILETYPE:
         logger.warning(f"Unsupported filetype: '{filetype}'")
         raise Exception(f"Unsupported filetype: '{filetype}'")
 
-    # Get the loader function name and retrieve the actual function
-    loader_func_name = FILETYPE_TO_LOADER[filetype]
-    loader_func = locals().get(loader_func_name) or globals().get(loader_func_name)
+    # Lazy loading the document loader function
+    exec(f"from .{filetype} import load_{filetype}")
+    loader_func = locals()[f"load_{filetype}"] or globals()[f"load_{filetype}"] or None
 
     if loader_func is None:
         raise Exception(
@@ -2205,9 +2205,9 @@ def load_online_media(
 
 # Validation: Check that all loader functions exist
 def _validate_loader_functions():
-    """Validate that all loader functions referenced in FILETYPE_TO_LOADER exist."""
+    """Validate that all loader functions referenced in LOADABLE_FILETYPE exist."""
     current_module = sys.modules[__name__]
-    for filetype, func_name in FILETYPE_TO_LOADER.items():
+    for filetype, func_name in LOADABLE_FILETYPE.items():
         if not hasattr(current_module, func_name):
             raise Exception(
                 f"Loader function '{func_name}' for filetype '{filetype}' not found in module"
