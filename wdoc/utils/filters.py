@@ -1,3 +1,11 @@
+"""
+Filter functions for VectorStore documents.
+
+This module provides functions to filter VectorStore documents (e.g., FAISS) on the fly,
+since the langchain implementation does not support native filtering. These functions
+allow filtering by regex patterns on document content and metadata.
+"""
+
 from tqdm import tqdm
 import re
 from beartype.typing import Tuple, Callable
