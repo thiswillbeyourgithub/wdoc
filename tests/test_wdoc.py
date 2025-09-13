@@ -269,7 +269,7 @@ def test_query_tim_urban():
     )
     final_answer = out["final_answer"]
     assert "monkey" in final_answer.lower()
-    assert out["total_cost"] > 0
+    assert out["total_cost"] > 0, out
 
     inst2 = wdoc(
         task="query",
@@ -287,7 +287,7 @@ def test_query_tim_urban():
     )
     final_answer2 = out2["final_answer"]
     assert "monkey" in final_answer2.lower()
-    assert out2["total_cost"] == 0
+    assert out2["total_cost"] == 0, out2
 
     inst3 = wdoc(
         task="query",
@@ -305,7 +305,7 @@ def test_query_tim_urban():
     )
     final_answer3 = out3["final_answer"]
     assert "monkey" in final_answer3.lower()
-    assert out3["total_cost"] > 0
+    assert out3["total_cost"] > 0, out3
     os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 
