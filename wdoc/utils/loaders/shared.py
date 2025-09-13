@@ -7,6 +7,10 @@ from langchain.docstore.document import Document
 
 from wdoc.utils.env import env
 
+markdownimage_regex = re.compile(
+    r"!\[([^\]]*)\]\s*(\([^\)]+\)|\[[^\]]+\])", flags=re.MULTILINE
+)
+
 
 def debug_return_empty(func: Callable) -> Callable:
     if env.WDOC_EMPTY_LOADER:
@@ -57,3 +61,15 @@ def signal_timeout(timeout: int, exception: Exception):
         finally:
             # Disable the alarm
             signal.alarm(0)
+
+
+@memoize
+def get_url_title(url: str) -> Union[str, type(None)]:
+    """if the title of the url is not loaded from the loader, trying as last
+    resort with this one"""
+    loader = WebBaseLoader(url, raise_for_status=True)
+    docs = loader.load()
+    if "title" in docs[0].metadata and docs[0].metadata["title"]:
+        return docs[0].metadata["title"]
+    else:
+        return None
