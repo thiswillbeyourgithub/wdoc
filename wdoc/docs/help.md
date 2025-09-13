@@ -744,7 +744,7 @@
     * If `both`, will try to use both.
     All other than `native` are experimental as they rely on weird python tricks that may cause issues.
 
-* `WDOC_LOADER_LAZY_LOADING`, default `False`
+* `WDOC_LOADER_LAZY_LOADING`, default `True`
     * If `True` the function used to load documents (e.g. load_anki, load_online_pdf etc) will be imported only when needed. This
     is faster but experimental for now. If `False`, we import all the loader function on start.
 
