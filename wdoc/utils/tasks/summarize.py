@@ -50,7 +50,49 @@ def do_summarize(
     verbose: bool,
     n_recursion: int = 0,
 ) -> Tuple[str, int, Dict[str, int]]:
-    "summarize each chunk of a long document"
+    """
+    Process document chunks through an LLM to generate structured summaries.
+
+    This function iterates through document chunks, sending each to an LLM for
+    summarization. It handles progressive context by including previous summaries,
+    formats the output as markdown bullet points, and tracks token usage for
+    cost calculation. The function ensures consistent formatting by normalizing
+    bullet points and handling markdown syntax issues.
+
+    Parameters
+    ----------
+    docs : List[Document]
+        List of document chunks to summarize. Each chunk is processed sequentially.
+    metadata : str
+        XML-formatted metadata about the document including title, author, progress
+        indicators. Must contain "[PROGRESS]" placeholder for chunk tracking.
+    language : str
+        Target language for the summary output.
+    modelbackend : str
+        Backend identifier for the LLM model being used.
+    llm : Union[ChatLiteLLM, FakeListChatModel]
+        Language model instance for generating summaries. Must support caching.
+    verbose : bool
+        If True, logs intermediate thinking and summary outputs.
+    n_recursion : int, optional
+        Current recursion level for recursive summarization, by default 0.
+        Adds special instructions when > 0.
+
+    Returns
+    -------
+    Tuple[str, int, Dict[str, int]]
+        - Combined summary text with chunk separators and progress indicators
+        - Number of chunks processed
+        - Token usage breakdown with keys: 'prompt', 'completion', 'internal_reasoning'
+
+    Notes
+    -----
+    The function applies several text cleaning operations:
+    - Removes LLM artifacts like "take a deep breath" phrases
+    - Normalizes bullet points to use consistent "- " format
+    - Fixes markdown formatting issues (bold/italic markers)
+    - Maintains context between chunks using previous summary snippets
+    """
     summaries = []
     previous_summary = ""
 
@@ -229,6 +271,78 @@ def summarize_documents(
     out_file: Optional[str],
     wdoc_version: str,
 ) -> dict:
+    """
+    Orchestrate the complete document summarization process with optional recursion.
+
+    This function serves as the main entry point for document summarization. It
+    extracts metadata from documents, performs initial summarization, optionally
+    applies recursive summarization to condense the output further, calculates
+    costs and reading times, and handles output formatting and file writing.
+    Recursive summarization continues until the summary converges or reaches
+    the specified recursion limit.
+
+    Parameters
+    ----------
+    path : Union[str, Path]
+        Source path or URL of the document being summarized. Used for metadata
+        and identification purposes.
+    relevant_docs : List
+        List of Document objects containing the content to summarize. Must not
+        be empty and should contain metadata like 'title', 'author', etc.
+    summary_language : str
+        Target language for the summary output.
+    model : ModelName
+        Model configuration object containing backend and tokenization info.
+    llm : Union[ChatLiteLLM, FakeListChatModel]
+        Language model instance for generating summaries.
+    llm_verbosity : bool
+        If True, enables verbose logging of LLM interactions and intermediate outputs.
+    summary_n_recursion : int
+        Maximum number of recursive summarization passes. 0 means no recursion.
+        Each pass attempts to further condense the previous summary.
+    llm_price : dict
+        Pricing information for token usage calculation with keys matching
+        token types ('prompt', 'completion', 'internal_reasoning').
+    in_import_mode : bool
+        If True, suppresses console output for integration scenarios.
+    out_file : Optional[str]
+        Path to output file for saving the summary. If None, no file is written.
+        Intermediate recursion summaries are saved with numbered extensions.
+    wdoc_version : str
+        Version string of wdoc for metadata tracking.
+
+    Returns
+    -------
+    dict
+        Comprehensive summary results containing:
+        - 'path': Original document path
+        - 'summary': Best summary text from final recursion pass
+        - 'recursive_summaries': Dict mapping recursion level to summary text
+        - 'sum_reading_length': Estimated reading time in minutes for summary
+        - 'sum_tkn_length': Token count of final summary
+        - 'doc_reading_length': Original document reading time
+        - 'doc_total_tokens': Token usage breakdown by type
+        - 'doc_total_tokens_sum': Total tokens used across all operations
+        - 'doc_total_cost': Total cost in dollars for LLM usage
+        - 'author': Document author if available
+        - 'n_chunk': Number of document chunks processed
+
+    Raises
+    ------
+    AssertionError
+        If relevant_docs is empty or contains unexpected data.
+
+    Notes
+    -----
+    Recursive summarization stops early if:
+    - The summary text becomes identical to the previous iteration
+    - Token length validation fails for the recursive summary chunks
+    - Maximum recursion depth is reached
+
+    The function prioritizes cost transparency by detailed token tracking and
+    supports both interactive and programmatic usage modes through the
+    in_import_mode parameter.
+    """
     assert relevant_docs, "Empty relevant_docs!"
 
     # parse metadata from the doc
