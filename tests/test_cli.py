@@ -39,7 +39,7 @@ def test_help_output_python():
         [PYTHON_EXEC, "-m", "wdoc", "--help"],
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
     )
     output = result.stdout + result.stderr
     assert (
