@@ -8,7 +8,7 @@ to directly identify the media links on the page.
 import json
 import sys
 import fire
-from wdoc.utils.loaders import find_online_media
+from wdoc.utils.loaders.online_media import find_online_media
 import yt_dlp as youtube_dl
 
 ydl_opts = {"dump_single_json": True, "simulate": True}
