@@ -9,7 +9,7 @@ from functools import partial
 from langchain.text_splitter import TextSplitter
 from tqdm import tqdm
 from pathlib import Path
-from typing import List, Union, Optional
+from beartype.typing import List, Union, Optional
 from langchain.docstore.document import Document
 from loguru import logger
 import signal

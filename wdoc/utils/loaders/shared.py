@@ -1,5 +1,5 @@
 import uuid6
-from typing import Callable
+from beartype.typing import Callable
 import signal
 from functools import wraps
 from contextlib import contextmanager
