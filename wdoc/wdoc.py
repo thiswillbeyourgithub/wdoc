@@ -83,7 +83,7 @@ from wdoc.utils.tasks.query import (
     semantic_batching,
     sieve_documents,
 )
-from wdoc.utils.tasks.summarize import summarize_documents
+from wdoc.utils.tasks.summarize import summarize_documents, wdocSummary
 
 logger.info("Starting wdoc")
 
@@ -668,7 +668,7 @@ class wdoc:
                         self.interaction_settings
                     )
 
-    def summary_task(self) -> dict:
+    def summary_task(self) -> wdocSummary:
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
