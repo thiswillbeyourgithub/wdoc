@@ -795,7 +795,14 @@ class wdoc:
         ), f"Invalid retriever value: {self.interaction_settings['retriever']}"
 
         retriever = create_retrievers(
-            **self.interaction_settings,
+            query_retrievers=self.interaction_settings["retriever"],
+            loaded_embeddings=self.loaded_embeddings,
+            embedding_engine=self.embedding_engine,
+            llm=self.llm,
+            top_k=self.interaction_settings["top_k"],
+            relevancy=self.interaction_settings["relevancy"],
+            task=self.interaction_settings["task"],
+            loaded_docs=self.loaded_docs,
         )
 
         if ">>>>" in query:
