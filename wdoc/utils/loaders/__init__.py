@@ -147,7 +147,7 @@ def load_one_doc(
     loader_func_name = f"load_{filetype}"
 
     # Lazy loading the document loader function
-    exec(f"from .{filetype} import {loader_func_name}")
+    exec(f"from wdoc.utils.loaders.{filetype} import {loader_func_name}")
     loader_func = locals()[loader_func_name] or globals()[loader_func_name] or None
 
     if loader_func is None:
@@ -450,22 +450,22 @@ def load_one_doc(
 
 # import all loader functions
 if env.WDOC_LOADER_LAZY_LOADING:
-    from .anki import load_anki
-    from .epub import load_epub
-    from .html import load_html
-    from .json_dict import load_json_dict
-    from .local_audio import load_local_audio
-    from .local_video import load_local_video
-    from .logseq_markdown import load_logseq_markdown
-    from .online_media import load_online_media
-    from .pdf import load_pdf, load_online_pdf
-    from .powerpoint import load_powerpoint
-    from .string import load_string
-    from .text import load_text
-    from .txt import load_txt
-    from .url import load_url
-    from .word import load_word
-    from .youtube import load_youtube
+    from wdoc.utils.loaders.anki import load_anki
+    from wdoc.utils.loaders.epub import load_epub
+    from wdoc.utils.loaders.html import load_html
+    from wdoc.utils.loaders.json_dict import load_json_dict
+    from wdoc.utils.loaders.local_audio import load_local_audio
+    from wdoc.utils.loaders.local_video import load_local_video
+    from wdoc.utils.loaders.logseq_markdown import load_logseq_markdown
+    from wdoc.utils.loaders.online_media import load_online_media
+    from wdoc.utils.loaders.pdf import load_pdf, load_online_pdf
+    from wdoc.utils.loaders.powerpoint import load_powerpoint
+    from wdoc.utils.loaders.string import load_string
+    from wdoc.utils.loaders.text import load_text
+    from wdoc.utils.loaders.txt import load_txt
+    from wdoc.utils.loaders.url import load_url
+    from wdoc.utils.loaders.word import load_word
+    from wdoc.utils.loaders.youtube import load_youtube
 
     # Validation: Check that all loader functions exist
     def _validate_loader_functions():

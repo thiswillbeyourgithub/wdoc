@@ -21,7 +21,10 @@ from wdoc.utils.loaders.shared_audio import (
     convert_verbose_json_to_timestamped_text,
     seconds_to_timecode,
 )
-from .local_audio import transcribe_audio_whisper, transcribe_audio_deepgram
+from wdoc.utils.loaders.local_audio import (
+    transcribe_audio_whisper,
+    transcribe_audio_deepgram,
+)
 
 yt_link_regex = re.compile("youtube.*watch")
 
