@@ -796,7 +796,6 @@ def check_docs_tkn_length(
     otherwise something probably went wrong."""
     identifier = str(identifier)
     size = sum([get_tkn_length(d.page_content) for d in docs])
-    nline = len("\n".join([d.page_content for d in docs]).splitlines())
     if size <= min_token:
         logger.warning(
             f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
@@ -1170,7 +1169,7 @@ def create_langfuse_callback(version: str) -> None:
                 and "redacted" not in os.environ.get("WDOC_LANGFUSE_PUBLIC_KEY", "")
             ):
                 raise Exception(
-                    f"Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
+                    "Couldn't import langfuse even though WDOC_LANGFUSE environment variables appear set. Crashing."
                 ) from e
             else:
                 logger.warning(
