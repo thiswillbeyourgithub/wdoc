@@ -1936,7 +1936,7 @@ class wdoc:
         Lazily create and cache all_texts from loaded_embeddings.
         This property is only computed when needed by specific retrievers (KNN, SVM).
         """
-        if not hasattr(self, '_all_texts'):
+        if not hasattr(self, "_all_texts"):
             self._all_texts = [
                 v.page_content for k, v in self.loaded_embeddings.docstore._dict.items()
             ]
