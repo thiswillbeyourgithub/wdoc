@@ -11,7 +11,7 @@ import playwright
 import re
 
 from wdoc.utils.loaders.shared import debug_return_empty
-from wdoc.utils.local_audio import load_local_audio
+from wdoc.utils.loaders.local_audio import load_local_audio
 from wdoc.utils.env import env
 from wdoc.utils.misc import (
     doc_loaders_cache,
