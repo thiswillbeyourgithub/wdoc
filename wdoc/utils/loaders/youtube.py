@@ -15,8 +15,8 @@ from wdoc.utils.misc import (
     optional_strip_unexp_args,
     doc_loaders_cache,
 )
-from .shared import debug_return_empty
-from .shared_audio import (
+from wdoc.utils.loaders.shared import debug_return_empty
+from wdoc.utils.loaders.shared_audio import (
     process_vtt_content_for_llm,
     convert_verbose_json_to_timestamped_text,
     seconds_to_timecode,

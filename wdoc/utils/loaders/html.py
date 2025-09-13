@@ -9,7 +9,7 @@ from wdoc.utils.misc import (
     optional_strip_unexp_args,
     doc_loaders_cache,
 )
-from .shared import debug_return_empty
+from wdoc.utils.loaders.shared import debug_return_empty
 
 
 @debug_return_empty

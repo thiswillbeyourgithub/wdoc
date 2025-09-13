@@ -12,8 +12,8 @@ except Exception as e:
     # torchaudio can be tricky to install to just in case let's avoid crashing wdoc entirely
     logger.warning(f"Failed to import torchaudio: '{e}'")
 
-from .shared import debug_return_empty
-from .shared_audio import (
+from wdoc.utils.loaders.shared import debug_return_empty
+from wdoc.utils.loaders.shared_audio import (
     transcribe_audio_whisper,
     transcribe_audio_deepgram,
     convert_verbose_json_to_timestamped_text,
