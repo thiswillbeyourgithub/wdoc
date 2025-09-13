@@ -41,7 +41,7 @@ HOME = str(Path.home())
 
 
 @log_and_time_fn
-def do_summarize(
+def _summarize(
     docs: List[Document],
     metadata: str,
     language: str,
@@ -393,7 +393,7 @@ def summarize_documents(
         summary,
         n_chunk,
         doc_total_tokens,
-    ) = do_summarize(
+    ) = _summarize(
         docs=relevant_docs,
         metadata=metadata,
         language=summary_language,
@@ -448,7 +448,7 @@ def summarize_documents(
                 summary_text,
                 n_chunk,
                 new_doc_total_tokens,
-            ) = do_summarize(
+            ) = _summarize(
                 docs=summary_docs,
                 metadata=metadata,
                 language=summary_language,
