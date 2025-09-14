@@ -607,6 +607,37 @@ def pbar_closer(
 
 
 @log_and_time_fn
+def source_replace(input: str, mapping: dict) -> str:
+    """
+    Replace document identifiers in text with their corresponding numbers.
+
+    This function substitutes document IDs (like WDOC_1, WDOC_2) with their
+    corresponding document numbers from the mapping dictionary. It processes
+    in reverse order to avoid issues like WDOC_2 replacing part of WDOC_21.
+
+    Parameters
+    ----------
+    input : str
+        The text containing document identifiers to replace.
+    mapping : dict
+        Dictionary mapping document IDs to document numbers.
+
+    Returns
+    -------
+    str
+        Text with document identifiers replaced by numbers.
+    """
+    # Make a copy of the input to avoid modifying the original string during iteration
+    result = input
+    # substitute in reverse order to avoid WDOC_2 replacing WDOC_21
+    doc_ids = list(mapping.keys())
+    for doc_id in doc_ids[::-1]:
+        doc_num = str(mapping[doc_id])
+        result = result.replace(doc_id, doc_num)
+    return result
+
+
+@log_and_time_fn
 def autoincrease_top_k(
     filtered_docs: List[Document], top_k: int, max_top_k: Optional[int]
 ) -> List[Document]:
