@@ -514,8 +514,8 @@ def test_query_duckduckgo_search():
     )
 
     # Basic validation that the function runs without crashing
-    assert isinstance(out, dict)
-    assert "final_answer" in out
-    assert isinstance(out["final_answer"], str)
-    assert len(out["final_answer"]) > 0
+    assert isinstance(out, dict), out
+    assert "final_answer" in out, out
+    assert isinstance(out["final_answer"], str), out
+    assert len(out["final_answer"]) > 0, out
     # Don't check the content deeply as requested, just ensure it returns something
