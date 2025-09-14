@@ -225,6 +225,10 @@ def batch_load_doc(
                 assert (
                     ndtl
                 ), f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
+                if (
+                    "filetype" not in ndtl
+                ):  # fix if the filetype has not been set after recursive loading
+                    ndtl["filetype"] = "auto"
 
             assert load_filetype in recursive_types_func_mapping
             to_load.remove(to_load[ild])
