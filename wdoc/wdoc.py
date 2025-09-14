@@ -19,7 +19,7 @@ from textwrap import indent
 import litellm
 import pyfiglet
 from beartype.door import is_bearable
-from beartype.typing import Callable, List, Literal, Optional, Union
+from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
 from langchain.docstore.document import Document
 from langchain.globals import set_debug, set_llm_cache, set_verbose
 from langchain_community.chat_models.fake import FakeListChatModel
@@ -877,11 +877,31 @@ class wdoc:
         }
 
         if self.task == "search":
-            self._actual_search_task()
+            return self._actual_search_task(
+                retriever=retriever,
+                query=query,
+                query_fe=query_fe,
+                query_an=query_an,
+                evaluate_doc_chain=evaluate_doc_chain,
+                multi=multi,
+            )
         else:
-            self._actual_query_task()
+            return self._actual_query_task(
+                retriever=retriever,
+                query_fe=query_fe,
+                query_an=query_an,
+                evaluate_doc_chain=evaluate_doc_chain,
+                multi=multi,
+            )
 
-    def _actual_query_task(self):
+    def _actual_query_task(
+        self,
+        retriever: Any,
+        query_fe: str,
+        query_an: str,
+        evaluate_doc_chain: Any,
+        multi: Dict[str, Any],
+    ) -> Dict[str, Any]:
         # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
         retrieve_documents = retrieve_documents_for_query(retriever)
 
@@ -1280,7 +1300,15 @@ class wdoc:
 
         return output
 
-    def _actual_search_task(self):
+    def _actual_search_task(
+        self,
+        retriever: Any,
+        query: str,
+        query_fe: str,
+        query_an: str,
+        evaluate_doc_chain: Any,
+        multi: Dict[str, Any],
+    ) -> Dict[str, Any]:
         if self.query_eval_model is not None:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             retrieve_documents = retrieve_documents_for_search(retriever)
