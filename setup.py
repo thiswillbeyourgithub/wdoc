@@ -164,6 +164,7 @@ setup(
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         "nltk>=3.8.1",  # needed for punkt_tab download in post-install
         # some loaders are included by default
+        "pandas >= 2.3.1",
         "playwright >= 1.45.0",  # for online_media and urls
         "openparse[ml] >= 0.5.7",  # pdf with table support
         # youtube
