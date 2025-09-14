@@ -448,6 +448,7 @@ def load_one_doc(
 
 # import all loader functions
 if env.WDOC_LOADER_LAZY_LOADING:
+    logger.debug("Importing all dependencies because WDOC_LOADER_LAZY_LOADING is True")
     from wdoc.utils.loaders.anki import load_anki
     from wdoc.utils.loaders.epub import load_epub
     from wdoc.utils.loaders.local_html import load_local_html
