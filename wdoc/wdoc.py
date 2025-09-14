@@ -760,13 +760,13 @@ class wdoc:
         self.latest_cost = total_cost
         return results
 
-    def query_task(self, query) -> Any:
+    def query_task(self, query) -> Dict[str, Any]:
         self.task = "query"
-        self._query_or_search_task(query=query)
+        return self._query_or_search_task(query=query)
 
-    def search_task(self, query) -> Any:
+    def search_task(self, query) -> Dict[str, Any]:
         self.task = "search"
-        self._query_or_search_task(query=query)
+        return self._query_or_search_task(query=query)
 
     def _query_or_search_task(self, query: str) -> dict:
         # load embeddings for querying
