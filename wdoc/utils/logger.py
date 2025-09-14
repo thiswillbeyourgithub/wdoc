@@ -94,7 +94,10 @@ def md_printer(message: str, color: Optional[str] = None) -> str:
         logger.debug(message)
         console.print(md, style=color)
     else:
-        logger.info(message)  # always shown
+        logger.info(message)
+        print(
+            message
+        )  # otherwise we can't do things like "wdoc summary something > some_file"
     return message
 
 
