@@ -42,7 +42,6 @@ def load_word(
         )
         loader = UnstructuredWordDocumentLoader(path)
         content2 = loader.load()
-        docs = [Document(page_content=content2)]
         if isinstance(content2, str):
             docs = [Document(page_content=content2)]
         else:
