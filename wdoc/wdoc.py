@@ -82,7 +82,10 @@ from wdoc.utils.tasks.query import (
     source_replace,
 )
 from wdoc.utils.tasks.search import retrieve_documents_for_search
-from wdoc.utils.tasks.shared_query_search import split_query_parts
+from wdoc.utils.tasks.shared_query_search import (
+    split_query_parts,
+    create_evaluate_doc_chain,
+)
 from wdoc.utils.tasks.summarize import summarize_documents, wdocSummary
 from wdoc.utils.tasks.parse import parse_doc
 from wdoc.utils.filters import filter_docstore
@@ -860,130 +863,13 @@ class wdoc:
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
 
-        @eval_cache_wrapper
-        def evaluate_doc_chain(
-            inputs: dict,
-            query_nb: int = self.query_eval_check_number,
-            eval_model_string: str = self.eval_llm._get_llm_string(),  # just for caching
-            eval_prompt: str = str(prompts.evaluate.to_json()),
-        ) -> List[str]:
-            if isinstance(self.eval_llm, FakeListChatModel):
-                outputs = ["10" for i in range(self.query_eval_check_number)]
-                new_p = 0
-                new_c = 0
-                new_r = 0
-
-            elif "n" in self.eval_llm_params or self.query_eval_check_number == 1:
-
-                def _parse_outputs(out) -> List[str]:
-                    reasons = [
-                        gen.generation_info["finish_reason"] for gen in out.generations
-                    ]
-                    outputs = [gen.text for gen in out.generations]
-                    # don't always crash if finish_reason is not stop, because it can sometimes still be parsed.
-                    if not all(r == "stop" for r in reasons):
-                        logger.warning(
-                            f"Unexpected generation finish_reason: '{reasons}' for generations: '{outputs}'. Expected 'stop'"
-                        )
-                    assert outputs, "No generations found by query eval llm"
-                    # parse_eval_output will crash if the output is bad anyway
-                    outputs = [parse_eval_output(o) for o in outputs]
-                    return outputs
-
-                try:
-                    out = self.eval_llm._generate_with_cache(
-                        prompts.evaluate.format_messages(**inputs),
-                        request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
-                    )
-                    outputs = _parse_outputs(out)
-                except Exception:  # retry without cache
-                    logger.debug(
-                        "Failed to run eval_llm on an input. Retrying without cache."
-                    )
-                    out = self.eval_llm._generate(
-                        prompts.evaluate.format_messages(**inputs),
-                        request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
-                    )
-                    outputs = _parse_outputs(out)
-
-                if out.llm_output:
-                    new_p = out.llm_output["token_usage"]["prompt_tokens"]
-                    new_c = out.llm_output["token_usage"]["completion_tokens"]
-                    new_r = (
-                        out.llm_output["token_usage"]["total_tokens"] - new_p - new_c
-                    )
-                else:
-                    new_p = 0
-                    new_c = 0
-                    new_r = 0
-
-            else:
-                outputs = []
-                new_p = 0
-                new_c = 0
-                new_r = 0
-
-                async def do_eval(subinputs):
-                    try:
-                        val = await self.eval_llm._agenerate_with_cache(
-                            prompts.evaluate.format_messages(**subinputs),
-                            request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
-                        )
-                    except Exception:  # retry without cache
-                        val = await self.eval_llm._agenerate(
-                            prompts.evaluate.format_messages(**subinputs),
-                            request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT,
-                        )
-                    return val
-
-                outs = [do_eval(inputs) for i in range(self.query_eval_check_number)]
-                try:
-                    loop = asyncio.get_event_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                outs = loop.run_until_complete(asyncio.gather(*outs))
-                for out in outs:
-                    assert (
-                        len(out.generations) == 1
-                    ), f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
-                    outputs.append(out.generations[0].text)
-                    finish_reason = out.generations[0].generation_info["finish_reason"]
-                    if finish_reason not in ["stop", "length"]:
-                        logger.warning(
-                            f"Unexpected finish_reason: '{finish_reason}' for generation '{outputs[-1]}'"
-                        )
-                    if out.llm_output:
-                        new_p += out.llm_output["token_usage"]["prompt_tokens"]
-                        new_c += out.llm_output["token_usage"]["completion_tokens"]
-                        new_r += (
-                            out.llm_output["token_usage"]["total_tokens"]
-                            - new_p
-                            - new_c
-                        )
-                assert outputs, "No generations found by query eval llm"
-                outputs = [parse_eval_output(o) for o in outputs]
-
-            if len(outputs) < self.query_eval_check_number and len(outputs) == 1:
-                logger.warning(
-                    f"query eval model produced 1 output instead of {self.query_eval_check_number}). Output: '{outputs}'\nThis is usually because the model is wrongly specified by litellm as having a modifiable `n` parameter. To avoid this use another model or set the query_eval_check_number to 1."
-                )
-                if "n" in self.eval_llm_params:
-                    self.eval_llm_params.remove("n")
-                outputs = outputs * self.query_eval_check_number
-            assert (
-                len(outputs) == self.query_eval_check_number
-            ), f"Query eval model produced an unexpected number of outputs ({outputs} but expected {self.query_eval_check_number} outputs).\nInputs: {inputs}'"
-
-            self.eval_llm.callbacks[0].prompt_tokens += new_p
-            self.eval_llm.callbacks[0].completion_tokens += new_c
-            self.eval_llm.callbacks[0].internal_reasoning_tokens += new_r
-            self.eval_llm.callbacks[0].total_tokens += new_p + new_c + new_r
-            if self.eval_llm.callbacks[0].pbar:
-                self.eval_llm.callbacks[0].pbar[-1].update(1)
-            return outputs
-
-        evaluate_doc_chain = chain(evaluate_doc_chain)
+        evaluate_doc_chain = create_evaluate_doc_chain(
+            eval_llm=self.eval_llm,
+            eval_llm_params=self.eval_llm_params,
+            query_eval_check_number=self.query_eval_check_number,
+            eval_cache_wrapper=eval_cache_wrapper,
+            prompts=prompts,
+        )
 
         # uses in most places to increase concurrency limit
         multi = {
