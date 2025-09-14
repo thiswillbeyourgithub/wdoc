@@ -67,7 +67,6 @@ cd ..
 uv pip install -e "..[dev]"
 
 # check if we can install the full wdoc
-cd ..
 uv pip install -e "..[full]"
 
 # cleanup
