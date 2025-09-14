@@ -1381,7 +1381,7 @@ class wdoc:
                     unit="answer",
                     total=len(output["relevant_intermediate_answers"]),
                     # disable=not env.WDOC_VERBOSE,
-                    disable=is_out_piped,
+                    # disable=is_out_piped,
                 )
                 temp_interm_answ = output["relevant_intermediate_answers"]
                 temp_interm_answ = [
