@@ -181,7 +181,7 @@ setup(
         "deepgram-sdk >= 3.2.7",
         "httpx >= 0.27.0",  # to increase deepgram timeout
         "pydub >= 0.25.1",  # extracting audio from local video
-        "audioop-lts >= 1.0.0; python_version >= '3.13'",  # audioop replacement for Python 3.13+, needed by pydub
+        "audioop-lts >= 1.0.0; python_version >= '3.13'",  # audioop replacement for Python 3.13+, needed by pydub. See https://github.com/jiaaro/pydub/issues/815
         "ffmpeg-python >= 0.2.0",  # extracting audio from local video
         "torchaudio >= 2.3.1",  # silence removal from audio
         "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
