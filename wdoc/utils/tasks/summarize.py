@@ -71,7 +71,7 @@ class wdocSummary:
         Total tokens used across all operations.
     doc_total_tokens_str : str
         Human-readable string representation of token usage.
-    doc_total_cost : float
+    doc_total_cost : Union[float, int]
         Total cost in dollars for LLM usage.
     author : Optional[str]
         Document author if available in metadata.
@@ -88,7 +88,7 @@ class wdocSummary:
     doc_total_tokens: Dict[str, int]
     doc_total_tokens_sum: int
     doc_total_tokens_str: str
-    doc_total_cost: float
+    doc_total_cost: Union[float, int]
     author: Optional[str]
     n_chunk: int
 
