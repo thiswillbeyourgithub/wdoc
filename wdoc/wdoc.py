@@ -631,9 +631,6 @@ class wdoc:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
-        if self.task in ["query", "search", "summary_then_query"]:
-            self._prepare_query_task()
-
         if self.__import_mode__:
             logger.debug(
                 "Ready to query or summarize, call your_instance.query_task(your_question)"
@@ -656,9 +653,9 @@ class wdoc:
                 "summary_then_query",
             ], f"Invalid task: {self.task}"
             if self.oneoff:
-                self.query_task(query=query)
+                self.query_or_search_task(query=query)
             elif is_out_piped:
-                self.query_task(query=query)
+                self.query_or_search_task(query=query)
                 logger.debug(
                     "Exited query_task because we don't loop the queries when the output is a shell pipe"
                 )
@@ -668,7 +665,7 @@ class wdoc:
                         self.interaction_settings
                     )
                 while True:
-                    self.query_task(query=query)
+                    self.query_or_search_task(query=query)
                     query, self.interaction_settings = ask_user(
                         self.interaction_settings
                     )
@@ -763,25 +760,27 @@ class wdoc:
         self.latest_cost = total_cost
         return results
 
-    def _prepare_query_task(self) -> None:
+    def query_or_search_task(self, query: str) -> dict:
         # load embeddings for querying
-        self.embedding_engine = load_embeddings_engine(
-            modelname=self.embed_model,
-            cli_kwargs=self.cli_kwargs,
-            api_base=self.llms_api_bases["embeddings"],
-            embed_kwargs=self.embed_model_kwargs,
-            private=self.private,
-            do_test=env.WDOC_EMBED_TESTING,
-        )
-        self.loaded_embeddings = create_embeddings(
-            modelname=self.embed_model,
-            cached_embeddings=self.embedding_engine,
-            load_embeds_from=self.load_embeds_from,
-            save_embeds_as=self.save_embeds_as,
-            loaded_docs=self.loaded_docs,
-            dollar_limit=self.dollar_limit,
-            private=self.private,
-        )
+        if not hasattr(self, "embedding_engine"):
+            self.embedding_engine = load_embeddings_engine(
+                modelname=self.embed_model,
+                cli_kwargs=self.cli_kwargs,
+                api_base=self.llms_api_bases["embeddings"],
+                embed_kwargs=self.embed_model_kwargs,
+                private=self.private,
+                do_test=env.WDOC_EMBED_TESTING,
+            )
+        if not hasattr(self, "loaded_embeddings"):
+            self.loaded_embeddings = create_embeddings(
+                modelname=self.embed_model,
+                cached_embeddings=self.embedding_engine,
+                load_embeds_from=self.load_embeds_from,
+                save_embeds_as=self.save_embeds_as,
+                loaded_docs=self.loaded_docs,
+                dollar_limit=self.dollar_limit,
+                private=self.private,
+            )
 
         # set default ask_user argument
         self.interaction_settings = {
@@ -793,10 +792,13 @@ class wdoc:
         }
 
         # parse filters as callable for faiss filtering
-        if "filter_metadata" in self.cli_kwargs or "filter_content" in self.cli_kwargs:
-            self.loaded_embeddings, self.unfiltered_docstor = filter_docstore()
+        if not hasattr(self, "unfiltered_docstore"):
+            if (
+                "filter_metadata" in self.cli_kwargs
+                or "filter_content" in self.cli_kwargs
+            ):
+                self.loaded_embeddings, self.unfiltered_docstore = filter_docstore()
 
-    def query_task(self, query: str) -> dict:
         assert query.strip(), "Cannot accept empty query"
         assert all(
             retriev in ["basic", "multiquery", "knn", "svm", "parent"]
