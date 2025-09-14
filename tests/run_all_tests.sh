@@ -29,13 +29,9 @@ mkdir temp
 cd temp
 
 # start tests
-echo "\nTesting CLI (basic)"
-$PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_cli.py
-echo "Done with CLI (basic)"
-
-echo "\nTesting CLI (api)"
-$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_cli.py
-echo "Done with CLI (api)"
+echo "\nTesting CLI using a shell script"
+../test_cli.sh
+echo "Done with CLI using a shell script"
 
 echo "\nTesting parsing (basic)"
 $PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_parsing.py
