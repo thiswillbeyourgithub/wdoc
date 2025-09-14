@@ -877,208 +877,413 @@ class wdoc:
         }
 
         if self.task == "search":
-            if self.query_eval_model is not None:
-                # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-                retrieve_documents = retrieve_documents_for_search(retriever)
+            self._actual_search_task()
+        else:
+            self._actual_query_task()
 
-                def create_autoincrease_top_k_chain(inputs):
-                    filtered_docs = inputs
-                    return autoincrease_top_k(filtered_docs, self.top_k, self.max_top_k)
+    def _actual_query_task(self):
+        # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
+        retrieve_documents = retrieve_documents_for_query(retriever)
 
-                create_autoincrease_top_k_chain = chain(create_autoincrease_top_k_chain)
+        def create_autoincrease_top_k_chain(inputs):
+            filtered_docs = inputs
+            return autoincrease_top_k(filtered_docs, self.top_k, self.max_top_k)
 
-                meta_refilter_docs = {
-                    "filtered_docs": (
-                        RunnablePassthrough.assign(
-                            evaluations=RunnablePassthrough.assign(
-                                doc=lambda inputs: inputs["unfiltered_docs"],
-                                q=lambda inputs: [
-                                    inputs["question_to_answer"]
-                                    for i in range(len(inputs["unfiltered_docs"]))
-                                ],
-                            )
-                            | RunnablePassthrough.assign(
-                                inputs=lambda inputs: [
-                                    {"doc": d.page_content, "q": q}
-                                    for d, q in zip(inputs["doc"], inputs["q"])
-                                ],
-                            )
-                            | itemgetter("inputs")
-                            | RunnableEach(
-                                bound=evaluate_doc_chain.with_config(multi)
-                            ).with_config(multi)
-                        )
-                        | refilter_docs
-                        | create_autoincrease_top_k_chain
-                    ),
-                    "unfiltered_docs": itemgetter("unfiltered_docs"),
-                    "question_to_answer": itemgetter("question_to_answer"),
-                }
+        create_autoincrease_top_k_chain = chain(create_autoincrease_top_k_chain)
 
-                logger.debug("Defining the rag_chain")
-                rag_chain = (
-                    retrieve_documents
-                    | sieve_documents(instance=self)
-                    | pbar_chain(
-                        llm=self.eval_llm,
-                        len_func="len(inputs['unfiltered_docs'])",
-                        desc="LLM evaluation",
-                        unit="doc",
+        meta_refilter_docs = {
+            "filtered_docs": (
+                RunnablePassthrough.assign(
+                    evaluations=RunnablePassthrough.assign(
+                        doc=lambda inputs: inputs["unfiltered_docs"],
+                        q=lambda inputs: [
+                            inputs["question_to_answer"]
+                            for i in range(len(inputs["unfiltered_docs"]))
+                        ],
                     )
-                    | meta_refilter_docs
-                    | pbar_closer(llm=self.eval_llm)
+                    | RunnablePassthrough.assign(
+                        inputs=lambda inputs: [
+                            {"doc": d.page_content, "q": q}
+                            for d, q in zip(inputs["doc"], inputs["q"])
+                        ]
+                    )
+                    | itemgetter("inputs")
+                    | RunnableEach(
+                        bound=evaluate_doc_chain.with_config(multi)
+                    ).with_config(multi)
                 )
-                tried_top_k = []
-                while True:
-                    if len(tried_top_k) > 10:
-                        raise Exception(f"Tried more than 10 top_k: {tried_top_k}")
-                    try:
-                        assert self.top_k not in tried_top_k
-                        tried_top_k.append(self.top_k)
-                        logger.debug("Calling the rag_chain")
-                        output = rag_chain.invoke(
-                            {
-                                "question_for_embedding": query_fe,
-                                "question_to_answer": query_an,
-                            }
-                        )
-                        break
-                    except ShouldIncreaseTopKAfterLLMEvalFiltering:
-                        if self.max_top_k is None:
-                            raise
-                        assert (
-                            self.max_top_k != self.top_k
-                        ), f"Something went wrong: top_k: {self.top_k} ; max_top_k: {self.max_top_k}"
-                        assert (
-                            self.max_top_k > self.top_k
-                        )  # if it's equal, it should have returned normally
-                        new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
-                        assert new_top_k > self.top_k
-                        assert new_top_k not in tried_top_k
-                        assert new_top_k <= self.max_top_k
-                        self.top_k = new_top_k
+                | refilter_docs
+                | create_autoincrease_top_k_chain
+            ),
+            "unfiltered_docs": itemgetter("unfiltered_docs"),
+            "question_to_answer": itemgetter("question_to_answer"),
+        }
+        answer_each_doc_chain = (
+            prompts.answer
+            | self.llm.bind(max_tokens=env.WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS)
+            | StrOutputParser()
+        )
 
-                docs = output["filtered_docs"]
-            else:
-                docs = retriever.invoke(query)
-                if len(docs) < self.interaction_settings["top_k"]:
-                    logger.warning(f"Only found {len(docs)} relevant documents")
+        answer_all_docs = RunnablePassthrough.assign(
+            inputs=lambda inputs: [
+                {"context": d.page_content, "question_to_answer": q}
+                for d, q in zip(
+                    inputs["filtered_docs"],
+                    [inputs["question_to_answer"]] * len(inputs["filtered_docs"]),
+                )
+            ]
+        ) | {
+            "intermediate_answers": itemgetter("inputs")
+            | RunnableEach(bound=answer_each_doc_chain),
+            "question_to_answer": itemgetter("question_to_answer"),
+            "filtered_docs": itemgetter("filtered_docs"),
+            "unfiltered_docs": itemgetter("unfiltered_docs"),
+        }
 
-            if "unfiltered_docs" in output:
-                logger.info(
-                    f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
-                )
-            if "filtered_docs" in output:
-                logger.info(
-                    f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
-                )
-            if "relevant_filtered_docs" in output:
-                logger.info(
-                    f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
-                )
-
-            evalllmcallback = self.eval_llm.callbacks[0]
-            etotal_cost = (
-                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price["completion"]
-                * evalllmcallback.completion_tokens
-                + self.query_evalllm_price["internal_reasoning"]
-                * evalllmcallback.internal_reasoning_tokens
+        logger.debug("Defining the rag_chain")
+        rag_chain = (
+            retrieve_documents
+            | sieve_documents(instance=self)
+            | pbar_chain(
+                llm=self.eval_llm,
+                len_func="len(inputs['unfiltered_docs'])",
+                desc="LLM evaluation",
+                unit="doc",
             )
-            logger.debug(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
+            | meta_refilter_docs
+            | pbar_closer(llm=self.eval_llm)
+            | pbar_chain(
+                llm=self.llm,
+                len_func="len(inputs['filtered_docs'])",
+                desc="Answering each",
+                unit="doc",
+            )
+            | answer_all_docs
+            | pbar_closer(llm=self.llm)
+        )
+
+        if env.WDOC_VERBOSE:
+            rag_chain.get_graph().print_ascii()
+
+        chain_time = 0
+        start_time = time.time()
+        tried_top_k = []
+        while True:
+            if len(tried_top_k) > 10:
+                raise Exception(f"Tried more than 10 top_k: {tried_top_k}")
+            try:
+                assert self.top_k not in tried_top_k
+                tried_top_k.append(self.top_k)
+                logger.debug("Calling the rag_chain")
+                output = rag_chain.invoke(
+                    {
+                        "question_for_embedding": query_fe,
+                        "question_to_answer": query_an,
+                    }
+                )
+                break
+            except ShouldIncreaseTopKAfterLLMEvalFiltering:
+                if self.max_top_k is None:
+                    raise
+                elif self.max_top_k == self.top_k:
+                    break
+                assert self.max_top_k > self.top_k
+                new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
+                assert new_top_k > self.top_k
+                assert new_top_k not in tried_top_k
+                assert new_top_k <= self.max_top_k
+                self.top_k = new_top_k
+            except NoDocumentsRetrieved:
+                return {
+                    "error": logger.error(
+                        md_printer(
+                            f"## No documents were retrieved with query '{query_fe}'",
+                            color="red",
+                        )
+                    )
+                }
+            except NoDocumentsAfterLLMEvalFiltering:
+                return {
+                    "error": logger.error(
+                        md_printer(
+                            f"## No documents remained after query eval LLM filtering using question '{query_an}'",
+                            color="red",
+                        )
+                    )
+                }
+        chain_time = time.time() - start_time
+
+        assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
+
+        output["relevant_filtered_docs"] = []
+        output["relevant_intermediate_answers"] = []
+        for ia, a in enumerate(output["intermediate_answers"]):
+            if check_intermediate_answer(a):
+                output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
+                output["relevant_intermediate_answers"].append(a)
+
+        # Create consistent document identifiers using WDOC_N format
+        output["source_mapping"] = {}
+        for ifd, fd in enumerate(output["relevant_filtered_docs"]):
+            doc_id = f"WDOC_{ifd + 1}"
+            output["source_mapping"][doc_id] = ifd + 1
+            ia = output["relevant_intermediate_answers"][ifd]
+            output["relevant_intermediate_answers"][
+                ifd
+            ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
+
+        all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
+
+        if len(output["relevant_intermediate_answers"]) > 1:
+            # next step is to combine the intermediate answers into a single answer
+            final_answer_chain = RunnablePassthrough.assign(
+                final_answer=RunnablePassthrough.assign(
+                    question=lambda inputs: inputs["question_to_answer"],
+                    intermediate_answers=lambda inputs: collate_relevant_intermediate_answers(
+                        list_ia=inputs["relevant_intermediate_answers"],
+                    ),
+                )
+                | prompts.combine
+                | self.llm
+                | StrOutputParser()
             )
 
             llmcallback = self.llm.callbacks[0]
-            total_cost = (
+            cost_before_combine = (
                 self.llm_price["prompt"] * llmcallback.prompt_tokens
                 + self.llm_price["completion"] * llmcallback.completion_tokens
                 + self.llm_price["internal_reasoning"]
                 * llmcallback.internal_reasoning_tokens
             )
-            logger.debug(
-                f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+
+            # group the intermediate answers by batch, then do a batch reduce mapping
+            # each batch is at least 2 intermediate answers and maxes at
+            # batch_tkn_size tokens to avoid losing anything because of
+            # the context
+            pbar = tqdm(
+                desc="Combining answers",
+                unit="answer",
+                total=len(output["relevant_intermediate_answers"]),
+                # disable=not env.WDOC_VERBOSE,
+                # disable=is_out_piped,
             )
-            logger.warning(f"Total cost: ${total_cost + etotal_cost:.5f}")
+            temp_interm_answ = output["relevant_intermediate_answers"]
+            temp_interm_answ = [
+                thinking_answer_parser(a)["answer"] for a in temp_interm_answ
+            ]
+            while True:
+                batches = [[]]
+                batches = semantic_batching(temp_interm_answ, self.embedding_engine)
+                batch_args = [
+                    {
+                        "question_to_answer": query_an,
+                        "relevant_intermediate_answers": b,
+                    }
+                    for b in batches
+                ]
+                temp_interm_answ = []
+                batch_result = final_answer_chain.batch(batch_args)
+                n_trial = 2
+                for ia, a in enumerate(batch_result):
+                    for trial in range(1, n_trial + 1):
+                        try:
+                            answer_text = a["final_answer"]
+                            o = thinking_answer_parser(
+                                answer_text,
+                                strict=True,
+                            )["answer"]
+                            temp_interm_answ.append(o)
+                            break
+                        except Exception as e:
+                            logger.warning(
+                                f"Error at trial {trial} when separating "
+                                "thinking from answer from LLM output.\n\n"
+                                f"The full answer is: '{a}'\n\n"
+                                f"The error was: '{e}'\n\n"
+                                "Retrying "
+                                "this specific batch to make sure we don't"
+                                " loose intermediate answers"
+                            )
+                            # modify the batch slightly to bypass the cache
+                            altered_batch = batch_args[ia]
+                            altered_batch["question_to_answer"] += "."
+                            a = final_answer_chain.batch([altered_batch])[0]
 
-            if self.__import_mode__:
-                return output
+                if len(temp_interm_answ) == 0 and trial > 0:
+                    logger.warning(
+                        f"Couldn't continue merging documents. This is likely because the intermediate answers got too large. As a cheap workaround I'll concatenate them in semantic order. The latest batch contains {len(batch_result)} intermediate answers. The number of trial was {trial}/{n_trial}."
+                    )
+                    assert batch_result, trial
+                    concat = "\n---\n".join([b["final_answer"] for b in batch_result])
+                    temp_interm_answ.append(concat)
 
-            md_printer("\n\n# Documents")
-            if env.WDOC_OPEN_ANKI:
-                anki_nids = []
-                to_print = ""
-            for id, doc in enumerate(docs):
-                to_print += f"## Document #{id + 1}\n"
-                content = doc.page_content.strip()
-                to_print += "```\n" + content + "\n ```\n"
-                for k, v in doc.metadata.items():
-                    to_print += f"* **{k}**: `{v}`\n"
-                to_print += "\n"
-                if env.WDOC_OPEN_ANKI and "anki_nid" in doc.metadata:
-                    nid_str = str(doc.metadata["anki_nid"]).split(" ")
-                    for nid in nid_str:
-                        if nid not in anki_nids:
-                            anki_nids.append(nid)
-            md_printer(to_print)
-            if self.query_eval_model is not None:
-                logger.warning(
-                    f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
-                )
-                logger.warning(
-                    f"Number of documents after query eval filter: {len(output['filtered_docs'])}"
-                )
+                all_rlvt_interim_ans.append(temp_interm_answ)
+                pbar.n = pbar.total - len(temp_interm_answ) + 1
+                pbar.update(0)
+                if len(temp_interm_answ) == 1:
+                    break
 
-            if env.WDOC_OPEN_ANKI and anki_nids:
-                open_answ = input(
-                    f"\nAnki notes found, open in anki? (yes/no/debug)\n(nids: {anki_nids})\n> "
-                )
-                if open_answ == "debug":
-                    breakpoint()
-                elif open_answ in ["y", "yes"]:
-                    logger.info("Opening anki.")
-                    query = f"nid:{','.join(anki_nids)}"
-                    try:
-                        from py_ankiconnect import PyAnkiconnect
+            assert pbar.n == pbar.total
+            pbar.close()
+            assert len(all_rlvt_interim_ans[-1]) == 1
 
-                        ankiconnect = PyAnkiconnect()
-                        ankiconnect(
-                            action="guiBrowse",
-                            query=query,
-                        )
-                    except Exception as e:
-                        logger.warning(f"Error when trying to open Anki: '{e}'")
-            all_filepaths = []
-            for doc in docs:
-                if "path" in doc.metadata:
-                    path = doc.metadata["path"]
-                    try:
-                        path = str(Path(path).resolve().absolute())
-                    except Exception:
-                        pass
-                    all_filepaths.append(path)
-            if all_filepaths:
-                md_printer("### All file paths")
-                md_printer("* " + "\n* ".join(all_filepaths))
+            final_answer = all_rlvt_interim_ans[-1][0]
+            output["all_relevant_intermediate_answers"] = all_rlvt_interim_ans
 
-            evalllmcallback = self.eval_llm.callbacks[0]
-            etotal_cost = (
-                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price["completion"]
-                * evalllmcallback.completion_tokens
-                + self.query_evalllm_price["internal_reasoning"]
-                * evalllmcallback.internal_reasoning_tokens
+        elif not len(output["relevant_intermediate_answers"]):
+            raise Exception(
+                f"No 'relevant_intermediate_answers' found. Output was: '{str(output)[:1000]}...'"
             )
-            logger.debug(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
-            )
-
-            logger.warning(f"Total cost: ${etotal_cost:.5f}")
-            self.latest_cost = etotal_cost
 
         else:
+            final_answer = output["relevant_intermediate_answers"][0]
+
+            # Apply source replacement to final answer
+            final_answer = f"Source identifier: [[{doc_id}]]\n{final_answer}"
+            output["all_relevant_intermediate_answers"] = [
+                output["relevant_intermediate_answers"][0]
+            ]
+
+        # check that all sources used as intermediates are mentionned in the final answer
+        collates = "\n".join(
+            ["\n".join(d) for d in output["all_relevant_intermediate_answers"]]
+        )
+        missing_mapper = []
+        for k, v in output["source_mapping"].items():
+            if k in collates and k not in final_answer:
+                missing_mapper.append(v)
+
+        # prepare the content of the output
+        final_answer = source_replace(final_answer, output["source_mapping"])
+        output["final_answer"] = final_answer
+
+        # if out_file is specified then we write the summary there too.
+        if self.out_file:
+
+            def output_handler(text: str) -> str:
+                # the raw markdown is written to the file
+                # and the rendered markdown is printed on screen
+                with open(self.out_file, "a") as f:
+                    f.write(text + "\n")
+                return md_printer(text)
+
+        else:
+
+            def output_handler(text: str) -> str:
+                return md_printer(text)
+
+        # display sources (i.e. documents used to answer)
+        output_handler("---")
+        if not output["relevant_intermediate_answers"]:
+            logger.error(
+                output_handler(
+                    "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
+                    color="red",
+                )
+            )
+            logger.error(
+                output_handler(
+                    "\n\n# No document filtered so no intermediate answers to combine"
+                )
+            )
+        else:
+            output_handler("\n\n# Intermediate answers for each document:")
+        n = len(output["relevant_intermediate_answers"])
+        for counter, (ia, doc) in enumerate(
+            zip(
+                output["relevant_intermediate_answers"][::-1],
+                output["relevant_filtered_docs"][::-1],
+            )
+        ):
+            to_print = f"## Document #{n - counter}\n"
+            content = doc.page_content.strip()
+            to_print += "```\n" + content + "\n ```\n"
+            for k, v in doc.metadata.items():
+                to_print += f"* **{k}**: `{v}`\n"
+            ia = thinking_answer_parser(ia)
+            # print either both thinking and answer or just answer
+            # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
+            ia = ia["answer"]
+            to_print += indent("### Intermediate answer:\n" + ia, "> ")
+            output_handler(source_replace(to_print, output["source_mapping"]))
+
+        # print the final answer
+        fa = thinking_answer_parser(output["final_answer"])
+        # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
+        fa = fa["answer"]
+        output_handler("---")
+        output_handler(
+            indent(f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> ")
+        )
+
+        if missing_mapper:
+            logger.warning(
+                f"Found some source mappers in intermediate answers that are missing from the final answer. Here are the documents #: {','.join(map(str, missing_mapper))}"
+            )
+
+        # print the breakdown of documents used and chain time
+        logger.info(
+            f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
+        )
+        logger.info(
+            f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
+        )
+        logger.info(
+            f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
+        )
+        if len(all_rlvt_interim_ans) > 1:
+            extra = "->".join([str(len(ia)) for ia in all_rlvt_interim_ans])
+            extra = f"({extra})"
+        else:
+            extra = ""
+        logger.debug(
+            f"Number of steps to combine intermediate answers: {len(all_rlvt_interim_ans) - 1} {extra}"
+        )
+        logger.debug(f"Time took by the chain: {chain_time:.2f}s")
+
+        evalllmcallback = self.eval_llm.callbacks[0]
+        etotal_cost = (
+            self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+            + self.query_evalllm_price["completion"] * evalllmcallback.completion_tokens
+            + self.query_evalllm_price["internal_reasoning"]
+            * evalllmcallback.internal_reasoning_tokens
+        )
+        llmcallback = self.llm.callbacks[0]
+        total_cost = (
+            self.llm_price["prompt"] * llmcallback.prompt_tokens
+            + self.llm_price["completion"] * llmcallback.completion_tokens
+            + self.llm_price["internal_reasoning"]
+            * llmcallback.internal_reasoning_tokens
+        )
+        logger.debug(
+            f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
+        )
+
+        if "cost_before_combine" in locals():
+            combine_cost = total_cost - cost_before_combine
+            logger.debug(
+                f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.5f}"
+            )
+
+        logger.debug(
+            f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+        )
+
+        logger.info(f"Total cost: ${total_cost + etotal_cost:.5f}")
+
+        assert total_cost + etotal_cost >= self.latest_cost
+        self.latest_cost = total_cost + etotal_cost
+
+        output["total_cost"] = self.latest_cost
+        output["total_model_cost"] = total_cost
+        output["total_eval_model_cost"] = etotal_cost
+
+        return output
+
+    def _actual_search_task(self):
+        if self.query_eval_model is not None:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-            retrieve_documents = retrieve_documents_for_query(retriever)
+            retrieve_documents = retrieve_documents_for_search(retriever)
 
             def create_autoincrease_top_k_chain(inputs):
                 filtered_docs = inputs
@@ -1100,7 +1305,7 @@ class wdoc:
                             inputs=lambda inputs: [
                                 {"doc": d.page_content, "q": q}
                                 for d, q in zip(inputs["doc"], inputs["q"])
-                            ]
+                            ],
                         )
                         | itemgetter("inputs")
                         | RunnableEach(
@@ -1112,27 +1317,6 @@ class wdoc:
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
                 "question_to_answer": itemgetter("question_to_answer"),
-            }
-            answer_each_doc_chain = (
-                prompts.answer
-                | self.llm.bind(max_tokens=env.WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS)
-                | StrOutputParser()
-            )
-
-            answer_all_docs = RunnablePassthrough.assign(
-                inputs=lambda inputs: [
-                    {"context": d.page_content, "question_to_answer": q}
-                    for d, q in zip(
-                        inputs["filtered_docs"],
-                        [inputs["question_to_answer"]] * len(inputs["filtered_docs"]),
-                    )
-                ]
-            ) | {
-                "intermediate_answers": itemgetter("inputs")
-                | RunnableEach(bound=answer_each_doc_chain),
-                "question_to_answer": itemgetter("question_to_answer"),
-                "filtered_docs": itemgetter("filtered_docs"),
-                "unfiltered_docs": itemgetter("unfiltered_docs"),
             }
 
             logger.debug("Defining the rag_chain")
@@ -1147,21 +1331,7 @@ class wdoc:
                 )
                 | meta_refilter_docs
                 | pbar_closer(llm=self.eval_llm)
-                | pbar_chain(
-                    llm=self.llm,
-                    len_func="len(inputs['filtered_docs'])",
-                    desc="Answering each",
-                    unit="doc",
-                )
-                | answer_all_docs
-                | pbar_closer(llm=self.llm)
             )
-
-            if env.WDOC_VERBOSE:
-                rag_chain.get_graph().print_ascii()
-
-            chain_time = 0
-            start_time = time.time()
             tried_top_k = []
             while True:
                 if len(tried_top_k) > 10:
@@ -1180,305 +1350,133 @@ class wdoc:
                 except ShouldIncreaseTopKAfterLLMEvalFiltering:
                     if self.max_top_k is None:
                         raise
-                    elif self.max_top_k == self.top_k:
-                        break
-                    assert self.max_top_k > self.top_k
+                    assert (
+                        self.max_top_k != self.top_k
+                    ), f"Something went wrong: top_k: {self.top_k} ; max_top_k: {self.max_top_k}"
+                    assert (
+                        self.max_top_k > self.top_k
+                    )  # if it's equal, it should have returned normally
                     new_top_k = min(int(self.top_k * 1.5), self.max_top_k)
                     assert new_top_k > self.top_k
                     assert new_top_k not in tried_top_k
                     assert new_top_k <= self.max_top_k
                     self.top_k = new_top_k
-                except NoDocumentsRetrieved:
-                    return {
-                        "error": logger.error(
-                            md_printer(
-                                f"## No documents were retrieved with query '{query_fe}'",
-                                color="red",
-                            )
-                        )
-                    }
-                except NoDocumentsAfterLLMEvalFiltering:
-                    return {
-                        "error": logger.error(
-                            md_printer(
-                                f"## No documents remained after query eval LLM filtering using question '{query_an}'",
-                                color="red",
-                            )
-                        )
-                    }
-            chain_time = time.time() - start_time
 
-            assert len(output["intermediate_answers"]) == len(output["filtered_docs"])
+            docs = output["filtered_docs"]
+        else:
+            docs = retriever.invoke(query)
+            if len(docs) < self.interaction_settings["top_k"]:
+                logger.warning(f"Only found {len(docs)} relevant documents")
 
-            output["relevant_filtered_docs"] = []
-            output["relevant_intermediate_answers"] = []
-            for ia, a in enumerate(output["intermediate_answers"]):
-                if check_intermediate_answer(a):
-                    output["relevant_filtered_docs"].append(output["filtered_docs"][ia])
-                    output["relevant_intermediate_answers"].append(a)
-
-            # Create consistent document identifiers using WDOC_N format
-            output["source_mapping"] = {}
-            for ifd, fd in enumerate(output["relevant_filtered_docs"]):
-                doc_id = f"WDOC_{ifd + 1}"
-                output["source_mapping"][doc_id] = ifd + 1
-                ia = output["relevant_intermediate_answers"][ifd]
-                output["relevant_intermediate_answers"][
-                    ifd
-                ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
-
-            all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
-
-            if len(output["relevant_intermediate_answers"]) > 1:
-                # next step is to combine the intermediate answers into a single answer
-                final_answer_chain = RunnablePassthrough.assign(
-                    final_answer=RunnablePassthrough.assign(
-                        question=lambda inputs: inputs["question_to_answer"],
-                        intermediate_answers=lambda inputs: collate_relevant_intermediate_answers(
-                            list_ia=inputs["relevant_intermediate_answers"],
-                        ),
-                    )
-                    | prompts.combine
-                    | self.llm
-                    | StrOutputParser()
-                )
-
-                llmcallback = self.llm.callbacks[0]
-                cost_before_combine = (
-                    self.llm_price["prompt"] * llmcallback.prompt_tokens
-                    + self.llm_price["completion"] * llmcallback.completion_tokens
-                    + self.llm_price["internal_reasoning"]
-                    * llmcallback.internal_reasoning_tokens
-                )
-
-                # group the intermediate answers by batch, then do a batch reduce mapping
-                # each batch is at least 2 intermediate answers and maxes at
-                # batch_tkn_size tokens to avoid losing anything because of
-                # the context
-                pbar = tqdm(
-                    desc="Combining answers",
-                    unit="answer",
-                    total=len(output["relevant_intermediate_answers"]),
-                    # disable=not env.WDOC_VERBOSE,
-                    # disable=is_out_piped,
-                )
-                temp_interm_answ = output["relevant_intermediate_answers"]
-                temp_interm_answ = [
-                    thinking_answer_parser(a)["answer"] for a in temp_interm_answ
-                ]
-                while True:
-                    batches = [[]]
-                    batches = semantic_batching(temp_interm_answ, self.embedding_engine)
-                    batch_args = [
-                        {
-                            "question_to_answer": query_an,
-                            "relevant_intermediate_answers": b,
-                        }
-                        for b in batches
-                    ]
-                    temp_interm_answ = []
-                    batch_result = final_answer_chain.batch(batch_args)
-                    n_trial = 2
-                    for ia, a in enumerate(batch_result):
-                        for trial in range(1, n_trial + 1):
-                            try:
-                                answer_text = a["final_answer"]
-                                o = thinking_answer_parser(
-                                    answer_text,
-                                    strict=True,
-                                )["answer"]
-                                temp_interm_answ.append(o)
-                                break
-                            except Exception as e:
-                                logger.warning(
-                                    f"Error at trial {trial} when separating "
-                                    "thinking from answer from LLM output.\n\n"
-                                    f"The full answer is: '{a}'\n\n"
-                                    f"The error was: '{e}'\n\n"
-                                    "Retrying "
-                                    "this specific batch to make sure we don't"
-                                    " loose intermediate answers"
-                                )
-                                # modify the batch slightly to bypass the cache
-                                altered_batch = batch_args[ia]
-                                altered_batch["question_to_answer"] += "."
-                                a = final_answer_chain.batch([altered_batch])[0]
-
-                    if len(temp_interm_answ) == 0 and trial > 0:
-                        logger.warning(
-                            f"Couldn't continue merging documents. This is likely because the intermediate answers got too large. As a cheap workaround I'll concatenate them in semantic order. The latest batch contains {len(batch_result)} intermediate answers. The number of trial was {trial}/{n_trial}."
-                        )
-                        assert batch_result, trial
-                        concat = "\n---\n".join(
-                            [b["final_answer"] for b in batch_result]
-                        )
-                        temp_interm_answ.append(concat)
-
-                    all_rlvt_interim_ans.append(temp_interm_answ)
-                    pbar.n = pbar.total - len(temp_interm_answ) + 1
-                    pbar.update(0)
-                    if len(temp_interm_answ) == 1:
-                        break
-
-                assert pbar.n == pbar.total
-                pbar.close()
-                assert len(all_rlvt_interim_ans[-1]) == 1
-
-                final_answer = all_rlvt_interim_ans[-1][0]
-                output["all_relevant_intermediate_answers"] = all_rlvt_interim_ans
-
-            elif not len(output["relevant_intermediate_answers"]):
-                raise Exception(
-                    f"No 'relevant_intermediate_answers' found. Output was: '{str(output)[:1000]}...'"
-                )
-
-            else:
-                final_answer = output["relevant_intermediate_answers"][0]
-
-                # Apply source replacement to final answer
-                final_answer = f"Source identifier: [[{doc_id}]]\n{final_answer}"
-                output["all_relevant_intermediate_answers"] = [
-                    output["relevant_intermediate_answers"][0]
-                ]
-
-            # check that all sources used as intermediates are mentionned in the final answer
-            collates = "\n".join(
-                ["\n".join(d) for d in output["all_relevant_intermediate_answers"]]
-            )
-            missing_mapper = []
-            for k, v in output["source_mapping"].items():
-                if k in collates and k not in final_answer:
-                    missing_mapper.append(v)
-
-            # prepare the content of the output
-            final_answer = source_replace(final_answer, output["source_mapping"])
-            output["final_answer"] = final_answer
-
-            # if out_file is specified then we write the summary there too.
-            if self.out_file:
-
-                def output_handler(text: str) -> str:
-                    # the raw markdown is written to the file
-                    # and the rendered markdown is printed on screen
-                    with open(self.out_file, "a") as f:
-                        f.write(text + "\n")
-                    return md_printer(text)
-
-            else:
-
-                def output_handler(text: str) -> str:
-                    return md_printer(text)
-
-            # display sources (i.e. documents used to answer)
-            output_handler("---")
-            if not output["relevant_intermediate_answers"]:
-                logger.error(
-                    output_handler(
-                        "\n\n# No document filtered so no intermediate answers to combine.\nThe answer will be based purely on the LLM's internal knowledge.",
-                        color="red",
-                    )
-                )
-                logger.error(
-                    output_handler(
-                        "\n\n# No document filtered so no intermediate answers to combine"
-                    )
-                )
-            else:
-                output_handler("\n\n# Intermediate answers for each document:")
-            n = len(output["relevant_intermediate_answers"])
-            for counter, (ia, doc) in enumerate(
-                zip(
-                    output["relevant_intermediate_answers"][::-1],
-                    output["relevant_filtered_docs"][::-1],
-                )
-            ):
-                to_print = f"## Document #{n - counter}\n"
-                content = doc.page_content.strip()
-                to_print += "```\n" + content + "\n ```\n"
-                for k, v in doc.metadata.items():
-                    to_print += f"* **{k}**: `{v}`\n"
-                ia = thinking_answer_parser(ia)
-                # print either both thinking and answer or just answer
-                # ia = "### Thinking:\n" + ia["thinking"] + "\n\n" + "### Answer:\n" + ia["answer"]
-                ia = ia["answer"]
-                to_print += indent("### Intermediate answer:\n" + ia, "> ")
-                output_handler(source_replace(to_print, output["source_mapping"]))
-
-            # print the final answer
-            fa = thinking_answer_parser(output["final_answer"])
-            # fa = "### Thinking:\n" + fa["thinking"] + "\n\n" + "### Answer:\n" + fa["answer"]
-            fa = fa["answer"]
-            output_handler("---")
-            output_handler(
-                indent(
-                    f"# Answer:\n{source_replace(fa, output['source_mapping'])}\n", "> "
-                )
-            )
-
-            if missing_mapper:
-                logger.warning(
-                    f"Found some source mappers in intermediate answers that are missing from the final answer. Here are the documents #: {','.join(map(str, missing_mapper))}"
-                )
-
-            # print the breakdown of documents used and chain time
+        if "unfiltered_docs" in output:
             logger.info(
                 f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
             )
+        if "filtered_docs" in output:
             logger.info(
                 f"Number of documents found relevant by eval LLM: {len(output['filtered_docs'])}"
             )
+        if "relevant_filtered_docs" in output:
             logger.info(
                 f"Number of documents found relevant by answer LLM: {len(output['relevant_filtered_docs'])}"
             )
-            if len(all_rlvt_interim_ans) > 1:
-                extra = "->".join([str(len(ia)) for ia in all_rlvt_interim_ans])
-                extra = f"({extra})"
-            else:
-                extra = ""
-            logger.debug(
-                f"Number of steps to combine intermediate answers: {len(all_rlvt_interim_ans) - 1} {extra}"
-            )
-            logger.debug(f"Time took by the chain: {chain_time:.2f}s")
 
-            evalllmcallback = self.eval_llm.callbacks[0]
-            etotal_cost = (
-                self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
-                + self.query_evalllm_price["completion"]
-                * evalllmcallback.completion_tokens
-                + self.query_evalllm_price["internal_reasoning"]
-                * evalllmcallback.internal_reasoning_tokens
-            )
-            llmcallback = self.llm.callbacks[0]
-            total_cost = (
-                self.llm_price["prompt"] * llmcallback.prompt_tokens
-                + self.llm_price["completion"] * llmcallback.completion_tokens
-                + self.llm_price["internal_reasoning"]
-                * llmcallback.internal_reasoning_tokens
-            )
-            logger.debug(
-                f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
-            )
+        evalllmcallback = self.eval_llm.callbacks[0]
+        etotal_cost = (
+            self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+            + self.query_evalllm_price["completion"] * evalllmcallback.completion_tokens
+            + self.query_evalllm_price["internal_reasoning"]
+            * evalllmcallback.internal_reasoning_tokens
+        )
+        logger.debug(
+            f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
+        )
 
-            if "cost_before_combine" in locals():
-                combine_cost = total_cost - cost_before_combine
-                logger.debug(
-                    f"Tokens used by strong model to combine the intermediate answers: ${combine_cost:.5f}"
-                )
+        llmcallback = self.llm.callbacks[0]
+        total_cost = (
+            self.llm_price["prompt"] * llmcallback.prompt_tokens
+            + self.llm_price["completion"] * llmcallback.completion_tokens
+            + self.llm_price["internal_reasoning"]
+            * llmcallback.internal_reasoning_tokens
+        )
+        logger.debug(
+            f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
+        )
+        logger.warning(f"Total cost: ${total_cost + etotal_cost:.5f}")
 
-            logger.debug(
-                f"Total tokens used by strong model: '{llmcallback.total_tokens}' (${total_cost:.5f})"
-            )
-
-            logger.info(f"Total cost: ${total_cost + etotal_cost:.5f}")
-
-            assert total_cost + etotal_cost >= self.latest_cost
-            self.latest_cost = total_cost + etotal_cost
-
-            output["total_cost"] = self.latest_cost
-            output["total_model_cost"] = total_cost
-            output["total_eval_model_cost"] = etotal_cost
-
+        if self.__import_mode__:
             return output
+
+        md_printer("\n\n# Documents")
+        if env.WDOC_OPEN_ANKI:
+            anki_nids = []
+            to_print = ""
+        for id, doc in enumerate(docs):
+            to_print += f"## Document #{id + 1}\n"
+            content = doc.page_content.strip()
+            to_print += "```\n" + content + "\n ```\n"
+            for k, v in doc.metadata.items():
+                to_print += f"* **{k}**: `{v}`\n"
+            to_print += "\n"
+            if env.WDOC_OPEN_ANKI and "anki_nid" in doc.metadata:
+                nid_str = str(doc.metadata["anki_nid"]).split(" ")
+                for nid in nid_str:
+                    if nid not in anki_nids:
+                        anki_nids.append(nid)
+        md_printer(to_print)
+        if self.query_eval_model is not None:
+            logger.warning(
+                f"Number of documents using embeddings: {len(output['unfiltered_docs'])}"
+            )
+            logger.warning(
+                f"Number of documents after query eval filter: {len(output['filtered_docs'])}"
+            )
+
+        if env.WDOC_OPEN_ANKI and anki_nids:
+            open_answ = input(
+                f"\nAnki notes found, open in anki? (yes/no/debug)\n(nids: {anki_nids})\n> "
+            )
+            if open_answ == "debug":
+                breakpoint()
+            elif open_answ in ["y", "yes"]:
+                logger.info("Opening anki.")
+                query = f"nid:{','.join(anki_nids)}"
+                try:
+                    from py_ankiconnect import PyAnkiconnect
+
+                    ankiconnect = PyAnkiconnect()
+                    ankiconnect(
+                        action="guiBrowse",
+                        query=query,
+                    )
+                except Exception as e:
+                    logger.warning(f"Error when trying to open Anki: '{e}'")
+        all_filepaths = []
+        for doc in docs:
+            if "path" in doc.metadata:
+                path = doc.metadata["path"]
+                try:
+                    path = str(Path(path).resolve().absolute())
+                except Exception:
+                    pass
+                all_filepaths.append(path)
+        if all_filepaths:
+            md_printer("### All file paths")
+            md_printer("* " + "\n* ".join(all_filepaths))
+
+        evalllmcallback = self.eval_llm.callbacks[0]
+        etotal_cost = (
+            self.query_evalllm_price["prompt"] * evalllmcallback.prompt_tokens
+            + self.query_evalllm_price["completion"] * evalllmcallback.completion_tokens
+            + self.query_evalllm_price["internal_reasoning"]
+            * evalllmcallback.internal_reasoning_tokens
+        )
+        logger.debug(
+            f"Tokens used by query_eval model: '{evalllmcallback.total_tokens}' (${etotal_cost:.5f})"
+        )
+
+        logger.warning(f"Total cost: ${etotal_cost:.5f}")
+        self.latest_cost = etotal_cost
 
 
 wdoc.parse_doc = staticmethod(parse_doc)
