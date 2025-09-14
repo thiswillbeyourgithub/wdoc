@@ -5,7 +5,6 @@ from wdoc.utils import (
     batch_file_loader,
     customs,
     env,
-    import_tricks,
     loaders,
     misc,
     prompts,
@@ -20,5 +19,4 @@ __all__ = [
     "prompts",
     "tasks",
     "customs",
-    "import_tricks",
 ]
