@@ -653,9 +653,9 @@ class wdoc:
                 "summary_then_query",
             ], f"Invalid task: {self.task}"
             if self.oneoff:
-                self.query_or_search_task(query=query)
+                self._query_or_search_task(query=query)
             elif is_out_piped:
-                self.query_or_search_task(query=query)
+                self._query_or_search_task(query=query)
                 logger.debug(
                     "Exited query_task because we don't loop the queries when the output is a shell pipe"
                 )
@@ -665,7 +665,7 @@ class wdoc:
                         self.interaction_settings
                     )
                 while True:
-                    self.query_or_search_task(query=query)
+                    self._query_or_search_task(query=query)
                     query, self.interaction_settings = ask_user(
                         self.interaction_settings
                     )
@@ -760,7 +760,15 @@ class wdoc:
         self.latest_cost = total_cost
         return results
 
-    def query_or_search_task(self, query: str) -> dict:
+    def query_task(self, query) -> Any:
+        self.task = "query"
+        self._query_or_search_task(query=query)
+
+    def search_task(self, query) -> Any:
+        self.task = "search"
+        self._query_or_search_task(query=query)
+
+    def _query_or_search_task(self, query: str) -> dict:
         # load embeddings for querying
         if not hasattr(self, "embedding_engine"):
             self.embedding_engine = load_embeddings_engine(
