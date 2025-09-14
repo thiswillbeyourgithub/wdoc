@@ -704,7 +704,7 @@ class wdoc:
                 ]
         logger.info(
             self.ntfy(
-                f"Estimate of the LLM cost to summarize: ${estimate_dol:.4f} for {full_tkn} tokens."
+                f"Summary cost estimation: ${estimate_dol:.4f} for {full_tkn} tokens."
             )
         )
         if estimate_dol > self.dollar_limit:
