@@ -10,7 +10,7 @@ import faulthandler
 from pathlib import Path
 from textwrap import dedent
 
-from beartype.typing import Callable, Optional, Type, Union
+from beartype.typing import Callable, Optional, Type, Union, no_type_check
 from loguru import logger
 from platformdirs import user_log_dir
 from rich.console import Console
@@ -138,6 +138,7 @@ def set_parse_doc_help_md_as_docstring(
     return obj
 
 
+@no_type_check  # forward reference to wdoc is not possible
 def debug_exceptions(instance: Optional["wdoc"] = None) -> None:
     "open a debugger if --debug is set"
 
