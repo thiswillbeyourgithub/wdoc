@@ -163,37 +163,48 @@ setup(
         "uuid6",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         "nltk>=3.8.1",  # needed for punkt_tab download in post-install
-        # Loaders:
-        "docx2txt >= 0.8",  # word documents
-        "pandoc >= 2.3",  # epub
-        "unstructured[all-docs]>=0.14.6",  # many file formats
-        "ankipandas>=0.3.15",  # anki
-        "tldextract>=5.1.2",  # url
-        "goose3 >= 3.1.19",  # url
-        "youtube-transcript-api >= 0.6.2",  # youtube
-        # "pytube >= 15.0.0",  # youtube
-        "LogseqMarkdownParser >= 3.3",  # logseq files (I'm the dev behind it)
-        "deepgram-sdk >= 3.2.7",  # audio transcription
-        "httpx >= 0.27.0",  # to increase deepgram timeout
-        "pydub >= 0.25.1",  # extracting audio from local video
-        "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-        "torchaudio >= 2.3.1",  # silence removal from audio
+        # some loaders are included by default
         "playwright >= 1.45.0",  # for online_media and urls
-        # pdf
-        "pdfminer.six >= 20231228",
-        "pillow_heif >= 0.16.0",
-        "pypdfium2 >= 4.30.0",
-        "pymupdf >= 1.24.5",
-        "pdfplumber >= 0.11.1",
-        "pdf2image >= 1.17.0",
         "openparse[ml] >= 0.5.7",  # pdf with table support
+        # youtube
         "yt-dlp >= 2025.04.30",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
-        "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-        # online search
-        "ddgs >= 9.0.0",
-        "duckduckgo-search >= 8.1.1",
+        "youtube-transcript-api >= 0.6.2",
+        # "pytube >= 15.0.0",
+        # url
+        "tldextract>=5.1.2",
+        "goose3 >= 3.1.19",
     ],
     extras_require={
+        "full": [
+            # Loaders:
+            # pdf
+            "pdfminer.six >= 20231228",
+            "pillow_heif >= 0.16.0",
+            "pypdfium2 >= 4.30.0",
+            "pymupdf >= 1.24.5",
+            "pdfplumber >= 0.11.1",
+            "pdf2image >= 1.17.0",
+            # many file formats
+            "unstructured[all-docs]>=0.14.6",
+            # word documents
+            "docx2txt >= 0.8",
+            # epub
+            "pandoc >= 2.3",
+            # anki
+            "ankipandas>=0.3.15",
+            # logseq files (I'm the dev behind it)
+            "LogseqMarkdownParser >= 3.3",
+            # audio/video transcription
+            "deepgram-sdk >= 3.2.7",
+            "httpx >= 0.27.0",  # to increase deepgram timeout
+            "pydub >= 0.25.1",  # extracting audio from local video
+            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
+            "torchaudio >= 2.3.1",  # silence removal from audio
+            "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
+            # online search via 'filetype=web'
+            "ddgs >= 9.0.0",
+            "duckduckgo-search >= 8.1.1",
+        ],
         "fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
             "fasttext-langdetect >= 1.0.5",
@@ -209,8 +220,8 @@ setup(
             "pre-commit >= 4.1.0",
             "pytest >= 8.3.4",
             "pytest-xdist >= 3.6.1",
-            "build",
-            "twine",
+            "build >= 1.2.2.post1",
+            "twine >= 6.1.0",
         ],
     },
     cmdclass={
