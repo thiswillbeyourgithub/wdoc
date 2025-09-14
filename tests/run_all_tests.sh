@@ -66,6 +66,10 @@ echo "Done with wdoc (basic)"
 cd ..
 uv pip install -e "..[dev]"
 
+# check if we can install the full wdoc
+cd ..
+uv pip install -e "..[full]"
+
 # cleanup
 deactivate
 trash test_venv temp
