@@ -131,31 +131,61 @@ test_parse_doc_help_output_python() {
 
 test_error_message_shell_debug() {
     local command="wdoc --task=summarize --path https://lemonde.fr/ --filetype=test --debug"
-    local expected_substring="(Pdb) "
-    local output
     
-    # Use timeout and expect it to timeout since debug mode waits for input
-    # Capture both stdout and stderr, and handle the timeout exit code
-    if output=$(timeout 20s zsh -c "$command"); then
-        echo "FAIL: Command should have timed out but completed successfully"
+    # Use expect to handle the interactive debug session
+    expect -c "
+        set timeout 60
+        spawn $command
+        
+        # Wait for the first (Pdb) prompt
+        expect {
+            \"(Pdb) \" {
+                send \"c\\r\"
+                sleep 0.5
+            }
+            timeout {
+                puts \"FAIL: Did not find (Pdb) prompt within timeout\"
+                exit 1
+            }
+        }
+        
+        # Handle up to 2 more potential nested breakpoints
+        for {set i 0} {\$i < 2} {incr i} {
+            expect {
+                \"(Pdb) \" {
+                    send \"c\\r\"
+                    sleep 0.5
+                }
+                eof {
+                    break
+                }
+                timeout {
+                    break
+                }
+            }
+        }
+        
+        # Wait for the process to exit
+        expect eof
+        wait
+        
+        # Check exit code - should be 0 after continuing through breakpoints
+        if {\[lindex \$::errorCode 2\] == 0} {
+            puts \"SUCCESS: Command exited with code 0\"
+            exit 0
+        } else {
+            puts \"FAIL: Command exited with code \[lindex \$::errorCode 2\]\"
+            exit 1
+        }
+    " >/dev/null 2>&1
+    
+    local expect_exit_code=$?
+    if [[ $expect_exit_code -eq 0 ]]; then
+        return 0
+    else
+        echo "FAIL: Expect script failed or command did not exit cleanly"
         return 1
     fi
-    
-    # timeout returns 124 on timeout, which is what we expect because --debug on error creates a prompt
-    local exit_code=$?
-    if [[ $exit_code -ne 124 ]]; then
-        echo "FAIL: Expected timeout (exit code 124), got exit code $exit_code"
-        return 1
-    fi
-    
-    # Check if we got the expected substring in the output
-    if ! echo "$output" | grep -q "$expected_substring"; then
-        echo "FAIL: Expected '$expected_substring' not found in command output"
-        echo "Output was: $output"
-        return 1
-    fi
-    
-    return 0
 }
 
 test_get_piped_input_detection() {
