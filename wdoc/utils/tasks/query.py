@@ -119,6 +119,32 @@ refilter_docs = chain(refilter_docs)
 
 
 @log_and_time_fn
+def retrieve_documents_for_query(retriever):
+    """
+    Create a retrieve documents chain for query tasks.
+
+    Parameters
+    ----------
+    retriever : object
+        The retriever object to use for document retrieval.
+
+    Returns
+    -------
+    RunnableLambda
+        A chain that retrieves documents using the provided retriever.
+    """
+
+    def _retrieve_documents(inputs):
+        return {
+            "unfiltered_docs": retriever.invoke(inputs["question_for_embedding"]),
+            "question_to_answer": inputs["question_to_answer"],
+        }
+
+    _retrieve_documents = chain(_retrieve_documents)
+    return _retrieve_documents
+
+
+@log_and_time_fn
 def parse_eval_output(output: str) -> str:
     """
     Parse an LLM's answer about wether a document is relevant or not into an
