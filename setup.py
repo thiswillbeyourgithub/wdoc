@@ -185,6 +185,8 @@ setup(
         "ffmpeg-python >= 0.2.0",  # extracting audio from local video
         "torchaudio >= 2.3.1",  # silence removal from audio
         "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
+        # many file formats
+        "unstructured[all-docs]>=0.14.6",
     ],
     extras_require={
         "full": [
@@ -196,8 +198,6 @@ setup(
             "pymupdf >= 1.24.5",
             "pdfplumber >= 0.11.1",
             "pdf2image >= 1.17.0",
-            # many file formats
-            "unstructured[all-docs]>=0.14.6",
             # word documents
             "docx2txt >= 0.8",
             # epub
