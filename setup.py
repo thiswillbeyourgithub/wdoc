@@ -163,8 +163,8 @@ setup(
         "uuid6",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         "nltk>=3.8.1",  # needed for punkt_tab download in post-install
-        # some loaders are included by default
         "pandas >= 2.3.1",
+        # some loaders are included by default:
         "playwright >= 1.45.0",  # for online_media and urls
         "openparse[ml] >= 0.5.7",  # pdf with table support
         # youtube
@@ -174,6 +174,17 @@ setup(
         # url
         "tldextract>=5.1.2",
         "goose3 >= 3.1.19",
+        # online search via 'filetype=web'
+        "ddgs >= 9.0.0",
+        "duckduckgo-search >= 8.1.1",
+        # audio/video transcription
+        "deepgram-sdk >= 3.2.7",
+        "httpx >= 0.27.0",  # to increase deepgram timeout
+        "pydub >= 0.25.1",  # extracting audio from local video
+        "audioop-lts >= 1.0.0; python_version >= '3.13'",  # audioop replacement for Python 3.13+, needed by pydub
+        "ffmpeg-python >= 0.2.0",  # extracting audio from local video
+        "torchaudio >= 2.3.1",  # silence removal from audio
+        "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
     ],
     extras_require={
         "full": [
@@ -195,17 +206,6 @@ setup(
             "ankipandas>=0.3.15",
             # logseq files (I'm the dev behind it)
             "LogseqMarkdownParser >= 3.3",
-            # audio/video transcription
-            "deepgram-sdk >= 3.2.7",
-            "httpx >= 0.27.0",  # to increase deepgram timeout
-            "pydub >= 0.25.1",  # extracting audio from local video
-            "audioop-lts >= 1.0.0; python_version >= '3.13'",  # audioop replacement for Python 3.13+, needed by pydub
-            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-            "torchaudio >= 2.3.1",  # silence removal from audio
-            "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-            # online search via 'filetype=web'
-            "ddgs >= 9.0.0",
-            "duckduckgo-search >= 8.1.1",
         ],
         "fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
