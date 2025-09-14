@@ -82,6 +82,7 @@ from wdoc.utils.tasks.query import (
     source_replace,
 )
 from wdoc.utils.tasks.search import retrieve_documents_for_search
+from wdoc.utils.tasks.shared_query_search import split_query_parts
 from wdoc.utils.tasks.summarize import summarize_documents, wdocSummary
 from wdoc.utils.tasks.parse import parse_doc
 from wdoc.utils.filters import filter_docstore
@@ -628,7 +629,7 @@ class wdoc:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
         if self.task in ["query", "search", "summary_then_query"]:
-            self.prepare_query_task()
+            self._prepare_query_task()
 
         if self.__import_mode__:
             logger.debug(
@@ -759,7 +760,7 @@ class wdoc:
         self.latest_cost = total_cost
         return results
 
-    def prepare_query_task(self) -> None:
+    def _prepare_query_task(self) -> None:
         # load embeddings for querying
         self.embedding_engine = load_embeddings_engine(
             modelname=self.embed_model,
@@ -810,15 +811,7 @@ class wdoc:
             loaded_docs=self.loaded_docs,
         )
 
-        if ">>>>" in query:
-            sp = query.split(">>>>")
-            assert (
-                len(sp) == 2
-            ), "The query must contain a maximum of 1 occurence of '>>>>'"
-            query_fe = sp[0].strip()
-            query_an = sp[1].strip()
-        else:
-            query_fe, query_an = copy.copy(query), copy.copy(query)
+        query_fe, query_an = split_query_parts(query)
 
         assert query.strip(), "Received empty 'query'"
         logger.debug(f"Query for the embeddings: {query_fe}")
