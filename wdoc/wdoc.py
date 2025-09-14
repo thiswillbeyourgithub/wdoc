@@ -76,9 +76,11 @@ from wdoc.utils.tasks.query import (
     pbar_chain,
     pbar_closer,
     refilter_docs,
+    retrieve_documents_for_query,
     semantic_batching,
     sieve_documents,
 )
+from wdoc.utils.tasks.search import retrieve_documents_for_search
 from wdoc.utils.tasks.summarize import summarize_documents, wdocSummary
 from wdoc.utils.tasks.parse import parse_doc
 from wdoc.utils.filters import filter_docstore
@@ -997,16 +999,7 @@ class wdoc:
         if self.task == "search":
             if self.query_eval_model is not None:
                 # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-                def retrieve_documents(inputs):
-                    return {
-                        "unfiltered_docs": retriever.invoke(
-                            inputs["question_for_embedding"]
-                        ),
-                        "question_to_answer": inputs["question_to_answer"],
-                    }
-                    return inputs
-
-                retrieve_documents = chain(retrieve_documents)
+                retrieve_documents = retrieve_documents_for_search(retriever)
 
                 def create_autoincrease_top_k_chain(inputs):
                     filtered_docs = inputs
@@ -1205,16 +1198,7 @@ class wdoc:
 
         else:
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
-            def retrieve_documents(inputs):
-                return {
-                    "unfiltered_docs": retriever.invoke(
-                        inputs["question_for_embedding"]
-                    ),
-                    "question_to_answer": inputs["question_to_answer"],
-                }
-                return inputs
-
-            retrieve_documents = chain(retrieve_documents)
+            retrieve_documents = retrieve_documents_for_query(retriever)
 
             def create_autoincrease_top_k_chain(inputs):
                 filtered_docs = inputs
