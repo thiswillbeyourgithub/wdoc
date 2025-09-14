@@ -69,6 +69,7 @@ from wdoc.utils.misc import (  # debug_chain,
 from wdoc.utils.prompts import prompts
 from wdoc.utils.retrievers import create_retrievers
 from wdoc.utils.tasks.query import (
+    autoincrease_top_k,
     check_intermediate_answer,
     collate_relevant_intermediate_answers,
     parse_eval_output,
@@ -862,30 +863,6 @@ class wdoc:
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
 
-        def autoincrease_top_k(filtered_docs: List[Document]) -> List[Document]:
-            if not self.max_top_k:
-                return filtered_docs
-            ratio = len(filtered_docs) / self.top_k
-            if ratio >= 0.9:
-                if self.top_k < self.max_top_k:
-                    raise ShouldIncreaseTopKAfterLLMEvalFiltering(
-                        logger.warning(
-                            f"Number of documents found: {len(filtered_docs)}, "
-                            f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
-                            f"top_k should be increased. Max_top_k is {self.max_top_k}"
-                        )
-                    )
-                else:
-                    logger.warning(
-                        f"Number of documents found: {len(filtered_docs)}, "
-                        f"top_k is {self.top_k} so ratio={ratio:.1f}, hence "
-                        f"top_k should be increased but we eached "
-                        f"max_top_k ({self.max_top_k}) so continuing."
-                    )
-            return filtered_docs
-
-        autoincrease_top_k = chain(autoincrease_top_k)
-
         @eval_cache_wrapper
         def evaluate_doc_chain(
             inputs: dict,
@@ -1030,6 +1007,12 @@ class wdoc:
 
                 retrieve_documents = chain(retrieve_documents)
 
+                def create_autoincrease_top_k_chain(inputs):
+                    filtered_docs = inputs
+                    return autoincrease_top_k(filtered_docs, self.top_k, self.max_top_k)
+
+                create_autoincrease_top_k_chain = chain(create_autoincrease_top_k_chain)
+
                 meta_refilter_docs = {
                     "filtered_docs": (
                         RunnablePassthrough.assign(
@@ -1052,7 +1035,7 @@ class wdoc:
                             ).with_config(multi)
                         )
                         | refilter_docs
-                        | autoincrease_top_k
+                        | create_autoincrease_top_k_chain
                     ),
                     "unfiltered_docs": itemgetter("unfiltered_docs"),
                     "question_to_answer": itemgetter("question_to_answer"),
@@ -1232,6 +1215,12 @@ class wdoc:
 
             retrieve_documents = chain(retrieve_documents)
 
+            def create_autoincrease_top_k_chain(inputs):
+                filtered_docs = inputs
+                return autoincrease_top_k(filtered_docs, self.top_k, self.max_top_k)
+
+            create_autoincrease_top_k_chain = chain(create_autoincrease_top_k_chain)
+
             meta_refilter_docs = {
                 "filtered_docs": (
                     RunnablePassthrough.assign(
@@ -1254,7 +1243,7 @@ class wdoc:
                         ).with_config(multi)
                     )
                     | refilter_docs
-                    | autoincrease_top_k
+                    | create_autoincrease_top_k_chain
                 ),
                 "unfiltered_docs": itemgetter("unfiltered_docs"),
                 "question_to_answer": itemgetter("question_to_answer"),

@@ -11,7 +11,7 @@ import scipy
 import sklearn.decomposition as decomposition
 import sklearn.metrics as metrics
 import sklearn.preprocessing as preprocessing
-from beartype.typing import List, Literal, Tuple, Union
+from beartype.typing import List, Literal, Optional, Tuple, Union
 from langchain.docstore.document import Document
 from langchain_core.embeddings import Embeddings
 from langchain_litellm import ChatLiteLLM
@@ -26,6 +26,7 @@ from wdoc.utils.errors import (
     InvalidDocEvaluationByLLMEval,
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
+    ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 from wdoc.utils.misc import get_tkn_length, thinking_answer_parser, log_and_time_fn
 
@@ -577,3 +578,66 @@ def pbar_closer(
     actual_pbar_closer = chain(actual_pbar_closer)
 
     return actual_pbar_closer
+
+
+@log_and_time_fn
+def autoincrease_top_k(
+    filtered_docs: List[Document], top_k: int, max_top_k: Optional[int]
+) -> List[Document]:
+    """
+    Check if the number of filtered documents suggests top_k should be increased.
+
+    This function evaluates the ratio of filtered documents to top_k and raises
+    an exception if the ratio is too high (>=0.9), suggesting that more documents
+    should be retrieved. This mechanism allows the query system to automatically
+    increase top_k when it appears that good documents might be getting cut off
+    due to the limit.
+
+    Parameters
+    ----------
+    filtered_docs : List[Document]
+        The list of documents that passed the LLM evaluation filtering.
+    top_k : int
+        The current top_k value used for document retrieval.
+    max_top_k : Optional[int]
+        The maximum allowed value for top_k. If None, no automatic increase
+        will be attempted.
+
+    Returns
+    -------
+    List[Document]
+        The same list of filtered documents (unchanged).
+
+    Raises
+    ------
+    ShouldIncreaseTopKAfterLLMEvalFiltering
+        When the ratio of filtered documents to top_k is >= 0.9 and top_k
+        can still be increased (i.e., top_k < max_top_k).
+
+    Notes
+    -----
+    This function is designed to be used in a langchain pipeline where the
+    exception can be caught to retry the query with an increased top_k value.
+    The function logs warnings when the ratio suggests top_k should be increased
+    but max_top_k has been reached.
+    """
+    if not max_top_k:
+        return filtered_docs
+    ratio = len(filtered_docs) / top_k
+    if ratio >= 0.9:
+        if top_k < max_top_k:
+            raise ShouldIncreaseTopKAfterLLMEvalFiltering(
+                logger.warning(
+                    f"Number of documents found: {len(filtered_docs)}, "
+                    f"top_k is {top_k} so ratio={ratio:.1f}, hence "
+                    f"top_k should be increased. Max_top_k is {max_top_k}"
+                )
+            )
+        else:
+            logger.warning(
+                f"Number of documents found: {len(filtered_docs)}, "
+                f"top_k is {top_k} so ratio={ratio:.1f}, hence "
+                f"top_k should be increased but we eached "
+                f"max_top_k ({max_top_k}) so continuing."
+            )
+    return filtered_docs
