@@ -5,7 +5,6 @@ set -o pipefail
 set -u
 
 # Environment setup for CLI tests (same as in pytest file)
-export OVERRIDE_USER_DIR_PYTEST_WDOC="true"
 export WDOC_TYPECHECKING="crash"
 
 # Store the venv python path to ensure we use it consistently
@@ -44,7 +43,7 @@ run_test() {
 # Test functions (converted from pytest)
 test_help_output_shell() {
     local output
-    if ! output=$(wdoc --help 2>&1); then
+    if ! output=$(wdoc --help); then
         echo "FAIL: wdoc --help command failed"
         return 1
     fi
@@ -66,7 +65,7 @@ test_help_output_shell() {
 
 test_help_output_python() {
     local output
-    if ! output=$($PYTHON_EXEC -m wdoc --help 2>&1); then
+    if ! output=$($PYTHON_EXEC -m wdoc --help); then
         echo "FAIL: python -m wdoc --help command failed"
         return 1
     fi
@@ -88,7 +87,7 @@ test_help_output_python() {
 
 test_parse_doc_help_output_shell() {
     local output
-    if ! output=$(wdoc parse --help 2>&1); then
+    if ! output=$(wdoc parse --help); then
         echo "FAIL: wdoc parse --help command failed"
         return 1
     fi
@@ -110,7 +109,7 @@ test_parse_doc_help_output_shell() {
 
 test_parse_doc_help_output_python() {
     local output
-    if ! output=$($PYTHON_EXEC -m wdoc parse --help 2>&1); then
+    if ! output=$($PYTHON_EXEC -m wdoc parse --help); then
         echo "FAIL: python -m wdoc parse --help command failed"
         return 1
     fi
@@ -137,12 +136,12 @@ test_error_message_shell_debug() {
     
     # Use timeout and expect it to timeout since debug mode waits for input
     # Capture both stdout and stderr, and handle the timeout exit code
-    if output=$(timeout 30s bash -c "$command" 2>&1); then
+    if output=$(timeout 20s zsh -c "$command"); then
         echo "FAIL: Command should have timed out but completed successfully"
         return 1
     fi
     
-    # timeout returns 124 on timeout, which is what we expect
+    # timeout returns 124 on timeout, which is what we expect because --debug on error creates a prompt
     local exit_code=$?
     if [[ $exit_code -ne 124 ]]; then
         echo "FAIL: Expected timeout (exit code 124), got exit code $exit_code"
@@ -165,7 +164,7 @@ test_get_piped_input_detection() {
     local cmd_text='import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.write(data)'
     local result_text
     
-    if ! result_text=$(echo -e "$input_text" | $PYTHON_EXEC -c "$cmd_text" 2>&1); then
+    if ! result_text=$(echo -e "$input_text" | $PYTHON_EXEC -c "$cmd_text"); then
         echo "FAIL: Text piping command failed"
         return 1
     fi
@@ -180,7 +179,7 @@ test_get_piped_input_detection() {
     local cmd_bytes='import sys; from wdoc.utils.misc import get_piped_input; data = get_piped_input(); sys.stdout.buffer.write(data)'
     local result_bytes
     
-    if ! result_bytes=$(printf '\x01\x02\x03\xffbinary data' | $PYTHON_EXEC -c "$cmd_bytes" 2>&1); then
+    if ! result_bytes=$(printf '\x01\x02\x03\xffbinary data' | $PYTHON_EXEC -c "$cmd_bytes"); then
         echo "FAIL: Binary piping command failed"
         return 1
     fi
@@ -196,7 +195,7 @@ test_get_piped_input_detection() {
 
 test_parse_nytimes_shell() {
     local output
-    if ! output=$($PYTHON_EXEC -m wdoc parse "https://www.nytimes.com/" --format text 2>&1); then
+    if ! output=$($PYTHON_EXEC -m wdoc parse "https://www.nytimes.com/" --format text); then
         echo "FAIL: NYTimes parsing command failed"
         return 1
     fi
@@ -217,7 +216,7 @@ test_ddg_search_nvidia() {
     local output
     local cmd="$PYTHON_EXEC -m wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month?' --filetype=ddg --ddg_max_result=3 --ddg_region=us-US --model=testing/testing --loading_failure=warn --oneoff --file_loader_parallel_backend=threading"
     
-    if ! output=$(timeout 120s bash -c "$cmd" 2>&1); then
+    if ! output=$(timeout 120s zsh -c "$cmd"); then
         local exit_code=$?
         if [[ $exit_code -eq 124 ]]; then
             echo "FAIL: DDG search command timed out"
@@ -254,10 +253,10 @@ echo
 
 # Run basic tests
 echo "${YELLOW}=== BASIC TESTS ===${NC}"
-run_test "Help output (python)" test_help_output_python  
 run_test "Help output (shell)" test_help_output_shell
-run_test "Parse doc help output (python)" test_parse_doc_help_output_python
+run_test "Help output (python)" test_help_output_python  
 run_test "Parse doc help output (shell)" test_parse_doc_help_output_shell
+run_test "Parse doc help output (python)" test_parse_doc_help_output_python
 run_test "Error message in debug mode" test_error_message_shell_debug
 run_test "Piped input detection" test_get_piped_input_detection
 run_test "Parse NYTimes homepage" test_parse_nytimes_shell
