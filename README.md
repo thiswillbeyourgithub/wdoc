@@ -324,14 +324,16 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 ## Getting started
 *`wdoc` was mainly developped on python 3.11.7 but I'm not sure all the versions that work. When in doubt, make sure that your Python version matches this one.*
 1. To install:
-    * Using pip: `pip install -U wdoc`
+    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually deal install the missing dependencies for your usecase).
     * Or to get a specific git branch:
-        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev`
-        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main`
+        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
+        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
     * You can also use uvx or pipx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
-        * Using uvx: `uvx wdoc --help`
-        * Using pipx: `pipx run wdoc --help`
-    * In any case, it is recommended to try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
+        * Using uvx: `uvx wdoc[full] --help`
+        * Using pipx: `pipx run wdoc[full] --help`
+    * In any case, it is recommended to:
+        * Install the `wdoc[full]` version except if you have specific constraints.
+        * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
