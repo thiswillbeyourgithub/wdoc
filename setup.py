@@ -141,7 +141,7 @@ setup(
         "langchain-community==0.3.27",
         "langchain-openai==0.3.27",
         "langchain-litellm==0.2.1",
-        "langfuse==2.60.9",  # for observability  # don't switch to v3 because of https://github.com/BerriAI/litellm/issues/11500
+        "langfuse>=3.4.0",  # for observability
         "litellm==v1.72.1",  # Bound because of incompatibility with langchain-litellm https://github.com/Akshay-Dongare/langchain-litellm/issues/18
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "prompt-toolkit>=3.0.47",
