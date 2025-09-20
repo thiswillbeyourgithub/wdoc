@@ -71,6 +71,8 @@ uv pip install -e "..[full]"
 
 # cleanup
 deactivate
-trash test_venv temp
+# trash test_venv temp
+rm -rv test_venv temp wdoc_user_cache_dir
+
 cd ..
 echo "Succesfuly ran all tests"
