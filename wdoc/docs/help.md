@@ -789,11 +789,11 @@
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
 
-* `WDOC_DEFAULT_MODEL`, default: `"openai/gpt-4o"`
+* `WDOC_DEFAULT_MODEL`, default: `"openrouter/google/gemini-2.5-pro"`
     * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
     combine those answers. It can also be used by some retrievers etc.
 
-* `WDOC_DEFAULT_QUERY_EVAL_MODEL`, default: `"openai/gpt-4o-mini"`
+* `WDOC_DEFAULT_QUERY_EVAL_MODEL`, default: `"openrouter/google/gemini-2.5-flash"`
     * Default small LLM to use. It will be used to evaluate wether each document is relevant to the query or not.
 
 * `WDOC_DEFAULT_EMBED_MODEL`, default: `"openai/text-embedding-3-small"`
