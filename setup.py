@@ -137,10 +137,10 @@ setup(
         "fire>=0.6.0",
         "ftfy>=6.2.0",
         "joblib>=1.4.2",
-        "langchain==0.3.26",
-        "langchain-community==0.3.27",
-        "langchain-openai==0.3.27",
-        "langchain-litellm==0.2.1",
+        "langchain==0.3.27",
+        "langchain-community==0.3.30",
+        "langchain-openai==0.3.34",
+        "langchain-litellm==0.2.3",
         "langfuse>=3.6.1",  # for observability
         "litellm==v1.72.1",  # Bound because of incompatibility with langchain-litellm https://github.com/Akshay-Dongare/langchain-litellm/issues/18
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
