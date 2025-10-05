@@ -4,7 +4,6 @@ from loguru import logger
 
 from beartype.claw import beartype_package
 from beartype import BeartypeConf
-from beartype.typing import Callable
 
 if os.environ.get("WDOC_TYPECHECKING", "") == "crash":
     beartype_package("wdoc")
