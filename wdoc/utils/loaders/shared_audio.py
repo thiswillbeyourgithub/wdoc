@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 
 import joblib
-import litellm
 from beartype.typing import List, Optional, Union
 from loguru import logger
 
@@ -199,6 +198,7 @@ def transcribe_audio_whisper(
 ) -> dict:
     "Use whisper to transcribe an audio file"
     import requests
+    import litellm
 
     logger.info(f"Calling openai's whisper to transcribe {audio_path}")
     if env.WDOC_PRIVATE_MODE:

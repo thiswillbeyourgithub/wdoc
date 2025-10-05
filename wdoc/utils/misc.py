@@ -16,7 +16,6 @@ from functools import cache as memoize
 from functools import partial, wraps
 from pathlib import Path
 
-import litellm
 from beartype.door import is_bearable
 from beartype.typing import (
     Dict,
@@ -433,6 +432,8 @@ debug_chain = chain(debug_chain)
 
 def wrapped_model_name_matcher(model: str) -> str:
     "find the best match for a modelname (wrapped to make some check)"
+    import litellm
+
     # find the currently set api keys to avoid matching models from
     # unset providers
     all_backends = list(litellm.models_by_provider.keys())
@@ -494,6 +495,8 @@ def model_name_matcher(model: str) -> str:
     model has a known cost and print the matched name)
     Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
     """
+    import litellm
+
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
@@ -619,6 +622,8 @@ class ModelName:
 
 @memoize
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
+    import litellm
+
     assert (
         "cli_parser" not in model.backend
     ), f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
@@ -695,6 +700,8 @@ def get_tkn_length(
     tosplit: str,
     modelname: Union[str, ModelName] = "gpt-4o-mini",
 ) -> int:
+    import litellm
+
     if isinstance(modelname, ModelName):
         modelname = modelname.original
     modelname = modelname.replace("openrouter/", "")

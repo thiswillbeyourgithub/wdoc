@@ -8,7 +8,6 @@ import os
 import time
 from pathlib import Path
 
-import litellm
 import numpy as np
 from beartype.typing import Any, List, Optional, Union
 from joblib import Parallel, delayed
@@ -257,6 +256,8 @@ def create_embeddings(
     computed and present in the cache or ask the CacheBackedEmbeddings class
     to create them and return to wdoc.loaded_embeddings.
     """
+    import litellm
+
     logger.debug("Creating embeddings")
 
     # reload passed embeddings

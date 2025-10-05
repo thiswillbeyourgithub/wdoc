@@ -11,8 +11,6 @@ from beartype.typing import List, Tuple, Dict, Optional, Union
 from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
-from langchain_litellm import ChatLiteLLM
-from langchain_community.chat_models.fake import FakeListChatModel
 import copy
 from dataclasses import dataclass, asdict
 
@@ -125,7 +123,7 @@ def summarize_documents(
     relevant_docs: List,
     summary_language: str,
     model: ModelName,
-    llm: Union[ChatLiteLLM, FakeListChatModel],
+    llm: Union["ChatLiteLLM", "FakeListChatModel"],
     llm_verbosity: bool,
     summary_n_recursion: int,
     llm_price: dict,
@@ -445,7 +443,7 @@ def _summarize(
     metadata: str,
     language: str,
     modelbackend: str,
-    llm: Union[ChatLiteLLM, FakeListChatModel],
+    llm: Union["ChatLiteLLM", "FakeListChatModel"],
     verbose: bool,
     n_recursion: int = 0,
 ) -> Tuple[str, int, Dict[str, int]]:

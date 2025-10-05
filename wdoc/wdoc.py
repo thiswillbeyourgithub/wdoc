@@ -12,7 +12,6 @@ import traceback
 from operator import itemgetter
 from pathlib import Path
 
-import litellm
 from beartype.door import is_bearable
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
 from langchain.docstore.document import Document
@@ -113,6 +112,8 @@ class wdoc:
         """
         This docstring is dynamically updated with the content of wdoc/docs/help.md
         """
+        import litellm
+
         if version:
             print(self.VERSION)
             return
