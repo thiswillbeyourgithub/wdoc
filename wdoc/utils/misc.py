@@ -5,23 +5,18 @@ Miscellanous functions etc.
 import hashlib
 import requests
 import re
-from copy import copy
-import platform
 import inspect
 import json
 import os
-import socket
 import sys
 import uuid
 import warnings
 from dataclasses import dataclass, field
 from datetime import timedelta
-from difflib import get_close_matches
 from functools import cache as memoize
 from functools import partial, wraps
 from pathlib import Path
 
-import bs4
 import litellm
 from beartype.door import is_bearable
 from beartype.typing import (
@@ -393,6 +388,8 @@ def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
 
 def html_to_text(html: str, remove_image: bool = False) -> str:
     """used to strip any html present in the text files"""
+    import bs4
+
     html = html.replace("</li><li>", "<br>")  # otherwise they might get joined
     html = html.replace("</ul><ul>", "<br>")  # otherwise they might get joined
     html = html.replace("<br>", "\n").replace(
@@ -477,6 +474,9 @@ def wrapped_model_name_matcher(model: str) -> str:
     if len(subcandidates) == 1:
         good = f"{backend}/{subcandidates[0]}"
         return good
+
+    from difflib import get_close_matches
+
     match = get_close_matches(modelname, candidates, n=1)
     if match:
         return match[0]
@@ -708,7 +708,7 @@ DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
 def get_splitter(
     task: str,
     modelname: ModelName = DEFAULT_SPLITTER_MODELNAME,
-) -> TextSplitter:
+) -> "TextSplitter":
     "we don't use the same text splitter depending on the task"
     # avoid creating many times this object
     if task not in text_splitters:
@@ -877,6 +877,8 @@ def disable_internet(allowed: dict) -> None:
     --private is used, we overload the socket module to make it only able to
     reach local connection.
     """
+    import socket
+
     logger.warning(
         "Disabling outgoing internet because private mode is on. "
         "The only allowed IPs from now on are the ones from the "
@@ -1013,6 +1015,8 @@ _THIN_SUB_REGEX = re.compile(
 
 def thinking_answer_parser(output: str, strict: bool = False) -> dict:
     """separate the <think> and <answer> tags in an answer"""
+    from copy import copy
+
     orig = copy(output)
     try:
         # some models like the geminis don't return their thinking output, sometimes
@@ -1254,6 +1258,8 @@ def cache_file_in_memory(file_path: Path, recursive: bool = False) -> bool:
         bool: True if caching was successful, False otherwise
     """
     # Check if we're on Linux
+    import platform
+
     if platform.system() != "Linux":
         # This function only works on Linux systems.
         return False
