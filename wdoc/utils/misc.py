@@ -3,7 +3,6 @@ Miscellanous functions etc.
 """
 
 import hashlib
-import requests
 import re
 import inspect
 import json
@@ -513,6 +512,8 @@ def model_name_matcher(model: str) -> str:
 @memoize
 def get_openrouter_metadata() -> dict:
     """fetch the metadata from openrouter, because litellm takes always too much time to add new models."""
+    import requests
+
     url = "https://openrouter.ai/api/v1/models"
     response = requests.get(url)
     rep = response.json()
