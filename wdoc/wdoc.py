@@ -30,7 +30,6 @@ from loguru import logger as logger
 
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
-from wdoc.utils.embeddings import create_embeddings, load_embeddings_engine
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
@@ -758,6 +757,8 @@ class wdoc:
 
         # load embeddings for querying
         if not hasattr(self, "embedding_engine"):
+            from wdoc.utils.embeddings import load_embeddings_engine
+
             self.embedding_engine = load_embeddings_engine(
                 modelname=self.embed_model,
                 cli_kwargs=self.cli_kwargs,
@@ -767,6 +768,8 @@ class wdoc:
                 do_test=env.WDOC_EMBED_TESTING,
             )
         if not hasattr(self, "loaded_embeddings"):
+            from wdoc.utils.embeddings import create_embeddings
+
             self.loaded_embeddings = create_embeddings(
                 modelname=self.embed_model,
                 cached_embeddings=self.embedding_engine,
