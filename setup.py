@@ -141,14 +141,14 @@ setup(
         "langchain-community==0.3.27",
         "langchain-openai==0.3.27",
         "langchain-litellm==0.2.1",
-        "langfuse>=3.4.0",  # for observability
+        "langfuse>=3.6.1",  # for observability
         "litellm==v1.72.1",  # Bound because of incompatibility with langchain-litellm https://github.com/Akshay-Dongare/langchain-litellm/issues/18
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "prompt-toolkit>=3.0.47",
         "tqdm>=4.66.4",
         "faiss-cpu>=1.8.0",
         "rich>=13.8.1",
-        "beartype >= 0.19.0",
+        "beartype >= 0.22.2",
         "platformdirs >= 4.2.2",
         "dill >= 0.3.8",
         "pyfiglet >= 1.0.2",  # banner
@@ -160,22 +160,22 @@ setup(
         "scikit-learn >= 1.5.1",  # for semantic reordering
         "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optional as it can help infer the filetype, and 0.4.28 is necessary for the pipe feature.
-        "uuid6",  # for time sortable timestamp
+        "uuid6 >= 2025.0.1",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
-        "nltk>=3.8.1",  # needed for punkt_tab download in post-install
-        "pandas >= 2.3.1",
+        "nltk>=3.9.2",  # needed for punkt_tab download in post-install
+        "pandas >= 2.3.3",
         # some loaders are included by default:
         "playwright >= 1.45.0",  # for online_media and urls
         "openparse[ml] >= 0.5.7",  # pdf with table support
         # youtube
-        "yt-dlp >= 2025.04.30",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
+        "yt-dlp >= 2025.09.26",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
         "youtube-transcript-api >= 0.6.2",
         # "pytube >= 15.0.0",
         # url
         "tldextract>=5.1.2",
-        "goose3 >= 3.1.19",
+        "goose3 >= 3.1.20",
         # online search via 'filetype=web'
-        "ddgs >= 9.0.0",
+        "ddgs >= 9.6.0",
         "duckduckgo-search >= 8.1.1",
         # audio/video transcription
         "deepgram-sdk >= 3.2.7",
@@ -183,10 +183,10 @@ setup(
         "pydub >= 0.25.1",  # extracting audio from local video
         "audioop-lts >= 1.0.0; python_version >= '3.13'",  # audioop replacement for Python 3.13+, needed by pydub. See https://github.com/jiaaro/pydub/issues/815
         "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-        "torchaudio >= 2.3.1",  # silence removal from audio
-        "trio >= 0.30.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
+        "torchaudio >= 2.8.0",  # silence removal from audio
+        "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
         # many file formats
-        "unstructured[all-docs]>=0.14.6",
+        "unstructured[all-docs]>=0.18.15",
     ],
     extras_require={
         "full": [
@@ -201,7 +201,7 @@ setup(
             # word documents
             "docx2txt >= 0.8",
             # epub
-            "pandoc >= 2.3",
+            "pandoc >= 2.4",
             # anki
             "ankipandas>=0.3.15",
             # logseq files (I'm the dev behind it)
