@@ -1533,8 +1533,8 @@ class wdoc:
         logger.warning(f"Total cost: ${etotal_cost:.5f}")
         self.latest_cost = etotal_cost
 
-    @set_parse_doc_help_md_as_docstring
     @staticmethod
+    @set_parse_doc_help_md_as_docstring
     def parse_doc(*args, **kwargs) -> Union[List[Document], str, List[dict]]:
         from wdoc.utils.tasks.parse import parse_doc
 
