@@ -2,7 +2,6 @@
 Main class.
 """
 
-import asyncio
 import copy
 import faulthandler
 import inspect
