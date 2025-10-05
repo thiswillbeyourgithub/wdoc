@@ -64,7 +64,6 @@ from wdoc.utils.misc import (  # debug_chain,
     thinking_answer_parser,
     tasks_list,
 )
-from wdoc.utils.prompts import prompts
 
 logger.info("Starting wdoc")
 
@@ -755,6 +754,7 @@ class wdoc:
             split_query_parts,
             create_evaluate_doc_chain,
         )
+        from wdoc.utils.prompts import prompts
 
         # load embeddings for querying
         if not hasattr(self, "embedding_engine"):
