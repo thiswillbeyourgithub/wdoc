@@ -3,7 +3,6 @@ Main class.
 """
 
 import copy
-import inspect
 import json
 import os
 import re
