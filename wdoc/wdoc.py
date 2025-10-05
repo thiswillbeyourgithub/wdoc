@@ -3,7 +3,6 @@ Main class.
 """
 
 import copy
-import faulthandler
 import inspect
 import json
 import os
@@ -13,10 +12,8 @@ import time
 import traceback
 from operator import itemgetter
 from pathlib import Path
-from textwrap import indent
 
 import litellm
-import pyfiglet
 from beartype.door import is_bearable
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
 from langchain.docstore.document import Document
@@ -38,7 +35,6 @@ from wdoc.utils.logger import (
 )
 
 from wdoc.utils.batch_file_loader import batch_load_doc
-from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
@@ -157,11 +153,15 @@ class wdoc:
                     sys.exit(1)
 
             sys.excepthook = print_exception
+            import faulthandler
+
             faulthandler.enable()
 
         from loguru import logger  # for some reason I have to reimport
 
         # loguru here otherwise the next line fails!
+        import pyfiglet
+
         logger.warning(pyfiglet.figlet_format("wdoc"))
 
         # make sure the extra args are valid
@@ -469,6 +469,8 @@ class wdoc:
         if disable_llm_cache:
             self.llm_cache = False
         else:
+            from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
+
             if not private:
                 self.llm_cache = SQLiteCacheFixed(
                     database_path=(cache_dir / "langchain_db").resolve().absolute(),
@@ -1326,6 +1328,8 @@ class wdoc:
         evaluate_doc_chain: Any,
         multi: Dict[str, Any],
     ) -> Dict[str, Any]:
+        from textwrap import indent
+
         if self.query_eval_model is not None:
             from wdoc.utils.tasks.search import retrieve_documents_for_search
 
