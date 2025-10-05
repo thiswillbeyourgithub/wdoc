@@ -16,7 +16,7 @@ from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 
 
 def create_multiquery_retriever(
-    llm: "ChatLiteLLM",
+    llm: "langchain_litellm.ChatLiteLLM",
     retriever: BaseRetriever,
 ) -> BaseRetriever:
     # advanced mode using pydantic parsers
