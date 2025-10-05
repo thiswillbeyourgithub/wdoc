@@ -19,7 +19,7 @@ from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM],
     retriever: BaseRetriever,
-) -> "MultiQueryRetriever":
+) -> BaseRetriever:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
     from langchain.retrievers.multi_query import MultiQueryRetriever
