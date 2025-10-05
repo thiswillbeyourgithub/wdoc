@@ -4,9 +4,7 @@ import shutil
 import warnings
 from pathlib import Path
 
-import ankipandas as akp
 import bs4
-import pandas as pd
 import uuid6
 from beartype.typing import Dict, List, Optional, Tuple, Union
 from langchain.docstore.document import Document
@@ -51,6 +49,8 @@ def load_anki(
     anki_tag_filter: Optional[str] = None,
     anki_tag_render_filter: Optional[str] = None,
 ) -> List[Document]:
+    import ankipandas as akp
+
     if anki_tag_render_filter:
         assert (
             "{tags}" in anki_template
@@ -90,6 +90,8 @@ def load_anki(
             tqdm.pandas(*x, **y)
 
     else:
+        import pandas as pd
+
         pd.DataFrame.progress_apply = pd.DataFrame.apply
         pd.Series.progress_apply = pd.Series.apply
 
@@ -201,7 +203,7 @@ def load_anki(
     else:
         usetags = False
 
-    def placeholder_replacer(row: pd.Series) -> Tuple[str, dict]:
+    def placeholder_replacer(row: "pd.Series") -> Tuple[str, dict]:
         text = anki_template
 
         if useallfields:
