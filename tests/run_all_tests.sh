@@ -30,7 +30,7 @@ cd temp
 
 # start tests
 echo "\nTesting CLI using a shell script"
-../test_cli.sh
+../test_cli.sh api
 echo "Done with CLI using a shell script"
 
 echo "\nTesting parsing (basic)"
