@@ -30,7 +30,6 @@ from wdoc.utils.loaders import (
     load_one_doc,
     markdownlink_regex,
 )
-from wdoc.utils.loaders.youtube import load_youtube_playlist, yt_link_regex
 from wdoc.utils.misc import (
     DocDict,
     ModelName,
@@ -834,6 +833,8 @@ def parse_youtube_playlist(
     Returns:
         List of DocDict objects, each representing a YouTube video from the playlist
     """
+    from wdoc.utils.loaders.youtube import load_youtube_playlist, yt_link_regex
+
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
         path = path.replace("\\", "")
