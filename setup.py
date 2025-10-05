@@ -224,6 +224,7 @@ setup(
             "pytest-xdist >= 3.6.1",
             "build >= 1.2.2.post1",
             "twine >= 6.1.0",
+            "bumpver >= 2025.1131",
         ],
     },
     cmdclass={
