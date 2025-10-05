@@ -209,6 +209,9 @@ def cli_launcher() -> None:
         else:
             target = wdoc
         doc = getattr(target, "__doc__")
+        assert (
+            doc
+        ), f"The signature wrapping apparently failed: empty __doc__ for {target}"
         if is_out_piped:
             print(doc)
         else:
