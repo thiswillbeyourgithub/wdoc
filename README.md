@@ -173,7 +173,6 @@ Click to read more
         - this needs to be scalable and easy to add recursion to (because then we can do this for subheaders and so on)
         - the end goal is to have a scalable solution to answer queries about extremely large documents for impossibly vast questions
     - use apprise instead of ntfy for the scripts
-    - refactor the loader to make a much lighter install, that rely on external parser or docling or crawl4ai etc. Possibly via "wdoc[full]" and "wdoc[lite]"
     - add crawl4ai parser: https://github.com/unclecode/crawl4ai
     - Way to add the title (or all metadata) of a document to its own text. Enabled by default. Because this would allow searching among many documents that don't refer to the original title (for example: material safety datasheets)
         - default value is "author" "page" title"
@@ -207,7 +206,6 @@ Click to read more
     - add an obsidian loader
         - https://pypi.org/project/obsidiantools/
     - add a /chat command to the prompt, it would enable starting an interactive session directly with the llm
-    - make sure to expose loaders and batch_loader to make it easy to import by others
     - find a way to make it work with llm from simonw
     - make images an actual filetype
 - ### Enhancements
