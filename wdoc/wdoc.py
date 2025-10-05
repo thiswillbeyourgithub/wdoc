@@ -39,7 +39,6 @@ from wdoc.utils.errors import (
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 
-from wdoc.utils.interact import ask_user
 from wdoc.utils.llm import TESTING_LLM, load_llm
 
 # import this first because it sets the logging level
@@ -660,6 +659,9 @@ class wdoc:
                     "Exited query_task because we don't loop the queries when the output is a shell pipe"
                 )
             else:
+                # import at last minute to reduce load time
+                from wdoc.utils.interact import ask_user
+
                 if not query:
                     query, self.interaction_settings = ask_user(
                         self.interaction_settings
