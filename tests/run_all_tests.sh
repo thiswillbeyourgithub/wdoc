@@ -6,10 +6,10 @@ set -u
 
 # cleanup previous
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
-[ -e "temp" ] && rm -rv temp
-[ -e "test_env" ] && rm -rv test_env
-[ -e "wdoc_user_cache_dir" ] && rm -rv wdoc_user_cache_dir
-[ -e "__pycache__" ] && rm -rv __pycache__
+[ -e "temp" ] && rm -r temp
+[ -e "test_env" ] && rm -r test_env
+[ -e "wdoc_user_cache_dir" ] && rm -r wdoc_user_cache_dir
+[ -e "__pycache__" ] && rm -r __pycache__
 
 # setup venv
 uv venv test_venv --python 3.12.11
@@ -73,7 +73,7 @@ uv pip install -e "..[full]"
 # cleanup
 deactivate
 # trash test_venv temp
-rm -rv test_venv temp wdoc_user_cache_dir
+rm -r test_venv temp wdoc_user_cache_dir
 
 cd ..
 echo "Succesfuly ran all tests"
