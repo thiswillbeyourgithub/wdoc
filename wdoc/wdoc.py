@@ -647,7 +647,7 @@ class wdoc:
                         self.interaction_settings
                     )
 
-    def summary_task(self) -> "wdocSummary":
+    def summary_task(self) -> "wdoc.utils.tasks.summarize.wdocSummary":
         from wdoc.utils.tasks.summarize import summarize_documents
 
         docs_tkn_cost = {}

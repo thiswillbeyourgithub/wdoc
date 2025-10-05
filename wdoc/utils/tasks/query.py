@@ -556,7 +556,10 @@ def semantic_batching(
 
 
 def pbar_chain(
-    llm: Union["langchain_litellm.ChatLiteLLM", "FakeListChatModel"],
+    llm: Union[
+        "langchain_litellm.ChatLiteLLM",
+        "langchain_community.chat_models.fake.FakeListChatModel",
+    ],
     len_func: str,
     **tqdm_kwargs,
 ) -> RunnableLambda:
@@ -564,7 +567,10 @@ def pbar_chain(
 
     def actual_pbar_chain(
         inputs: Union[dict, List],
-        llm: Union["langchain_litellm.ChatLiteLLM", "FakeListChatModel"] = llm,
+        llm: Union[
+            "langchain_litellm.ChatLiteLLM",
+            "langchain_community.chat_models.fake.FakeListChatModel",
+        ] = llm,
     ) -> Union[dict, List]:
 
         llm.callbacks[0].pbar.append(
@@ -584,13 +590,19 @@ def pbar_chain(
 
 
 def pbar_closer(
-    llm: Union["langchain_litellm.ChatLiteLLM", "FakeListChatModel"],
+    llm: Union[
+        "langchain_litellm.ChatLiteLLM",
+        "langchain_community.chat_models.fake.FakeListChatModel",
+    ],
 ) -> RunnableLambda:
     "close a pbar created by pbar_chain"
 
     def actual_pbar_closer(
         inputs: Union[dict, List],
-        llm: Union["langchain_litellm.ChatLiteLLM", "FakeListChatModel"] = llm,
+        llm: Union[
+            "langchain_litellm.ChatLiteLLM",
+            "langchain_community.chat_models.fake.FakeListChatModel",
+        ] = llm,
     ) -> Union[dict, List]:
         pbar = llm.callbacks[0].pbar[-1]
         pbar.update(pbar.total - pbar.n)
