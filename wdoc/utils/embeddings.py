@@ -4,16 +4,13 @@
 """
 
 # import math
-import hashlib
 import os
-import random
 import time
-from functools import wraps
 from pathlib import Path
 
 import litellm
 import numpy as np
-from beartype.typing import Any, Callable, List, Optional, Tuple, Union
+from beartype.typing import Any, List, Optional, Union
 from joblib import Parallel, delayed
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_core.vectorstores.base import VectorStore
@@ -146,7 +143,7 @@ def load_embeddings_engine(
     elif modelname.backend == "huggingface":
         assert (
             not private
-        ), f"Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
+        ), "Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
@@ -187,7 +184,7 @@ def load_embeddings_engine(
 
     elif modelname.backend == "sentencetransformers":
         if private:
-            logger.warning(f"Private is set and will use sentencetransformers backend")
+            logger.warning("Private is set and will use sentencetransformers backend")
         embed_kwargs.update(
             {
                 "batch_size": 1,
@@ -321,7 +318,6 @@ def create_embeddings(
             raise SystemExit()
 
     # create a faiss index for batch of documents
-    ts = time.time()
     batch_size = 1000
     batches = [
         [i * batch_size, (i + 1) * batch_size]

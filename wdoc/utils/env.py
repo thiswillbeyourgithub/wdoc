@@ -15,7 +15,7 @@ from loguru import logger
 
 from beartype import BeartypeConf, beartype
 from beartype.door import is_bearable
-from beartype.typing import Literal, Optional, Union, List
+from beartype.typing import Literal, Optional, Union
 
 try:
     from wdoc.utils.errors import FrozenAttributeCantBeSet
@@ -286,7 +286,7 @@ env_list = [
 ]
 # check that it's properly documented to begin with
 for e in env_list:
-    if not f"* `{e}`" in help_content:
+    if f"* `{e}`" not in help_content:
         logger.error(
             f"The env variable '{e}' seems to be missing from the help.md page"
         )

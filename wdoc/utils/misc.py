@@ -1334,7 +1334,7 @@ def get_piped_input() -> Optional[Any]:
             # On Windows this is trickier, consider using a different approach
             pass
 
-    except:
+    except Exception:
         # If we can't reopen stdin, at least return the data
         pass
 

@@ -142,7 +142,7 @@ class CompressedFAISS(FAISS):
             index = faiss.read_index(p)
         except RuntimeError as e:
             if (
-                not "index type" in str(e).lower()
+                "index type" not in str(e).lower()
                 and " not recognized" in str(e).lower()
             ):
                 raise

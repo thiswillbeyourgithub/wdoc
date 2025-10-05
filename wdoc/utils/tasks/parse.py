@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from typing import List, Optional, Union
 
-from beartype.typing import List
 from langchain.docstore.document import Document
 
 from wdoc.utils.batch_file_loader import batch_load_doc

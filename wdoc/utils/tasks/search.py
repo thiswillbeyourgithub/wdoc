@@ -3,7 +3,6 @@ Chain (logic) used for search tasks.
 """
 
 from langchain_core.runnables import chain
-from loguru import logger
 
 from wdoc.utils.misc import log_and_time_fn
 

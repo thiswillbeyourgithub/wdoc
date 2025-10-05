@@ -6,7 +6,7 @@ import re
 import time
 
 import numpy as np
-from beartype.typing import List, Literal, Optional, Tuple, Union
+from beartype.typing import List, Optional, Union
 from langchain.docstore.document import Document
 from langchain_core.embeddings import Embeddings
 from langchain_litellm import ChatLiteLLM
@@ -176,8 +176,8 @@ def parse_eval_output(output: str) -> str:
 
     answer = parsed["answer"]
     answer = answer.replace("-", "")  # negative ints are not accepted anyway
-    if not answer.isdigit() and any(l.isdigit() for l in answer.splitlines()):
-        answer = [l for l in answer.splitlines() if l.isdigit()][0]
+    if not answer.isdigit() and any(li.isdigit() for li in answer.splitlines()):
+        answer = [li for li in answer.splitlines() if li.isdigit()][0]
 
     if answer.isdigit():
         answer = int(answer)
@@ -212,7 +212,7 @@ def collate_relevant_intermediate_answers(
     readable by the combining LLM"""
     assert list_ia == [
         ia for ia in list_ia if check_intermediate_answer(ia)
-    ], f"collate_relevant_intermediate_answers should only be receiving relevant answers"
+    ], "collate_relevant_intermediate_answers should only be receiving relevant answers"
     assert (
         len(list_ia) >= 2
     ), f"Cannot collate a single intermediate answer!\n{list_ia[0]}"

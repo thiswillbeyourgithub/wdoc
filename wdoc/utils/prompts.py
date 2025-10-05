@@ -3,7 +3,7 @@ Prompts used by wdoc.
 """
 
 from beartype.typing import List
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.prompts.chat import (
