@@ -4,13 +4,6 @@ Retrievers used to retrieve the appropriate embeddings for a given query.
 
 from beartype.typing import Any, List, Union
 from langchain.docstore.document import Document
-from langchain.retrievers import ParentDocumentRetriever
-from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain_community.retrievers import KNNRetriever, SVMRetriever
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain_community.document_transformers import EmbeddingsRedundantFilter
-from langchain.retrievers.document_compressors import DocumentCompressorPipeline
-from langchain.retrievers.merger_retriever import MergerRetriever
 
 # from langchain.storage import LocalFileStore
 from langchain_litellm import ChatLiteLLM
@@ -26,9 +19,11 @@ from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 def create_multiquery_retriever(
     llm: Union[ChatLiteLLM],
     retriever: BaseRetriever,
-) -> MultiQueryRetriever:
+) -> "MultiQueryRetriever":
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
+    from langchain.retrievers.multi_query import MultiQueryRetriever
+
     mqr = MultiQueryRetriever(
         retriever=retriever,
         llm_chain=llm_chain,
@@ -62,6 +57,8 @@ def create_parent_retriever(
         verbose=env.WDOC_VERBOSE,
         name="parent_retriever",
     )
+    from langchain.retrievers import ParentDocumentRetriever
+
     parent = ParentDocumentRetriever(
         vectorstore=loaded_embeddings,
         docstore=lfs,
@@ -111,6 +108,8 @@ def create_retrievers(
     if "knn" in query_retrievers.lower():
         if not all_texts:
             all_texts = get_all_texts(loaded_embeddings)
+        from langchain_community.retrievers import KNNRetriever
+
         retrievers.append(
             KNNRetriever.from_texts(
                 all_texts,
@@ -122,6 +121,8 @@ def create_retrievers(
     if "svm" in query_retrievers:
         if not all_texts:
             all_texts = get_all_texts(loaded_embeddings)
+        from langchain_community.retrievers import SVMRetriever
+
         retrievers.append(
             SVMRetriever.from_texts(
                 all_texts,
@@ -159,9 +160,15 @@ def create_retrievers(
     if len(retrievers) == 1:
         retriever = retrievers[0]
     else:
+        from langchain.retrievers.merger_retriever import MergerRetriever
+
         merge_retriever = MergerRetriever(retrievers=retrievers)
 
         # remove redundant results from the merged retrievers:
+        from langchain_community.document_transformers import EmbeddingsRedundantFilter
+        from langchain.retrievers.document_compressors import DocumentCompressorPipeline
+        from langchain.retrievers import ContextualCompressionRetriever
+
         filtered = EmbeddingsRedundantFilter(
             embeddings=embedding_engine,
             similarity_threshold=0.999,
