@@ -11,7 +11,6 @@ from beartype.typing import List, Tuple, Dict, Optional, Union
 from langchain.docstore.document import Document
 from tqdm import tqdm
 from loguru import logger
-import tldextract
 from langchain_litellm import ChatLiteLLM
 from langchain_community.chat_models.fake import FakeListChatModel
 import copy
@@ -196,6 +195,8 @@ def summarize_documents(
     supports both interactive and programmatic usage modes through the
     in_import_mode parameter.
     """
+    import tldextract
+
     assert relevant_docs, "Empty relevant_docs!"
 
     # parse metadata from the doc
