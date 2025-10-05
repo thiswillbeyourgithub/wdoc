@@ -3,7 +3,6 @@ Entry point file
 """
 
 import json
-import json
 import os
 import re
 import sys
