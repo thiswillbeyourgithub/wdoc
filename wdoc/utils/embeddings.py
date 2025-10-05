@@ -16,22 +16,13 @@ import numpy as np
 from beartype.typing import Any, Callable, List, Optional, Tuple, Union
 from joblib import Parallel, delayed
 from langchain.embeddings import CacheBackedEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import (
-    HuggingFaceEmbeddings,
-    HuggingFaceInstructEmbeddings,
-    SentenceTransformerEmbeddings,
-)
 from langchain_core.vectorstores.base import VectorStore
 from langchain_core.embeddings import Embeddings
-from langchain_openai import OpenAIEmbeddings
 from tqdm import tqdm
 from loguru import logger
 
 # from langchain.storage import LocalFileStore
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
-from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
-from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS, CompressedFAISS
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
 
@@ -57,11 +48,17 @@ def __get_faiss_vectorstore__():
         assert (
             env.WDOC_FAISS_COMPRESSION
         ), "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
+        from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
+
         return BinaryFAISS
     else:
         if env.WDOC_FAISS_COMPRESSION:
+            from wdoc.utils.customs.binary_faiss_vectorstore import CompressedFAISS
+
             return CompressedFAISS
         else:
+            from langchain_community.vectorstores import FAISS
+
             return FAISS
 
 
@@ -106,6 +103,8 @@ def load_embeddings_engine(
     )
 
     if True:
+        from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
+
         try:
             embeddings = LiteLLMEmbeddings(
                 model=modelname.original,
@@ -135,6 +134,8 @@ def load_embeddings_engine(
                 and "REDACTED" not in os.environ["OPENAI_API_KEY"]
             ), "Missing OPENAI_API_KEY"
 
+        from langchain_openai import OpenAIEmbeddings
+
         embeddings = OpenAIEmbeddings(
             model=modelname.model,
             openai_api_key=os.environ["OPENAI_API_KEY"],
@@ -162,6 +163,8 @@ def load_embeddings_engine(
             # your token to use the models
             model_kwargs["use_auth_token"] = hftkn
         if instruct:
+            from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+
             embeddings = HuggingFaceInstructEmbeddings(
                 model_name=modelname.model,
                 model_kwargs=model_kwargs,
@@ -169,6 +172,8 @@ def load_embeddings_engine(
                 query_instruction=DEFAULT_QUERY_INSTRUCTION,
             )
         else:
+            from langchain_community.embeddings import HuggingFaceEmbeddings
+
             embeddings = HuggingFaceEmbeddings(
                 model_name=modelname.model,
                 model_kwargs=model_kwargs,
@@ -190,6 +195,8 @@ def load_embeddings_engine(
                 "device": None,
             }
         )
+        from langchain_community.embeddings import SentenceTransformerEmbeddings
+
         embeddings = SentenceTransformerEmbeddings(
             model_name=modelname.model,
             encode_kwargs=embed_kwargs,
