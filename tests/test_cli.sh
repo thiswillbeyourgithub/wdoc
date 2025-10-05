@@ -244,7 +244,7 @@ test_parse_nytimes_shell() {
 
 test_ddg_search_nvidia() {
     local output
-    local cmd="$PYTHON_EXEC -m wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month?' --filetype=ddg --ddg_max_result=3 --ddg_region=us-US --model=testing/testing --loading_failure=warn --oneoff --file_loader_parallel_backend=threading"
+    local cmd="$PYTHON_EXEC -m wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month?' --filetype=ddg --ddg_max_result=3 --ddg_region=us-US --model=testing/testing --loading_failure=warn --oneoff --file_loader_parallel_backend=threading 2>&1 "
     
     if ! output=$(timeout 120s zsh -c "$cmd"); then
         local exit_code=$?
