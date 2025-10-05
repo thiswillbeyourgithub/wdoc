@@ -8,6 +8,7 @@ set -u
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
 [ -e "temp" ] && rm -rv temp
 [ -e "test_env" ] && rm -rv test_env
+[ -e "wdoc_user_cache_dir" ] && rm -rv wdoc_user_cache_dir
 [ -e "__pycache__" ] && rm -rv __pycache__
 
 # setup venv
