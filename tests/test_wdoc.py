@@ -130,7 +130,7 @@ def test_semantic_batching():
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
 )
-def test_summary_tim_urban():
+def test_summary_tim_urban_cache_cost():
     """Test summarization of Tim Urban's procrastination video. Three times to make sure the caching and caching disabling works."""
     os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "false"
     inst = wdoc(
