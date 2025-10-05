@@ -43,10 +43,12 @@ WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
 )
 
 WDOC_TEST_OPENROUTER_MODEL = os.getenv(
-    "WDOC_TEST_OPENROUTER_MODEL", "openrouter/openai/gpt-4o"
+    "WDOC_TEST_OPENROUTER_MODEL",
+    "openrouter/mistralai/mistral-small-3.2-24b-instruct",
 )
 WDOC_TEST_OPENROUTER_EVAL_MODEL = os.getenv(
-    "WDOC_TEST_OPENROUTER_EVAL_MODEL", "openrouter/openai/gpt-4o-mini"
+    "WDOC_TEST_OPENROUTER_EVAL_MODEL",
+    "openrouter/mistralai/mistral-small-3.2-24b-instruct",
 )
 
 WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
