@@ -17,7 +17,6 @@ from beartype.door import is_bearable
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
 from langchain.docstore.document import Document
 from langchain.globals import set_debug, set_llm_cache, set_verbose
-from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.runnables.base import RunnableEach
 from tqdm import tqdm
@@ -44,7 +43,6 @@ from wdoc.utils.llm import TESTING_LLM, load_llm
 
 from wdoc.utils.misc import (  # debug_chain,
     cache_dir,
-    DocDict,
     ModelName,
     create_langfuse_callback,
     disable_internet,
@@ -909,7 +907,6 @@ class wdoc:
             autoincrease_top_k,
             check_intermediate_answer,
             collate_relevant_intermediate_answers,
-            parse_eval_output,
             pbar_chain,
             pbar_closer,
             refilter_docs,
@@ -918,6 +915,9 @@ class wdoc:
             sieve_documents,
             source_replace,
         )
+        from langchain_core.output_parsers.string import StrOutputParser
+        from textwrap import indent
+        from wdoc.utils.prompts import prompts
 
         # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
         retrieve_documents = retrieve_documents_for_query(retriever)
@@ -1326,10 +1326,15 @@ class wdoc:
         evaluate_doc_chain: Any,
         multi: Dict[str, Any],
     ) -> Dict[str, Any]:
-        from textwrap import indent
-
         if self.query_eval_model is not None:
             from wdoc.utils.tasks.search import retrieve_documents_for_search
+            from wdoc.utils.tasks.query import (
+                autoincrease_top_k,
+                pbar_chain,
+                pbar_closer,
+                refilter_docs,
+                sieve_documents,
+            )
 
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             retrieve_documents = retrieve_documents_for_search(retriever)
