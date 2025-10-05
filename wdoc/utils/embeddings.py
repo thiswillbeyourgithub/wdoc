@@ -92,6 +92,8 @@ def load_embeddings_engine(
     Create the Embeddings class used to compute embeddings. This class is wrapped
     into a CacheBackedEmbeddings to add a caching layer.
     """
+    from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
+
     logger.debug("Loading the embeddings engine")
     if "embed_instruct" in cli_kwargs and cli_kwargs["embed_instruct"]:
         instruct = True
@@ -102,23 +104,20 @@ def load_embeddings_engine(
         f"Selected embedding model '{modelname}' of backend {modelname.backend}"
     )
 
-    if True:
-        from wdoc.utils.customs.litellm_embeddings import LiteLLMEmbeddings
-
-        try:
-            embeddings = LiteLLMEmbeddings(
-                model=modelname.original,
-                dimensions=env.WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
-                api_base=api_base,
-                private=private,
-                **embed_kwargs,
-            )
-            if do_test:
-                test_embeddings(embeddings)
-        except Exception as e:
-            logger.warning(
-                f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
-            )
+    try:
+        embeddings = LiteLLMEmbeddings(
+            model=modelname.original,
+            dimensions=env.WDOC_DEFAULT_EMBED_DIMENSION,  # defaults to None
+            api_base=api_base,
+            private=private,
+            **embed_kwargs,
+        )
+        if do_test:
+            test_embeddings(embeddings)
+    except Exception as e:
+        logger.warning(
+            f"Failed to use the experimental LiteLLMEmbeddings backend, defaulting to using the previous implementation. Error was '{e}'. Please open a github issue to help the developper debug this until it is stable enough."
+        )
 
     if "embeddings" in locals():
         # already loaded
