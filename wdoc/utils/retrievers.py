@@ -6,7 +6,6 @@ from beartype.typing import Any, List, Union
 from langchain.docstore.document import Document
 
 # from langchain.storage import LocalFileStore
-from langchain_litellm import ChatLiteLLM
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.embeddings import Embeddings
 
@@ -17,7 +16,7 @@ from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 
 
 def create_multiquery_retriever(
-    llm: Union[ChatLiteLLM],
+    llm: "ChatLiteLLM",
     retriever: BaseRetriever,
 ) -> BaseRetriever:
     # advanced mode using pydantic parsers

@@ -5,10 +5,7 @@ counting callback.
 
 import os
 
-import litellm
 from beartype.typing import Any, Dict, List, Optional, Union
-from langchain_litellm import ChatLiteLLM
-from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.caches import BaseCache
 from langchain_core.callbacks import BaseCallbackHandler
@@ -43,8 +40,12 @@ def load_llm(
     private: bool,
     tags: List[str],
     **extra_model_args,
-) -> Union[ChatLiteLLM, FakeListChatModel]:
+) -> Union["ChatLiteLLM", "FakeListChatModel"]:
     """load language model"""
+    import litellm
+    from langchain_litellm import ChatLiteLLM
+    from langchain_community.chat_models.fake import FakeListChatModel
+
     if extra_model_args is None:
         extra_model_args = {}
 

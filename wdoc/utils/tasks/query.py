@@ -9,8 +9,6 @@ import numpy as np
 from beartype.typing import List, Optional, Union
 from langchain.docstore.document import Document
 from langchain_core.embeddings import Embeddings
-from langchain_litellm import ChatLiteLLM
-from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
 from tqdm import tqdm
@@ -558,7 +556,7 @@ def semantic_batching(
 
 
 def pbar_chain(
-    llm: Union[ChatLiteLLM, FakeListChatModel],
+    llm: Union["ChatLiteLLM", "FakeListChatModel"],
     len_func: str,
     **tqdm_kwargs,
 ) -> RunnableLambda:
@@ -566,7 +564,7 @@ def pbar_chain(
 
     def actual_pbar_chain(
         inputs: Union[dict, List],
-        llm: Union[ChatLiteLLM, FakeListChatModel] = llm,
+        llm: Union["ChatLiteLLM", "FakeListChatModel"] = llm,
     ) -> Union[dict, List]:
 
         llm.callbacks[0].pbar.append(
@@ -586,13 +584,13 @@ def pbar_chain(
 
 
 def pbar_closer(
-    llm: Union[ChatLiteLLM, FakeListChatModel],
+    llm: Union["ChatLiteLLM", "FakeListChatModel"],
 ) -> RunnableLambda:
     "close a pbar created by pbar_chain"
 
     def actual_pbar_closer(
         inputs: Union[dict, List],
-        llm: Union[ChatLiteLLM, FakeListChatModel] = llm,
+        llm: Union["ChatLiteLLM", "FakeListChatModel"] = llm,
     ) -> Union[dict, List]:
         pbar = llm.callbacks[0].pbar[-1]
         pbar.update(pbar.total - pbar.n)

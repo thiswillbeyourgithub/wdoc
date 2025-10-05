@@ -6,7 +6,6 @@ Source: https://python.langchain.com/docs/how_to/custom_embeddings/
 
 from typing import List, Optional
 
-import litellm
 from langchain_core.embeddings import Embeddings
 
 
@@ -21,6 +20,10 @@ class LiteLLMEmbeddings(Embeddings):
         private: bool,
         **embed_kwargs,
     ):
+        import litellm
+
+        global litellm
+
         assert (
             "/" in model
         ), "model must contain a /, for example 'ollama/bge-m3' or 'openai/text-embedding-ada-002'"
