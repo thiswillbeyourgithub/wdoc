@@ -3,9 +3,6 @@ import re
 import time
 from pathlib import Path
 
-import deepgram
-import ffmpeg
-import httpx
 import joblib
 import litellm
 import requests
@@ -129,6 +126,9 @@ def transcribe_audio_deepgram(
     deepgram_kwargs: Optional[dict] = None,
 ) -> dict:
     "Use whisper to transcribe an audio file"
+    import httpx
+    import deepgram
+
     logger.info(f"Calling deepgram to transcribe {audio_path}")
     assert (
         not env.WDOC_PRIVATE_MODE
@@ -369,6 +369,8 @@ def split_too_large_audio(
     split the audio file into multiple 30 minute files, then combine the
     outputs
     """
+    import ffmpeg
+
     audio_path = Path(audio_path)
     logger.info(
         f"Splitting large audio file '{audio_path}' into 30minute segment because it's too long for whisper"

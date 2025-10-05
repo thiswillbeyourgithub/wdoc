@@ -18,7 +18,6 @@ from beartype.door import is_bearable
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
 from langchain.docstore.document import Document
 from langchain.globals import set_debug, set_llm_cache, set_verbose
-from langchain_community.chat_models.fake import FakeListChatModel
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.runnables.base import RunnableEach
