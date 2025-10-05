@@ -143,7 +143,7 @@ def test_summary_tim_urban():
     )
     out = inst.summary_task()
     assert "urban" in out["summary"].lower() or "procrastinat" in out["summary"].lower()
-    assert out["doc_total_cost"] > 0
+    assert out["doc_total_cost"] > 0, out
 
     inst2 = wdoc(
         task="summarize",
@@ -156,8 +156,9 @@ def test_summary_tim_urban():
     out2 = inst2.summary_task()
     assert "monkey" in out2["summary"].lower()
     assert (
-        out2["doc_total_cost"] == 0
-    ), "Normally we should be reusing the cache so cost should be 0"
+        out2["doc_total_cost"] == 0,
+        out2,
+    ), f"Normally we should be reusing the cache so cost should be 0 but is {out2['doc_total_cost']}"
 
     inst3 = wdoc(
         task="summarize",
@@ -171,7 +172,7 @@ def test_summary_tim_urban():
     assert "monkey" in out3["summary"].lower()
     assert (
         out3["doc_total_cost"] > 0
-    ), "Normally we disabled the cache so cost should be higher than 0"
+    ), f"Normally we disabled the cache so cost should be higher than 0 but is {out3['doc_total_cost']}"
     os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 
