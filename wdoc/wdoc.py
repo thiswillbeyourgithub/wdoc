@@ -66,28 +66,6 @@ from wdoc.utils.misc import (  # debug_chain,
     tasks_list,
 )
 from wdoc.utils.prompts import prompts
-from wdoc.utils.retrievers import create_retrievers
-from wdoc.utils.tasks.query import (
-    autoincrease_top_k,
-    check_intermediate_answer,
-    collate_relevant_intermediate_answers,
-    parse_eval_output,
-    pbar_chain,
-    pbar_closer,
-    refilter_docs,
-    retrieve_documents_for_query,
-    semantic_batching,
-    sieve_documents,
-    source_replace,
-)
-from wdoc.utils.tasks.search import retrieve_documents_for_search
-from wdoc.utils.tasks.shared_query_search import (
-    split_query_parts,
-    create_evaluate_doc_chain,
-)
-from wdoc.utils.tasks.summarize import summarize_documents, wdocSummary
-from wdoc.utils.tasks.parse import parse_doc
-from wdoc.utils.filters import filter_docstore
 
 logger.info("Starting wdoc")
 
@@ -672,7 +650,9 @@ class wdoc:
                         self.interaction_settings
                     )
 
-    def summary_task(self) -> wdocSummary:
+    def summary_task(self) -> "wdocSummary":
+        from wdoc.utils.tasks.summarize import summarize_documents
+
         docs_tkn_cost = {}
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
@@ -771,6 +751,12 @@ class wdoc:
         return self._query_or_search_task(query=query)
 
     def _query_or_search_task(self, query: str) -> dict:
+        from wdoc.utils.retrievers import create_retrievers
+        from wdoc.utils.tasks.shared_query_search import (
+            split_query_parts,
+            create_evaluate_doc_chain,
+        )
+
         # load embeddings for querying
         if not hasattr(self, "embedding_engine"):
             self.embedding_engine = load_embeddings_engine(
@@ -807,6 +793,8 @@ class wdoc:
                 "filter_metadata" in self.cli_kwargs
                 or "filter_content" in self.cli_kwargs
             ):
+                from wdoc.utils.filters import filter_docstore
+
                 self.loaded_embeddings, self.unfiltered_docstore = filter_docstore()
 
         assert query.strip(), "Cannot accept empty query"
@@ -914,6 +902,20 @@ class wdoc:
         evaluate_doc_chain: Any,
         multi: Dict[str, Any],
     ) -> Dict[str, Any]:
+        from wdoc.utils.tasks.query import (
+            autoincrease_top_k,
+            check_intermediate_answer,
+            collate_relevant_intermediate_answers,
+            parse_eval_output,
+            pbar_chain,
+            pbar_closer,
+            refilter_docs,
+            retrieve_documents_for_query,
+            semantic_batching,
+            sieve_documents,
+            source_replace,
+        )
+
         # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
         retrieve_documents = retrieve_documents_for_query(retriever)
 
@@ -1322,6 +1324,8 @@ class wdoc:
         multi: Dict[str, Any],
     ) -> Dict[str, Any]:
         if self.query_eval_model is not None:
+            from wdoc.utils.tasks.search import retrieve_documents_for_search
+
             # for some reason I needed to have at least one chain object otherwise rag_chain is a dict
             retrieve_documents = retrieve_documents_for_search(retriever)
 

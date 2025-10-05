@@ -18,14 +18,10 @@ from functools import cache as memoizer
 from multiprocessing.context import TimeoutError as MultiprocessTimeoutError
 from pathlib import Path
 
-import dill
-import rtoml
 import uuid6
 from beartype.typing import List, Optional, Tuple, Union, Literal
 from joblib import Parallel, delayed
 from langchain.docstore.document import Document
-from langchain_community.tools import DuckDuckGoSearchResults
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from tqdm import tqdm
 from loguru import logger
 
@@ -745,6 +741,8 @@ def parse_toml_entries(
     Returns:
         List of DocDict or dict objects, each representing an entry from the TOML file
     """
+    import rtoml
+
     logger.info(f"Loading toml_entries: '{path}'")
     content = rtoml.load(toml=Path(path))
     assert isinstance(content, dict)
@@ -895,6 +893,9 @@ def parse_ddg_search(
     Returns:
         List of DocDict objects, each representing a URL from search results
     """
+    from langchain_community.tools import DuckDuckGoSearchResults
+    from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+
     query = str(path).strip()
     logger.info(f"Performing DuckDuckGo search: '{query}'")
 
@@ -979,6 +980,7 @@ def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     assert all(
         isinstance(lf, str) for lf in load_functions
     ), "load_functions elements must be strings"
+    import dill
 
     try:
         for ilf, lf in enumerate(load_functions):

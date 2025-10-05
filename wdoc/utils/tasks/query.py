@@ -6,11 +6,6 @@ import re
 import time
 
 import numpy as np
-import pandas as pd
-import scipy
-import sklearn.decomposition as decomposition
-import sklearn.metrics as metrics
-import sklearn.preprocessing as preprocessing
 from beartype.typing import List, Literal, Optional, Tuple, Union
 from langchain.docstore.document import Document
 from langchain_core.embeddings import Embeddings
@@ -243,6 +238,11 @@ def semantic_batching(
     Note that the documents are also sorted inside each batch, so that iterating
     over each document of each batch in order will follow the optimal leaf order.
     """
+    import scipy
+    import pandas as pd
+    import sklearn.decomposition as decomposition
+    import sklearn.metrics as metrics
+    import sklearn.preprocessing as preprocessing
 
     assert texts, "No input text received"
     assert len(texts) > 1, f"received only one text: {texts}"
