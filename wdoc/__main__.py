@@ -19,7 +19,7 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 
 from wdoc.utils import logger as importedlogger  # make sure to setup the logs first
 from wdoc.wdoc import wdoc
-from wdoc.utils.env import env, is_out_piped
+from wdoc.utils.env import is_out_piped
 from wdoc.utils.misc import get_piped_input, tasks_list
 from wdoc.utils.batch_file_loader import infer_filetype, NoInferrableFiletype
 from typing import Tuple, List, Dict, Any
@@ -229,11 +229,11 @@ def cli_launcher() -> None:
         args, kwargs = parse_args_fire()
 
     if "web" in args:
-        logger.debug(f"Detected 'web' in args, setting 'task' to 'query'")
+        logger.debug("Detected 'web' in args, setting 'task' to 'query'")
         args.pop(args.index("web"))
         sys.argv.pop(sys.argv.index("web"))
         kwargs["task"] = "query"
-        sys.argv.append(f"--task='query'")
+        sys.argv.append("--task='query'")
 
         if "filetype" not in kwargs:
             logger.debug("Web search: specifying that 'filetype' is 'ddg'")
@@ -247,7 +247,7 @@ def cli_launcher() -> None:
         if "query" not in kwargs and "path" not in kwargs:
             if len(args) == 1:
                 logger.debug(
-                    f"Web search task without 'query' nor 'path' but with positional arg: using it as query and path"
+                    "Web search task without 'query' nor 'path' but with positional arg: using it as query and path"
                 )
                 temp = args.pop(0)
                 sys.argv.pop(sys.argv.index(temp))
@@ -257,7 +257,7 @@ def cli_launcher() -> None:
                 sys.argv.append(f"--query={temp}")
             else:
                 logger.warning(
-                    f"Web search task with no 'query' nor 'path' but several positional arg: expecting only one to treat it as query and path"
+                    "Web search task with no 'query' nor 'path' but several positional arg: expecting only one to treat it as query and path"
                 )
 
     if "completion" in kwargs or "--completion" in sys.argv:
@@ -355,13 +355,13 @@ def cli_launcher() -> None:
     if "filetype" in kwargs and kwargs["filetype"] == "ddg":
         if "path" in kwargs and "query" not in kwargs:
             logger.debug(
-                f"Detected DDG search with 'path' but no 'query' argument, duplicating the 'path' to 'query' then."
+                "Detected DDG search with 'path' but no 'query' argument, duplicating the 'path' to 'query' then."
             )
             kwargs["query"] = kwargs["path"]
             sys.argv.append(f"--query={kwargs['path']}")
         elif "path" not in kwargs and "query" in kwargs:
             logger.debug(
-                f"Detected DDG search with 'query' but no 'path' argument, duplicating the 'query' to 'path' then."
+                "Detected DDG search with 'query' but no 'path' argument, duplicating the 'query' to 'path' then."
             )
             kwargs["path"] = kwargs["query"]
             sys.argv.append(f"--path={kwargs['query']}")

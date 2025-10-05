@@ -267,7 +267,7 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
             logger.info(f"Set {sett_k}={sett_v}")
             continue
         elif "/settings" in user_input:
-            logger.warning(f"Detected '/settings' but not at the start, retrying.")
+            logger.warning("Detected '/settings' but not at the start, retrying.")
             show_help()
             continue
 

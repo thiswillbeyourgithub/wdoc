@@ -173,7 +173,7 @@ def load_llm(
         ort_model_kwargs["provider"] = ort_provider_kwargs
         extra_model_args["model_kwargs"] = ort_model_kwargs
         logger.debug(
-            f"Using openrouter so sorting models by throughput and prioritizing groq out of principle"
+            "Using openrouter so sorting models by throughput and prioritizing groq out of principle"
         )
 
     logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
