@@ -123,7 +123,10 @@ def summarize_documents(
     relevant_docs: List,
     summary_language: str,
     model: ModelName,
-    llm: Union["ChatLiteLLM", "FakeListChatModel"],
+    llm: Union[
+        "langchain_litellm.ChatLiteLLM",
+        "langchain_community.chat_models.fake.FakeListChatModel",
+    ],
     llm_verbosity: bool,
     summary_n_recursion: int,
     llm_price: dict,
@@ -153,7 +156,7 @@ def summarize_documents(
         Target language for the summary output.
     model : ModelName
         Model configuration object containing backend and tokenization info.
-    llm : Union[ChatLiteLLM, FakeListChatModel]
+    llm : Union[langchain_litellm.ChatLiteLLM, langchain_community.chat_models.fake.FakeListChatModel]
         Language model instance for generating summaries.
     llm_verbosity : bool
         If True, enables verbose logging of LLM interactions and intermediate outputs.
@@ -443,7 +446,10 @@ def _summarize(
     metadata: str,
     language: str,
     modelbackend: str,
-    llm: Union["ChatLiteLLM", "FakeListChatModel"],
+    llm: Union[
+        "langchain_litellm.ChatLiteLLM",
+        "langchain_community.chat_models.fake.FakeListChatModel",
+    ],
     verbose: bool,
     n_recursion: int = 0,
 ) -> Tuple[str, int, Dict[str, int]]:
@@ -467,7 +473,7 @@ def _summarize(
         Target language for the summary output.
     modelbackend : str
         Backend identifier for the LLM model being used.
-    llm : Union[ChatLiteLLM, FakeListChatModel]
+    llm : Union[langchain_litellm.ChatLiteLLM, langchain_community.chat_models.fake.FakeListChatModel]
         Language model instance for generating summaries. Must support caching.
     verbose : bool
         If True, logs intermediate thinking and summary outputs.

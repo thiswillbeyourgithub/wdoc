@@ -40,7 +40,10 @@ def load_llm(
     private: bool,
     tags: List[str],
     **extra_model_args,
-) -> Union["ChatLiteLLM", "FakeListChatModel"]:
+) -> Union[
+    "langchain_litellm.ChatLiteLLM",
+    "langchain_community.chat_models.fake.FakeListChatModel",
+]:
     """load language model"""
     import litellm
     from langchain_litellm import ChatLiteLLM
