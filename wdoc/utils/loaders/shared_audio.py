@@ -5,7 +5,6 @@ from pathlib import Path
 
 import joblib
 import litellm
-import requests
 from beartype.typing import List, Optional, Union
 from loguru import logger
 
@@ -199,6 +198,8 @@ def transcribe_audio_whisper(
     prompt: Optional[str],
 ) -> dict:
     "Use whisper to transcribe an audio file"
+    import requests
+
     logger.info(f"Calling openai's whisper to transcribe {audio_path}")
     if env.WDOC_PRIVATE_MODE:
         assert (
