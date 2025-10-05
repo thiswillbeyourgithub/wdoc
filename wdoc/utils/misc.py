@@ -38,6 +38,11 @@ from loguru import logger
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
 
+import lazy_import
+
+litellm = lazy_import.lazy_module("litellm")
+
+
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
 warnings.filterwarnings(
     "ignore",
@@ -432,8 +437,6 @@ debug_chain = chain(debug_chain)
 
 def wrapped_model_name_matcher(model: str) -> str:
     "find the best match for a modelname (wrapped to make some check)"
-    import litellm
-
     # find the currently set api keys to avoid matching models from
     # unset providers
     all_backends = list(litellm.models_by_provider.keys())
@@ -495,8 +498,6 @@ def model_name_matcher(model: str) -> str:
     model has a known cost and print the matched name)
     Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
     """
-    import litellm
-
     assert "testing" not in model
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
@@ -622,8 +623,6 @@ class ModelName:
 
 @memoize
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
-    import litellm
-
     assert (
         "cli_parser" not in model.backend
     ), f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
@@ -700,8 +699,6 @@ def get_tkn_length(
     tosplit: str,
     modelname: Union[str, ModelName] = "gpt-4o-mini",
 ) -> int:
-    import litellm
-
     if isinstance(modelname, ModelName):
         modelname = modelname.original
     modelname = modelname.replace("openrouter/", "")
@@ -1189,8 +1186,6 @@ def create_langfuse_callback(version: str) -> None:
                 )
         try:
             # use litellm's callbacks for chatlitellm backend
-            import litellm
-
             litellm.success_callback.append("langfuse")
             litellm.failure_callback.append("langfuse")
 
