@@ -8,12 +8,10 @@ import os
 import re
 import sys
 from pathlib import Path
-import tempfile
 from typing import Union
 import fire
 import logging
 from loguru import logger
-import rtoml
 
 # Just in case: we set the env variable of WDOC_PRIVATE_MODE as early as possible, even before importing wdoc
 if re.findall(r"\b--private\b", " ".join(sys.argv)):
@@ -61,6 +59,8 @@ def parse_args_fire() -> Tuple[List[Any], Dict[str, Any]]:
 
 def handle_piped_input(piped_data: Union[str, bytes]) -> str:
     """Processes piped input and returns the appropriate argument string."""
+    import tempfile
+
     temp_file = None
     arg_to_add = None
 
@@ -107,6 +107,8 @@ def handle_piped_input(piped_data: Union[str, bytes]) -> str:
 
             # Try TOML (only if not already handled as JSON or other specific cases)
             if arg_to_add is None:
+                import rtoml
+
                 try:
                     rtoml.loads(piped_data)  # Just check if it loads
                     logger.debug("Detected TOML in piped input. Writing to temp file.")
