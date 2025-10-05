@@ -14,8 +14,6 @@ import traceback
 from functools import wraps
 from pathlib import Path
 
-import bs4
-import ftfy
 from beartype.typing import Callable, List, Optional, Union
 from langchain.docstore.document import Document
 from loguru import logger
@@ -134,6 +132,9 @@ def load_one_doc(
     """choose the appropriate loader for a file, then load it,
     split into documents, add some metadata then return.
     The loader is cached"""
+    import bs4
+    import ftfy
+
     text_splitter = get_splitter(task, modelname=llm_name)
     assert kwargs, "Received an empty dict of arguments to load. Maybe --path is empty?"
     assert temp_dir.exists(), temp_dir
