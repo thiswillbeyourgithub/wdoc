@@ -28,6 +28,15 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm import tqdm
 from loguru import logger as logger
 
+# import this first because it sets the logging level
+from wdoc.utils.logger import (
+    log_dir,
+    md_printer,
+    set_help_md_as_docstring,
+    set_parse_doc_help_md_as_docstring,
+    debug_exceptions,
+)
+
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.customs.fix_llm_caching import SQLiteCacheFixed
 from wdoc.utils.env import env, is_out_piped
@@ -39,14 +48,6 @@ from wdoc.utils.errors import (
 
 from wdoc.utils.llm import TESTING_LLM, load_llm
 
-# import this first because it sets the logging level
-from wdoc.utils.logger import (
-    log_dir,
-    md_printer,
-    set_help_md_as_docstring,
-    set_parse_doc_help_md_as_docstring,
-    debug_exceptions,
-)
 from wdoc.utils.misc import (  # debug_chain,
     cache_dir,
     DocDict,
