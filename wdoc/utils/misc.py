@@ -1191,7 +1191,11 @@ def create_langfuse_callback(version: str) -> None:
 
             # # and use langchain's callback for openai's backend
             # BUT as of october 2024 it seems buggy with chatlitellm, the modelname does not seem to be passed?
-            from langfuse.callback import CallbackHandler as LangfuseCallback
+            try:
+                from langfuse.callback import CallbackHandler as LangfuseCallback
+            except (ImportError, AttributeError):
+                # import changed for langfuse v3: https://github.com/langfuse/langfuse/issues/7205
+                from langfuse.langchain import CallbackHandler as LangfuseCallback
 
             langfuse_callback = LangfuseCallback(
                 secret_key=os.environ["LANGFUSE_SECRET_KEY"],
