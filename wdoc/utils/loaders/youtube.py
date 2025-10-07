@@ -60,6 +60,9 @@ def load_youtube(
 
     if youtube_audio_backend == "youtube":
         logger.info(f"Using youtube.com loader: '{path}'")
+        logger.warning(
+            "You are using the youtube_audio_backend `youtube`, which depends on the actual youtube subtitles. For better result, it is recommended to use the `whisper` or `deepgram` audio backends."
+        )
         try:
             docs = cached_yt_loader(
                 path=path,
