@@ -310,10 +310,13 @@ def load_one_doc(
     tdocs = text_splitter.transform_documents(docs)
 
     if not tdocs:
-        raise ValueError(
-            f"text_splitter.transform_documents apparently erased the docs, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'\nOriginal docs:\n'''\n{docs}\n'''\n"
+        logger.warning(
+            f"text_splitter.transform_documents apparently erased the docs, something went wrong so using original docs.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'\nText_splitter: '{text_splitter}'"
         )
     else:
+        logger.debug(
+            f"Successfuly used text_splitter.transform_documents on {len(docs)} docs"
+        )
         docs = tdocs
 
     if filetype not in ["anki", "pdf"]:
