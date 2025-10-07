@@ -1186,16 +1186,21 @@ def create_langfuse_callback(version: str) -> None:
                 )
         try:
             # use litellm's callbacks for chatlitellm backend
-            litellm.success_callback.append("langfuse")
-            litellm.failure_callback.append("langfuse")
-
             # # and use langchain's callback for openai's backend
             # BUT as of october 2024 it seems buggy with chatlitellm, the modelname does not seem to be passed?
             try:
                 from langfuse.callback import CallbackHandler as LangfuseCallback
+
+                litellm.success_callback.append("langfuse")
+                litellm.failure_callback.append("langfuse")
+
             except (ImportError, AttributeError):
                 # import changed for langfuse v3: https://github.com/langfuse/langfuse/issues/7205
                 from langfuse.langchain import CallbackHandler as LangfuseCallback
+
+                # v3 switched to open telemetry: https://github.com/BerriAI/litellm/issues/11500
+                litellm.success_callback.append("langfuse_otel")
+                litellm.failure_callback.append("langfuse_otel")
 
             langfuse_callback = LangfuseCallback(
                 secret_key=os.environ["LANGFUSE_SECRET_KEY"],
