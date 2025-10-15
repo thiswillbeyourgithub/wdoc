@@ -2,7 +2,7 @@
 Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
-from beartype.typing import Any, List, Union
+from beartype.typing import Any, List, Union, Optional
 from langchain.docstore.document import Document
 
 # from langchain.storage import LocalFileStore
@@ -85,7 +85,7 @@ def create_retrievers(
     top_k: int,
     relevancy: float,
     task: str,
-    loaded_docs: List[Document],
+    loaded_docs: Optional[List[Document]],
 ) -> BaseRetriever:
     """Create and return list of retrievers based on query_retrievers setting."""
     retrievers = []
