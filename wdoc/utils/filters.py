@@ -8,6 +8,7 @@ allow filtering by regex patterns on document content and metadata.
 
 from tqdm import tqdm
 import re
+import time
 from beartype.typing import Tuple, Callable
 from langchain_core.vectorstores.base import VectorStore
 from loguru import logger
@@ -61,8 +62,15 @@ def filter_docstore(
     # directly remove the filtered documents from the docstore
     # but first store the docstore before altering it to allow
     # unfiltering in the prompt
+    start_time = time.time()
     unfiltered_docstore_bytes = loaded_embeddings.serialize_to_bytes()
+    serialize_time = time.time() - start_time
+    logger.debug(f"Serializing unfiltered docstore took {serialize_time:.3f} seconds")
+
+    start_time = time.time()
     status = loaded_embeddings.delete(ids_to_del)
+    delete_time = time.time() - start_time
+    logger.debug(f"Deleting {len(ids_to_del)} documents took {delete_time:.3f} seconds")
 
     # checking deletions went well
     if status is False:
