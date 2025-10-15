@@ -17,9 +17,9 @@ from wdoc.utils.env import env, is_out_piped
 
 
 def filter_docstore(
-    loaded_embeddings: Embeddings,
+    loaded_embeddings: VectorStore,
     cli_kwargs: dict,
-) -> Tuple[Embeddings, VectorStore]:
+) -> Tuple[VectorStore, VectorStore]:
     if "filter_metadata" in cli_kwargs:
         filter_meta = create_metadata_filter(
             loaded_embeddings=loaded_embeddings,
