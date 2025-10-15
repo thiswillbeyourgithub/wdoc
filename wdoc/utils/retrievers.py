@@ -4,6 +4,7 @@ Retrievers used to retrieve the appropriate embeddings for a given query.
 
 from beartype.typing import Any, List, Optional
 from langchain.docstore.document import Document
+from loguru import logger
 
 # from langchain.storage import LocalFileStore
 from langchain_core.retrievers import BaseRetriever
@@ -131,6 +132,11 @@ def create_retrievers(
             )
         )
     if "parent" in query_retrievers.lower():
+        if not loaded_docs:
+            logger.warning(
+                "To use the 'parent' retriever, we have have loaded documents but we haven't. This might be because you are loading from an index directly instead of creating embeddings during this run. As an experimental workaround, we load the documents from the loaded embeddings."
+            )
+            loaded_docs = list(loaded_embeddings.docstore._dict.values())
         retrievers.append(
             create_parent_retriever(
                 task=task,
