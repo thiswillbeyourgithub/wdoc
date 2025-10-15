@@ -799,9 +799,9 @@ class wdoc:
                 "filter_metadata" in self.cli_kwargs
                 or "filter_content" in self.cli_kwargs
             ):
-                from wdoc.utils.filters import filter_docstore
+                from wdoc.utils.filters import filter_vectorstore
 
-                self.loaded_embeddings = filter_docstore(
+                self.loaded_embeddings = filter_vectorstore(
                     loaded_embeddings=self.loaded_embeddings,
                     cli_kwargs=self.cli_kwargs,
                 )

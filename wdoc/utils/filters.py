@@ -16,7 +16,7 @@ from loguru import logger
 from wdoc.utils.env import env, is_out_piped
 
 
-def filter_docstore(
+def filter_vectorstore(
     loaded_embeddings: VectorStore,
     cli_kwargs: dict,
 ) -> VectorStore:
