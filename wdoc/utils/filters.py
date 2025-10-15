@@ -84,7 +84,7 @@ def filter_docstore(
 
 
 def create_metadata_filter(
-    loaded_embeddings: Embeddings,
+    loaded_embeddings: VectorStore,
     cli_kwargs: dict,
 ) -> Callable:
     # get the list of all metadata to see if a filter was not misspelled
