@@ -798,7 +798,10 @@ class wdoc:
             ):
                 from wdoc.utils.filters import filter_docstore
 
-                self.loaded_embeddings, self.unfiltered_docstore = filter_docstore()
+                self.loaded_embeddings, self.unfiltered_docstore = filter_docstore(
+                    loaded_embeddings=self.loaded_embeddings,
+                    cli_kwargs=self.cli_kwargs,
+                )
 
         assert query.strip(), "Cannot accept empty query"
         assert all(
