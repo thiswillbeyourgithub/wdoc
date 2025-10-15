@@ -606,6 +606,9 @@ class wdoc:
         else:
             self.loaded_docs = None  # will be loaded when embeddings are loaded
 
+        # flag to know if we already filtered or not
+        self._is_vectorstore_filtered = False
+
         if self.__import_mode__:
             logger.debug(
                 "Ready to query or summarize, call your_instance.query_task(your_question)"
@@ -791,19 +794,18 @@ class wdoc:
         }
 
         # parse filters as callable for faiss filtering
-        if not hasattr(self, "unfiltered_docstore_bytes"):
+        if not self._is_vectorstore_filtered:
             if (
                 "filter_metadata" in self.cli_kwargs
                 or "filter_content" in self.cli_kwargs
             ):
                 from wdoc.utils.filters import filter_docstore
 
-                self.loaded_embeddings, self.unfiltered_docstore_bytes = (
-                    filter_docstore(
-                        loaded_embeddings=self.loaded_embeddings,
-                        cli_kwargs=self.cli_kwargs,
-                    )
+                self.loaded_embeddings = filter_docstore(
+                    loaded_embeddings=self.loaded_embeddings,
+                    cli_kwargs=self.cli_kwargs,
                 )
+                self._is_vectorstore_filtered = True
 
         assert query.strip(), "Cannot accept empty query"
         assert all(

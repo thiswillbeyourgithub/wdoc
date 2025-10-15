@@ -19,7 +19,7 @@ from wdoc.utils.env import env, is_out_piped
 def filter_docstore(
     loaded_embeddings: VectorStore,
     cli_kwargs: dict,
-) -> Tuple[VectorStore, bytes]:
+) -> VectorStore:
     if "filter_metadata" in cli_kwargs:
         filter_meta = create_metadata_filter(
             loaded_embeddings=loaded_embeddings,
@@ -59,14 +59,15 @@ def filter_docstore(
         logger.warning("Your filter matched all stored documents!")
     assert good, "No documents in the vectorstore match the given filter"
 
-    # directly remove the filtered documents from the docstore
-    # but first store the docstore before altering it to allow
-    # unfiltering in the prompt
-    start_time = time.time()
-    unfiltered_docstore_bytes = loaded_embeddings.serialize_to_bytes()
-    serialize_time = time.time() - start_time
-    logger.debug(f"Serializing unfiltered docstore took {serialize_time:.3f} seconds")
+    # commented because it's taking quite long
+    # # first store the docstore before altering it to allow
+    # # unfiltering in the prompt
+    # start_time = time.time()
+    # unfiltered_docstore_bytes = loaded_embeddings.serialize_to_bytes()
+    # serialize_time = time.time() - start_time
+    # logger.debug(f"Serializing unfiltered docstore took {serialize_time:.3f} seconds")
 
+    # directly remove the filtered documents from the docstore
     start_time = time.time()
     status = loaded_embeddings.delete(ids_to_del)
     delete_time = time.time() - start_time
@@ -87,7 +88,7 @@ def filter_docstore(
         loaded_embeddings.index_to_docstore_id
     ), "Something went wrong when deleting filtered out documents"
 
-    return loaded_embeddings, unfiltered_docstore_bytes
+    return loaded_embeddings
 
 
 def create_metadata_filter(
