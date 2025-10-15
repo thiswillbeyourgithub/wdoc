@@ -10,7 +10,6 @@ from tqdm import tqdm
 import re
 from beartype.typing import Tuple, Callable
 from langchain_core.vectorstores.base import VectorStore
-from langchain_core.embeddings import Embeddings
 from loguru import logger
 
 from wdoc.utils.env import env, is_out_piped
