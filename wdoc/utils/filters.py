@@ -19,7 +19,7 @@ from wdoc.utils.env import env, is_out_piped
 def filter_docstore(
     loaded_embeddings: VectorStore,
     cli_kwargs: dict,
-) -> Tuple[VectorStore, VectorStore]:
+) -> Tuple[VectorStore, bytes]:
     if "filter_metadata" in cli_kwargs:
         filter_meta = create_metadata_filter(
             loaded_embeddings=loaded_embeddings,
@@ -62,7 +62,7 @@ def filter_docstore(
     # directly remove the filtered documents from the docstore
     # but first store the docstore before altering it to allow
     # unfiltering in the prompt
-    unfiltered_docstore = loaded_embeddings.serialize_to_bytes()
+    unfiltered_docstore_bytes = loaded_embeddings.serialize_to_bytes()
     status = loaded_embeddings.delete(ids_to_del)
 
     # checking deletions went well
@@ -80,7 +80,7 @@ def filter_docstore(
         loaded_embeddings.index_to_docstore_id
     ), "Something went wrong when deleting filtered out documents"
 
-    return loaded_embeddings, unfiltered_docstore
+    return loaded_embeddings, unfiltered_docstore_bytes
 
 
 def create_metadata_filter(

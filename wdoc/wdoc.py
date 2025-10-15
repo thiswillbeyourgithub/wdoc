@@ -791,16 +791,18 @@ class wdoc:
         }
 
         # parse filters as callable for faiss filtering
-        if not hasattr(self, "unfiltered_docstore"):
+        if not hasattr(self, "unfiltered_docstore_bytes"):
             if (
                 "filter_metadata" in self.cli_kwargs
                 or "filter_content" in self.cli_kwargs
             ):
                 from wdoc.utils.filters import filter_docstore
 
-                self.loaded_embeddings, self.unfiltered_docstore = filter_docstore(
-                    loaded_embeddings=self.loaded_embeddings,
-                    cli_kwargs=self.cli_kwargs,
+                self.loaded_embeddings, self.unfiltered_docstore_bytes = (
+                    filter_docstore(
+                        loaded_embeddings=self.loaded_embeddings,
+                        cli_kwargs=self.cli_kwargs,
+                    )
                 )
 
         assert query.strip(), "Cannot accept empty query"
