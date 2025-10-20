@@ -306,7 +306,7 @@ def batch_load_doc(
     doc_hashes = Parallel(
         n_jobs=-1 if len(to_load) > 1 else 1,
         backend=backend,
-        verbose=0 if not env.WDOC_VERBOSE else 51,
+        verbose=0,
     )(
         delayed(file_hasher)(doc=doc)
         for doc in tqdm(
