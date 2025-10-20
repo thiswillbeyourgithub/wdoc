@@ -1,7 +1,6 @@
 import shutil
 import subprocess
 import sys
-from loguru import logger
 
 from setuptools import find_packages, setup
 from setuptools.command.install import install
@@ -17,7 +16,7 @@ class PostInstallCommand(install):
         try:
             subprocess.check_call([sys.executable, "-m", "playwright", "install"])
         except Exception as err:
-            logger.error(f"Error when installing playwright: '{err}'")
+            print(f"Error when installing playwright: '{err}'")
 
         # do pip install --user -U --pre yt-dlp
         try:
@@ -36,7 +35,7 @@ class PostInstallCommand(install):
                 ]
             )
         except Exception as err:
-            logger.error(f"Error when installing yt-dlp pre-release: '{err}'")
+            print(f"Error when installing yt-dlp pre-release: '{err}'")
 
         # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
         # see https://github.com/ahupp/python-magic/issues/261
@@ -54,7 +53,7 @@ class PostInstallCommand(install):
                 ],
             )
         except Exception as err:
-            logger.error(f"Error when pip updating python-magic from git: '{err}'")
+            print(f"Error when pip updating python-magic from git: '{err}'")
 
         # do "openparse-download"
         try:
@@ -62,7 +61,7 @@ class PostInstallCommand(install):
                 ["openparse-download"],
             )
         except Exception as err:
-            logger.error(
+            print(
                 "Error when trying to run 'openparse-download' to download"
                 f" weights for deep learning based table detection : '{err}'"
                 "\nBy default wdoc still uses pymupdf via openparse so it "
@@ -76,7 +75,7 @@ class PostInstallCommand(install):
 
             nltk.download("punkt_tab")
         except Exception as err:
-            logger.error(f"Error when downloading nltk punkt_tab: '{err}'")
+            print(f"Error when downloading nltk punkt_tab: '{err}'")
 
 
 with open("README.md", "r") as readme:
