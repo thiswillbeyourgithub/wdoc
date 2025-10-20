@@ -203,7 +203,7 @@ if env.WDOC_VERBOSE:
 @optional_strip_unexp_args
 @doc_loaders_cache.cache
 def load_online_pdf(
-    path: str,
+    path: Union[str, Path],
     text_splitter: TextSplitter,
     file_hash: str,
     pdf_parsers: Union[str, List[str]] = "pymupdf",  # used only if online loading fails
@@ -252,7 +252,9 @@ def load_online_pdf(
 
 
 @doc_loaders_cache.cache(ignore=["path"])
-def _pdf_loader(loader_name: str, path: str, file_hash: str) -> List[Document]:
+def _pdf_loader(
+    loader_name: str, path: Union[str, Path], file_hash: str
+) -> List[Document]:
     loader = pdf_loaders[loader_name](path)
     docs = loader.load()
     assert isinstance(docs, list), f"Output of {loader_name} is of type {type(docs)}"
