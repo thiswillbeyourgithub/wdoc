@@ -156,7 +156,7 @@ def batch_load_doc(
     loop_counter = 0
     while any(d["filetype"] in recursive_types_func_mapping for d in to_load):
         loop_counter += 1
-        if loop_counter > 5:
+        if loop_counter > 9999:
             culprit_elements = [
                 d for d in to_load if d["filetype"] in recursive_types_func_mapping
             ]
