@@ -35,6 +35,7 @@ from wdoc.utils.misc import (
     ModelName,
     cache_dir,
     file_hasher,
+    hasher,
     unlazyload_modules,
 )
 from wdoc.utils.errors import NoInferrableFiletype
@@ -153,17 +154,28 @@ def batch_load_doc(
     to_load = [cli_kwargs.copy()]
     to_load[-1]["filetype"] = filetype.lower()
     new_doc_to_load = []
-    loop_counter = 0
+    seen_hashes = set()
     while any(d["filetype"] in recursive_types_func_mapping for d in to_load):
-        loop_counter += 1
-        if loop_counter > 9999:
+        # Create a hash of the current state to detect infinite loops
+        # Using sorted JSON to ensure consistent hashing regardless of dict ordering
+        current_state = json.dumps(
+            sorted([json.dumps(tl) for tl in to_load]),
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        state_hash = hasher(current_state)
+
+        if state_hash in seen_hashes:
             culprit_elements = [
                 d for d in to_load if d["filetype"] in recursive_types_func_mapping
             ]
             raise Exception(
-                f"Infinite loop detected in recursive file type processing after {loop_counter} iterations. "
+                f"Infinite loop detected in recursive file type processing. "
+                f"The same state has been encountered twice. "
                 f"Culprit elements still in to_load: {culprit_elements}"
             )
+        seen_hashes.add(state_hash)
+
         for ild, load_kwargs in enumerate(to_load):
 
             if "source_tag" in load_kwargs:
