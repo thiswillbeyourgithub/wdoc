@@ -202,7 +202,6 @@ def batch_load_doc(
 
                 # remove the arguments that were expected by the recursive parsing function and are returned unchanged. For example arguments like ddg_max_result
                 the_func_kwargs = dict(inspect.signature(func_to_use).parameters)
-                logger.warning(str(to_add))
                 for inewdoc, newdoc in enumerate(to_add):
                     for k, v in newdoc.copy().items():
                         if (
