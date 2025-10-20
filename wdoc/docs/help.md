@@ -101,7 +101,7 @@
                 * `--doccheck_max_token`
 
         * `powerpoint`
-            * `--path` to a .doc, .docx etc
+            * `--path` to a .ppt or .pptx etc
 
         * `string`: no parameters needed, will provide a field where
             you must type or paste the string
@@ -122,7 +122,7 @@
                 * `--title`, otherwise we try to detect it ourselves.
 
         * `word`
-            * `--path` to a .doc, .docx etc
+            * `--path` to a .doc, .docx, etc
 
         * `youtube`
             * `--path` must link to a youtube video
