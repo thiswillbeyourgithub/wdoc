@@ -39,7 +39,7 @@ from wdoc.utils.errors import (
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 
-from wdoc.utils.llm import TESTING_LLM, load_llm
+from wdoc.utils.llm import load_llm
 
 from wdoc.utils.misc import (  # debug_chain,
     cache_dir,
@@ -186,6 +186,7 @@ class wdoc:
                         f"Cli_kwargs '{k}' is of type '{type(val)}' instead of '{expected_type}'"
                     )
 
+        TESTING_LLM = "testing/testing"
         if (
             model == TESTING_LLM
             or model == "testing"

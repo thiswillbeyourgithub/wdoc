@@ -498,7 +498,9 @@ def model_name_matcher(model: str) -> str:
     model has a known cost and print the matched name)
     Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
     """
-    assert "testing" not in model
+    assert (
+        "testing" not in model.lower()
+    ), f"Found 'testing' in model, this should not happen"
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
         # logger.debug(f"Bypassing model name matching for model '{model}'")
@@ -617,7 +619,7 @@ class ModelName:
         return False
 
     def __hash__(self):
-        # necessary for memoizing
+        "necessary for memoizing"
         return (str(self.original.__hash__()) + str("ModelName".__hash__())).__hash__()
 
 
@@ -730,7 +732,7 @@ def get_splitter(
             length_function=get_tkn_length,
         )
 
-    if modelname.original == "testing/testing":
+    if modelname.is_testing():
         return get_splitter(task=task, modelname=DEFAULT_SPLITTER_MODELNAME)
 
     try:
@@ -1218,7 +1220,7 @@ def create_langfuse_callback(version: str) -> None:
 
 @memoize
 def get_supported_model_params(modelname: ModelName) -> list:
-    if modelname.backend == "testing":
+    if modelname.is_testing():
         return []
     if modelname.backend == "openrouter":
         metadata = get_openrouter_metadata()

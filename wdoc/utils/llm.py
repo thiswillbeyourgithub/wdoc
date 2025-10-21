@@ -16,9 +16,7 @@ from loguru import logger
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, get_model_max_tokens, langfuse_callback_holder
 
-TESTING_LLM = "testing/testing"
-
-# lorem ipsum is output by TESTING_LLM
+# lorem ipsum is output by "testing" llm
 LOREM_IPSUM = (
     "Lorem ipsum dolor sit amet, consectetur adipiscing "
     "elit, sed do eiusmod tempor incididunt ut labore et "
