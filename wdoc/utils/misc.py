@@ -62,7 +62,13 @@ try:
     import ftlangdetect
 
     def language_detector(text: str) -> float:
-        return ftlangdetect.detect(text.lower())["score"]
+        try:
+            return ftlangdetect.detect(text.lower())["score"]
+        except Exception as e:
+            logger.info(
+                f"Error when running ftlangdetect: '{e}'. First 100 chars of the str were '{text[:100]}'. Assuming probability of 1."
+            )
+            return 1.0
 
     assert isinstance(language_detector("This is a test"), float)
 except Exception as err:
@@ -77,7 +83,13 @@ except Exception as err:
         import langdetect
 
         def language_detector(text: str) -> float:
-            return langdetect.detect_langs(text.lower())[0].prob
+            try:
+                return langdetect.detect_langs(text.lower())[0].prob
+            except Exception as e:
+                logger.info(
+                    f"Error when running langdetect: '{e}'. First 100 chars of the str were '{text[:100]}'. Assuming probability of 1."
+                )
+                return 1.0
 
         assert isinstance(language_detector("This is a test"), float)
     except Exception as err:
