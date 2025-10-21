@@ -16,6 +16,8 @@ from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.misc import file_hasher, html_to_text, optional_strip_unexp_args
 
+import pandas as pd
+
 clozeregex = re.compile(r"{{c\d+::|}}")  # for removing clozes in anki
 anki_replacements_regex = re.compile(r"\{([^}]*)\}")
 
@@ -90,8 +92,6 @@ def load_anki(
             tqdm.pandas(*x, **y)
 
     else:
-        import pandas as pd
-
         pd.DataFrame.progress_apply = pd.DataFrame.apply
         pd.Series.progress_apply = pd.Series.apply
 
@@ -203,7 +203,7 @@ def load_anki(
     else:
         usetags = False
 
-    def placeholder_replacer(row: "pd.Series") -> Tuple[str, dict]:
+    def placeholder_replacer(row: pd.Series) -> Tuple[str, dict]:
         text = anki_template
 
         if useallfields:
