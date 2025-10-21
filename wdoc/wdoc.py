@@ -54,8 +54,8 @@ from wdoc.utils.misc import (  # debug_chain,
     query_eval_cache,
     set_func_signature,
     thinking_answer_parser,
-    tasks_list,
 )
+from wdoc.utils.tasks.types import wdocTask
 
 logger.info("Starting wdoc")
 
@@ -75,7 +75,9 @@ class wdoc:
     @set_func_signature
     def __init__(
         self,
-        task: Literal["query", "search", "summarize", "summarize_then_query"],
+        task: Union[
+            Literal["query", "search", "summarize", "summarize_then_query"], wdocTask
+        ],
         filetype: str = "auto",
         model: str = env.WDOC_DEFAULT_MODEL,
         model_kwargs: Optional[dict] = None,
@@ -215,13 +217,14 @@ class wdoc:
         assert (
             "loaded_embeddings" not in cli_kwargs
         ), "'loaded_embeddings' cannot be an argument as it is used internally"
-        task = task.replace("summary", "summarize")
-        assert task in tasks_list, f"invalid task value: {task}"
-        if task in ["summarize", "summarize_then_query"]:
-            assert not load_embeds_from, "can't use load_embeds_from if task is summary"
+        task = wdocTask(task)
+        if task.summarize:
+            assert (
+                not load_embeds_from
+            ), "can't use load_embeds_from if asking for a summary"
         if filetype == "ddg":
-            assert task == "query", "Only 'query' task is supported for 'ddg' filetype"
-        if task in ["query", "search", "summarize_then_query"]:
+            assert task.query, "Only 'query' task is supported for 'ddg' filetype"
+        if task.query or task.search:
             assert (
                 query_eval_model is not None
             ), "query_eval_model can't be None if doing RAG"
@@ -434,10 +437,10 @@ class wdoc:
             self.query_eval_model = ModelName(query_eval_model)
         else:
             self.query_eval_model = None
-        self.task = task
         self.filetype = filetype
         self.embed_model = ModelName(embed_model)
         self.embed_model_kwargs = embed_model_kwargs
+        self.task: wdocTask = task
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
@@ -616,21 +619,17 @@ class wdoc:
             )
             return
 
-        if self.task in ["summarize", "summarize_then_query"]:
+        if self.task.summarize:
             self.summary_task()
 
-            if self.task == "summary_then_query":
+            if self.task.query:
                 logger.info("Done summarizing. Switching to query mode.")
             else:
                 logger.info("Done summarizing.")
                 return
 
         else:
-            assert self.task in [
-                "query",
-                "search",
-                "summary_then_query",
-            ], f"Invalid task: {self.task}"
+            assert self.task.query or self.task.search, f"Invalid task: {self.task}"
             if self.oneoff:
                 self._query_or_search_task(query=query)
             elif is_out_piped:
@@ -745,11 +744,11 @@ class wdoc:
         return results
 
     def query_task(self, query) -> Dict[str, Any]:
-        self.task = "query"
+        self.task = wdocTask("query")
         return self._query_or_search_task(query=query)
 
     def search_task(self, query) -> Dict[str, Any]:
-        self.task = "search"
+        self.task = wdocTask("search")
         return self._query_or_search_task(query=query)
 
     def _query_or_search_task(self, query: str) -> dict:
@@ -887,7 +886,7 @@ class wdoc:
             "max_concurrency": env.WDOC_LLM_MAX_CONCURRENCY if not self.debug else 1
         }
 
-        if self.task == "search":
+        if self.task.search:
             return self._actual_search_task(
                 retriever=retriever,
                 query=query,
@@ -896,7 +895,7 @@ class wdoc:
                 evaluate_doc_chain=evaluate_doc_chain,
                 multi=multi,
             )
-        else:
+        elif self.task.query:
             return self._actual_query_task(
                 retriever=retriever,
                 query_fe=query_fe,
@@ -904,6 +903,8 @@ class wdoc:
                 evaluate_doc_chain=evaluate_doc_chain,
                 multi=multi,
             )
+        else:
+            raise ValueError(self.task)
 
     def _actual_query_task(
         self,

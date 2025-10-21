@@ -26,6 +26,7 @@ from tqdm import tqdm
 from loguru import logger
 
 from wdoc.utils.env import env, is_out_piped
+from wdoc.utils.tasks.types import wdocTask
 from wdoc.utils.loaders import (
     load_one_doc,
     markdownlink_regex,
@@ -122,7 +123,7 @@ def infer_filetype(path: str) -> str:
 def batch_load_doc(
     llm_name: ModelName,
     filetype: str,
-    task: str,
+    task: wdocTask,
     backend: str,
     n_jobs: int,
     **cli_kwargs,
@@ -297,7 +298,7 @@ def batch_load_doc(
                 "exclude",
             ], "Include or exclude arguments should be reomved at this point"
 
-    if "summar" not in task:
+    if not task.summarize:
         # shuffle the list of files to load to make
         # the hashing progress bar more representative
         to_load = sorted(to_load, key=lambda x: random.random())
@@ -320,7 +321,7 @@ def batch_load_doc(
     for i, h in enumerate(doc_hashes):
         to_load[i]["file_hash"] = doc_hashes[i]
 
-    if "summar" not in task:
+    if not task.summarize:
         # shuffle the list of files again to be random but deterministic:
         # keeping only the digits of each hash, then multiplying by the
         # index of the filetype by size. This makes sure the doc dicts are
@@ -529,7 +530,8 @@ def batch_load_doc(
 
     # smart deduplication before embedding:
     # find the document with the same content_hash, merge their metadata and keep only one
-    if "summar" not in task and len(docs) > 1:
+
+    if task.summarize and len(docs) > 1:
         logger.debug("Deduplicating...")
         logger.debug("Getting all hash")
         content_hash = [d.metadata["content_hash"] for d in docs]

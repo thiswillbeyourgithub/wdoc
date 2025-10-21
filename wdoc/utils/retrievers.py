@@ -11,6 +11,7 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.embeddings import Embeddings
 
 from wdoc.utils.env import env
+from wdoc.utils.tasks.types import wdocTask
 from wdoc.utils.misc import cache_dir, get_splitter
 from wdoc.utils.prompts import multiquery_parser, prompts
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
@@ -42,7 +43,7 @@ def create_multiquery_retriever(
 
 
 def create_parent_retriever(
-    task: str,
+    task: wdocTask,
     loaded_embeddings: Any,
     loaded_docs: List[Document],
     top_k: int,
@@ -85,7 +86,7 @@ def create_retrievers(
     llm,
     top_k: int,
     relevancy: float,
-    task: str,
+    task: wdocTask,
     loaded_docs: Optional[List[Document]],
 ) -> BaseRetriever:
     """Create and return list of retrievers based on query_retrievers setting."""

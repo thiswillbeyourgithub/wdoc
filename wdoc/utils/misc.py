@@ -37,6 +37,7 @@ from loguru import logger
 
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
+from wdoc.utils.tasks.types import wdocTask
 
 import lazy_import
 
@@ -139,9 +140,6 @@ recur_separator = ["\n\n\n\n", "\n\n\n", "\n\n", "\n", "...", ".", " ", ""]
 min_token = 20
 max_token = 10_000_000
 min_lang_prob = 0.50
-
-# list of available tasks
-tasks_list = ["query", "summarize", "parse", "search", "summarize_then_query"]
 
 printed_unexpected_api_keys = [False]  # to print it only once
 
@@ -713,7 +711,7 @@ DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
 
 
 def get_splitter(
-    task: str,
+    task: wdocTask,
     modelname: ModelName = DEFAULT_SPLITTER_MODELNAME,
 ) -> "TextSplitter":
     "we don't use the same text splitter depending on the task"
@@ -724,7 +722,7 @@ def get_splitter(
         return text_splitters[task][modelname.original]
 
     # if task is parse but we let the model as testing: assume we want a single super large document with no splitting
-    if task == "parse" and modelname.original == "cliparser/cliparser":
+    if task.parse and modelname.original == "cliparser/cliparser":
         return RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=1e7,
@@ -749,7 +747,7 @@ def get_splitter(
         )
 
     # Cap context sizes
-    if task in ["query", "search"] and max_tokens > env.WDOC_MAX_EMBED_CONTEXT:
+    if (task.query or task.search) and max_tokens > env.WDOC_MAX_EMBED_CONTEXT:
         logger.warning(
             f"Capping max_tokens for model {modelname} to WDOC_MAX_EMBED_CONTEXT ({env.WDOC_MAX_EMBED_CONTEXT} instead of {max_tokens}) because in query mode and we can only guess the context size of the embedding model."
         )
@@ -762,25 +760,18 @@ def get_splitter(
 
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
-    if task in ["query", "search", "parse"]:
+    if task.query or task.search or task.parse:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
             length_function=model_tkn_length,
         )
-    elif task in ["summarize_then_query", "summarize"]:
+    elif task.summarize:
         text_splitter = RecursiveCharacterTextSplitter(
             separators=recur_separator,
             chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
-            length_function=model_tkn_length,
-        )
-    elif task == "recursive_summary":
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
-            chunk_size=int(1 / 4 * max_tokens),
-            chunk_overlap=300,
             length_function=model_tkn_length,
         )
     else:

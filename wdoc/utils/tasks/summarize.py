@@ -13,6 +13,8 @@ from tqdm import tqdm
 from loguru import logger
 import copy
 from dataclasses import dataclass, asdict
+from functools import partial
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from wdoc.utils.logger import (
     md_printer,
@@ -20,9 +22,10 @@ from wdoc.utils.logger import (
 from wdoc.utils.misc import (
     # debug_chain,
     ModelName,
+    get_model_max_tokens,
     average_word_length,
     check_docs_tkn_length,
-    get_splitter,
+    recur_separator,
     get_tkn_length,
     log_and_time_fn,
     thinking_answer_parser,
@@ -257,6 +260,23 @@ def summarize_documents(
         verbose=llm_verbosity,
     )
 
+    model_tkn_length = partial(get_tkn_length, modelname=model.original)
+    if model.is_testing():
+        max_tokens = 4096
+    else:
+        max_tokens = get_model_max_tokens(model)
+    if max_tokens > env.WDOC_MAX_CHUNK_SIZE:
+        logger.debug(
+            f"Capping max_tokens for model {model.original} to the WDOC_MAX_CHUNK_SIZE value ({env.WDOC_MAX_CHUNK_SIZE} instead of {max_tokens})."
+        )
+        max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
+    splitter = RecursiveCharacterTextSplitter(
+        separators=recur_separator,
+        chunk_size=int(1 / 4 * max_tokens),
+        chunk_overlap=300,
+        length_function=model_tkn_length,
+    )
+
     # get reading length of the summary
     real_text = "".join([letter for letter in list(summary) if letter.isalpha()])
     sum_reading_length = len(real_text) / average_word_length / wpm
@@ -285,10 +305,6 @@ def summarize_documents(
             assert "- Chunk " not in summary_text, "Found chunk marker"
             assert "- BEFORE RECURSION # " not in summary_text, "Found recursion block"
 
-            splitter = get_splitter(
-                "recursive_summary",
-                modelname=model,
-            )
             summary_docs = [Document(page_content=summary_text)]
             summary_docs = splitter.transform_documents(summary_docs)
             assert summary_docs != relevant_docs

@@ -20,7 +20,8 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
 from wdoc.utils import logger as importedlogger  # make sure to setup the logs first
 from wdoc.wdoc import wdoc
 from wdoc.utils.env import is_out_piped
-from wdoc.utils.misc import get_piped_input, tasks_list
+from wdoc.utils.misc import get_piped_input
+from wdoc.utils.tasks.types import __valid_tasks__
 from wdoc.utils.batch_file_loader import infer_filetype, NoInferrableFiletype
 from typing import Tuple, List, Dict, Any
 import io
@@ -278,13 +279,13 @@ def cli_launcher() -> None:
 
     # turn "wdoc query" into "wdoc --task=query", same for the other tasks
     if "task" not in kwargs:
-        matching_tasks = [t for t in args if t in tasks_list]
+        matching_tasks = [t for t in args if t in __valid_tasks__]
         assert (
             len(matching_tasks) != 0
-        ), f"Found no task in the args: '{args}', wdoc needs one of {tasks_list}"
+        ), f"Found no task in the args: '{args}', wdoc needs one of {__valid_tasks__}"
         assert (
             len(matching_tasks) == 1
-        ), f"Found multiple potential tasks in args: '{args}', wdoc needs one of {tasks_list}"
+        ), f"Found multiple potential tasks in args: '{args}', wdoc needs one of {__valid_tasks__}"
         task = matching_tasks[0]
         logger.debug(f"Moving task '{task}' from args to kwargs")
         args.remove(task)

@@ -21,6 +21,7 @@ from loguru import logger
 from wdoc.utils.env import env
 from wdoc.utils.errors import MissingDocdictArguments, TimeoutPdfLoaderError
 from wdoc.utils.loaders.shared import get_url_title
+from wdoc.utils.tasks.types import wdocTask
 from wdoc.utils.misc import (
     ModelName,
     average_word_length,
@@ -116,7 +117,7 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
 
 @wrapper_load_one_doc
 def load_one_doc(
-    task: str,
+    task: wdocTask,
     llm_name: ModelName,
     temp_dir: Path,
     filetype: str,

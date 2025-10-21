@@ -12,6 +12,7 @@ from langchain.docstore.document import Document
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.logger import debug_exceptions, set_parse_doc_help_md_as_docstring
 from wdoc.utils.misc import DocDict, ModelName
+from wdoc.utils.tasks.types import wdocTask
 
 
 @set_parse_doc_help_md_as_docstring
@@ -77,7 +78,7 @@ def parse_doc(
             cli_kwargs[k] = v
 
     out = batch_load_doc(
-        task="parse",
+        task=wdocTask("parse"),
         filetype=filetype,
         **cli_kwargs,
         **docdict_kwargs,
