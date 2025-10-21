@@ -437,10 +437,10 @@ class wdoc:
             self.query_eval_model = ModelName(query_eval_model)
         else:
             self.query_eval_model = None
-        self.filetype = filetype
-        self.embed_model = ModelName(embed_model)
-        self.embed_model_kwargs = embed_model_kwargs
         self.task: wdocTask = task
+        self.filetype: str = filetype
+        self.embed_model: ModelName = ModelName(embed_model)
+        self.embed_model_kwargs: dict = embed_model_kwargs
         self.save_embeds_as = save_embeds_as
         self.load_embeds_from = load_embeds_from
         self.top_k = top_k
