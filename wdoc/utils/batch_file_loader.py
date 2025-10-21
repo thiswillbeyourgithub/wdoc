@@ -500,10 +500,28 @@ def batch_load_doc(
                     st[s] += 1
             else:
                 no_st += 1
+
+        # Count failures per source tag
+        st_failed = {t: 0 for t in asked_source_tags}
+        for failed_doc in missing_docargs:
+            if "source_tag" in failed_doc:
+                tag = failed_doc["source_tag"]
+                if tag in st_failed:
+                    st_failed[tag] += 1
+
         should_crash = False
         logger.warning("Found the following source_tag after loading all documents:")
         for n, s in st.items():
-            logger.warning(f"- {s}: {n}")
+            # n is the tag name, s is the successful count
+            n_failed = st_failed.get(n, 0)
+            if n_failed > 0:
+                total = s + n_failed
+                success_rate = (s / total * 100) if total > 0 else 0
+                logger.warning(
+                    f"- {s}: {n} ({n_failed} failed, {success_rate:.1f}% success rate)"
+                )
+            else:
+                logger.warning(f"- {s}: {n}")
             if n == 0:
                 should_crash = True
         if extra:
