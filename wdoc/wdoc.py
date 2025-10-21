@@ -651,6 +651,40 @@ class wdoc:
                         self.interaction_settings
                     )
 
+    @property
+    def interaction_settings(self) -> dict:
+        """
+        Returns current interaction settings as a dict.
+
+        This property dynamically builds the settings dict from the current
+        attribute values, ensuring it's always up to date.
+        """
+        return {
+            "top_k": self.top_k,
+            "multiline": False,
+            "retriever": self.query_retrievers,
+            "task": self.task,
+            "relevancy": self.query_relevancy,
+        }
+
+    @interaction_settings.setter
+    def interaction_settings(self, value: dict) -> None:
+        """
+        Updates interaction settings from a dict.
+
+        This setter updates the underlying attributes based on the dict values,
+        allowing ask_user() to modify the settings.
+        """
+        if "top_k" in value:
+            self.top_k = value["top_k"]
+        if "retriever" in value:
+            self.query_retrievers = value["retriever"]
+        if "task" in value:
+            self.task = value["task"]
+        if "relevancy" in value:
+            self.query_relevancy = value["relevancy"]
+        # Note: "multiline" is not stored as an attribute
+
     def summary_task(self) -> "wdoc.utils.tasks.summarize.wdocSummary":
         from wdoc.utils.tasks.summarize import summarize_documents
 
@@ -783,15 +817,6 @@ class wdoc:
                 dollar_limit=self.dollar_limit,
                 private=self.private,
             )
-
-        # set default ask_user argument
-        self.interaction_settings = {
-            "top_k": self.top_k,
-            "multiline": False,
-            "retriever": self.query_retrievers,
-            "task": self.task,
-            "relevancy": self.query_relevancy,
-        }
 
         # parse filters as callable for faiss filtering
         if not self._is_vectorstore_filtered:
