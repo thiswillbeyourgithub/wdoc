@@ -86,8 +86,7 @@ except Exception as err:
                 f"Couldn't import optional package 'langdetect' either: '{err}'"
             )
 
-        def language_detector(text: str) -> None:
-            return None
+            language_detector = None
 
 
 if (
@@ -813,6 +812,9 @@ def check_docs_tkn_length(
 
     # check if language check is above a threshold and cast as lowercase as it's apparently what it was trained on
     try:
+        if not language_detector:
+            # bypass if language_detector not defined
+            return 1.0
         probs = [language_detector(d.page_content.replace("\n", "<br>")) for d in docs]
         if not probs or probs[0] is None:
             # bypass if language_detector not defined
