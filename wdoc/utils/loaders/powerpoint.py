@@ -20,10 +20,17 @@ def load_powerpoint(
     loader = UnstructuredPowerPointLoader(path)
     content = loader.load()
 
-    docs = [
-        Document(
-            page_content=content,
-            metadata={},
+    if isinstance(content, str):
+        docs = [
+            Document(
+                page_content=content,
+                metadata={},
+            )
+        ]
+    elif isinstance(content, list) and all(isinstance(d, Document) for d in content):
+        docs = content
+    else:
+        raise TypeError(
+            f"loaded powerpoint content from path '{path}' was of unexpected type '{type(content)}'"
         )
-    ]
     return docs
