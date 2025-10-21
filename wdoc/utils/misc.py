@@ -814,7 +814,7 @@ def check_docs_tkn_length(
     # check if language check is above a threshold and cast as lowercase as it's apparently what it was trained on
     try:
         probs = [language_detector(d.page_content.replace("\n", "<br>")) for d in docs]
-        if probs[0] is None or not probs:
+        if not probs or probs[0] is None:
             # bypass if language_detector not defined
             return 1.0
         prob = sum(probs) / len(probs)
