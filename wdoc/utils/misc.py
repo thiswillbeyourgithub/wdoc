@@ -827,6 +827,11 @@ def check_docs_tkn_length(
     except Exception as err:
         if str(err).startswith("Low language probability"):
             raise
+        if "no features in text" in str(err).lower():
+            logger.exception(
+                f"language_detector couldn't find text features of text '{identifier}'. Treating it as valid document."
+            )
+            return 1.0
         else:
             logger.exception(
                 f"Error when using language_detector on '{identifier}': {err}. Treating it as valid document."
