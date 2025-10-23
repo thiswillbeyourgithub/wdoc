@@ -150,7 +150,6 @@ Click to read more
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
-    - write an `llm` (cf simonw) plugin
     - support other vector databases (important to bridge it to [karakeep](https://github.com/karakeep-app/karakeep/issues/1359)!)
     - learn how to set a github action for test code coverage
     - allow anki to use anki type queries
