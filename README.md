@@ -137,7 +137,6 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
-    - store the available tasks names as a dataclass
     - move the query task and summary task to their own file instead of having a giant wdoc.py
         - clean up the python api to make it a more intuitive workflow
         - then switch from fire.Fire to using click
