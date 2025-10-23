@@ -152,7 +152,7 @@ Click to read more
         - pay attention to how the USAGE document is structured
     - support other vector databases
     - learn how to set a github action for test code coverage
-    - allow anki to use anki type queries
+    - allow anki to use anki type search queries
     - refactor the tasks to use langgraph, as it seems easier to do complex recursive tasks with it
     - use async for the langchain chains
 - ### Features
