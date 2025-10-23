@@ -150,7 +150,7 @@ Click to read more
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
-    - support other vector databases (important to bridge it to [karakeep](https://github.com/karakeep-app/karakeep/issues/1359)!)
+    - support other vector databases
     - learn how to set a github action for test code coverage
     - allow anki to use anki type queries
     - refactor the tasks to use langgraph, as it seems easier to do complex recursive tasks with it
