@@ -137,9 +137,6 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
-    - move the query task and summary task to their own file instead of having a giant wdoc.py
-        - clean up the python api to make it a more intuitive workflow
-        - then switch from fire.Fire to using click
     - figure out a good way to skip merging batches that are too large before trying to merge them
         - probably means adding an env var to store a max value, document it in the help.md
         - then check after batch creation if a batch is that large
