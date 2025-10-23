@@ -159,9 +159,7 @@ class CompressedFAISS(FAISS):
             (
                 docstore,
                 index_to_docstore_id,
-            ) = pickle.loads(
-                pickle_data
-            )  # ignore[pickle]: explicit-opt-in
+            ) = pickle.loads(pickle_data)  # ignore[pickle]: explicit-opt-in
         except (zlib.error, pickle.UnpicklingError) as e:
             # Fallback: try loading without decompression (backwards compatibility)
             logger.info(
@@ -170,9 +168,7 @@ class CompressedFAISS(FAISS):
             (
                 docstore,
                 index_to_docstore_id,
-            ) = pickle.loads(
-                file_data
-            )  # ignore[pickle]: explicit-opt-in
+            ) = pickle.loads(file_data)  # ignore[pickle]: explicit-opt-in
 
         return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
 

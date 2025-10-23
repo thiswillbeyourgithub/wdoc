@@ -303,7 +303,7 @@ Answerer and Carl the Combiner. They can sometimes be useful to expand the queri
             + multiquery_parser.get_format_instructions()
         ),
         HumanMessagePromptTemplate.from_template(
-            template="Here's the query to expand: '''{question}'''" ""
+            template="Here's the query to expand: '''{question}'''"
         ),
     ],
     input_variables=["question"],

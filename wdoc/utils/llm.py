@@ -91,12 +91,12 @@ def load_llm(
     if private:
         assert api_base, "If private is set, api_base must be set too"
         assert env.WDOC_PRIVATE_MODE
-        assert (
-            "WDOC_PRIVATE_MODE" in os.environ
-        ), "Missing env variable WDOC_PRIVATE_MODE"
-        assert (
-            os.environ["WDOC_PRIVATE_MODE"] == "true"
-        ), "Wrong value for env variable WDOC_PRIVATE_MODE"
+        assert "WDOC_PRIVATE_MODE" in os.environ, (
+            "Missing env variable WDOC_PRIVATE_MODE"
+        )
+        assert os.environ["WDOC_PRIVATE_MODE"] == "true", (
+            "Wrong value for env variable WDOC_PRIVATE_MODE"
+        )
     if api_base:
         logger.warning(f"Will use custom api_base {api_base}")
     if not (
@@ -132,9 +132,9 @@ def load_llm(
             os.environ[f"{modelname.backend.upper()}_API_KEY"]
             == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
         )
-        assert (
-            not langfuse_callback_holder
-        ), "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
+        assert not langfuse_callback_holder, (
+            "Private argument but langfuse_handler appears set. Something went wrong so crashing just to be safe."
+        )
     else:
         assert not env.WDOC_PRIVATE_MODE
         assert (
@@ -195,9 +195,9 @@ def load_llm(
 
     if private:
         assert llm.api_base, "private is set but no api_base for llm were found"
-        assert (
-            llm.api_base == api_base
-        ), "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
+        assert llm.api_base == api_base, (
+            "private is set but found unexpected llm.api_base value: '{litellm.api_base}'"
+        )
 
     # fix: the SQLiteCache's str appearance is cancelling its own cache lookup!
     # Simply turning '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at 0x72cd5a6d4050>' into '<wdoc.utils.customs.fix_llm_caching.SQLiteCacheFixed object at REDACTED>'
@@ -264,9 +264,9 @@ class PriceCountingCallback(BaseCallbackHandler):
         return "PriceCountingCallback"
 
     def _check_methods_called(self) -> bool:
-        assert all(
-            meth in dir(self) for meth in self.methods_called
-        ), "unexpected method names!"
+        assert all(meth in dir(self) for meth in self.methods_called), (
+            "unexpected method names!"
+        )
         wrong = [
             meth for meth in self.methods_called if meth not in self.authorized_methods
         ]

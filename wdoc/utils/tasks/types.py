@@ -29,9 +29,9 @@ class wdocTask:
         if isinstance(self.original, wdocTask):
             self.original = self.original.original
         self.original = self.original.replace("summary", "summarize")
-        assert (
-            self.original in __valid_tasks__
-        ), f"Received task '{self.original}' is not part of expected tasks: '{__valid_tasks__}'"
+        assert self.original in __valid_tasks__, (
+            f"Received task '{self.original}' is not part of expected tasks: '{__valid_tasks__}'"
+        )
 
         # set the actual properties
         if "query" in self.original:

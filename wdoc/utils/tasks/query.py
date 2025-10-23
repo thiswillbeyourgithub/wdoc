@@ -71,15 +71,15 @@ def refilter_docs(inputs: dict) -> List[Document]:
     "filter documents fond via RAG based on the digit answered by the eval llm"
     unfiltered_docs = inputs["unfiltered_docs"]
     evaluations = inputs["evaluations"]
-    assert isinstance(
-        unfiltered_docs, list
-    ), f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
-    assert isinstance(
-        evaluations, list
-    ), f"evaluations should be a list, not {type(evaluations)}"
-    assert len(unfiltered_docs) == len(
-        evaluations
-    ), f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
+    assert isinstance(unfiltered_docs, list), (
+        f"unfiltered_docs should be a list, not {type(unfiltered_docs)}"
+    )
+    assert isinstance(evaluations, list), (
+        f"evaluations should be a list, not {type(evaluations)}"
+    )
+    assert len(unfiltered_docs) == len(evaluations), (
+        f"len of unfiltered_docs is {len(unfiltered_docs)} but len of evaluations is {len(evaluations)}"
+    )
     if not unfiltered_docs:
         raise NoDocumentsRetrieved("No document corresponding to the query")
 
@@ -208,12 +208,12 @@ def collate_relevant_intermediate_answers(
 ) -> str:
     """rewrite the relevant intermediate answers in a single string to be
     readable by the combining LLM"""
-    assert list_ia == [
-        ia for ia in list_ia if check_intermediate_answer(ia)
-    ], "collate_relevant_intermediate_answers should only be receiving relevant answers"
-    assert (
-        len(list_ia) >= 2
-    ), f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
+    assert list_ia == [ia for ia in list_ia if check_intermediate_answer(ia)], (
+        "collate_relevant_intermediate_answers should only be receiving relevant answers"
+    )
+    assert len(list_ia) >= 2, (
+        f"Cannot collate a single intermediate answer!\n{list_ia[0]}"
+    )
 
     out = ""
     for ia in list_ia:
@@ -268,7 +268,7 @@ def semantic_batching(
             break
         except Exception as e:
             logger.warning(
-                f"Error at trial {trial+1}/{n_trial} when trying to embed texts for semantic batching: '{e}'"
+                f"Error at trial {trial + 1}/{n_trial} when trying to embed texts for semantic batching: '{e}'"
             )
             if trial + 1 >= n_trial:
                 logger.warning("Too many errors so crashing")
@@ -277,9 +277,9 @@ def semantic_batching(
                 time.sleep(2)
 
     n_dim = embeds.shape[1]
-    assert (
-        n_dim > 2
-    ), f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
+    assert n_dim > 2, (
+        f"Unexpected number of dimension: {n_dim}, shape was {embeds.shape}"
+    )
 
     max_n_dim = min(100, len(texts))
 
@@ -296,9 +296,9 @@ def semantic_batching(
                 logger.warning(
                     f"Found lower than exepcted PCA explained variance ratio: {vr:.4f}"
                 )
-            assert (
-                vr >= 0.75
-            ), f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
+            assert vr >= 0.75, (
+                f"Found substancially low explained variance ratio afer pca at {vr:.4f} so not using dimension reduction"
+            )
             embeddings = pd.DataFrame(
                 columns=[f"v_{i}" for i in range(embeds_reduced.shape[1])],
                 index=[i for i in range(len(texts))],
@@ -533,19 +533,19 @@ def semantic_batching(
                 assert id(b) == id(buckets[ib])
                 break
         buckets = [b for b in buckets if b]
-    assert all(
-        len(b) >= 2 for b in buckets
-    ), f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
+    assert all(len(b) >= 2 for b in buckets), (
+        f"Invalid size of buckets: '{[len(b) for b in buckets]}'"
+    )
 
     unchained = []
     [unchained.extend(b) for b in buckets]
-    assert len(unchained) == len(
-        set(unchained)
-    ), "There were duplicate texts in buckets!"
+    assert len(unchained) == len(set(unchained)), (
+        "There were duplicate texts in buckets!"
+    )
     assert all(t in texts for t in unchained), "Some text of buckets were added!"
-    assert sorted(unchained) == sorted(
-        texts
-    ), "There is an issue with semantic_batching"
+    assert sorted(unchained) == sorted(texts), (
+        "There is an issue with semantic_batching"
+    )
 
     logger.debug("Printing size of each bucket in semantic_batching:")
     for ib, b in enumerate(buckets):
@@ -572,7 +572,6 @@ def pbar_chain(
             "langchain_community.chat_models.fake.FakeListChatModel",
         ] = llm,
     ) -> Union[dict, List]:
-
         llm.callbacks[0].pbar.append(
             tqdm(
                 total=eval(len_func),

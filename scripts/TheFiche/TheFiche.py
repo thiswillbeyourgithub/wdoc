@@ -18,7 +18,7 @@ import fire
 import litellm
 from beartype import beartype
 from joblib import Memory
-from LogseqMarkdownParser import LogseqBlock, LogseqPage, parse_file, parse_text
+from LogseqMarkdownParser import LogseqBlock, parse_file, parse_text
 from loguru import logger
 
 from wdoc import wdoc
@@ -63,9 +63,9 @@ def chat(
         stream=False,
         **kwargs,
     ).json()
-    assert all(
-        a["finish_reason"] == "stop" for a in answer["choices"]
-    ), f"Found bad finish_reason: '{answer}'"
+    assert all(a["finish_reason"] == "stop" for a in answer["choices"]), (
+        f"Found bad finish_reason: '{answer}'"
+    )
     return answer
 
 
@@ -293,9 +293,9 @@ anticorps
                 temperature=0,
             )
             tags_text = tag_answer["choices"][0]["message"]["content"]
-            assert (
-                "<tags>" in tags_text and "</tags>" in tags_text
-            ), f"missing <tags> or </tags> in new text:\n'''\n{tags_text}\n'''"
+            assert "<tags>" in tags_text and "</tags>" in tags_text, (
+                f"missing <tags> or </tags> in new text:\n'''\n{tags_text}\n'''"
+            )
             tags = tags_text.split("<tags>", 1)[1].split("</tags>", 1)[0].splitlines()
             tags = [t.strip() for t in tags if t.strip()]
             for t in tags:
@@ -383,9 +383,9 @@ anticorps
                     for fd in fiche["filtered_docs"]
                     if fd.metadata["all_hash"] == dm["all_hash"]
                 ]
-                assert (
-                    len(cont) == 1
-                ), f"Found multiple sources with the same hash! {cont}"
+                assert len(cont) == 1, (
+                    f"Found multiple sources with the same hash! {cont}"
+                )
                 cont = cont[0].strip()
                 new_block = LogseqBlock(f"- [[{dh}]]: {indent(cont, '  ').strip()}")
                 for k, v in dm.items():
@@ -409,9 +409,9 @@ anticorps
                     for fd in fiche["filtered_docs"]
                     if fd.metadata["all_hash"] == dm["all_hash"]
                 ]
-                assert (
-                    len(cont) == 1
-                ), f"Found multiple sources with the same hash! {cont}"
+                assert len(cont) == 1, (
+                    f"Found multiple sources with the same hash! {cont}"
+                )
                 cont = cont[0].strip()
                 new_h = dm["all_hash"][:5]
 

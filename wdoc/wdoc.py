@@ -124,9 +124,9 @@ class wdoc:
 
             def ntfy(text: str) -> str:
                 out = notification_callback(text)
-                assert (
-                    out == text
-                ), "The notification callback must return the same string"
+                assert out == text, (
+                    "The notification callback must return the same string"
+                )
                 return out
 
             ntfy("Starting wdoc")
@@ -211,34 +211,34 @@ class wdoc:
         query_retrievers = query_retrievers.replace("_", " ").strip().replace(" ", "_")
 
         # checking argument validity
-        assert (
-            "loaded_docs" not in cli_kwargs
-        ), "'loaded_docs' cannot be an argument as it is used internally"
-        assert (
-            "loaded_embeddings" not in cli_kwargs
-        ), "'loaded_embeddings' cannot be an argument as it is used internally"
+        assert "loaded_docs" not in cli_kwargs, (
+            "'loaded_docs' cannot be an argument as it is used internally"
+        )
+        assert "loaded_embeddings" not in cli_kwargs, (
+            "'loaded_embeddings' cannot be an argument as it is used internally"
+        )
         task = wdocTask(task)
         if task.summarize:
-            assert (
-                not load_embeds_from
-            ), "can't use load_embeds_from if asking for a summary"
+            assert not load_embeds_from, (
+                "can't use load_embeds_from if asking for a summary"
+            )
         if filetype == "ddg":
             assert task.query, "Only 'query' task is supported for 'ddg' filetype"
         if task.query or task.search:
-            assert (
-                query_eval_model is not None
-            ), "query_eval_model can't be None if doing RAG"
+            assert query_eval_model is not None, (
+                "query_eval_model can't be None if doing RAG"
+            )
         else:
             query_eval_model = None
         if filetype == "auto":
-            assert (
-                "path" in cli_kwargs and cli_kwargs["path"]
-            ), "If filetype is 'auto', a --path must be given"
+            assert "path" in cli_kwargs and cli_kwargs["path"], (
+                "If filetype is 'auto', a --path must be given"
+            )
         elif filetype == "string":
             cli_kwargs["path"] = "empty placeholder"
-        assert (
-            "/" in model
-        ), "model must be in litellm format: provider/model. For example 'openai/gpt-4o'"
+        assert "/" in model, (
+            "model must be in litellm format: provider/model. For example 'openai/gpt-4o'"
+        )
         if model != TESTING_LLM and model.split("/", 1)[0] not in list(
             litellm.models_by_provider.keys()
         ):
@@ -247,9 +247,9 @@ class wdoc:
                 "litellm nor 'testing'.\nList of litellm providers/backend:\n"
                 f"{litellm.models_by_provider.keys()}"
             )
-        assert (
-            query_eval_check_number > 0
-        ), "query_eval_check_number value must be greater than 0"
+        assert query_eval_check_number > 0, (
+            "query_eval_check_number value must be greater than 0"
+        )
 
         # parse the model kwargs
         if model_kwargs is None:
@@ -265,9 +265,9 @@ class wdoc:
         if "tags" not in model_kwargs:
             model_kwargs["tags"] = ["strong_model"]
         else:
-            assert isinstance(
-                model_kwargs["tags"], list
-            ), f"Model kwargs 'tags' value must be a list. Got '{model_kwargs['tags']}'"
+            assert isinstance(model_kwargs["tags"], list), (
+                f"Model kwargs 'tags' value must be a list. Got '{model_kwargs['tags']}'"
+            )
             model_kwargs["tags"].append("strong_model")
         self.model_kwargs = model_kwargs
         if query_eval_model_kwargs is None:
@@ -279,19 +279,19 @@ class wdoc:
                 raise Exception(
                     f"Failed to parse query_eval_model_kwargs: '{query_eval_model_kwargs}'"
                 ) from err
-        assert isinstance(
-            query_eval_model_kwargs, dict
-        ), f"Not a dict but {type(query_eval_model_kwargs)}"
-        assert (
-            "n" not in query_eval_model_kwargs
-        ), "Trying to set the 'n' argument using query_eval_model_kwargs, you should instead use the query_eval_check_number argument"
+        assert isinstance(query_eval_model_kwargs, dict), (
+            f"Not a dict but {type(query_eval_model_kwargs)}"
+        )
+        assert "n" not in query_eval_model_kwargs, (
+            "Trying to set the 'n' argument using query_eval_model_kwargs, you should instead use the query_eval_check_number argument"
+        )
         self.query_eval_model_kwargs = query_eval_model_kwargs
         if "tags" not in query_eval_model_kwargs:
             query_eval_model_kwargs["tags"] = ["eval_model"]
         else:
-            assert isinstance(
-                query_eval_model_kwargs["tags"], list
-            ), f"Model kwargs 'tags' value must be a list. Got '{query_eval_model_kwargs['tags']}'"
+            assert isinstance(query_eval_model_kwargs["tags"], list), (
+                f"Model kwargs 'tags' value must be a list. Got '{query_eval_model_kwargs['tags']}'"
+            )
             query_eval_model_kwargs["tags"].append("eval_model")
         if embed_model_kwargs is None:
             embed_model_kwargs = {}
@@ -302,9 +302,9 @@ class wdoc:
                 raise Exception(
                     f"Failed to parse embed_model_kwargs: '{embed_model_kwargs}'"
                 ) from err
-        assert isinstance(
-            embed_model_kwargs, dict
-        ), f"Not a dict but {type(embed_model_kwargs)}"
+        assert isinstance(embed_model_kwargs, dict), (
+            f"Not a dict but {type(embed_model_kwargs)}"
+        )
         self.embed_model_kwargs = embed_model_kwargs
 
         if llms_api_bases is None:
@@ -314,15 +314,17 @@ class wdoc:
                 llms_api_bases = json.loads(llms_api_bases)
             except Exception as err:
                 raise Exception(f"Error when parsing llms_api_bases as a dict: {err}")
-        assert isinstance(
-            llms_api_bases, dict
-        ), "llms_api_bases must be a dict or be a string that can be parsed as a dict"
+        assert isinstance(llms_api_bases, dict), (
+            "llms_api_bases must be a dict or be a string that can be parsed as a dict"
+        )
         for k in llms_api_bases:
             assert k in [
                 "model",
                 "query_eval_model",
                 "embeddings",
-            ], f"Invalid k of llms_api_bases not in 'model', 'query_eval_model', 'embeddings': {k}"
+            ], (
+                f"Invalid k of llms_api_bases not in 'model', 'query_eval_model', 'embeddings': {k}"
+            )
         for k in ["model", "query_eval_model", "embeddings"]:
             if k not in llms_api_bases:
                 llms_api_bases[k] = None
@@ -335,17 +337,17 @@ class wdoc:
                 "Setting litellm wide api_base because it's the same for model, query_eval_model and embeddings"
             )
             litellm.api_base = llms_api_bases["model"]
-        assert isinstance(
-            private, bool
-        ), "private arg should be a boolean, not {private}"
+        assert isinstance(private, bool), (
+            "private arg should be a boolean, not {private}"
+        )
         assert private == env.WDOC_PRIVATE_MODE
         if private:
-            assert llms_api_bases[
-                "model"
-            ], "private is set but llms_api_bases['model'] is not set"
-            assert llms_api_bases[
-                "query_eval_model"
-            ], "private is set but llms_api_bases['query_eval_model'] is not set"
+            assert llms_api_bases["model"], (
+                "private is set but llms_api_bases['model'] is not set"
+            )
+            assert llms_api_bases["query_eval_model"], (
+                "private is set but llms_api_bases['query_eval_model'] is not set"
+            )
             os.environ["WDOC_PRIVATE_MODE"] = "true"
             for k in dict(os.environ):
                 if (
@@ -717,9 +719,7 @@ class wdoc:
                     compr_ratio**i
                 ) * self.llm_price["prompt"] + full_tkn * (
                     compr_ratio ** (i + 1)
-                ) * self.llm_price[
-                    "completion"
-                ]
+                ) * self.llm_price["completion"]
         logger.info(
             self.ntfy(
                 f"Summary cost estimation: ${estimate_dol:.4f} for {full_tkn} tokens."
@@ -1101,9 +1101,9 @@ class wdoc:
             doc_id = f"WDOC_{ifd + 1}"
             output["source_mapping"][doc_id] = ifd + 1
             ia = output["relevant_intermediate_answers"][ifd]
-            output["relevant_intermediate_answers"][
-                ifd
-            ] = f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
+            output["relevant_intermediate_answers"][ifd] = (
+                f"<doc id=[[{doc_id}]]>\n{ia}\n</doc>"
+            )
 
         all_rlvt_interim_ans = [output["relevant_intermediate_answers"]]
 
@@ -1440,9 +1440,9 @@ class wdoc:
                 except ShouldIncreaseTopKAfterLLMEvalFiltering:
                     if self.max_top_k is None:
                         raise
-                    assert (
-                        self.max_top_k != self.top_k
-                    ), f"Something went wrong: top_k: {self.top_k} ; max_top_k: {self.max_top_k}"
+                    assert self.max_top_k != self.top_k, (
+                        f"Something went wrong: top_k: {self.top_k} ; max_top_k: {self.max_top_k}"
+                    )
                     assert (
                         self.max_top_k > self.top_k
                     )  # if it's equal, it should have returned normally

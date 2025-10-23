@@ -258,9 +258,9 @@ def _pdf_loader(
     loader = pdf_loaders[loader_name](path)
     docs = loader.load()
     assert isinstance(docs, list), f"Output of {loader_name} is of type {type(docs)}"
-    assert all(
-        isinstance(d, Document) for d in docs
-    ), f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    assert all(isinstance(d, Document) for d in docs), (
+        f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
+    )
     return docs
 
 
@@ -285,13 +285,13 @@ def load_pdf(
     if isinstance(pdf_parsers, str):
         pdf_parsers = pdf_parsers.strip().split(",")
     assert pdf_parsers, "No pdf_parsers found"
-    assert len(pdf_parsers) == len(
-        set(pdf_parsers)
-    ), f"You pdf_parsers list contains non unique elements. List: {pdf_parsers}"
+    assert len(pdf_parsers) == len(set(pdf_parsers)), (
+        f"You pdf_parsers list contains non unique elements. List: {pdf_parsers}"
+    )
     for pdfp in pdf_parsers:
-        assert (
-            pdfp in pdf_loaders
-        ), f"The PDF loader '{pdfp}' was not present in the pdf_loaders keys. Your 'pdf_parsers' argument seems wrong."
+        assert pdfp in pdf_loaders, (
+            f"The PDF loader '{pdfp}' was not present in the pdf_loaders keys. Your 'pdf_parsers' argument seems wrong."
+        )
 
     loaded_docs = {}
     # using language detection to keep the parsing with the highest lang

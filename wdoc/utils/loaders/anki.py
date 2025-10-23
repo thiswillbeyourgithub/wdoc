@@ -54,9 +54,9 @@ def load_anki(
     import ankipandas as akp
 
     if anki_tag_render_filter:
-        assert (
-            "{tags}" in anki_template
-        ), "Can't use anki_tag_render_filter without using {tags} in anki_template"
+        assert "{tags}" in anki_template, (
+            "Can't use anki_tag_render_filter without using {tags} in anki_template"
+        )
         try:
             anki_tag_render_filter = re.compile(anki_tag_render_filter)
         except Exception as err:
@@ -106,9 +106,9 @@ def load_anki(
     cards["nmodel"] = cards["nmodel"].progress_apply(lambda x: x.lower())
     if anki_notetype:
         cards = cards[cards["nmodel"].str.contains(anki_notetype, case=False)]
-        assert (
-            not cards.empty
-        ), f"No cards found after filtering by notetype {anki_notetype}"
+        assert not cards.empty, (
+            f"No cards found after filtering by notetype {anki_notetype}"
+        )
     if anki_tag_filter:
         pbar(desc="Filtering by tags")
         cards = cards[
@@ -116,9 +116,9 @@ def load_anki(
                 (lambda x: any(anki_tag_filter.match(t) for t in x["ntags"])), axis=1
             )
         ]
-        assert (
-            not cards.empty
-        ), f"No cards found after filtering by tags: {anki_tag_filter}"
+        assert not cards.empty, (
+            f"No cards found after filtering by tags: {anki_tag_filter}"
+        )
 
     # remove suspended
     cards = cards[cards["cqueue"] != "suspended"]
@@ -197,9 +197,9 @@ def load_anki(
             axis=1,
         )
         if notes["ntags"].notnull().any():
-            assert (
-                notes["tags_formatted"].notnull().any()
-            ), "No tags were extracted because of your filter. Crashing to let you recheck your setup."
+            assert notes["tags_formatted"].notnull().any(), (
+                "No tags were extracted because of your filter. Crashing to let you recheck your setup."
+            )
     else:
         usetags = False
 
@@ -284,9 +284,9 @@ def load_anki(
         medias = c["medias"]
         to_add = {}
         for k, v in medias.items():
-            assert (
-                k in c["text"]
-            ), f"missing media '{k}' in text '{c['text']}' of card '{c}'"
+            assert k in c["text"], (
+                f"missing media '{k}' in text '{c['text']}' of card '{c}'"
+            )
             try:
                 src = bs4.BeautifulSoup(v, "html.parser").find("img")["src"]
                 assert src
@@ -429,15 +429,15 @@ def replace_media(
                 logger.warning(err)
             for iimg, img in enumerate(images):
                 try:
-                    assert (
-                        img in content
-                    ), f"missing img from content:\nimg: {img}\ncontent: {content}"
-                    assert re.search(
-                        REG_IMG, img
-                    ), f"Regex couldn't identify img: {img}"
-                    assert not re.search(
-                        REG_SOUNDS, img
-                    ), f"Sound regex identifier img: {img}"
+                    assert img in content, (
+                        f"missing img from content:\nimg: {img}\ncontent: {content}"
+                    )
+                    assert re.search(REG_IMG, img), (
+                        f"Regex couldn't identify img: {img}"
+                    )
+                    assert not re.search(REG_SOUNDS, img), (
+                        f"Sound regex identifier img: {img}"
+                    )
                 except AssertionError as err:
                     if strict:
                         raise
@@ -458,12 +458,12 @@ def replace_media(
             for isound, sound in enumerate(sounds):
                 try:
                     assert sound in content, f"Sound is not in content: {sound}"
-                    assert not re.search(
-                        REG_IMG, sound
-                    ), f"Image regex identified this sound: {sound}"
-                    assert re.search(
-                        REG_SOUNDS, sound
-                    ), f"Regex didn't identify this sound: {sound}"
+                    assert not re.search(REG_IMG, sound), (
+                        f"Image regex identified this sound: {sound}"
+                    )
+                    assert re.search(REG_SOUNDS, sound), (
+                        f"Regex didn't identify this sound: {sound}"
+                    )
                 except AssertionError as err:
                     if strict:
                         raise
@@ -484,12 +484,12 @@ def replace_media(
                 assert links, "No links found"
             for ilink, link in enumerate(links):
                 try:
-                    assert (
-                        link in content
-                    ), f"Link not in content:\nlink: {link}\ncontent: {content}"
-                    assert re.search(
-                        REG_LINKS, link
-                    ), f"Regex couldn't identify link: {link}"
+                    assert link in content, (
+                        f"Link not in content:\nlink: {link}\ncontent: {content}"
+                    )
+                    assert re.search(REG_LINKS, link), (
+                        f"Regex couldn't identify link: {link}"
+                    )
                 except AssertionError as err:
                     if strict:
                         raise
@@ -508,18 +508,18 @@ def replace_media(
             assert replace_image, replace_image
             try:
                 assert img in content, f"img '{img}' not in content '{content}'"
-                assert (
-                    img in new_content
-                ), f"img '{img}' not in new_content '{new_content}'"
+                assert img in new_content, (
+                    f"img '{img}' not in new_content '{new_content}'"
+                )
                 assert img not in media.keys() and img not in media.values()
-                replaced = f"[IMAGE_{i+1}]"
+                replaced = f"[IMAGE_{i + 1}]"
                 assert replaced not in media.keys() and replaced not in media.values()
-                assert (
-                    replaced not in content
-                ), f"Replaced '{replaced}' already in content '{content}'"
-                assert (
-                    replaced not in new_content
-                ), f"Replaced '{replaced}' already in new_content '{new_content}'"
+                assert replaced not in content, (
+                    f"Replaced '{replaced}' already in content '{content}'"
+                )
+                assert replaced not in new_content, (
+                    f"Replaced '{replaced}' already in new_content '{new_content}'"
+                )
                 new_content = new_content.replace(img, replaced)
                 media[replaced] = img
                 assert img not in new_content
@@ -536,7 +536,7 @@ def replace_media(
                 assert sound in content
                 assert sound in new_content
                 assert sound not in media.keys() and sound not in media.values()
-                replaced = f"[SOUND_{i+1}]"
+                replaced = f"[SOUND_{i + 1}]"
                 assert replaced not in media.keys() and replaced not in media.values()
                 assert replaced not in content
                 assert replaced not in new_content
@@ -555,7 +555,7 @@ def replace_media(
                 assert replace_links
                 assert link in content
                 assert link not in media.keys()
-                replaced = f"[LINK_{i+1}]"
+                replaced = f"[LINK_{i + 1}]"
                 assert replaced not in media.keys() and replaced not in media.values()
                 assert replaced not in content
                 assert replaced not in new_content

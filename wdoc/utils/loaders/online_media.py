@@ -23,7 +23,6 @@ def find_online_media(
     online_media_resourcetype_regex: Optional[str] = None,
     headless: bool = True,
 ) -> dict:
-
     def check_browser_installation(browser_type: str, crash: bool = False) -> bool:
         try:
             with playwright.sync_api.sync_playwright() as p:
@@ -197,7 +196,6 @@ def load_online_media(
     online_media_url_regex: Optional[str] = None,
     online_media_resourcetype_regex: Optional[str] = None,
 ) -> List[Document]:
-
     urls_to_try = [path]
     extra_media = find_online_media(
         url=path,
@@ -249,9 +247,9 @@ def load_online_media(
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {url} failed to download?"
-        assert (
-            len(candidate) == 1
-        ), f"Multiple audio file found for video: '{candidate}'"
+        assert len(candidate) == 1, (
+            f"Multiple audio file found for video: '{candidate}'"
+        )
         audio_file = candidate[0].absolute()
         return audio_file
 
@@ -264,7 +262,7 @@ def load_online_media(
             break
         except Exception as err:
             logger.warning(
-                f"Failed #{iurl+1}/{len(urls_to_try)} to download a media from url '{url}': '{err}'"
+                f"Failed #{iurl + 1}/{len(urls_to_try)} to download a media from url '{url}': '{err}'"
             )
 
     assert audio_file is not None, f"Failed to find suitable media for url '{path}'"
@@ -282,7 +280,7 @@ def load_online_media(
         ffmpeg.input(
             audio_file,
         ).output(str(audio_path.resolve().absolute())).run()
-        logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
+        logger.info(f"Done extracting audio in {time.time() - t:.2f}s")
     except Exception as err:
         logger.warning(
             f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'"
@@ -299,7 +297,7 @@ def load_online_media(
             )
             t = time.time()
             audio.export(audio_path, format="mp3")
-            logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
+            logger.info(f"Done extracting audio in {time.time() - t:.2f}s")
         except Exception as err:
             raise Exception(
                 f"Error when getting audio from video using ffmpeg: '{err}'"

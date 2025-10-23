@@ -81,7 +81,6 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
         try:
             return func(*args, **kwargs)
         except Exception as err:
-
             # those crashes can rise right away without more details
             if loading_failure == "crash":
                 if isinstance(err, (MissingDocdictArguments, TimeoutPdfLoaderError)):
@@ -304,9 +303,9 @@ def load_one_doc(
     # Call the loader function with the appropriate arguments
     docs = loader_func(**args_to_pass)
 
-    assert (
-        docs
-    ), f"The loader function returned no documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
+    assert docs, (
+        f"The loader function returned no documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
+    )
 
     tdocs = text_splitter.transform_documents(docs)
 
@@ -420,9 +419,9 @@ def load_one_doc(
         # set hash
         docs[i].metadata["content_hash"] = hasher(docs[i].page_content)
         docs[i].metadata["file_hash"] = file_hash
-        assert docs[i].metadata[
-            "content_hash"
-        ], f"Empty content_hash for document: {docs[i]}"
+        assert docs[i].metadata["content_hash"], (
+            f"Empty content_hash for document: {docs[i]}"
+        )
         assert docs[i].metadata["file_hash"], f"Empty file_hash for document: {docs[i]}"
 
         # check if metadata can be dumped, otherwise stringify the culprit

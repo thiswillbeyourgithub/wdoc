@@ -38,12 +38,12 @@ def __get_faiss_vectorstore__():
     importing wdoc.
     """
     if env.WDOC_FAISS_BINARY:
-        assert (
-            not env.WDOC_MOD_FAISS_SCORE_FN
-        ), "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_FAISS_BINARY=true at the same time."
-        assert (
-            env.WDOC_FAISS_COMPRESSION
-        ), "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
+        assert not env.WDOC_MOD_FAISS_SCORE_FN, (
+            "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_FAISS_BINARY=true at the same time."
+        )
+        assert env.WDOC_FAISS_COMPRESSION, (
+            "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
+        )
         from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
 
         return BinaryFAISS
@@ -140,9 +140,9 @@ def load_embeddings_engine(
         )
 
     elif modelname.backend == "huggingface":
-        assert (
-            not private
-        ), "Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
+        assert not private, (
+            "Set private but tried to use huggingface embeddings, which might not be as private as using sentencetransformers"
+        )
         model_kwargs = {
             "device": "cpu",
             # "device": "cuda",
@@ -346,7 +346,7 @@ def create_embeddings(
                 break
             except Exception as e:
                 logger.warning(
-                    f"Thread #{ib + 1} Error at trial {trial+1}/{n_trial} when trying to embed documents: {e}"
+                    f"Thread #{ib + 1} Error at trial {trial + 1}/{n_trial} when trying to embed documents: {e}"
                 )
                 if trial + 1 >= n_trial:
                     if env.WDOC_DISABLE_EMBEDDINGS_CACHE:
@@ -394,7 +394,7 @@ def create_embeddings(
         else:
             db.merge_from(temp)
 
-    logger.info(f"Done creating index (total time: {time.time()-ti:.2f}s)")
+    logger.info(f"Done creating index (total time: {time.time() - ti:.2f}s)")
 
     # saving embeddings
     logger.debug("Saving embeddings to file")
@@ -412,13 +412,13 @@ def test_embeddings(embeddings: Embeddings) -> None:
     vec2 = np.array(embeddings.embed_documents(["This is another test"])[0])
     shape1 = vec1.shape
     shape2 = vec2.shape
-    assert (
-        shape1 == shape2
-    ), f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
-    assert not (
-        vec1 == vec2
-    ).all(), "Test vectors 1 and 2 are identical despite different inputs"
-    assert not (
-        (vec1 == 0).all() or (vec2 == 0).all()
-    ), "Test vectors 1 or 2 or both is only zeroes"
+    assert shape1 == shape2, (
+        f"Test vectors 1 has shape {shape1} but vector 2 has shape {shape2}"
+    )
+    assert not (vec1 == vec2).all(), (
+        "Test vectors 1 and 2 are identical despite different inputs"
+    )
+    assert not ((vec1 == 0).all() or (vec2 == 0).all()), (
+        "Test vectors 1 or 2 or both is only zeroes"
+    )
     logger.debug("Done testing embeddings")

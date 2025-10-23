@@ -178,7 +178,6 @@ def batch_load_doc(
         seen_hashes.add(state_hash)
 
         for ild, load_kwargs in enumerate(to_load):
-
             if "source_tag" in load_kwargs:
                 if load_kwargs["source_tag"] not in asked_source_tags:
                     asked_source_tags.append(load_kwargs["source_tag"])
@@ -193,9 +192,9 @@ def batch_load_doc(
             if load_filetype == "auto":
                 load_filetype = infer_filetype(load_kwargs["path"])
 
-                assert (
-                    load_filetype != "auto"
-                ), f"Could not infer the filetype of '{load_kwargs['path']}', please specify a value for the 'filetype' argument."
+                assert load_filetype != "auto", (
+                    f"Could not infer the filetype of '{load_kwargs['path']}', please specify a value for the 'filetype' argument."
+                )
                 if load_filetype not in recursive_types_func_mapping:
                     to_load[ild]["filetype"] = load_filetype
 
@@ -229,9 +228,9 @@ def batch_load_doc(
 
         if new_doc_to_load:
             for indtl, ndtl in enumerate(new_doc_to_load):
-                assert (
-                    ndtl
-                ), f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
+                assert ndtl, (
+                    f"Args for document #{indtl} from recursive_types '{load_filetype}' is empty."
+                )
                 if (
                     "filetype" not in ndtl
                 ):  # fix if the filetype has not been set after recursive loading
@@ -354,9 +353,9 @@ def batch_load_doc(
 
     if len(to_load) > 1:
         for tl in to_load:
-            assert (
-                tl["filetype"] != "text"
-            ), "You shouldn't not be using filetype 'text' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
+            assert tl["filetype"] != "text", (
+                "You shouldn't not be using filetype 'text' with other kind of documents normally. Please open an issue on github and explain me your usecase to see how I can fix that for you!"
+            )
 
     # dir name where to store temporary files
     load_temp_name = "file_load_" + str(uuid6.uuid6())
@@ -380,9 +379,9 @@ def batch_load_doc(
     sharedmem = None
     if len(to_load) == 1:
         n_jobs = 1
-        to_load[0][
-            "loading_failure"
-        ] = "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
+        to_load[0]["loading_failure"] = (
+            "crash"  # crash if loading fails when only one document is to be loaded and fails anyway
+        )
     else:
         if backend == "loky":
             if env.WDOC_VERBOSE:
@@ -454,7 +453,7 @@ def batch_load_doc(
         ) from e
 
     logger.info(
-        f"Done loading all {len(to_load)} documents in {time.time()-t_load:.2f}s"
+        f"Done loading all {len(to_load)} documents in {time.time() - t_load:.2f}s"
     )
     missing_docargs = []
     for idoc, d in tqdm(
@@ -603,9 +602,9 @@ def batch_load_doc(
         docs = [d for d in docs if d is not None]
         if deduped:
             docs += list(deduped.values())
-        assert (
-            len(docs) <= lenbefore
-        ), f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
+        assert len(docs) <= lenbefore, (
+            f"Removing duplicates seems to have added documents: {lenbefore} -> {len(docs)}. Something went wrong."
+        )
 
     assert docs, "No documents were succesfully loaded!"
 
@@ -647,7 +646,9 @@ def parse_recursive_paths(
         "json_entries",
         "youtube",
         "anki",
-    ], "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
+    ], (
+        "'recursed_filetype' cannot be 'recursive_paths', 'json_entries', 'anki' or 'youtube'"
+    )
 
     if not Path(path).exists() and Path(path.replace(r"\ ", " ")).exists():
         logger.info(r"File was not found so replaced '\ ' by ' '")
@@ -873,9 +874,9 @@ def parse_youtube_playlist(
     video = load_youtube_playlist(path)
 
     playlist_title = video["title"].strip().replace("\n", "")
-    assert (
-        "duration" not in video
-    ), f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
+    assert "duration" not in video, (
+        f'"duration" found when loading youtube playlist. This might not be a playlist: {path}'
+    )
     doclist = [ent["webpage_url"] for ent in video["entries"]]
     doclist = [li for li in doclist if yt_link_regex.search(li)]
 
@@ -966,12 +967,12 @@ def parse_ddg_search(
     doclist = []
     for i, result in enumerate(search_results):
         if "link" not in result:
-            logger.warning(f"Search result #{i+1} missing 'link' field: {result}")
+            logger.warning(f"Search result #{i + 1} missing 'link' field: {result}")
             continue
 
         url = result["link"].strip()
         if not url or not url.startswith("http"):
-            logger.warning(f"Invalid URL in search result #{i+1}: '{url}'")
+            logger.warning(f"Invalid URL in search result #{i + 1}: '{url}'")
             continue
 
         # Create document kwargs
@@ -1009,9 +1010,9 @@ def parse_ddg_search(
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
     assert isinstance(load_functions, list), "load_functions must be a list"
-    assert all(
-        isinstance(lf, str) for lf in load_functions
-    ), "load_functions elements must be strings"
+    assert all(isinstance(lf, str) for lf in load_functions), (
+        "load_functions elements must be strings"
+    )
     import dill
 
     try:

@@ -49,7 +49,9 @@ def load_youtube(
         "youtube",
         "whisper",
         "deepgram",
-    ], f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
+    ], (
+        f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
+    )
 
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
@@ -102,9 +104,9 @@ def load_youtube(
             if file_name.name in f.name:
                 candidate.append(f)
         assert len(candidate), f"Audio file of {path} failed to download?"
-        assert (
-            len(candidate) == 1
-        ), f"Multiple audio file found for video: '{candidate}'"
+        assert len(candidate) == 1, (
+            f"Multiple audio file found for video: '{candidate}'"
+        )
         audio_file = str(candidate[0].absolute())
         audio_hash = file_hasher({"path": audio_file})
 
@@ -139,12 +141,12 @@ def load_youtube(
                 audio_hash=audio_hash,
                 deepgram_kwargs=deepgram_kwargs,
             )
-            assert (
-                len(content["results"]["channels"]) == 1
-            ), "unexpected deepgram output"
-            assert (
-                len(content["results"]["channels"][0]["alternatives"]) == 1
-            ), "unexpected deepgram output"
+            assert len(content["results"]["channels"]) == 1, (
+                "unexpected deepgram output"
+            )
+            assert len(content["results"]["channels"][0]["alternatives"]) == 1, (
+                "unexpected deepgram output"
+            )
             text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"][
                 "transcript"
             ].strip()

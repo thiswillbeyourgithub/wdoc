@@ -105,9 +105,9 @@ if (
     "OVERRIDE_USER_DIR_PYTEST_WDOC" in os.environ
     and os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] == "true"
 ):
-    assert (
-        pytest_ongoing
-    ), "Detected env var OVERRIDE_USER_DIR_PYTEST_WDOC but not detecting a pytest environment!"
+    assert pytest_ongoing, (
+        "Detected env var OVERRIDE_USER_DIR_PYTEST_WDOC but not detecting a pytest environment!"
+    )
     cache_dir = Path.cwd() / "wdoc_user_cache_dir"
     if cache_dir.exists():
         logger.debug(
@@ -326,9 +326,9 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
 
         @wraps(truefunc)
         def wrapper(*args, **kwargs):
-            assert (
-                not args
-            ), f"We are not expecting args here, only kwargs. Received {args}"
+            assert not args, (
+                f"We are not expecting args here, only kwargs. Received {args}"
+            )
             sig = inspect.signature(truefunc)
             bound_args = sig.bind_partial(**kwargs)
 
@@ -346,9 +346,9 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
                 logger.warning(mess)
-            assert (
-                kwargs2
-            ), f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
+            assert kwargs2, (
+                f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
+            )
 
             return func(**kwargs2)
 
@@ -507,9 +507,9 @@ def model_name_matcher(model: str) -> str:
     model has a known cost and print the matched name)
     Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
     """
-    assert (
-        "testing" not in model.lower()
-    ), f"Found 'testing' in model, this should not happen"
+    assert "testing" not in model.lower(), (
+        "Found 'testing' in model, this should not happen"
+    )
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
         # logger.debug(f"Bypassing model name matching for model '{model}'")
@@ -518,9 +518,9 @@ def model_name_matcher(model: str) -> str:
     out = wrapped_model_name_matcher(model)
     if out != model and env.WDOC_VERBOSE:
         logger.debug(f"Matched model name {model} to {out}")
-    assert (
-        out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
-    ), f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    assert out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost, (
+        f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    )
     return out
 
 
@@ -599,9 +599,9 @@ class ModelName:
     sanitized: str = field(init=False)
 
     def __post_init__(self):
-        assert (
-            "/" in self.original
-        ), f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        assert "/" in self.original, (
+            f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        )
         self.backend, self.model = self.original.split("/", 1)
         self.backend = self.backend.lower()
 
@@ -634,9 +634,9 @@ class ModelName:
 
 @memoize
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
-    assert (
-        "cli_parser" not in model.backend
-    ), f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
+    assert "cli_parser" not in model.backend, (
+        f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
+    )
     if env.WDOC_ALLOW_NO_PRICE:
         logger.warning(
             f"Disabling price computation for {model} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
@@ -683,9 +683,9 @@ def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
 def get_model_max_tokens(modelname: ModelName) -> int:
     if modelname.backend == "openrouter":
         openrouter_data = get_openrouter_metadata()
-        assert (
-            modelname.original in openrouter_data
-        ), f"Missing model {modelname.original} from openrouter metadata"
+        assert modelname.original in openrouter_data, (
+            f"Missing model {modelname.original} from openrouter metadata"
+        )
         return openrouter_data[modelname.original]["context_length"]
 
     if modelname.original in litellm.model_cost:
@@ -807,14 +807,14 @@ def check_docs_tkn_length(
     size = sum([get_tkn_length(d.page_content) for d in docs])
     if size <= min_token:
         logger.warning(
-            f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too few tokens : {docs[len(docs) // 2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
         )
     if size >= max_token:
         logger.warning(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too many tokens : {docs[len(docs) // 2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} >= {max_token}, probably something went wrong?"
@@ -834,7 +834,7 @@ def check_docs_tkn_length(
         prob = sum(probs) / len(probs)
         if prob <= min_lang_prob:
             raise Exception(
-                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs) // 2]}"
             )
     except Exception as err:
         if str(err).startswith("Low language probability"):
@@ -980,9 +980,9 @@ def disable_internet(allowed: dict) -> None:
         )
         skip = True
     if not skip:
-        assert not is_private(
-            ip
-        ), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+        assert not is_private(ip), (
+            f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+        )
 
 
 def set_func_signature(func: Callable) -> Callable:
@@ -1053,12 +1053,12 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             output = output.replace(ANSW, THINE + "\n" + ANSW)
 
         if (THIN not in output) and (ANSW not in output):
-            assert (
-                THINE not in output
-            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {THINE}:\n'''\n{output}\n'''"
-            assert (
-                ANSWE not in output
-            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {ANSWE}:\n'''\n{output}\n'''"
+            assert THINE not in output, (
+                f"Output contains no {THIN} nor {ANSW} but an unexpected {THINE}:\n'''\n{output}\n'''"
+            )
+            assert ANSWE not in output, (
+                f"Output contains no {THIN} nor {ANSW} but an unexpected {ANSWE}:\n'''\n{output}\n'''"
+            )
 
             logger.debug(f"LLM output contained neither {THIN} nor {ANSW}")
             return {"thinking": "", "answer": output}
@@ -1076,9 +1076,9 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
                     )
         else:
             # check we don't have only one of the xml sides
-            assert (
-                THIN not in output and THINE not in output
-            ), f"Found only one of '{THIN}' or '{THINE}' in LLM output"
+            assert THIN not in output and THINE not in output, (
+                f"Found only one of '{THIN}' or '{THINE}' in LLM output"
+            )
             logger.debug("LLM output contained no thinking block")
 
         answer = ""
@@ -1094,9 +1094,9 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             logger.debug("LLM output contained answer block")
         else:
             # check we don't have only one of the xml sides
-            assert (
-                ANSW not in output and ANSWE not in output
-            ), f"Found only one of '{ANSW}' or '{ANSWE}' in LLM output"
+            assert ANSW not in output and ANSWE not in output, (
+                f"Found only one of '{ANSW}' or '{ANSWE}' in LLM output"
+            )
             if thinking:
                 logger.debug(
                     "LLM output contained no answer block, assuming it's all but the thinking"
@@ -1114,24 +1114,24 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         thinking = thinking.strip()
         answer = answer.rstrip()
 
-        assert (
-            THIN not in answer
-        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THINE not in answer
-        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THIN not in thinking
-        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THINE not in thinking
-        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            ANSW not in answer
-        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
-        assert (
-            ANSWE not in answer
-        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert THIN not in answer, (
+            f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        )
+        assert THINE not in answer, (
+            f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        )
+        assert THIN not in thinking, (
+            f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
+        )
+        assert THINE not in thinking, (
+            f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
+        )
+        assert ANSW not in answer, (
+            f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        )
+        assert ANSWE not in answer, (
+            f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        )
 
         assert answer, f"No answer could be parsed from LLM output: '{output}'"
 
@@ -1234,9 +1234,9 @@ def get_supported_model_params(modelname: ModelName) -> list:
         return []
     if modelname.backend == "openrouter":
         metadata = get_openrouter_metadata()
-        assert (
-            modelname.original in metadata
-        ), f"Missing {modelname.original} from openrouter"
+        assert modelname.original in metadata, (
+            f"Missing {modelname.original} from openrouter"
+        )
         return metadata[modelname.original]["supported_parameters"]
 
     for test in [

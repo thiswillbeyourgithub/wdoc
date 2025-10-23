@@ -87,7 +87,6 @@ def load_logseq_markdown(
             if cont.strip() in d.page_content or (
                 cont not in next and cont in d.page_content + next
             ):
-
                 # merge metadata dictionnaries
                 for k, v in props.items():
                     if not v:
@@ -130,8 +129,8 @@ def load_logseq_markdown(
         for k, v in d.metadata.items():
             if isinstance(v, list):
                 d.metadata[k] = list(sorted(list(set(v))))
-            assert d.metadata[
-                k
-            ], f"There shouldn't be any empty metadata value but key '{k}' of doc '{d}' is empty."
+            assert d.metadata[k], (
+                f"There shouldn't be any empty metadata value but key '{k}' of doc '{d}' is empty."
+            )
 
     return docs

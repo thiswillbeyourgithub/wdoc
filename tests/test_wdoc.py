@@ -1,14 +1,8 @@
 import os
 import sys
-import subprocess
 import tempfile
-import hashlib
-from pathlib import Path
-from copy import copy
 
 import pytest
-import requests
-from langchain_core.documents.base import Document
 
 # add an unexpected env variable to make sure nothing crashes
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
@@ -28,8 +22,6 @@ from wdoc.utils.misc import ModelName
 from wdoc.utils.embeddings import load_embeddings_engine
 from wdoc.utils.embeddings import test_embeddings as _test_embeddings
 from wdoc.utils.tasks.query import semantic_batching
-from wdoc.utils.embeddings import load_embeddings_engine
-from wdoc.utils.misc import ModelName, get_piped_input
 from wdoc.utils.env import env
 
 os.environ["WDOC_TYPECHECKING"] = "crash"
@@ -158,7 +150,9 @@ def test_summary_tim_urban_cache_cost():
     assert (
         out2["doc_total_cost"] == 0,
         out2,
-    ), f"Normally we should be reusing the cache so cost should be 0 but is {out2['doc_total_cost']}"
+    ), (
+        f"Normally we should be reusing the cache so cost should be 0 but is {out2['doc_total_cost']}"
+    )
 
     inst3 = wdoc(
         task="summarize",
@@ -170,9 +164,9 @@ def test_summary_tim_urban_cache_cost():
     )
     out3 = inst3.summary_task()
     assert "monkey" in out3["summary"].lower()
-    assert (
-        out3["doc_total_cost"] > 0
-    ), f"Normally we disabled the cache so cost should be higher than 0 but is {out3['doc_total_cost']}"
+    assert out3["doc_total_cost"] > 0, (
+        f"Normally we disabled the cache so cost should be higher than 0 but is {out3['doc_total_cost']}"
+    )
     os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 

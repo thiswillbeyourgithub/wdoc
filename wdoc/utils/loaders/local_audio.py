@@ -135,9 +135,9 @@ def load_local_audio(
         file_hash = unsilenced_hash
 
     if audio_backend == "whisper":
-        assert (
-            deepgram_kwargs is None
-        ), "Found kwargs for deepgram but selected whisper backend for local_audio"
+        assert deepgram_kwargs is None, (
+            "Found kwargs for deepgram but selected whisper backend for local_audio"
+        )
         content = transcribe_audio_whisper(
             audio_path=path,
             audio_hash=file_hash,
@@ -161,18 +161,18 @@ def load_local_audio(
             docs[-1].metadata["language"] = whisper_lang
 
     elif audio_backend == "deepgram":
-        assert (
-            whisper_prompt is None and whisper_lang is None
-        ), "Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        assert whisper_prompt is None and whisper_lang is None, (
+            "Found args whisper_prompt or whisper_lang but selected deepgram backend for local_audio"
+        )
         content = transcribe_audio_deepgram(
             audio_path=path,
             audio_hash=file_hash,
             deepgram_kwargs=deepgram_kwargs,
         )
         assert len(content["results"]["channels"]) == 1, "unexpected deepgram output"
-        assert (
-            len(content["results"]["channels"][0]["alternatives"]) == 1
-        ), "unexpected deepgram output"
+        assert len(content["results"]["channels"][0]["alternatives"]) == 1, (
+            "unexpected deepgram output"
+        )
         text = content["results"]["channels"][0]["alternatives"][0]["paragraphs"][
             "transcript"
         ].strip()
