@@ -47,7 +47,7 @@ if (
         format="{level} {time: HH:mm}({function}:{line}): {message}",
         level="ERROR",
         enqueue=True,
-        colorize=True if not is_out_piped else False,
+        colorize=not is_out_piped,
         backtrace=True if env.WDOC_DEBUG else None,
         diagnose=True if env.WDOC_DEBUG else None,
     )
