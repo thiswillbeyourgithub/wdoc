@@ -14,7 +14,7 @@ from loguru import logger
 import copy
 from dataclasses import dataclass, asdict
 from functools import partial
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from wdoc.utils.misc import ChonkieSemanticSplitter
 
 from wdoc.utils.logger import (
     md_printer,
@@ -260,7 +260,6 @@ def summarize_documents(
         verbose=llm_verbosity,
     )
 
-    model_tkn_length = partial(get_tkn_length, modelname=model.original)
     if model.is_testing():
         max_tokens = 4096
     else:
@@ -270,11 +269,9 @@ def summarize_documents(
             f"Capping max_tokens for model {model.original} to the WDOC_MAX_CHUNK_SIZE value ({env.WDOC_MAX_CHUNK_SIZE} instead of {max_tokens})."
         )
         max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
-    splitter = RecursiveCharacterTextSplitter(
-        separators=recur_separator,
+    splitter = ChonkieSemanticSplitter(
         chunk_size=int(1 / 4 * max_tokens),
         chunk_overlap=300,
-        length_function=model_tkn_length,
     )
 
     # get reading length of the summary

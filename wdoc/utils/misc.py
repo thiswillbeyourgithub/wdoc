@@ -34,6 +34,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
 from platformdirs import user_cache_dir
 from loguru import logger
+from chonkie import SemanticChunker, OverlapRefinery
 
 from wdoc.utils.env import env, is_input_piped, pytest_ongoing
 from wdoc.utils.errors import UnexpectedDocDictArgument
@@ -42,6 +43,7 @@ from wdoc.utils.tasks.types import wdocTask
 import lazy_import
 
 litellm = lazy_import.lazy_module("litellm")
+chonkie = lazy_import.lazy_module("chonkie")
 
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
@@ -716,6 +718,117 @@ def get_tkn_length(
     return litellm.token_counter(model=modelname, text=tosplit)
 
 
+class ChonkieSemanticSplitter(TextSplitter):
+    """
+    TextSplitter that uses chonkie's semantic chunker with the multilingual potion 128M model.
+    Implements overlap using chonkie's OverlapRefinery to maintain the same token overlap
+    as the original RecursiveCharacterTextSplitter.
+    """
+
+    def __init__(self, chunk_size: int, chunk_overlap: int = 500, **kwargs):
+        """
+        Initialize the semantic splitter with chonkie.
+
+        Parameters
+        ----------
+        chunk_size : int
+            Maximum size of each chunk in tokens
+        chunk_overlap : int
+            Number of tokens to overlap between chunks (default: 500)
+        **kwargs : dict
+            Additional arguments passed to parent TextSplitter
+        """
+        # Initialize parent - TextSplitter requires these parameters
+        super().__init__(**kwargs)
+        self._chunk_size = chunk_size
+        self._chunk_overlap = chunk_overlap
+
+        # Create the semantic chunker with multilingual model
+        # This chunker uses semantic similarity to determine chunk boundaries
+        self.chunker = SemanticChunker(
+            embedding_model="minishlab/potion-multilingual-128M",
+            tokenizer="openai-community/gpt2",
+            chunk_size=chunk_size,
+        )
+
+        # Calculate context_size as a ratio for OverlapRefinery
+        # Convert fixed token overlap to percentage of chunk size
+        context_size = min(chunk_overlap / chunk_size, 0.5) if chunk_size > 0 else 0.25
+
+        # Create overlap refinery to add context from previous chunks
+        self.overlap_refinery = OverlapRefinery(
+            tokenizer="openai-community/gpt2",
+            context_size=context_size,
+            method="prefix",  # Add context from the previous chunk
+            merge=True,  # Merge context directly into chunk text
+        )
+
+    @memoize
+    def _chunk_text(self, text: str) -> List[str]:
+        """
+        Internal chunking implementation that is memoized for performance.
+        Uses chonkie's semantic chunker and applies overlap refinement.
+
+        Parameters
+        ----------
+        text : str
+            Text to chunk
+
+        Returns
+        -------
+        List[str]
+            List of chunked text segments
+        """
+        # Get chunks from semantic chunker
+        chunks = self.chunker.chunk(text)
+
+        # Apply overlap refinery to add context between chunks
+        refined_chunks = self.overlap_refinery.refine(chunks)
+
+        # Extract text content from chunk objects
+        return [chunk.text for chunk in refined_chunks]
+
+    def split_text(self, text: str) -> List[str]:
+        """
+        Split text into chunks using semantic chunking.
+        This method is memoized for performance via _chunk_text.
+
+        Parameters
+        ----------
+        text : str
+            Text to split
+
+        Returns
+        -------
+        List[str]
+            List of text chunks
+        """
+        return self._chunk_text(text)
+
+    def split_documents(self, documents: List[Document]) -> List[Document]:
+        """
+        Split documents into chunks, preserving metadata.
+
+        Parameters
+        ----------
+        documents : List[Document]
+            Documents to split
+
+        Returns
+        -------
+        List[Document]
+            List of split documents with preserved metadata
+        """
+        split_docs = []
+        for doc in documents:
+            chunks = self.split_text(doc.page_content)
+            for chunk in chunks:
+                split_docs.append(
+                    Document(page_content=chunk, metadata=doc.metadata.copy())
+                )
+        return split_docs
+
+
 text_splitters = {}
 
 DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
@@ -769,21 +882,15 @@ def get_splitter(
         )
         max_tokens = min(max_tokens, env.WDOC_MAX_CHUNK_SIZE)
 
-    model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
-
     if task.query or task.search or task.parse:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
-            length_function=model_tkn_length,
         )
     elif task.summarize:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
-            length_function=model_tkn_length,
         )
     else:
         raise Exception(task)
