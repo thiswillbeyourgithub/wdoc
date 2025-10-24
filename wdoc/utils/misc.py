@@ -1118,19 +1118,19 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
         )
         assert THINE not in answer, (
-            f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+            f"Parsed answer contained unexpected {THINE}:\n'''\n{output}\n'''"
         )
         assert THIN not in thinking, (
             f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
         )
         assert THINE not in thinking, (
-            f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
+            f"Parsed thinking contained unexpected {THINE}:\n'''\n{output}\n'''"
         )
         assert ANSW not in answer, (
             f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
         )
         assert ANSWE not in answer, (
-            f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+            f"Parsed answer contained unexpected {ANSWE}:\n'''\n{output}\n'''"
         )
 
         assert answer, f"No answer could be parsed from LLM output: '{output}'"
