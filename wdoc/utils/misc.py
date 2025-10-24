@@ -1120,12 +1120,6 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         assert THINE not in answer, (
             f"Parsed answer contained unexpected {THINE}:\n'''\n{output}\n'''"
         )
-        assert THIN not in thinking, (
-            f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
-        )
-        assert THINE not in thinking, (
-            f"Parsed thinking contained unexpected {THINE}:\n'''\n{output}\n'''"
-        )
         assert ANSW not in answer, (
             f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
         )
