@@ -162,7 +162,9 @@ class wdoc:
         # loguru here otherwise the next line fails!
         import pyfiglet
 
-        logger.warning(pyfiglet.figlet_format("wdoc"))
+        print("\n\n")
+        print(pyfiglet.figlet_format("wdoc", font="alligator"))
+        print("\n\n")
 
         # make sure the extra args are valid
         for k in cli_kwargs:
