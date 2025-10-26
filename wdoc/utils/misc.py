@@ -42,6 +42,7 @@ from wdoc.utils.tasks.types import wdocTask
 import lazy_import
 
 litellm = lazy_import.lazy_module("litellm")
+chonkie = lazy_import.lazy_module("chonkie")
 
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
@@ -716,6 +717,132 @@ def get_tkn_length(
     return litellm.token_counter(model=modelname, text=tosplit)
 
 
+class ChonkieSemanticSplitter(TextSplitter):
+    """
+    Text splitter using chonkie's semantic chunker.
+
+    This splitter uses semantic boundaries from chonkie to create meaningful chunks,
+    then merges them to reach the desired token count while respecting overlap.
+    The semantic chunking is memoized for efficiency.
+    """
+
+    def __init__(
+        self,
+        chunk_size: int,
+        chunk_overlap: int,
+        length_function: Callable[[str], int],
+    ):
+        """
+        Initialize the semantic splitter.
+
+        Parameters
+        ----------
+        chunk_size : int
+            Maximum number of tokens per chunk.
+        chunk_overlap : int
+            Number of tokens to overlap between chunks.
+        length_function : Callable[[str], int]
+            Function to compute token length of text.
+        """
+        super().__init__()
+        self._chunk_size = chunk_size
+        self._chunk_overlap = chunk_overlap
+        self._length_function = length_function
+
+    @staticmethod
+    @memoize
+    def _get_semantic_units(text: str, model_name: str) -> tuple:
+        """
+        Get semantic units from chonkie, memoized for efficiency.
+
+        Parameters
+        ----------
+        text : str
+            Text to chunk semantically.
+        model_name : str
+            Model name for the chunker (used for cache key).
+
+        Returns
+        -------
+        tuple
+            Tuple of semantic unit strings (tuple for hashability).
+        """
+        from chonkie import SemanticChunker
+
+        chunker = SemanticChunker(model_name=model_name)
+        chunks = chunker.chunk(text)
+        # Convert to tuple of strings for hashability and caching
+        # Handle both string chunks and chunk objects with .text attribute
+        return tuple(
+            str(chunk.text) if hasattr(chunk, "text") else str(chunk)
+            for chunk in chunks
+        )
+
+    def split_text(self, text: str) -> List[str]:
+        """
+        Split text into chunks using semantic boundaries and token limits.
+
+        Semantic units from chonkie are merged until reaching chunk_size,
+        with overlap handling between chunks.
+
+        Parameters
+        ----------
+        text : str
+            Text to split.
+
+        Returns
+        -------
+        List[str]
+            List of text chunks.
+        """
+        # Get semantic units from chonkie (memoized)
+        semantic_units = list(
+            self._get_semantic_units(text, "minishlab/potion-multilingual-128M")
+        )
+
+        if not semantic_units:
+            return []
+
+        # Merge semantic units until reaching chunk_size
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for unit in semantic_units:
+            unit_length = self._length_function(unit)
+
+            # Check if adding this unit would exceed chunk_size
+            if current_length + unit_length > self._chunk_size and current_chunk:
+                # Save current chunk
+                chunks.append(" ".join(current_chunk))
+
+                # Handle overlap by keeping last few units
+                if self._chunk_overlap > 0:
+                    overlap_units = []
+                    overlap_length = 0
+                    for prev_unit in reversed(current_chunk):
+                        prev_length = self._length_function(prev_unit)
+                        if overlap_length + prev_length <= self._chunk_overlap:
+                            overlap_units.insert(0, prev_unit)
+                            overlap_length += prev_length
+                        else:
+                            break
+                    current_chunk = overlap_units
+                    current_length = overlap_length
+                else:
+                    current_chunk = []
+                    current_length = 0
+
+            current_chunk.append(unit)
+            current_length += unit_length
+
+        # Add final chunk if any
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
+
+
 text_splitters = {}
 
 DEFAULT_SPLITTER_MODELNAME = ModelName("openai/gpt-4o-mini")
@@ -772,15 +899,13 @@ def get_splitter(
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
     if task.query or task.search or task.parse:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
             length_function=model_tkn_length,
         )
     elif task.summarize:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
             length_function=model_tkn_length,
