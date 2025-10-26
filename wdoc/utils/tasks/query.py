@@ -692,13 +692,13 @@ def autoincrease_top_k(
     ratio = len(filtered_docs) / top_k
     if ratio >= 0.9:
         if top_k < max_top_k:
-            raise ShouldIncreaseTopKAfterLLMEvalFiltering(
-                logger.warning(
-                    f"Number of documents found: {len(filtered_docs)}, "
-                    f"top_k is {top_k} so ratio={ratio:.1f}, hence "
-                    f"top_k should be increased. Max_top_k is {max_top_k}"
-                )
+            mess = (
+                f"Number of documents found: {len(filtered_docs)}, "
+                f"top_k is {top_k} so ratio={ratio:.1f}, hence "
+                f"top_k should be increased. Max_top_k is {max_top_k}"
             )
+            logger.warning(mess)
+            raise ShouldIncreaseTopKAfterLLMEvalFiltering(mess)
         else:
             logger.warning(
                 f"Number of documents found: {len(filtered_docs)}, "
