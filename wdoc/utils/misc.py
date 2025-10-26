@@ -842,6 +842,33 @@ class ChonkieSemanticSplitter(TextSplitter):
 
         return chunks
 
+    def transform_documents(self, documents: List[Document]) -> List[Document]:
+        """
+        Transform documents by splitting them into chunks.
+
+        This method splits each document's content using semantic boundaries
+        and creates new Document objects for each chunk, preserving the
+        original metadata.
+
+        Parameters
+        ----------
+        documents : List[Document]
+            List of documents to transform.
+
+        Returns
+        -------
+        List[Document]
+            List of transformed document chunks.
+        """
+        transformed_docs = []
+        for doc in documents:
+            chunks = self.split_text(doc.page_content)
+            for chunk in chunks:
+                transformed_docs.append(
+                    Document(page_content=chunk, metadata=doc.metadata.copy())
+                )
+        return transformed_docs
+
 
 text_splitters = {}
 
