@@ -233,8 +233,8 @@ test_parse_nytimes_shell() {
     # Verify we got substantial content
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
-        echo "FAIL: Expected significant text content from NYTimes, got only $output_length characters"
         echo "Output was: '''\n$output\n'''\n===End of captured output==="
+        echo "FAIL: Expected significant text content from NYTimes, got only $output_length characters"
         return 1
     fi
     
@@ -248,27 +248,27 @@ test_ddg_search_nvidia() {
     
     if ! output=$(timeout 120s zsh -c "$cmd | cat -"); then
         local exit_code=$?
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         if [[ $exit_code -eq 124 ]]; then
             echo "FAIL: DDG search command timed out"
         else
             echo "FAIL: DDG search command failed with exit code $exit_code"
         fi
-        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         return 1
     fi
     
     # Check that we got some output
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
-        echo "FAIL: Expected substantial output from DDG search, got only $output_length characters"
         echo "Output was: '''\n$output\n'''\n===End of captured output==="
+        echo "FAIL: Expected substantial output from DDG search, got only $output_length characters"
         return 1
     fi
     
     # Should contain the testing model's standard response
     if ! echo "$output" | grep -q "Lorem ipsum dolor sit amet"; then
-        echo "FAIL: Output did not contain expected testing string"
         echo "Output was: '''\n$output\n'''\n===End of captured output==="
+        echo "FAIL: Output did not contain expected testing string"
         return 1
     fi
     
