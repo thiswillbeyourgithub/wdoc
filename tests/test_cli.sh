@@ -234,7 +234,7 @@ test_parse_nytimes_shell() {
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
         echo "FAIL: Expected significant text content from NYTimes, got only $output_length characters"
-        echo "Output was: $output"
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         return 1
     fi
     
@@ -253,7 +253,7 @@ test_ddg_search_nvidia() {
         else
             echo "FAIL: DDG search command failed with exit code $exit_code"
         fi
-        echo "Output was: $output"
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         return 1
     fi
     
@@ -261,14 +261,14 @@ test_ddg_search_nvidia() {
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
         echo "FAIL: Expected substantial output from DDG search, got only $output_length characters"
-        echo "Output was: $output"
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         return 1
     fi
     
     # Should contain the testing model's standard response
     if ! echo "$output" | grep -q "Lorem ipsum dolor sit amet"; then
         echo "FAIL: Output did not contain expected testing string"
-        echo "Output was: $output"
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         return 1
     fi
     
