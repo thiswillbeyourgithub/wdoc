@@ -9,7 +9,7 @@ allow filtering by regex patterns on document content and metadata.
 from tqdm import tqdm
 import re
 import time
-from beartype.typing import Tuple, Callable
+from beartype.typing import Callable
 from langchain_core.vectorstores.base import VectorStore
 from loguru import logger
 
@@ -78,12 +78,12 @@ def filter_vectorstore(
         raise Exception("Vectorstore filtering failed")
     elif status is None:
         raise Exception("Vectorstore filtering not implemented")
-    assert len(loaded_embeddings.docstore._dict) == checked - len(
-        ids_to_del
-    ), "Something went wrong when deleting filtered out documents"
-    assert len(
-        loaded_embeddings.docstore._dict
-    ), "Something went wrong when deleting filtered out documents: no document left"
+    assert len(loaded_embeddings.docstore._dict) == checked - len(ids_to_del), (
+        "Something went wrong when deleting filtered out documents"
+    )
+    assert len(loaded_embeddings.docstore._dict), (
+        "Something went wrong when deleting filtered out documents: no document left"
+    )
     assert len(loaded_embeddings.docstore._dict) == len(
         loaded_embeddings.index_to_docstore_id
     ), "Something went wrong when deleting filtered out documents"
@@ -105,17 +105,17 @@ def create_metadata_filter(
     ):
         for k in doc.metadata.keys():
             all_metadata_keys.add(k)
-    assert (
-        all_metadata_keys
-    ), "No metadata keys found in any metadata, something went wrong!"
+    assert all_metadata_keys, (
+        "No metadata keys found in any metadata, something went wrong!"
+    )
 
     if isinstance(cli_kwargs["filter_metadata"], str):
         filter_metadata = cli_kwargs["filter_metadata"].split(",")
     else:
         filter_metadata = cli_kwargs["filter_metadata"]
-    assert isinstance(
-        filter_metadata, list
-    ), f"filter_metadata must be a list, not {cli_kwargs['filter_metadata']}"
+    assert isinstance(filter_metadata, list), (
+        f"filter_metadata must be a list, not {cli_kwargs['filter_metadata']}"
+    )
 
     # storing fast as list then in tupples for faster iteration
     filters_k_plus = []
@@ -187,9 +187,9 @@ def create_metadata_filter(
     for k in (
         filters_k_plus + filters_k_minus + filters_b_plus_keys + filters_b_minus_keys
     ):
-        assert any(
-            k.match(str(key)) for key in all_metadata_keys
-        ), f"Key {k} didn't match any key in the metadata"
+        assert any(k.match(str(key)) for key in all_metadata_keys), (
+            f"Key {k} didn't match any key in the metadata"
+        )
 
     def filter_meta(meta: dict) -> bool:
         # match keys
@@ -240,9 +240,9 @@ def create_content_filter(
         filter_content = cli_kwargs["filter_content"].split(",")
     else:
         filter_content = cli_kwargs["filter_content"]
-    assert isinstance(
-        filter_content, list
-    ), f"filter_content must be a list, not {cli_kwargs['filter_content']}"
+    assert isinstance(filter_content, list), (
+        f"filter_content must be a list, not {cli_kwargs['filter_content']}"
+    )
 
     # storing fast as list then in tupples for faster iteration
     filters_cont_plus = []

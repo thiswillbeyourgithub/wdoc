@@ -92,7 +92,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="wdoc",
-    version="4.1.0",
+    version="4.1.1",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, oe any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -144,6 +144,8 @@ setup(
         "langfuse>=3.6.1",  # for observability
         "litellm==v1.78.2",
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
+        "chonkie[all]>=1.4.0",  # chonkie is for the semantic embeddings
+        "chonkie[semantics]>=1.4.0",
         "prompt-toolkit>=3.0.47",
         "tqdm>=4.66.4",
         "faiss-cpu>=1.8.0",
@@ -217,7 +219,7 @@ setup(
             "pdftotext >= 2.2.2",
         ],
         "dev": [
-            "black >= 25.1.0",
+            "ruff >= 0.14.1",
             # "isort >= 6.0.0",
             "pre-commit >= 4.1.0",
             "pytest >= 8.3.4",

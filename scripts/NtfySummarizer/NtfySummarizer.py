@@ -153,8 +153,8 @@ def main(
 
 {md}
 
-- Total cost of those summaries: '{results['doc_total_tokens']}' (${results['doc_total_cost']:.5f})
-- Total time saved by those summaries: {results['doc_reading_length']:.1f} minutes
+- Total cost of those summaries: '{results["doc_total_tokens"]}' (${results["doc_total_cost"]:.5f})
+- Total time saved by those summaries: {results["doc_reading_length"]:.1f} minutes
 """.strip()
 
         if render_md:
@@ -184,12 +184,11 @@ def main(
                     topic=topic,
                     message=f"Summary of {url}",
                 )
-            except Exception as err:
+            except Exception:
                 sn(message=full_message)
                 raise
         log("Done\n")
     except Exception as err:
-
         stack_trace_str = traceback.format_exc()
 
         err_mess = (

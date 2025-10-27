@@ -137,10 +137,6 @@ Click to read more
 
 <!-- BEGIN_TODO -->
 - ## Most urgent
-    - store the available tasks names as a dataclass
-    - move the query task and summary task to their own file instead of having a giant wdoc.py
-        - clean up the python api to make it a more intuitive workflow
-        - then switch from fire.Fire to using click
     - figure out a good way to skip merging batches that are too large before trying to merge them
         - probably means adding an env var to store a max value, document it in the help.md
         - then check after batch creation if a batch is that large
@@ -154,10 +150,9 @@ Click to read more
         - pay attention to how to modify the init and main.py files
         - pay attention to how the --help flag works
         - pay attention to how the USAGE document is structured
-    - write an `llm` (cf simonw) plugin
-    - support other vector databases (important to bridge it to [karakeep](https://github.com/karakeep-app/karakeep/issues/1359)!)
+    - support other vector databases
     - learn how to set a github action for test code coverage
-    - allow anki to use anki type queries
+    - allow anki to use anki type search queries
     - refactor the tasks to use langgraph, as it seems easier to do complex recursive tasks with it
     - use async for the langchain chains
 - ### Features
@@ -165,7 +160,6 @@ Click to read more
     - ability to cap the search documents capped by a number of tokens instead of a number of documents
     - Add prompt caching for claude
     - add a "fast summary" feature that does not use recursive summary if you care more about speed than overlapping summaries
-    - use [chonkie](https://docs.chonkie.ai/python-sdk/chunkers/semantic-chunker) for better chunking instead of the ones included in langchain
     - count how many time each source is used, as it can be relevant to infer answer quality
     - add an html format output. It would display a nice UI with proper dropdowns for sources etc
     - if a model supports structured output we should make use of it to get the thinking and answer part. Opt in because some models hide their thoughts.

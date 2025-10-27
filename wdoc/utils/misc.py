@@ -42,6 +42,7 @@ from wdoc.utils.tasks.types import wdocTask
 import lazy_import
 
 litellm = lazy_import.lazy_module("litellm")
+chonkie = lazy_import.lazy_module("chonkie")
 
 
 # ignore warnings from beautiful soup that can happen because anki is not exactly html
@@ -105,9 +106,9 @@ if (
     "OVERRIDE_USER_DIR_PYTEST_WDOC" in os.environ
     and os.environ["OVERRIDE_USER_DIR_PYTEST_WDOC"] == "true"
 ):
-    assert (
-        pytest_ongoing
-    ), "Detected env var OVERRIDE_USER_DIR_PYTEST_WDOC but not detecting a pytest environment!"
+    assert pytest_ongoing, (
+        "Detected env var OVERRIDE_USER_DIR_PYTEST_WDOC but not detecting a pytest environment!"
+    )
     cache_dir = Path.cwd() / "wdoc_user_cache_dir"
     if cache_dir.exists():
         logger.debug(
@@ -326,9 +327,9 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
 
         @wraps(truefunc)
         def wrapper(*args, **kwargs):
-            assert (
-                not args
-            ), f"We are not expecting args here, only kwargs. Received {args}"
+            assert not args, (
+                f"We are not expecting args here, only kwargs. Received {args}"
+            )
             sig = inspect.signature(truefunc)
             bound_args = sig.bind_partial(**kwargs)
 
@@ -346,9 +347,9 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
                 for kwarg in diffkwargs:
                     mess += f"\n-KWARG: {kwarg}"
                 logger.warning(mess)
-            assert (
-                kwargs2
-            ), f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
+            assert kwargs2, (
+                f"No kwargs2 found for func {func}. There's probably an issue with the decorator"
+            )
 
             return func(**kwargs2)
 
@@ -507,9 +508,9 @@ def model_name_matcher(model: str) -> str:
     model has a known cost and print the matched name)
     Bypassed if env variable WDOC_NO_MODELNAME_MATCHING is 'true'
     """
-    assert (
-        "testing" not in model.lower()
-    ), f"Found 'testing' in model, this should not happen"
+    assert "testing" not in model.lower(), (
+        "Found 'testing' in model, this should not happen"
+    )
     assert "/" in model, f"expected / in model '{model}'"
     if env.WDOC_NO_MODELNAME_MATCHING:
         # logger.debug(f"Bypassing model name matching for model '{model}'")
@@ -518,9 +519,9 @@ def model_name_matcher(model: str) -> str:
     out = wrapped_model_name_matcher(model)
     if out != model and env.WDOC_VERBOSE:
         logger.debug(f"Matched model name {model} to {out}")
-    assert (
-        out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost
-    ), f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    assert out in litellm.model_cost or out.split("/", 1)[1] in litellm.model_cost, (
+        f"Neither {out} nor {out.split('/', 1)[1]} found in litellm.model_cost"
+    )
     return out
 
 
@@ -599,9 +600,9 @@ class ModelName:
     sanitized: str = field(init=False)
 
     def __post_init__(self):
-        assert (
-            "/" in self.original
-        ), f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        assert "/" in self.original, (
+            f"Modelname must contain a / to distinguish the backend from the model. Received '{self.original}'"
+        )
         self.backend, self.model = self.original.split("/", 1)
         self.backend = self.backend.lower()
 
@@ -634,9 +635,9 @@ class ModelName:
 
 @memoize
 def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
-    assert (
-        "cli_parser" not in model.backend
-    ), f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
+    assert "cli_parser" not in model.backend, (
+        f"Found a cli_parser model backend, this should not happen. Model if: '{model}'"
+    )
     if env.WDOC_ALLOW_NO_PRICE:
         logger.warning(
             f"Disabling price computation for {model} because env var 'WDOC_ALLOW_NO_PRICE' is 'true'"
@@ -683,9 +684,9 @@ def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
 def get_model_max_tokens(modelname: ModelName) -> int:
     if modelname.backend == "openrouter":
         openrouter_data = get_openrouter_metadata()
-        assert (
-            modelname.original in openrouter_data
-        ), f"Missing model {modelname.original} from openrouter metadata"
+        assert modelname.original in openrouter_data, (
+            f"Missing model {modelname.original} from openrouter metadata"
+        )
         return openrouter_data[modelname.original]["context_length"]
 
     if modelname.original in litellm.model_cost:
@@ -714,6 +715,159 @@ def get_tkn_length(
         modelname = modelname.original
     modelname = modelname.replace("openrouter/", "")
     return litellm.token_counter(model=modelname, text=tosplit)
+
+
+class ChonkieSemanticSplitter(TextSplitter):
+    """
+    Text splitter using chonkie's semantic chunker.
+
+    This splitter uses semantic boundaries from chonkie to create meaningful chunks,
+    then merges them to reach the desired token count while respecting overlap.
+    The semantic chunking is memoized for efficiency.
+    """
+
+    def __init__(
+        self,
+        chunk_size: int,
+        chunk_overlap: int,
+        length_function: Callable[[str], int],
+    ):
+        """
+        Initialize the semantic splitter.
+
+        Parameters
+        ----------
+        chunk_size : int
+            Maximum number of tokens per chunk.
+        chunk_overlap : int
+            Number of tokens to overlap between chunks.
+        length_function : Callable[[str], int]
+            Function to compute token length of text.
+        """
+        super().__init__()
+        self._chunk_size = chunk_size
+        self._chunk_overlap = chunk_overlap
+        self._length_function = length_function
+
+    @staticmethod
+    @memoize
+    def _get_semantic_units(text: str, model_name: str) -> tuple:
+        """
+        Get semantic units from chonkie, memoized for efficiency.
+
+        Parameters
+        ----------
+        text : str
+            Text to chunk semantically.
+        model_name : str
+            Model name for the chunker (used for cache key).
+
+        Returns
+        -------
+        tuple
+            Tuple of semantic unit strings (tuple for hashability).
+        """
+        from chonkie import SemanticChunker
+
+        chunker = SemanticChunker(model_name=model_name)
+        chunks = chunker.chunk(text)
+        # Convert to tuple of strings for hashability and caching
+        # Handle both string chunks and chunk objects with .text attribute
+        return tuple(
+            str(chunk.text) if hasattr(chunk, "text") else str(chunk)
+            for chunk in chunks
+        )
+
+    def split_text(self, text: str) -> List[str]:
+        """
+        Split text into chunks using semantic boundaries and token limits.
+
+        Semantic units from chonkie are merged until reaching chunk_size,
+        with overlap handling between chunks.
+
+        Parameters
+        ----------
+        text : str
+            Text to split.
+
+        Returns
+        -------
+        List[str]
+            List of text chunks.
+        """
+        # Get semantic units from chonkie (memoized)
+        semantic_units = list(
+            self._get_semantic_units(text, "minishlab/potion-multilingual-128M")
+        )
+
+        if not semantic_units:
+            return []
+
+        # Merge semantic units until reaching chunk_size
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for unit in semantic_units:
+            unit_length = self._length_function(unit)
+
+            # Check if adding this unit would exceed chunk_size
+            if current_length + unit_length > self._chunk_size and current_chunk:
+                # Save current chunk
+                chunks.append(" ".join(current_chunk))
+
+                # Handle overlap by keeping last few units
+                if self._chunk_overlap > 0:
+                    overlap_units = []
+                    overlap_length = 0
+                    for prev_unit in reversed(current_chunk):
+                        prev_length = self._length_function(prev_unit)
+                        if overlap_length + prev_length <= self._chunk_overlap:
+                            overlap_units.insert(0, prev_unit)
+                            overlap_length += prev_length
+                        else:
+                            break
+                    current_chunk = overlap_units
+                    current_length = overlap_length
+                else:
+                    current_chunk = []
+                    current_length = 0
+
+            current_chunk.append(unit)
+            current_length += unit_length
+
+        # Add final chunk if any
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
+
+    def transform_documents(self, documents: List[Document]) -> List[Document]:
+        """
+        Transform documents by splitting them into chunks.
+
+        This method splits each document's content using semantic boundaries
+        and creates new Document objects for each chunk, preserving the
+        original metadata.
+
+        Parameters
+        ----------
+        documents : List[Document]
+            List of documents to transform.
+
+        Returns
+        -------
+        List[Document]
+            List of transformed document chunks.
+        """
+        transformed_docs = []
+        for doc in documents:
+            chunks = self.split_text(doc.page_content)
+            for chunk in chunks:
+                transformed_docs.append(
+                    Document(page_content=chunk, metadata=doc.metadata.copy())
+                )
+        return transformed_docs
 
 
 text_splitters = {}
@@ -772,15 +926,13 @@ def get_splitter(
     model_tkn_length = partial(get_tkn_length, modelname=modelname.original)
 
     if task.query or task.search or task.parse:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(3 / 4 * max_tokens),  # default 4000
             chunk_overlap=500,  # default 200
             length_function=model_tkn_length,
         )
     elif task.summarize:
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=recur_separator,
+        text_splitter = ChonkieSemanticSplitter(
             chunk_size=int(1 / 2 * max_tokens),
             chunk_overlap=500,
             length_function=model_tkn_length,
@@ -807,14 +959,14 @@ def check_docs_tkn_length(
     size = sum([get_tkn_length(d.page_content) for d in docs])
     if size <= min_token:
         logger.warning(
-            f"Example of page from document with too few tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too few tokens : {docs[len(docs) // 2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} <= {min_token}, probably something went wrong?"
         )
     if size >= max_token:
         logger.warning(
-            f"Example of page from document with too many tokens : {docs[len(docs)//2].page_content}"
+            f"Example of page from document with too many tokens : {docs[len(docs) // 2].page_content}"
         )
         raise Exception(
             f"The number of token from '{identifier}' is {size} >= {max_token}, probably something went wrong?"
@@ -834,7 +986,7 @@ def check_docs_tkn_length(
         prob = sum(probs) / len(probs)
         if prob <= min_lang_prob:
             raise Exception(
-                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs)//2]}"
+                f"Low language probability for {identifier}: prob={prob:.3f}<{min_lang_prob}.\nExample page: {docs[len(docs) // 2]}"
             )
     except Exception as err:
         if str(err).startswith("Low language probability"):
@@ -980,9 +1132,9 @@ def disable_internet(allowed: dict) -> None:
         )
         skip = True
     if not skip:
-        assert not is_private(
-            ip
-        ), f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+        assert not is_private(ip), (
+            f"Failed to set www.google.com as unreachable: IP is '{ip}'"
+        )
 
 
 def set_func_signature(func: Callable) -> Callable:
@@ -1053,12 +1205,12 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             output = output.replace(ANSW, THINE + "\n" + ANSW)
 
         if (THIN not in output) and (ANSW not in output):
-            assert (
-                THINE not in output
-            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {THINE}:\n'''\n{output}\n'''"
-            assert (
-                ANSWE not in output
-            ), f"Output contains no {THIN} nor {ANSW} but an unexpected {ANSWE}:\n'''\n{output}\n'''"
+            assert THINE not in output, (
+                f"Output contains no {THIN} nor {ANSW} but an unexpected {THINE}:\n'''\n{output}\n'''"
+            )
+            assert ANSWE not in output, (
+                f"Output contains no {THIN} nor {ANSW} but an unexpected {ANSWE}:\n'''\n{output}\n'''"
+            )
 
             logger.debug(f"LLM output contained neither {THIN} nor {ANSW}")
             return {"thinking": "", "answer": output}
@@ -1076,9 +1228,9 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
                     )
         else:
             # check we don't have only one of the xml sides
-            assert (
-                THIN not in output and THINE not in output
-            ), f"Found only one of '{THIN}' or '{THINE}' in LLM output"
+            assert THIN not in output and THINE not in output, (
+                f"Found only one of '{THIN}' or '{THINE}' in LLM output"
+            )
             logger.debug("LLM output contained no thinking block")
 
         answer = ""
@@ -1094,9 +1246,9 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
             logger.debug("LLM output contained answer block")
         else:
             # check we don't have only one of the xml sides
-            assert (
-                ANSW not in output and ANSWE not in output
-            ), f"Found only one of '{ANSW}' or '{ANSWE}' in LLM output"
+            assert ANSW not in output and ANSWE not in output, (
+                f"Found only one of '{ANSW}' or '{ANSWE}' in LLM output"
+            )
             if thinking:
                 logger.debug(
                     "LLM output contained no answer block, assuming it's all but the thinking"
@@ -1114,24 +1266,18 @@ def thinking_answer_parser(output: str, strict: bool = False) -> dict:
         thinking = thinking.strip()
         answer = answer.rstrip()
 
-        assert (
-            THIN not in answer
-        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THINE not in answer
-        ), f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THIN not in thinking
-        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            THINE not in thinking
-        ), f"Parsed thinking contained unexpected {THIN}:\n'''\n{output}\n'''"
-        assert (
-            ANSW not in answer
-        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
-        assert (
-            ANSWE not in answer
-        ), f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        assert THIN not in answer, (
+            f"Parsed answer contained unexpected {THIN}:\n'''\n{output}\n'''"
+        )
+        assert THINE not in answer, (
+            f"Parsed answer contained unexpected {THINE}:\n'''\n{output}\n'''"
+        )
+        assert ANSW not in answer, (
+            f"Parsed answer contained unexpected {ANSW}:\n'''\n{output}\n'''"
+        )
+        assert ANSWE not in answer, (
+            f"Parsed answer contained unexpected {ANSWE}:\n'''\n{output}\n'''"
+        )
 
         assert answer, f"No answer could be parsed from LLM output: '{output}'"
 
@@ -1234,9 +1380,9 @@ def get_supported_model_params(modelname: ModelName) -> list:
         return []
     if modelname.backend == "openrouter":
         metadata = get_openrouter_metadata()
-        assert (
-            modelname.original in metadata
-        ), f"Missing {modelname.original} from openrouter"
+        assert modelname.original in metadata, (
+            f"Missing {modelname.original} from openrouter"
+        )
         return metadata[modelname.original]["supported_parameters"]
 
     for test in [

@@ -210,9 +210,9 @@ def cli_launcher() -> None:
         else:
             target = wdoc
         doc = getattr(target, "__doc__")
-        assert (
-            doc
-        ), f"The signature wrapping apparently failed: empty __doc__ for {target}"
+        assert doc, (
+            f"The signature wrapping apparently failed: empty __doc__ for {target}"
+        )
         if is_out_piped:
             print(doc)
         else:
@@ -280,12 +280,12 @@ def cli_launcher() -> None:
     # turn "wdoc query" into "wdoc --task=query", same for the other tasks
     if "task" not in kwargs:
         matching_tasks = [t for t in args if t in __valid_tasks__]
-        assert (
-            len(matching_tasks) != 0
-        ), f"Found no task in the args: '{args}', wdoc needs one of {__valid_tasks__}"
-        assert (
-            len(matching_tasks) == 1
-        ), f"Found multiple potential tasks in args: '{args}', wdoc needs one of {__valid_tasks__}"
+        assert len(matching_tasks) != 0, (
+            f"Found no task in the args: '{args}', wdoc needs one of {__valid_tasks__}"
+        )
+        assert len(matching_tasks) == 1, (
+            f"Found multiple potential tasks in args: '{args}', wdoc needs one of {__valid_tasks__}"
+        )
         task = matching_tasks[0]
         logger.debug(f"Moving task '{task}' from args to kwargs")
         args.remove(task)

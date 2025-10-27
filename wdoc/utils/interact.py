@@ -130,9 +130,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
         not always useful but in some cases depending on documents and
         retriever it can be needed to avoid having to set top_k too high.
     """
-    assert (
-        not is_out_piped
-    ), "Trying to load the CLI even though we are in a piped script. Crashing."
+    assert not is_out_piped, (
+        "Trying to load the CLI even though we are in a piped script. Crashing."
+    )
     md_printer("# wdoc Prompt")
 
     # loading history from files
@@ -240,9 +240,9 @@ def ask_user(settings: dict) -> Tuple[str, dict]:
                 if sett_k == "top_k":
                     assert int(sett_v) > 0, f"Can't set top_k to <= 0 ({sett_v})"
                 elif sett_k == "relevancy":
-                    assert (
-                        float(sett_v) >= -1 and float(sett_v) <= 1
-                    ), f"Can't set relevancy to < -1 or > +1 ({sett_v})"
+                    assert float(sett_v) >= -1 and float(sett_v) <= 1, (
+                        f"Can't set relevancy to < -1 or > +1 ({sett_v})"
+                    )
                     sett_v = float(sett_v)
                 elif sett_k == "retriever":
                     assert all(

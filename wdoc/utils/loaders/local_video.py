@@ -39,7 +39,7 @@ def load_local_video(
         )
         t = time.time()
         ffmpeg.input(path).output(str(audio_path.resolve().absolute())).run()
-        logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
+        logger.info(f"Done extracting audio in {time.time() - t:.2f}s")
     except Exception as err:
         logger.warning(
             f"Error when getting audio from video using ffmpeg. Retrying with pydub. Error: '{err}'"
@@ -54,7 +54,7 @@ def load_local_video(
             )
             t = time.time()
             audio.export(audio_path, format="mp3")
-            logger.info(f"Done extracting audio in {time.time()-t:.2f}s")
+            logger.info(f"Done extracting audio in {time.time() - t:.2f}s")
         except Exception as err:
             raise Exception(
                 f"Error when getting audio from video using ffmpeg: '{err}'"

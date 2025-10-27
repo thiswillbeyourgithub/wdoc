@@ -44,9 +44,9 @@ def parse_doc(
         debug_exceptions()
 
     if "task" in kwargs:
-        assert (
-            kwargs["task"] == "parse"
-        ), f"Unexpected task when parsing. Expected 'parse' but got '{kwargs['task']}'"
+        assert kwargs["task"] == "parse", (
+            f"Unexpected task when parsing. Expected 'parse' but got '{kwargs['task']}'"
+        )
         del kwargs["task"]
     assert "task" not in kwargs, "Cannot give --task argument if we are only parsing"
 

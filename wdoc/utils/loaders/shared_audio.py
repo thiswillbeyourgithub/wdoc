@@ -128,9 +128,9 @@ def transcribe_audio_deepgram(
     import deepgram
 
     logger.info(f"Calling deepgram to transcribe {audio_path}")
-    assert (
-        not env.WDOC_PRIVATE_MODE
-    ), "Private mode detected, aborting before trying to use deepgram's API"
+    assert not env.WDOC_PRIVATE_MODE, (
+        "Private mode detected, aborting before trying to use deepgram's API"
+    )
     assert (
         "DEEPGRAM_API_KEY" in os.environ
         and not os.environ["DEEPGRAM_API_KEY"]
@@ -184,7 +184,7 @@ def transcribe_audio_deepgram(
         options,
         timeout=httpx.Timeout(300.0, connect=10.0),  # timeout for large files
     )
-    logger.info(f"Done deepgram transcribing {audio_path} in {int(time.time()-t)}s")
+    logger.info(f"Done deepgram transcribing {audio_path} in {int(time.time() - t)}s")
     d = content.to_dict()
     return d
 
@@ -202,9 +202,9 @@ def transcribe_audio_whisper(
 
     logger.info(f"Calling openai's whisper to transcribe {audio_path}")
     if env.WDOC_PRIVATE_MODE:
-        assert (
-            env.WDOC_WHISPER_ENDPOINT
-        ), "WDOC_PRIVATE_MODE is set but no WDOC_WHISPER_ENDPOINT is set. Crashing as it seems like your private request would call a remote API"
+        assert env.WDOC_WHISPER_ENDPOINT, (
+            "WDOC_PRIVATE_MODE is set but no WDOC_WHISPER_ENDPOINT is set. Crashing as it seems like your private request would call a remote API"
+        )
         assert (
             not os.environ["WDOC_WHISPER_API_KEY"]
             == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
@@ -282,7 +282,7 @@ def transcribe_audio_whisper(
                 transcript = response.json()
 
         t2 = time.time()
-        logger.info(f"Done transcribing {audio_path} in {int(t2-t1)}s")
+        logger.info(f"Done transcribing {audio_path} in {int(t2 - t1)}s")
 
     except Exception as e:
         if "Maximum content size limit" in str(e):

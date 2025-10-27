@@ -69,9 +69,9 @@ class FilteredDeckCreator:
         p(f"Started with query '{query}'")
         deckname = "wdoc_filtered_deck::" + deckname
         decknames = akc("deckNames")
-        assert (
-            deckname not in decknames
-        ), f"Deckname {deckname} is already used. You have to delete it manually"
+        assert deckname not in decknames, (
+            f"Deckname {deckname} is already used. You have to delete it manually"
+        )
 
         instance = wdoc(
             query_eval_modelname=query_eval_modelname,
@@ -152,8 +152,8 @@ class FilteredDeckCreator:
         nids = list(set(nids))
         p(f"Found cids:{cids}")
 
-        p(f"Ratio of cid per document: {len(cids)/len(docs):.4f}")
-        p(f"Ratio of nid per document: {len(nids)/len(docs):.4f}")
+        p(f"Ratio of cid per document: {len(cids) / len(docs):.4f}")
+        p(f"Ratio of nid per document: {len(nids) / len(docs):.4f}")
 
         return nids, cids
 

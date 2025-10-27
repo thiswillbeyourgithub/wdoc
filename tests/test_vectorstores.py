@@ -1,11 +1,9 @@
 import os
 import sys
 import tempfile
-from pathlib import Path
 
 import pytest
 import numpy as np
-from langchain_core.documents.base import Document
 from langchain_community.vectorstores import FAISS
 from langchain_community.vectorstores.utils import DistanceStrategy
 
@@ -26,12 +24,8 @@ WDOC_TEST_OPENAI_EMBED_MODEL = os.getenv(
 )
 def test_compressed_faiss_functionality():
     """Test that CompressedFAISS works as well as native FAISS with compression."""
-    from wdoc.utils.customs.binary_faiss_vectorstore import CompressedFAISS
-    from langchain_community.vectorstores import FAISS
     from langchain_core.documents import Document
     from wdoc.utils.misc import ModelName
-    from wdoc.utils.embeddings import load_embeddings_engine
-    import numpy as np
 
     # Create test documents
     test_docs = [
@@ -159,12 +153,8 @@ def test_compressed_faiss_functionality():
 )
 def test_binary_faiss_functionality():
     """Test that BinaryFAISS preserves semantic relationships with binary embeddings."""
-    from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
-    from langchain_community.vectorstores import FAISS
     from langchain_core.documents import Document
     from wdoc.utils.misc import ModelName
-    from wdoc.utils.embeddings import load_embeddings_engine
-    import numpy as np
 
     # Create test words: 4 related programming words + 1 completely unrelated word
     related_words = ["python", "programming", "algorithm", "software"]
@@ -209,12 +199,12 @@ def test_binary_faiss_functionality():
                 outlier_distances.append(distance)
 
         # Verify we got the expected number of distances
-        assert (
-            len(related_distances) == 6
-        ), f"Expected 6 related distances for {store_name}, got {len(related_distances)}"  # C(4,2) = 6 pairs
-        assert (
-            len(outlier_distances) == 4
-        ), f"Expected 4 outlier distances for {store_name}, got {len(outlier_distances)}"  # 4 related words
+        assert len(related_distances) == 6, (
+            f"Expected 6 related distances for {store_name}, got {len(related_distances)}"
+        )  # C(4,2) = 6 pairs
+        assert len(outlier_distances) == 4, (
+            f"Expected 4 outlier distances for {store_name}, got {len(outlier_distances)}"
+        )  # 4 related words
 
         # The key test: minimum distance from outlier should be greater than maximum distance within related group
         max_related_distance = max(related_distances)
@@ -286,18 +276,18 @@ def test_binary_faiss_functionality():
 
         # Other results should be related programming terms, not the outlier
         result_contents = [doc.page_content for doc in search_results]
-        assert (
-            outlier_word not in result_contents[:3]
-        ), f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+        assert outlier_word not in result_contents[:3], (
+            f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+        )
 
         # also test for regular embeddings
         search_results = loaded_regular.similarity_search("programming", k=3)
         assert len(search_results) == 3
         assert search_results[0].page_content == "programming"
         result_contents = [doc.page_content for doc in search_results]
-        assert (
-            outlier_word not in result_contents[:3]
-        ), f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+        assert outlier_word not in result_contents[:3], (
+            f"Outlier '{outlier_word}' appeared in top 3 results for 'programming': {result_contents}"
+        )
 
         # Test similarity search with scores
         search_with_scores = loaded_binary.similarity_search_with_score(
@@ -311,17 +301,17 @@ def test_binary_faiss_functionality():
             assert score >= 0, f"Distance should be non-negative, got {score}"
             # For Hamming distance, the maximum possible distance is the number of bits
             # which should be reasonable (not astronomically large)
-            assert (
-                score <= 10000
-            ), f"Distance seems unreasonably large for Hamming distance: {score}"
+            assert score <= 10000, (
+                f"Distance seems unreasonably large for Hamming distance: {score}"
+            )
 
         # EDGE CASE TESTS
 
         # Test 1: Edge case with k larger than available documents
         large_k_results = loaded_binary.similarity_search("python", k=10)
-        assert len(large_k_results) == len(
-            test_docs
-        ), f"Expected {len(test_docs)} results when k > num_docs, got {len(large_k_results)}"
+        assert len(large_k_results) == len(test_docs), (
+            f"Expected {len(test_docs)} results when k > num_docs, got {len(large_k_results)}"
+        )
 
         # Test 2: Edge case with k=0 (should crash)
         with pytest.raises(AssertionError):
@@ -353,9 +343,9 @@ def test_binary_faiss_functionality():
         ]
         assert len(duplicate_scores) == 2, "Should find both duplicate documents"
         # Allow for small floating point differences
-        assert (
-            abs(duplicate_scores[0] - duplicate_scores[1]) < 1e-6
-        ), f"Duplicate documents should have nearly identical scores: {duplicate_scores}"
+        assert abs(duplicate_scores[0] - duplicate_scores[1]) < 1e-6, (
+            f"Duplicate documents should have nearly identical scores: {duplicate_scores}"
+        )
 
         # Test 6: Test with very short and very long content
         extreme_docs = [
@@ -379,9 +369,9 @@ def test_binary_faiss_functionality():
         )
         # All results should have scores <= threshold
         for doc, score in threshold_results:
-            assert (
-                score <= binary_max_related
-            ), f"Score {score} exceeds threshold {binary_max_related}"
+            assert score <= binary_max_related, (
+                f"Score {score} exceeds threshold {binary_max_related}"
+            )
 
         # Test 8: Test that distances are consistent (same query should give same results)
         results1 = loaded_binary.similarity_search_with_score("python", k=3)
@@ -390,9 +380,9 @@ def test_binary_faiss_functionality():
         for (doc1, score1), (doc2, score2) in zip(results1, results2):
             assert doc1.page_content == doc2.page_content
             # For binary embeddings, allow for small numerical differences in integer scores
-            assert (
-                abs(score1 - score2) <= 1
-            ), f"Scores should be nearly identical for same query: {score1} vs {score2}"
+            assert abs(score1 - score2) <= 1, (
+                f"Scores should be nearly identical for same query: {score1} vs {score2}"
+            )
 
         # Test 9: Test that all returned documents are actually from our original set
         all_search_results = loaded_binary.similarity_search(
@@ -400,9 +390,9 @@ def test_binary_faiss_functionality():
         )
         returned_contents = {doc.page_content for doc in all_search_results}
         original_contents = {doc.page_content for doc in test_docs}
-        assert (
-            returned_contents == original_contents
-        ), "All returned documents should be from original set"
+        assert returned_contents == original_contents, (
+            "All returned documents should be from original set"
+        )
 
         # Test 10: Verify that binary and regular FAISS produce different distances
         # This confirms that binary conversion actually changes the distance calculations
@@ -428,12 +418,12 @@ def test_binary_faiss_functionality():
                 break
 
         # Both distances should be found
-        assert (
-            regular_python_to_programming_distance is not None
-        ), "Could not find 'programming' in regular FAISS results for 'python' query"
-        assert (
-            binary_python_to_programming_distance is not None
-        ), "Could not find 'programming' in binary FAISS results for 'python' query"
+        assert regular_python_to_programming_distance is not None, (
+            "Could not find 'programming' in regular FAISS results for 'python' query"
+        )
+        assert binary_python_to_programming_distance is not None, (
+            "Could not find 'programming' in binary FAISS results for 'python' query"
+        )
 
         # The distances should be different, confirming binary conversion affects calculations
         assert (
@@ -463,11 +453,7 @@ def test_binary_faiss_functionality():
 )
 def test_binary_faiss_edge_cases_and_errors():
     """Test BinaryFAISS error conditions and edge cases."""
-    from wdoc.utils.customs.binary_faiss_vectorstore import BinaryFAISS
     from langchain_core.documents import Document
-    from wdoc.utils.misc import ModelName
-    from wdoc.utils.embeddings import load_embeddings_engine
-    import numpy as np
 
     # Use OpenAI embeddings for testing
     openai_embedding = load_embeddings_engine(
@@ -490,7 +476,6 @@ def test_binary_faiss_edge_cases_and_errors():
         )
 
     # Test 2: Error when trying to use unsupported distance strategy
-    from langchain_community.vectorstores.utils import DistanceStrategy
 
     with pytest.raises(
         ValueError, match="Distance strategy .* is not supported for binary embeddings"

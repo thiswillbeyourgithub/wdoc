@@ -1,5 +1,4 @@
 import os
-import subprocess
 import tempfile
 import hashlib
 from pathlib import Path
@@ -138,9 +137,9 @@ def test_parse_docx():
     expected_hash = "64b73b409688cc5b5675c07d9df4b83d353fa85026a9d686d6725e50f388930e1d57c56cc6cfebd5f2cecc06d7ef89ae7495bd5411ca0eac4b0df63a7d6c82dc"
     with open(tmp_path, "rb") as f:
         file_hash = hashlib.sha512(f.read()).hexdigest()
-    assert (
-        file_hash == expected_hash
-    ), f"File hash {file_hash} does not match expected {expected_hash}"
+    assert file_hash == expected_hash, (
+        f"File hash {file_hash} does not match expected {expected_hash}"
+    )
 
     try:
         # Parse the file

@@ -24,14 +24,16 @@ class LiteLLMEmbeddings(Embeddings):
 
         global litellm
 
-        assert (
-            "/" in model
-        ), "model must contain a /, for example 'ollama/bge-m3' or 'openai/text-embedding-ada-002'"
+        assert "/" in model, (
+            "model must contain a /, for example 'ollama/bge-m3' or 'openai/text-embedding-ada-002'"
+        )
         if private:
             if not api_base:
                 assert any(
                     provider in model for provider in ["ollama", "huggingface"]
-                ), "--private argument is set and api_base not overridden BUT the model does not contain ollama nor huggingface, this can be a mistake so crashing out of abundance of caution. If you think this is a bug please open an issue on github."
+                ), (
+                    "--private argument is set and api_base not overridden BUT the model does not contain ollama nor huggingface, this can be a mistake so crashing out of abundance of caution. If you think this is a bug please open an issue on github."
+                )
         self.model = model
         self.dimensions = dimensions
         self.private = private
@@ -40,9 +42,9 @@ class LiteLLMEmbeddings(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed search docs."""
-        assert not any(
-            not t.strip() for t in texts
-        ), f"The texts to embed include an empty string, which usually errors out providers. Texts={texts}"
+        assert not any(not t.strip() for t in texts), (
+            f"The texts to embed include an empty string, which usually errors out providers. Texts={texts}"
+        )
 
         # https://docs.litellm.ai/docs/embedding/supported_embedding
         vecs = litellm.embedding(

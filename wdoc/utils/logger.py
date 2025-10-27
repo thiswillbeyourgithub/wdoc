@@ -44,10 +44,10 @@ if (
     logger.remove()
     logger.add(
         sys.stderr,
-        format="{level} {time: HH:mm}({function}:{line}): {message}",
+        format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
         level="ERROR",
         enqueue=True,
-        colorize=True if not is_out_piped else False,
+        colorize=not is_out_piped,
         backtrace=True if env.WDOC_DEBUG else None,
         diagnose=True if env.WDOC_DEBUG else None,
     )
@@ -68,10 +68,10 @@ logger.add(
 # logger for the user stdout
 logger.add(
     sys.stdout,
-    format="{level} {time: HH:mm}({function}:{line}): {message}",
+    format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
     level=log_level,
     enqueue=True,
-    colorize=True if is_out_piped else False,
+    colorize=not is_out_piped,
     backtrace=True if env.WDOC_DEBUG else None,
     diagnose=True if env.WDOC_DEBUG else None,
 )

@@ -167,9 +167,9 @@ def create_evaluate_doc_chain(
                 asyncio.set_event_loop(loop)
             outs = loop.run_until_complete(asyncio.gather(*outs))
             for out in outs:
-                assert (
-                    len(out.generations) == 1
-                ), f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
+                assert len(out.generations) == 1, (
+                    f"Query eval llm produced more than 1 evaluations: '{out.generations}'"
+                )
                 outputs.append(out.generations[0].text)
                 finish_reason = out.generations[0].generation_info["finish_reason"]
                 if finish_reason not in ["stop", "length"]:
@@ -192,9 +192,9 @@ def create_evaluate_doc_chain(
             if "n" in eval_llm_params:
                 eval_llm_params.remove("n")
             outputs = outputs * query_eval_check_number
-        assert (
-            len(outputs) == query_eval_check_number
-        ), f"Query eval model produced an unexpected number of outputs ({outputs} but expected {query_eval_check_number} outputs).\nInputs: {inputs}'"
+        assert len(outputs) == query_eval_check_number, (
+            f"Query eval model produced an unexpected number of outputs ({outputs} but expected {query_eval_check_number} outputs).\nInputs: {inputs}'"
+        )
 
         eval_llm.callbacks[0].prompt_tokens += new_p
         eval_llm.callbacks[0].completion_tokens += new_c

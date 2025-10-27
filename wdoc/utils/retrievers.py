@@ -159,9 +159,9 @@ def create_retrievers(
             )
         )
 
-    assert (
-        retrievers
-    ), "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
+    assert retrievers, (
+        "No retriever selected. Probably cause by a wrong cli_command or query_retrievers arg."
+    )
 
     if len(retrievers) == 1:
         retriever = retrievers[0]

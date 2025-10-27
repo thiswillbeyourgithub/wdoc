@@ -49,13 +49,13 @@ test_help_output_shell() {
     fi
     
     # Check that dynamic docstring placeholder is not present
-    if echo "$output" | grep -q "This docstring is dynamically updated with the content of wdoc/docs/help.md"; then
+    if echo "$output" | \grep -q "This docstring is dynamically updated with the content of wdoc/docs/help.md"; then
         echo "FAIL: Found dynamic docstring placeholder in help output"
         return 1
     fi
     
     # Check that actual content is present
-    if ! echo "$output" | grep -q "Content of wdoc/docs/help.md"; then
+    if ! echo "$output" | \grep -q "Content of wdoc/docs/help.md"; then
         echo "FAIL: Did not find expected content in help output"
         return 1
     fi
@@ -71,13 +71,13 @@ test_help_output_python() {
     fi
     
     # Check that dynamic docstring placeholder is not present
-    if echo "$output" | grep -q "This docstring is dynamically updated with the content of wdoc/docs/help.md"; then
+    if echo "$output" | \grep -q "This docstring is dynamically updated with the content of wdoc/docs/help.md"; then
         echo "FAIL: Found dynamic docstring placeholder in help output"
         return 1
     fi
     
     # Check that actual content is present
-    if ! echo "$output" | grep -q "Content of wdoc/docs/help.md"; then
+    if ! echo "$output" | \grep -q "Content of wdoc/docs/help.md"; then
         echo "FAIL: Did not find expected content in help output"
         return 1
     fi
@@ -93,13 +93,13 @@ test_parse_doc_help_output_shell() {
     fi
     
     # Check that dynamic docstring placeholder is not present
-    if echo "$output" | grep -q "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"; then
+    if echo "$output" | \grep -q "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"; then
         echo "FAIL: Found dynamic docstring placeholder in parse help output"
         return 1
     fi
     
     # Check that actual content is present
-    if ! echo "$output" | grep -q "Content of wdoc/docs/parse_doc_help.md"; then
+    if ! echo "$output" | \grep -q "Content of wdoc/docs/parse_doc_help.md"; then
         echo "FAIL: Did not find expected content in parse help output"
         return 1
     fi
@@ -115,13 +115,13 @@ test_parse_doc_help_output_python() {
     fi
     
     # Check that dynamic docstring placeholder is not present
-    if echo "$output" | grep -q "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"; then
+    if echo "$output" | \grep -q "This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md"; then
         echo "FAIL: Found dynamic docstring placeholder in parse help output"
         return 1
     fi
     
     # Check that actual content is present
-    if ! echo "$output" | grep -q "Content of wdoc/docs/parse_doc_help.md"; then
+    if ! echo "$output" | \grep -q "Content of wdoc/docs/parse_doc_help.md"; then
         echo "FAIL: Did not find expected content in parse help output"
         return 1
     fi
@@ -199,7 +199,7 @@ test_get_piped_input_detection() {
         return 1
     fi
     
-    if ! echo "$result_text" | grep -q "This is test text"; then
+    if ! echo "$result_text" | \grep -q "This is test text"; then
         echo "FAIL: Text piping did not work correctly"
         echo "Expected to find input text in output, got: $result_text"
         return 1
@@ -214,7 +214,7 @@ test_get_piped_input_detection() {
         return 1
     fi
     
-    if ! echo "$result_bytes" | grep -q "binary data"; then
+    if ! echo "$result_bytes" | \grep -q "binary data"; then
         echo "FAIL: Binary piping did not work correctly"
         echo "Expected to find binary data in output, got: $result_bytes"
         return 1
@@ -233,8 +233,8 @@ test_parse_nytimes_shell() {
     # Verify we got substantial content
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         echo "FAIL: Expected significant text content from NYTimes, got only $output_length characters"
-        echo "Output was: $output"
         return 1
     fi
     
@@ -244,31 +244,31 @@ test_parse_nytimes_shell() {
 
 test_ddg_search_nvidia() {
     local output
-    local cmd="$PYTHON_EXEC -m wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month?' --filetype=ddg --ddg_max_result=3 --ddg_region=us-US --model=testing/testing --loading_failure=warn --oneoff --file_loader_parallel_backend=threading 2>&1 "
+    local cmd="$PYTHON_EXEC -m wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month?' --filetype=ddg --ddg_max_result=10 --ddg_region=us-US --model=testing/testing --loading_failure=warn --oneoff --file_loader_parallel_backend=threading 2>&1 "
     
-    if ! output=$(timeout 120s zsh -c "$cmd"); then
+    if ! output=$(timeout 120s zsh -c "$cmd | cat -"); then
         local exit_code=$?
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         if [[ $exit_code -eq 124 ]]; then
             echo "FAIL: DDG search command timed out"
         else
             echo "FAIL: DDG search command failed with exit code $exit_code"
         fi
-        echo "Output was: $output"
         return 1
     fi
     
     # Check that we got some output
     local output_length=${#output}
     if [[ $output_length -le 100 ]]; then
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         echo "FAIL: Expected substantial output from DDG search, got only $output_length characters"
-        echo "Output was: $output"
         return 1
     fi
     
     # Should contain the testing model's standard response
-    if ! echo "$output" | grep -q "Lorem ipsum dolor sit amet"; then
+    if ! echo "$output" | sed 's/\x1b\[[0-9;]*m//g' | tail -n 20 | GREP_COLORS='' \grep --color=never -i -q "ipsum dolor"; then
+        echo "Output was: '''\n$output\n'''\n===End of captured output==="
         echo "FAIL: Output did not contain expected testing string"
-        echo "Output was: $output"
         return 1
     fi
     

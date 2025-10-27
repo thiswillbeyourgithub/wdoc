@@ -348,9 +348,9 @@ for k in os.environ.keys():
                 f"Unexpected key env variable starting by 'wdoc_': {k}. This might be a typo in your configuration!"
             )
     else:
-        assert is_bearable(
-            v, env.__dataclass_fields__[k].type
-        ), f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{env.__dataclass_fields__[k].type}'"
+        assert is_bearable(v, env.__dataclass_fields__[k].type), (
+            f"Unexpected type of env variable '{k}': '{type(v)}' but expected '{env.__dataclass_fields__[k].type}'"
+        )
         v_stored = getattr(env, k)
         setattr(env, k, v)
 
@@ -380,9 +380,9 @@ for k in [
 
 # even though that check is done at runtime we also check it at startup
 if env.WDOC_FAISS_BINARY:
-    assert (
-        not env.WDOC_MOD_FAISS_SCORE_FN
-    ), "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_FAISS_BINARY=true at the same time."
-    assert (
-        env.WDOC_FAISS_COMPRESSION
-    ), "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
+    assert not env.WDOC_MOD_FAISS_SCORE_FN, (
+        "You can't use the env variable WDOC_MOD_FAISS_SCORE_FN=true and WDOC_FAISS_BINARY=true at the same time."
+    )
+    assert env.WDOC_FAISS_COMPRESSION, (
+        "You can't use the env variable WDOC_FAISS_BINARY=true and WDOC_FAISS_COMPRESSION=false at the same time."
+    )
