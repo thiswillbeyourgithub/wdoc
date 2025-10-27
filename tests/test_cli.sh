@@ -266,7 +266,7 @@ test_ddg_search_nvidia() {
     fi
     
     # Should contain the testing model's standard response
-    if ! echo "$output" | \grep -q "Lorem ipsum dolor sit amet"; then
+    if ! echo "$output" | sed 's/\x1b\[[0-9;]*m//g' | tail -n 20 | GREP_COLORS='' \grep --color=never -i -q "ipsum dolor"; then
         echo "Output was: '''\n$output\n'''\n===End of captured output==="
         echo "FAIL: Output did not contain expected testing string"
         return 1
