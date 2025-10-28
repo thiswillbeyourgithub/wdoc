@@ -145,7 +145,7 @@ setup(
         "litellm==v1.78.2",
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "chonkie[all]>=1.4.0",  # chonkie is for the semantic embeddings
-        "chonkie[semantics]>=1.4.0",
+        "chonkie[semantic]>=1.4.0",
         "prompt-toolkit>=3.0.47",
         "tqdm>=4.66.4",
         "faiss-cpu>=1.8.0",
