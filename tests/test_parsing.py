@@ -1,6 +1,6 @@
 import os
 import tempfile
-import hashlib
+from blake3 import blake3
 from pathlib import Path
 
 import pytest
@@ -134,9 +134,9 @@ def test_parse_docx():
         f.write(response.content)
 
     # Verify SHA512 checksum
-    expected_hash = "64b73b409688cc5b5675c07d9df4b83d353fa85026a9d686d6725e50f388930e1d57c56cc6cfebd5f2cecc06d7ef89ae7495bd5411ca0eac4b0df63a7d6c82dc"
+    expected_hash = "e69f84a2b494c767255d5d6934e3d12648fccb7dbc06e1cd47cad1b1c6efc902"
     with open(tmp_path, "rb") as f:
-        file_hash = hashlib.sha512(f.read()).hexdigest()
+        file_hash = blake3(f.read()).hexdigest()
     assert file_hash == expected_hash, (
         f"File hash {file_hash} does not match expected {expected_hash}"
     )

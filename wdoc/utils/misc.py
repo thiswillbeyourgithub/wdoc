@@ -2,7 +2,7 @@
 Miscellanous functions etc.
 """
 
-import hashlib
+from blake3 import blake3
 import re
 import inspect
 import json
@@ -359,7 +359,7 @@ def optional_strip_unexp_args(func: Callable) -> Callable:
 def hasher(text: str) -> str:
     """used to hash the text contant of each doc to cache the splitting and
     embeddings"""
-    return hashlib.sha256(text.encode()).hexdigest()[:20]
+    return blake3(text.encode()).hexdigest()[:20]
 
 
 def file_hasher(doc: dict) -> str:
@@ -396,7 +396,7 @@ def file_hasher(doc: dict) -> str:
 @hashdoc_cache.cache
 def _file_hasher(abs_path: str, stats: List[Union[int, float]]) -> str:
     with open(abs_path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()[:20]
+        return blake3(f.read()).hexdigest()[:20]
 
 
 def html_to_text(html: str, remove_image: bool = False) -> str:
@@ -614,7 +614,7 @@ class ModelName:
                     with open(
                         Path(self.model).resolve().absolute().__str__(), "rb"
                     ) as f:
-                        h = hashlib.sha256(f.read() + str(self.model)).hexdigest()[:15]
+                        h = blake3(f.read() + str(self.model)).hexdigest()[:15]
                     self.sanitized = Path(self.model).name + "_" + h
             except Exception:
                 pass

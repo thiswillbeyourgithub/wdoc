@@ -165,6 +165,7 @@ setup(
         "uuid6 >= 2025.0.1",  # for time sortable timestamp
         "PersistDict >= 0.2.14",  # by me, like a dict but an LMDB database, to fix langchain's caches
         "nltk>=3.9.2",  # needed for punkt_tab download in post-install
+        "blake3>=1.0.8",  # faster than sha256
         "pandas >= 2.3.3",
         # some loaders are included by default:
         "playwright >= 1.45.0",  # for online_media and urls
