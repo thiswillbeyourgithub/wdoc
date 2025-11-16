@@ -1,3 +1,4 @@
+
 ```mermaid
 flowchart TD
     subgraph EntryPoints["Entry Points"]
@@ -32,7 +33,7 @@ flowchart TD
 
     subgraph AIMLPipeline["AI/ML Pipeline"]
         Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
-        VectorStore["BinaryFAISS<br/>Compressed vectorstore"]
+        VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
         LLM["LiteLLM<br/>Model abstraction"]
 
         Embeddings --> VectorStore
@@ -48,14 +49,14 @@ flowchart TD
         Carl["Carl the Combiner<br/>Answer combination"]
     end
 
-    VectorStore --> Raphael
-    VectorStore --> Sam
+    Raphael --> VectorStore
     VectorStore --> Eve
-
-    Raphael --> Eve
-    Sam --> Eve
     Eve --> Anna
     Anna --> Carl
     LLM --> Anna
     LLM --> Carl
+
+    Output["Send output to user"]
+    Carl --> Output
+    Sam --> Output
 ```
