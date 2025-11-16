@@ -1,4 +1,8 @@
 flowchart TD
+    Task["Task"]
+    UserQuery["User Query"]
+    Path["Path"]
+
     subgraph AIMLPipeline["AI/ML Pipeline"]
         Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
         VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
@@ -15,13 +19,33 @@ flowchart TD
         Carl["Carl the Combiner<br/>Answer combination"]
     end
 
-    Raphael --> VectorStore
+    Path --> VectorStore
+    UserQuery --> Raphael
+    Raphael --> Embeddings
+    
     VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    VectorStore --> Eve
+    
     Eve --> Anna
+    Eve --> Anna
+    Eve --> Anna
+    
+    Anna --> Carl
+    Anna --> Carl
     Anna --> Carl
     LLM --> Anna
     LLM --> Carl
 
     Output["Send output to user"]
     Carl --> Output
+    
+    Task -->|summary| Sam
     Sam --> Output
