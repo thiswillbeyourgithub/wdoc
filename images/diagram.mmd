@@ -6,7 +6,6 @@ flowchart TD
     subgraph AIMLPipeline["AI/ML Pipeline"]
         Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
         VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
-        LLM["LiteLLM<br/>Model abstraction"]
 
         Embeddings --> VectorStore
     end
@@ -41,8 +40,6 @@ flowchart TD
     Anna --> Carl
     Anna --> Carl
     Anna --> Carl
-    LLM --> Anna
-    LLM --> Carl
 
     Output["Send output to user"]
     Carl --> Output
