@@ -1,34 +1,4 @@
 flowchart TD
-    subgraph EntryPoints["Entry Points"]
-        CLI["CLI Interface<br/>wdoc command"]
-        API["Python API<br/>wdoc class"]
-        Piped["Piped Input<br/>stdin processing"]
-    end
-
-    subgraph CoreOrch["Core Orchestration"]
-        Orchestrator["wdoc Class<br/>Main orchestrator"]
-    end
-
-    CLI --> Orchestrator
-    API --> Orchestrator
-    Piped --> Orchestrator
-
-    Orchestrator --> TaskRouter["Task Router<br/>query/summarize/search/parse"]
-    Orchestrator --> EnvSync["EnvDataclass<br/>Environment sync"]
-
-    subgraph DocProc["Document Processing"]
-        Loader["FILETYPE_TO_LOADER<br/>Loader selection"]
-        Joblib["joblib backend<br/>Parallel processing"]
-        Validation["DocDict Validation<br/>Type checking"]
-        Chunking["Task-optimized<br/>chunking"]
-
-        Loader --> Joblib
-        Joblib --> Validation
-        Validation --> Chunking
-    end
-
-    TaskRouter --> Loader
-
     subgraph AIMLPipeline["AI/ML Pipeline"]
         Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
         VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
@@ -36,8 +6,6 @@ flowchart TD
 
         Embeddings --> VectorStore
     end
-
-    Chunking --> Embeddings
 
     subgraph RAGPersonas["RAG Personas"]
         Raphael["Raphael the Rephraser<br/>Query expansion"]
