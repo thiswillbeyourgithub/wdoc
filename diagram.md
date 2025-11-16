@@ -1,0 +1,61 @@
+```mermaid
+flowchart TD
+    subgraph EntryPoints["Entry Points"]
+        CLI["CLI Interface<br/>wdoc command"]
+        API["Python API<br/>wdoc class"]
+        Piped["Piped Input<br/>stdin processing"]
+    end
+
+    subgraph CoreOrch["Core Orchestration"]
+        Orchestrator["wdoc Class<br/>Main orchestrator"]
+    end
+
+    CLI --> Orchestrator
+    API --> Orchestrator
+    Piped --> Orchestrator
+
+    Orchestrator --> TaskRouter["Task Router<br/>query/summarize/search/parse"]
+    Orchestrator --> EnvSync["EnvDataclass<br/>Environment sync"]
+
+    subgraph DocProc["Document Processing"]
+        Loader["FILETYPE_TO_LOADER<br/>Loader selection"]
+        Joblib["joblib backend<br/>Parallel processing"]
+        Validation["DocDict Validation<br/>Type checking"]
+        Chunking["Task-optimized<br/>chunking"]
+
+        Loader --> Joblib
+        Joblib --> Validation
+        Validation --> Chunking
+    end
+
+    TaskRouter --> Loader
+
+    subgraph AIMLPipeline["AI/ML Pipeline"]
+        Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
+        VectorStore["BinaryFAISS<br/>Compressed vectorstore"]
+        LLM["LiteLLM<br/>Model abstraction"]
+
+        Embeddings --> VectorStore
+    end
+
+    Chunking --> Embeddings
+
+    subgraph RAGPersonas["RAG Personas"]
+        Raphael["Raphael the Rephraser<br/>Query expansion"]
+        Sam["Sam the Summarizer<br/>Document summary"]
+        Eve["Eve the Evaluator<br/>Document filtering"]
+        Anna["Anna the Answerer<br/>Per-doc answers"]
+        Carl["Carl the Combiner<br/>Answer combination"]
+    end
+
+    VectorStore --> Raphael
+    VectorStore --> Sam
+    VectorStore --> Eve
+
+    Raphael --> Eve
+    Sam --> Eve
+    Eve --> Anna
+    Anna --> Carl
+    LLM --> Anna
+    LLM --> Carl
+```
