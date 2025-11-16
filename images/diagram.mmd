@@ -3,20 +3,16 @@ flowchart TD
     UserQuery["User Query"]
     Path["Path"]
 
-    subgraph AIMLPipeline["AI/ML Pipeline"]
-        Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
-        VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
+    Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
+    VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
 
-        Embeddings --> VectorStore
-    end
+    Embeddings --> VectorStore
 
-    subgraph RAGPersonas["RAG Personas"]
-        Raphael["Raphael the Rephraser<br/>Query expansion"]
-        Sam["Sam the Summarizer<br/>Document summary"]
-        Eve["Eve the Evaluator<br/>Document filtering"]
-        Anna["Anna the Answerer<br/>Per-doc answers"]
-        Carl["Carl the Combiner<br/>Answer combination"]
-    end
+    Raphael["Raphael the Rephraser<br/>Query expansion"]
+    Sam["Sam the Summarizer<br/>Document summary"]
+    Eve["Eve the Evaluator<br/>Document filtering"]
+    Anna["Anna the Answerer<br/>Per-doc answers"]
+    Carl["Carl the Combiner<br/>Answer combination"]
 
     Path --> VectorStore
     UserQuery --> Raphael
