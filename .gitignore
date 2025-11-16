@@ -3,7 +3,8 @@ publish_all.sh
 ggml*bin
 .cache
 medical_indexes.txt
-logs.txt*
+logs_dir*
+logs.txt
 author_dir
 pages
 .env*
