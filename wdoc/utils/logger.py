@@ -41,7 +41,7 @@ if (
     and next(iter(handlers.values())).levelno == 10
     and "<stderr>" in str(next(iter(handlers.values())))
 ):
-    logger.remove()
+    # logger.remove()
     logger.add(
         sys.stderr,
         format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
