@@ -1,7 +1,9 @@
 flowchart TD
-    Task["Task"]
-    UserQuery["User Query"]
-    Path["Path"]
+    subgraph UserInput["User Input"]
+        Task["Task"]
+        UserQuery["User Query"]
+        Path["Path"]
+    end
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
     VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
