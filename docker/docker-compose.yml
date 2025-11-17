@@ -9,17 +9,18 @@ services:
       - "${WDOC_GUI_PORT:-7860}:7860"
     volumes:
       # Mount vectorstore directory to persist and share vectorstore data
-      - ${WDOC_VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
+      - ${VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
       # Optionally mount cache directory to persist LLM caches
-      - ${WDOC_CACHE_PATH:-./wdoc_cache}:/app/wdoc_cache
+      - ${CACHE_PATH:-./wdoc_cache}:/app/wdoc_cache
     environment:
       # Path to vectorstore inside container
-      - WDOC_VECTORSTORE_PATH=/app/vectorstore
+      - VECTORSTORE_PATH=/app/vectorstore
       # Optional: Set default models via environment variables
       - WDOC_DEFAULT_MODEL=${WDOC_DEFAULT_MODEL:-openai/gpt-4o-mini}
       - WDOC_DEFAULT_EMBED_MODEL=${WDOC_DEFAULT_EMBED_MODEL:-openai/text-embedding-3-small}
       # Pass through API keys from host environment
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - MISTRAL_API_KEY=${MISTRAL_API_KEY}
     restart: unless-stopped
