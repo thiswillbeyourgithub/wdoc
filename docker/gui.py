@@ -169,8 +169,8 @@ def create_interface() -> gr.Blocks:
             "# 📚 wdoc Web Interface\n\nProcess documents with AI-powered query, summarization, and parsing."
         )
 
-        with gr.Row():
-            with gr.Column(scale=1):
+        with gr.Tabs() as main_tabs:
+            with gr.Tab("Input", id=0):
                 # Task selection
                 task = gr.Dropdown(
                     choices=["query", "summarize", "parse"],
@@ -232,12 +232,12 @@ def create_interface() -> gr.Blocks:
                         info="Auto-detect or specify the file type",
                     )
 
-                # Process button
-                process_btn = gr.Button(
-                    "🚀 Process Document", variant="primary", size="lg"
-                )
+                    # Process button
+                    process_btn = gr.Button(
+                        "🚀 Process Document", variant="primary", size="lg"
+                    )
 
-            with gr.Column(scale=2):
+            with gr.Tab("Output", id=1):
                 # Output display
                 output_md = gr.Markdown(label="Output")
 
@@ -266,9 +266,14 @@ def create_interface() -> gr.Blocks:
             outputs=[query_group, parse_group],
         )
 
-        # Process button click
+        # Process button click - also switches to Output tab
+        def process_and_switch(*args):
+            """Process document and return results plus tab selection."""
+            md_output, text_output = process_document(*args)
+            return md_output, text_output, gr.Tabs(selected=1)
+
         process_btn.click(
-            fn=process_document,
+            fn=process_and_switch,
             inputs=[
                 task,
                 path_text,
@@ -278,7 +283,7 @@ def create_interface() -> gr.Blocks:
                 filetype,
                 parse_format,
             ],
-            outputs=[output_md, output_text],
+            outputs=[output_md, output_text, main_tabs],
         )
 
         # Download button - create temporary file with the markdown content
