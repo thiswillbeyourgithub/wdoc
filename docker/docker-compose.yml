@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${WDOC_GUI_PORT:-7860}:7860"
+      - "7618:7860"
     volumes:
       # Mount vectorstore directory to persist and share vectorstore data
       - ${VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
