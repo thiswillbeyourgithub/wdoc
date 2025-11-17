@@ -8,11 +8,19 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user with UID:GID 1000:1000
+# This matches most default user IDs on Linux systems, allowing proper file permissions for volumes
+RUN groupadd -g 1000 wdoc && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash wdoc
+
 # Install Python packages
 # Using uv for faster installation, but pip is fine too
 RUN pip install --no-cache-dir uv && \
     uv pip install --system wdoc gradio && \
     rm -rf /root/.cache
+
+# Change ownership of the app directory to the wdoc user
+RUN chown -R wdoc:wdoc /app
 
 # Copy the GUI script
 COPY gui.py /app/gui.py
@@ -22,6 +30,9 @@ EXPOSE 7860
 
 # Set environment variable for Gradio to listen on all interfaces
 ENV GRADIO_SERVER_NAME="0.0.0.0"
+
+# Switch to non-root user for running the application
+USER wdoc
 
 # Run the Gradio app
 CMD ["python", "gui.py"]
