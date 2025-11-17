@@ -179,18 +179,20 @@ def create_interface() -> gr.Blocks:
                     info="Select the operation to perform on the document",
                 )
 
-                # Path input options
+                # Path input options with tabs
                 gr.Markdown("### Document Input")
-                uploaded_file = gr.File(
-                    label="Upload File",
-                    file_types=[".txt", ".pdf", ".docx", ".html", ".md"],
-                )
-                gr.Markdown("**OR**")
-                path_text = gr.Textbox(
-                    label="Path or URL",
-                    placeholder="https://example.com/document.pdf or /path/to/file.txt",
-                    lines=1,
-                )
+                with gr.Tabs() as input_tabs:
+                    with gr.Tab("Path or URL", id="text_tab"):
+                        path_text = gr.Textbox(
+                            label="Path or URL",
+                            placeholder="https://example.com/document.pdf or /path/to/file.txt",
+                            lines=1,
+                        )
+                    with gr.Tab("Upload File", id="file_tab"):
+                        uploaded_file = gr.File(
+                            label="Upload File",
+                            file_types=[".txt", ".pdf", ".docx", ".html", ".md"],
+                        )
 
                 # Task-specific inputs
                 with gr.Group(visible=False) as query_group:
