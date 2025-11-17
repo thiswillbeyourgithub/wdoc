@@ -6,6 +6,7 @@ VECTORSTORE_PATH=/app/vectorstore
 
 # Default models for wdoc
 WDOC_DEFAULT_MODEL=openrouter/google/gemini-2.5-pro
+WDOC_DEFAULT_QUERY_EVAL_MODEL=openrouter/google/gemini-2.5-flash
 WDOC_DEFAULT_EMBED_MODEL=openai/text-embedding-3-small
 
 # API Keys - REQUIRED: Add your API keys here
