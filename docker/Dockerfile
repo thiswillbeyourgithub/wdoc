@@ -19,8 +19,10 @@ RUN pip install --no-cache-dir uv && \
     uv pip install --system wdoc gradio && \
     rm -rf /root/.cache
 
-# Change ownership of the app directory to the wdoc user
-RUN chown -R wdoc:wdoc /app
+# Create .local directory structure for the wdoc user and set permissions
+RUN mkdir -p /home/wdoc/.local && \
+    chown -R wdoc:wdoc /home/wdoc/.local && \
+    chown -R wdoc:wdoc /app
 
 # Copy the GUI script
 COPY gui.py /app/gui.py
@@ -28,11 +30,12 @@ COPY gui.py /app/gui.py
 # Expose Gradio's default port
 EXPOSE 7860
 
-# Set environment variable for Gradio to listen on all interfaces
-ENV GRADIO_SERVER_NAME="0.0.0.0"
-
 # Switch to non-root user for running the application
 USER wdoc
+
+# Set environment variables
+ENV GRADIO_SERVER_NAME="0.0.0.0"
+ENV HOME="/home/wdoc"
 
 # Run the Gradio app
 CMD ["python", "gui.py"]
