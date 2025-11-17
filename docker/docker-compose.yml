@@ -12,16 +12,8 @@ services:
       - ${VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
       # Optionally mount cache directory to persist LLM caches
       - ${CACHE_PATH:-./wdoc_cache}:/app/wdoc_cache
-    environment:
-      # Path to vectorstore inside container
-      - VECTORSTORE_PATH=/app/vectorstore
-      # Optional: Set default models via environment variables
-      - WDOC_DEFAULT_MODEL=${WDOC_DEFAULT_MODEL:-openai/gpt-4o-mini}
-      - WDOC_DEFAULT_EMBED_MODEL=${WDOC_DEFAULT_EMBED_MODEL:-openai/text-embedding-3-small}
-      # Pass through API keys from host environment
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      # - OPENAI_API_KEY=${OPENAI_API_KEY}
-      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      # - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+    # Load environment variables from the env file
+    env_file:
+      - env
     restart: unless-stopped
     user: 1000:1000
