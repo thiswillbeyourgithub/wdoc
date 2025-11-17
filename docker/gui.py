@@ -62,16 +62,19 @@ def process_document(
             path = path_text.strip()
             logger.info(f"Processing path from text: {path}")
         else:
-            return "❌ **Error**: Please provide either a file upload or a path/URL.", ""
+            return (
+                "❌ **Error**: Please provide either a file upload or a path/URL.",
+                "",
+            )
 
         # Get vectorstore path from environment for query tasks
         vectorstore_path = os.getenv("WDOC_VECTORSTORE_PATH", "/app/vectorstore")
-        
+
         # Create wdoc instance based on task
         if task == "query":
             if not query_text or not query_text.strip():
                 return "❌ **Error**: Query text is required for query task.", ""
-            
+
             logger.info(f"Starting query task with query: {query_text}")
             instance = wdoc(
                 task="query",
@@ -83,13 +86,13 @@ def process_document(
             )
             result = instance.query_task(query=query_text.strip())
             output_md = f"# Query Result\n\n**Query**: {query_text}\n\n## Answer\n\n{result['final_answer']}"
-            
+
             # Add metadata if available
-            if 'sources' in result:
+            if "sources" in result:
                 output_md += f"\n\n## Sources\n\n{result['sources']}"
-            if 'total_cost' in result:
+            if "total_cost" in result:
                 output_md += f"\n\n---\n*Total cost: ${result['total_cost']:.4f}*"
-                
+
         elif task == "summarize":
             logger.info("Starting summarize task")
             instance = wdoc(
@@ -100,11 +103,11 @@ def process_document(
             )
             result = instance.summary_task()
             output_md = f"# Summary\n\n{result['summary']}"
-            
+
             # Add metadata if available
-            if 'doc_total_cost' in result:
+            if "doc_total_cost" in result:
                 output_md += f"\n\n---\n*Total cost: ${result['doc_total_cost']:.4f}*"
-                
+
         elif task == "parse":
             logger.info(f"Starting parse task with format: {parse_format}")
             result = wdoc.parse_doc(
@@ -112,7 +115,7 @@ def process_document(
                 filetype=filetype,
                 format=parse_format,
             )
-            
+
             # Format output based on parse_format
             if parse_format == "text":
                 output_md = f"# Parsed Document\n\n```\n{result}\n```"
@@ -120,29 +123,35 @@ def process_document(
                 output_md = f"# Parsed Document (XML)\n\n```xml\n{result}\n```"
             elif parse_format == "langchain":
                 # Convert Document objects to readable format
-                docs_text = "\n\n---\n\n".join([
-                    f"## Document {i+1}\n\n{doc.page_content}\n\n**Metadata**: {doc.metadata}"
-                    for i, doc in enumerate(result)
-                ])
+                docs_text = "\n\n---\n\n".join(
+                    [
+                        f"## Document {i + 1}\n\n{doc.page_content}\n\n**Metadata**: {doc.metadata}"
+                        for i, doc in enumerate(result)
+                    ]
+                )
                 output_md = f"# Parsed Documents\n\n{docs_text}"
             elif parse_format == "langchain_dict":
                 # Convert dicts to readable format
-                docs_text = "\n\n---\n\n".join([
-                    f"## Document {i+1}\n\n{doc['page_content']}\n\n**Metadata**: {doc['metadata']}"
-                    for i, doc in enumerate(result)
-                ])
+                docs_text = "\n\n---\n\n".join(
+                    [
+                        f"## Document {i + 1}\n\n{doc['page_content']}\n\n**Metadata**: {doc['metadata']}"
+                        for i, doc in enumerate(result)
+                    ]
+                )
                 output_md = f"# Parsed Documents\n\n{docs_text}"
             else:
                 output_md = f"# Parsed Document\n\n{result}"
         else:
             return f"❌ **Error**: Unknown task '{task}'", ""
-        
+
         logger.info(f"Task completed successfully: {task}")
         return output_md, output_md
-        
+
     except Exception as e:
         logger.exception(f"Error processing document: {e}")
-        error_md = f"# ❌ Error\n\nAn error occurred while processing:\n\n```\n{str(e)}\n```"
+        error_md = (
+            f"# ❌ Error\n\nAn error occurred while processing:\n\n```\n{str(e)}\n```"
+        )
         return error_md, error_md
 
 
@@ -156,8 +165,10 @@ def create_interface() -> gr.Blocks:
         The configured Gradio interface
     """
     with gr.Blocks(title="wdoc Web UI", theme=gr.themes.Soft()) as interface:
-        gr.Markdown("# 📚 wdoc Web Interface\n\nProcess documents with AI-powered query, summarization, and parsing.")
-        
+        gr.Markdown(
+            "# 📚 wdoc Web Interface\n\nProcess documents with AI-powered query, summarization, and parsing."
+        )
+
         with gr.Row():
             with gr.Column(scale=1):
                 # Task selection
@@ -165,9 +176,9 @@ def create_interface() -> gr.Blocks:
                     choices=["query", "summarize", "parse"],
                     value="summarize",
                     label="Task",
-                    info="Select the operation to perform on the document"
+                    info="Select the operation to perform on the document",
                 )
-                
+
                 # Path input options
                 gr.Markdown("### Document Input")
                 uploaded_file = gr.File(
@@ -180,7 +191,7 @@ def create_interface() -> gr.Blocks:
                     placeholder="https://example.com/document.pdf or /path/to/file.txt",
                     lines=1,
                 )
-                
+
                 # Task-specific inputs
                 with gr.Group(visible=False) as query_group:
                     query_text = gr.Textbox(
@@ -188,15 +199,15 @@ def create_interface() -> gr.Blocks:
                         placeholder="What question do you want to ask about the document?",
                         lines=3,
                     )
-                
+
                 with gr.Group(visible=False) as parse_group:
                     parse_format = gr.Dropdown(
                         choices=["text", "xml", "langchain", "langchain_dict"],
                         value="text",
                         label="Parse Output Format",
-                        info="Format for parsed document output"
+                        info="Format for parsed document output",
                     )
-                
+
                 # Model and filetype settings
                 with gr.Accordion("Advanced Settings", open=False):
                     model = gr.Textbox(
@@ -205,19 +216,29 @@ def create_interface() -> gr.Blocks:
                         placeholder="e.g., openai/gpt-4o-mini",
                     )
                     filetype = gr.Dropdown(
-                        choices=["auto", "txt", "pdf", "word", "youtube", "online_pdf", "html"],
+                        choices=[
+                            "auto",
+                            "txt",
+                            "pdf",
+                            "word",
+                            "youtube",
+                            "online_pdf",
+                            "html",
+                        ],
                         value="auto",
                         label="File Type",
-                        info="Auto-detect or specify the file type"
+                        info="Auto-detect or specify the file type",
                     )
-                
+
                 # Process button
-                process_btn = gr.Button("🚀 Process Document", variant="primary", size="lg")
-            
+                process_btn = gr.Button(
+                    "🚀 Process Document", variant="primary", size="lg"
+                )
+
             with gr.Column(scale=2):
                 # Output display
                 output_md = gr.Markdown(label="Output")
-                
+
                 # Download and copy buttons
                 with gr.Row():
                     download_btn = gr.DownloadButton(
@@ -225,10 +246,10 @@ def create_interface() -> gr.Blocks:
                         variant="secondary",
                     )
                     # Note: Copy to clipboard requires JavaScript and is handled via download for simplicity
-                
+
                 # Hidden textbox to store the output for download
                 output_text = gr.Textbox(visible=False)
-        
+
         # Event handlers
         def update_visibility(task_name: str) -> Tuple[gr.Group, gr.Group]:
             """Update visibility of task-specific input groups based on selected task."""
@@ -236,43 +257,53 @@ def create_interface() -> gr.Blocks:
                 gr.Group(visible=(task_name == "query")),  # query_group
                 gr.Group(visible=(task_name == "parse")),  # parse_group
             )
-        
+
         task.change(
             fn=update_visibility,
             inputs=[task],
             outputs=[query_group, parse_group],
         )
-        
+
         # Process button click
         process_btn.click(
             fn=process_document,
-            inputs=[task, path_text, uploaded_file, query_text, model, filetype, parse_format],
+            inputs=[
+                task,
+                path_text,
+                uploaded_file,
+                query_text,
+                model,
+                filetype,
+                parse_format,
+            ],
             outputs=[output_md, output_text],
         )
-        
+
         # Download button - create temporary file with the markdown content
         output_text.change(
             fn=lambda text: gr.DownloadButton(
                 label="📥 Download as Markdown",
                 value=text,
                 visible=bool(text),
-            ) if text else gr.DownloadButton(visible=False),
+            )
+            if text
+            else gr.DownloadButton(visible=False),
             inputs=[output_text],
             outputs=[download_btn],
         )
-        
+
         gr.Markdown(
             "\n\n---\n\n*Built with [wdoc](https://github.com/yourusername/wdoc) and [Gradio](https://gradio.app). "
             "Assisted by [aider.chat](https://github.com/Aider-AI/aider/)*"
         )
-    
+
     return interface
 
 
 if __name__ == "__main__":
     # Configure logging to show in Docker logs
     logger.info("Starting wdoc Gradio interface...")
-    
+
     # Create and launch interface
     # Uses environment variables for host/port configuration
     interface = create_interface()
