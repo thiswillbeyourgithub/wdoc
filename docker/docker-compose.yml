@@ -24,3 +24,4 @@ services:
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - MISTRAL_API_KEY=${MISTRAL_API_KEY}
     restart: unless-stopped
+    user: 1000:1000
