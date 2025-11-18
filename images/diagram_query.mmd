@@ -2,19 +2,18 @@ flowchart TD
     subgraph Inputs["User Arguments"]
         Path["Path"]
         TopK["TopK"]
+        UserQuery["User Query"]
     end
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
-    VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
+    VectorStore["VectorStore"]
     Chunker["Loading & Chunking<br/>Text splitting"]
 
     Path --> Chunker
     Chunker --> VectorStore
     Embeddings --> VectorStore
 
-    QueryOutput["General Output"]
-
-    UserQuery["User Query"]
+    QueryOutput["Output"]
     Raphael["Raphael the Rephraser<br/>Query expansion"]
     Eve["Eve the Evaluator<br/>Document filtering"]
     Anna["Anna the Answerer<br/>Per-doc answers"]
