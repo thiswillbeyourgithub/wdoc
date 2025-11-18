@@ -12,13 +12,14 @@ flowchart TD
     Embeddings --> VectorStore
 
     Chunker["Chunker<br/>Text splitting"]
+    ChunkExample["ex: 17 chunks"]
     Raphael["Raphael the Rephraser<br/>Query expansion"]
-    Sam["Sam the Summarizer<br/>Document summary"]
     Eve["Eve the Evaluator<br/>Document filtering"]
     Anna["Anna the Answerer<br/>Per-doc answers"]
 
     Path --> Chunker
     Chunker --> VectorStore
+    Chunker --> ChunkExample
     TopK -->|ex: top_k=50| VectorStore
     UserQuery --> Raphael
     Raphael --> Embeddings
@@ -35,6 +36,12 @@ flowchart TD
     
     Anna -->|37 answers| RecursiveCombining
 
+    subgraph Summary["Summary"]
+        Sam["Sam the Summarizer<br/>Document summary"]
+        Concatenation["Concatenation"]
+        Sam -->|17 overlapping<br/>chunk summaries| Concatenation
+    end
+
     subgraph UserOutput["User Output"]
         Output["General Output"]
         SummaryOutput["wdocSummary object"]
@@ -43,5 +50,6 @@ flowchart TD
     Carl -->|1 answer| Output
     
     Task -->|task=query| Raphael
-    Task -->|task=summary| Sam
-    Sam --> SummaryOutput
+    Task -->|task=summary| ChunkExample
+    ChunkExample --> Sam
+    Concatenation --> SummaryOutput
