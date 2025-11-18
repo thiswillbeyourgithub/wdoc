@@ -10,7 +10,7 @@ services:
       # Mount vectorstore directory to persist and share vectorstore data
       - ${VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
       # Optionally mount cache directory to persist LLM caches
-      - ${CACHE_PATH:-./wdoc_cache}:/app/wdoc_cache
+      - ${CACHE_PATH:-./wdoc_cache}:/home/wdoc/.cache/wdoc
     # Load environment variables from the env file
     env_file:
       - custom_env
