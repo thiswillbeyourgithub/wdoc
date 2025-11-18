@@ -18,24 +18,11 @@ flowchart TD
     UserQuery --> Raphael
     Raphael --> Embeddings
     
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
-    VectorStore --> Eve
+    VectorStore -->|50 docs| Eve
     
-    Eve --> Anna
-    Eve --> Anna
-    Eve --> Anna
+    Eve -->|37 docs| Anna
     
-    Anna --> Carl
-    Anna --> Carl
-    Anna --> Carl
+    Anna -->|37 answers| Carl
 
     Carl --> Carl
 
@@ -44,7 +31,8 @@ flowchart TD
         SummaryOutput["wdocSummary object"]
     end
     
-    Carl --> Output
+    Carl -->|1 answer| Output
     
+    Task -->|task=query| Raphael
     Task -->|task=summary| Sam
     Sam --> SummaryOutput
