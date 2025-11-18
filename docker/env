@@ -1,0 +1,34 @@
+# wdoc Docker Environment Configuration
+# Copy this file and customize the values for your setup
+
+# Path to vectorstore inside container (usually no need to change)
+VECTORSTORE_PATH=/app/vectorstore
+
+# Default models for wdoc
+WDOC_DEFAULT_MODEL=openrouter/google/gemini-2.5-pro
+WDOC_DEFAULT_QUERY_EVAL_MODEL=openrouter/google/gemini-2.5-flash
+WDOC_DEFAULT_EMBED_MODEL=openai/text-embedding-3-small
+
+# API Keys - REQUIRED: Add your API keys here
+# At minimum, you need an OpenRouter API key for most models
+OPENROUTER_API_KEY=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
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+# MISTRAL_API_KEY=
+
+# Optional: Langfuse configuration for observability
+# WDOC_LANGFUSE_PUBLIC_KEY=
+# WDOC_LANGFUSE_SECRET_KEY=
+# WDOC_LANGFUSE_HOST=
+LANGFUSE_HOST=http://host.docker.internal:4001
+LANGFUSE_PUBLIC_KEY=pk-lf-9b5ef607-4e6e-412f-89c6-e5eb413914a7
+LANGFUSE_SECRET_KEY=sk-lf-ae5dbffc-6fa9-4244-bf9f-b3e8eac1159c
+
+# Optional: Gradio server configuration
+GRADIO_SERVER_NAME=0.0.0.0
+GRADIO_SERVER_PORT=7860
+
+# Optional: wdoc behavior settings
+# WDOC_VERBOSE=false
+# WDOC_DEBUG=false
+# WDOC_EXPIRE_CACHE_DAYS=0

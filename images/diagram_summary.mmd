@@ -1,0 +1,16 @@
+flowchart TD
+    subgraph Inputs["User Arguments"]
+        Path["Path"]
+    end
+
+    Chunker["Loading & Chunking<br/>Text splitting"]
+
+    Path --> Chunker
+
+    SummaryOutput["wdocSummary object"]
+
+    Sam["Sam the Summarizer<br/>Document summary"]
+    Concatenation["Concatenation"]
+    Chunker -->|ex: 17 chunks| Sam
+    Sam -->|17 overlapping<br/>chunk summaries| Concatenation
+    Concatenation -->|1 final summary| SummaryOutput

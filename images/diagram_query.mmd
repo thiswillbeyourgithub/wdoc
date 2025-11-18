@@ -1,0 +1,31 @@
+flowchart TD
+    subgraph Inputs["User Arguments"]
+        Path["Path"]
+        TopK["Top K"]
+        UserQuery["User Query"]
+    end
+
+    VectorStoreEmbeddings["VectorStore + Embeddings"]
+    Chunker["Loading & Chunking<br/>Text splitting"]
+
+    Path --> Chunker
+    Chunker --> VectorStoreEmbeddings
+
+    QueryOutput["Output"]
+    Raphael["Raphael the Rephraser<br/>Query expansion"]
+    Eve["Eve the Evaluator<br/>Document filtering"]
+    Anna["Anna the Answerer<br/>Per-doc answers"]
+    
+    subgraph RecursiveCombining["Recursive Combining"]
+        SemanticBatching["Semantic batching"]
+        Carl["Carl the Combiner<br/>Answer combination"]
+        SemanticBatching --> Carl
+    end
+    
+    UserQuery --> Raphael
+    Raphael --> VectorStoreEmbeddings
+    TopK -->|ex: top_k=50| VectorStoreEmbeddings
+    VectorStoreEmbeddings -->|50 docs| Eve
+    Eve -->|37 docs| Anna
+    Anna -->|37 answers| RecursiveCombining
+    Carl -->|1 answer| QueryOutput
