@@ -15,7 +15,6 @@ flowchart TD
     Sam["Sam the Summarizer<br/>Document summary"]
     Eve["Eve the Evaluator<br/>Document filtering"]
     Anna["Anna the Answerer<br/>Per-doc answers"]
-    Carl["Carl the Combiner<br/>Answer combination"]
 
     Path --> VectorStore
     TopK -->|ex: top_k=50| VectorStore
@@ -26,9 +25,13 @@ flowchart TD
     
     Eve -->|37 docs| Anna
     
-    Anna -->|37 answers| Carl
-
-    Carl --> Carl
+    subgraph RecursiveCombining["Recursive Combining"]
+        SemanticBatching["Semantic batching"]
+        Carl["Carl the Combiner<br/>Answer combination"]
+        SemanticBatching --> Carl
+    end
+    
+    Anna -->|37 answers| RecursiveCombining
 
     subgraph UserOutput["User Output"]
         Output["General Output"]
