@@ -12,11 +12,17 @@ import os
 from pathlib import Path
 from typing import Optional, Tuple, Any
 import tempfile
+import io
+import sys
 
 import gradio as gr
 from loguru import logger
 
 from wdoc.wdoc import wdoc
+
+
+# Global log buffer to capture logs
+log_buffer = io.StringIO()
 
 
 def process_document(
@@ -27,7 +33,7 @@ def process_document(
     model: str,
     filetype: str,
     parse_format: str,
-) -> Tuple[str, str]:
+) -> Tuple[str, str, str]:
     """
     Process a document using wdoc based on selected task.
 
@@ -50,9 +56,16 @@ def process_document(
 
     Returns
     -------
-    Tuple[str, str]
-        (markdown_output, download_content) - the rendered output and downloadable text
+    Tuple[str, str, str]
+        (markdown_output, download_content, logs) - the rendered output, downloadable text, and logs
     """
+    # Clear the log buffer before processing
+    global log_buffer
+    log_buffer = io.StringIO()
+    
+    # Add a sink to capture logs to our buffer
+    handler_id = logger.add(log_buffer, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")
+    
     try:
         # Determine path: uploaded file takes precedence over text input
         if uploaded_file is not None:
@@ -62,9 +75,12 @@ def process_document(
             path = path_text.strip()
             logger.info(f"Processing path from text: {path}")
         else:
+            logs = log_buffer.getvalue()
+            logger.remove(handler_id)
             return (
                 "❌ **Error**: Please provide either a file upload or a path/URL.",
                 "",
+                logs,
             )
 
         # Get vectorstore path from environment for query tasks
@@ -145,14 +161,24 @@ def process_document(
             return f"❌ **Error**: Unknown task '{task}'", ""
 
         logger.info(f"Task completed successfully: {task}")
-        return output_md, output_md
+        
+        # Capture logs and remove the handler
+        logs = log_buffer.getvalue()
+        logger.remove(handler_id)
+        
+        return output_md, output_md, logs
 
     except Exception as e:
         logger.exception(f"Error processing document: {e}")
         error_md = (
             f"# ❌ Error\n\nAn error occurred while processing:\n\n```\n{str(e)}\n```"
         )
-        return error_md, error_md
+        
+        # Capture logs and remove the handler even on error
+        logs = log_buffer.getvalue()
+        logger.remove(handler_id)
+        
+        return error_md, error_md, logs
 
 
 def create_interface() -> gr.Blocks:
@@ -237,6 +263,16 @@ def create_interface() -> gr.Blocks:
                     "🚀 Process Document", variant="primary", size="lg"
                 )
 
+                # Logs section - collapsed by default
+                with gr.Accordion("📋 Logs", open=False):
+                    logs_output = gr.Textbox(
+                        label="Application Logs",
+                        lines=10,
+                        max_lines=20,
+                        interactive=False,
+                        show_copy_button=True,
+                    )
+
             with gr.Tab("Output", id=1):
                 # Output display
                 output_md = gr.Markdown(label="Output")
@@ -269,8 +305,8 @@ def create_interface() -> gr.Blocks:
         # Process button click - also switches to Output tab
         def process_and_switch(*args):
             """Process document and return results plus tab selection."""
-            md_output, text_output = process_document(*args)
-            return md_output, text_output, gr.Tabs(selected=1)
+            md_output, text_output, logs = process_document(*args)
+            return md_output, text_output, logs, gr.Tabs(selected=1)
 
         process_btn.click(
             fn=process_and_switch,
@@ -283,7 +319,7 @@ def create_interface() -> gr.Blocks:
                 filetype,
                 parse_format,
             ],
-            outputs=[output_md, output_text, main_tabs],
+            outputs=[output_md, output_text, logs_output, main_tabs],
         )
 
         # Download button - create temporary file with the markdown content
