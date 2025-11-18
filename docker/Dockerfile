@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir uv && \
 
 # Create .local directory structure for the wdoc user and set permissions
 RUN mkdir -p /home/wdoc/.local && \
+    mkdir -p /home/wdoc/.cache/wdoc && \
     chown -R wdoc:wdoc /home/wdoc/.local && \
     chown -R wdoc:wdoc /home/wdoc/.cache/wdoc && \
     chown -R wdoc:wdoc /app
