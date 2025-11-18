@@ -25,3 +25,4 @@ latest_release_notes_*.md
 wdoc_user_cache_dir/
 
 docker/custom_env
+docker/vectorstore
