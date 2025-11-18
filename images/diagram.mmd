@@ -24,28 +24,24 @@ flowchart TD
             SemanticBatching --> Carl
         end
         
-        QueryOutput["General Output"]
-        
         UserQuery --> Raphael
         Raphael --> Embeddings
         TopK -->|ex: top_k=50| VectorStore
         VectorStore -->|50 docs| Eve
         Eve -->|37 docs| Anna
         Anna -->|37 answers| RecursiveCombining
-        Carl -->|1 answer| QueryOutput["General Output"]
+        Carl -->|1 answer| QueryOutput
     end
 
     subgraph SummaryTask["task=summary"]
         Sam["Sam the Summarizer<br/>Document summary"]
         Concatenation["Concatenation"]
-        SummaryOutput["wdocSummary object"]
-        
         Chunker -->|ex: 17 chunks| Sam
         Sam -->|17 overlapping<br/>chunk summaries| Concatenation
-        Concatenation --> SummaryOutput["wdocSummary object"]
+        Concatenation --> SummaryOutput
     end
 
     subgraph Output["Output"]
-        QueryOutput
-        SummaryOutput
+        QueryOutput["General Output"]
+        SummaryOutput["wdocSummary object"]
     end
