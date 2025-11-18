@@ -62,10 +62,12 @@ def process_document(
     # Clear the log buffer before processing
     global log_buffer
     log_buffer = io.StringIO()
-    
+
     # Add a sink to capture logs to our buffer
-    handler_id = logger.add(log_buffer, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")
-    
+    handler_id = logger.add(
+        log_buffer, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+    )
+
     try:
         # Determine path: uploaded file takes precedence over text input
         if uploaded_file is not None:
@@ -161,11 +163,11 @@ def process_document(
             return f"❌ **Error**: Unknown task '{task}'", ""
 
         logger.info(f"Task completed successfully: {task}")
-        
+
         # Capture logs and remove the handler
         logs = log_buffer.getvalue()
         logger.remove(handler_id)
-        
+
         return output_md, output_md, logs
 
     except Exception as e:
@@ -173,11 +175,11 @@ def process_document(
         error_md = (
             f"# ❌ Error\n\nAn error occurred while processing:\n\n```\n{str(e)}\n```"
         )
-        
+
         # Capture logs and remove the handler even on error
         logs = log_buffer.getvalue()
         logger.remove(handler_id)
-        
+
         return error_md, error_md, logs
 
 
