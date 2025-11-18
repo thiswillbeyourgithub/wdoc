@@ -6,7 +6,7 @@ flowchart TD
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
     VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
-    Chunker["Chunker<br/>Text splitting"]
+    Chunker["Loading & Chunking<br/>Text splitting"]
 
     Path --> Chunker
     Chunker --> VectorStore
