@@ -38,8 +38,8 @@ Created by a medical student who needed a way to get a definitive answer from mu
   - [Supported filetypes](#supported-filetypes)
   - [Supported tasks](#supported-tasks)
   - [Walkthrough and examples](#walkthrough-and-examples)
-- [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [Getting started](#getting-started)
+- [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
 
