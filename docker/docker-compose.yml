@@ -17,6 +17,6 @@ services:
     user: 1000:1000
     security_opt:
       - no-new-privileges:true
+    # if using langfuse for example
     extra_hosts:
-      # if using langguse for example
      - "host.docker.internal:host-gateway"
