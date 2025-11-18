@@ -33,6 +33,7 @@ Created by a medical student who needed a way to get a definitive answer from mu
     * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
+- [Explanatory diagrams](#explanatory-diagrams)
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
   - [Tasks](#Tasks)
@@ -42,6 +43,17 @@ Created by a medical student who needed a way to get a definitive answer from mu
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
+
+## Explanatory diagrams
+
+### Query Task Flow
+![Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output](images/diagram_query.png)
+
+### Summary Task Flow
+![Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output](images/diagram_summary.png)
+
+### Search Task Flow
+![Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output](images/diagram_search.png)
 
 ## Ultra short guide for people in a hurry
 <details>
