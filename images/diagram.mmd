@@ -1,5 +1,5 @@
 flowchart TD
-    subgraph CommonInput["Common Input"]
+    subgraph Inputs["Inputs"]
         Path["Path"]
         TopK["TopK"]
     end
@@ -36,13 +36,11 @@ flowchart TD
     end
 
     subgraph SummaryTask["task=summary"]
-        ChunkExample["ex: 17 chunks"]
         Sam["Sam the Summarizer<br/>Document summary"]
         Concatenation["Concatenation"]
         SummaryOutput["wdocSummary object"]
         
-        Chunker --> ChunkExample
-        ChunkExample --> Sam
+        Chunker -->|ex: 17 chunks| Sam
         Sam -->|17 overlapping<br/>chunk summaries| Concatenation
         Concatenation --> SummaryOutput["wdocSummary object"]
     end
