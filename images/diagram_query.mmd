@@ -5,13 +5,11 @@ flowchart TD
         UserQuery["User Query"]
     end
 
-    Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
-    VectorStore["VectorStore"]
+    VectorStoreEmbeddings["VectorStore + Embeddings<br/>OpenAI/Cohere/HF"]
     Chunker["Loading & Chunking<br/>Text splitting"]
 
     Path --> Chunker
-    Chunker --> VectorStore
-    Embeddings --> VectorStore
+    Chunker --> VectorStoreEmbeddings
 
     QueryOutput["Output"]
     Raphael["Raphael the Rephraser<br/>Query expansion"]
@@ -25,9 +23,9 @@ flowchart TD
     end
     
     UserQuery --> Raphael
-    Raphael --> Embeddings
-    TopK -->|ex: top_k=50| VectorStore
-    VectorStore -->|50 docs| Eve
+    Raphael --> VectorStoreEmbeddings
+    TopK -->|ex: top_k=50| VectorStoreEmbeddings
+    VectorStoreEmbeddings -->|50 docs| Eve
     Eve -->|37 docs| Anna
     Anna -->|37 answers| RecursiveCombining
     Carl -->|1 answer| QueryOutput
