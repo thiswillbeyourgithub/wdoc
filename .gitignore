@@ -26,3 +26,4 @@ wdoc_user_cache_dir/
 
 docker/custom_env
 docker/vectorstore
+docker/wdoc_cache
