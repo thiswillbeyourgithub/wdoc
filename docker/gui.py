@@ -314,6 +314,11 @@ if __name__ == "__main__":
     # Create and launch interface
     # Uses environment variables for host/port configuration
     interface = create_interface()
+    
+    # Configure queue with max_size=1 to ensure sequential processing
+    # wdoc does not parallelize well, so we limit to one request at a time
+    interface.queue(max_size=1)
+    
     interface.launch(
         server_name=os.getenv("GRADIO_SERVER_NAME", "0.0.0.0"),
         server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
