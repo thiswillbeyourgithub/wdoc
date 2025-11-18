@@ -1,55 +1,48 @@
 flowchart TD
-    subgraph UserInput["User Input"]
-        Task["Task"]
-        UserQuery["User Query"]
+    subgraph CommonInput["Common Input"]
         Path["Path"]
-        TopK["TopK"]
     end
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
     VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
-
-    Embeddings --> VectorStore
-
     Chunker["Chunker<br/>Text splitting"]
-    ChunkExample["ex: 17 chunks"]
-    Raphael["Raphael the Rephraser<br/>Query expansion"]
-    Eve["Eve the Evaluator<br/>Document filtering"]
-    Anna["Anna the Answerer<br/>Per-doc answers"]
 
     Path --> Chunker
     Chunker --> VectorStore
-    Chunker --> ChunkExample
-    TopK -->|ex: top_k=50| VectorStore
-    UserQuery --> Raphael
-    Raphael --> Embeddings
-    
-    VectorStore -->|50 docs| Eve
-    
-    Eve -->|37 docs| Anna
-    
-    subgraph RecursiveCombining["Recursive Combining"]
-        SemanticBatching["Semantic batching"]
-        Carl["Carl the Combiner<br/>Answer combination"]
-        SemanticBatching --> Carl
-    end
-    
-    Anna -->|37 answers| RecursiveCombining
+    Embeddings --> VectorStore
 
-    subgraph Summary["Summary"]
+    subgraph QueryTask["task=query"]
+        UserQuery["User Query"]
+        TopK["TopK"]
+        Raphael["Raphael the Rephraser<br/>Query expansion"]
+        Eve["Eve the Evaluator<br/>Document filtering"]
+        Anna["Anna the Answerer<br/>Per-doc answers"]
+        
+        subgraph RecursiveCombining["Recursive Combining"]
+            SemanticBatching["Semantic batching"]
+            Carl["Carl the Combiner<br/>Answer combination"]
+            SemanticBatching --> Carl
+        end
+        
+        QueryOutput["General Output"]
+        
+        UserQuery --> Raphael
+        Raphael --> Embeddings
+        TopK -->|ex: top_k=50| VectorStore
+        VectorStore -->|50 docs| Eve
+        Eve -->|37 docs| Anna
+        Anna -->|37 answers| RecursiveCombining
+        Carl -->|1 answer| QueryOutput
+    end
+
+    subgraph SummaryTask["task=summary"]
+        ChunkExample["ex: 17 chunks"]
         Sam["Sam the Summarizer<br/>Document summary"]
         Concatenation["Concatenation"]
-        Sam -->|17 overlapping<br/>chunk summaries| Concatenation
-    end
-
-    subgraph UserOutput["User Output"]
-        Output["General Output"]
         SummaryOutput["wdocSummary object"]
+        
+        Chunker --> ChunkExample
+        ChunkExample --> Sam
+        Sam -->|17 overlapping<br/>chunk summaries| Concatenation
+        Concatenation --> SummaryOutput
     end
-    
-    Carl -->|1 answer| Output
-    
-    Task -->|task=query| Raphael
-    Task -->|task=summary| ChunkExample
-    ChunkExample --> Sam
-    Concatenation --> SummaryOutput
