@@ -41,8 +41,6 @@ Created by a medical student who needed a way to get a definitive answer from mu
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [Getting started](#getting-started)
 - [FAQ](#faq)
-- [Notes](#notes)
-  - [Known issues](#known-issues)
 - [Roadmap](#roadmap)
 
 ## Ultra short guide for people in a hurry
