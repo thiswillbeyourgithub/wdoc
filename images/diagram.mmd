@@ -1,7 +1,10 @@
 flowchart TD
-    Task["Task"]
-    UserQuery["User Query"]
-    Path["Path"]
+    subgraph UserInput["User Input"]
+        Task["Task"]
+        UserQuery["User Query"]
+        Path["Path"]
+        TopK["TopK"]
+    end
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
     VectorStore["VectorStore<br/>(CompressedFaiss/BinaryFaiss)"]
@@ -15,6 +18,7 @@ flowchart TD
     Carl["Carl the Combiner<br/>Answer combination"]
 
     Path --> VectorStore
+    TopK -->|ex: top_k=50| VectorStore
     UserQuery --> Raphael
     Raphael --> Embeddings
     
