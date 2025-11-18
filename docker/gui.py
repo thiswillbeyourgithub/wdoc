@@ -32,7 +32,6 @@ def process_document(
     query_text: str,
     model: str,
     filetype: str,
-    parse_format: str,
 ) -> Tuple[str, str, str]:
     """
     Process a document using wdoc based on selected task.
@@ -51,8 +50,6 @@ def process_document(
         Model name to use
     filetype : str
         File type hint for wdoc
-    parse_format : str
-        Output format for parse task
 
     Returns
     -------
@@ -127,38 +124,15 @@ def process_document(
                 output_md += f"\n\n---\n*Total cost: ${result['doc_total_cost']:.4f}*"
 
         elif task == "parse":
-            logger.info(f"Starting parse task with format: {parse_format}")
+            logger.info("Starting parse task with text format")
             result = wdoc.parse_doc(
                 path=path,
                 filetype=filetype,
-                format=parse_format,
+                format="text",
             )
 
-            # Format output based on parse_format
-            if parse_format == "text":
-                output_md = f"# Parsed Document\n\n```\n{result}\n```"
-            elif parse_format == "xml":
-                output_md = f"# Parsed Document (XML)\n\n```xml\n{result}\n```"
-            elif parse_format == "langchain":
-                # Convert Document objects to readable format
-                docs_text = "\n\n---\n\n".join(
-                    [
-                        f"## Document {i + 1}\n\n{doc.page_content}\n\n**Metadata**: {doc.metadata}"
-                        for i, doc in enumerate(result)
-                    ]
-                )
-                output_md = f"# Parsed Documents\n\n{docs_text}"
-            elif parse_format == "langchain_dict":
-                # Convert dicts to readable format
-                docs_text = "\n\n---\n\n".join(
-                    [
-                        f"## Document {i + 1}\n\n{doc['page_content']}\n\n**Metadata**: {doc['metadata']}"
-                        for i, doc in enumerate(result)
-                    ]
-                )
-                output_md = f"# Parsed Documents\n\n{docs_text}"
-            else:
-                output_md = f"# Parsed Document\n\n{result}"
+            # The text is parsed as markdown and rendered directly
+            output_md = f"# Parsed Document\n\n{result}"
         else:
             return f"❌ **Error**: Unknown task '{task}'", ""
 
@@ -230,13 +204,8 @@ def create_interface() -> gr.Blocks:
                         lines=3,
                     )
 
-                with gr.Group(visible=False) as parse_group:
-                    parse_format = gr.Dropdown(
-                        choices=["text", "xml", "langchain", "langchain_dict"],
-                        value="text",
-                        label="Parse Output Format",
-                        info="Format for parsed document output",
-                    )
+                # Parse task has no additional options - always uses text format
+                parse_group = gr.Group(visible=False)
 
                 # Model and filetype settings
                 with gr.Accordion("Advanced Settings", open=False):
@@ -320,7 +289,6 @@ def create_interface() -> gr.Blocks:
                 query_text,
                 model,
                 filetype,
-                parse_format,
             ],
             outputs=[output_md, output_text, logs_output, main_tabs],
         )
