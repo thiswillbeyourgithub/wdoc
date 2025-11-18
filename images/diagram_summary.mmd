@@ -7,14 +7,10 @@ flowchart TD
 
     Path --> Chunker
 
-    subgraph Outputs["Outputs"]
-        SummaryOutput["wdocSummary object"]
-    end
+    SummaryOutput["wdocSummary object"]
 
-    subgraph SummaryTask["task=summary"]
-        Sam["Sam the Summarizer<br/>Document summary"]
-        Concatenation["Concatenation"]
-        Chunker -->|ex: 17 chunks| Sam
-        Sam -->|17 overlapping<br/>chunk summaries| Concatenation
-        Concatenation --> SummaryOutput
-    end
+    Sam["Sam the Summarizer<br/>Document summary"]
+    Concatenation["Concatenation"]
+    Chunker -->|ex: 17 chunks| Sam
+    Sam -->|17 overlapping<br/>chunk summaries| Concatenation
+    Concatenation --> SummaryOutput
