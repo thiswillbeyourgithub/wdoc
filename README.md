@@ -35,8 +35,8 @@ Created by a medical student who needed a way to get a definitive answer from mu
 ### Table of contents
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
-  - [Supported filetypes](#supported-filetypes)
-  - [Supported tasks](#supported-tasks)
+  - [Tasks](#Tasks)
+  - [Filetypes](#filetypes)
   - [Walkthrough and examples](#walkthrough-and-examples)
 - [Getting started](#getting-started)
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
@@ -90,7 +90,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 </details>
 
 ## Features
-* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
+* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Filestypes](#Filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
 * **100+ LLMs and many embeddings**: Supports any LLM by OpenAI, Mistral, Claude, Ollama, Openrouter, etc. thanks to [litellm](https://docs.litellm.ai/). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
@@ -107,7 +107,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
     * The summary can be in the same language as the documents or directly translated.
-* **Many tasks**: See [Supported tasks](#Supported-tasks).
+* **Many tasks**: See [Supported tasks](#Tasks).
 * **Trust but verify**: The answer is sourced: `wdoc` keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
@@ -124,8 +124,13 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Notification callback**: Can be used for example to get summaries on your phone using [ntfy.sh](ntfy.sh).
 * **Hacker mindset**: I'm a friendly dev! Just open an issue if you have a feature request or anything else.
 
+### Tasks
+* **query** give documents and asks questions about it.
+* **search** only returns the documents and their metadata. For anki it can be used to directly open cards in the browser.
+* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
+* **summarize_then_query** summarize the document then allow you to query directly about it.
 
-### Supported filetypes
+### Filetypes
 * **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db. `alt` and `title` of images can be shown to the LLM, meaning that if you used [the ankiOCR addon](https://github.com/cfculhane/AnkiOCR) this information will help contextualize the note for the LLM.
 * **auto**: default, guess the filetype for you
 * **epub**: barely tested because epub is in general a poorly defined format
@@ -152,12 +157,6 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
     * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
     * **youtube playlists**: get the link for each video then process as **youtube**
-
-### Supported tasks
-* **query** give documents and asks questions about it.
-* **search** only returns the documents and their metadata. For anki it can be used to directly open cards in the browser.
-* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
-* **summarize_then_query** summarize the document then allow you to query directly about it.
 
 ## Walkthrough and examples
 
