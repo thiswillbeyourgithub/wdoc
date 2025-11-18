@@ -1,6 +1,7 @@
 flowchart TD
     subgraph CommonInput["Common Input"]
         Path["Path"]
+        TopK["TopK"]
     end
 
     Embeddings["Embedding providers<br/>OpenAI/Cohere/HF"]
@@ -13,7 +14,6 @@ flowchart TD
 
     subgraph QueryTask["task=query"]
         UserQuery["User Query"]
-        TopK["TopK"]
         Raphael["Raphael the Rephraser<br/>Query expansion"]
         Eve["Eve the Evaluator<br/>Document filtering"]
         Anna["Anna the Answerer<br/>Per-doc answers"]
@@ -32,7 +32,7 @@ flowchart TD
         VectorStore -->|50 docs| Eve
         Eve -->|37 docs| Anna
         Anna -->|37 answers| RecursiveCombining
-        Carl -->|1 answer| QueryOutput
+        Carl -->|1 answer| QueryOutput["General Output"]
     end
 
     subgraph SummaryTask["task=summary"]
@@ -44,5 +44,10 @@ flowchart TD
         Chunker --> ChunkExample
         ChunkExample --> Sam
         Sam -->|17 overlapping<br/>chunk summaries| Concatenation
-        Concatenation --> SummaryOutput
+        Concatenation --> SummaryOutput["wdocSummary object"]
+    end
+
+    subgraph Output["Output"]
+        QueryOutput
+        SummaryOutput
     end
