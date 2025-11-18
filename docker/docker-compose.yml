@@ -1,5 +1,6 @@
 services:
   wdoc-gui:
+    container_name: wdoc-gui
     build:
       context: .
       dockerfile: Dockerfile
