@@ -12,6 +12,11 @@ flowchart TD
     Chunker --> VectorStore
     Embeddings --> VectorStore
 
+    subgraph Outputs["Outputs"]
+        QueryOutput["General Output"]
+        SummaryOutput["wdocSummary object"]
+    end
+
     subgraph QueryTask["task=query"]
         UserQuery["User Query"]
         Raphael["Raphael the Rephraser<br/>Query expansion"]
@@ -39,9 +44,4 @@ flowchart TD
         Chunker -->|ex: 17 chunks| Sam
         Sam -->|17 overlapping<br/>chunk summaries| Concatenation
         Concatenation --> SummaryOutput
-    end
-
-    subgraph Outputs["Outputs"]
-        QueryOutput["General Output"]
-        SummaryOutput["wdocSummary object"]
     end
