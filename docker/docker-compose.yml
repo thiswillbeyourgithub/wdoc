@@ -12,7 +12,7 @@ services:
       - ${CACHE_PATH:-./wdoc_cache}:/app/wdoc_cache
     # Load environment variables from the env file
     env_file:
-      - env
+      - custom_env
     restart: unless-stopped
     user: 1000:1000
     security_opt:

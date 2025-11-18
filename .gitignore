@@ -24,4 +24,4 @@ scripts/**/*perso*
 latest_release_notes_*.md
 wdoc_user_cache_dir/
 
-docker/env
+docker/custom_env
