@@ -11,12 +11,14 @@ flowchart TD
 
     Embeddings --> VectorStore
 
+    Chunker["Chunker<br/>Text splitting"]
     Raphael["Raphael the Rephraser<br/>Query expansion"]
     Sam["Sam the Summarizer<br/>Document summary"]
     Eve["Eve the Evaluator<br/>Document filtering"]
     Anna["Anna the Answerer<br/>Per-doc answers"]
 
-    Path --> VectorStore
+    Path --> Chunker
+    Chunker --> VectorStore
     TopK -->|ex: top_k=50| VectorStore
     UserQuery --> Raphael
     Raphael --> Embeddings
