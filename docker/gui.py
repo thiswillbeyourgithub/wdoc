@@ -308,7 +308,8 @@ def create_interface() -> gr.Blocks:
         def process_and_switch(*args):
             """Process document and return results plus tab selection."""
             md_output, text_output, logs = process_document(*args)
-            return md_output, text_output, logs, gr.Tabs(selected=1)
+            # Return results and update to select the Output tab (id=1)
+            return md_output, text_output, logs, gr.update(selected=1)
 
         process_btn.click(
             fn=process_and_switch,
