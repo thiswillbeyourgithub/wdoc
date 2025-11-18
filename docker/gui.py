@@ -232,10 +232,10 @@ def create_interface() -> gr.Blocks:
                         info="Auto-detect or specify the file type",
                     )
 
-                    # Process button
-                    process_btn = gr.Button(
-                        "🚀 Process Document", variant="primary", size="lg"
-                    )
+                # Process button - prominently placed outside the accordion
+                process_btn = gr.Button(
+                    "🚀 Process Document", variant="primary", size="lg"
+                )
 
             with gr.Tab("Output", id=1):
                 # Output display
