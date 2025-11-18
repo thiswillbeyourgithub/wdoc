@@ -102,7 +102,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 </details>
 
 ## Features
-* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Filestypes](#Filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
+* **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Filestypes](#Filetypes) and [Recursive Filetypes](#recursive-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
 * **100+ LLMs and many embeddings**: Supports any LLM by OpenAI, Mistral, Claude, Ollama, Openrouter, etc. thanks to [litellm](https://docs.litellm.ai/). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
@@ -162,13 +162,13 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **word**: .doc, .docx, .odt, ...
 * **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram. Note that youtube subtitles are downloaded with the timecode (so you can ask 'when does the author talks about such and such) but at a lower sampling frequency (instead of one timecode per second, only one per 15s). Youtube chapters are also given as context to the LLM when summarizing, which probably help it a lot.
 
-* **Recursive types**
-    * **ddg**: does an online web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). This is not an agent search, we only use `wdoc` over the urls fetched by DuckDuckGo and return the result. Only supported by `query` tasks.
-    * **json_entries**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `docs/json_entries_example.json`.
-    * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
-    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
-    * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
-    * **youtube playlists**: get the link for each video then process as **youtube**
+### Recursive Filetypes
+* **ddg**: does an online web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). This is not an agent search, we only use `wdoc` over the urls fetched by DuckDuckGo and return the result. Only supported by `query` tasks.
+* **json_entries**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `docs/json_entries_example.json`.
+* **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
+* **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
+* **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
+* **youtube playlists**: get the link for each video then process as **youtube**
 
 ## Walkthrough and examples
 
@@ -192,7 +192,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
-    * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
+    * Don't forget that if you're using a lot of documents (notably via [recursive filetypes](#recursive-filepaths)) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
     * Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. 
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
