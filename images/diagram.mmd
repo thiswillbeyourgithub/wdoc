@@ -37,8 +37,14 @@ flowchart TD
     Anna --> Carl
     Anna --> Carl
 
-    Output["Send output to user"]
+    Carl --> Carl
+
+    subgraph UserOutput["User Output"]
+        Output["General Output"]
+        SummaryOutput["wdocSummary object"]
+    end
+    
     Carl --> Output
     
     Task -->|summary| Sam
-    Sam --> Output
+    Sam --> SummaryOutput
