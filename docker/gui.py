@@ -19,6 +19,7 @@ from loguru import logger
 
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import filetype_arg_types
+from wdoc.utils.env import EnvDataclass
 
 
 def read_log_file(
@@ -67,6 +68,7 @@ def process_document(
     query_eval_model: str,
     query_eval_check_number: int,
     summary_n_recursion: int,
+    env_args: dict,
     filetype_args: dict,
 ) -> Tuple[str, str]:
     """
@@ -93,6 +95,13 @@ def process_document(
         (markdown_output, download_content) - the rendered output and downloadable text
     """
     try:
+        # Set environment variables from env_args
+        for key, value in env_args.items():
+            if value is not None and value != "":
+                # Convert value to string for environment variable
+                os.environ[key] = str(value)
+                logger.debug(f"Set environment variable {key}={value}")
+
         # Determine path: uploaded file takes precedence over text input
         if uploaded_file is not None:
             path = uploaded_file.name
@@ -346,6 +355,66 @@ def create_interface() -> gr.Blocks:
                         info="Maximum allowed cost in dollars",
                     )
 
+                    # Environment variables accordion
+                    with gr.Accordion("Environment Variables", open=False):
+                        gr.Markdown("### Environment Variable Settings")
+                        gr.Markdown(
+                            "*These control wdoc's behavior. Changes will be applied for this request only.*"
+                        )
+
+                        env_arg_components = {}
+
+                        # Create input components for EnvDataclass fields
+                        for field_name, field_obj in EnvDataclass.__dataclass_fields__.items():
+                            # Skip internal fields and dummy variables
+                            if field_name.startswith("_") or field_name == "WDOC_DUMMY_ENV_VAR":
+                                continue
+
+                            # Convert field_name to a more readable label
+                            label = field_name.replace("_", " ").title()
+                            arg_type = field_obj.type
+                            default_value = field_obj.default
+
+                            # Determine the type and create appropriate component
+                            type_str = str(arg_type)
+
+                            if "Literal" in type_str:
+                                # Extract choices from Literal type
+                                choices = list(get_args(arg_type))
+                                env_arg_components[field_name] = gr.Dropdown(
+                                    choices=choices,
+                                    label=label,
+                                    value=default_value,
+                                    info=f"Choose from: {', '.join(str(c) for c in choices)}",
+                                )
+                            elif arg_type == bool or "bool" in type_str:
+                                env_arg_components[field_name] = gr.Checkbox(
+                                    label=label,
+                                    value=default_value if isinstance(default_value, bool) else False,
+                                )
+                            elif arg_type == int or "int" in type_str:
+                                env_arg_components[field_name] = gr.Number(
+                                    label=label,
+                                    value=default_value if isinstance(default_value, (int, float)) else 0,
+                                    precision=0,
+                                )
+                            elif arg_type == float or "float" in type_str:
+                                env_arg_components[field_name] = gr.Number(
+                                    label=label,
+                                    value=default_value if isinstance(default_value, (int, float)) else 0.0,
+                                )
+                            elif "Optional[str]" in type_str:
+                                env_arg_components[field_name] = gr.Textbox(
+                                    label=label,
+                                    value=default_value if isinstance(default_value, str) else "",
+                                    info="Leave empty for None",
+                                )
+                            else:  # Default to textbox for str and other types
+                                env_arg_components[field_name] = gr.Textbox(
+                                    label=label,
+                                    value=default_value if isinstance(default_value, str) else "",
+                                )
+
                     # Filetype-specific arguments accordion
                     with gr.Accordion("Filetype Arguments", open=False):
                         gr.Markdown("### Filetype-Specific Settings")
@@ -491,10 +560,20 @@ def create_interface() -> gr.Blocks:
         # Process button click - also switches to Output tab
         def process_and_switch(*args):
             """Process document and return results plus tab selection."""
-            # The last N arguments are the filetype args
+            # The last N arguments are the filetype args, before that are env args
             n_filetype_args = len(filetype_arg_components)
-            regular_args = args[:-n_filetype_args]
-            filetype_arg_values = args[-n_filetype_args:]
+            n_env_args = len(env_arg_components)
+            regular_args = args[:-(n_filetype_args + n_env_args)]
+            env_arg_values = args[-(n_filetype_args + n_env_args):-n_filetype_args] if n_filetype_args > 0 else args[-n_env_args:]
+            filetype_arg_values = args[-n_filetype_args:] if n_filetype_args > 0 else []
+
+            # Build env_args dict from component values
+            env_args_dict = {}
+            for (field_name, component), value in zip(
+                env_arg_components.items(), env_arg_values
+            ):
+                if value is not None and value != "":
+                    env_args_dict[field_name] = value
 
             # Build filetype_args dict from component values
             filetype_args_dict = {}
@@ -533,7 +612,7 @@ def create_interface() -> gr.Blocks:
                     else:
                         filetype_args_dict[arg_name] = value
 
-            md_output, text_output = process_document(*regular_args, filetype_args_dict)
+            md_output, text_output = process_document(*regular_args, env_args_dict, filetype_args_dict)
             # Return results and update to select the Output tab (id=1)
             return md_output, text_output, gr.update(selected=1)
 
@@ -556,6 +635,7 @@ def create_interface() -> gr.Blocks:
                 query_eval_check_number,
                 summary_n_recursion,
             ]
+            + list(env_arg_components.values())
             + list(filetype_arg_components.values()),
             outputs=[output_md, output_text, main_tabs],
         )
