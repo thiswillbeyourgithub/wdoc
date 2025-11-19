@@ -318,7 +318,7 @@ Click to read more
 Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md).
 
 ## Getting started
-*`wdoc` was mainly developped and tested on python 3.11.7. When in doubt, make sure that your Python version matches this one.*
+*`wdoc` was mainly developped and tested on python 3.13.5. When in doubt, make sure that your Python version matches this one.*
 1. To install:
     * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually install the missing dependencies for your usecase).
     * Or to get a specific git branch:
