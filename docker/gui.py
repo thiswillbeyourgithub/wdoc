@@ -57,6 +57,15 @@ def process_document(
     query_text: str,
     model: str,
     filetype: str,
+    llm_verbosity: bool,
+    disable_llm_cache: bool,
+    dollar_limit: float,
+    embed_model: str,
+    top_k: str,
+    query_retrievers: str,
+    query_eval_model: str,
+    query_eval_check_number: int,
+    summary_n_recursion: int,
 ) -> Tuple[str, str]:
     """
     Process a document using wdoc based on selected task.
@@ -109,8 +118,14 @@ def process_document(
                 path=path,
                 filetype=filetype,
                 model=model,
-                # If vectorstore exists, we could load it here
-                # For now, wdoc will create embeddings on the fly
+                embed_model=embed_model,
+                top_k=top_k,
+                query_retrievers=query_retrievers,
+                query_eval_model=query_eval_model,
+                query_eval_check_number=int(query_eval_check_number),
+                llm_verbosity=llm_verbosity,
+                disable_llm_cache=disable_llm_cache,
+                dollar_limit=dollar_limit,
             )
             result = instance.query_task(query=query_text.strip())
             output_md = f"# Query Result\n\n**Query**: {query_text}\n\n## Answer\n\n{result['final_answer']}"
@@ -128,6 +143,10 @@ def process_document(
                 path=path,
                 filetype=filetype,
                 model=model,
+                summary_n_recursion=int(summary_n_recursion),
+                llm_verbosity=llm_verbosity,
+                disable_llm_cache=disable_llm_cache,
+                dollar_limit=dollar_limit,
             )
             result = instance.summary_task()
             output_md = f"# Summary\n\n{result['summary']}"
@@ -246,6 +265,75 @@ def create_interface() -> gr.Blocks:
                         info="Auto-detect or specify the file type",
                     )
 
+                    gr.Markdown("### General Settings")
+                    llm_verbosity = gr.Checkbox(
+                        label="LLM Verbosity",
+                        value=False,
+                        info="Enable verbose logging for LLM calls",
+                    )
+                    disable_llm_cache = gr.Checkbox(
+                        label="Disable LLM Cache",
+                        value=False,
+                        info="Disable caching of LLM responses",
+                    )
+                    dollar_limit = gr.Number(
+                        label="Dollar Limit",
+                        value=5,
+                        minimum=0,
+                        info="Maximum allowed cost in dollars",
+                    )
+
+                    # Query/Search-specific settings
+                    with gr.Group(visible=False) as query_settings_group:
+                        gr.Markdown("### Query/Search Settings")
+                        embed_model = gr.Textbox(
+                            label="Embedding Model",
+                            value=os.getenv(
+                                "WDOC_DEFAULT_EMBED_MODEL",
+                                "openai/text-embedding-3-small",
+                            ),
+                            placeholder="e.g., openai/text-embedding-3-small",
+                            info="Model to use for document embeddings",
+                        )
+                        top_k = gr.Textbox(
+                            label="Top K",
+                            value="auto_200_500",
+                            placeholder="e.g., auto_200_500 or 100",
+                            info="Number of documents to retrieve (auto_N_M or integer)",
+                        )
+                        query_retrievers = gr.Textbox(
+                            label="Query Retrievers",
+                            value="basic_multiquery",
+                            placeholder="e.g., basic_multiquery",
+                            info="Retriever strategy (basic, multiquery, knn, svm, parent)",
+                        )
+                        query_eval_model = gr.Textbox(
+                            label="Query Eval Model",
+                            value=os.getenv(
+                                "WDOC_DEFAULT_QUERY_EVAL_MODEL", "openai/gpt-4o-mini"
+                            ),
+                            placeholder="e.g., openai/gpt-4o-mini",
+                            info="Model to use for evaluating document relevance",
+                        )
+                        query_eval_check_number = gr.Number(
+                            label="Query Eval Check Number",
+                            value=3,
+                            minimum=1,
+                            precision=0,
+                            info="Number of evaluation checks per document",
+                        )
+
+                    # Summary-specific settings
+                    with gr.Group(visible=False) as summary_settings_group:
+                        gr.Markdown("### Summary Settings")
+                        summary_n_recursion = gr.Number(
+                            label="Summary Recursion Depth",
+                            value=0,
+                            minimum=0,
+                            precision=0,
+                            info="Number of recursive summarization steps",
+                        )
+
                 # Process button - prominently placed outside the accordion
                 process_btn = gr.Button(
                     "🚀 Process Document", variant="primary", size="lg"
@@ -280,17 +368,35 @@ def create_interface() -> gr.Blocks:
                 output_text = gr.Textbox(visible=False)
 
         # Event handlers
-        def update_visibility(task_name: str) -> Tuple[gr.Group, gr.Group]:
+        def update_visibility(
+            task_name: str,
+        ) -> Tuple[gr.Group, gr.Group, gr.Group, gr.Group]:
             """Update visibility of task-specific input groups based on selected task."""
+            # Query text input only for query task
+            query_visible = task_name == "query"
+            # Parse group (currently empty but kept for future use)
+            parse_visible = task_name == "parse"
+            # Query/search settings visible for query and search tasks
+            query_settings_visible = task_name in ["query", "search"]
+            # Summary settings only for summarize task
+            summary_settings_visible = task_name == "summarize"
+
             return (
-                gr.Group(visible=(task_name == "query")),  # query_group
-                gr.Group(visible=(task_name == "parse")),  # parse_group
+                gr.Group(visible=query_visible),  # query_group
+                gr.Group(visible=parse_visible),  # parse_group
+                gr.Group(visible=query_settings_visible),  # query_settings_group
+                gr.Group(visible=summary_settings_visible),  # summary_settings_group
             )
 
         task.change(
             fn=update_visibility,
             inputs=[task],
-            outputs=[query_group, parse_group],
+            outputs=[
+                query_group,
+                parse_group,
+                query_settings_group,
+                summary_settings_group,
+            ],
         )
 
         # Timer event to continuously update logs
@@ -316,6 +422,15 @@ def create_interface() -> gr.Blocks:
                 query_text,
                 model,
                 filetype,
+                llm_verbosity,
+                disable_llm_cache,
+                dollar_limit,
+                embed_model,
+                top_k,
+                query_retrievers,
+                query_eval_model,
+                query_eval_check_number,
+                summary_n_recursion,
             ],
             outputs=[output_md, output_text, main_tabs],
         )
