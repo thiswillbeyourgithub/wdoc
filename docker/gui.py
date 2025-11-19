@@ -10,7 +10,7 @@ This file was created with assistance from aider.chat.
 
 import os
 from pathlib import Path
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, get_args
 import tempfile
 import sys
 
@@ -18,6 +18,7 @@ import gradio as gr
 from loguru import logger
 
 from wdoc.wdoc import wdoc
+from wdoc.utils.misc import filetype_arg_types
 
 
 def read_log_file(
@@ -66,6 +67,7 @@ def process_document(
     query_eval_model: str,
     query_eval_check_number: int,
     summary_n_recursion: int,
+    filetype_args: dict,
 ) -> Tuple[str, str]:
     """
     Process a document using wdoc based on selected task.
@@ -107,6 +109,13 @@ def process_document(
         # Get vectorstore path from environment for query tasks
         vectorstore_path = os.getenv("WDOC_VECTORSTORE_PATH", "/app/vectorstore")
 
+        # Filter out empty/None filetype arguments
+        filtered_filetype_args = {
+            k: v
+            for k, v in filetype_args.items()
+            if v is not None and v != "" and v != []
+        }
+
         # Create wdoc instance based on task
         if task == "query":
             if not query_text or not query_text.strip():
@@ -126,6 +135,7 @@ def process_document(
                 llm_verbosity=llm_verbosity,
                 disable_llm_cache=disable_llm_cache,
                 dollar_limit=dollar_limit,
+                **filtered_filetype_args,
             )
             result = instance.query_task(query=query_text.strip())
             output_md = f"# Query Result\n\n**Query**: {query_text}\n\n## Answer\n\n{result['final_answer']}"
@@ -147,6 +157,7 @@ def process_document(
                 llm_verbosity=llm_verbosity,
                 disable_llm_cache=disable_llm_cache,
                 dollar_limit=dollar_limit,
+                **filtered_filetype_args,
             )
             result = instance.summary_task()
             output_md = f"# Summary\n\n{result['summary']}"
@@ -161,6 +172,7 @@ def process_document(
                 path=path,
                 filetype=filetype,
                 format="text",
+                **filtered_filetype_args,
             )
 
             # The text is parsed as markdown and rendered directly
@@ -334,6 +346,76 @@ def create_interface() -> gr.Blocks:
                         info="Maximum allowed cost in dollars",
                     )
 
+                    # Filetype-specific arguments accordion
+                    with gr.Accordion("Filetype Arguments", open=False):
+                        gr.Markdown("### Filetype-Specific Settings")
+                        gr.Markdown(
+                            "*These arguments are specific to certain filetypes. "
+                            "Only fill in what's relevant for your document type.*"
+                        )
+
+                        filetype_arg_components = {}
+
+                        # Create input components based on the type from filetype_arg_types
+                        for arg_name, arg_type in filetype_arg_types.items():
+                            # Convert arg_name to a more readable label
+                            label = arg_name.replace("_", " ").title()
+
+                            # Determine the type and create appropriate component
+                            type_str = str(arg_type)
+
+                            if "Literal" in type_str:
+                                # Extract choices from Literal type
+                                choices = list(get_args(arg_type))
+                                filetype_arg_components[arg_name] = gr.Dropdown(
+                                    choices=choices,
+                                    label=label,
+                                    value=None,
+                                    info=f"Choose from: {', '.join(choices)}",
+                                )
+                            elif arg_type == bool:
+                                filetype_arg_components[arg_name] = gr.Checkbox(
+                                    label=label,
+                                    value=False,
+                                )
+                            elif arg_type == int:
+                                filetype_arg_components[arg_name] = gr.Number(
+                                    label=label,
+                                    value=None,
+                                    precision=0,
+                                )
+                            elif arg_type == float:
+                                filetype_arg_components[arg_name] = gr.Number(
+                                    label=label,
+                                    value=None,
+                                )
+                            elif arg_type == dict or "dict" in type_str:
+                                filetype_arg_components[arg_name] = gr.Textbox(
+                                    label=label,
+                                    value=None,
+                                    placeholder='{"key": "value"}',
+                                    info="Enter as JSON",
+                                )
+                            elif "List" in type_str or arg_type == list:
+                                filetype_arg_components[arg_name] = gr.Textbox(
+                                    label=label,
+                                    value=None,
+                                    placeholder="item1, item2, item3",
+                                    info="Comma-separated values",
+                                )
+                            elif "Union[str, List[str]]" in type_str:
+                                filetype_arg_components[arg_name] = gr.Textbox(
+                                    label=label,
+                                    value=None,
+                                    placeholder="value or item1, item2",
+                                    info="Single value or comma-separated list",
+                                )
+                            else:  # Default to textbox for str and other types
+                                filetype_arg_components[arg_name] = gr.Textbox(
+                                    label=label,
+                                    value=None,
+                                )
+
                 # Process button - prominently placed outside the accordion
                 process_btn = gr.Button(
                     "🚀 Process Document", variant="primary", size="lg"
@@ -409,7 +491,49 @@ def create_interface() -> gr.Blocks:
         # Process button click - also switches to Output tab
         def process_and_switch(*args):
             """Process document and return results plus tab selection."""
-            md_output, text_output = process_document(*args)
+            # The last N arguments are the filetype args
+            n_filetype_args = len(filetype_arg_components)
+            regular_args = args[:-n_filetype_args]
+            filetype_arg_values = args[-n_filetype_args:]
+
+            # Build filetype_args dict from component values
+            filetype_args_dict = {}
+            for (arg_name, component), value in zip(
+                filetype_arg_components.items(), filetype_arg_values
+            ):
+                # Parse special types
+                if value is not None and value != "":
+                    arg_type = filetype_arg_types[arg_name]
+                    type_str = str(arg_type)
+
+                    if arg_type == dict or "dict" in type_str:
+                        # Parse JSON string to dict
+                        try:
+                            import json
+
+                            filetype_args_dict[arg_name] = json.loads(value)
+                        except:
+                            logger.warning(
+                                f"Failed to parse {arg_name} as JSON: {value}"
+                            )
+                            continue
+                    elif "List" in type_str or arg_type == list:
+                        # Parse comma-separated string to list
+                        filetype_args_dict[arg_name] = [
+                            item.strip() for item in value.split(",")
+                        ]
+                    elif "Union[str, List[str]]" in type_str:
+                        # Parse as list if comma-separated, otherwise as string
+                        if "," in value:
+                            filetype_args_dict[arg_name] = [
+                                item.strip() for item in value.split(",")
+                            ]
+                        else:
+                            filetype_args_dict[arg_name] = value
+                    else:
+                        filetype_args_dict[arg_name] = value
+
+            md_output, text_output = process_document(*regular_args, filetype_args_dict)
             # Return results and update to select the Output tab (id=1)
             return md_output, text_output, gr.update(selected=1)
 
@@ -431,7 +555,8 @@ def create_interface() -> gr.Blocks:
                 query_eval_model,
                 query_eval_check_number,
                 summary_n_recursion,
-            ],
+            ]
+            + list(filetype_arg_components.values()),
             outputs=[output_md, output_text, main_tabs],
         )
 
