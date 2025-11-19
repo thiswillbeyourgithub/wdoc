@@ -265,24 +265,6 @@ def create_interface() -> gr.Blocks:
                         info="Auto-detect or specify the file type",
                     )
 
-                    gr.Markdown("### General Settings")
-                    llm_verbosity = gr.Checkbox(
-                        label="LLM Verbosity",
-                        value=False,
-                        info="Enable verbose logging for LLM calls",
-                    )
-                    disable_llm_cache = gr.Checkbox(
-                        label="Disable LLM Cache",
-                        value=False,
-                        info="Disable caching of LLM responses",
-                    )
-                    dollar_limit = gr.Number(
-                        label="Dollar Limit",
-                        value=5,
-                        minimum=0,
-                        info="Maximum allowed cost in dollars",
-                    )
-
                     # Query/Search-specific settings
                     with gr.Group(visible=False) as query_settings_group:
                         gr.Markdown("### Query/Search Settings")
@@ -333,6 +315,24 @@ def create_interface() -> gr.Blocks:
                             precision=0,
                             info="Number of recursive summarization steps",
                         )
+
+                    gr.Markdown("### Misc")
+                    llm_verbosity = gr.Checkbox(
+                        label="LLM Verbosity",
+                        value=False,
+                        info="Enable verbose logging for LLM calls",
+                    )
+                    disable_llm_cache = gr.Checkbox(
+                        label="Disable LLM Cache",
+                        value=False,
+                        info="Disable caching of LLM responses",
+                    )
+                    dollar_limit = gr.Number(
+                        label="Dollar Limit",
+                        value=5,
+                        minimum=0,
+                        info="Maximum allowed cost in dollars",
+                    )
 
                 # Process button - prominently placed outside the accordion
                 process_btn = gr.Button(
