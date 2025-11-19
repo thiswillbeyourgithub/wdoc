@@ -47,13 +47,14 @@ Created by a medical student who needed a way to get a definitive answer from mu
 ## Explanatory diagrams
 
 ### Query Task Flow
-![Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output](images/diagram_query.png)
+![Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png)
+
 
 ### Summary Task Flow
-![Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output](images/diagram_summary.png)
+![Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png)
 
 ### Search Task Flow
-![Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output](images/diagram_search.png)
+![Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png)
 
 ## Ultra short guide for people in a hurry
 <details>
