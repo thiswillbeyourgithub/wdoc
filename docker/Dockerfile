@@ -19,13 +19,6 @@ RUN pip install --no-cache-dir uv && \
     uv pip install --system wdoc gradio && \
     rm -rf /root/.cache
 
-# Create .local directory structure for the wdoc user and set permissions
-RUN mkdir -p /home/wdoc/.local && \
-    mkdir -p /home/wdoc/.cache/wdoc && \
-    chown -R wdoc:wdoc /home/wdoc/.local && \
-    chown -R wdoc:wdoc /home/wdoc/.cache/wdoc && \
-    chown -R wdoc:wdoc /app
-
 # Copy the GUI script
 COPY gui.py /app/gui.py
 
@@ -33,6 +26,15 @@ COPY gui.py /app/gui.py
 EXPOSE 7860
 
 # Switch to non-root user for running the application
+USER wdoc
+
+# Create .local directory structure for the wdoc user and set permissions
+RUN mkdir -p /home/wdoc/.local && \
+    mkdir -p /home/wdoc/.cache/wdoc
+USER root
+RUN chown -R wdoc:wdoc /home/wdoc/.local && \
+    chown -R wdoc:wdoc /home/wdoc/.cache/wdoc && \
+    chown -R wdoc:wdoc /app
 USER wdoc
 
 # Set environment variables
