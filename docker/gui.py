@@ -20,7 +20,9 @@ from loguru import logger
 from wdoc.wdoc import wdoc
 
 
-def read_log_file(log_path: str = "/home/wdoc/.local/state/wdoc/log/logs.txt", max_lines: int = 5000) -> str:
+def read_log_file(
+    log_path: str = "/home/wdoc/.local/state/wdoc/log/logs.txt", max_lines: int = 5000
+) -> str:
     """
     Read the last N lines from wdoc's log file.
 
@@ -39,11 +41,11 @@ def read_log_file(log_path: str = "/home/wdoc/.local/state/wdoc/log/logs.txt", m
     try:
         if not os.path.exists(log_path):
             return f"Log file not found at {log_path}"
-        
-        with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+
+        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
             # Get last max_lines lines
-            return ''.join(lines[-max_lines:])
+            return "".join(lines[-max_lines:])
     except Exception as e:
         return f"Error reading log file: {str(e)}"
 
