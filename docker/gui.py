@@ -399,6 +399,10 @@ def create_interface() -> gr.Blocks:
                                 "WDOC_TYPECHECKING",
                                 "WDOC_BEHAVIOR_EXCL_INCL_USELESS",
                                 "WDOC_IMPORT_TYPE",
+                                "WDOC_AUDIO_BACKEND",
+                                "WDOC_YOUTUBE_AUDIO_BACKEND",
+                                "WDOC_LOADING_FAILURE",
+                                "WDOC_DDG_SAFE_SEARCH",
                             ]:
                                 # Extract choices from Literal type
                                 choices = list(get_args(arg_type))
@@ -700,7 +704,7 @@ def create_interface() -> gr.Blocks:
         )
 
         gr.Markdown(
-            "\n\n---\n\n*Built with [wdoc](https://github.com/yourusername/wdoc) and [Gradio](https://gradio.app). "
+            "\n\n---\n\n*Built for [wdoc](https://github.com/thiswillbeyourgithub/wdoc) with [Gradio](https://gradio.app). "
             "Assisted by [aider.chat](https://github.com/Aider-AI/aider/)*"
         )
 
