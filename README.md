@@ -54,6 +54,8 @@ Give it to me I am in a hurry!
 **Note: a list of examples can be found in [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)**
 
 
+First, let's see how to *query* a pdf.
+
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
@@ -69,6 +71,8 @@ wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say
     7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-2.5-pro) to extract relevant info and give one answer per relevant document.
     8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers of similar semantics, sort the batch in semantic order too), each batch is combined into a single answer per batch of relevant doc (or after: per batch of batches).
     9. Rinse and repeat steps 7+8 (i.e. gradually aggregate batches) until we have only one answer, that is returned to the user.
+
+Now, let's see how to summarize a pdf.
 
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
@@ -94,7 +98,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 ## Features
 * **15+ filetypes**: also supports combination to load recursively or define complex heterogenous corpus like a list of files, list of links, using regex, youtube playlists etc. See [Supported filestypes](#Supported-filetypes). All filetype can be seamlessly combined in the same index, meaning you can query your anki collection at the same time as your work PDFs). It supports removing silence from audio files and youtube videos too! There is even a `ddg` filetype to search the web using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo).
 * **100+ LLMs and many embeddings**: Supports any LLM by OpenAI, Mistral, Claude, Ollama, Openrouter, etc. thanks to [litellm](https://docs.litellm.ai/). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
-* **Local and Private LLM**: take some measures to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading sockets, etc.
+* **Local and Private LLM**: When in private mode, measures are taken to make sure no data leaves your computer and goes to an LLM provider: no API keys are used, all `api_base` are user set, cache are isolated from the rest, outgoing connections are censored by overloading python sockets, etc.
 * **Advanced RAG to query lots of diverse documents**:
     1. The documents are retrieved using embeddings
     2. Then a weak LLM model ("Eve the Evaluator") is used to tell which of those document is not relevant
