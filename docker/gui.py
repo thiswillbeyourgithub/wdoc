@@ -415,7 +415,7 @@ def create_interface() -> gr.Blocks:
                             elif "Literal" in type_str:
                                 # Extract choices from Literal type - use dropdown for others
                                 choices = list(get_args(arg_type))
-                                env_arg_components[field_name] = gr.Dropdown(
+                                env_arg_components[field_name] = gr.Radio(
                                     choices=choices,
                                     label=label,
                                     value=default_value,
@@ -480,7 +480,7 @@ def create_interface() -> gr.Blocks:
                             if "Literal" in type_str:
                                 # Extract choices from Literal type
                                 choices = list(get_args(arg_type))
-                                filetype_arg_components[arg_name] = gr.Dropdown(
+                                filetype_arg_components[arg_name] = gr.Radio(
                                     choices=choices,
                                     label=label,
                                     value=None,
