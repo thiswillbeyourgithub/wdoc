@@ -365,9 +365,15 @@ def create_interface() -> gr.Blocks:
                         env_arg_components = {}
 
                         # Create input components for EnvDataclass fields
-                        for field_name, field_obj in EnvDataclass.__dataclass_fields__.items():
+                        for (
+                            field_name,
+                            field_obj,
+                        ) in EnvDataclass.__dataclass_fields__.items():
                             # Skip internal fields and dummy variables
-                            if field_name.startswith("_") or field_name == "WDOC_DUMMY_ENV_VAR":
+                            if (
+                                field_name.startswith("_")
+                                or field_name == "WDOC_DUMMY_ENV_VAR"
+                            ):
                                 continue
 
                             # Convert field_name to a more readable label
@@ -390,29 +396,39 @@ def create_interface() -> gr.Blocks:
                             elif arg_type == bool or "bool" in type_str:
                                 env_arg_components[field_name] = gr.Checkbox(
                                     label=label,
-                                    value=default_value if isinstance(default_value, bool) else False,
+                                    value=default_value
+                                    if isinstance(default_value, bool)
+                                    else False,
                                 )
                             elif arg_type == int or "int" in type_str:
                                 env_arg_components[field_name] = gr.Number(
                                     label=label,
-                                    value=default_value if isinstance(default_value, (int, float)) else 0,
+                                    value=default_value
+                                    if isinstance(default_value, (int, float))
+                                    else 0,
                                     precision=0,
                                 )
                             elif arg_type == float or "float" in type_str:
                                 env_arg_components[field_name] = gr.Number(
                                     label=label,
-                                    value=default_value if isinstance(default_value, (int, float)) else 0.0,
+                                    value=default_value
+                                    if isinstance(default_value, (int, float))
+                                    else 0.0,
                                 )
                             elif "Optional[str]" in type_str:
                                 env_arg_components[field_name] = gr.Textbox(
                                     label=label,
-                                    value=default_value if isinstance(default_value, str) else "",
+                                    value=default_value
+                                    if isinstance(default_value, str)
+                                    else "",
                                     info="Leave empty for None",
                                 )
                             else:  # Default to textbox for str and other types
                                 env_arg_components[field_name] = gr.Textbox(
                                     label=label,
-                                    value=default_value if isinstance(default_value, str) else "",
+                                    value=default_value
+                                    if isinstance(default_value, str)
+                                    else "",
                                 )
 
                     # Filetype-specific arguments accordion
@@ -563,8 +579,12 @@ def create_interface() -> gr.Blocks:
             # The last N arguments are the filetype args, before that are env args
             n_filetype_args = len(filetype_arg_components)
             n_env_args = len(env_arg_components)
-            regular_args = args[:-(n_filetype_args + n_env_args)]
-            env_arg_values = args[-(n_filetype_args + n_env_args):-n_filetype_args] if n_filetype_args > 0 else args[-n_env_args:]
+            regular_args = args[: -(n_filetype_args + n_env_args)]
+            env_arg_values = (
+                args[-(n_filetype_args + n_env_args) : -n_filetype_args]
+                if n_filetype_args > 0
+                else args[-n_env_args:]
+            )
             filetype_arg_values = args[-n_filetype_args:] if n_filetype_args > 0 else []
 
             # Build env_args dict from component values
@@ -612,7 +632,9 @@ def create_interface() -> gr.Blocks:
                     else:
                         filetype_args_dict[arg_name] = value
 
-            md_output, text_output = process_document(*regular_args, env_args_dict, filetype_args_dict)
+            md_output, text_output = process_document(
+                *regular_args, env_args_dict, filetype_args_dict
+            )
             # Return results and update to select the Output tab (id=1)
             return md_output, text_output, gr.update(selected=1)
 
