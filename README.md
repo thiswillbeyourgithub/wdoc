@@ -320,7 +320,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 ## Getting started
 *`wdoc` was mainly developped on python 3.11.7 but I'm not sure all the versions that work. When in doubt, make sure that your Python version matches this one.*
 1. To install:
-    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually deal install the missing dependencies for your usecase).
+    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually install the missing dependencies for your usecase).
     * Or to get a specific git branch:
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
