@@ -12,7 +12,6 @@ import os
 from pathlib import Path
 from typing import Optional, Tuple, Any
 import tempfile
-import io
 import sys
 
 import gradio as gr
@@ -21,8 +20,32 @@ from loguru import logger
 from wdoc.wdoc import wdoc
 
 
-# Global log buffer to capture logs
-log_buffer = io.StringIO()
+def read_log_file(log_path: str = "/home/wdoc/.local/state/wdoc/log/logs.txt", max_lines: int = 5000) -> str:
+    """
+    Read the last N lines from wdoc's log file.
+
+    Parameters
+    ----------
+    log_path : str
+        Path to the log file
+    max_lines : int
+        Maximum number of lines to read from the end of the file
+
+    Returns
+    -------
+    str
+        The last max_lines lines from the log file
+    """
+    try:
+        if not os.path.exists(log_path):
+            return f"Log file not found at {log_path}"
+        
+        with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+            # Get last max_lines lines
+            return ''.join(lines[-max_lines:])
+    except Exception as e:
+        return f"Error reading log file: {str(e)}"
 
 
 def process_document(
@@ -32,7 +55,7 @@ def process_document(
     query_text: str,
     model: str,
     filetype: str,
-) -> Tuple[str, str, str]:
+) -> Tuple[str, str]:
     """
     Process a document using wdoc based on selected task.
 
@@ -53,18 +76,9 @@ def process_document(
 
     Returns
     -------
-    Tuple[str, str, str]
-        (markdown_output, download_content, logs) - the rendered output, downloadable text, and logs
+    Tuple[str, str]
+        (markdown_output, download_content) - the rendered output and downloadable text
     """
-    # Clear the log buffer before processing
-    global log_buffer
-    log_buffer = io.StringIO()
-
-    # Add a sink to capture logs to our buffer
-    handler_id = logger.add(
-        log_buffer, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
-    )
-
     try:
         # Determine path: uploaded file takes precedence over text input
         if uploaded_file is not None:
@@ -74,12 +88,9 @@ def process_document(
             path = path_text.strip()
             logger.info(f"Processing path from text: {path}")
         else:
-            logs = log_buffer.getvalue()
-            logger.remove(handler_id)
             return (
                 "❌ **Error**: Please provide either a file upload or a path/URL.",
                 "",
-                logs,
             )
 
         # Get vectorstore path from environment for query tasks
@@ -138,11 +149,7 @@ def process_document(
 
         logger.info(f"Task completed successfully: {task}")
 
-        # Capture logs and remove the handler
-        logs = log_buffer.getvalue()
-        logger.remove(handler_id)
-
-        return output_md, output_md, logs
+        return output_md, output_md
 
     except Exception as e:
         logger.exception(f"Error processing document: {e}")
@@ -150,11 +157,7 @@ def process_document(
             f"# ❌ Error\n\nAn error occurred while processing:\n\n```\n{str(e)}\n```"
         )
 
-        # Capture logs and remove the handler even on error
-        logs = log_buffer.getvalue()
-        logger.remove(handler_id)
-
-        return error_md, error_md, logs
+        return error_md, error_md
 
 
 def create_interface() -> gr.Blocks:
@@ -234,15 +237,17 @@ def create_interface() -> gr.Blocks:
                     "🚀 Process Document", variant="primary", size="lg"
                 )
 
-                # Logs section - collapsed by default
+                # Logs section - collapsed by default, continuously updated
                 with gr.Accordion("📋 Logs", open=False):
                     logs_output = gr.Textbox(
-                        label="Application Logs",
+                        label="Application Logs (last 5000 lines)",
                         lines=10,
                         max_lines=20,
                         interactive=False,
                         show_copy_button=True,
                     )
+                    # Timer to update logs every 0.2 seconds
+                    log_timer = gr.Timer(value=0.2, active=True)
 
             with gr.Tab("Output", id=1):
                 # Output display
@@ -273,12 +278,19 @@ def create_interface() -> gr.Blocks:
             outputs=[query_group, parse_group],
         )
 
+        # Timer event to continuously update logs
+        log_timer.tick(
+            fn=read_log_file,
+            inputs=None,
+            outputs=[logs_output],
+        )
+
         # Process button click - also switches to Output tab
         def process_and_switch(*args):
             """Process document and return results plus tab selection."""
-            md_output, text_output, logs = process_document(*args)
+            md_output, text_output = process_document(*args)
             # Return results and update to select the Output tab (id=1)
-            return md_output, text_output, logs, gr.update(selected=1)
+            return md_output, text_output, gr.update(selected=1)
 
         process_btn.click(
             fn=process_and_switch,
@@ -290,7 +302,7 @@ def create_interface() -> gr.Blocks:
                 model,
                 filetype,
             ],
-            outputs=[output_md, output_text, logs_output, main_tabs],
+            outputs=[output_md, output_text, main_tabs],
         )
 
         # Download button - create temporary file with the markdown content
