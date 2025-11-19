@@ -389,7 +389,9 @@ def create_interface() -> gr.Blocks:
                                 env_arg_components[field_name] = gr.Radio(
                                     choices=["false", "strip"],
                                     label=label,
-                                    value="strip" if default_value == "strip" else "false",
+                                    value="strip"
+                                    if default_value == "strip"
+                                    else "false",
                                     info="Choose strictness mode for DocDict validation",
                                 )
                             # Use radio buttons for specific Literal type fields
