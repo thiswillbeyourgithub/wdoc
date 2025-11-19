@@ -231,7 +231,7 @@ def create_interface() -> gr.Blocks:
         with gr.Tabs() as main_tabs:
             with gr.Tab("Input", id=0):
                 # Task selection
-                task = gr.Dropdown(
+                task = gr.Radio(
                     choices=["query", "summarize", "parse"],
                     value="summarize",
                     label="Task",
