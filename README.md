@@ -47,14 +47,14 @@ Created by a medical student who needed a way to get a definitive answer from mu
 ## Explanatory diagrams
 
 ### Query Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">
 
 
 ### Summary Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">
 
 ### Search Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">
 
 ## Ultra short guide for people in a hurry
 <details>
