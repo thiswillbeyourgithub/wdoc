@@ -80,6 +80,8 @@ class PostInstallCommand(install):
 
 with open("README.md", "r") as readme:
     long_description = readme.read()
+
+    # Convert icon HTML to markdown
     assert (
         '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512" style="background-color: transparent !important"></p>'
         in long_description
@@ -88,6 +90,37 @@ with open("README.md", "r") as readme:
         '<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true" width="512" style="background-color: transparent !important"></p>',
         "![icon](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/icon.png?raw=true)",
     )
+
+    # Convert query diagram HTML to markdown
+    assert (
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">'
+        in long_description
+    ), "Unexpected HTML for query diagram"
+    long_description = long_description.replace(
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">',
+        "![Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png)",
+    )
+
+    # Convert summary diagram HTML to markdown
+    assert (
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">'
+        in long_description
+    ), "Unexpected HTML for summary diagram"
+    long_description = long_description.replace(
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">',
+        "![Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png)",
+    )
+
+    # Convert search diagram HTML to markdown
+    assert (
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">'
+        in long_description
+    ), "Unexpected HTML for search diagram"
+    long_description = long_description.replace(
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">',
+        "![Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png)",
+    )
+
     assert 'align="center"' not in long_description
 
 setup(
