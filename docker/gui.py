@@ -384,8 +384,30 @@ def create_interface() -> gr.Blocks:
                             # Determine the type and create appropriate component
                             type_str = str(arg_type)
 
-                            if "Literal" in type_str:
+                            # Special handling for WDOC_STRICT_DOCDICT (Union[bool, Literal["strip"]])
+                            if field_name == "WDOC_STRICT_DOCDICT":
+                                env_arg_components[field_name] = gr.Radio(
+                                    choices=["false", "strip"],
+                                    label=label,
+                                    value="strip" if default_value == "strip" else "false",
+                                    info="Choose strictness mode for DocDict validation",
+                                )
+                            # Use radio buttons for specific Literal type fields
+                            elif field_name in [
+                                "WDOC_TYPECHECKING",
+                                "WDOC_BEHAVIOR_EXCL_INCL_USELESS",
+                                "WDOC_IMPORT_TYPE",
+                            ]:
                                 # Extract choices from Literal type
+                                choices = list(get_args(arg_type))
+                                env_arg_components[field_name] = gr.Radio(
+                                    choices=choices,
+                                    label=label,
+                                    value=default_value,
+                                    info=f"Choose from: {', '.join(str(c) for c in choices)}",
+                                )
+                            elif "Literal" in type_str:
+                                # Extract choices from Literal type - use dropdown for others
                                 choices = list(get_args(arg_type))
                                 env_arg_components[field_name] = gr.Dropdown(
                                     choices=choices,
