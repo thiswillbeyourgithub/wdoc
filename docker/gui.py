@@ -171,7 +171,19 @@ def create_interface() -> gr.Blocks:
     gr.Blocks
         The configured Gradio interface
     """
-    with gr.Blocks(title="wdoc Web UI", theme=gr.themes.Soft()) as interface:
+    with gr.Blocks(
+        title="wdoc Web UI",
+        theme=gr.themes.Soft(),
+        css="""
+        .log-output textarea {
+            font-family: 'Courier New', monospace !important;
+            font-size: 11px !important;
+            white-space: pre !important;
+            overflow-wrap: normal !important;
+            word-break: keep-all !important;
+        }
+        """,
+    ) as interface:
         gr.Markdown(
             "# 📚 wdoc Web Interface\n\nProcess documents with AI-powered query, summarization, and parsing."
         )
@@ -247,6 +259,7 @@ def create_interface() -> gr.Blocks:
                         max_lines=20,
                         interactive=False,
                         show_copy_button=True,
+                        elem_classes="log-output",
                     )
                     # Timer to update logs every 0.2 seconds
                     log_timer = gr.Timer(value=0.2, active=True)
