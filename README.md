@@ -180,7 +180,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md).
 
 ## Getting started
-*`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.
+*`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.*
 
 ### Direct Installation
 
