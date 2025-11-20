@@ -306,7 +306,7 @@
     * if True will enable langchain tracing, increase verbosity,
     disable multithreading for summaries and loading files,
     display warning if an error is encountered when loading a file,
-    automatically trigger the debugger on exceptions.
+    automatically trigger the debugger on exceptions (except if wdoc is running in docker).
     Note that the parallel processing will not be disabled if you manually
     set `--file_loader_n_jobs`, allowing you to debug parallel
     processing issues.
@@ -314,7 +314,7 @@
     limiting, this can be used to slowly but always get your answer.
     It implies `--verbose=True`
     If you just want to open the debugger in case of issue, see
-    below at `WDOC_DEBUGGER`.
+    below at `WDOC_DEBUGGER`. This is incompatible with running wdoc in docker.
     When in debugging mode, the default `loading_failure` is `warn`,
     but if you specify `loading_failure=crash` it will be honored.
 
@@ -721,6 +721,12 @@
 
 * `WDOC_DEBUGGER`
     * If True, will open the debugger in case of issue. Implied by `--debug`
+    Incompatible with `WDOC_IN_DOCKER`.
+    Default is `False`
+
+* `WDOC_IN_DOCKER`
+    * Flag set automatically, used to modify some behaviors to avoid issues when running wdoc inside docker.
+    Incompatible with `WDOC_DEBUGGER`.
     Default is `False`
 
 * `WDOC_EXPIRE_CACHE_DAYS`
