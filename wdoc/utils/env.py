@@ -96,6 +96,7 @@ class EnvDataclass:
     WDOC_WHISPER_ENDPOINT: Optional[str] = ""
     WDOC_WHISPER_API_KEY: Optional[str] = ""
     WDOC_WHISPER_MODEL: str = "whisper-1"
+    WDOC_IN_DOCKER: bool = False
 
     @warn_typecheck
     def __parse__(self, val: str) -> Optional[Union[bool, int, str]]:
