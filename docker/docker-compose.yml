@@ -2,8 +2,11 @@ services:
   wdoc-gui:
     container_name: wdoc-gui
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..  # Parent directory to access wdoc source for local builds
+      dockerfile: docker/Dockerfile
+      args:
+        # Set to "compile" to install from local source, "install" for PyPI
+        COMPILE_OR_INSTALL: ${COMPILE_OR_INSTALL:-compile}
     ports:
       - "7618:7860"
     volumes:

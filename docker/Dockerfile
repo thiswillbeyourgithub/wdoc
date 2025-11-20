@@ -1,5 +1,9 @@
 FROM python:3.13-slim
 
+# Build argument to control installation method
+# Values: "install" (from PyPI) or "compile" (from local source in editable mode)
+ARG COMPILE_OR_INSTALL=compile
+
 # Set working directory to allow the gui.py to be in the same directory as where we run
 WORKDIR /app
 
@@ -13,10 +17,21 @@ RUN apt-get update && apt-get install -y \
 RUN groupadd -g 1000 wdoc && \
     useradd -u 1000 -g 1000 -m -s /bin/bash wdoc
 
-# Install Python packages
+# Copy source code if we're doing a local install
+# This copies the parent directory (the wdoc repository root)
+COPY --chown=wdoc:wdoc ../ /tmp/wdoc-source/
+
+# Install Python packages with conditional logic based on COMPILE_OR_INSTALL
 # Using uv for faster installation, but pip is fine too
 RUN pip install --no-cache-dir uv && \
-    uv pip install --system wdoc gradio==5.49.1 && \
+    if [ "$COMPILE_OR_INSTALL" = "compile" ]; then \
+        echo "Installing wdoc from local source in editable mode..." && \
+        uv pip install --system -e /tmp/wdoc-source && \
+        uv pip install --system gradio==5.49.1; \
+    else \
+        echo "Installing wdoc from PyPI..." && \
+        uv pip install --system wdoc gradio==5.49.1; \
+    fi && \
     rm -rf /root/.cache
 
 # Copy the GUI script
