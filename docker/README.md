@@ -1,4 +1,4 @@
-# wdoc Docker Setup
+# Docker Setup
 
 This directory contains a dockerized Gradio web interface for wdoc, designed for easy deployment and use.
 
