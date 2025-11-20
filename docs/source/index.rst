@@ -18,6 +18,7 @@ Below the table of content is the content of the `README.md`, followed by the co
    parse_doc_help
    api
    link_to_single_page_doc
+   docker_readme
 
 .. include:: readme.md
    :parser: myst_parser.sphinx_
