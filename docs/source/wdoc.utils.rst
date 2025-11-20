@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    wdoc.utils.customs
+   wdoc.utils.loaders
    wdoc.utils.tasks
 
 Submodules
@@ -45,10 +46,10 @@ wdoc.utils.errors module
    :show-inheritance:
    :undoc-members:
 
-wdoc.utils.import\_tricks module
---------------------------------
+wdoc.utils.filters module
+-------------------------
 
-.. automodule:: wdoc.utils.import_tricks
+.. automodule:: wdoc.utils.filters
    :members:
    :show-inheritance:
    :undoc-members:
@@ -69,10 +70,10 @@ wdoc.utils.llm module
    :show-inheritance:
    :undoc-members:
 
-wdoc.utils.loaders module
--------------------------
+wdoc.utils.load\_recursive module
+---------------------------------
 
-.. automodule:: wdoc.utils.loaders
+.. automodule:: wdoc.utils.load_recursive
    :members:
    :show-inheritance:
    :undoc-members:
@@ -105,14 +106,6 @@ wdoc.utils.retrievers module
 ----------------------------
 
 .. automodule:: wdoc.utils.retrievers
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-wdoc.utils.typechecker module
------------------------------
-
-.. automodule:: wdoc.utils.typechecker
    :members:
    :show-inheritance:
    :undoc-members:

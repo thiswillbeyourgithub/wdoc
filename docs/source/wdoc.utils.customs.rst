@@ -4,6 +4,14 @@ wdoc.utils.customs package
 Submodules
 ----------
 
+wdoc.utils.customs.binary\_faiss\_vectorstore module
+----------------------------------------------------
+
+.. automodule:: wdoc.utils.customs.binary_faiss_vectorstore
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 wdoc.utils.customs.compressed\_embeddings\_cacher module
 --------------------------------------------------------
 
