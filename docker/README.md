@@ -2,9 +2,21 @@
 
 This directory contains a dockerized Gradio web interface for wdoc, designed for easy deployment and use.
 
+## Prerequisites
+
+This setup assumes you have already cloned the wdoc repository:
+```bash
+git clone https://github.com/thiswillbeyourgithub/wdoc.git
+cd wdoc/docker
+```
+
+**Note**: No pre-built Docker images are provided. You'll build the image locally from the cloned repository.
+
 ## Quick Start
 
-1. **Configure environment variables**: Copy and edit the environment file:
+All commands below should be run from the `docker` subdirectory of the wdoc repository.
+
+1. **Configure environment variables**: Copy and edit the environment file (both files are in the `./docker` directory):
    ```bash
    cp custom_env.example custom_env
    # Edit custom_env to add your API keys (OPENAI_API_KEY, etc.)
@@ -19,9 +31,18 @@ This directory contains a dockerized Gradio web interface for wdoc, designed for
 
 ## Architecture
 
+- **Build modes**: The Docker image can be built in two ways controlled by the `COMPILE_OR_INSTALL` build argument:
+  - `compile` (default): Installs wdoc from the local repository source in editable mode. Use this for development or when you need the latest changes.
+  - `install`: Installs wdoc from PyPI. Use this for a stable, released version.
+  
+  To change the build mode, set the environment variable before building:
+  ```bash
+  COMPILE_OR_INSTALL=install docker-compose up -d --build
+  ```
+
 - **Container user**: Runs as non-root user `wdoc` (UID:GID 1000:1000) for security
 - **Port**: Exposes Gradio on port 7618 (mapped from internal port 7860)
-- **Volumes**:
+- **Volumes** (relative to the `./docker` directory):
   - `./vectorstore`: Persistent storage for document embeddings
   - `./wdoc_cache`: LLM cache to reduce API costs and improve performance
 
@@ -31,10 +52,13 @@ This directory contains a dockerized Gradio web interface for wdoc, designed for
 
 If you encounter permission errors on first startup, particularly related to the cache directory, this is typically because Docker created the volume directories with root ownership.
 
-**Solution**: Change ownership of the docker directory to match the container's user (UID:GID 1000:1000):
+**Solution**: From the `docker` directory, change ownership to match the container's user (UID:GID 1000:1000):
 
 ```bash
-# From the docker directory
+# Make sure you're in the docker directory
+cd wdoc/docker
+
+# Fix permissions
 sudo chown -R 1000:1000 ./vectorstore ./wdoc_cache
 
 # Or if the directories don't exist yet:
@@ -73,7 +97,7 @@ docker-compose up -d
 
 ### Environment Variables
 
-Create a `custom_env` file with your configuration:
+Create a `custom_env` file in the `docker` directory with your configuration:
 
 ```bash
 # Required: API keys for your LLM provider
@@ -112,8 +136,16 @@ CACHE_PATH=/your/custom/path/cache docker-compose up -d
 
 ### Building Locally
 
+From the `docker` directory:
+
 ```bash
-docker build -t wdoc-gui .
+# Build from local source (default)
+docker build -t wdoc-gui -f Dockerfile ..
+
+# Or build from PyPI
+docker build -t wdoc-gui -f Dockerfile --build-arg COMPILE_OR_INSTALL=install ..
+
+# Run the container
 docker run -p 7618:7860 \
   -v $(pwd)/vectorstore:/app/vectorstore \
   -v $(pwd)/wdoc_cache:/home/wdoc/.cache/wdoc \
@@ -123,7 +155,19 @@ docker run -p 7618:7860 \
 
 ### Modifying the GUI
 
-The Gradio interface is defined in `gui.py`. After making changes, rebuild the container to see them take effect.
+The Gradio interface is defined in `docker/gui.py`. After making changes, rebuild the container to see them take effect.
+
+### Understanding COMPILE_OR_INSTALL
+
+- **`compile` mode**: The Dockerfile copies your local wdoc source code and installs it in editable mode (`pip install -e`). This means:
+  - Code changes in the repository affect the Docker image after rebuild
+  - Useful for development and testing
+  - Includes unreleased features/fixes
+  
+- **`install` mode**: The Dockerfile installs wdoc from PyPI. This means:
+  - You get the latest stable release
+  - Independent of your local source code
+  - Faster builds (no need to copy source files)
 
 ## Additional Resources
 
