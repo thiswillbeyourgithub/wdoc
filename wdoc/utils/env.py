@@ -369,6 +369,14 @@ for k, v in asdict(env).items():
     #     continue
     assert is_bearable(v, env.__dataclass_fields__[k].type), v
 
+# Check for incompatible WDOC_DEBUGGER and WDOC_IN_DOCKER settings
+if env.WDOC_DEBUGGER and env.WDOC_IN_DOCKER:
+    logger.warning(
+        "Both WDOC_DEBUGGER and WDOC_IN_DOCKER are set to true. "
+        "The debugger (pdb) is not compatible with Docker containers. "
+        "WDOC_IN_DOCKER takes priority - the debugger will be disabled and errors will be logged instead."
+    )
+
 # If langfuse env variables are set AND WDOC_LANGFUSE_PUBLIC_KEY etc are set: we replace langfuse's env variable to make sure any underlyng lib use wdoc's instead
 for k in [
     "LANGFUSE_PUBLIC_KEY",
