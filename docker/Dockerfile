@@ -16,7 +16,7 @@ RUN groupadd -g 1000 wdoc && \
 # Install Python packages
 # Using uv for faster installation, but pip is fine too
 RUN pip install --no-cache-dir uv && \
-    uv pip install --system wdoc gradio && \
+    uv pip install --system wdoc gradio==5.49.1 && \
     rm -rf /root/.cache
 
 # Copy the GUI script
