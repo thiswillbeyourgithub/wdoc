@@ -137,10 +137,20 @@ class wdoc:
 
         self.ntfy = ntfy
 
-        if (debug or env.WDOC_DEBUGGER or env.WDOC_DEBUG) and not env.WDOC_IN_DOCKER:
-            debug_exceptions(instance=self)
+        used_debug_exceptions = False
 
-        elif notification_callback or env.WDOC_IN_DOCKER:
+        if debug or env.WDOC_DEBUGGER or env.WDOC_DEBUG:
+            if env.WDOC_IN_DOCKER:
+                logger.warning(
+                    "Debug mode requested but running in Docker (WDOC_IN_DOCKER=true). "
+                    "Skipping pdb debugger as it's not compatible with Docker containers. "
+                    "Errors will be logged instead."
+                )
+            else:
+                debug_exceptions(instance=self)
+                used_debug_exceptions = True
+
+        if not used_debug_exceptions and (notification_callback or env.WDOC_IN_DOCKER):
 
             def print_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
