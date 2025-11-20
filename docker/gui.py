@@ -164,15 +164,19 @@ def process_document(
                 return "❌ **Error**: Query text is required for query task.", ""
 
             logger.info(f"Starting query task with query: {query_text}")
-            
+
             # Process load_embeds_from - convert "None" or empty to None, otherwise use full path
             load_embeds = None
             if load_embeds_from and load_embeds_from != "None":
                 load_embeds = os.path.join(vectorstore_path, load_embeds_from)
-            
+
             # Process save_embeds_as - use default if empty
-            save_embeds = save_embeds_as.strip() if save_embeds_as.strip() else "{user_cache}/latest_docs_and_embeddings"
-            
+            save_embeds = (
+                save_embeds_as.strip()
+                if save_embeds_as.strip()
+                else "{user_cache}/latest_docs_and_embeddings"
+            )
+
             instance = wdoc(
                 task="query",
                 path=path,
@@ -381,7 +385,7 @@ def create_interface() -> gr.Blocks:
                             precision=0,
                             info="Number of evaluation checks per document",
                         )
-                        
+
                         gr.Markdown("### Vectorstore Settings")
                         with gr.Row():
                             load_embeds_from = gr.Dropdown(
