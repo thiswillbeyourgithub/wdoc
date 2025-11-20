@@ -1,0 +1,23 @@
+services:
+  wdoc-gui:
+    container_name: wdoc-gui
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7618:7860"
+    volumes:
+      # Mount vectorstore directory to persist and share vectorstore data
+      - ${VECTORSTORE_PATH:-./vectorstore}:/app/vectorstore
+      # Optionally mount cache directory to persist LLM caches
+      - ${CACHE_PATH:-./wdoc_cache}:/home/wdoc/.cache/wdoc
+    # Load environment variables from the env file
+    env_file:
+      - custom_env
+    restart: unless-stopped
+    user: 1000:1000
+    security_opt:
+      - no-new-privileges:true
+    # if using langfuse for example
+    extra_hosts:
+     - "host.docker.internal:host-gateway"

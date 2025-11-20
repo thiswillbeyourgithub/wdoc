@@ -147,11 +147,13 @@ def load_one_doc(
 
     # Lazy loading the document loader function
     exec(f"from wdoc.utils.loaders.{filetype} import {loader_func_name}")
-    loader_func = locals()[loader_func_name] or globals()[loader_func_name] or None
-
-    if loader_func is None:
+    if loader_func_name in locals():
+        loader_func = locals()[loader_func_name]
+    elif loader_func_name in globals():
+        loader_func = globals()[loader_func_name]
+    else:
         raise Exception(
-            f"Loader function 'load_{filetype}' not found for filetype '{filetype}'"
+            f"Loader function 'load_{filetype}' not found for filetype '{filetype}' (couldn't find func '{loader_func_name}')"
         )
 
     # Get function signature to determine what arguments to pass
