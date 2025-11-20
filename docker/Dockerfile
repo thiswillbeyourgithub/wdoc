@@ -35,7 +35,7 @@ RUN pip install --no-cache-dir uv && \
     rm -rf /root/.cache
 
 # Copy the GUI script
-COPY gui.py /app/gui.py
+COPY docker/gui.py /app/gui.py
 
 # Expose Gradio's default port
 EXPOSE 7860
