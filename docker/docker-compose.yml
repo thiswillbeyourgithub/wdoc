@@ -14,6 +14,60 @@ services:
     # Load environment variables from the env file
     env_file:
       - custom_env
+    # Pass through environment variables from host if present, otherwise use env_file or env.py defaults
+    environment:
+      # API Keys
+      - OPENROUTER_API_KEY
+      - OPENAI_API_KEY
+      - ANTHROPIC_API_KEY
+      - MISTRAL_API_KEY
+      # Gradio configuration
+      - GRADIO_SERVER_NAME
+      - GRADIO_SERVER_PORT
+      # wdoc environment variables (auto-discovered from env.py)
+      - WDOC_DEBUG
+      - WDOC_VERBOSE
+      - WDOC_TYPECHECKING
+      - WDOC_NO_MODELNAME_MATCHING
+      - WDOC_ALLOW_NO_PRICE
+      - WDOC_OPEN_ANKI
+      - WDOC_STRICT_DOCDICT
+      - WDOC_MAX_LOADER_TIMEOUT
+      - WDOC_MAX_PDF_LOADER_TIMEOUT
+      - WDOC_PRIVATE_MODE
+      - WDOC_DEBUGGER
+      - WDOC_EXPIRE_CACHE_DAYS
+      - WDOC_EMPTY_LOADER
+      - WDOC_BEHAVIOR_EXCL_INCL_USELESS
+      - WDOC_IMPORT_TYPE
+      - WDOC_LOADER_LAZY_LOADING
+      - WDOC_MOD_FAISS_SCORE_FN
+      - WDOC_FAISS_COMPRESSION
+      - WDOC_FAISS_BINARY
+      - WDOC_LLM_MAX_CONCURRENCY
+      - WDOC_LLM_REQUEST_TIMEOUT
+      - WDOC_SEMANTIC_BATCH_MAX_TOKEN_SIZE
+      - WDOC_MAX_CHUNK_SIZE
+      - WDOC_MAX_EMBED_CONTEXT
+      - WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS
+      - WDOC_DEFAULT_MODEL
+      - WDOC_DEFAULT_EMBED_MODEL
+      - WDOC_DEFAULT_EMBED_DIMENSION
+      - WDOC_EMBED_TESTING
+      - WDOC_DISABLE_EMBEDDINGS_CACHE
+      - WDOC_DEFAULT_QUERY_EVAL_MODEL
+      - WDOC_LANGFUSE_PUBLIC_KEY
+      - WDOC_LANGFUSE_SECRET_KEY
+      - WDOC_LANGFUSE_HOST
+      - WDOC_LITELLM_TAGS
+      - WDOC_LITELLM_USER
+      - WDOC_APPLY_ASYNCIO_PATCH
+      - WDOC_CONTINUE_ON_INVALID_EVAL
+      - WDOC_WHISPER_PARALLEL_SPLITS
+      - WDOC_WHISPER_ENDPOINT
+      - WDOC_WHISPER_API_KEY
+      - WDOC_WHISPER_MODEL
+      - WDOC_IN_DOCKER
     restart: unless-stopped
     user: 1000:1000
     security_opt:
