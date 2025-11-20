@@ -26,3 +26,6 @@ This is all the documentation for `wdoc <https://github.com/thiswillbeyourgithub
 
 .. include:: parse_doc_help.md
    :parser: myst_parser.sphinx_
+
+.. include:: docker_readme.md
+   :parser: myst_parser.sphinx_
