@@ -18,7 +18,7 @@ import gradio as gr
 from loguru import logger
 
 # Set environment variable to indicate running in Docker
-os.environ["WDOCWEB_IN_DOCKER"] = "true"
+os.environ["WDOC_IN_DOCKER"] = "true"
 
 from wdoc.wdoc import wdoc
 from wdoc.utils.misc import filetype_arg_types

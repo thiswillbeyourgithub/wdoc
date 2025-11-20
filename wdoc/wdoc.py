@@ -137,10 +137,10 @@ class wdoc:
 
         self.ntfy = ntfy
 
-        if debug or env.WDOC_DEBUGGER or env.WDOC_DEBUG:
+        if (debug or env.WDOC_DEBUGGER or env.WDOC_DEBUG) and not env.WDOC_IN_DOCKER:
             debug_exceptions(instance=self)
 
-        elif notification_callback:
+        elif notification_callback or env.WDOC_IN_DOCKER:
 
             def print_exception(exc_type, exc_value, exc_traceback):
                 if not issubclass(exc_type, KeyboardInterrupt):
