@@ -103,7 +103,7 @@ def wrapper_load_one_doc(func: Callable) -> Callable:
                 )
             if loading_failure == "crash":
                 logger.exception(mess)
-                raise Exception(mess) from err
+                raise
             elif loading_failure == "warn" or env.WDOC_DEBUG:
                 logger.warning(mess)
                 return str(err)
