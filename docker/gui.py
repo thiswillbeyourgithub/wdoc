@@ -22,6 +22,37 @@ from wdoc.utils.misc import filetype_arg_types
 from wdoc.utils.env import EnvDataclass
 
 
+def list_vectorstore_dirs(vectorstore_path: str = "/app/vectorstore") -> list:
+    """
+    List all directories in the vectorstore path.
+
+    Parameters
+    ----------
+    vectorstore_path : str
+        Path to the vectorstore directory
+
+    Returns
+    -------
+    list
+        List of directory names in the vectorstore path
+    """
+    try:
+        if not os.path.exists(vectorstore_path):
+            logger.warning(f"Vectorstore path not found: {vectorstore_path}")
+            return []
+
+        # Get all directories in the vectorstore path
+        dirs = [
+            d
+            for d in os.listdir(vectorstore_path)
+            if os.path.isdir(os.path.join(vectorstore_path, d))
+        ]
+        return sorted(dirs)
+    except Exception as e:
+        logger.error(f"Error listing vectorstore directories: {str(e)}")
+        return []
+
+
 def read_log_file(
     log_path: str = "/home/wdoc/.local/state/wdoc/log/logs.txt", max_lines: int = 5000
 ) -> str:
@@ -68,6 +99,8 @@ def process_document(
     query_eval_model: str,
     query_eval_check_number: int,
     summary_n_recursion: int,
+    load_embeds_from: str,
+    save_embeds_as: str,
     env_args: dict,
     filetype_args: dict,
 ) -> Tuple[str, str]:
@@ -131,6 +164,15 @@ def process_document(
                 return "❌ **Error**: Query text is required for query task.", ""
 
             logger.info(f"Starting query task with query: {query_text}")
+            
+            # Process load_embeds_from - convert "None" or empty to None, otherwise use full path
+            load_embeds = None
+            if load_embeds_from and load_embeds_from != "None":
+                load_embeds = os.path.join(vectorstore_path, load_embeds_from)
+            
+            # Process save_embeds_as - use default if empty
+            save_embeds = save_embeds_as.strip() if save_embeds_as.strip() else "{user_cache}/latest_docs_and_embeddings"
+            
             instance = wdoc(
                 task="query",
                 path=path,
@@ -141,6 +183,8 @@ def process_document(
                 query_retrievers=query_retrievers,
                 query_eval_model=query_eval_model,
                 query_eval_check_number=int(query_eval_check_number),
+                load_embeds_from=load_embeds,
+                save_embeds_as=save_embeds,
                 llm_verbosity=llm_verbosity,
                 disable_llm_cache=disable_llm_cache,
                 dollar_limit=dollar_limit,
@@ -336,6 +380,27 @@ def create_interface() -> gr.Blocks:
                             minimum=1,
                             precision=0,
                             info="Number of evaluation checks per document",
+                        )
+                        
+                        gr.Markdown("### Vectorstore Settings")
+                        with gr.Row():
+                            load_embeds_from = gr.Dropdown(
+                                label="Load Embeddings From",
+                                choices=["None"] + list_vectorstore_dirs(),
+                                value="None",
+                                info="Select existing vectorstore to load, or None to create new",
+                                allow_custom_value=False,
+                            )
+                            refresh_vectorstore_btn = gr.Button(
+                                "🔄 Refresh",
+                                size="sm",
+                                scale=0,
+                            )
+                        save_embeds_as = gr.Textbox(
+                            label="Save Embeddings As",
+                            value="{user_cache}/latest_docs_and_embeddings",
+                            placeholder="{user_cache}/latest_docs_and_embeddings",
+                            info="Path to save embeddings (use {user_cache} for default cache location)",
                         )
 
                     # Summary-specific settings
@@ -606,6 +671,13 @@ def create_interface() -> gr.Blocks:
             ],
         )
 
+        # Refresh vectorstore dropdown
+        refresh_vectorstore_btn.click(
+            fn=lambda: gr.Dropdown(choices=["None"] + list_vectorstore_dirs()),
+            inputs=None,
+            outputs=[load_embeds_from],
+        )
+
         # Timer event to continuously update logs
         log_timer.tick(
             fn=read_log_file,
@@ -696,6 +768,8 @@ def create_interface() -> gr.Blocks:
                 query_eval_model,
                 query_eval_check_number,
                 summary_n_recursion,
+                load_embeds_from,
+                save_embeds_as,
             ]
             + list(env_arg_components.values())
             + list(filetype_arg_components.values()),
