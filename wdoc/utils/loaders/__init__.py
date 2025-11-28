@@ -148,7 +148,7 @@ def load_one_doc(
     # Lazy loading the document loader function
     exec(
         f"from wdoc.utils.loaders.{filetype} import {loader_func_name}",
-        globals=globals(),
+        globals(),
     )
     if loader_func_name in locals():
         loader_func = locals()[loader_func_name]
