@@ -352,7 +352,9 @@ class wdoc:
         assert isinstance(private, bool), (
             "private arg should be a boolean, not {private}"
         )
-        assert private == env.WDOC_PRIVATE_MODE
+        assert private == env.WDOC_PRIVATE_MODE, (
+            f"Argument 'private' is '{private}' but the env variable 'WDOC_PRIVATE_MODE' is '{env.WDOC_PRIVATE_MODE}'. You probably want to set that env variable excplicitely."
+        )
         if private:
             assert llms_api_bases["model"], (
                 "private is set but llms_api_bases['model'] is not set"
