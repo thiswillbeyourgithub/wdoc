@@ -190,7 +190,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
     * You can also use uvx or pipx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
-        * Using uvx: `uvx wdoc[full] --help`
+        * Using uvx: `uvx wdoc[full]@latest --help`
         * Using pipx: `pipx run wdoc[full] --help`
     * In any case, it is recommended to:
         * Install the `wdoc[full]` version except if you have specific constraints.
@@ -516,7 +516,7 @@ See the [Docker README](docker/README.md) for detailed instructions.
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
     * You can also use uvx or pipx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
-        * Using uvx: `uvx wdoc[full] --help`
+        * Using uvx: `uvx wdoc[full]@latest --help`
         * Using pipx: `pipx run wdoc[full] --help`
     * In any case, it is recommended to:
         * Install the `wdoc[full]` version except if you have specific constraints.
