@@ -19,7 +19,7 @@ class LocalFileStore(ByteStore):
 
         .. code-block:: python
 
-            from langchain.storage import LocalFileStore
+            from langchain_classic.storage import LocalFileStore
 
             # Instantiate the LocalFileStore with the root path
             file_store = LocalFileStore("/path/to/root")
