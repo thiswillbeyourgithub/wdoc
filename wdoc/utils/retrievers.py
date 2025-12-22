@@ -3,7 +3,7 @@ Retrievers used to retrieve the appropriate embeddings for a given query.
 """
 
 from beartype.typing import Any, List, Optional
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 # from langchain.storage import LocalFileStore

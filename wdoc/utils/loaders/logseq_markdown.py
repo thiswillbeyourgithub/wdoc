@@ -3,7 +3,7 @@ from pathlib import Path
 
 import LogseqMarkdownParser
 from beartype.typing import List, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.text_splitter import TextSplitter
 from loguru import logger
 

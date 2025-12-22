@@ -1,7 +1,7 @@
 import json
 
 from beartype.typing import List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 from wdoc.utils.loaders.shared import debug_return_empty

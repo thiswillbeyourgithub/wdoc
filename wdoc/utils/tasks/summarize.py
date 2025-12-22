@@ -8,7 +8,7 @@ import re
 from dataclasses import MISSING
 import json
 from beartype.typing import List, Tuple, Dict, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from tqdm import tqdm
 from loguru import logger
 import copy

@@ -1,5 +1,5 @@
 from beartype.typing import List
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 from prompt_toolkit import prompt
 

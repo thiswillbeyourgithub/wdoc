@@ -3,7 +3,7 @@ from pathlib import Path
 import bs4
 import dill
 from beartype.typing import Callable, List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 from wdoc.utils.loaders.shared import debug_return_empty

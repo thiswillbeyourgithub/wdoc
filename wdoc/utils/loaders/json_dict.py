@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from beartype.typing import List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.misc import doc_loaders_cache, optional_strip_unexp_args

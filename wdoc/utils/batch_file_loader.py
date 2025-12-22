@@ -19,7 +19,7 @@ from pathlib import Path
 
 from beartype.typing import List
 from joblib import Parallel, delayed
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from tqdm import tqdm
 from loguru import logger
 

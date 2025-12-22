@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from beartype.typing import List, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_community.document_loaders import UnstructuredEPubLoader
 
 from wdoc.utils.loaders.shared import debug_return_empty

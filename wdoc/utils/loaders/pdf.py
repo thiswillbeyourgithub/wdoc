@@ -9,7 +9,7 @@ import ftfy
 import openparse
 import requests
 from beartype.typing import List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.text_splitter import TextSplitter
 from langchain_community.document_loaders import (
     OnlinePDFLoader,

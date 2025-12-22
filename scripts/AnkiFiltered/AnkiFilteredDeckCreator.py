@@ -6,7 +6,7 @@ import os
 from typing import List, Tuple
 
 import fire
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 from py_ankiconnect import PyAnkiconnect
 

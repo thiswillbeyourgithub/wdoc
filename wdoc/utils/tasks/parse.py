@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import List, Optional, Union
 
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 
 from wdoc.utils.batch_file_loader import batch_load_doc
 from wdoc.utils.logger import debug_exceptions, set_parse_doc_help_md_as_docstring
