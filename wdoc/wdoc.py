@@ -15,7 +15,11 @@ from pathlib import Path
 
 from beartype.door import is_bearable
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Union
-from langchain.docstore.document import Document
+
+try:
+    from langchain.docstore.document import Document
+except ImportError:
+    from langchain_core.documents import Document
 from langchain.globals import set_debug, set_llm_cache, set_verbose
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.runnables.base import RunnableEach
