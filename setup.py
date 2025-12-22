@@ -169,12 +169,12 @@ setup(
         "fire>=0.6.0",
         "ftfy>=6.2.0",
         "joblib>=1.4.2",
-        "langchain==0.3.27",
-        "langchain-community==0.3.30",
-        "langchain-openai==0.3.34",
-        "langchain-litellm==0.2.3",
+        "langchain>=0.3.27",
+        "langchain-community>=0.3.30",
+        "langchain-openai>=0.3.34",
+        "langchain-litellm>=0.2.3",
         "langfuse>=3.6.1",  # for observability
-        "litellm==v1.78.2",
+        "litellm>=v1.78.2",
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "chonkie[all]>=1.4.0",  # chonkie is for the semantic embeddings
         "chonkie[semantic]>=1.4.0",
