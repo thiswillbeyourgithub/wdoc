@@ -492,7 +492,7 @@ Click to read more
 Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md).
 
 ## Getting started
-*`wdoc` was mainly developped and tested on python 3.13.5. When in doubt, make sure that your Python version matches this one.*
+*`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.
 
 ### Option 1: Docker (Recommended for Quick Start)
 
