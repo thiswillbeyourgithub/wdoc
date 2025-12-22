@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 from beartype.typing import Any, List, Optional, Union
 from joblib import Parallel, delayed
-from langchain.embeddings import CacheBackedEmbeddings
+from langchain_classic.embeddings import CacheBackedEmbeddings
 from langchain_core.vectorstores.base import VectorStore
 from langchain_core.embeddings import Embeddings
 from tqdm import tqdm
