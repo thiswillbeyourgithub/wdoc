@@ -55,6 +55,26 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when pip updating python-magic from git: '{err}'")
 
+        # Install audioop-lts only for Python 3.13+
+        # audioop was removed in Python 3.13, and pydub needs it
+        # See https://github.com/jiaaro/pydub/issues/815
+        if sys.version_info >= (3, 13):
+            try:
+                subprocess.check_call(
+                    [
+                        sys.executable,
+                        "-m",
+                    ]
+                    + pip
+                    + [
+                        "install",
+                        "-U",
+                        "audioop-lts>=0.2.2",
+                    ]
+                )
+            except Exception as err:
+                print(f"Error when installing audioop-lts for Python 3.13+: '{err}'")
+
         # do "openparse-download"
         try:
             subprocess.check_call(
@@ -216,7 +236,6 @@ setup(
         "deepgram-sdk >= 3.2.7",
         "httpx >= 0.27.0",  # to increase deepgram timeout
         "pydub >= 0.25.1",  # extracting audio from local video
-        "audioop-lts >= 0.2.2",  # audioop replacement for Python 3.13+, needed by pydub. See https://github.com/jiaaro/pydub/issues/815
         "ffmpeg-python >= 0.2.0",  # extracting audio from local video
         "torchaudio >= 2.8.0",  # silence removal from audio
         "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
