@@ -23,7 +23,7 @@ def create_multiquery_retriever(
 ) -> BaseRetriever:
     # advanced mode using pydantic parsers
     llm_chain = prompts.multiquery | llm | multiquery_parser
-    from langchain.retrievers.multi_query import MultiQueryRetriever
+    from langchain_classic.retrievers.multi_query import MultiQueryRetriever
 
     mqr = MultiQueryRetriever(
         retriever=retriever,
@@ -58,7 +58,7 @@ def create_parent_retriever(
         verbose=env.WDOC_VERBOSE,
         name="parent_retriever",
     )
-    from langchain.retrievers import ParentDocumentRetriever
+    from langchain_classic.retrievers import ParentDocumentRetriever
 
     parent = ParentDocumentRetriever(
         vectorstore=loaded_embeddings,
@@ -166,14 +166,16 @@ def create_retrievers(
     if len(retrievers) == 1:
         retriever = retrievers[0]
     else:
-        from langchain.retrievers.merger_retriever import MergerRetriever
+        from langchain_classic.retrievers.merger_retriever import MergerRetriever
 
         merge_retriever = MergerRetriever(retrievers=retrievers)
 
         # remove redundant results from the merged retrievers:
         from langchain_community.document_transformers import EmbeddingsRedundantFilter
-        from langchain.retrievers.document_compressors import DocumentCompressorPipeline
-        from langchain.retrievers import ContextualCompressionRetriever
+        from langchain_classic.retrievers.document_compressors import (
+            DocumentCompressorPipeline,
+        )
+        from langchain_classic.retrievers import ContextualCompressionRetriever
 
         filtered = EmbeddingsRedundantFilter(
             embeddings=embedding_engine,
