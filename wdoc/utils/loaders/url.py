@@ -2,7 +2,7 @@ import re
 
 import goose3
 from beartype.typing import List
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     PlaywrightURLLoader,
     SeleniumURLLoader,

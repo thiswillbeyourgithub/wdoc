@@ -8,7 +8,7 @@ import pydub
 import uuid6
 import yt_dlp as youtube_dl
 from beartype.typing import List, Literal, Optional
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 from wdoc.utils.env import env

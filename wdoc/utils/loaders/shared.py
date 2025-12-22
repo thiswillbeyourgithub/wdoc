@@ -5,7 +5,7 @@ from functools import cache as memoize
 from functools import wraps
 
 from beartype.typing import Callable, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 
 from wdoc.utils.env import env
 

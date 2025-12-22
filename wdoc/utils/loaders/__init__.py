@@ -15,7 +15,7 @@ from functools import wraps
 from pathlib import Path
 
 from beartype.typing import Callable, List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 from wdoc.utils.env import env

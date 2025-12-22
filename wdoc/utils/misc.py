@@ -29,7 +29,7 @@ from beartype.typing import (
 )
 from joblib import Memory
 from joblib import hash as jhash
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 from langchain_core.runnables import chain
 from platformdirs import user_cache_dir

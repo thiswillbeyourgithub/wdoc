@@ -5,7 +5,7 @@ import ffmpeg
 import pydub
 import uuid6
 from beartype.typing import List, Literal, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from loguru import logger
 
 from wdoc.utils.loaders.local_audio import load_local_audio

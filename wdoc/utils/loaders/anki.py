@@ -7,7 +7,7 @@ from pathlib import Path
 import bs4
 import uuid6
 from beartype.typing import Dict, List, Optional, Tuple, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.text_splitter import TextSplitter
 from loguru import logger
 from tqdm import tqdm

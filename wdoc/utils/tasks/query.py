@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 from beartype.typing import List, Optional, Union
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
