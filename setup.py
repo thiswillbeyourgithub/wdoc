@@ -189,7 +189,7 @@ setup(
         "fire>=0.6.0",
         "ftfy>=6.2.0",
         "joblib>=1.4.2",
-        "langchain>=0.3.27",
+        "langchain>=1.2.0",
         "langchain-community>=0.3.30",
         "langchain-openai>=0.3.34",
         "langchain-litellm>=0.2.3",
