@@ -17,7 +17,7 @@ from langchain_core.embeddings import Embeddings
 from tqdm import tqdm
 from loguru import logger
 
-# from langchain.storage import LocalFileStore
+# from langchain_classic.storage import LocalFileStore
 from wdoc.utils.customs.compressed_embeddings_cacher import LocalFileStore
 from wdoc.utils.env import env
 from wdoc.utils.misc import ModelName, cache_dir, get_tkn_length, cache_file_in_memory
