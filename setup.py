@@ -162,7 +162,7 @@ setup(
             "wdoc=wdoc.__main__:cli_launcher",
         ],
     },
-    python_requires=">=3.13",
+    python_requires=">=3.11",
     install_requires=[
         "sqlalchemy>=2.0.32",
         "beautifulsoup4>=4.12.3",
