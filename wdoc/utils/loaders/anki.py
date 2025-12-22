@@ -8,7 +8,7 @@ import bs4
 import uuid6
 from beartype.typing import Dict, List, Optional, Tuple, Union
 from langchain_core.documents import Document
-from langchain.text_splitter import TextSplitter
+from langchain_text_splitters import TextSplitter
 from loguru import logger
 from tqdm import tqdm
 

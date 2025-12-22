@@ -4,7 +4,7 @@ from pathlib import Path
 import LogseqMarkdownParser
 from beartype.typing import List, Union
 from langchain_core.documents import Document
-from langchain.text_splitter import TextSplitter
+from langchain_text_splitters import TextSplitter
 from loguru import logger
 
 from wdoc.utils.loaders.shared import debug_return_empty, markdownimage_regex
