@@ -708,13 +708,23 @@ def get_model_max_tokens(modelname: ModelName) -> int:
 
 
 def get_tkn_length(
-    tosplit: str,
+    tosplit: Union[str, Document],
     modelname: Union[str, ModelName] = "gpt-4o-mini",
 ) -> int:
     if isinstance(modelname, ModelName):
         modelname = modelname.original
     modelname = modelname.replace("openrouter/", "")
-    return litellm.token_counter(model=modelname, text=tosplit)
+    if isinstance(tosplit, str):
+        return litellm.token_counter(model=modelname, text=tosplit)
+
+    # avoid recomputing token length for documents
+    tl = tosplit.metadata.get("tkn_length", None)
+    if tl and isinstance(tl, int):
+        return tl
+    else:
+        tl = litellm.token_counter(model=modelname, text=tosplit.page_content)
+        tosplit.metadata["tkn_length"] = tl
+        return tl
 
 
 class ChonkieSemanticSplitter(TextSplitter):
