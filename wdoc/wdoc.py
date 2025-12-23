@@ -709,9 +709,9 @@ class wdoc:
         for doc in self.loaded_docs:
             meta = doc.metadata["path"]
             if meta not in docs_tkn_cost:
-                docs_tkn_cost[meta] = get_tkn_length(doc.page_content)
+                docs_tkn_cost[meta] = get_tkn_length(doc)
             else:
-                docs_tkn_cost[meta] += get_tkn_length(doc.page_content)
+                docs_tkn_cost[meta] += get_tkn_length(doc)
 
         full_tkn = sum(list(docs_tkn_cost.values()))
         logger.warning("Token price of each document:")

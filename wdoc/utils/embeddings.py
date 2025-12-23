@@ -284,7 +284,7 @@ def create_embeddings(
     logger.info(f"Docs to embed: {len(docs)}")
 
     # check price of embedding
-    full_tkn = sum([get_tkn_length(doc.page_content) for doc in docs])
+    full_tkn = sum([get_tkn_length(doc) for doc in docs])
     logger.info(f"Total number of tokens in documents: '{full_tkn}'")
     if modelname.backend in [
         "ollama",
@@ -375,7 +375,7 @@ def create_embeddings(
     current_doc_count = 0
 
     for i, doc in enumerate(docs):
-        doc_tokens = get_tkn_length(doc.page_content)
+        doc_tokens = get_tkn_length(doc)
 
         # Check if adding this doc would exceed limits
         if current_doc_count > 0 and (
