@@ -966,7 +966,7 @@ def check_docs_tkn_length(
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
     identifier = str(identifier)
-    size = sum([get_tkn_length(d.page_content) for d in docs])
+    size = sum([get_tkn_length(d) for d in docs])
     if size <= min_token:
         logger.warning(
             f"Example of page from document with too few tokens : {docs[len(docs) // 2].page_content}"
