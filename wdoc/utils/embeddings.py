@@ -366,11 +366,34 @@ def create_embeddings(
         return temp
 
     # create a faiss index for batch of documents
-    batch_size = 1000
-    batches = [
-        [i * batch_size, (i + 1) * batch_size]
-        for i in range(len(docs) // batch_size + 1)
-    ]
+    # Create batches based on token count (max 100k tokens) and document count (max 1000 docs)
+    max_tokens_per_batch = 100_000
+    max_docs_per_batch = 1000
+    batches = []
+    current_batch_start = 0
+    current_token_count = 0
+    current_doc_count = 0
+
+    for i, doc in enumerate(docs):
+        doc_tokens = get_tkn_length(doc.page_content)
+
+        # Check if adding this doc would exceed limits
+        if current_doc_count > 0 and (
+            current_token_count + doc_tokens > max_tokens_per_batch
+            or current_doc_count >= max_docs_per_batch
+        ):
+            # Save current batch and start a new one
+            batches.append([current_batch_start, i])
+            current_batch_start = i
+            current_token_count = doc_tokens
+            current_doc_count = 1
+        else:
+            current_token_count += doc_tokens
+            current_doc_count += 1
+
+    # Add the final batch
+    if current_doc_count > 0:
+        batches.append([current_batch_start, len(docs)])
 
     temp_dbs = Parallel(
         backend="threading",
