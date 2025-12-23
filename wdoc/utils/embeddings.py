@@ -318,13 +318,6 @@ def create_embeddings(
             logger.warning("Quitting.")
             raise SystemExit()
 
-    # create a faiss index for batch of documents
-    batch_size = 1000
-    batches = [
-        [i * batch_size, (i + 1) * batch_size]
-        for i in range(len(docs) // batch_size + 1)
-    ]
-
     def embed_one_batch(
         batch: List,
         ib: int,
@@ -371,6 +364,13 @@ def create_embeddings(
                 else:
                     time.sleep(1)
         return temp
+
+    # create a faiss index for batch of documents
+    batch_size = 1000
+    batches = [
+        [i * batch_size, (i + 1) * batch_size]
+        for i in range(len(docs) // batch_size + 1)
+    ]
 
     temp_dbs = Parallel(
         backend="threading",
