@@ -65,8 +65,7 @@ Give it to me I am in a hurry!
 
 **Note: a list of examples can be found in [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)**
 
-**Quick Start with Docker**: For the easiest setup with a web UI, check out the [Docker deployment guide](./docker/README.md).
-
+**Quick Start with Docker**: If you want an experimental web UI, check out the [Docker deployment guide](./docker/README.md).
 
 First, let's see how to *query* a pdf.
 
@@ -282,7 +281,7 @@ FAQ
     * Yes! I am maintaining an [official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) which is hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
 
 * **Is there a web UI for `wdoc`?**
-    * Yes! A [Docker-based Gradio web interface](./docker/README.md) is available for easy deployment and use without command-line interaction.
+    * Yes! An [experimental Docker-based Gradio web interface](./docker/README.md) is available for easy deployment and use without command-line interaction.
 
 * **Can I use shell pipes with `wdoc`?**
     * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
@@ -494,21 +493,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 ## Getting started
 *`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.
 
-### Option 1: Docker (Recommended for Quick Start)
-
-For the easiest setup with a web-based Gradio interface, use Docker:
-
-```bash
-cd docker
-cp custom_env.example custom_env
-# Edit custom_env to add your API keys
-docker-compose up -d
-# Access at http://localhost:7618
-```
-
-See the [Docker README](./docker/README.md) for detailed instructions.
-
-### Option 2: Direct Installation
+### Option 1: Direct Installation
 
 1. To install:
     * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually install the missing dependencies for your usecase).
@@ -532,6 +517,13 @@ See the [Docker README](./docker/README.md) for detailed instructions.
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
 5. To do an online search, the idea is `wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is Nvidia doing this month?'`.
 6. For more: read the documentation at `wdoc --help`
+
+### Option 2: Docker Interface (experimental)
+
+You can also use the experimental docker interface to use `wdoc` in the browser (including on a smartphone!).
+
+See the [Docker README](./docker/README.md) for detailed instructions.
+
 
 ## Scripts made with wdoc
 * *More to come in [the scripts folder](./scripts/)*.

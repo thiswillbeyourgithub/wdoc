@@ -12,7 +12,7 @@ git clone https://github.com/thiswillbeyourgithub/wdoc.git
 cd wdoc/docker
 ```
 
-**Note**: No pre-built Docker images are provided. You'll build the image locally from the cloned repository.
+**Note**: No pre-built Docker images are provided. You'll either build the image locally from the cloned repository or install it from PyPI, depending on the value of `COMPILE_OR_INSTALL` (see below).
 
 ## Quick Start
 
@@ -21,12 +21,12 @@ All commands below should be run from the `docker` subdirectory of the wdoc repo
 1. **Configure environment variables**: Copy and edit the environment file (both files are in the `./docker` directory):
    ```bash
    cp custom_env.example custom_env
-   # Edit custom_env to add your API keys (OPENAI_API_KEY, etc.)
+   # Manually edit custom_env to add your API keys (OPENAI_API_KEY, etc.)
    ```
 
 2. **Start the service**:
    ```bash
-   docker-compose up -d
+   sudo docker compose up
    ```
 
 3. **Access the web interface**: Open your browser to `http://localhost:7618`
@@ -39,7 +39,7 @@ All commands below should be run from the `docker` subdirectory of the wdoc repo
   
   To change the build mode, set the environment variable before building:
   ```bash
-  COMPILE_OR_INSTALL=install docker-compose up -d --build
+  COMPILE_OR_INSTALL=install sudo docker compose up -d --build
   ```
 
 - **Container user**: Runs as non-root user `wdoc` (UID:GID 1000:1000) for security
@@ -68,7 +68,7 @@ mkdir -p ./vectorstore ./wdoc_cache
 sudo chown -R 1000:1000 ./vectorstore ./wdoc_cache
 ```
 
-**Alternative**: If you're running with a different user ID, you can modify the `docker-compose.yml` to use your current user:
+**Alternative**: If you're running with a different user ID, you can modify the `docker compose.yml` to use your current user:
 
 ```yaml
 user: "${UID}:${GID}"
@@ -76,23 +76,23 @@ user: "${UID}:${GID}"
 
 Then run with:
 ```bash
-UID=$(id -u) GID=$(id -g) docker-compose up -d
+sudo docker compose up
 ```
 
 ### Checking Logs
 
 To view the application logs:
 ```bash
-docker-compose logs -f wdoc-gui
+sudo docker compose logs -f wdoc-gui
 ```
 
 ### Rebuilding After Changes
 
 If you've modified `gui.py` or `Dockerfile`:
 ```bash
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
+sudo docker compose down
+sudo docker compose build --no-cache
+sudo docker compose up
 ```
 
 ## Configuration
@@ -120,11 +120,11 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 
 ### Volume Paths
 
-You can customize volume paths using environment variables in `docker-compose.yml`:
+You can customize volume paths using environment variables in `docker compose.yml`:
 
 ```bash
-VECTORSTORE_PATH=/your/custom/path/vectorstore docker-compose up -d
-CACHE_PATH=/your/custom/path/cache docker-compose up -d
+VECTORSTORE_PATH=/your/custom/path/vectorstore sudo docker compose up -d
+CACHE_PATH=/your/custom/path/cache sudo docker compose up -d
 ```
 
 ## Security Notes
@@ -142,13 +142,13 @@ From the `docker` directory:
 
 ```bash
 # Build from local source (default)
-docker build -t wdoc-gui -f Dockerfile ..
+sudo docker build -t wdoc-gui -f Dockerfile ..
 
 # Or build from PyPI
-docker build -t wdoc-gui -f Dockerfile --build-arg COMPILE_OR_INSTALL=install ..
+sudo docker build -t wdoc-gui -f Dockerfile --build-arg COMPILE_OR_INSTALL=install ..
 
 # Run the container
-docker run -p 7618:7860 \
+sudo docker run -p 7618:7860 \
   -v $(pwd)/vectorstore:/app/vectorstore \
   -v $(pwd)/wdoc_cache:/home/wdoc/.cache/wdoc \
   --env-file custom_env \
