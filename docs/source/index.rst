@@ -6,7 +6,7 @@
 wdoc
 ====
 
-This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_, a sophisticated RAG system made by `Olicorne, a medical student <https://github.com/thiswillbeyourgithub>`_.
+This is the documentation for `wdoc <https://github.com/thiswillbeyourgithub/wdoc>`_, a sophisticated RAG system made by `Olicorne, a psychiatry resident <https://olicorne.org/>`_.
 
 Below the table of content is the content of the `README.md`, followed by the content of `wdoc/docs/help.md` (i.e. what you see when you run `uvx wdoc --help`).
 
