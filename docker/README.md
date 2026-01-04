@@ -2,6 +2,8 @@
 
 This directory contains a dockerized Gradio web interface for wdoc, designed for easy deployment and use.
 
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/dev/images/gradio_interface.png?raw=true"></p>
+
 ## Prerequisites
 
 This setup assumes you have already cloned the wdoc repository:
