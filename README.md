@@ -13,7 +13,7 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
 
 *(The online documentation can be found [here](https://wdoc.readthedocs.io/en/stable))*
 
-* **Goal and project specifications**: `wdoc`'s  goal is to create **perfectly useful** summaries and **perfectly useful** sourced answers to questions on heterogeneous corpus. It's capable of querying **tens of thousands** of documents across [various file types](#Supported-filetypes) at the same time. The project also includes an opinionated summary feature to help users efficiently keep up with large amounts of information. It uses mostly [LangChain](https://python.langchain.com/) and [LiteLLM](https://docs.litellm.ai/docs/) as backends.
+* **Goal and project specifications**: `wdoc`'s  goal is to create **perfectly useful** summaries and **perfectly useful** sourced answers to questions on heterogeneous corpus. It's capable of querying **tens of thousands** of documents across [various file types](#filetypes) at the same time. The project also includes an opinionated summary feature to help users efficiently keep up with large amounts of information. It uses mostly [LangChain](https://python.langchain.com/) and [LiteLLM](https://docs.litellm.ai/docs/) as backends.
 
 * **Current status**: **usable, tested, still under active development, tens of planned features**
     * I don't plan on stopping to read anytime soon so if you find it promising, stick around as I have many improvements planned (see roadmap section).
@@ -233,8 +233,8 @@ FAQ
     * Yes of course! `wdoc --task=query --path https://wdoc.readthedocs.io/en/latest/all_docs.html`
 * **Why can `wdoc` also produce summaries?**
     * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
-* **What other tasks are supported by `wdoc`?**
-    * See [Supported tasks](#Supported-tasks)single_page_doc
+* **Which tasks are supported by `wdoc`?**
+    * See [Tasks](#tasks).
 * **Which LLM providers are supported by `wdoc`?**
     * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
 * **What do you use `wdoc` for?**
@@ -452,43 +452,6 @@ Click to read more
 
 </details>
 
-### Supported filetypes
-* **anki**: any subset of an [anki](https://github.com/ankitects/anki) collection db. `alt` and `title` of images can be shown to the LLM, meaning that if you used [the ankiOCR addon](https://github.com/cfculhane/AnkiOCR) this information will help contextualize the note for the LLM.
-* **auto**: default, guess the filetype for you
-* **epub**: barely tested because epub is in general a poorly defined format
-* **json_dict**: a text file containing a single json dict.
-* **local_audio**: supports many file formats, can use either OpenAI's whisper or [deepgram](https://deepgram.com)'s Nova-3 model. Supports automatically removing silence etc. Note: audio that are too large for whisper (usually >25mb) are automatically split into smaller files, transcribed, then combined. Also, audio transcripts are converted to text containing timestamps at regular intervals, making it possible to ask the LLM when something was said.
-* **local_html**: useful for website dumps
-* **local_video**: extract the audio then treat it as **local_audio**
-* **logseq_markdown**: thanks to my other project: [LogseqMarkdownParser](https://github.com/thiswillbeyourgithub/LogseqMarkdownParser) you can use your [Logseq graph](https://github.com/logseq/logseq/)
-* **online_media**: use youtube_dl to try to download videos/audio, if fails try to intercept good url candidates using playwright to load the page. Then processed as **local_audio** (but works with video too).
-* **online_pdf**: via URL then treated as a **pdf** (see above)
-* **pdf**: 15 default loaders are implemented, heuristics are used to keep the best one and stop early. Table support via [openparse](https://github.com/Filimoa/open-parse/) or [UnstructuredPDFLoader](https://python.langchain.com/docs/integrations/document_loaders/unstructured_pdfloader/). Easy to add more.
-* **powerpoint**: .ppt, .pptx, .odp, ...
-* **string**: the cli prompts you for a text so you can easily paste something, handy for paywalled articles!
-* **text**: send a text content directly as path
-* **txt**: .txt, markdown, etc
-* **url**: try many ways to load a webpage, with heuristics to find the better parsed one
-* **word**: .doc, .docx, .odt, ...
-* **youtube**: text is then either from the yt subtitles / translation or even better: using whisper / deepgram. Note that youtube subtitles are downloaded with the timecode (so you can ask 'when does the author talks about such and such) but at a lower sampling frequency (instead of one timecode per second, only one per 15s). Youtube chapters are also given as context to the LLM when summarizing, which probably help it a lot.
-
-* **Recursive types**
-    * **ddg**: does an online web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). This is not an agent search, we only use `wdoc` over the urls fetched by DuckDuckGo and return the result. Only supported by `query` tasks.
-    * **json_entries**: turns a path to a file where each line is a json **dict**: that contains arguments to use when loading. Example: load several other recursive types. An example can be found in `docs/json_entries_example.json`.
-    * **link_file**: turn a text file where each line contains a url into appropriate loader arguments. Supports any link, so for example webpage, link to pdfs and youtube links can be in the same file. Handy for summarizing lots of things!
-    * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
-    * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
-    * **youtube playlists**: get the link for each video then process as **youtube**
-
-### Supported tasks
-* **query** give documents and asks questions about it.
-* **search** only returns the documents and their metadata. For anki it can be used to directly open cards in the browser.
-* **summarize** give documents and read a summary. The summary prompt can be found in `utils/prompts.py`.
-* **summarize_then_query** summarize the document then allow you to query directly about it.
-
-## Walkthrough and examples
-
-Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md).
 
 ## Getting started
 *`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.
@@ -525,96 +488,3 @@ You can also use the experimental docker interface to use `wdoc` in the browser 
 See the [Docker README](./docker/README.md) for detailed instructions.
 
 
-## Scripts made with wdoc
-* *More to come in [the scripts folder](./scripts/)*.
-* [Ntfy Summarizer](scripts/NtfySummarizer): automatically summarize a document from your android phone using [ntfy.sh](ntfy.sh).
-* [TheFiche](scripts/TheFiche): create summaries for specific notions directly as a [logseq](https://github.com/logseq/logseq) page.
-* [FilteredDeckCreator](scripts/FilteredDeckCreator): directly create an [anki](https://ankitects.github.io/) filtered deck from the cards found by `wdoc`.
-* [Official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool), hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
-* [MediaURLFinder](scripts/MediaURLFinder) simply leverages the `find_online_media` loader helper to use `playwright` and `yt-dlp` to find all the URLs of medias (videos, audio etc). This is especially useful if `yt-dlp` alone is not able to find the URL of a ressource.
-
-## FAQ
-
-<details>
-<summary>
-FAQ
-</summary>
-
-* **Who is this for?**
-    * `wdoc` is for power users who want document querying on steroid, and in depth AI powered document summaries.
-* **What's RAG?**
-    * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
-* **Why make another RAG system? Can't you use any of the others?**
-    * I'm [Olicorne](https://olicorne.org/), a medical student who needed a tool to ask medical questions from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc). Existing solutions couldn't handle this diversity and scale of content.
-* **Why is `wdoc` better than most RAG system to ask questions on documents?**
-    * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also `wdoc` is very customizable.
-* **Can you use wdoc on `wdoc`'s documentation?**
-    * Yes of course! `wdoc --task=query --path https://wdoc.readthedocs.io/en/latest/all_docs.html`
-* **Why can `wdoc` also produce summaries?**
-    * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
-* **What other tasks are supported by `wdoc`?**
-    * See [Supported tasks](#Supported-tasks)single_page_doc
-* **Which LLM providers are supported by `wdoc`?**
-    * `wdoc` supports virtually any LLM provider thanks to [litellm](https://docs.litellm.ai/). It even supports local LLM and local embeddings (see [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)). The list of supported embeddings engine can be found [here](https://docs.litellm.ai/docs/embedding/supported_embedding) but includes at least Openai (or any openai API compatible models), Cohere, Azure, Bedrock, NVIDIA NIM, Hugginface, Mistral, Ollama, Gemini, Vertex, Voyage.
-* **What do you use `wdoc` for?**
-    * I follow heterogeneous sources to keep up with the news: youtube, website, etc. So thanks to `wdoc` I can automatically create awesome markdown summaries that end up straight into my [Logseq](https://github.com/logseq/logseq/) database as a bunch of `TODO` blocks.
-    * I use it to ask technical questions to my vast heterogeneous corpus of medical knowledge.
-    * I use it to query my personal documents using the `--private` argument.
-    * I sometimes use it to summarize a documents then go straight to asking questions about it, all in the same command.
-    * I use it to ask questions about entire youtube playlists.
-    * Other use case are the reason I made the [scripts made with `wdoc` section](#scripts-made-with-wdoc)
-* **What's up with the name?**
-    * One of my favorite character (and somewhat of a rolemodel is [Winston Wolf](https://www.youtube.com/watch?v=UeoMuK536C8) and after much hesitation I decided `WolfDoc` would be too confusing and `WinstonDoc` sounds like something micro$oft would do. Also `wd` and `wdoc` were free, whereas `doctools` was already taken. The initial name of the project was `DocToolsLLM`, a play on words between 'doctor' and 'tool'.
-* **How can I improve the prompt for a specific task without coding?**
-    * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
-* **How can I use `wdoc`'s parser for my own documents?**
-    * If you are in the shell cli you can easily use `wdoc parse my_file.pdf`.
-    add `--format=langchain_dict` to get the text and metadata as a list of dict, otherwise you will only get the text. Other formats exist including `--format=xml` to make it LLM friendly like [files-to-promt](https://github.com/simonw/files-to-prompt).
-    * If you want the document using python:
-        ``` python
-        from wdoc import wdoc
-        list_of_docs = wdoc.parse_doc(path=my_path)
-        ```
-    * Another example would be to use wdoc to parse an anki deck: `wdoc parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
-* **What should I do if my PDF are encrypted?**
-    * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
-        * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
-* **How can I add my own pdf parser?**
-    * Write a python class and add it there: `wdoc.utils.loaders.pdf_loaders['parser_name']=parser_object` then call `wdoc` with `--pdf_parsers=parser_name`.
-        * The class has to take a `path` argument in `__init__`, have a `load` method taking
-        no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
-        class for an example.
-
-* **What should I do if I keep hitting rate limits?**
-    * The simplest way is to add the `debug` argument. It will disable multithreading,
-        multiprocessing and LLM concurrency. A less harsh alternative is to set the
-        environment variable `WDOC_LLM_MAX_CONCURRENCY` to a lower value.
-
-* **How can I run the tests?**
-    * Take a look at the files `./tests/run_all_tests.sh`.
-
-* **How can I query a text but without chunking? / How can I query a text with the full text as context?**
-    * If you set the environment variable `WDOC_MAX_CHUNK_SIZE` to a very high value and use a model with enough context according to litellm's metadata, then no chunking will happen and the LLM will have the full text as context.
-
-* **Is there a way to use `wdoc` with [Open-WebUI](https://github.com/open-webui/open-webui/)?**
-    * Yes! I am maintaining an [official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) which is hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
-
-* **Can I use shell pipes with `wdoc`?**
-    * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
-
-* **Can the environment variables be set at runtime?**
-    * Sort of. Actually when importing `wdoc`, code in `wdoc/utils/env.py` creates a dataclass that holds the environment variables used by `wdoc`. This is done primarily to ensure runtime type checking and to ensure that when an env variable is accessed inside wdoc's code (through the dataclass) it is always compared to the environment one. If you decide to change env variables throughout the code, this change new value will be used inside `wdoc`. But that's somewhat brittle because some env variables are used to store the *default* value of some function or class and hence are only used when importing code so will be out of sync. Additionaly, `wdoc` will intentionaly crash if it suspects the `WDOC_PRIVATE_MODE` env var is out of sync, just to be safe. Also note that if env vars like `WDOC_LANGFUSE_PUBLIC_KEY` are found, `wdoc` will overwrite `LANGFUSE_PUBLIC_KEY` with it. This is because `litellm` (maybe others) looks for this env variable to enable `langfuse` callbacks. This whole contraption allows to set env variable for a specific user of when using the `open-webui` `wdoc` tool. Feedback is much welcome for this feature.
-
-* **How can I build the autodoc using sphinx?**
-    * The command I've been using is `sphinx-apidoc -o docs/source/ wdoc --force`, to call from the root of this repository.
-
-* **Why can't I load the vectorstores in other langchain projects?**
-    * In `wdoc/utils/customs/binary_faiss_vectorstore.py`, we create `BinaryFAISS` and `CompressedFAISS`. The latter is just like FAISS but with zlib compression to the pickled index and the former adds on top binary embeddings, resulting in faster and more compact embeddings. If you want to disable compression altogether, use the env variable `WDOC_MOD_FAISS_COMPRESSION=false`.
-
-* **Which python version is used in the test suite?**
-    * The recommended python version is `3.12.11`.
-
-* **Why does the online search only supports the 'query' task?**
-    * The way `wdoc` works for summaries is to take the "whole document", chunk it into sequential "documents" and iteratively create the summary. But if we start with several documents (say difference web pages) then the "sequence" wouldn't make sense.
-
-</details>
