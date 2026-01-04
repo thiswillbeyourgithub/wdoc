@@ -49,15 +49,11 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
 
 ## Explanatory diagrams
 
-### Query Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">
-
-
-### Summary Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">
-
-### Search Task Flow
-<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">
+<p float="left" align="middle">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output" height="400">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output" height="400">
+<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output" height="400">
+</p>
 
 ## Ultra short guide for people in a hurry
 <details>
