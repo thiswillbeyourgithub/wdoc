@@ -41,6 +41,8 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
   - [Filetypes](#filetypes)
   - [Walkthrough and examples](#walkthrough-and-examples)
 - [Getting started](#getting-started)
+  - [Direct installation](#direct-installation)
+  - [Experimental Docker Interface](#experiental-docker-interface)
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
@@ -182,9 +184,12 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md).
 
 ## Getting started
-*`wdoc` was mainly developped on python 3.11.7 but I'm not sure all the versions that work. When in doubt, make sure that your Python version matches this one.*
+*`wdoc` was mainly developped and tested on python 3.13.5 but for compatibility it is installable with python version `>=3.11`. If possible, try to use python `3.13`.
+
+### Direct Installation
+
 1. To install:
-    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually deal install the missing dependencies for your usecase).
+    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually install the missing dependencies for your usecase).
     * Or to get a specific git branch:
         * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
         * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
@@ -193,18 +198,24 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         * Using pipx: `pipx run wdoc[full] --help`
     * In any case, it is recommended to:
         * Install the `wdoc[full]` version except if you have specific constraints.
-        * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`. This is because those two packages are kinda weird to install and package.
-    * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks etc.
+        * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
+    * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
-    * Don't forget that if you're using a lot of documents (notably via [recursive filetypes](#recursive-filepaths)) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
+    * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
     * Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. 
 4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
 5. To do an online search, the idea is `wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is Nvidia doing this month?'`.
 6. For more: read the documentation at `wdoc --help`
+
+### Experimental Docker Interface
+
+You can also use the experimental docker interface to use `wdoc` in the browser (including on a smartphone!).
+
+See the [Docker README](./docker/README.md) for detailed instructions.
 
 ## Scripts made with wdoc
 * *More to come in [the scripts folder](./scripts/)*.
