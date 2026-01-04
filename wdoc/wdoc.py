@@ -1022,7 +1022,9 @@ class wdoc:
             ]
         ) | {
             "intermediate_answers": itemgetter("inputs")
-            | RunnableEach(bound=answer_each_doc_chain),
+            | RunnableEach(bound=answer_each_doc_chain.with_config(multi)).with_config(
+                multi
+            ),
             "question_to_answer": itemgetter("question_to_answer"),
             "filtered_docs": itemgetter("filtered_docs"),
             "unfiltered_docs": itemgetter("unfiltered_docs"),
