@@ -276,7 +276,7 @@ def create_interface() -> gr.Blocks:
         """,
     ) as interface:
         gr.Markdown(
-            "# 📚 wdoc Web Interface\n\nProcess documents with AI-powered query, summarization, and parsing."
+            "# 📚 wdoc Web Interface (Experimental)\n\nProcess documents with AI-powered query, summarization, and parsing."
         )
 
         with gr.Tabs() as main_tabs:
