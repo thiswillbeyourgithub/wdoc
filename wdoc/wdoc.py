@@ -20,7 +20,7 @@ from langchain_core.documents import Document
 from langchain_core.globals import set_debug, set_llm_cache, set_verbose
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.runnables.base import RunnableEach
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from loguru import logger as logger
 
 # import this first because it sets the logging level

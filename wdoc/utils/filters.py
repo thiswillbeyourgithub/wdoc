@@ -6,7 +6,7 @@ since the langchain implementation does not support native filtering. These func
 allow filtering by regex patterns on document content and metadata.
 """
 
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 import re
 import time
 from beartype.typing import Callable

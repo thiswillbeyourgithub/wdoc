@@ -21,7 +21,7 @@ from langchain_community.document_loaders import (
     UnstructuredPDFLoader,
 )
 from loguru import logger
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from unstructured.cleaners.core import clean_extra_whitespace
 
 from wdoc.utils.env import env, is_linux, is_out_piped

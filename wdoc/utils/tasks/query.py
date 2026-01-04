@@ -11,7 +11,7 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.runnables import chain
 from langchain_core.runnables.base import RunnableLambda
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from loguru import logger
 
 from wdoc.utils.env import env
