@@ -1,0 +1,74 @@
+flowchart LR
+    subgraph QueryTask["Query Task"]
+      subgraph InputsQ["User Arguments"]
+          PathQ["Path"]
+          TopKQ["Top K"]
+          UserQueryQ["User Query"]
+      end
+
+      VectorStoreEmbeddingsQ["VectorStore + Embeddings"]
+      ChunkerQ["Loading & Chunking<br/>Text splitting"]
+
+      PathQ --> ChunkerQ
+      ChunkerQ --> VectorStoreEmbeddingsQ
+
+      QueryOutputQ["Output"]
+      RaphaelQ["Raphael the Rephraser<br/>Query expansion"]
+      EveQ["Eve the Evaluator<br/>Document filtering"]
+      AnnaQ["Anna the Answerer<br/>Per-doc answers"]
+      
+      subgraph RecursiveCombiningQ["Recursive Combining"]
+          SemanticBatching["Semantic batching"]
+          CarlQ["Carl the Combiner<br/>Answer combination"]
+          SemanticBatching --> CarlQ
+      end
+      
+      UserQueryQ --> RaphaelQ
+      RaphaelQ --> VectorStoreEmbeddingsQ
+      TopKQ -->|ex: top_k=50| VectorStoreEmbeddingsQ
+      VectorStoreEmbeddingsQ -->|50 docs| EveQ
+      EveQ -->|37 docs| AnnaQ
+      AnnaQ -->|37 answers| RecursiveCombiningQ
+      CarlQ -->|1 answer| QueryOutputQ
+    end
+
+    subgraph SearchTask["Search Task"]
+      subgraph InputsS["User Arguments"]
+          PathSe["Path"]
+          TopKSe["Top K"]
+          UserQuerySe["User Query"]
+      end
+
+      VectorStoreEmbeddingsSe["VectorStore + Embeddings"]
+      ChunkerSe["Loading & Chunking<br/>Text splitting"]
+
+      PathSe --> ChunkerSe
+
+      SearchOutput["Output<br/>37 documents"]
+      RaphaelSe["Raphael the Rephraser<br/>Query expansion"]
+      EveSe["Eve the Evaluator<br/>Document filtering"]
+      
+      UserQuerySe --> RaphaelSe
+      RaphaelSe --> VectorStoreEmbeddingsSe
+      TopKSe -->|ex: top_k=50| VectorStoreEmbeddingsSe
+      VectorStoreEmbeddingsSe -->|50 docs| EveSe
+      EveSe -->|37 docs| SearchOutput
+    end
+
+    subgraph SummaryTask["Summary Task"]
+      subgraph InputsSu["User Arguments"]
+          PathSu["Path"]
+      end
+
+      ChunkerSu["Loading & Chunking<br/>Text splitting"]
+
+      PathSu --> ChunkerSu
+
+      SummaryOutputSu["wdocSummary object"]
+
+      SamSu["Sam the Summarizer<br/>Document summary"]
+      ConcatenationSu["Concatenation"]
+      ChunkerSu -->|ex: 17 chunks| SamSu
+      SamSu -->|17 overlapping<br/>chunk summaries| ConcatenationSu
+      ConcatenationSu -->|1 final summary| SummaryOutputSu
+    end
