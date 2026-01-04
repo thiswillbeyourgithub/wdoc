@@ -1,6 +1,6 @@
 # Docker Setup
 
-This directory contains a dockerized Gradio web interface for wdoc, designed for easy deployment and use.
+This directory contains an experimental dockerized Gradio web interface for wdoc, designed for easy deployment and use.
 
 <p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/dev/images/gradio_interface.png?raw=true"></p>
 
