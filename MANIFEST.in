@@ -1,3 +1,4 @@
 include wdoc/docs/examples.md
 include wdoc/docs/help.md
 include wdoc/docs/parse_doc_help.md
+include wdoc/docs/docker/README.md
