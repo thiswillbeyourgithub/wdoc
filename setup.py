@@ -113,31 +113,31 @@ with open("README.md", "r") as readme:
 
     # Convert query diagram HTML to markdown
     assert (
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">'
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output" height="400">'
         in long_description
     ), "Unexpected HTML for query diagram"
     long_description = long_description.replace(
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output">',
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true" alt="Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output" height="400">',
         "![Query task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator, Anna the Answerer, and recursive combining to final output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_query.png?raw=true)",
     )
 
     # Convert summary diagram HTML to markdown
     assert (
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">'
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output" height="400">'
         in long_description
     ), "Unexpected HTML for summary diagram"
     long_description = long_description.replace(
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output">',
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true" alt="Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output" height="400">',
         "![Summary task workflow diagram showing the flow from user inputs through loading & chunking, Sam the Summarizer, concatenation to wdocSummary output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_summary.png?raw=true)",
     )
 
     # Convert search diagram HTML to markdown
     assert (
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">'
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output" height="400">'
         in long_description
     ), "Unexpected HTML for search diagram"
     long_description = long_description.replace(
-        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output">',
+        '<img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true" alt="Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output" height="400">',
         "![Search task workflow diagram showing the flow from user inputs through Raphael the Rephraser, VectorStore, Eve the Evaluator to search output](https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/diagram_search.png?raw=true)",
     )
 
