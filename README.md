@@ -23,14 +23,14 @@ Created by a medical student who needed a way to get a definitive answer from mu
     * Please open an issue before making a PR, as there may be ongoing improvements in the pipeline.
 
 * **Key Features**:
-    * **Docker Web UI**: Easy deployment with a [Gradio-based web interface](docker/README.md) for simplified document processing without CLI interaction.
+    * **Docker Web UI**: Easy deployment with a [Gradio-based web interface](./docker/README.md) for simplified document processing without CLI interaction.
     * **High recall and specificity**: it was made to find A LOT of documents using carefully designed embedding search then carefully aggregate gradually each answer using semantic batch to produce a single answer that mentions the source pointing to the exact portion of the source document.
         * Use both an expensive and cheap LLM to make recall as high as possible because we can afford fetching a lot of documents per query (via embeddings)
     * Supports **virtually any LLM providers**, including local ones, and even with extra layers of security for super secret stuff.
     * Aims to **support *any* filetypes** and query from all of them at the same time (**15+** are already implemented!)
     * **Actually *useful* AI powered summary**: get the thought process of the author instead of nebulous takeaways.
     * **Actually *useful* AI powered queries**: get the **sourced** indented markdown answer yo your questions instead of hallucinated nonsense.
-    * **Extensible**: this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool). Also available as a [Docker web UI](docker/README.md) for easy deployment.
+    * **Extensible**: this is both a tool and a library. It was even turned into [an Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool). Also available as a [Docker web UI](./docker/README.md) for easy deployment.
     * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
@@ -65,7 +65,7 @@ Give it to me I am in a hurry!
 
 **Note: a list of examples can be found in [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)**
 
-**Quick Start with Docker**: For the easiest setup with a web UI, check out the [Docker deployment guide](docker/README.md).
+**Quick Start with Docker**: For the easiest setup with a web UI, check out the [Docker deployment guide](./docker/README.md).
 
 
 First, let's see how to *query* a pdf.
@@ -282,7 +282,7 @@ FAQ
     * Yes! I am maintaining an [official Open-WebUI Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) which is hosted [here](https://github.com/thiswillbeyourgithub/openwebui_custom_pipes_filters/blob/main/tools/wdoc_tools.py).
 
 * **Is there a web UI for `wdoc`?**
-    * Yes! A [Docker-based Gradio web interface](docker/README.md) is available for easy deployment and use without command-line interaction.
+    * Yes! A [Docker-based Gradio web interface](./docker/README.md) is available for easy deployment and use without command-line interaction.
 
 * **Can I use shell pipes with `wdoc`?**
     * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
@@ -506,7 +506,7 @@ docker-compose up -d
 # Access at http://localhost:7618
 ```
 
-See the [Docker README](docker/README.md) for detailed instructions.
+See the [Docker README](./docker/README.md) for detailed instructions.
 
 ### Option 2: Direct Installation
 
