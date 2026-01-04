@@ -2,7 +2,7 @@
 
 This directory contains an experimental dockerized Gradio web interface for wdoc, designed for easy deployment and use.
 
-<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/dev/images/gradio_interface.png?raw=true"></p>
+<p align="center"><img src="https://github.com/thiswillbeyourgithub/wdoc/blob/main/images/gradio_interface.png?raw=true"></p>
 
 ## Prerequisites
 
