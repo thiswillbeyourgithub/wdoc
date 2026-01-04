@@ -226,7 +226,7 @@ FAQ
 * **What's RAG?**
     * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
-    * I'm Olicorne, a psychiatry resident who needed a tool to ask medical questions from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc). Existing solutions couldn't handle this diversity and scale of content.
+    * I'm [Olicorne](https://olicorne.org/), a psychiatry resident who needed a tool to ask medical questions from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc). Existing solutions couldn't handle this diversity and scale of content.
 * **Why is `wdoc` better than most RAG system to ask questions on documents?**
     * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also `wdoc` is very customizable.
 * **Can you use wdoc on `wdoc`'s documentation?**
@@ -545,7 +545,7 @@ FAQ
 * **What's RAG?**
     * A RAG system (retrieval augmented generation) is basically an LLM powered search through a text corpus.
 * **Why make another RAG system? Can't you use any of the others?**
-    * I'm Olicorne, a medical student who needed a tool to ask medical questions from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc). Existing solutions couldn't handle this diversity and scale of content.
+    * I'm [Olicorne](https://olicorne.org/), a medical student who needed a tool to ask medical questions from **a lot** (tens of thousands) of documents, of different types (epub, pdf, [anki](https://ankitects.github.io/) database, [Logseq](https://github.com/logseq/logseq/), website dump, youtube videos and playlists, recorded conferences, audio files, etc). Existing solutions couldn't handle this diversity and scale of content.
 * **Why is `wdoc` better than most RAG system to ask questions on documents?**
     * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also `wdoc` is very customizable.
 * **Can you use wdoc on `wdoc`'s documentation?**
