@@ -20,7 +20,7 @@ from pathlib import Path
 from beartype.typing import List
 from joblib import Parallel, delayed
 from langchain_core.documents import Document
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from loguru import logger
 
 from wdoc.utils.env import env, is_out_piped

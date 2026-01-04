@@ -9,7 +9,7 @@ from dataclasses import MISSING
 import json
 from beartype.typing import List, Tuple, Dict, Optional, Union
 from langchain_core.documents import Document
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from loguru import logger
 import copy
 from dataclasses import dataclass, asdict

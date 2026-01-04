@@ -10,7 +10,7 @@ from beartype.typing import Dict, List, Optional, Tuple, Union
 from langchain_core.documents import Document
 from langchain_text_splitters import TextSplitter
 from loguru import logger
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 
 from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.loaders.shared import debug_return_empty

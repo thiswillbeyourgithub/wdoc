@@ -14,7 +14,7 @@ from joblib import Parallel, delayed
 from langchain_classic.embeddings import CacheBackedEmbeddings
 from langchain_core.vectorstores.base import VectorStore
 from langchain_core.embeddings import Embeddings
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 from loguru import logger
 
 # from langchain_classic.storage import LocalFileStore
