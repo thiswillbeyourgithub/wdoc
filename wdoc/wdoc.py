@@ -69,7 +69,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "4.1.2"
+    VERSION: str = "5.0.0"
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 
