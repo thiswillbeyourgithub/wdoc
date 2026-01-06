@@ -7,11 +7,7 @@ from beartype.typing import List, Literal, Optional, Union
 from langchain_core.documents import Document
 from loguru import logger
 
-try:
-    import torchaudio
-except Exception as e:
-    # torchaudio can be tricky to install to just in case let's avoid crashing wdoc entirely
-    logger.warning(f"Failed to import torchaudio: '{e}'")
+import torchaudio
 
 from wdoc.utils.loaders.shared import debug_return_empty
 from wdoc.utils.loaders.shared_audio import (
