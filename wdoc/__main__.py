@@ -237,7 +237,7 @@ def cli_launcher() -> None:
         args.pop(args.index("web"))
         sys.argv.pop(sys.argv.index("web"))
         kwargs["task"] = "query"
-        sys.argv.append("--task='query'")
+        sys.argv.append("--task=query")
 
         if "filetype" not in kwargs:
             logger.debug("Web search: specifying that 'filetype' is 'ddg'")
@@ -353,7 +353,7 @@ def cli_launcher() -> None:
             and candidates[0]
         ):
             kwargs["path"] = args.pop(0)
-            sys.argv[sys.argv.index(kwargs["path"])] = f"--path='{kwargs['path']}'"
+            sys.argv[sys.argv.index(kwargs["path"])] = f"--path={kwargs['path']}"
 
     # when using web search, make sure to make query and path match the other by default
     if "filetype" in kwargs and kwargs["filetype"] == "ddg":
