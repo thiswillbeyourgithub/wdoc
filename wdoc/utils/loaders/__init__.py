@@ -312,6 +312,9 @@ def load_one_doc(
         f"The loader function returned no documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
     )
 
+    # remove empty documents
+    docs = [d for d in docs if d.page_content.strip()]
+
     tdocs = text_splitter.transform_documents(docs)
 
     if not tdocs:
