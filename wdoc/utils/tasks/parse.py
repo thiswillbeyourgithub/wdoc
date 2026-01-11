@@ -29,6 +29,7 @@ def parse_doc(
     """
     assert format in [
         "text",
+        "split_text",
         "xml",
         "langchain",
         "langchain_dict",
@@ -86,6 +87,8 @@ def parse_doc(
 
     # Process format and prepare the result
     if format == "text":
+        result = "\n".join([d.page_content.strip() for d in out])
+    elif format == "split_text":
         n = len(out)
         if n > 1:
             result = (
