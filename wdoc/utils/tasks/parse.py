@@ -5,7 +5,7 @@ Parse document functionality.
 import inspect
 import json
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from langchain_core.documents import Document
 
@@ -18,7 +18,9 @@ from wdoc.utils.tasks.types import wdocTask
 @set_parse_doc_help_md_as_docstring
 def parse_doc(
     filetype: str = "auto",
-    format: str = "text",
+    format: Literal[
+        "text", "split_text", "xml", "langchain", "langchain_dict"
+    ] = "text",
     debug: bool = False,
     verbose: bool = False,
     out_file: Optional[Union[str, Path]] = None,
@@ -27,13 +29,6 @@ def parse_doc(
     """
     This docstring is dynamically updated with the content of wdoc/docs/parse_doc_help.md
     """
-    assert format in [
-        "text",
-        "split_text",
-        "xml",
-        "langchain",
-        "langchain_dict",
-    ], f"Unexpected --format value: '{format}'"
     default_cli_kwargs = {
         "llm_name": ModelName("cliparser/cliparser"),
         "backend": "loky",  # doesn't matter because n_jobs is 1 anyway
