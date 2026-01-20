@@ -95,11 +95,15 @@ def load_local_audio(
             )
             # will crash anyway at the folling line because the assert is strict
 
-        assert new_dur < dur, (
+        assert new_dur <= dur, (
             f"Failed to remove silence for {path.name}:\n"
             f"Original duration: {dur:.1f}\n"
             f"New duration: {new_dur:.1f}\n"
         )
+        if new_dur == dur:
+            logger.error(
+                "When removing the silence for {path.name} the duration was not changed: {dur:.1f}"
+            )
         assert new_dur > 10, (
             f"Silence removal ended up with a suspiciously short audio for {path.name}:\n"
             f"Original duration: {dur:.1f}\n"
