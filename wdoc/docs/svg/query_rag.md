@@ -5,9 +5,9 @@ The portion of the README related to the query algorithm used in the RAG library
 1. **Embedding Creation**: The text is split into chunks, and embeddings are created for each chunk.
 2. **Query Expansion**: The user query is embedded, and the default LLM is used to generate alternative queries, which are also embedded.
 3. **Embedding Search**: The embeddings of the queries are used to search through all chunks of the text to retrieve the most relevant documents (initially set to 200).
-4. **Document Filtering**: Each retrieved document is passed to a smaller LLM (default: anthropic/claude-3-5-haiku-20241022) to evaluate if the document is relevant to the user query.
+4. **Document Filtering**: Each retrieved document is passed to a smaller LLM to evaluate if the document is relevant to the user query.
 5. **Iterative Search**: If more than 90% of the documents are relevant, another search is performed with a higher `top_k` value, and the process repeats until documents become irrelevant or the maximum number of documents (500) is reached.
-6. **Information Extraction**: Each relevant document is sent to a stronger LLM (default: anthropic/claude-3-7-sonnet-20250219) to extract relevant information and generate an intermediate answer.
+6. **Information Extraction**: Each relevant document is sent to a stronger LLM to extract relevant information and generate an intermediate answer.
 7. **Semantic Batching**: The intermediate answers are semantically batched by creating embeddings, performing hierarchical clustering, and grouping semantically similar answers together.
 8. **Answer Combination**: Each batch of intermediate answers is combined into a single answer by the strong LLM. This process is repeated until only one final answer remains, which is returned to the user.
 
