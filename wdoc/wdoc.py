@@ -37,6 +37,7 @@ from wdoc.utils.env import env, is_out_piped
 from wdoc.utils.errors import (
     NoDocumentsAfterLLMEvalFiltering,
     NoDocumentsRetrieved,
+    NoRelevantIntermediateAnswers,
     ShouldIncreaseTopKAfterLLMEvalFiltering,
 )
 
@@ -936,13 +937,25 @@ class wdoc:
                 multi=multi,
             )
         elif self.task.query:
-            return self._actual_query_task(
-                retriever=retriever,
-                query_fe=query_fe,
-                query_an=query_an,
-                evaluate_doc_chain=evaluate_doc_chain,
-                multi=multi,
-            )
+            try:
+                return self._actual_query_task(
+                    retriever=retriever,
+                    query_fe=query_fe,
+                    query_an=query_an,
+                    evaluate_doc_chain=evaluate_doc_chain,
+                    multi=multi,
+                )
+            except NoRelevantIntermediateAnswers:
+                # All retrieved documents were deemed irrelevant by the LLM,
+                # so no intermediate answer could be produced for the query.
+                return {
+                    "error": logger.error(
+                        md_printer(
+                            f"## No relevant intermediate answers found for question '{query_an}'. All retrieved documents were deemed irrelevant.",
+                            color="red",
+                        )
+                    )
+                }
         else:
             raise ValueError(self.task)
 
@@ -1221,7 +1234,7 @@ class wdoc:
             output["all_relevant_intermediate_answers"] = all_rlvt_interim_ans
 
         elif not len(output["relevant_intermediate_answers"]):
-            raise Exception(
+            raise NoRelevantIntermediateAnswers(
                 f"No 'relevant_intermediate_answers' found. Output was: '{str(output)[:1000]}...'"
             )
 
