@@ -205,7 +205,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         ```bash
         mkdir -p ~/.claude/skills/wdoc && wget -O ~/.claude/skills/wdoc/SKILL.md https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/SKILL.md
         ```
-2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
+2. Add the API key for the backend you want as an environment variable: for example `export ANTHROPIC_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.

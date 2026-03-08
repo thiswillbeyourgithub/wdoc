@@ -59,7 +59,7 @@ pip install -U wdoc[pdftotext]
 pip install -U wdoc[fasttext]
 ```
 
-Set your API key(s): `export OPENAI_API_KEY="your_key"` (or whichever provider you use).
+Set your API key(s): `export ANTHROPIC_API_KEY="your_key"` (or whichever provider you use).
 
 ---
 
