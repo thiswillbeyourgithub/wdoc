@@ -34,6 +34,7 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
     * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
+- [Comprehensive reference (SKILL.md)](#comprehensive-reference)
 - [Explanatory diagrams](#explanatory-diagrams)
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
@@ -46,6 +47,10 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
+
+## Comprehensive reference
+
+A single-page comprehensive reference covering every CLI argument, environment variable, filetype, and the full Python API can be found in **[SKILL.md](./SKILL.md)**.
 
 ## Explanatory diagrams
 
@@ -196,6 +201,10 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         * Install the `wdoc[full]` version except if you have specific constraints.
         * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
+    * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [SKILL.md](./SKILL.md) reference file:
+        ```bash
+        mkdir -p ~/.claude/skills/wdoc && wget -O ~/.claude/skills/wdoc/SKILL.md https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/SKILL.md
+        ```
 2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
