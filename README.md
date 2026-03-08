@@ -34,6 +34,7 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
     * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
+- [Comprehensive reference (SKILL.md)](#comprehensive-reference)
 - [Explanatory diagrams](#explanatory-diagrams)
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
@@ -46,6 +47,10 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
 - [Scripts made with wdoc](#scripts-made-with-wdoc)
 - [FAQ](#faq)
 - [Roadmap](#roadmap)
+
+## Comprehensive reference
+
+A single-page comprehensive reference covering every CLI argument, environment variable, filetype, and the full Python API can be found in **[SKILL.md](./SKILL.md)**.
 
 ## Explanatory diagrams
 
@@ -79,7 +84,7 @@ wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say
     4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
     5. Pass each of those documents to the smaller LLM (default: openrouter/google/gemini-2.5-flash) to tell us if the document seems appropriate given the user query
     6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-2.5-pro) to extract relevant info and give one answer per relevant document.
+    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-3.1-pro-preview) to extract relevant info and give one answer per relevant document.
     8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers of similar semantics, sort the batch in semantic order too), each batch is combined into a single answer per batch of relevant doc (or after: per batch of batches).
     9. Rinse and repeat steps 7+8 (i.e. gradually aggregate batches) until we have only one answer, that is returned to the user.
 
@@ -92,7 +97,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 ```
 * This will:
     1. Split the text into chunks
-    2. pass each chunk into the strong LLM (by default openrouter/google/gemini-2.5-pro) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+    2. pass each chunk into the strong LLM (by default openrouter/google/gemini-3.1-pro-preview) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
     3. When creating each new chunk, the LLM has access to the previous chunk for context.
     4. All summary are then concatenated and returned to the user
 
@@ -196,7 +201,11 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         * Install the `wdoc[full]` version except if you have specific constraints.
         * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
-2. Add the API key for the backend you want as an environment variable: for example `export OPENAI_API_KEY="***my_key***"`
+    * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [SKILL.md](./SKILL.md) reference file:
+        ```bash
+        mkdir -p ~/.claude/skills/wdoc && wget -O ~/.claude/skills/wdoc/SKILL.md https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/SKILL.md
+        ```
+2. Add the API key for the backend you want as an environment variable: for example `export ANTHROPIC_API_KEY="***my_key***"`
 3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
     * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.

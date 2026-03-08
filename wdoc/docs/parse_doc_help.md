@@ -14,7 +14,8 @@ use it to quickly parse anything to send to [@simonw's](https://github.com/simon
     - Same as for wdoc
 
 - `format`: str, default `text`
-    - if `text`: only return the text
+    - if `text`: returns the text, with splits joined separated by a newline
+    - if `split_text`: returns the text, with indicators for the document splits
     - if `xml`: returns text in an xml like format
     - if `langchain`: return a list of langchain Documents
     - if `langchain_dict`: return a list of langchain Documents as

@@ -261,6 +261,8 @@ def _pdf_loader(
     assert all(isinstance(d, Document) for d in docs), (
         f"Output of {loader_name} contains elements that are not Documents: {[type(c) for c in docs]}"
     )
+    # remove empty documents
+    docs = [d for d in docs if d.page_content.strip()]
     return docs
 
 

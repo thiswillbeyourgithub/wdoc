@@ -60,6 +60,17 @@ class MissingDocdictArguments(Exception):
         super().__init__(message)
 
 
+class NoRelevantIntermediateAnswers(Exception):
+    """
+    Raised when all retrieved documents were deemed IRRELEVANT by the LLM
+    during the intermediate answer step, meaning none contained an answer
+    to the user's question.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
 class NoInferrableFiletype(Exception):
     """
     Occurs when the 'filetype' argument of a file

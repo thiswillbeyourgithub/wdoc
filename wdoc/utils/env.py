@@ -79,7 +79,7 @@ class EnvDataclass:
     WDOC_MAX_CHUNK_SIZE: int = 16_000
     WDOC_MAX_EMBED_CONTEXT: int = 7_000
     WDOC_INTERMEDIATE_ANSWER_MAX_TOKENS: int = 4000
-    WDOC_DEFAULT_MODEL: str = "openrouter/google/gemini-2.5-pro"
+    WDOC_DEFAULT_MODEL: str = "openrouter/google/gemini-3.1-pro-preview"
     WDOC_DEFAULT_EMBED_MODEL: str = "openai/text-embedding-3-small"
     WDOC_DEFAULT_EMBED_DIMENSION: Optional[int] = None
     WDOC_EMBED_TESTING: bool = True

@@ -21,7 +21,7 @@ All commands below should be run from the `docker` subdirectory of the wdoc repo
 1. **Configure environment variables**: Copy and edit the environment file (both files are in the `./docker` directory):
    ```bash
    cp custom_env.example custom_env
-   # Manually edit custom_env to add your API keys (OPENAI_API_KEY, etc.)
+   # Manually edit custom_env to add your API keys (ANTHROPIC_API_KEY, etc.)
    ```
 
 2. **Start the service**:
@@ -103,9 +103,9 @@ Create a `custom_env` file in the `docker` directory with your configuration:
 
 ```bash
 # Required: API keys for your LLM provider
-OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
 # Or for other providers:
-# ANTHROPIC_API_KEY=...
+# OPENAI_API_KEY=...
 # GEMINI_API_KEY=...
 
 # Optional: Default models

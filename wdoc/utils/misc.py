@@ -656,6 +656,11 @@ def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
             logger.error(
                 f"Found non 0 request for {model}, this is not supported by wdoc so the price will not be accurate"
             )
+        if not "internal_reasoning" in pricing:
+            logger.warning(
+                f"Warning: no 'internal_reasoning' price found for model '{model.original}'. Setting it to 0 but this might make price estimation wrong. Detected pricing: '{pricing}'"
+            )
+            pricing["internal_reasoning"] = 0
         return pricing
 
     for key in ["original", "model", "sanitized"]:
@@ -674,6 +679,11 @@ def get_model_price(model: ModelName) -> Dict[str, Union[float, int]]:
             for k, v in pricing.items():
                 if k not in output:
                     output[k] = v
+            if not "internal_reasoning" in output:
+                logger.warning(
+                    f"Warning: no 'internal_reasoning' price found for model '{mod}'. Setting it to 0 but this might make price estimation wrong. Detected pricing: '{output}'"
+                )
+                output["internal_reasoning"] = 0
             return output
     raise Exception(
         f"Can't find the price of '{model}'\nUpdate litellm or set WDOC_ALLOW_NO_PRICE=True if you still want to use this model."
