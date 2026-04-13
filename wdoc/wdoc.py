@@ -1298,7 +1298,8 @@ class wdoc:
                 output["relevant_filtered_docs"][::-1],
             )
         ):
-            to_print = f"## Document #{n - counter}\n"
+            doc_num = n - counter
+            to_print = f'<a id="document-{doc_num}"></a>\n\n## Document #{doc_num}\n'
             content = doc.page_content.strip()
             to_print += "```\n" + content + "\n ```\n"
             for k, v in doc.metadata.items():
