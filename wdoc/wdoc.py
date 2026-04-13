@@ -192,8 +192,11 @@ class wdoc:
             # type checking of extra args
             if env.WDOC_TYPECHECKING in ["crash", "warn"]:
                 val = cli_kwargs[k]
-                # curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
+                # coerce int to float when float is expected (e.g. from Gradio UI)
+                if expected_type is float and isinstance(val, int):
+                    val = float(val)
+                    cli_kwargs[k] = val
                 if expected_type is str:
                     assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
