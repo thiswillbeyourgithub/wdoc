@@ -171,6 +171,46 @@ def test_summary_tim_urban_cache_cost():
 
 
 @pytest.mark.basic
+def test_source_replace_anchor_links():
+    """Test that source_replace converts WDOC_IDs to markdown anchor links."""
+    from wdoc.utils.tasks.query import source_replace
+
+    mapping = {"WDOC_1": 1, "WDOC_2": 2, "WDOC_21": 21}
+    text = "Information from [[WDOC_1]] and [[WDOC_2]] and [[WDOC_21]]."
+    result = source_replace(text, mapping)
+    assert "[1](#document-1)" in result
+    assert "[2](#document-2)" in result
+    assert "[21](#document-21)" in result
+    # Make sure WDOC_2 didn't corrupt WDOC_21
+    assert "[2](#document-2)1" not in result
+
+
+@pytest.mark.basic
+def test_citation_url_template():
+    """Test that citation_url_template converts page citations to clickable links."""
+    import re
+
+    template = "https://site.com/docs/{source}#page={page}"
+    cite_pattern = re.compile(r"\[p\.(\d+)(?:,\s*([^\]]+))?\]")
+
+    def _make_link(m):
+        page = m.group(1)
+        source = m.group(2) or "default.pdf"
+        url = template.format(page=page, source=source)
+        return f"[p.{page}]({url})"
+
+    # Simple citation
+    text = "- **Key finding** [p.42]"
+    result = cite_pattern.sub(_make_link, text)
+    assert "[p.42](https://site.com/docs/default.pdf#page=42)" in result
+
+    # Citation with source
+    text2 = "- **Another finding** [p.7, transcript.pdf]"
+    result2 = cite_pattern.sub(_make_link, text2)
+    assert "[p.7](https://site.com/docs/transcript.pdf#page=7)" in result2
+
+
+@pytest.mark.basic
 def test_summary_tim_urban_testing_model():
     """Test summarization of Tim Urban's procrastination video with testing model."""
     inst = wdoc(

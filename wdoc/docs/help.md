@@ -558,6 +558,17 @@
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
 
+* `--citation_url_template`: str, default `None`
+    * Optional URL template for turning page citations into clickable markdown links
+    in summaries. When set, citations like `[p.42]` become
+    `[p.42](https://your-site.com/doc.pdf#page=42)`.
+    * Available placeholders: `{page}` (page number), `{source}` (source file path or label).
+    * Example: `--citation_url_template="https://private-site.com/docs/{source}#page={page}"`
+    * Note: even without this template, summaries of documents with page metadata
+    (e.g. PDFs) will automatically include `[p.N]` citations on bullet points.
+    For multi-file summaries, citations include the filename: `[p.N, file.pdf]`.
+    * This feature was developed with Claude Code.
+
 * `--filter_metadata`: list or str, default `None`
     * list of regex string to use as metadata filter when querying.
     Format: `[kvb][+-]your_regex`

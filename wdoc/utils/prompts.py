@@ -52,6 +52,7 @@ This is very important to me! If you succeed, I'll pay you up to $2000, dependin
         - eg don't start several bullet points by 'The author thinks that', just say it once then use indented children bullet points to make it implicit
     - If the text includes timestamps, write the approximate time of the sections in the top level bullet points.
     - If an <end_of_summary_of_prev_section> tag is present, it means I'm giving you access to the summary of the previous chunk. You must summarize your own chunk so that the transition between chunks is seamless. You are allowed one transition bullet point to take a DEEP BREATH but then the indentation etc has to logically match the previous summary.
+    - If a <chunk_metadata> tag is present with a <page> element, add a page citation at the end of each top-level bullet point using the format [p.N] where N is the page number (e.g. [p.42]). If a <source> element is also present, include it: [p.N, filename.pdf]. If you can determine that specific information comes from a different page within the chunk, use the appropriate page number. This is important for source tracking.
 </instructions>
 """.strip()
         ),
