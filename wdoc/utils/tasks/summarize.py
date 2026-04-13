@@ -135,6 +135,7 @@ def summarize_documents(
     in_import_mode: bool,
     out_file: Optional[str],
     wdoc_version: str,
+    citation_url_template: Optional[str] = None,
 ) -> wdocSummary:
     """
     Orchestrate the complete document summarization process with optional recursion.
@@ -409,6 +410,24 @@ def summarize_documents(
         header += f"    by '{author}'"
     header += f"    original path: '{path}'"
     header += f"    wdoc version {wdoc_version} with model {model} on {date.today().isoformat()}"
+
+    # Apply citation URL template if provided
+    if citation_url_template:
+        import re as _re
+
+        # Match [p.N] or [p.N, source_label]
+        cite_pattern = _re.compile(r"\[p\.(\d+)(?:,\s*([^\]]+))?\]")
+
+        def _make_citation_link(m):
+            page = m.group(1)
+            source = m.group(2) or path
+            url = citation_url_template.format(page=page, source=source)
+            return f"[{m.group(0)}]({url})"
+
+        for key in recursive_summaries:
+            recursive_summaries[key] = cite_pattern.sub(
+                _make_citation_link, recursive_summaries[key]
+            )
 
     # save to output file
     if out_file:
