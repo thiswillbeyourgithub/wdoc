@@ -520,6 +520,31 @@ def _summarize(
     metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
 
     assert "[PROGRESS]" in metadata
+
+    # Determine citation format: single vs multi-file
+    unique_sources = set()
+    for d in docs:
+        if hasattr(d, "metadata") and d.metadata and "source" in d.metadata:
+            unique_sources.add(d.metadata["source"])
+    is_multi_source = len(unique_sources) > 1
+
+    # For multi-source: compute shortest distinguishing labels
+    _source_labels = {}
+    if is_multi_source:
+        from pathlib import PurePosixPath
+
+        source_list = list(unique_sources)
+        for src in source_list:
+            parts = PurePosixPath(src).parts
+            # try increasingly longer suffixes until unique
+            for depth in range(1, len(parts) + 1):
+                label = str(PurePosixPath(*parts[-depth:]))
+                if sum(1 for s in source_list if s.endswith(label)) == 1:
+                    _source_labels[src] = label
+                    break
+            else:
+                _source_labels[src] = src
+
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
 
@@ -664,6 +689,27 @@ def _summarize(
             output_lines[il] = ll
 
         good_lines = [li for li in output_lines if (li and li.replace("-", "").strip())]
+
+        # Hybrid citation fallback: if chunk has page metadata and a top-level
+        # bullet point lacks a [p.N] citation, append one from chunk metadata
+        chunk_page = (
+            rd.metadata.get("page") if hasattr(rd, "metadata") and rd.metadata else None
+        )
+        if chunk_page is not None:
+            import re as _re
+
+            page_citation_re = _re.compile(r"\[p\.\d+")
+            chunk_source = rd.metadata.get("source", "") if rd.metadata else ""
+            source_label = _source_labels.get(chunk_source, "")
+            if is_multi_source and source_label:
+                fallback_cite = f" [p.{chunk_page}, {source_label}]"
+            else:
+                fallback_cite = f" [p.{chunk_page}]"
+            for il, ll in enumerate(good_lines):
+                # top-level bullets start with "- " (no leading spaces)
+                if ll.startswith("- ") and not page_citation_re.search(ll):
+                    good_lines[il] = ll.rstrip() + fallback_cite
+
         output_text = "\n".join(good_lines)
 
         if verbose:
