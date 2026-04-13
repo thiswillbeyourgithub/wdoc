@@ -282,6 +282,10 @@ FAQ
         no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
         class for an example.
 
+* **Can `wdoc` add source citations to summaries?**
+    * Yes! When summarizing documents that have page metadata (like PDFs), `wdoc` automatically adds `[p.N]` citations to bullet points tracking which page the information came from. For multi-file summaries, citations include the filename: `[p.N, file.pdf]`. You can also use `--citation_url_template` to turn these into clickable markdown links pointing to your own document server (e.g. `--citation_url_template="https://my-site.com/docs/{source}#page={page}"`). This feature was developed with Claude Code.
+    * For the query task, source documents are referenced with clickable anchor links `[N](#document-N)` in the final answer.
+
 * **What should I do if I keep hitting rate limits?**
     * The simplest way is to add the `debug` argument. It will disable multithreading,
         multiprocessing and LLM concurrency. A less harsh alternative is to set the

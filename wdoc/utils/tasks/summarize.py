@@ -422,7 +422,7 @@ def summarize_documents(
             page = m.group(1)
             source = m.group(2) or path
             url = citation_url_template.format(page=page, source=source)
-            return f"[{m.group(0)}]({url})"
+            return f"[p.{page}]({url})"
 
         for key in recursive_summaries:
             recursive_summaries[key] = cite_pattern.sub(

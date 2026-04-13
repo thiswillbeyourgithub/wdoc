@@ -255,3 +255,29 @@ instance = wdoc(
 results = instance.summary_results
 summary_text = results['summary']
 ```
+
+3. Summarize a PDF with clickable page citations (developed with Claude Code)
+```python
+from wdoc import wdoc
+
+# Summarize with page citations linking to a private document server
+instance = wdoc(
+    task="summary",
+    path="court_transcript.pdf",
+    filetype="pdf",
+    model="openai/gpt-4o",
+    citation_url_template="https://private-site.com/cases/{source}#page={page}",
+)
+
+results = instance.summary_results
+# Bullet points will contain clickable citations like:
+# - **Key finding** about the case [p.42](https://private-site.com/cases/court_transcript.pdf#page=42)
+```
+
+```zsh
+# Same example from the shell
+wdoc --task=summary \
+     --path="court_transcript.pdf" \
+     --filetype="pdf" \
+     --citation_url_template="https://private-site.com/cases/{source}#page={page}"
+```
