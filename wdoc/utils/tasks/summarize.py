@@ -523,12 +523,28 @@ def _summarize(
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
 
+        # Build chunk text with per-chunk metadata if available
+        chunk_text = rd.page_content
+        chunk_meta_parts = []
+        if hasattr(rd, "metadata") and rd.metadata:
+            if "page" in rd.metadata:
+                chunk_meta_parts.append(f"<page>{rd.metadata['page']}</page>")
+            if "source" in rd.metadata:
+                chunk_meta_parts.append(f"<source>{rd.metadata['source']}</source>")
+        if chunk_meta_parts:
+            chunk_metadata_xml = (
+                "<chunk_metadata>\n"
+                + "\n".join(chunk_meta_parts)
+                + "\n</chunk_metadata>\n\n"
+            )
+            chunk_text = chunk_metadata_xml + chunk_text
+
         messages = BASE_SUMMARY_PROMPT.format_messages(
             language=language,
             metadata=metadata.replace("[PROGRESS]", fixed_index),
             previous_summary=previous_summary,
             recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION,
-            text=rd.page_content,
+            text=chunk_text,
         )
         if " object at " in llm._get_llm_string():
             logger.warning(
