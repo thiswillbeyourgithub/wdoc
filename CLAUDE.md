@@ -61,6 +61,33 @@ Each persona can be customized via `WDOC_{NAME}_INSTRUCTIONS` env vars.
 
 **Type checking**: Beartype runtime checking, controlled by `WDOC_TYPECHECKING` env var (crash/warn/disabled).
 
+## Adding New Settings
+
+Any new setting (CLI argument or environment variable) **must** be documented in:
+- `wdoc/docs/help.md` — describe the setting, its type, default value, and accepted values.
+- `wdoc/docs/examples.md` — add usage examples where appropriate.
+
+New settings should be either:
+- A **CLI argument** (defined in `wdoc.py`'s main class), or
+- A **`WDOC_*` environment variable** (defined in `wdoc/utils/env.py`'s `EnvDataclass`).
+
+**Environment variables are re-read on every access, not just at declaration.** The `EnvDataclass.__getattribute__` method checks `os.environ` at access time when the dataclass is frozen, so changing an env var between wdoc instantiations (or even at runtime) takes effect without reimporting.
+
+## Variables in `wdoc/utils/misc.py` to Keep Updated
+
+When adding new CLI arguments or loader-specific parameters, update these dicts in `wdoc/utils/misc.py`:
+- `filetype_arg_types` — maps loader-specific argument names to their types (e.g. `"whisper_lang": str`).
+- `extra_args_types` — maps extra wdoc instantiation arguments to their types. It merges `filetype_arg_types` automatically.
+- `DocDict.allowed_keys` — derives from `filetype_arg_types` keys automatically, but verify new keys appear.
+
+## Adding Support for a New Filetype
+
+1. **Create a loader** in `wdoc/utils/loaders/` — add a file (e.g. `myformat.py`) containing a function `load_myformat(path, file_hash, ...) -> List[Document]`. Use the `@debug_return_empty` and `@optional_strip_unexp_args` decorators (see `txt.py` for a minimal example).
+2. **Register the filetype** — add `"myformat"` to the `LOADABLE_FILETYPE` list in `wdoc/utils/loaders/__init__.py`.
+3. **Add loader-specific args** (if any) to `filetype_arg_types` in `wdoc/utils/misc.py`.
+4. **Document it** — add the filetype and its arguments to `wdoc/docs/help.md`, and add examples to `wdoc/docs/examples.md`.
+5. **Auto-detection** (optional) — if the filetype corresponds to a file extension, add a mapping in the auto-detection logic so `--filetype=auto` can infer it.
+
 ## Key Conventions
 
 - `utils/misc.py` is a large utility module (~53KB) — search it before creating new helpers.
