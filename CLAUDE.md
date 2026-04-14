@@ -88,6 +88,13 @@ When adding new CLI arguments or loader-specific parameters, update these dicts 
 4. **Document it** — add the filetype and its arguments to `wdoc/docs/help.md`, and add examples to `wdoc/docs/examples.md`.
 5. **Auto-detection** (optional) — if the filetype corresponds to a file extension, add a mapping in the auto-detection logic so `--filetype=auto` can infer it.
 
+## Building Documentation
+
+To regenerate the Sphinx autodoc files, run from the repo root:
+```bash
+sphinx-apidoc -o docs/source/ wdoc --force
+```
+
 ## Key Conventions
 
 - `utils/misc.py` is a large utility module (~53KB) — search it before creating new helpers.
