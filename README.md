@@ -1,4 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/wdoc.svg)](https://badge.fury.io/py/wdoc)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/thiswillbeyourgithub/wdoc)
 
 # wdoc
 
