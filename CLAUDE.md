@@ -88,6 +88,17 @@ When adding new CLI arguments or loader-specific parameters, update these dicts 
 4. **Document it** — add the filetype and its arguments to `wdoc/docs/help.md`, and add examples to `wdoc/docs/examples.md`.
 5. **Auto-detection** (optional) — if the filetype corresponds to a file extension, add a mapping in the auto-detection logic so `--filetype=auto` can infer it.
 
+## Bumping the Default Models
+
+The two default LLM identifiers (`WDOC_DEFAULT_MODEL` and `WDOC_DEFAULT_QUERY_EVAL_MODEL`) are duplicated across `wdoc/utils/env.py`, `wdoc/docs/help.md`, `SKILL.md`, `README.md`, `ARCHITECTURE.md`, and `docker/env.example`. Use the repo-root helper instead of editing each file by hand:
+
+```bash
+./bump_default_models.sh <NEW_STRONG_MODEL> <NEW_EVAL_MODEL>           # dry-run preview
+./bump_default_models.sh <NEW_STRONG_MODEL> <NEW_EVAL_MODEL> --apply   # write
+```
+
+`env.py` is the source of truth for the current values. The script replaces both the full id (`provider/path/name`) and the basename, and re-syncs the `KEY=VALUE` lines in `docker/env.example` independently (so it recovers from prior drift). It never commits; review with `git diff` and commit yourself.
+
 ## Building Documentation
 
 To regenerate the Sphinx autodoc files, run from the repo root:
