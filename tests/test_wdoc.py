@@ -1,8 +1,28 @@
 import os
+import socket
 import sys
 import tempfile
+from urllib.parse import urlparse
 
 import pytest
+
+
+def _ollama_is_reachable() -> bool:
+    """Check if the Ollama server port is open. Honors OLLAMA_HOST."""
+    host_env = os.getenv("OLLAMA_HOST", "127.0.0.1:11434")
+    if "://" not in host_env:
+        host_env = f"http://{host_env}"
+    parsed = urlparse(host_env)
+    host = parsed.hostname or "127.0.0.1"
+    port = parsed.port or 11434
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+_OLLAMA_REACHABLE = _ollama_is_reachable()
 
 # add an unexpected env variable to make sure nothing crashes
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
@@ -388,6 +408,14 @@ def test_whisper_tim_urban():
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+@pytest.mark.skipif(
+    not _OLLAMA_REACHABLE,
+    reason=(
+        "Ollama server not reachable on "
+        f"{os.getenv('OLLAMA_HOST', '127.0.0.1:11434')}. "
+        "Start `ollama serve` (or set OLLAMA_HOST) to run this test."
+    ),
 )
 def test_ollama_embeddings():
     emb = load_embeddings_engine(
