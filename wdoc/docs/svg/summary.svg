@@ -196,5 +196,5 @@
 
   <!-- Model note -->
   <rect x="250" y="620" width="300" height="22" rx="11" ry="11" fill="#e3f2fd" stroke="#3d7be6" stroke-width="1" />
-  <text x="400" y="635" class="note-text">Using claude-3-7-sonnet as default model</text>
+  <text x="400" y="635" class="note-text">Using the default LLM</text>
 </svg>
