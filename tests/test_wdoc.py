@@ -111,6 +111,11 @@ if any(m.startswith("mistral/") for m in _ALL_TEST_MODELS) and not os.getenv(
         "'mistral/'. Set MISTRAL_API_KEY or override the relevant WDOC_TEST_* "
         "model env vars."
     )
+if not os.getenv("WDOC_WHISPER_API_KEY"):
+    raise RuntimeError(
+        "WDOC_WHISPER_API_KEY env var is not set but is required to test "
+        "whisper transcription. Set WDOC_WHISPER_API_KEY before running tests."
+    )
 
 os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
