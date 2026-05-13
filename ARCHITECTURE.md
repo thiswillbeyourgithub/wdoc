@@ -89,8 +89,8 @@ wdoc.__init__() ── Configuration & validation
 
 | Role | Default Model | Purpose |
 |------|--------------|---------|
-| **Main model** | `gemini-3.1-pro` | Answering, summarizing |
-| **Eval model** | `gemini-2.5-flash` | Document relevance checking (cheap/fast) |
+| **Main model** | `deepseek-v4-pro` | Answering, summarizing |
+| **Eval model** | `deepseek-v4-flash` | Document relevance checking (cheap/fast) |
 | **Embed model** | `text-embedding-3-small` | Dense vector embeddings |
 
 All models are loaded through **LiteLLM**, supporting 100+ providers (OpenAI, Anthropic, Google, Mistral, Ollama, OpenRouter, etc.).

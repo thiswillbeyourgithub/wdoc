@@ -254,8 +254,8 @@ These load multiple documents and can combine different sources:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WDOC_DEFAULT_MODEL` | `openrouter/google/gemini-3.1-pro-preview` | Default strong LLM |
-| `WDOC_DEFAULT_QUERY_EVAL_MODEL` | `openrouter/google/gemini-2.5-flash` | Default eval LLM |
+| `WDOC_DEFAULT_MODEL` | `deepseek/deepseek-v4-pro` | Default strong LLM |
+| `WDOC_DEFAULT_QUERY_EVAL_MODEL` | `deepseek/deepseek-v4-flash` | Default eval LLM |
 | `WDOC_DEFAULT_EMBED_MODEL` | `openai/text-embedding-3-small` | Default embedding model |
 | `WDOC_DEFAULT_EMBED_DIMENSION` | `none` | Embedding dimensions to request |
 
