@@ -103,6 +103,14 @@ if any(m.startswith("openai/") for m in _ALL_TEST_MODELS) and not os.getenv(
         "'openai/'. Set OPENAI_API_KEY or override the relevant WDOC_TEST_* "
         "model env vars."
     )
+if any(m.startswith("mistral/") for m in _ALL_TEST_MODELS) and not os.getenv(
+    "MISTRAL_API_KEY"
+):
+    raise RuntimeError(
+        "MISTRAL_API_KEY env var is not set but a test model starts with "
+        "'mistral/'. Set MISTRAL_API_KEY or override the relevant WDOC_TEST_* "
+        "model env vars."
+    )
 
 os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
