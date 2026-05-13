@@ -434,15 +434,23 @@ def test_query_tim_urban_testing_model():
 )
 def test_whisper_tim_urban():
     """Test summarization of Tim Urban's video using whisper transcription."""
-    out = wdoc(
-        task="summarize",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        disable_llm_cache=True,
-        # filetype="youtube",
-        youtube_audio_backend="whisper",
-        whisper_lang="en",
-    )
+    try:
+        out = wdoc(
+            task="summarize",
+            path="https://www.youtube.com/watch?v=arj7oStGLkU",
+            model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+            disable_llm_cache=True,
+            # filetype="youtube",
+            youtube_audio_backend="whisper",
+            whisper_lang="en",
+        )
+    except Exception as e:
+        if "502" in str(e):
+            pytest.skip(
+                f"Whisper endpoint returned 502 (upstream unavailable), "
+                f"treating as not-tested instead of failure: {e}"
+            )
+        raise
 
 
 @pytest.mark.api
