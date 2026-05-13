@@ -135,6 +135,7 @@ def summarize_documents(
     in_import_mode: bool,
     out_file: Optional[str],
     wdoc_version: str,
+    citation_url_template: Optional[str] = None,
 ) -> wdocSummary:
     """
     Orchestrate the complete document summarization process with optional recursion.
@@ -410,6 +411,24 @@ def summarize_documents(
     header += f"    original path: '{path}'"
     header += f"    wdoc version {wdoc_version} with model {model} on {date.today().isoformat()}"
 
+    # Apply citation URL template if provided
+    if citation_url_template:
+        import re as _re
+
+        # Match [p.N] or [p.N, source_label]
+        cite_pattern = _re.compile(r"\[p\.(\d+)(?:,\s*([^\]]+))?\]")
+
+        def _make_citation_link(m):
+            page = m.group(1)
+            source = m.group(2) or path
+            url = citation_url_template.format(page=page, source=source)
+            return f"[p.{page}]({url})"
+
+        for key in recursive_summaries:
+            recursive_summaries[key] = cite_pattern.sub(
+                _make_citation_link, recursive_summaries[key]
+            )
+
     # save to output file
     if out_file:
         if in_import_mode:
@@ -520,15 +539,56 @@ def _summarize(
     metadata = metadata.replace(HOME, "~")  # extra privacy just in case a path appears
 
     assert "[PROGRESS]" in metadata
+
+    # Determine citation format: single vs multi-file
+    unique_sources = set()
+    for d in docs:
+        if hasattr(d, "metadata") and d.metadata and "source" in d.metadata:
+            unique_sources.add(d.metadata["source"])
+    is_multi_source = len(unique_sources) > 1
+
+    # For multi-source: compute shortest distinguishing labels
+    _source_labels = {}
+    if is_multi_source:
+        from pathlib import PurePosixPath
+
+        source_list = list(unique_sources)
+        for src in source_list:
+            parts = PurePosixPath(src).parts
+            # try increasingly longer suffixes until unique
+            for depth in range(1, len(parts) + 1):
+                label = str(PurePosixPath(*parts[-depth:]))
+                if sum(1 for s in source_list if s.endswith(label)) == 1:
+                    _source_labels[src] = label
+                    break
+            else:
+                _source_labels[src] = src
+
     for ird, rd in tqdm(enumerate(docs), desc="Summarising splits", total=len(docs)):
         fixed_index = f"{ird + 1}/{len(docs)}"
+
+        # Build chunk text with per-chunk metadata if available
+        chunk_text = rd.page_content
+        chunk_meta_parts = []
+        if hasattr(rd, "metadata") and rd.metadata:
+            if "page" in rd.metadata:
+                chunk_meta_parts.append(f"<page>{rd.metadata['page']}</page>")
+            if "source" in rd.metadata:
+                chunk_meta_parts.append(f"<source>{rd.metadata['source']}</source>")
+        if chunk_meta_parts:
+            chunk_metadata_xml = (
+                "<chunk_metadata>\n"
+                + "\n".join(chunk_meta_parts)
+                + "\n</chunk_metadata>\n\n"
+            )
+            chunk_text = chunk_metadata_xml + chunk_text
 
         messages = BASE_SUMMARY_PROMPT.format_messages(
             language=language,
             metadata=metadata.replace("[PROGRESS]", fixed_index),
             previous_summary=previous_summary,
             recursion_instruction="" if not n_recursion else RECURSION_INSTRUCTION,
-            text=rd.page_content,
+            text=chunk_text,
         )
         if " object at " in llm._get_llm_string():
             logger.warning(
@@ -590,8 +650,8 @@ def _summarize(
         if output_lines:
             first_line = output_lines[0].lower()
             should_remove = (
-                ("deep breath" in first_line and len(first_line) < 20)
-                or (first_line.startswith("i'll summarize") and len(first_line) < 20)
+                ("deep breath" in first_line and len(first_line) < 100)
+                or (first_line.startswith("i'll summarize") and len(first_line) < 100)
                 or (
                     first_line.strip().startswith("- ")
                     and ("deep breath" in first_line or "i'll summarize" in first_line)
@@ -648,6 +708,27 @@ def _summarize(
             output_lines[il] = ll
 
         good_lines = [li for li in output_lines if (li and li.replace("-", "").strip())]
+
+        # Hybrid citation fallback: if chunk has page metadata and a top-level
+        # bullet point lacks a [p.N] citation, append one from chunk metadata
+        chunk_page = (
+            rd.metadata.get("page") if hasattr(rd, "metadata") and rd.metadata else None
+        )
+        if chunk_page is not None:
+            import re as _re
+
+            page_citation_re = _re.compile(r"\[p\.\d+")
+            chunk_source = rd.metadata.get("source", "") if rd.metadata else ""
+            source_label = _source_labels.get(chunk_source, "")
+            if is_multi_source and source_label:
+                fallback_cite = f" [p.{chunk_page}, {source_label}]"
+            else:
+                fallback_cite = f" [p.{chunk_page}]"
+            for il, ll in enumerate(good_lines):
+                # top-level bullets start with "- " (no leading spaces)
+                if ll.startswith("- ") and not page_citation_re.search(ll):
+                    good_lines[il] = ll.rstrip() + fallback_cite
+
         output_text = "\n".join(good_lines)
 
         if verbose:

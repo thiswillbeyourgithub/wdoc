@@ -558,6 +558,17 @@
     created with the name `{out_file}.n.md` with n being the n-1th recursive
     summary.
 
+* `--citation_url_template`: str, default `None`
+    * Optional URL template for turning page citations into clickable markdown links
+    in summaries. When set, citations like `[p.42]` become
+    `[p.42](https://your-site.com/doc.pdf#page=42)`.
+    * Available placeholders: `{page}` (page number), `{source}` (source file path or label).
+    * Example: `--citation_url_template="https://private-site.com/docs/{source}#page={page}"`
+    * Note: even without this template, summaries of documents with page metadata
+    (e.g. PDFs) will automatically include `[p.N]` citations on bullet points.
+    For multi-file summaries, citations include the filename: `[p.N, file.pdf]`.
+    * This feature was developed with Claude Code.
+
 * `--filter_metadata`: list or str, default `None`
     * list of regex string to use as metadata filter when querying.
     Format: `[kvb][+-]your_regex`
@@ -795,11 +806,11 @@
     Each batch contains at least two intermediate answers so it's not an absolute limitation but increasing it should
     reduce the cost of the "combine intermediate answers" step when querying.
 
-* `WDOC_DEFAULT_MODEL`, default: `"openrouter/google/gemini-3.1-pro-preview"`
+* `WDOC_DEFAULT_MODEL`, default: `"openrouter/deepseek/deepseek-v4-pro"`
     * Default strong LLM to use. This is the strongest model, it will be used to answer the query about each document,
     combine those answers. It can also be used by some retrievers etc.
 
-* `WDOC_DEFAULT_QUERY_EVAL_MODEL`, default: `"openrouter/google/gemini-2.5-flash"`
+* `WDOC_DEFAULT_QUERY_EVAL_MODEL`, default: `"openrouter/deepseek/deepseek-v4-flash"`
     * Default small LLM to use. It will be used to evaluate wether each document is relevant to the query or not.
 
 * `WDOC_DEFAULT_EMBED_MODEL`, default: `"openai/text-embedding-3-small"`

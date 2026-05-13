@@ -1,4 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/wdoc.svg)](https://badge.fury.io/py/wdoc)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/thiswillbeyourgithub/wdoc)
 
 # wdoc
 
@@ -82,9 +83,9 @@ wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say
     2. cut the text into chunks and create embeddings for each
     3. Take the user query, create embeddings for it ('basic') AND ask the default LLM to generate alternative queries and embed those
     4. Use those embeddings to search through all chunks of the text and get the 200 most appropriate documents
-    5. Pass each of those documents to the smaller LLM (default: openrouter/google/gemini-2.5-flash) to tell us if the document seems appropriate given the user query
+    5. Pass each of those documents to the smaller LLM (default: openrouter/deepseek/deepseek-v4-flash) to tell us if the document seems appropriate given the user query
     6. If More than 90% of the 200 documents are appropriate, then we do another search with a higher top_k and repeat until documents start to be irrelevant OR we it 500 documents.
-    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/google/gemini-3.1-pro-preview) to extract relevant info and give one answer per relevant document.
+    7. Then each relevant doc is sent to the strong LLM (by default, openrouter/deepseek/deepseek-v4-pro) to extract relevant info and give one answer per relevant document.
     8. Then all those "intermediate" answers are 'semantic batched' (meaning we create embeddings, do hierarchical clustering, then create small batch containing several intermediate answers of similar semantics, sort the batch in semantic order too), each batch is combined into a single answer per batch of relevant doc (or after: per batch of batches).
     9. Rinse and repeat steps 7+8 (i.e. gradually aggregate batches) until we have only one answer, that is returned to the user.
 
@@ -97,7 +98,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 ```
 * This will:
     1. Split the text into chunks
-    2. pass each chunk into the strong LLM (by default openrouter/google/gemini-3.1-pro-preview) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
+    2. pass each chunk into the strong LLM (by default openrouter/deepseek/deepseek-v4-pro) for a very low level (=with all details) summary. The format is markdown bullet points for each idea and with logical indentation.
     3. When creating each new chunk, the LLM has access to the previous chunk for context.
     4. All summary are then concatenated and returned to the user
 
@@ -281,6 +282,10 @@ FAQ
         * The class has to take a `path` argument in `__init__`, have a `load` method taking
         no argument but returning a `List[Document]`. Take a look at the `OpenparseDocumentParser`
         class for an example.
+
+* **Can `wdoc` add source citations to summaries?**
+    * Yes! When summarizing documents that have page metadata (like PDFs), `wdoc` automatically adds `[p.N]` citations to bullet points tracking which page the information came from. For multi-file summaries, citations include the filename: `[p.N, file.pdf]`. You can also use `--citation_url_template` to turn these into clickable markdown links pointing to your own document server (e.g. `--citation_url_template="https://my-site.com/docs/{source}#page={page}"`). This feature was developed with Claude Code.
+    * For the query task, source documents are referenced with clickable anchor links `[N](#document-N)` in the final answer.
 
 * **What should I do if I keep hitting rate limits?**
     * The simplest way is to add the `debug` argument. It will disable multithreading,

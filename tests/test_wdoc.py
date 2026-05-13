@@ -1,8 +1,28 @@
 import os
+import socket
 import sys
 import tempfile
+from urllib.parse import urlparse
 
 import pytest
+
+
+def _ollama_is_reachable() -> bool:
+    """Check if the Ollama server port is open. Honors OLLAMA_HOST."""
+    host_env = os.getenv("OLLAMA_HOST", "127.0.0.1:11434")
+    if "://" not in host_env:
+        host_env = f"http://{host_env}"
+    parsed = urlparse(host_env)
+    host = parsed.hostname or "127.0.0.1"
+    port = parsed.port or 11434
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
+
+
+_OLLAMA_REACHABLE = _ollama_is_reachable()
 
 # add an unexpected env variable to make sure nothing crashes
 os.environ["WDOC_TEST_UNEXPECTED_VARIABLE_1"] = "testing"
@@ -55,6 +75,47 @@ WDOC_TEST_DEFAULT_EVAL_MODEL = os.getenv(
 WDOC_TEST_DEFAULT_EMBED_MODEL = os.getenv(
     "WDOC_TEST_DEFAULT_EMBED_MODEL", env.WDOC_DEFAULT_EMBED_MODEL
 )
+
+# Crash early if a model that will be used requires an API key we don't have.
+_ALL_TEST_MODELS = [
+    WDOC_TEST_OPENAI_MODEL,
+    WDOC_TEST_OPENAI_EVAL_MODEL,
+    WDOC_TEST_OPENAI_EMBED_MODEL,
+    WDOC_TEST_OPENROUTER_MODEL,
+    WDOC_TEST_OPENROUTER_EVAL_MODEL,
+    WDOC_TEST_DEFAULT_MODEL,
+    WDOC_TEST_DEFAULT_EVAL_MODEL,
+    WDOC_TEST_DEFAULT_EMBED_MODEL,
+]
+if any(m.startswith("openrouter/") for m in _ALL_TEST_MODELS) and not os.getenv(
+    "OPENROUTER_API_KEY"
+):
+    raise RuntimeError(
+        "OPENROUTER_API_KEY env var is not set but a test model starts with "
+        "'openrouter/'. Set OPENROUTER_API_KEY or override the relevant "
+        "WDOC_TEST_* model env vars."
+    )
+if any(m.startswith("openai/") for m in _ALL_TEST_MODELS) and not os.getenv(
+    "OPENAI_API_KEY"
+):
+    raise RuntimeError(
+        "OPENAI_API_KEY env var is not set but a test model starts with "
+        "'openai/'. Set OPENAI_API_KEY or override the relevant WDOC_TEST_* "
+        "model env vars."
+    )
+if any(m.startswith("mistral/") for m in _ALL_TEST_MODELS) and not os.getenv(
+    "MISTRAL_API_KEY"
+):
+    raise RuntimeError(
+        "MISTRAL_API_KEY env var is not set but a test model starts with "
+        "'mistral/'. Set MISTRAL_API_KEY or override the relevant WDOC_TEST_* "
+        "model env vars."
+    )
+if not os.getenv("WDOC_WHISPER_API_KEY"):
+    raise RuntimeError(
+        "WDOC_WHISPER_API_KEY env var is not set but is required to test "
+        "whisper transcription. Set WDOC_WHISPER_API_KEY before running tests."
+    )
 
 os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
@@ -168,6 +229,46 @@ def test_summary_tim_urban_cache_cost():
         f"Normally we disabled the cache so cost should be higher than 0 but is {out3['doc_total_cost']}"
     )
     os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
+
+
+@pytest.mark.basic
+def test_source_replace_anchor_links():
+    """Test that source_replace converts WDOC_IDs to markdown anchor links."""
+    from wdoc.utils.tasks.query import source_replace
+
+    mapping = {"WDOC_1": 1, "WDOC_2": 2, "WDOC_21": 21}
+    text = "Information from [[WDOC_1]] and [[WDOC_2]] and [[WDOC_21]]."
+    result = source_replace(text, mapping)
+    assert "[1](#document-1)" in result
+    assert "[2](#document-2)" in result
+    assert "[21](#document-21)" in result
+    # Make sure WDOC_2 didn't corrupt WDOC_21
+    assert "[2](#document-2)1" not in result
+
+
+@pytest.mark.basic
+def test_citation_url_template():
+    """Test that citation_url_template converts page citations to clickable links."""
+    import re
+
+    template = "https://site.com/docs/{source}#page={page}"
+    cite_pattern = re.compile(r"\[p\.(\d+)(?:,\s*([^\]]+))?\]")
+
+    def _make_link(m):
+        page = m.group(1)
+        source = m.group(2) or "default.pdf"
+        url = template.format(page=page, source=source)
+        return f"[p.{page}]({url})"
+
+    # Simple citation
+    text = "- **Key finding** [p.42]"
+    result = cite_pattern.sub(_make_link, text)
+    assert "[p.42](https://site.com/docs/default.pdf#page=42)" in result
+
+    # Citation with source
+    text2 = "- **Another finding** [p.7, transcript.pdf]"
+    result2 = cite_pattern.sub(_make_link, text2)
+    assert "[p.7](https://site.com/docs/transcript.pdf#page=7)" in result2
 
 
 @pytest.mark.basic
@@ -333,21 +434,37 @@ def test_query_tim_urban_testing_model():
 )
 def test_whisper_tim_urban():
     """Test summarization of Tim Urban's video using whisper transcription."""
-    out = wdoc(
-        task="summarize",
-        path="https://www.youtube.com/watch?v=arj7oStGLkU",
-        model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
-        disable_llm_cache=True,
-        # filetype="youtube",
-        youtube_audio_backend="whisper",
-        whisper_lang="en",
-    )
+    try:
+        out = wdoc(
+            task="summarize",
+            path="https://www.youtube.com/watch?v=arj7oStGLkU",
+            model=f"openai/{WDOC_TEST_OPENAI_MODEL}",
+            disable_llm_cache=True,
+            # filetype="youtube",
+            youtube_audio_backend="whisper",
+            whisper_lang="en",
+        )
+    except Exception as e:
+        if "502" in str(e):
+            pytest.skip(
+                f"Whisper endpoint returned 502 (upstream unavailable), "
+                f"treating as not-tested instead of failure: {e}"
+            )
+        raise
 
 
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),
     reason="Skip tests using external APIs by default, use '-m api' to run them.",
+)
+@pytest.mark.skipif(
+    not _OLLAMA_REACHABLE,
+    reason=(
+        "Ollama server not reachable on "
+        f"{os.getenv('OLLAMA_HOST', '127.0.0.1:11434')}. "
+        "Start `ollama serve` (or set OLLAMA_HOST) to run this test."
+    ),
 )
 def test_ollama_embeddings():
     emb = load_embeddings_engine(

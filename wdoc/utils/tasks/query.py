@@ -642,7 +642,7 @@ def source_replace(input: str, mapping: dict) -> str:
     doc_ids = list(mapping.keys())
     for doc_id in doc_ids[::-1]:
         doc_num = str(mapping[doc_id])
-        result = result.replace(doc_id, doc_num)
+        result = result.replace(doc_id, f"[{doc_num}](#document-{doc_num})")
     return result
 
 

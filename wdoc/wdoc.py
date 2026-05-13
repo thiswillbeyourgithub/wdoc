@@ -70,7 +70,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "5.0.0"
+    VERSION: str = "5.0.1"
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 
@@ -109,6 +109,7 @@ class wdoc:
         private: Union[bool, int] = False,
         llms_api_bases: Optional[Union[dict, str]] = None,
         out_file: Optional[Union[str, Path]] = None,
+        citation_url_template: Optional[str] = None,
         oneoff: bool = False,
         silent: bool = False,
         version: bool = False,
@@ -191,8 +192,11 @@ class wdoc:
             # type checking of extra args
             if env.WDOC_TYPECHECKING in ["crash", "warn"]:
                 val = cli_kwargs[k]
-                # curr_type = type(val)
                 expected_type = self.allowed_extra_args[k]
+                # coerce int to float when float is expected (e.g. from Gradio UI)
+                if expected_type is float and isinstance(val, int):
+                    val = float(val)
+                    cli_kwargs[k] = val
                 if expected_type is str:
                     assert val.strip(), f"Empty string found for cli_kwargs: '{k}'"
                 if isinstance(val, list):
@@ -470,6 +474,7 @@ class wdoc:
         self.cli_kwargs = cli_kwargs
         self.llm_verbosity = llm_verbosity
         self.out_file = out_file
+        self.citation_url_template = citation_url_template
         self.summary_n_recursion = summary_n_recursion
         self.summary_language = summary_language
         self.dollar_limit = dollar_limit
@@ -767,6 +772,7 @@ class wdoc:
             in_import_mode=self.__import_mode__,
             out_file=self.out_file,
             wdoc_version=self.VERSION,
+            citation_url_template=self.citation_url_template,
         )
 
         logger.info(
@@ -1298,7 +1304,8 @@ class wdoc:
                 output["relevant_filtered_docs"][::-1],
             )
         ):
-            to_print = f"## Document #{n - counter}\n"
+            doc_num = n - counter
+            to_print = f'<a id="document-{doc_num}"></a>\n\n## Document #{doc_num}\n'
             content = doc.page_content.strip()
             to_print += "```\n" + content + "\n ```\n"
             for k, v in doc.metadata.items():
