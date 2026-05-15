@@ -191,16 +191,11 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 ### Direct Installation
 
 1. To install:
-    * Using pip: `pip install -U wdoc[full]` (if you want to try the version with much less dependencies, use `pip install -U wdoc` but you will have to manually install the missing dependencies for your usecase).
-    * Or to get a specific git branch:
-        * `dev` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]`
-        * `main` branch: `pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]`
-    * You can also use uvx or pipx. But as I'm not experiences with them I don't know if that can cause issues with for example caching etc. Do tell me if you tested it!
-        * Using uvx: `uvx wdoc[full]@latest --help`
-        * Using pipx: `pipx run wdoc[full] --help`
-    * In any case, it is recommended to:
-        * Install the `wdoc[full]` version except if you have specific constraints.
-        * try to install pdftotext with `pip install -U wdoc[pdftotext]` as well as add fasttext support with `pip install -U wdoc[fasttext]`.
+    * The recommended invocation is simply `uvx wdoc[full]` (see [uv](https://docs.astral.sh/uv/)).
+        * You can specify the `dev` branch like so: `uvx --from git+https://github.com/thiswillbeyourgithub/wdoc@dev[full] wdoc`
+    * Notes:
+        * using `wdoc` instead of `wdoc[full]` will install only the most used dependencies. If you want to use all the loaders and don' have to worry about filetypes, use `wdoc[full]`.
+        * if you have problems with pdftotext or fasttext, try `uvx wdoc[full,pdftotext,fasttext]`
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
     * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [SKILL.md](./SKILL.md) reference file:
         ```bash
