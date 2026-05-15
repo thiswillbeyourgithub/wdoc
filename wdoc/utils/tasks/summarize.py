@@ -661,6 +661,22 @@ def _summarize(
             if should_remove:
                 output_lines = output_lines[1:]
 
+        # Strip a leading "- *DEEP BREATH* - " style prefix from the start of the first line.
+        # Permissive on asterisks and the separator char (em-dash, en-dash,
+        # hyphen, colon, comma, etc.): consume up to and including the first
+        # run of non-word characters following "DEEP BREATH".
+        if (
+            output_lines
+            and "deep" in output_lines[0].lower()
+            and "breath" in output_lines[0].lower()
+        ):
+            output_lines[0] = re.sub(
+                r"^-?\s*\**\s*deep\s+breaths?\s*\**\s*\W+\s*",
+                "- ",
+                output_lines[0],
+                flags=re.IGNORECASE,
+            ).lstrip()
+
         for il, ll in enumerate(output_lines):
             # remove if contains no alphanumeric character
             if not any(char.isalpha() for char in ll.strip()):
