@@ -5,6 +5,8 @@
 2. [Shell Examples](#shell-examples)
 3. [Python Script Examples](#python-script-examples)
 
+> **Heads up on installation:** if you don't want to think about which extras to install, use `uvx wdoc[full]` everywhere. The plain `wdoc` package only includes PDF and URL/web loaders, so commands that touch youtube, audio, anki, office formats (word/powerpoint/epub) or logseq need their extras. `[full]` bundles all of those at once. The examples below sometimes use plain `uvx wdoc` when the base install is enough (pdf, url, ddg), but you can always replace it with `uvx wdoc[full]` to be safe. See the [installation section](https://github.com/thiswillbeyourgithub/wdoc/blob/main/README.md#direct-installation) for the full list of extras.
+
 Note that there is [an official open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) that is even simpler to use.
 
 
@@ -152,7 +154,7 @@ uvx wdoc[full] --task=summary \
 
 4. Summarize a YouTube video based on the whisper transcript
 ```zsh
-uvx wdoc[full,audio] --task=summary \
+uvx wdoc[youtube,audio] --task=summary \
      --path='https://www.youtube.com/watch?v=arj7oStGLkU' \
      --youtube_audio_backend="whisper" \
      --whisper_lang="en"

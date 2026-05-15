@@ -69,6 +69,8 @@ Give it to me I am in a hurry!
 
 **Note: a list of examples can be found in [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md)**
 
+> **TL;DR for installation:** when in doubt, use `uvx wdoc[full]`. The plain `wdoc` only ships PDF + URL/web loaders; everything else (youtube, audio, anki, office formats, logseq) lives in optional extras. `[full]` bundles all of them so you never have to think about missing dependencies. See the [Direct Installation](#direct-installation) section for the full list of extras.
+
 **Quick Start with Docker**: If you want an experimental web UI, check out the [Docker deployment guide](./docker/README.md).
 
 First, let's see how to *query* a pdf.
@@ -276,7 +278,7 @@ FAQ
         from wdoc import wdoc
         list_of_docs = wdoc.parse_doc(path=my_path)
         ```
-    * Another example would be to use wdoc to parse an anki deck: `uvx wdoc parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
+    * Another example would be to use wdoc to parse an anki deck: `uvx wdoc[anki] parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
 * **What should I do if my PDF are encrypted?**
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
