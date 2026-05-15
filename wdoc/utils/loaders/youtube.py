@@ -38,7 +38,7 @@ linebreak_before_letter = re.compile(
 def load_youtube(
     path: str,
     loaders_temp_dir: Path,
-    youtube_language: Optional[str] = None,
+    youtube_language: Optional[str | List[str]] = ["en-orig", "en", "en-US", "en-UK"],
     youtube_translation: Optional[str] = None,
     youtube_audio_backend: Literal["youtube", "whisper", "deepgram"] = "youtube",
     whisper_lang: Optional[str] = None,
@@ -52,6 +52,10 @@ def load_youtube(
     ], (
         f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
     )
+    if isinstance(youtube_language, str) and "," in youtube_language:
+        youtube_language = youtube_language.split(",")
+    if isinstance(youtube_language, str):
+        youtube_language = [youtube_language]
 
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
@@ -69,9 +73,7 @@ def load_youtube(
             docs = cached_yt_loader(
                 path=path,
                 add_video_info=True,
-                language=(
-                    [youtube_language] if youtube_language else ["en", "en-US", "en-UK"]
-                ),
+                language=youtube_language,
                 translation=youtube_translation if youtube_translation else None,
             )
         except Exception as err:
