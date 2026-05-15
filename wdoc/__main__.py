@@ -65,7 +65,24 @@ class ArgvState:
     """
 
     def __init__(self) -> None:
+        self._normalize_dashed_keys()
         self.args, self.kwargs = parse_args_fire()
+
+    @staticmethod
+    def _normalize_dashed_keys() -> None:
+        """Rewrite --foo-bar tokens in sys.argv to --foo_bar.
+
+        Why: accept the modern `--kebab-case` form while keeping the historical
+        `--snake_case` API working. Normalizing sys.argv up-front means every
+        downstream consumer (fire parsing, manual sys.argv scans) sees a single
+        canonical form.
+        """
+        for i, tok in enumerate(sys.argv):
+            if not tok.startswith("--") or len(tok) <= 2:
+                continue
+            key, sep, value = tok.partition("=")
+            new_key = "--" + key[2:].replace("-", "_")
+            sys.argv[i] = f"{new_key}={value}" if sep else new_key
 
     def _replace_in_argv(self, old_flag: str, new_flag: str) -> None:
         """Rewrite tokens matching --{old_flag} or --{old_flag}=... in sys.argv."""
