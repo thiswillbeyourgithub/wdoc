@@ -195,6 +195,7 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 1. To install:
     * The recommended invocation is simply `uvx wdoc[full]` (see [uv](https://docs.astral.sh/uv/)).
         * You can specify the `dev` branch like so: `uvx --from git+https://github.com/thiswillbeyourgithub/wdoc@dev[full] wdoc`
+        * If you cloned the repository and have modified the code: `uvx --from PATH/TO/WDOC[full] --refresh wdoc`
     * **Picking only the loaders you need**: `wdoc` ships in a modular fashion so you don't have to pull in heavy ML dependencies you won't use. Plain `wdoc` already includes the engine plus the **PDF** and **URL/web search** loaders (the most common cases). Optional extras:
         * `wdoc[youtube]` -- youtube videos and playlists (yt-dlp, youtube-transcript-api)
         * `wdoc[audio]` -- local audio/video transcription (deepgram, pydub, torchaudio, ffmpeg-python)
