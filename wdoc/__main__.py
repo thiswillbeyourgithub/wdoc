@@ -81,8 +81,14 @@ class ArgvState:
             if not tok.startswith("--") or len(tok) <= 2:
                 continue
             key, sep, value = tok.partition("=")
+            if "-" not in key[2:]:
+                continue
             new_key = "--" + key[2:].replace("-", "_")
             sys.argv[i] = f"{new_key}={value}" if sep else new_key
+            logger.warning(
+                f"Normalized kebab-case argument '{key}' to '{new_key}'. "
+                "Prefer snake_case in future invocations."
+            )
 
     def _replace_in_argv(self, old_flag: str, new_flag: str) -> None:
         """Rewrite tokens matching --{old_flag} or --{old_flag}=... in sys.argv."""
@@ -104,7 +110,7 @@ class ArgvState:
             return
         self.kwargs[new] = self.kwargs.pop(old)
         self._replace_in_argv(old, new)
-        logger.info(f"Replaced argument '{old}' with '{new}'")
+        logger.warning(f"Replaced argument '{old}' with '{new}'")
 
     def rename_kwarg_prefix(self, old_prefix: str, new_prefix: str) -> None:
         """Bulk rename: every kwarg starting with `old_prefix` -> `new_prefix`."""
@@ -117,6 +123,7 @@ class ArgvState:
             return
         self.args[self.args.index(old)] = new
         sys.argv[sys.argv.index(old)] = new
+        logger.warning(f"Renamed positional argument '{old}' to '{new}'")
 
     def remove_positional(self, value: str) -> None:
         """Drop a bare positional from args + sys.argv. No-op if absent."""
@@ -124,11 +131,13 @@ class ArgvState:
             return
         self.args.remove(value)
         sys.argv.remove(value)
+        logger.warning(f"Removed positional argument '{value}' from sys.argv")
 
     def append_positional(self, value: str) -> None:
         """Append a bare positional to both args and sys.argv."""
         self.args.append(value)
         sys.argv.append(value)
+        logger.warning(f"Appended positional argument '{value}' to sys.argv")
 
     def is_empty(self) -> bool:
         """True if no real CLI input was given (only the program name)."""
@@ -164,6 +173,7 @@ class ArgvState:
             t for t in sys.argv if t != f"--{key}" and not t.startswith(f"--{key}=")
         ]
         sys.argv.append(f"--{key}={value}")
+        logger.warning(f"Set argument '--{key}={value}' in sys.argv")
 
     def promote_positional_to_kwarg(self, positional: str, key: str) -> None:
         """Move a bare positional into kwargs as `--key=positional`."""
@@ -172,6 +182,9 @@ class ArgvState:
         self.args.remove(positional)
         sys.argv[sys.argv.index(positional)] = f"--{key}={positional}"
         self.kwargs[key] = positional
+        logger.warning(
+            f"Promoted positional '{positional}' to keyword argument '--{key}={positional}'"
+        )
 
 
 def handle_piped_input(piped_data: Union[str, bytes]) -> str:
