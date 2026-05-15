@@ -46,19 +46,28 @@ class PostInstallCommand(install):
             except Exception as err:
                 print(f"Error when installing yt-dlp pre-release: '{err}'")
 
-        # do "openparse-download"
+        # Only run "openparse-download" if openparse is actually installed.
+        # openparse[ml] is in install_requires today, but guard anyway so this
+        # post-install does not crash on a stripped-down install.
         try:
-            subprocess.check_call(
-                ["openparse-download"],
-            )
-        except Exception as err:
-            print(
-                "Error when trying to run 'openparse-download' to download"
-                f" weights for deep learning based table detection : '{err}'"
-                "\nBy default wdoc still uses pymupdf via openparse so it "
-                "shouldn't matter too much.\n"
-                "For more: see https://github.com/Filimoa/open-parse/"
-            )
+            import openparse  # noqa: F401
+
+            has_openparse = True
+        except ImportError:
+            has_openparse = False
+        if has_openparse:
+            try:
+                subprocess.check_call(
+                    ["openparse-download"],
+                )
+            except Exception as err:
+                print(
+                    "Error when trying to run 'openparse-download' to download"
+                    f" weights for deep learning based table detection : '{err}'"
+                    "\nBy default wdoc still uses pymupdf via openparse so it "
+                    "shouldn't matter too much.\n"
+                    "For more: see https://github.com/Filimoa/open-parse/"
+                )
 
         # do "import nltk ; nltk.download('punkt_tab')"
         try:
