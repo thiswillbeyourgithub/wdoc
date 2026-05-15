@@ -409,7 +409,7 @@ def summarize_documents(
     if author:
         header += f"    by '{author}'"
     header += f"    original path: '{path}'"
-    header += f"    wdoc version {wdoc_version} with model {model} on {date.today().isoformat()}"
+    header += f"    wdoc version {wdoc_version} with model {model.original} on {date.today().isoformat()}"
 
     # Apply citation URL template if provided
     if citation_url_template:
