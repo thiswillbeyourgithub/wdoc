@@ -224,8 +224,8 @@ setup(
         "playwright >= 1.45.0",  # for online_media and urls
         "openparse[ml] >= 0.5.7",  # pdf with table support
         # youtube
-        "yt-dlp >= 2025.09.26",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
-        "youtube-transcript-api >= 0.6.2",
+        "yt-dlp >= 2026.3.17",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
+        "youtube-transcript-api >= 1.2.4",
         # "pytube >= 15.0.0",
         # url
         "tldextract>=5.1.2",
