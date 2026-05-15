@@ -170,6 +170,12 @@ def load_youtube(
             if str(file_name.name) in f.stem:
                 f.unlink()
         assert not Path(audio_file).exists()
+    assert docs and [d for d in docs if d.page_content], (
+        f"No documents were produced for '{path}'. "
+        f"The current youtube_audio_backend is '{youtube_audio_backend}'. "
+        f"Try using a different backend by setting the `youtube_audio_backend` argument to "
+        f"'whisper' or 'deepgram'."
+    )
 
     return docs
 
