@@ -193,9 +193,17 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
 1. To install:
     * The recommended invocation is simply `uvx wdoc[full]` (see [uv](https://docs.astral.sh/uv/)).
         * You can specify the `dev` branch like so: `uvx --from git+https://github.com/thiswillbeyourgithub/wdoc@dev[full] wdoc`
-    * Notes:
-        * using `wdoc` instead of `wdoc[full]` will install only the most used dependencies. If you want to use all the loaders and don' have to worry about filetypes, use `wdoc[full]`.
-        * if you have problems with pdftotext or fasttext, try `uvx wdoc[full,pdftotext,fasttext]`
+    * **Picking only the loaders you need**: `wdoc` ships in a modular fashion so you don't have to pull in heavy ML dependencies you won't use. Plain `wdoc` already includes the engine plus the **PDF** and **URL/web search** loaders (the most common cases). Optional extras:
+        * `wdoc[youtube]` -- youtube videos and playlists (yt-dlp, youtube-transcript-api)
+        * `wdoc[audio]` -- local audio/video transcription (deepgram, pydub, torchaudio, ffmpeg-python)
+        * `wdoc[anki]` -- anki collection loading (ankipandas)
+        * `wdoc[office]` -- word/powerpoint/epub and other office formats (unstructured[all-docs], docx2txt, pandoc)
+        * `wdoc[logseq]` -- logseq markdown graphs
+        * `wdoc[fasttext]` -- language detection (buggy on windows, hence optional)
+        * `wdoc[pdftotext]` -- an additional pdf parser that needs system libs (`sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev`)
+        * You can combine extras freely: `uvx wdoc[youtube,audio,anki]`.
+        * `wdoc[full]` is a shortcut that includes all the loader extras above (excluding `fasttext` and `pdftotext`, which need special handling). If unsure, use `wdoc[full]` and don't worry about filetypes.
+        * If you have problems with pdftotext or fasttext, try `uvx wdoc[full,pdftotext,fasttext]`.
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
     * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [SKILL.md](./SKILL.md) reference file:
         ```bash

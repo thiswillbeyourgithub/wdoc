@@ -184,6 +184,7 @@ setup(
     },
     python_requires=">=3.11",
     install_requires=[
+        # Core RAG engine
         "sqlalchemy>=2.0.32",
         "beautifulsoup4>=4.12.3",
         "fire>=0.6.0",
@@ -220,47 +221,49 @@ setup(
         "nltk>=3.9.2",  # needed for punkt_tab download in post-install
         "blake3>=1.0.8",  # faster than sha256
         "pandas >= 2.3.3",
-        # some loaders are included by default:
-        "playwright >= 1.45.0",  # for online_media and urls
+        "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
+        "unstructured >= 0.18.15",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
+        # PDF loading (default, since pdf is the most common filetype)
         "openparse[ml] >= 0.5.7",  # pdf with table support
-        # youtube
-        "yt-dlp >= 2026.3.17",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
-        "youtube-transcript-api >= 1.2.4",
-        # "pytube >= 15.0.0",
-        # url
-        "tldextract>=5.1.2",
+        "pdfminer.six >= 20231228",
+        "pillow_heif >= 0.16.0",
+        "pypdfium2 >= 4.30.0",
+        "pymupdf >= 1.24.5",
+        "pdfplumber >= 0.11.1",
+        "pdf2image >= 1.17.0",
+        # URL / web loading (default, since urls are the most common filetype)
+        "playwright >= 1.45.0",  # for online_media and urls
         "goose3 >= 3.1.20",
+        "tldextract>=5.1.2",
         # online search via 'filetype=web'
         "ddgs >= 9.6.0",
         "duckduckgo-search >= 8.1.1",
-        # audio/video transcription
-        "deepgram-sdk >= 3.2.7",
-        "httpx >= 0.27.0",  # to increase deepgram timeout
-        "pydub >= 0.25.1",  # extracting audio from local video
-        "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-        "torchaudio >= 2.8.0",  # silence removal from audio
-        "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-        # many file formats
-        "unstructured[all-docs]>=0.18.15",
     ],
     extras_require={
-        "full": [
-            # Loaders:
-            # pdf
-            "pdfminer.six >= 20231228",
-            "pillow_heif >= 0.16.0",
-            "pypdfium2 >= 4.30.0",
-            "pymupdf >= 1.24.5",
-            "pdfplumber >= 0.11.1",
-            "pdf2image >= 1.17.0",
-            # word documents
-            "docx2txt >= 0.8",
-            # epub
-            "pandoc >= 2.4",
-            # anki
+        "youtube": [
+            "yt-dlp >= 2026.3.17",  # NOTE: the postinstall script reinstalls yt-dlp from the master branch
+            "youtube-transcript-api >= 1.2.4",
+            # "pytube >= 15.0.0",
+        ],
+        "audio": [
+            # audio/video transcription
+            "deepgram-sdk >= 3.2.7",
+            "httpx >= 0.27.0",  # to increase deepgram timeout
+            "pydub >= 0.25.1",  # extracting audio from local video
+            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
+            "torchaudio >= 2.8.0",  # silence removal from audio
+        ],
+        "anki": [
             "ankipandas>=0.3.15",
-            # logseq files (I'm the dev behind it)
-            "LogseqMarkdownParser >= 3.3",
+        ],
+        "office": [
+            # word, powerpoint, epub and other office formats
+            "unstructured[all-docs]>=0.18.15",
+            "docx2txt >= 0.8",
+            "pandoc >= 2.4",  # for epub
+        ],
+        "logseq": [
+            "LogseqMarkdownParser >= 3.3",  # I'm the dev behind it
         ],
         "fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
@@ -270,6 +273,10 @@ setup(
         "pdftotext": [
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
+        ],
+        "full": [
+            # aggregates all loader extras (self-reference requires pip >= 21.2)
+            "wdoc[youtube,audio,anki,office,logseq]",
         ],
         "dev": [
             "ruff >= 0.14.1",
