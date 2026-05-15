@@ -76,7 +76,7 @@ First, let's see how to *query* a pdf.
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
-wdoc --path=$link --task=query --filetype="online_pdf" --query="What does it say about alphago?" --query_retrievers='basic_multiquery' --top_k=auto_200_500
+uvx wdoc[full] --path=$link --task=query --filetype="online_pdf" --query="What does it say about alphago?" --query_retrievers='basic_multiquery' --top_k=auto_200_500
 ```
 * This will:
     1. parse what's in --path as a link to a pdf to download (otherwise the url could simply be a webpage, but in most cases you can leave it to 'auto' by default as heuristics are in place to detect the most appropriate parser).
@@ -94,7 +94,7 @@ Now, let's see how to summarize a pdf.
 ``` zsh
 link="https://situational-awareness.ai/wp-content/uploads/2024/06/situationalawareness.pdf"
 
-wdoc --path=$link --task=summarize --filetype="online_pdf"
+uvx wdoc[full] --path=$link --task=summarize --filetype="online_pdf"
 ```
 * This will:
     1. Split the text into chunks
@@ -125,7 +125,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
     `Eve the Evaluator`, `Anna the Answerer` and `Carl the Combiner` are the names given to each LLM in their system prompt, this way you can easily add specific additional instructions to a specific step. There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query.
     5. Each document is identified by a unique hash and the answers are sourced, meaning you know from which document comes each information of the answer.
     * Supports a special syntax like "QE >>>> QA" were QE is a question used to filter the embeddings and QA is the actual question you want answered.
-* **Web Search**: Preliminary support for web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). Just do `wdoc web "How is Nvidia today this month?"`
+* **Web Search**: Preliminary support for web search using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo). Just do `uvx wdoc web "How is Nvidia today this month?"`
 * **Advanced summary**:
     * Instead of unusable "high level takeaway" points, compress the reasoning, arguments, though process etc of the author into an easy to skim markdown file.
     * The summaries are then checked again n times for correct logical indentation etc.
@@ -134,7 +134,7 @@ wdoc --path=$link --task=summarize --filetype="online_pdf"
 * **Trust but verify**: The answer is sourced: `wdoc` keeps track of the hash of each document used in the answer, allowing you to verify each assertion.
 * **Markdown formatted answers and summaries**: using [rich](https://github.com/Textualize/rich).
 * **Sane embeddings**: By default use sophisticated embeddings like [multi query retrievers](https://python.langchain.com/docs/how_to/MultiQueryRetriever) but also include SVM, KNN, parent retriever etc. Customizable.
-* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. The full help can be found in the file [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) or via `python -m wdoc --help`. I work hard to maintain an exhaustive documentation. The complete documentation in a single page is available [on the website](https://wdoc.readthedocs.io/en/latest/all_docs.html).
+* **Fully documented** Lots of docstrings, lots of in code comments, detailed `--help` etc. Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. The full help can be found in the file [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) or via `uvx wdoc --help`. I work hard to maintain an exhaustive documentation. The complete documentation in a single page is available [on the website](https://wdoc.readthedocs.io/en/latest/all_docs.html).
 * **Scriptable / Extensible**: You can use `wdoc` as an executable or as a library. Take a look at the scripts [below](#scripts-made-with-wdoc). There is even [an open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool).
 * **Strictly Typed**: Runtime type checking without performance penalty thanks to the incredible [beartype](https://beartype.readthedocs.io/en/latest/)! Opt out using an environment flag: `WDOC_TYPECHECKING="disabled / warn / crash" wdoc` (by default: `warn`).
 * **LLM (and embeddings) caching**: speed things up, as well as index storing and loading (handy for large collections).
@@ -210,15 +210,15 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         mkdir -p ~/.claude/skills/wdoc && wget -O ~/.claude/skills/wdoc/SKILL.md https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/SKILL.md
         ```
 2. Add the API key for the backend you want as an environment variable: for example `export ANTHROPIC_API_KEY="***my_key***"`
-3. Launch is as easy as using `wdoc --task=query --path=MYDOC [ARGS]`
+3. Launch is as easy as using `uvx wdoc --task=query --path=MYDOC [ARGS]`
     * If for some reason this fails, maybe try with `python -m wdoc`. And if everything fails, try with `uvx wdoc@latest`, or as last resort clone this repo and try again after `cd` inside it? Don't hesitate to open an issue.
-    * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `wdoc -- --completion MYSHELL > my_completion_file"`.
+    * To get shell autocompletion: if you're using zsh: `eval $(cat shell_completions/wdoc_completion.zsh)`. Also provided for `bash` and `fish`. You can generate your own with `uvx wdoc -- --completion MYSHELL > my_completion_file"`.
     * Don't forget that if you're using a lot of documents (notably via recursive filetypes) it can take a lot of time (depending on parallel processing too, but you then might run into memory errors).
     * Take a look at the [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wdoc/docs/examples.md) for a list of shell and python examples. 
-4. To ask questions about a local document: `wdoc query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
+4. To ask questions about a local document: `uvx wdoc[office] query --path="PATH/TO/YOUR/FILE" --filetype="auto"`
     * If you want to reduce the startup time by directly loading the embeddings from a previous run (although the embeddings are always cached anyway): add `--saveas="some/path"` to the previous command to save the generated embeddings to a file and replace with `--loadfrom "some/path"` on every subsequent call.
-5. To do an online search, the idea is `wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `wdoc web 'How is Nvidia doing this month?'`.
-6. For more: read the documentation at `wdoc --help`
+5. To do an online search, the idea is `uvx wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg`. But if any of `path` or `query` is missing, we replace it by the other one. This can also be used like so: `uvx wdoc web 'How is Nvidia doing this month?'`.
+6. For more: read the documentation at `uvx wdoc --help`
 
 ### Experimental Docker Interface
 
@@ -250,7 +250,7 @@ FAQ
 * **Why is `wdoc` better than most RAG system to ask questions on documents?**
     * It uses both a strong and query_eval LLM. After finding the appropriate documents using embeddings, the query_eval LLM is used to filter through the documents that don't seem to be about the question, then the strong LLM answers the question based on each remaining documents, then combines them all in a neat markdown. Also `wdoc` is very customizable.
 * **Can you use wdoc on `wdoc`'s documentation?**
-    * Yes of course! `wdoc --task=query --path https://wdoc.readthedocs.io/en/latest/all_docs.html`
+    * Yes of course! `uvx wdoc --task=query --path https://wdoc.readthedocs.io/en/latest/all_docs.html`
 * **Why can `wdoc` also produce summaries?**
     * I have little free time so I needed a tailor made summary feature to keep up with the news. But most summary systems are rubbish and just try to give you the high level takeaway points, and don't handle properly text chunking. So I made my own tailor made summarizer. **The summary prompts can be found in `utils/prompts.py` and focus on extracting the arguments/reasonning/though process/arguments of the author then use markdown indented bullet points to make it easy to read.** It's really good! The prompts dataclass is not frozen so you can provide your own prompt if you want.
 * **Which tasks are supported by `wdoc`?**
@@ -269,14 +269,14 @@ FAQ
 * **How can I improve the prompt for a specific task without coding?**
     * Each prompt of the `query` task are roleplaying as employees working for WDOC-CORP©, either as `Eve the Evaluator` (the LLM that filters out relevant documents), `Anna the Answerer` (the LLM that answers the question from a filtered document) or `Carl the Combiner` (the LLM that combines answers from Answerer as one). There's also `Sam the Summarizer` for summaries and `Raphael the Rephraser` to expand your query. They are all receiving orders from you if you talk to them in a prompt.
 * **How can I use `wdoc`'s parser for my own documents?**
-    * If you are in the shell cli you can easily use `wdoc parse my_file.pdf`.
+    * If you are in the shell cli you can easily use `uvx wdoc parse my_file.pdf`.
     add `--format=langchain_dict` to get the text and metadata as a list of dict, otherwise you will only get the text. Other formats exist including `--format=xml` to make it LLM friendly like [files-to-promt](https://github.com/simonw/files-to-prompt).
     * If you want the document using python:
         ``` python
         from wdoc import wdoc
         list_of_docs = wdoc.parse_doc(path=my_path)
         ```
-    * Another example would be to use wdoc to parse an anki deck: `wdoc parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
+    * Another example would be to use wdoc to parse an anki deck: `uvx wdoc parse --filetype "anki" --anki_profile "Main" --anki_deck "mydeck::subdeck1" --anki_notetype "my_notetype" --anki_template "<header>\n{header}\n</header>\n<body>\n{body}\n</body>\n<personal_notes>\n{more}\n</personal_notes>\n<tags>{tags}</tags>\n{image_ocr_alt}" --anki_tag_filter "a::tag::regex::.*something.*" --format=text`
 * **What should I do if my PDF are encrypted?**
     * If you're on linux you can try running `qpdf --decrypt input.pdf output.pdf`
         * I made a quick and dirty batch script for [in this repo](https://github.com/thiswillbeyourgithub/PDF_batch_decryptor)
@@ -308,7 +308,7 @@ FAQ
     * Yes! An [experimental Docker-based Gradio web interface](./docker/README.md) is available for easy deployment and use without command-line interaction.
 
 * **Can I use shell pipes with `wdoc`?**
-    * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
+    * Yes! Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | uvx wdoc --task=query`, `echo $my_url | uvx wdoc parse`  or even `cat my_file.pdf | uvx wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
 
 * **Can the environment variables be set at runtime?**
     * Sort of. Actually when importing `wdoc`, code in `wdoc/utils/env.py` creates a dataclass that holds the environment variables used by `wdoc`. This is done primarily to ensure runtime type checking and to ensure that when an env variable is accessed inside wdoc's code (through the dataclass) it is always compared to the environment one. If you decide to change env variables throughout the code, this change new value will be used inside `wdoc`. But that's somewhat brittle because some env variables are used to store the *default* value of some function or class and hence are only used when importing code so will be out of sync. Additionaly, `wdoc` will intentionaly crash if it suspects the `WDOC_PRIVATE_MODE` env var is out of sync, just to be safe. Also note that if env vars like `WDOC_LANGFUSE_PUBLIC_KEY` are found, `wdoc` will overwrite `LANGFUSE_PUBLIC_KEY` with it. This is because `litellm` (maybe others) looks for this env variable to enable `langfuse` callbacks. This whole contraption allows to set env variable for a specific user of when using the `open-webui` `wdoc` tool. Feedback is much welcome for this feature.
