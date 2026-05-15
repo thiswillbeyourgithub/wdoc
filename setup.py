@@ -18,24 +18,33 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
-        # do pip install --user -U --pre yt-dlp
+        # Only refresh yt-dlp to its pre-release if the user actually installed
+        # it (i.e. picked the [youtube] extra). This keeps yt-dlp optional while
+        # still letting users track YouTube extractor fixes that land in
+        # pre-releases before the stable pin catches up.
         try:
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    "-m",
-                ]
-                + pip
-                + [
-                    "install",
-                    "--user",
-                    "-U",
-                    "--pre",
-                    "yt-dlp",
-                ]
-            )
-        except Exception as err:
-            print(f"Error when installing yt-dlp pre-release: '{err}'")
+            import yt_dlp  # noqa: F401
+
+            has_yt_dlp = True
+        except ImportError:
+            has_yt_dlp = False
+        if has_yt_dlp:
+            try:
+                subprocess.check_call(
+                    [
+                        sys.executable,
+                        "-m",
+                    ]
+                    + pip
+                    + [
+                        "install",
+                        "-U",
+                        "--pre",
+                        "yt-dlp",
+                    ]
+                )
+            except Exception as err:
+                print(f"Error when installing yt-dlp pre-release: '{err}'")
 
         # do "openparse-download"
         try:
