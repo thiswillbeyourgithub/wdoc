@@ -49,11 +49,7 @@ source test_venv/bin/activate
 sleep 1
 
 # install wdoc
-uv pip install -e ".."
-
-# install test suite
-uv pip install pytest pytest-xdist
-sleep 1
+uv pip install -e "..[full,dev,fasttext,pdftotext]"
 
 # Store the venv python path to ensure we use it consistently
 PYTHON_EXEC=$(which python)
@@ -85,22 +81,6 @@ echo "Done with wdoc (api)"
 echo "\nDone with first round of pytest!"
 
 cd ..
-
-# also check if we can install those then redo some of the tests
-uv pip install -e "..[fasttext]"
-uv pip install -e "..[pdftotext]"
-cd temp
-
-echo "\nTesting wdoc (basic)"
-$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
-echo "Done with wdoc (basic)"
-
-# check if we can install the dev test
-cd ..
-uv pip install -e "..[dev]"
-
-# check if we can install the full wdoc
-uv pip install -e "..[full]"
 
 # cleanup
 deactivate
