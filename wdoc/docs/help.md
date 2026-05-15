@@ -525,10 +525,10 @@
 
 *Note: `--yt_*` is automatically parsed as `--youtube_`*
 * `--youtube_language`: List[str]
-    * For youtube. e.g. `["fr","en"]` to use french transcripts if
-    possible and english otherwise
+    * For youtube. e.g. `["fr-orig", "fr","en"]` to use french transcripts if
+    possible and english otherwise.
 * `--youtube_translation`: str
-    * For youtube. e.g. `en` to use the transcripts after translation to english
+    * For youtube. e.g. `en` to use the transcripts after translation to english (translation provided by youtube)
 * `--youtube_audio_backend`: str
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
