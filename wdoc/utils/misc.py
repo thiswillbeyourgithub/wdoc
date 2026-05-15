@@ -976,6 +976,7 @@ def check_docs_tkn_length(
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
     identifier = str(identifier)
+    assert docs, f"Received empty doc, identifier was: '{identifier}'"
     size = sum([get_tkn_length(d) for d in docs])
     if size <= min_token:
         logger.warning(
