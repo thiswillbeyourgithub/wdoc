@@ -70,6 +70,10 @@ class PostInstallCommand(install):
                 )
 
         # do "import nltk ; nltk.download('punkt_tab')"
+        # Likely redundant: `unstructured` (our only nltk consumer, via
+        # unstructured.nlp.tokenize) already lazily runs nltk.download("punkt_tab")
+        # on first use. Kept as a safety net so the download happens at install
+        # time rather than on the first parse of an office document.
         try:
             import nltk
 
