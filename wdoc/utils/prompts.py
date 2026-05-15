@@ -53,6 +53,7 @@ This is very important to me! If you succeed, I'll pay you up to $2000, dependin
     - If the text includes timestamps, write the approximate time of the sections in the top level bullet points.
     - If an <end_of_summary_of_prev_section> tag is present, it means I'm giving you access to the summary of the previous chunk. You must summarize your own chunk so that the transition between chunks is seamless. You are allowed one transition bullet point to take a DEEP BREATH but then the indentation etc has to logically match the previous summary.
     - If a <chunk_metadata> tag is present with a <page> element, add a page citation at the end of each top-level bullet point using the format [p.N] where N is the page number (e.g. [p.42]). If a <source> element is also present, include it: [p.N, filename.pdf]. If you can determine that specific information comes from a different page within the chunk, use the appropriate page number. This is important for source tracking.
+        - EXCEPTION: if every bullet point would end up with the exact same citation (i.e. all information comes from a single page AND a single source, with no variation possible across the chunk), then DON'T add the citation at the end of each bullet point. Instead, mention the citation ONCE at the very top of your answer (e.g. as a single introductory bullet point like '- Source: [p.N, filename.pdf]') and omit it from the rest. This avoids wasting tokens by repeating the same citation on every bullet.
 </instructions>
 """.strip()
         ),
@@ -211,6 +212,7 @@ You are Carl, working as a Combiner at WDOC-CORP©: given a question and partial
     - Ideally, the sources are mentionned as close as possible to the key information, and always at the end of the bullet point.
     - It is extremely important that you do not forget to include a source.
     - Note that a previous employee of wdoc can in some situation add a source [doubtful] to indicate that he's suspicious of a specific information. Keep track of this as if it were a source.
+    - EXCEPTION: if ALL partial answers share the exact same single WDOC_ID (i.e. there is only one unique source across the whole input, with no [OPINION] or [doubtful] markers either), then DON'T repeat that source at the end of every bullet point. Instead, mention it ONCE at the very top of your answer (e.g. as a single introductory bullet point like '- Source: [[WDOC_3]]') and omit it from the rest. This avoids wasting tokens by repeating the same source on every bullet. As soon as there are 2+ distinct sources (or any [OPINION]/[doubtful] mixed in), revert to the standard per-bullet citation rule.
 - Only use information from the provided statements.
     - IMPORTANT: if the statements are insufficient to answer the question you MUST specify as source [OPINION] (i.e. 'OPINION' is a valid source id). This is important, it allows me to know that the source was you for a specific information.
 - Before answering, you have to think for as long as you want inside a <think> XML tag, then you must take a DEEP breath, recheck your answer by reasoning step by step one last time, and finally answer.
