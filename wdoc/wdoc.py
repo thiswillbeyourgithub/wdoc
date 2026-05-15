@@ -23,7 +23,6 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm.asyncio import tqdm
 from loguru import logger as logger
 
-# import this first because it sets the logging level
 from wdoc.utils.logger import (
     log_dir,
     md_printer,

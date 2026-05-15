@@ -17,7 +17,10 @@ if re.findall(r"\b--private\b", " ".join(sys.argv)):
     logger.warning("Detected --private mode: setting WDOC_PRIVATE_MODE to True")
     os.environ["WDOC_PRIVATE_MODE"] = True
 
-from wdoc.utils import logger as importedlogger  # make sure to setup the logs first
+from wdoc.utils.logger import setup_cli_logging, md_printer
+
+setup_cli_logging()  # install wdoc's loguru sinks; library users opt in by calling this themselves
+
 from wdoc.wdoc import wdoc
 from wdoc.utils.env import is_out_piped
 from wdoc.utils.misc import get_piped_input
@@ -347,7 +350,7 @@ def cli_launcher() -> None:
         if is_out_piped:
             print(doc)
         else:
-            importedlogger.md_printer(doc)
+            md_printer(doc)
         sys.exit(0)
 
     # turn 'summary' into 'summarize' etc

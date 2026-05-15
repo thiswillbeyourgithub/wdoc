@@ -26,64 +26,77 @@ log_dir.mkdir(exist_ok=True, parents=True)
 log_file = log_dir / "logs.txt"
 log_file.touch(exist_ok=True)
 
-log_level = "INFO"
-if env.WDOC_VERBOSE:
-    log_level = "DEBUG"
-if env.WDOC_DEBUG:
-    log_level = "DEBUG"
-if is_out_piped:
-    log_level = "CRITICAL"
+console = Console()
 
-# reset the default handler of stderr otherwise the user always see all log levels apparently
-handlers = logger._core.handlers
-if (
-    len(handlers) == 1
-    and next(iter(handlers.values())).levelno == 10
-    and "<stderr>" in str(next(iter(handlers.values())))
-):
-    logger.remove()
+_cli_logging_setup_done = False
+
+
+def setup_cli_logging() -> None:
+    """Install wdoc's stderr/stdout/file sinks on the global loguru logger.
+
+    Only the CLI entry point should call this. When wdoc is imported as a
+    library (e.g. into an open-webui tool), we leave the host's loguru
+    configuration alone, so wdoc records flow through whatever handlers the
+    host already installed.
+    """
+    global _cli_logging_setup_done
+    if _cli_logging_setup_done:
+        return
+    _cli_logging_setup_done = True
+
+    log_level = "INFO"
+    if env.WDOC_VERBOSE:
+        log_level = "DEBUG"
+    if env.WDOC_DEBUG:
+        log_level = "DEBUG"
+    if is_out_piped:
+        log_level = "CRITICAL"
+
+    # reset the default handler of stderr otherwise the user always see all log levels apparently
+    handlers = logger._core.handlers
+    if (
+        len(handlers) == 1
+        and next(iter(handlers.values())).levelno == 10
+        and "<stderr>" in str(next(iter(handlers.values())))
+    ):
+        logger.remove()
+        logger.add(
+            sys.stderr,
+            format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
+            level="ERROR",
+            enqueue=True,
+            colorize=not is_out_piped,
+            backtrace=True if env.WDOC_DEBUG else None,
+            diagnose=True if env.WDOC_DEBUG else None,
+        )
+
     logger.add(
-        sys.stderr,
+        log_file,
+        rotation="100MB",
+        retention=5,
+        format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{thread}|{process}|{function}|{line}|{message}",
+        level="DEBUG",
+        enqueue=True,
+        colorize=False,
+        backtrace=True,
+        diagnose=True,
+        serialize=False,
+    )
+    logger.add(
+        sys.stdout,
         format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
-        level="ERROR",
+        level=log_level,
         enqueue=True,
         colorize=not is_out_piped,
         backtrace=True if env.WDOC_DEBUG else None,
         diagnose=True if env.WDOC_DEBUG else None,
     )
 
-# logger for the log_file
-logger.add(
-    log_file,
-    rotation="100MB",
-    retention=5,
-    format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{thread}|{process}|{function}|{line}|{message}",
-    level="DEBUG",
-    enqueue=True,
-    colorize=False,
-    backtrace=True,
-    diagnose=True,
-    serialize=False,
-)
-# logger for the user stdout
-logger.add(
-    sys.stdout,
-    format="<level>{level} {time: HH:mm}({function}:{line}): {message}</level>",
-    level=log_level,
-    enqueue=True,
-    colorize=not is_out_piped,
-    backtrace=True if env.WDOC_DEBUG else None,
-    diagnose=True if env.WDOC_DEBUG else None,
-)
-
-logger.debug(f"log_file location: {log_file}")
-
-if is_input_piped:
-    logger.debug("Detected input pipe")
-if is_out_piped:
-    logger.debug("Detected output pipe")
-
-console = Console()
+    logger.debug(f"log_file location: {log_file}")
+    if is_input_piped:
+        logger.debug("Detected input pipe")
+    if is_out_piped:
+        logger.debug("Detected output pipe")
 
 
 def md_printer(message: str, color: Optional[str] = None) -> str:
