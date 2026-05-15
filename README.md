@@ -10,7 +10,7 @@
 
 `wdoc` is a powerful RAG (Retrieval-Augmented Generation) system designed to summarize, search, and query documents across various file types. It's particularly useful for handling large volumes of diverse document types, making it ideal for researchers, students, and professionals dealing with extensive information sources.
 
-Created by a psychiatry resident who needed a way to get a definitive answer from multiple sources at the same time (audio recordings, video lectures, [Anki flashcards](https://apps.ankiweb.net/), PDFs, EPUBs, etc.). `wdoc` was born from frustration with existing RAG solutions for querying and summarizing.
+Created by a psychiatry resident who needed a way to get a definitive answer from multiple sources at the same time (audio recordings, video lectures, [Anki flashcards](https://apps.ankiweb.net/), PDFs, EPUBs, etc.). `wdoc` was born from frustration with existing RAG solutions for querying and summarizing. Note: `wdoc` was coded mostly by hand, without LLM assistance as they didn't exist at the time, Claude Code will probably be used to refactor the code as it evolves.
 
 *(The online documentation can be found [here](https://wdoc.readthedocs.io/en/stable))*
 
