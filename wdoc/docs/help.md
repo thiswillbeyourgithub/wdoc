@@ -126,6 +126,7 @@
 
         * `youtube`
             * `--path` must link to a youtube video
+            *Note: `--yt_*` is automatically parsed as `--youtube_`*
             * Optional:
                 * `--youtube_language`
                 * `--youtube_translations`
@@ -522,6 +523,7 @@
 * `--deepgram_kwargs`: dict
     * if using deepgram for transcription, those arguments will be used.
 
+*Note: `--yt_*` is automatically parsed as `--youtube_`*
 * `--youtube_language`: List[str]
     * For youtube. e.g. `["fr","en"]` to use french transcripts if
     possible and english otherwise

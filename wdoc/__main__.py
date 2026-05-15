@@ -322,6 +322,21 @@ def cli_launcher() -> None:
             for elem in sys.argv
         ]
 
+    # auto replace --yt_ by --youtube_
+    to_remove = []
+    to_add = {}
+    for k, v in kwargs.items():
+        if k.startswith("yt_"):
+            new_k = k.replace("yt_", "youtube_", 1)
+            to_add[new_k] = v
+            to_remove.append(k)
+            sys.argv[sys.argv.index("--" + k)] = "--" + new_k
+            logger.info(f"Replaced argument '{k}' with '{new_k}'")
+    kwargs.update(to_add)
+    for k in to_remove:
+        del kwargs[k]
+    del to_remove, to_add
+
     # if there are remaining args, use the infer_filetype function to see if they are the missing path or the query
     if args:
         candidates = []
