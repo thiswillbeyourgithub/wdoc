@@ -76,47 +76,6 @@ WDOC_TEST_DEFAULT_EMBED_MODEL = os.getenv(
     "WDOC_TEST_DEFAULT_EMBED_MODEL", env.WDOC_DEFAULT_EMBED_MODEL
 )
 
-# Crash early if a model that will be used requires an API key we don't have.
-_ALL_TEST_MODELS = [
-    WDOC_TEST_OPENAI_MODEL,
-    WDOC_TEST_OPENAI_EVAL_MODEL,
-    WDOC_TEST_OPENAI_EMBED_MODEL,
-    WDOC_TEST_OPENROUTER_MODEL,
-    WDOC_TEST_OPENROUTER_EVAL_MODEL,
-    WDOC_TEST_DEFAULT_MODEL,
-    WDOC_TEST_DEFAULT_EVAL_MODEL,
-    WDOC_TEST_DEFAULT_EMBED_MODEL,
-]
-if any(m.startswith("openrouter/") for m in _ALL_TEST_MODELS) and not os.getenv(
-    "OPENROUTER_API_KEY"
-):
-    raise RuntimeError(
-        "OPENROUTER_API_KEY env var is not set but a test model starts with "
-        "'openrouter/'. Set OPENROUTER_API_KEY or override the relevant "
-        "WDOC_TEST_* model env vars."
-    )
-if any(m.startswith("openai/") for m in _ALL_TEST_MODELS) and not os.getenv(
-    "OPENAI_API_KEY"
-):
-    raise RuntimeError(
-        "OPENAI_API_KEY env var is not set but a test model starts with "
-        "'openai/'. Set OPENAI_API_KEY or override the relevant WDOC_TEST_* "
-        "model env vars."
-    )
-if any(m.startswith("mistral/") for m in _ALL_TEST_MODELS) and not os.getenv(
-    "MISTRAL_API_KEY"
-):
-    raise RuntimeError(
-        "MISTRAL_API_KEY env var is not set but a test model starts with "
-        "'mistral/'. Set MISTRAL_API_KEY or override the relevant WDOC_TEST_* "
-        "model env vars."
-    )
-if not os.getenv("WDOC_WHISPER_API_KEY"):
-    raise RuntimeError(
-        "WDOC_WHISPER_API_KEY env var is not set but is required to test "
-        "whisper transcription. Set WDOC_WHISPER_API_KEY before running tests."
-    )
-
 os.environ["WDOC_DISABLE_EMBEDDINGS_CACHE"] = "true"
 
 # the unexpected env var should be tested both before import and before run:

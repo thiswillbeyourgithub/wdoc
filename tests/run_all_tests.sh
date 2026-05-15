@@ -4,6 +4,38 @@ set -e
 set -o pipefail
 set -u
 
+# Crash early if a model that will be used requires an API key we don't have.
+# Defaults mirror those in test_wdoc.py and wdoc/utils/env.py.
+_ALL_TEST_MODELS=(
+    "${WDOC_TEST_OPENAI_MODEL:-gpt-4o}"
+    "${WDOC_TEST_OPENAI_EVAL_MODEL:-gpt-4o-mini}"
+    "${WDOC_TEST_OPENAI_EMBED_MODEL:-text-embedding-3-small}"
+    "${WDOC_TEST_OPENROUTER_MODEL:-openrouter/mistralai/mistral-small-3.2-24b-instruct}"
+    "${WDOC_TEST_OPENROUTER_EVAL_MODEL:-openrouter/mistralai/mistral-small-3.2-24b-instruct}"
+    "${WDOC_TEST_DEFAULT_MODEL:-openrouter/deepseek/deepseek-v4-pro}"
+    "${WDOC_TEST_DEFAULT_EVAL_MODEL:-openrouter/deepseek/deepseek-v4-flash}"
+    "${WDOC_TEST_DEFAULT_EMBED_MODEL:-openai/text-embedding-3-small}"
+)
+_check_provider_key() {
+    local prefix="$1" keyvar="$2" m
+    for m in "${_ALL_TEST_MODELS[@]}"; do
+        if [[ "$m" == ${prefix}* ]]; then
+            if [[ -z "${(P)keyvar:-}" ]]; then
+                echo "ERROR: $keyvar env var is not set but a test model starts with '$prefix'. Set $keyvar or override the relevant WDOC_TEST_* model env vars." >&2
+                exit 1
+            fi
+            return 0
+        fi
+    done
+}
+_check_provider_key "openrouter/" OPENROUTER_API_KEY
+_check_provider_key "openai/" OPENAI_API_KEY
+_check_provider_key "mistral/" MISTRAL_API_KEY
+if [[ -z "${WDOC_WHISPER_API_KEY:-}" ]]; then
+    echo "ERROR: WDOC_WHISPER_API_KEY env var is not set but is required to test whisper transcription. Set WDOC_WHISPER_API_KEY before running tests." >&2
+    exit 1
+fi
+
 # cleanup previous
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
 [ -e "temp" ] && rm -r temp
