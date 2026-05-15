@@ -473,6 +473,48 @@ def summarize_documents(
     )
 
 
+def _strip_llm_intro_artifacts(lines: List[str]) -> List[str]:
+    """Strip 'deep breath' / 'i'll summarize' boilerplate from top-level lines.
+
+    Applied to every top-level line (no leading whitespace) rather than just the
+    first one: the LLM sometimes emits this preamble on a later top-level bullet
+    when an earlier line is something like a source reference.
+    """
+    cleaned = []
+    for line in lines:
+        if line and line[0] in (" ", "\t"):
+            cleaned.append(line)
+            continue
+
+        lowered = line.lower()
+        should_remove = (
+            ("deep breath" in lowered and len(lowered) < 100)
+            or (lowered.startswith("i'll summarize") and len(lowered) < 100)
+            or (
+                line.strip().startswith("- ")
+                and ("deep breath" in lowered or "i'll summarize" in lowered)
+                and (len(lowered) < 20)
+            )
+        )
+        if should_remove:
+            continue
+
+        # Strip a leading "- *DEEP BREATH* - " style prefix. Permissive on
+        # asterisks and the separator char (en-dash, hyphen, colon, comma,
+        # etc.): consume up to and including the first run of non-word
+        # characters following "DEEP BREATH".
+        if "deep" in lowered and "breath" in lowered:
+            line = re.sub(
+                r"^-?\s*\**\s*deep\s+breaths?\s*\**\s*\W+\s*",
+                "- ",
+                line,
+                flags=re.IGNORECASE,
+            ).lstrip()
+
+        cleaned.append(line)
+    return cleaned
+
+
 @log_and_time_fn
 def _summarize(
     docs: List[Document],
@@ -643,39 +685,7 @@ def _summarize(
 
         output_lines = parsed["answer"].rstrip().splitlines(keepends=True)
 
-        # Remove first line if:
-        # - it contains "a deep breath"
-        # - it starts with "i'll summarize" (case insensitive)
-        # - it's a bullet point containing these phrases
-        if output_lines:
-            first_line = output_lines[0].lower()
-            should_remove = (
-                ("deep breath" in first_line and len(first_line) < 100)
-                or (first_line.startswith("i'll summarize") and len(first_line) < 100)
-                or (
-                    first_line.strip().startswith("- ")
-                    and ("deep breath" in first_line or "i'll summarize" in first_line)
-                    and (len(first_line) < 20)
-                )
-            )
-            if should_remove:
-                output_lines = output_lines[1:]
-
-        # Strip a leading "- *DEEP BREATH* - " style prefix from the start of the first line.
-        # Permissive on asterisks and the separator char (em-dash, en-dash,
-        # hyphen, colon, comma, etc.): consume up to and including the first
-        # run of non-word characters following "DEEP BREATH".
-        if (
-            output_lines
-            and "deep" in output_lines[0].lower()
-            and "breath" in output_lines[0].lower()
-        ):
-            output_lines[0] = re.sub(
-                r"^-?\s*\**\s*deep\s+breaths?\s*\**\s*\W+\s*",
-                "- ",
-                output_lines[0],
-                flags=re.IGNORECASE,
-            ).lstrip()
+        output_lines = _strip_llm_intro_artifacts(output_lines)
 
         for il, ll in enumerate(output_lines):
             # remove if contains no alphanumeric character
