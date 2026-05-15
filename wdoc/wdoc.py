@@ -53,6 +53,7 @@ from wdoc.utils.misc import (  # debug_chain,
     get_supported_model_params,
     get_tkn_length,
     model_name_matcher,
+    open_anki_gui,
     query_eval_cache,
     set_func_signature,
     thinking_answer_parser,
@@ -1569,13 +1570,7 @@ class wdoc:
                 logger.info("Opening anki.")
                 query = f"nid:{','.join(anki_nids)}"
                 try:
-                    from py_ankiconnect import PyAnkiconnect
-
-                    ankiconnect = PyAnkiconnect()
-                    ankiconnect(
-                        action="guiBrowse",
-                        query=query,
-                    )
+                    open_anki_gui(query)
                 except Exception as e:
                     logger.warning(f"Error when trying to open Anki: '{e}'")
         all_filepaths = []

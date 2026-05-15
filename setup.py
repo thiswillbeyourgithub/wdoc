@@ -212,7 +212,6 @@ setup(
         "loguru >= 0.7.2",
         "grandalf >= 0.8",  # to print ascii graph
         "lazy-import >= 0.2.2",
-        "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
         "scikit-learn >= 1.5.1",  # for semantic reordering
         "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optional as it can help infer the filetype, and 0.4.28 is necessary for the pipe feature.
@@ -255,6 +254,7 @@ setup(
         ],
         "anki": [
             "ankipandas>=0.3.15",
+            "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
         ],
         "office": [
             # word, powerpoint, epub and other office formats
