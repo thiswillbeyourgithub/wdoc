@@ -108,6 +108,31 @@ class ArgvState:
         self.args.remove(value)
         sys.argv.remove(value)
 
+    def append_positional(self, value: str) -> None:
+        """Append a bare positional to both args and sys.argv."""
+        self.args.append(value)
+        sys.argv.append(value)
+
+    def is_empty(self) -> bool:
+        """True if no real CLI input was given (only the program name)."""
+        return len(sys.argv) == 1 or not (self.args or self.kwargs)
+
+    def kwarg_equals(self, key: str, value: Any) -> bool:
+        """True iff kwargs[key] is present and equals `value`. Avoids KeyError."""
+        return key in self.kwargs and self.kwargs[key] == value
+
+    def has_flag(self, name: str) -> bool:
+        """True if `name` was passed as a kwarg or as a bare --name in sys.argv."""
+        return name in self.kwargs or f"--{name}" in sys.argv
+
+    def has_arg(self, name: str) -> bool:
+        """True if `name` appears in either positional args or kwargs."""
+        return name in self.args or name in self.kwargs
+
+    def argv_contains(self, substring: str) -> bool:
+        """True if `substring` appears anywhere in the joined sys.argv."""
+        return substring in " ".join(sys.argv)
+
     def set_kwarg(self, key: str, value: Any, *, force: bool = False) -> None:
         """Set a kwarg, syncing sys.argv. Skip if already set unless force=True.
 
@@ -271,7 +296,7 @@ def cli_launcher() -> None:
     )
 
     # crash if no args
-    if len(sys.argv) == 1 or (not (args or kwargs)):
+    if state.is_empty():
         logger.info("No args shown. Use '--help' to display the help.")
         sys.exit(0)
 
@@ -281,7 +306,7 @@ def cli_launcher() -> None:
 
     if "help" in kwargs or "h" in kwargs:
         print("Showing help")
-        if ("task" in kwargs and kwargs["task"] == "parse") or "parse" in args:
+        if state.kwarg_equals("task", "parse") or "parse" in args:
             target = wdoc.parse_doc
         else:
             target = wdoc
@@ -324,10 +349,10 @@ def cli_launcher() -> None:
                     "Web search task with no 'query' nor 'path' but several positional arg: expecting only one to treat it as query and path"
                 )
 
-    if "completion" in kwargs or "--completion" in sys.argv:
-        if " -- --completion" in " ".join(sys.argv):
-            if " parse " in " ".join(sys.argv):
-                sys.argv.remove("parse")
+    if state.has_flag("completion"):
+        if state.argv_contains(" -- --completion"):
+            if state.argv_contains(" parse "):
+                state.remove_positional("parse")
                 fire.Fire(wdoc.parse_doc)
             else:
                 fire.Fire(wdoc)
@@ -363,8 +388,7 @@ def cli_launcher() -> None:
             state.set_kwarg("path", new_arg)
         else:
             logger.debug(f"Adding '{new_arg}' to arguments based on piped input.")
-            args.append(new_arg)
-            sys.argv.append(new_arg)  # Append the new argument
+            state.append_positional(new_arg)
 
     # replace frequently mystyped argument
     state.rename_kwarg("ddg_max_result", "ddg_max_results")
@@ -390,23 +414,19 @@ def cli_launcher() -> None:
         ):
             if len([c for c in candidates if c == "user_query"]) == 1:
                 query_index = candidates.index("user_query")
-                kwargs["query"] = args.pop(query_index)
-                sys.argv[sys.argv.index(kwargs["query"])] = (
-                    f"--query='{kwargs['query']}'"
-                )
+                state.promote_positional_to_kwarg(args[query_index], "query")
                 candidates.pop(query_index)
 
         if (
             args
-            and not ("path" in args or "path" in kwargs)
+            and not state.has_arg("path")
             and len(candidates) == 1
             and candidates[0]
         ):
-            kwargs["path"] = args.pop(0)
-            sys.argv[sys.argv.index(kwargs["path"])] = f"--path={kwargs['path']}"
+            state.promote_positional_to_kwarg(args[0], "path")
 
     # when using web search, make sure to make query and path match the other by default
-    if "filetype" in kwargs and kwargs["filetype"] == "ddg":
+    if state.kwarg_equals("filetype", "ddg"):
         if "path" in kwargs and "query" not in kwargs:
             logger.debug(
                 "Detected DDG search with 'path' but no 'query' argument, duplicating the 'path' to 'query' then."
@@ -424,7 +444,7 @@ def cli_launcher() -> None:
             f"It appears the arguments parsing was not complete: remaining args were not dispatched to kwargs: '{args}'"
         )
 
-    if kwargs["task"] == "parse":
+    if state.kwarg_equals("task", "parse"):
         call_parse_doc()
         sys.exit(0)
 

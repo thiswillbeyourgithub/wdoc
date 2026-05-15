@@ -245,6 +245,84 @@ def test_rename_kwarg_prefix_leaves_non_matching_alone(monkeypatch):
     assert "--filetype=pdf" in sys.argv
 
 
+# ---------- append_positional ----------
+
+
+@pytest.mark.basic
+def test_append_positional(monkeypatch):
+    _argv(monkeypatch, "wdoc", "--task=query")
+    s = ArgvState()
+    s.append_positional("/tmp/piped.txt")
+    assert "/tmp/piped.txt" in s.args
+    assert "/tmp/piped.txt" in sys.argv
+
+
+# ---------- read-only check helpers ----------
+
+
+@pytest.mark.basic
+def test_is_empty_true_for_program_name_only(monkeypatch):
+    _argv(monkeypatch, "wdoc")
+    s = ArgvState()
+    assert s.is_empty()
+
+
+@pytest.mark.basic
+def test_is_empty_false_with_args(monkeypatch):
+    _argv(monkeypatch, "wdoc", "query", "--path=/tmp/x")
+    s = ArgvState()
+    assert not s.is_empty()
+
+
+@pytest.mark.basic
+def test_kwarg_equals(monkeypatch):
+    _argv(monkeypatch, "wdoc", "--task=parse", "--path=/tmp/x")
+    s = ArgvState()
+    assert s.kwarg_equals("task", "parse")
+    assert not s.kwarg_equals("task", "query")
+    assert not s.kwarg_equals("missing_key", "anything")
+
+
+@pytest.mark.basic
+def test_has_flag_kwarg_form(monkeypatch):
+    _argv(monkeypatch, "wdoc", "--completion", "--task=query")
+    s = ArgvState()
+    assert s.has_flag("completion")
+
+
+@pytest.mark.basic
+def test_has_flag_bare_argv_form(monkeypatch):
+    # Bare --completion that fire didn't put into kwargs still counts.
+    _argv(monkeypatch, "wdoc", "parse", "--", "--completion")
+    s = ArgvState()
+    assert s.has_flag("completion")
+
+
+@pytest.mark.basic
+def test_has_flag_absent(monkeypatch):
+    _argv(monkeypatch, "wdoc", "query", "--path=/tmp/x")
+    s = ArgvState()
+    assert not s.has_flag("completion")
+
+
+@pytest.mark.basic
+def test_has_arg_positional_or_kwarg(monkeypatch):
+    _argv(monkeypatch, "wdoc", "path", "--task=query")
+    s = ArgvState()
+    assert s.has_arg("path")  # positional
+    assert s.has_arg("task")  # kwarg
+    assert not s.has_arg("query")
+
+
+@pytest.mark.basic
+def test_argv_contains(monkeypatch):
+    _argv(monkeypatch, "wdoc", "parse", "--", "--completion")
+    s = ArgvState()
+    assert s.argv_contains(" -- --completion")
+    assert s.argv_contains(" parse ")
+    assert not s.argv_contains("--nope")
+
+
 # ---------- realistic end-to-end sequences ----------
 
 
