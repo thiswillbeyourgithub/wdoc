@@ -408,8 +408,6 @@ Click to read more
     - make images an actual filetype
 - ### Enhancements
     - store the available tasks in a dataclass in misc.py
-    - turn arugments that contain a _ into arguments with a -
-        - in the cli launcher function, manually convert arguments
     - maybe add support for docling to parse documents?
     - when querying hard stuff the number of drop documents after batching is non negligible, we should remove those from the list of documents to display and instead store those in another variable
     - check if using html syntax is less costly and confusing to LLMs than markdown with tall those indentation. Or maybe json. It would be simple to turn that into markdown afterwards.
