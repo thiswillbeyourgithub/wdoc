@@ -37,24 +37,6 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing yt-dlp pre-release: '{err}'")
 
-        # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
-        # see https://github.com/ahupp/python-magic/issues/261
-        try:
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    "-m",
-                ]
-                + pip
-                + [
-                    "install",
-                    "-U",
-                    "git+https://github.com/ahupp/python-magic/",
-                ],
-            )
-        except Exception as err:
-            print(f"Error when pip updating python-magic from git: '{err}'")
-
         # Install audioop-lts only for Python 3.13+
         # audioop was removed in Python 3.13, and pydub needs it
         # See https://github.com/jiaaro/pydub/issues/815
