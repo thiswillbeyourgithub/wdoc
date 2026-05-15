@@ -308,16 +308,16 @@ def load_one_doc(
     # Call the loader function with the appropriate arguments
     docs = loader_func(**args_to_pass)
 
-    assert docs, (
-        f"The loader function returned no documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
-    )
-
     # remove empty documents
     docs = [d for d in docs if d.page_content.strip()]
 
+    assert docs, (
+        f"The loader function returned no non-empty documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
+    )
+
     tdocs = text_splitter.transform_documents(docs)
 
-    if not tdocs:
+    if docs and not tdocs:
         logger.warning(
             f"text_splitter.transform_documents apparently erased the docs, something went wrong so using original docs.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'\nText_splitter: '{text_splitter}'"
         )
@@ -326,6 +326,10 @@ def load_one_doc(
         #     f"Successfuly used text_splitter.transform_documents on {len(docs)} docs"
         # )
         docs = tdocs
+
+    assert docs, (
+        f"The loader function returned no non-empty documents, something went wrong.\nLoader function: '{loader_func}'\nArguments: '{args_to_pass}'"
+    )
 
     if filetype not in ["anki", "pdf"]:
         check_docs_tkn_length(

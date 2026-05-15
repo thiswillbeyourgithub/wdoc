@@ -976,6 +976,7 @@ def check_docs_tkn_length(
     not too low, and has a high enough language probability,
     otherwise something probably went wrong."""
     identifier = str(identifier)
+    assert docs, f"Received empty doc, identifier was: '{identifier}'"
     size = sum([get_tkn_length(d) for d in docs])
     if size <= min_token:
         logger.warning(
@@ -1530,6 +1531,40 @@ def get_piped_input() -> Optional[Any]:
 
     logger.debug("Loaded piped data")
     return piped_input
+
+
+def open_anki_gui(query: str) -> None:
+    """
+    Open Anki's card browser with the given query via AnkiConnect.
+
+    Tries the optional `py_ankiconnect` dependency first (installed via the
+    `anki` extra), and falls back to a plain `requests.post` call against the
+    AnkiConnect endpoint when the package isn't available. The fallback honors
+    the `PY_ANKICONNECT_DEFAULT_HOST` and `PY_ANKICONNECT_DEFAULT_PORT` env
+    vars, defaulting to `http://127.0.0.1` and `8765`.
+    """
+    try:
+        from py_ankiconnect import PyAnkiconnect
+
+        PyAnkiconnect()(action="guiBrowse", query=query)
+    except ImportError:
+        import requests
+
+        host = os.environ.get("PY_ANKICONNECT_DEFAULT_HOST", "http://127.0.0.1")
+        port = os.environ.get("PY_ANKICONNECT_DEFAULT_PORT", "8765")
+        resp = requests.post(
+            f"{host}:{port}",
+            json={
+                "action": "guiBrowse",
+                "params": {"query": query},
+                "version": 6,
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("error") is not None:
+            raise Exception(f"AnkiConnect returned error: '{data['error']}'")
 
 
 if pytest_ongoing:

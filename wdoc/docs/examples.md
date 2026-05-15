@@ -5,6 +5,8 @@
 2. [Shell Examples](#shell-examples)
 3. [Python Script Examples](#python-script-examples)
 
+> **Heads up on installation:** if you don't want to think about which extras to install, use `uvx wdoc[full]` everywhere. The plain `wdoc` package only includes PDF and URL/web loaders, so commands that touch youtube, audio, anki, office formats (word/powerpoint/epub) or logseq need their extras. `[full]` bundles all of those at once. The examples below sometimes use plain `uvx wdoc` when the base install is enough (pdf, url, ddg), but you can always replace it with `uvx wdoc[full]` to be safe. See the [installation section](https://github.com/thiswillbeyourgithub/wdoc/blob/main/README.md#direct-installation) for the full list of extras.
+
 Note that there is [an official open-webui Tool](https://openwebui.com/t/qqqqqqqqqqqqqqqqqqqq/wdoctool) that is even simpler to use.
 
 
@@ -12,16 +14,16 @@ Note that there is [an official open-webui Tool](https://openwebui.com/t/qqqqqqq
 
 1. Say you want to ask a question about one pdf, that's simple: 
 ```bash
-wdoc --task="query" --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
+uvx wdoc --task="query" --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
 ```
 Note that you could have just let `--filetype="auto"` and it would have worked the same.
-* *Note: By default `wdoc` tries to parse args as kwargs so `wdoc query mydocument What's the age of the captain?` is parsed as `wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries. This does not always work so use it only after getting comfortable with `wdoc`.*
+* *Note: By default `wdoc` tries to parse args as kwargs so `uvx wdoc query mydocument What's the age of the captain?` is parsed as `uvx wdoc --task=query --path=mydocument --query "What's the age of the captain?"`. Likewise for summaries. This does not always work so use it only after getting comfortable with `wdoc`.*
 
 2. You have several pdf? Say you want to ask a question about any pdf contained in a folder, that's not much more complicated:
 ```bash
-wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"
+uvx wdoc --task="query" --path="my/other_dir" --pattern="**/*pdf" --filetype="recursive_paths" --recursed_filetype="pdf" --query="My question about those documents"
 ```
-So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that `wdoc` knows what arguments to expect, and specify as recursed_filetype "pdf" so that `wdoc` knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by `wdoc` like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `wdoc [your kwargs] here is my question`.
+So basically you give as path the path to the dir, as pattern the globbing pattern used to find the files relative to the path, set as filetype "recursive_paths" so that `wdoc` knows what arguments to expect, and specify as recursed_filetype "pdf" so that `wdoc` knows that each found file must be treated as a pdf. You can use the same idea to glob any kind of file supported by `wdoc` like markdown etc. You can even use "auto"! Note that you can either directly ask your question with `--query="my question"`, or wait for an interactive prompt to pop up, or just pass the question as *args like so `uvx wdoc [your kwargs] here is my question`.
 
 3. You want more? You can write a `.json` file where each line (`#comments` and empty lines are ignored) will be parsed as a list of argument. For example one line could be:
 ```json
@@ -43,14 +45,14 @@ to quickly ask queries about it!
 
 6. To know more about each argument supported by each filetype, 
 ```bash
-wdoc --help
+uvx wdoc --help
 ```
 
 7. There is a specific recursive filetype I should mention: `--filetype="link_file"`. Basically the file designated by `--path` should contain in each line (`#comments` and empty lines are ignored) one url, that will be parsed by `wdoc`. I made this so that I can quickly use the "share" button on android from my browser to a text file (so it just appends the url to the file), this file is synced via [syncthing](https://github.com/syncthing/syncthing) to my browser and `wdoc` automatically summarize them and add them to my [Logseq](https://github.com/logseq/logseq/). Note that the url is parsed in each line, so formatting is ignored, for example it works even in markdown bullet point list.
 
 8. If you want to only use local models, here's an example with [ollama](https://ollama.com/):
 ```bash
-wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/snowflake-arctic-embed2" --task summarize --path https://situational-awareness.ai/
+uvx wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" --embed_model="ollama/snowflake-arctic-embed2" --task summarize --path https://situational-awareness.ai/
 ```
 You can always add `--private` to add additional safety nets that no data will leave your local network. You can also override specific API endpoints using 
 ```bash
@@ -59,7 +61,7 @@ You can always add `--private` to add additional safety nets that no data will l
 
 9. Now say you just want to summarize [Tim Urban's TED talk on procrastination](https://www.youtube.com/watch?v=arj7oStGLkU):
 ```bash
-wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing
+uvx wdoc[youtube] --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtube_language="en" --disable_md_printing
 ```
 
 <details><summary>Click to see the output</summary>
@@ -128,12 +130,12 @@ wdoc --task=summary --path='https://www.youtube.com/watch?v=arj7oStGLkU' --youtu
 
 1. Query a simple PDF file
 ```zsh
-wdoc --task=query --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
+uvx wdoc --task=query --path="my_file.pdf" --filetype="pdf" --model='openai/gpt-4o'
 ```
 
 2. Recursively query multiple PDFs in a directory
 ```zsh
-wdoc --task=query \
+uvx wdoc --task=query \
      --path="my/other_dir" \
      --pattern="**/*pdf" \
      --filetype="recursive_paths" \
@@ -143,7 +145,7 @@ wdoc --task=query \
 
 3. Summarize a YouTube video in french based on the english transcript
 ```zsh
-wdoc --task=summary \
+uvx wdoc[full] --task=summary \
      --path='https://www.youtube.com/watch?v=arj7oStGLkU' \
      --youtube_language="en" \
      --summary_language="fr" \
@@ -152,7 +154,7 @@ wdoc --task=summary \
 
 4. Summarize a YouTube video based on the whisper transcript
 ```zsh
-wdoc --task=summary \
+uvx wdoc[youtube,audio] --task=summary \
      --path='https://www.youtube.com/watch?v=arj7oStGLkU' \
      --youtube_audio_backend="whisper" \
      --whisper_lang="en"
@@ -160,7 +162,7 @@ wdoc --task=summary \
 
 5. Use local models with Ollama
 ```zsh
-wdoc --model="ollama/qwen3:8b" \
+uvx wdoc --model="ollama/qwen3:8b" \
      --query_eval_model="ollama/qwen3:8b" \
      --embed_model="ollama/snowflake-arctic-embed2" \
      --task summarize --path https://situational-awareness.ai/
@@ -179,7 +181,7 @@ wdoc --model="ollama/qwen3:8b" \
 
 6. Parse an Anki deck as text
 ```zsh
-wdoc parse \
+uvx wdoc[anki] parse \
     --filetype "anki" \
     --anki_profile "Main" \
     --anki_deck "mydeck::subdeck1" \
@@ -191,7 +193,7 @@ wdoc parse \
 
 7. Query an online PDF
 ```zsh
-wdoc --path="https://example.com/document.pdf" \
+uvx wdoc --path="https://example.com/document.pdf" \
      --task=query \
      --filetype="online_pdf" \
      --query="What does it say about X?"
@@ -200,23 +202,23 @@ wdoc --path="https://example.com/document.pdf" \
 8. Save and load embeddings for faster subsequent queries
 ```zsh
 # First run - save embeddings
-wdoc --task=query \
+uvx wdoc --task=query \
      --path="my_document.pdf" \
      --save_embeds_as="saved_embeddings.pkl"
 
 # Subsequent runs - load embeddings
-wdoc --task=query \
+uvx wdoc --task=query \
      --load_embeds_from="saved_embeddings.pkl" \
      --query="My new question"
 ```
 
 9. You can even use shell pipes:
 
-Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | wdoc --task=query`, `echo $my_url | wdoc parse`  or even `cat my_file.pdf | wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
+Data sent using shell pipes (be it for strings or binary data) will be automatically saved to a temporary file which is then passed as `--path=[temp_file]` argument. For example `cat **/*.txt | uvx wdoc --task=query`, `echo $my_url | uvx wdoc parse`  or even `cat my_file.pdf | uvx wdoc parse --filetype=pdf`. For binary input it is strongly recommended to use a `--filetype` argument because `python-magic` version <=0.4.27 chokes otherwise (see [that issue](https://github.com/ahupp/python-magic/issues/261).
 
 10. You can also search the web for results using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo):
 
-It's implemented like if `ddg` was a `recursive_filetype`. Hence, the idea is to use `wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg` (remember: `path` specifies the document and `query` the question to ask about the documents). To make it more natural, if any of `path` or `query` is missing, we replace it by the value of the other one. It can be shortened to: `wdoc web 'How is Nvidia doing this month?'`. With `--ddg_max_result=5` you can specify the maximum number of results to get, use `--ddg_region=us-US` to get US only result, `--ddg_safesearch=on` to filter out NSFW results.
+It's implemented like if `ddg` was a `recursive_filetype`. Hence, the idea is to use `uvx wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg` (remember: `path` specifies the document and `query` the question to ask about the documents). To make it more natural, if any of `path` or `query` is missing, we replace it by the value of the other one. It can be shortened to: `uvx wdoc web 'How is Nvidia doing this month?'`. With `--ddg_max_result=5` you can specify the maximum number of results to get, use `--ddg_region=us-US` to get US only result, `--ddg_safesearch=on` to filter out NSFW results.
 
 
 # Python Script Examples
@@ -276,7 +278,7 @@ results = instance.summary_results
 
 ```zsh
 # Same example from the shell
-wdoc --task=summary \
+uvx wdoc --task=summary \
      --path="court_transcript.pdf" \
      --filetype="pdf" \
      --citation_url_template="https://private-site.com/cases/{source}#page={page}"

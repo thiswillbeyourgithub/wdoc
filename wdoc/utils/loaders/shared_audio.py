@@ -205,16 +205,18 @@ def transcribe_audio_whisper(
         assert env.WDOC_WHISPER_ENDPOINT, (
             "WDOC_PRIVATE_MODE is set but no WDOC_WHISPER_ENDPOINT is set. Crashing as it seems like your private request would call a remote API"
         )
-        assert (
-            not os.environ["WDOC_WHISPER_API_KEY"]
-            == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        ), "No environment variable WDOC_WHISPER_API_KEY found"
+        assert env.WDOC_WHISPER_API_KEY == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE", (
+            "No environment variable WDOC_WHISPER_API_KEY found"
+        )
     else:
         assert (
             "OPENAI_API_KEY" in os.environ
             and not os.environ["OPENAI_API_KEY"]
             == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        ), "No environment variable OPENAI_API_KEY found"
+        ) or (
+            env.WDOC_WHISPER_API_KEY
+            and not env.WDOC_WHISPER_API_KEY == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+        ), "No environment variable OPENAI_API_KEY nor WDOC_WHISPER_API_KEY found"
 
     try:
         t1 = time.time()

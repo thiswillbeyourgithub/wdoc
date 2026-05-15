@@ -18,47 +18,17 @@ class PostInstallCommand(install):
         except Exception as err:
             print(f"Error when installing playwright: '{err}'")
 
-        # do pip install --user -U --pre yt-dlp
+        # Only refresh yt-dlp to its pre-release if the user actually installed
+        # it (i.e. picked the [youtube] extra). This keeps yt-dlp optional while
+        # still letting users track YouTube extractor fixes that land in
+        # pre-releases before the stable pin catches up.
         try:
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    "-m",
-                ]
-                + pip
-                + [
-                    "install",
-                    "--user",
-                    "-U",
-                    "--pre",
-                    "yt-dlp",
-                ]
-            )
-        except Exception as err:
-            print(f"Error when installing yt-dlp pre-release: '{err}'")
+            import yt_dlp  # noqa: F401
 
-        # do "python -m pip install -U git+https://github.com/ahupp/python-magic/
-        # see https://github.com/ahupp/python-magic/issues/261
-        try:
-            subprocess.check_call(
-                [
-                    sys.executable,
-                    "-m",
-                ]
-                + pip
-                + [
-                    "install",
-                    "-U",
-                    "git+https://github.com/ahupp/python-magic/",
-                ],
-            )
-        except Exception as err:
-            print(f"Error when pip updating python-magic from git: '{err}'")
-
-        # Install audioop-lts only for Python 3.13+
-        # audioop was removed in Python 3.13, and pydub needs it
-        # See https://github.com/jiaaro/pydub/issues/815
-        if sys.version_info >= (3, 13):
+            has_yt_dlp = True
+        except ImportError:
+            has_yt_dlp = False
+        if has_yt_dlp:
             try:
                 subprocess.check_call(
                     [
@@ -69,27 +39,41 @@ class PostInstallCommand(install):
                     + [
                         "install",
                         "-U",
-                        "audioop-lts>=0.2.2",
+                        "--pre",
+                        "yt-dlp",
                     ]
                 )
             except Exception as err:
-                print(f"Error when installing audioop-lts for Python 3.13+: '{err}'")
+                print(f"Error when installing yt-dlp pre-release: '{err}'")
 
-        # do "openparse-download"
+        # Only run "openparse-download" if openparse is actually installed.
+        # openparse[ml] is in install_requires today, but guard anyway so this
+        # post-install does not crash on a stripped-down install.
         try:
-            subprocess.check_call(
-                ["openparse-download"],
-            )
-        except Exception as err:
-            print(
-                "Error when trying to run 'openparse-download' to download"
-                f" weights for deep learning based table detection : '{err}'"
-                "\nBy default wdoc still uses pymupdf via openparse so it "
-                "shouldn't matter too much.\n"
-                "For more: see https://github.com/Filimoa/open-parse/"
-            )
+            import openparse  # noqa: F401
+
+            has_openparse = True
+        except ImportError:
+            has_openparse = False
+        if has_openparse:
+            try:
+                subprocess.check_call(
+                    ["openparse-download"],
+                )
+            except Exception as err:
+                print(
+                    "Error when trying to run 'openparse-download' to download"
+                    f" weights for deep learning based table detection : '{err}'"
+                    "\nBy default wdoc still uses pymupdf via openparse so it "
+                    "shouldn't matter too much.\n"
+                    "For more: see https://github.com/Filimoa/open-parse/"
+                )
 
         # do "import nltk ; nltk.download('punkt_tab')"
+        # Likely redundant: `unstructured` (our only nltk consumer, via
+        # unstructured.nlp.tokenize) already lazily runs nltk.download("punkt_tab")
+        # on first use. Kept as a safety net so the download happens at install
+        # time rather than on the first parse of an office document.
         try:
             import nltk
 
@@ -145,7 +129,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="wdoc",
-    version="5.0.1",
+    version="5.1.0",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, or any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -184,18 +168,19 @@ setup(
     },
     python_requires=">=3.11",
     install_requires=[
+        # Core RAG engine
         "sqlalchemy>=2.0.32",
         "beautifulsoup4>=4.12.3",
         "fire>=0.6.0",
         "ftfy>=6.2.0",
         "joblib>=1.4.2",
-        "langchain>=1.2.0",
-        "langchain-classic>=1.0.0",
-        "langchain-community>=0.3.30",
-        "langchain-openai>=0.3.34",
-        "langchain-litellm>=0.3.5",
+        "langchain>=1.3.0",
+        "langchain-classic>=1.0.7",
+        "langchain-community>=0.4.1",
+        "langchain-openai>=1.2.1",
+        "langchain-litellm>=0.6.5",
         "langfuse>=3.6.1",  # for observability
-        "litellm>=v1.78.2",
+        "litellm>=v1.84.0",
         "nest_asyncio>=1.6.0",  # needed to fix ollama 'event loop closed' error thanks to https://github.com/BerriAI/litellm/pull/7625/files
         "chonkie[all]>=1.4.0",  # chonkie is for the semantic embeddings
         "chonkie[semantic]>=1.4.0",
@@ -211,7 +196,6 @@ setup(
         "loguru >= 0.7.2",
         "grandalf >= 0.8",  # to print ascii graph
         "lazy-import >= 0.2.2",
-        "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
         "scikit-learn >= 1.5.1",  # for semantic reordering
         "scipy >= 1.13.1",  # for semantic reordering
         # 'python-magic >= 0.4.27',  # for detecting file type  # made optional as it can help infer the filetype, and 0.4.28 is necessary for the pipe feature.
@@ -220,47 +204,53 @@ setup(
         "nltk>=3.9.2",  # needed for punkt_tab download in post-install
         "blake3>=1.0.8",  # faster than sha256
         "pandas >= 2.3.3",
-        # some loaders are included by default:
-        "playwright >= 1.45.0",  # for online_media and urls
+        "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
+        "unstructured >= 0.18.15",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
+        # PDF loading (default, since pdf is the most common filetype)
         "openparse[ml] >= 0.5.7",  # pdf with table support
-        # youtube
-        "yt-dlp >= 2025.09.26",  # we actually need to install yt-dlp here otherwise readthedocs crashes. Note that in the postinstall script above it will be reinstalled using the master branch
-        "youtube-transcript-api >= 0.6.2",
-        # "pytube >= 15.0.0",
-        # url
-        "tldextract>=5.1.2",
+        "pdfminer.six >= 20231228",
+        "pillow_heif >= 0.16.0",
+        "pypdfium2 >= 4.30.0",
+        "pymupdf >= 1.24.5",
+        "pdfplumber >= 0.11.1",
+        "pdf2image >= 1.17.0",
+        # URL / web loading (default, since urls are the most common filetype)
+        "playwright >= 1.45.0",  # for online_media and urls
         "goose3 >= 3.1.20",
+        "tldextract>=5.1.2",
         # online search via 'filetype=web'
         "ddgs >= 9.6.0",
         "duckduckgo-search >= 8.1.1",
-        # audio/video transcription
-        "deepgram-sdk >= 3.2.7",
-        "httpx >= 0.27.0",  # to increase deepgram timeout
-        "pydub >= 0.25.1",  # extracting audio from local video
-        "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-        "torchaudio >= 2.8.0",  # silence removal from audio
-        "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-        # many file formats
-        "unstructured[all-docs]>=0.18.15",
     ],
     extras_require={
-        "full": [
-            # Loaders:
-            # pdf
-            "pdfminer.six >= 20231228",
-            "pillow_heif >= 0.16.0",
-            "pypdfium2 >= 4.30.0",
-            "pymupdf >= 1.24.5",
-            "pdfplumber >= 0.11.1",
-            "pdf2image >= 1.17.0",
-            # word documents
-            "docx2txt >= 0.8",
-            # epub
-            "pandoc >= 2.4",
-            # anki
+        "youtube": [
+            "yt-dlp >= 2026.3.17",  # NOTE: the postinstall script reinstalls yt-dlp from the master branch
+            "youtube-transcript-api >= 1.2.4",
+            # "pytube >= 15.0.0",
+        ],
+        "audio": [
+            # audio/video transcription
+            "deepgram-sdk >= 3.2.7",
+            "httpx >= 0.27.0",  # to increase deepgram timeout
+            "pydub >= 0.25.1",  # extracting audio from local video
+            # audioop was removed in stdlib in Python 3.13 and pydub needs it
+            # See https://github.com/jiaaro/pydub/issues/815
+            "audioop-lts>=0.2.2; python_version>='3.13'",
+            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
+            "torchaudio >= 2.8.0",  # silence removal from audio
+        ],
+        "anki": [
             "ankipandas>=0.3.15",
-            # logseq files (I'm the dev behind it)
-            "LogseqMarkdownParser >= 3.3",
+            "py_ankiconnect >= 1.1.2",  # DIY wrapper to tell anki to sync just in case
+        ],
+        "office": [
+            # word, powerpoint, epub and other office formats
+            "unstructured[all-docs]>=0.18.15",
+            "docx2txt >= 0.8",
+            "pandoc >= 2.4",  # for epub
+        ],
+        "logseq": [
+            "LogseqMarkdownParser >= 3.3",  # I'm the dev behind it
         ],
         "fasttext": [
             # buggy in windows so optional: https://github.com/zafercavdar/fasttext-langdetect/issues/14
@@ -270,6 +260,10 @@ setup(
         "pdftotext": [
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
+        ],
+        "full": [
+            # aggregates all loader extras (self-reference requires pip >= 21.2)
+            "wdoc[youtube,audio,anki,office,logseq]",
         ],
         "dev": [
             "ruff >= 0.14.1",

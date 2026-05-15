@@ -127,6 +127,11 @@ def test_parse_docx():
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
     response = requests.get(url, headers=headers)
+    if response.status_code == 429:
+        pytest.skip(
+            f"Skipping test: got HTTP 429 (rate limited) when downloading {url}. "
+            "This is not a wdoc bug."
+        )
     response.raise_for_status()
 
     # Write content to temporary file

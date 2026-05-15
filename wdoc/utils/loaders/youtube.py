@@ -38,7 +38,7 @@ linebreak_before_letter = re.compile(
 def load_youtube(
     path: str,
     loaders_temp_dir: Path,
-    youtube_language: Optional[str] = None,
+    youtube_language: Optional[str | List[str]] = None,
     youtube_translation: Optional[str] = None,
     youtube_audio_backend: Literal["youtube", "whisper", "deepgram"] = "youtube",
     whisper_lang: Optional[str] = None,
@@ -52,6 +52,10 @@ def load_youtube(
     ], (
         f"Invalid value for youtube_audio_backend. Must be either youtube, whisper or deepgram, not '{youtube_audio_backend}'"
     )
+    if isinstance(youtube_language, str) and "," in youtube_language:
+        youtube_language = youtube_language.split(",")
+    if isinstance(youtube_language, str):
+        youtube_language = [youtube_language]
 
     if "\\" in path:
         logger.warning(f"Removed backslash found in '{path}'")
@@ -69,9 +73,7 @@ def load_youtube(
             docs = cached_yt_loader(
                 path=path,
                 add_video_info=True,
-                language=(
-                    [youtube_language] if youtube_language else ["en", "en-US", "en-UK"]
-                ),
+                language=youtube_language,
                 translation=youtube_translation if youtube_translation else None,
             )
         except Exception as err:
@@ -170,25 +172,35 @@ def load_youtube(
             if str(file_name.name) in f.stem:
                 f.unlink()
         assert not Path(audio_file).exists()
+    assert docs and [d for d in docs if d.page_content], (
+        f"No documents were produced for '{path}'. "
+        f"The current youtube_audio_backend is '{youtube_audio_backend}'. "
+        f"Try using a different backend by setting the `youtube_audio_backend` argument to "
+        f"'whisper' or 'deepgram'."
+    )
 
     return docs
 
 
 @doc_loaders_cache.cache
 def cached_yt_loader(
-    path: str, add_video_info: bool, language: List[str], translation: Optional[str]
+    path: str,
+    add_video_info: bool,
+    language: Optional[List[str]],
+    translation: Optional[str],
 ) -> List[Document]:
     logger.debug(f"Not using cache for youtube {path}")
 
     options = {
         "writesubtitles": True,
         "writeautomaticsub": True,
-        "subtitleslangs": language,
         "skip_download": True,
         "subtitlesformat": "vtt",
         "allsubtitles": True,
         "extract_flat": False,
     }
+    if language is not None:
+        options["subtitleslangs"] = language
     if translation is None:
         translation = []
     else:
@@ -208,6 +220,22 @@ def cached_yt_loader(
             raise Exception(
                 f"No subtitles found for youtube video entitled '{title}' at link '{path}'"
             )
+
+        # If no language was specified, prefer the original-language track (any
+        # subtitle key ending in `-orig`); fall back to the standard english set.
+        if language is None:
+            available = list(good_subs.keys()) + list(auto_subs.keys())
+            orig_langs = [lang for lang in available if lang.endswith("-orig")]
+            if orig_langs:
+                language = [orig_langs[0]]
+                logger.info(
+                    f"Auto-detected original subtitle language for '{title}': '{language[0]}'"
+                )
+            else:
+                language = ["en", "en-US", "en-UK"]
+                logger.info(
+                    f"No '-orig' subtitle for '{title}', falling back to {language}"
+                )
 
         sub = None
         for subs in [good_subs, auto_subs]:

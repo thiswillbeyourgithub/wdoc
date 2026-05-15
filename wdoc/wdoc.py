@@ -23,7 +23,6 @@ from langchain_core.runnables.base import RunnableEach
 from tqdm.asyncio import tqdm
 from loguru import logger as logger
 
-# import this first because it sets the logging level
 from wdoc.utils.logger import (
     log_dir,
     md_printer,
@@ -53,6 +52,7 @@ from wdoc.utils.misc import (  # debug_chain,
     get_supported_model_params,
     get_tkn_length,
     model_name_matcher,
+    open_anki_gui,
     query_eval_cache,
     set_func_signature,
     thinking_answer_parser,
@@ -70,7 +70,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "5.0.1"
+    VERSION: str = "5.1.0"
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 
@@ -1569,13 +1569,7 @@ class wdoc:
                 logger.info("Opening anki.")
                 query = f"nid:{','.join(anki_nids)}"
                 try:
-                    from py_ankiconnect import PyAnkiconnect
-
-                    ankiconnect = PyAnkiconnect()
-                    ankiconnect(
-                        action="guiBrowse",
-                        query=query,
-                    )
+                    open_anki_gui(query)
                 except Exception as e:
                     logger.warning(f"Error when trying to open Anki: '{e}'")
         all_filepaths = []

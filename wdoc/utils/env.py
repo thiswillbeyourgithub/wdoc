@@ -319,11 +319,15 @@ if " --help" in " ".join(sys.argv):
 
 # if --debug -d --verbose or -v are in the command line: we set WDOC_DEBUG and WDOC_VERBOSE accordingly
 def check_kwargs(arg: str, abbrv: str = None) -> bool:
-    cmdline = " ".join(sys.argv[1:])
-    if f" {arg}" in cmdline or f" --{arg}" in cmdline:
+    # match argv tokens exactly so values containing e.g. " debug" don't trigger
+    tokens = sys.argv[1:]
+    long_forms = {arg, f"--{arg}"}
+    if any(t in long_forms or t.startswith(f"--{arg}=") for t in tokens):
         return True
-    if abbrv and f" -{abbrv}" in cmdline:
-        return True
+    if abbrv:
+        short_forms = {f"-{abbrv}", f"--{abbrv}"}
+        if any(t in short_forms or t.startswith(f"-{abbrv}=") for t in tokens):
+            return True
     return False
 
 

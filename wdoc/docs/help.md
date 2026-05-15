@@ -126,6 +126,7 @@
 
         * `youtube`
             * `--path` must link to a youtube video
+            *Note: `--yt_*` is automatically parsed as `--youtube_`*
             * Optional:
                 * `--youtube_language`
                 * `--youtube_translations`
@@ -522,11 +523,16 @@
 * `--deepgram_kwargs`: dict
     * if using deepgram for transcription, those arguments will be used.
 
+*Note: `--yt_*` is automatically parsed as `--youtube_`*
 * `--youtube_language`: List[str]
-    * For youtube. e.g. `["fr","en"]` to use french transcripts if
-    possible and english otherwise
+    * For youtube. e.g. `["fr-orig", "fr","en"]` to use french transcripts if
+    possible and english otherwise.
+    * If unset, wdoc lists the video's available subtitle tracks and picks
+    the first one ending in `-orig` (youtube's original-language track,
+    e.g. `fr-orig` for a french video). If no `-orig` track exists, it falls
+    back to `["en", "en-US", "en-UK"]`.
 * `--youtube_translation`: str
-    * For youtube. e.g. `en` to use the transcripts after translation to english
+    * For youtube. e.g. `en` to use the transcripts after translation to english (translation provided by youtube)
 * `--youtube_audio_backend`: str
     Either 'youtube', 'whisper' or 'deepgram'.
     Default is 'youtube'.
