@@ -229,6 +229,7 @@ class DocDict(dict):
                 "source_tag",
                 "recur_parent_id",
                 "subitem_link",
+                "title",
             ]
             + list(filetype_arg_types.keys())
         )
