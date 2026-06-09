@@ -263,7 +263,7 @@ setup(
         ],
         "zotero": [
             # load documents straight from a Zotero library (local API or web API)
-            "pyzotero >= 1.5.18",
+            "pyzotero >= 1.6.0",
         ],
         "full": [
             # aggregates all loader extras (self-reference requires pip >= 21.2)
