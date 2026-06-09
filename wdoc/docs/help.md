@@ -154,6 +154,43 @@
             * `--recursed_filetype` is the filetype to use for each of the found path
         * `youtube_playlist`
             * `--path` must link to a youtube playlist
+        * `zotero`
+            * Loads documents from a Zotero library. One Zotero selection fans
+                out into many sub-documents: each attachment is handed to wdoc's
+                own pdf/auto loaders (no duplicated extraction), plus a per-item
+                metadata/abstract document and, optionally, notes.
+            * `--path` is the selector. Accepted forms:
+                * a collection name or nested path, e.g. `"Research/ML/Papers"`
+                    (the reference tool's `%%` separators are also accepted)
+                * `tag:foo,bar` to load items matching those tags
+                * `items:KEY1,KEY2` to load explicit Zotero item keys
+                * `search:Name` to run a Zotero saved search by name
+                    (best-effort: tag/itemType/quicksearch conditions are
+                    translated, other conditions are ignored with a warning)
+                * `library` (or `*`) to load the whole library
+            * `--zotero_connection`: str, default `auto`. One of `auto` (try the
+                local Zotero HTTP API at localhost:23119 then fall back to the
+                Web API), `local`, or `web`. The local API works offline and in
+                `--private` mode (it requires the Zotero desktop app running);
+                the Web API is blocked in `--private` mode.
+            * `--zotero_library_id`: str. Numeric library id for the Web API.
+                Falls back to the `ZOTERO_LIBRARY_ID` env var.
+            * `--zotero_library_type`: str, default `user`. `user` or `group`.
+                Falls back to the `ZOTERO_LIBRARY_TYPE` env var.
+            * `--zotero_api_key`: str. Zotero api key for the Web API. Falls back
+                to the `ZOTERO_API_KEY` env var.
+            * `--zotero_attachment_text`: str, default `wdoc`. How to obtain the
+                text of an attachment: `wdoc` (download/locate the file and let
+                wdoc's loaders parse it, best quality), `fulltext` (use Zotero's
+                pre-indexed fulltext, fast but lower quality and skips
+                un-indexed attachments), or `hybrid` (fulltext when available,
+                otherwise fall back to `wdoc`).
+            * `--zotero_include_notes`: bool, default `False`. Also emit one
+                document per Zotero note attached to an item.
+            * `--zotero_include_metadata`: bool, default `True`. Emit a small
+                per-item document with the bibliographic header (title, authors,
+                date, DOI, tags, ...) and abstract.
+            * Requires the `zotero` extra: `pip install wdoc[zotero]`.
         * `link_file`
             * `--path` must point to a file where each line is a link
                 that will be summarized.
