@@ -139,7 +139,7 @@ Key variables:
 
 Each filetype has a dedicated loader in `utils/loaders/`. The dispatcher (`load_one_doc()`) dynamically imports the `load_{filetype}` function.
 
-**Supported types**: `pdf`, `txt`, `word`, `powerpoint`, `epub`, `url`, `youtube`, `youtube_playlist`, `online_pdf`, `online_media`, `local_audio`, `local_video`, `anki`, `logseq_markdown`, `json_dict`, `recursive_paths`, `json_entries`, `toml_entries`, `string`, `ddg` (DuckDuckGo search), `zotero` (fans a Zotero library selection out into its attachments + metadata via pyzotero).
+**Supported types**: `pdf`, `txt`, `word`, `powerpoint`, `epub`, `url`, `youtube`, `youtube_playlist`, `online_pdf`, `online_media`, `local_audio`, `local_video`, `anki`, `logseq_markdown`, `json_dict`, `recursive_paths`, `json_entries`, `toml_entries`, `string`, `ddg` (DuckDuckGo search), `zotero`.
 
 **PDF parsing** is particularly robust: 15 different parser backends are evaluated and the best result is selected automatically.
 
