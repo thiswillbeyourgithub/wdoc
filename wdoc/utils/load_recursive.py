@@ -489,6 +489,13 @@ def parse_zotero(
         doc_kwargs["subitem_link"] = subitem or item_web_url(item) or ""
         doc_kwargs.update(extra_args)
         doc_kwargs["recur_parent_id"] = recur_parent_id
+        # A fan-out over a whole library will inevitably hit individual items
+        # that fail to load (a sparse bibliographic entry too short for wdoc's
+        # minimum length check, a corrupt or DRM'd attachment, an unsupported
+        # attachment type, ...). Degrade gracefully: warn and skip that
+        # sub-document instead of crashing the entire selection. The batch
+        # still raises if every single sub-document fails.
+        doc_kwargs["loading_failure"] = "warn"
         doclist.append(DocDict(doc_kwargs))
 
     def _write_text(name: str, text: str) -> str:
