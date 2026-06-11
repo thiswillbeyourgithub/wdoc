@@ -236,16 +236,27 @@ def test_zotero_tag_selector(fake_client):
     " -m api" not in " ".join(sys.argv) or not os.getenv("ZOTERO_TEST_SELECTOR"),
     reason=(
         "Needs '-m api' and a small Zotero selector in ZOTERO_TEST_SELECTOR "
-        "(e.g. 'tag:to-read'), plus reachable local Zotero or ZOTERO_API_KEY/"
-        "ZOTERO_LIBRARY_ID."
+        "(e.g. 'tag:to-read' or 'items:KEY'), plus reachable local Zotero or "
+        "ZOTERO_API_KEY/ZOTERO_LIBRARY_ID."
     ),
 )
-def test_zotero_real_library():
+@pytest.mark.parametrize("route", ["fulltext", "wdoc"])
+def test_zotero_real_library(route):
+    """Both attachment-text routes must fan a real item out into documents.
+
+    `fulltext` pulls Zotero's indexed text (a txt doc); `wdoc` downloads the
+    attachment and runs it through wdoc's own pdf loader. Either way the
+    bibliographic metadata doc must be present and carry the item title.
+    """
     from wdoc.wdoc import wdoc
 
     docs = wdoc.parse_doc(
         path=os.environ["ZOTERO_TEST_SELECTOR"],
         filetype="zotero",
+        zotero_attachment_text=route,
         format="langchain",
     )
     assert len(docs) > 0
+    assert any(d.page_content.strip() for d in docs)
+    # every document inherits a non-empty title from its Zotero item
+    assert all(d.metadata.get("title") for d in docs)

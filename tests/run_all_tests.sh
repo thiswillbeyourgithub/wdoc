@@ -35,6 +35,17 @@ if [[ -z "${WDOC_WHISPER_API_KEY:-}" ]]; then
     echo "ERROR: WDOC_WHISPER_API_KEY env var is not set but is required to test whisper transcription. Set WDOC_WHISPER_API_KEY before running tests." >&2
     exit 1
 fi
+# Zotero loader: the api test needs real credentials (or a reachable local
+# Zotero) plus a small selector to fan out. Mirror the whisper check so a
+# missing setup crashes early instead of silently skipping the test.
+if [[ -z "${ZOTERO_API_KEY:-}" ]]; then
+    echo "ERROR: ZOTERO_API_KEY env var is not set but is required to test the zotero loader. Set ZOTERO_API_KEY (and ZOTERO_LIBRARY_ID) before running tests." >&2
+    exit 1
+fi
+if [[ -z "${ZOTERO_TEST_SELECTOR:-}" ]]; then
+    echo "ERROR: ZOTERO_TEST_SELECTOR env var is not set but is required to exercise the zotero loader api test. Set it to a small selector such as 'tag:to-read' or 'items:SOMEKEY'." >&2
+    exit 1
+fi
 
 # cleanup previous
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
@@ -69,6 +80,14 @@ echo "Done with parsing (basic)"
 echo "\nTesting wdoc (basic)"
 $PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
 echo "Done with wdoc (basic)"
+
+echo "\nTesting zotero (basic)"
+$PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_zotero.py
+echo "Done with zotero (basic)"
+
+echo "\nTesting zotero (api)"
+$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_zotero.py
+echo "Done with zotero (api)"
 
 echo "\nTesting vectorstores (api)"
 $PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
