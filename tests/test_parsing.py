@@ -43,6 +43,29 @@ def test_parse_doc_text(sample_text_file):
 
 
 @pytest.mark.basic
+def test_parse_doc_title_on_non_url_loader(sample_text_file):
+    """A `title` kwarg must be accepted by loaders that don't declare it.
+
+    Regression: `title` used to be forwarded as a plain DocDict arg, so any
+    loader lacking a `title` parameter (txt, pdf, ...) crashed with
+    MissingDocdictArguments. It is now a first-class load_one_doc parameter that
+    is consumed for metadata rather than passed to the loader. This is the path
+    the zotero fan-out relies on to label its emitted documents.
+    """
+    f = Path(sample_text_file)
+    content = f.read_text()
+    f.write_text(50 * (content + "\n"))
+    docs = wdoc.parse_doc(
+        path=str(sample_text_file),
+        filetype="txt",
+        title="My Custom Title",
+        format="langchain",
+    )
+    assert len(docs) > 0
+    assert all("My Custom Title" in d.metadata.get("title", "") for d in docs)
+
+
+@pytest.mark.basic
 def test_parse_doc_formats(sample_text_file):
     """Test text-only output from parse_doc."""
     f = Path(sample_text_file)
