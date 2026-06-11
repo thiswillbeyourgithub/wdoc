@@ -42,8 +42,8 @@ if [[ -z "${ZOTERO_API_KEY:-}" ]]; then
     echo "ERROR: ZOTERO_API_KEY env var is not set but is required to test the zotero loader. Set ZOTERO_API_KEY (and ZOTERO_LIBRARY_ID) before running tests." >&2
     exit 1
 fi
-if [[ -z "${ZOTERO_TEST_SELECTOR:-}" ]]; then
-    echo "ERROR: ZOTERO_TEST_SELECTOR env var is not set but is required to exercise the zotero loader api test. Set it to a small selector such as 'tag:to-read' or 'items:SOMEKEY'." >&2
+if [[ -z "${ZOTERO_COLLECTION_NAME:-}" ]]; then
+    echo "ERROR: ZOTERO_COLLECTION_NAME env var is not set but is required to exercise the zotero loader api test. Set it to the name of a (preferably small) collection in your library." >&2
     exit 1
 fi
 

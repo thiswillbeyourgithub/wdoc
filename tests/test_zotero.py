@@ -2,7 +2,7 @@
 
 The `basic` tests use a fake pyzotero client so they need no network and no
 Zotero install. The `api` test needs real credentials (or a running local
-Zotero) and a selector provided via the ZOTERO_TEST_SELECTOR env var.
+Zotero) and a collection name provided via the ZOTERO_COLLECTION_NAME env var.
 """
 
 import os
@@ -228,21 +228,35 @@ def test_zotero_tag_selector(fake_client):
     assert _filetypes(docs) == ["pdf", "txt"]
 
 
+@pytest.mark.basic
+def test_zotero_fanout_is_resilient(fake_client):
+    """Every emitted sub-document is marked loading_failure='warn'.
+
+    Regression: a fan-out over a whole library hits items that fail to load
+    (e.g. a sparse bibliographic entry too short for wdoc's minimum length
+    check). Those must warn and be skipped rather than crash the entire
+    selection, so the fan-out overrides the inherited 'crash' setting.
+    """
+    docs = parse_zotero(cli_kwargs={"path": "Papers"}, path="Papers")
+    assert docs
+    assert all(d["loading_failure"] == "warn" for d in docs)
+
+
 # --- real library (needs creds / local Zotero) ------------------------------
 
 
 @pytest.mark.api
 @pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv) or not os.getenv("ZOTERO_TEST_SELECTOR"),
+    " -m api" not in " ".join(sys.argv) or not os.getenv("ZOTERO_COLLECTION_NAME"),
     reason=(
-        "Needs '-m api' and a small Zotero selector in ZOTERO_TEST_SELECTOR "
-        "(e.g. 'tag:to-read' or 'items:KEY'), plus reachable local Zotero or "
-        "ZOTERO_API_KEY/ZOTERO_LIBRARY_ID."
+        "Needs '-m api' and a Zotero collection name in ZOTERO_COLLECTION_NAME, "
+        "plus a reachable local Zotero or the standard ZOTERO_API_KEY/"
+        "ZOTERO_LIBRARY_ID credentials."
     ),
 )
 @pytest.mark.parametrize("route", ["fulltext", "wdoc"])
 def test_zotero_real_library(route):
-    """Both attachment-text routes must fan a real item out into documents.
+    """Both attachment-text routes must fan a real collection out into documents.
 
     `fulltext` pulls Zotero's indexed text (a txt doc); `wdoc` downloads the
     attachment and runs it through wdoc's own pdf loader. Either way the
@@ -251,7 +265,7 @@ def test_zotero_real_library(route):
     from wdoc.wdoc import wdoc
 
     docs = wdoc.parse_doc(
-        path=os.environ["ZOTERO_TEST_SELECTOR"],
+        path=os.environ["ZOTERO_COLLECTION_NAME"],
         filetype="zotero",
         zotero_attachment_text=route,
         format="langchain",
