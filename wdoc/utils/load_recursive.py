@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import tempfile
 from loguru import logger
@@ -574,6 +575,132 @@ def parse_zotero(
     return doclist
 
 
+def parse_karakeep(
+    cli_kwargs: dict,
+    path: Union[str, Path],
+    karakeep_api_endpoint: Optional[str] = None,
+    karakeep_api_key: Optional[str] = None,
+    karakeep_verify_ssl: bool = True,
+    karakeep_content_source: Literal["auto", "native", "wdoc"] = "auto",
+    **extra_args,
+) -> List[DocDict]:
+    """
+    Turn a DocDict that has `filetype==karakeep` into one DocDict per loadable
+    bookmark of the selected Karakeep source.
+
+    The `path` carries the selector (see `parse_selector`): a list name by
+    default, or one of `tag:...`, `search:...`, `ids:...`, `library`/`*`,
+    `favourites`, `archived`. Each bookmark resolves to a single sub-document:
+      - a `local_html` doc for a link bookmark's stored crawled html;
+      - a `txt` doc for a text bookmark or an asset's pre-extracted text;
+      - a `pdf` doc for a downloaded stored pdf/archive asset.
+    A compact metadata header (title / url / author / tags / note / summary) is
+    prepended to text and html docs. The live bookmarked url is never re-fetched.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The Karakeep selector (see above)
+        karakeep_api_endpoint: Karakeep API endpoint, else KARAKEEP_PYTHON_API_ENDPOINT
+        karakeep_api_key: Karakeep api key, else KARAKEEP_PYTHON_API_KEY
+        karakeep_verify_ssl: verify the instance's TLS certificate
+        karakeep_content_source: 'auto' (stored text/html, else stored pdf), 'native'
+            (stored extracted text/html only), or 'wdoc' (prefer the stored
+            pdf/archive asset, parsed by wdoc's loaders). None re-fetch the live url.
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each a loadable sub-document
+    """
+    from wdoc.utils.loaders.karakeep import (
+        bookmark_web_url,
+        cached_karakeep_content,
+        get_karakeep_client,
+        parse_selector,
+        resolve_bookmarks,
+    )
+
+    logger.info(f"Loading karakeep selector: '{path}'")
+    selector = parse_selector(path)
+    resolved_endpoint = karakeep_api_endpoint or os.environ.get(
+        "KARAKEEP_PYTHON_API_ENDPOINT"
+    )
+    client = get_karakeep_client(
+        api_endpoint=karakeep_api_endpoint,
+        api_key=karakeep_api_key,
+        verify_ssl=karakeep_verify_ssl,
+    )
+    bookmarks = resolve_bookmarks(client, selector)
+    assert bookmarks, f"No Karakeep bookmarks found for selector '{path}'"
+
+    temp_dir = Path(tempfile.mkdtemp(prefix="wdoc_karakeep_"))
+    recur_parent_id = str(uuid.uuid4())
+    doclist: List[DocDict] = []
+
+    def _emit(filetype: str, location: str, title: str, subitem: str):
+        doc_kwargs = cli_kwargs.copy()
+        for k in list(doc_kwargs.keys()):
+            if k.startswith("karakeep_"):
+                del doc_kwargs[k]
+        doc_kwargs.pop("filetype", None)
+        doc_kwargs["path"] = location
+        doc_kwargs["filetype"] = filetype
+        doc_kwargs["title"] = title
+        doc_kwargs["subitem_link"] = subitem or ""
+        doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
+        # A fan-out over a whole library will inevitably hit individual
+        # bookmarks that fail to load (an empty crawl, a corrupt asset, ...).
+        # Degrade gracefully: warn and skip that sub-document instead of
+        # crashing the entire selection. The batch still raises if every single
+        # sub-document fails.
+        doc_kwargs["loading_failure"] = "warn"
+        doclist.append(DocDict(doc_kwargs))
+
+    for bookmark in bookmarks:
+        bid = bookmark.get("id")
+        title = (
+            bookmark.get("title")
+            or (bookmark.get("content") or {}).get("title")
+            or "Untitled"
+        )
+        try:
+            descriptor = cached_karakeep_content(
+                bid,
+                bookmark.get("modifiedAt"),
+                karakeep_content_source,
+                resolved_endpoint,
+                client=client,
+                bookmark=bookmark,
+            )
+        except Exception as err:
+            logger.warning(f"Could not resolve Karakeep bookmark {bid}: {err}")
+            continue
+        if not descriptor:
+            logger.warning(
+                f"Karakeep bookmark {bid} ('{title}') has no usable stored "
+                f"content for source '{karakeep_content_source}', skipping"
+            )
+            continue
+
+        out = temp_dir / f"{bid}{descriptor['suffix']}"
+        if descriptor["data"] is not None:
+            out.write_bytes(descriptor["data"])
+        else:
+            out.write_text(descriptor["text"])
+        _emit(
+            descriptor["filetype"],
+            str(out),
+            title,
+            bookmark_web_url(bookmark, resolved_endpoint),
+        )
+
+    assert doclist, (
+        f"Karakeep selector '{path}' produced no loadable documents "
+        f"(bookmarks found: {len(bookmarks)})"
+    )
+    return doclist
+
+
 @memoizer
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
@@ -601,5 +728,6 @@ recursive_types_func_mapping = {
     "youtube_playlist": parse_youtube_playlist,
     "ddg": parse_ddg_search,
     "zotero": parse_zotero,
+    "karakeep": parse_karakeep,
     "auto": None,
 }
