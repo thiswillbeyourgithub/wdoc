@@ -253,6 +253,40 @@ The selector passed to `--path` can also be `items:KEY1,KEY2` for explicit item
 keys or `search:MySavedSearch` for a saved search. See the `zotero` section of
 the help for every option.
 
+12. Query a Karakeep list (one selection fans out into all its bookmarks)
+
+```zsh
+# Query a list by name (creds read from KARAKEEP_PYTHON_API_* env vars)
+KARAKEEP_PYTHON_API_ENDPOINT=https://karakeep.example.com/api/v1/ \
+KARAKEEP_PYTHON_API_KEY=xxxx uvx wdoc[karakeep] --task=query \
+    --filetype="karakeep" \
+    --path="list:Reading" \
+    --query="What do these articles say about RAG?"
+```
+
+```zsh
+# Bookmarks matching a tag, using only Karakeep's stored content (no asset download)
+uvx wdoc[karakeep] parse \
+    --filetype="karakeep" \
+    --path="tag:to-read" \
+    --karakeep_content_source="native" \
+    --karakeep_api_endpoint="https://karakeep.example.com/api/v1/" \
+    --format=langchain_dict
+```
+
+```zsh
+# Whole library, preferring the stored pdf/archive asset parsed by wdoc's loaders
+uvx wdoc[karakeep] parse \
+    --filetype="karakeep" \
+    --path="library" \
+    --karakeep_content_source="wdoc" \
+    --format=langchain_dict
+```
+
+The selector passed to `--path` can also be `search:terms`, `ids:ID1,ID2`,
+`favourites` or `archived`. See the `karakeep` section of the help for every
+option.
+
 
 # Python Script Examples
 

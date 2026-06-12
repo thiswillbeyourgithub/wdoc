@@ -183,6 +183,7 @@ uvx wdoc[full] --path=$link --task=summarize --filetype="online_pdf"
 * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
 * **youtube playlists**: get the link for each video then process as **youtube**
 * **zotero**: load documents straight from a [Zotero](https://www.zotero.org/) library via [pyzotero](https://github.com/urschrei/pyzotero). The `--path` selects a collection, tag, item keys, saved search or the whole library, and each attachment is fed to the regular loaders. Requires the `zotero` extra. See [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) for the selector syntax and options.
+* **karakeep**: load bookmarks straight from a [Karakeep](https://karakeep.app/) instance via [karakeep-python-api](https://github.com/thiswillbeyourgithub/karakeep_python_api). The `--path` selects a list, tag, search, bookmark ids or the whole library, and each bookmark's stored content (crawled html, text, or a stored pdf asset) is fed to the regular loaders without re-fetching the live url. Requires the `karakeep` extra. See [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) for the selector syntax and options.
 
 ## Walkthrough and examples
 

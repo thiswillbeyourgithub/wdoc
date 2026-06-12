@@ -37,7 +37,8 @@ wdoc/
     │   ├── word.py             # Word documents
     │   ├── powerpoint.py       # PowerPoint
     │   ├── json_dict.py        # JSON entries
-    │   └── zotero.py           # Zotero API helpers (used by parse_zotero)
+    │   ├── zotero.py           # Zotero API helpers (used by parse_zotero)
+    │   └── karakeep.py         # Karakeep API helpers (used by parse_karakeep)
     ├── tasks/                  # Task implementations
     │   ├── types.py            # wdocTask enum
     │   ├── query.py            # Query: retrieve → evaluate → answer → combine
@@ -139,7 +140,7 @@ Key variables:
 
 Each filetype has a dedicated loader in `utils/loaders/`. The dispatcher (`load_one_doc()`) dynamically imports the `load_{filetype}` function.
 
-**Supported types**: `pdf`, `txt`, `word`, `powerpoint`, `epub`, `url`, `youtube`, `youtube_playlist`, `online_pdf`, `online_media`, `local_audio`, `local_video`, `anki`, `logseq_markdown`, `json_dict`, `recursive_paths`, `json_entries`, `toml_entries`, `string`, `ddg` (DuckDuckGo search), `zotero`.
+**Supported types**: `pdf`, `txt`, `word`, `powerpoint`, `epub`, `url`, `youtube`, `youtube_playlist`, `online_pdf`, `online_media`, `local_audio`, `local_video`, `anki`, `logseq_markdown`, `json_dict`, `recursive_paths`, `json_entries`, `toml_entries`, `string`, `ddg` (DuckDuckGo search), `zotero`, `karakeep`.
 
 **PDF parsing** is particularly robust: 15 different parser backends are evaluated and the best result is selected automatically.
 
