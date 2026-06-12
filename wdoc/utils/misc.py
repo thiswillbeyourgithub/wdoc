@@ -191,6 +191,10 @@ filetype_arg_types = {
     "zotero_attachment_text": Literal["wdoc", "fulltext", "hybrid"],
     "zotero_include_notes": bool,
     "zotero_include_metadata": bool,
+    "karakeep_api_endpoint": str,
+    "karakeep_api_key": str,
+    "karakeep_verify_ssl": bool,
+    "karakeep_content_source": Literal["auto", "native", "wdoc"],
 }
 
 # extra arguments supported when instanciating wdoc
