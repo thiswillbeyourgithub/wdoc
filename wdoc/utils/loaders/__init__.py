@@ -127,6 +127,7 @@ def load_one_doc(
     doccheck_max_token: int = max_token,
     recur_parent_id: str = None,  # just used to keep track of which document comes from which recursive filetype
     subitem_link: str = None,
+    title: str = None,  # optional human readable title, consumed for metadata and forwarded to loaders that declare a `title` arg (e.g. url)
     **kwargs,
 ) -> List[Document]:
     """choose the appropriate loader for a file, then load it,
@@ -174,6 +175,7 @@ def load_one_doc(
         "doccheck_min_token": doccheck_min_token,
         "doccheck_max_token": doccheck_max_token,
         "recur_parent_id": recur_parent_id,
+        "title": title,
         "text_splitter": text_splitter,
         "loaders_temp_dir": temp_dir,
         "verbose": env.WDOC_VERBOSE,
@@ -378,8 +380,8 @@ def load_one_doc(
         if subitem_link and "subitem_link" not in docs[i].metadata:
             docs[i].metadata["subitem_link"] = subitem_link
         if "title" not in docs[i].metadata or docs[i].metadata["title"] == "Untitled":
-            if "title" in kwargs and kwargs["title"] and kwargs["title"] != "Untitled":
-                docs[i].metadata["title"] = kwargs["title"]
+            if title and title != "Untitled":
+                docs[i].metadata["title"] = title
             elif (
                 "path" in docs[i].metadata
                 and isinstance(docs[i].metadata["path"], str)
@@ -390,11 +392,11 @@ def load_one_doc(
                     docs[i].metadata["title"] = "Untitled"
                     logger.debug(f"Could not get title from url of doc '{kwargs}'")
         if (
-            "title" in kwargs
-            and kwargs["title"] != docs[i].metadata["title"]
-            and kwargs["title"] not in docs[i].metadata["title"]
+            title
+            and title != docs[i].metadata["title"]
+            and title not in docs[i].metadata["title"]
         ):
-            docs[i].metadata["title"] += " - " + kwargs["title"]
+            docs[i].metadata["title"] += " - " + title
         if "playlist_title" in kwargs:
             docs[i].metadata["title"] = (
                 kwargs["playlist_title"] + " - " + docs[i].metadata["title"]

@@ -220,6 +220,39 @@ Data sent using shell pipes (be it for strings or binary data) will be automatic
 
 It's implemented like if `ddg` was a `recursive_filetype`. Hence, the idea is to use `uvx wdoc --task=query --path='How is Nvidia doing this month?' --query='How is Nvidia doing this month' --filetype=ddg` (remember: `path` specifies the document and `query` the question to ask about the documents). To make it more natural, if any of `path` or `query` is missing, we replace it by the value of the other one. It can be shortened to: `uvx wdoc web 'How is Nvidia doing this month?'`. With `--ddg_max_result=5` you can specify the maximum number of results to get, use `--ddg_region=us-US` to get US only result, `--ddg_safesearch=on` to filter out NSFW results.
 
+11. Query a Zotero collection (one selection fans out into all its attachments + metadata)
+
+```zsh
+# Local Zotero app running: query a nested collection (no api key needed)
+uvx wdoc[zotero] --task=query \
+    --filetype="zotero" \
+    --path="Research/ML/Papers" \
+    --query="What do these papers say about attention?"
+```
+
+```zsh
+# Whole library via the Web API, summarizing, including notes
+ZOTERO_LIBRARY_ID=123456 ZOTERO_API_KEY=xxxx uvx wdoc[zotero] parse \
+    --filetype="zotero" \
+    --path="library" \
+    --zotero_connection="web" \
+    --zotero_include_notes=True \
+    --format=langchain_dict
+```
+
+```zsh
+# Items matching a tag, using Zotero's pre-indexed fulltext instead of re-parsing
+uvx wdoc[zotero] parse \
+    --filetype="zotero" \
+    --path="tag:to-read" \
+    --zotero_attachment_text="fulltext" \
+    --format=langchain_dict
+```
+
+The selector passed to `--path` can also be `items:KEY1,KEY2` for explicit item
+keys or `search:MySavedSearch` for a saved search. See the `zotero` section of
+the help for every option.
+
 
 # Python Script Examples
 

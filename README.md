@@ -182,6 +182,7 @@ uvx wdoc[full] --path=$link --task=summarize --filetype="online_pdf"
 * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
 * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
 * **youtube playlists**: get the link for each video then process as **youtube**
+* **zotero**: load documents straight from a [Zotero](https://www.zotero.org/) library via [pyzotero](https://github.com/urschrei/pyzotero). The `--path` selects a collection, tag, item keys, saved search or the whole library, and each attachment is fed to the regular loaders. Requires the `zotero` extra. See [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) for the selector syntax and options.
 
 ## Walkthrough and examples
 

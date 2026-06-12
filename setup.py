@@ -261,9 +261,13 @@ setup(
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
         ],
+        "zotero": [
+            # load documents straight from a Zotero library (local API or web API)
+            "pyzotero >= 1.6.0",
+        ],
         "full": [
             # aggregates all loader extras (self-reference requires pip >= 21.2)
-            "wdoc[youtube,audio,anki,office,logseq]",
+            "wdoc[youtube,audio,anki,office,logseq,zotero]",
         ],
         "dev": [
             "ruff >= 0.14.1",
