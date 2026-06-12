@@ -46,19 +46,15 @@ if [[ -z "${ZOTERO_COLLECTION_NAME:-}" ]]; then
     echo "ERROR: ZOTERO_COLLECTION_NAME env var is not set but is required to exercise the zotero loader api test. Set it to the name of a (preferably small) collection in your library." >&2
     exit 1
 fi
-# Karakeep loader: the api test needs real credentials (endpoint + api key) plus
-# a small selector to fan out. Mirror the zotero check so a missing setup
-# crashes early instead of silently skipping the test.
+# Karakeep loader: the api test creates its own temporary bookmark and deletes
+# it, so it only needs real credentials (endpoint + api key). Mirror the zotero
+# check so a missing setup crashes early instead of silently skipping the test.
 if [[ -z "${KARAKEEP_PYTHON_API_KEY:-}" ]]; then
     echo "ERROR: KARAKEEP_PYTHON_API_KEY env var is not set but is required to test the karakeep loader. Set KARAKEEP_PYTHON_API_KEY (and KARAKEEP_PYTHON_API_ENDPOINT) before running tests." >&2
     exit 1
 fi
 if [[ -z "${KARAKEEP_PYTHON_API_ENDPOINT:-}" ]]; then
     echo "ERROR: KARAKEEP_PYTHON_API_ENDPOINT env var is not set but is required to test the karakeep loader. Set it to your instance URL including /api/v1/." >&2
-    exit 1
-fi
-if [[ -z "${KARAKEEP_TEST_SELECTOR:-}" ]]; then
-    echo "ERROR: KARAKEEP_TEST_SELECTOR env var is not set but is required to exercise the karakeep loader api test. Set it to a (preferably small) selector such as 'list:Reading' or 'tag:to-read'." >&2
     exit 1
 fi
 

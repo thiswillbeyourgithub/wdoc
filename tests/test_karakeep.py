@@ -268,32 +268,71 @@ def test_karakeep_content_cache():
 
 
 # --- real instance (needs creds) --------------------------------------------
+#
+# Rather than depend on the live library already containing a known bookmark,
+# the api test creates its own temporary text bookmark (mirroring
+# karakeep_python_api's own create/delete lifecycle tests), runs wdoc's loader
+# against it, then deletes it. A text bookmark is deterministic: its content is
+# set at creation, unlike a link bookmark whose html is populated asynchronously
+# by Karakeep's crawler. This exercises the real schema end to end, so it also
+# guards against the basic-test fakes going stale: if Karakeep renames/removes a
+# field the loader reads, the round-trip below breaks loudly.
+
+# the bookmark-level keys the loader (and the FakeKarakeep fixtures) rely on
+_CONTRACT_KEYS = {"id", "modifiedAt", "title", "tags", "content", "assets"}
+
+
+@pytest.fixture
+def karakeep_api_client():
+    """A real KarakeepAPI client, or skip when credentials are absent."""
+    endpoint = os.environ.get("KARAKEEP_PYTHON_API_ENDPOINT")
+    api_key = os.environ.get("KARAKEEP_PYTHON_API_KEY")
+    if " -m api" not in " ".join(sys.argv) or not endpoint or not api_key:
+        pytest.skip(
+            "Needs '-m api' and the standard KARAKEEP_PYTHON_API_ENDPOINT / "
+            "KARAKEEP_PYTHON_API_KEY credentials."
+        )
+    from karakeep_python_api import KarakeepAPI
+
+    return KarakeepAPI(
+        api_endpoint=endpoint,
+        api_key=api_key,
+        disable_response_validation=True,  # plain dicts, like the loader uses
+    )
 
 
 @pytest.mark.api
-@pytest.mark.skipif(
-    " -m api" not in " ".join(sys.argv) or not os.getenv("KARAKEEP_TEST_SELECTOR"),
-    reason=(
-        "Needs '-m api', a small selector in KARAKEEP_TEST_SELECTOR (e.g. "
-        "'list:Reading' or 'tag:to-read'), and the standard "
-        "KARAKEEP_PYTHON_API_ENDPOINT / KARAKEEP_PYTHON_API_KEY credentials."
-    ),
-)
-@pytest.mark.parametrize("source", ["auto", "native"])
-def test_karakeep_real_library(source):
-    """Fan a real Karakeep selection out into loadable documents.
+def test_karakeep_real_text_bookmark_roundtrip(karakeep_api_client):
+    """Create a text bookmark, load it through wdoc's loader, then delete it."""
+    import time
 
-    Runs against the instance pointed at by KARAKEEP_PYTHON_API_*; every
-    document must carry a non-empty title and at least one must have content.
-    """
     from wdoc.wdoc import wdoc
 
-    docs = wdoc.parse_doc(
-        path=os.environ["KARAKEEP_TEST_SELECTOR"],
-        filetype="karakeep",
-        karakeep_content_source=source,
-        format="langchain",
+    client = karakeep_api_client
+    marker = f"wdoc karakeep roundtrip {uuid.uuid4()}"
+    title = f"wdoc test bookmark {int(time.time())}"
+    created = kmod._as_dict(
+        client.create_a_new_bookmark(type="text", text=marker, title=title)
     )
-    assert len(docs) > 0
-    assert any(d.page_content.strip() for d in docs)
-    assert all(d.metadata.get("title") for d in docs)
+    bid = created["id"]
+    try:
+        # freshness guard: the live bookmark must carry the structural keys our
+        # fakes encode, so the basic tests cannot silently drift from reality
+        live = kmod._as_dict(client.get_a_single_bookmark(bid))
+        missing = _CONTRACT_KEYS - set(live)
+        assert not missing, (
+            f"Karakeep bookmark schema changed: missing {missing}. The "
+            "FakeKarakeep fixtures in this file are out of date."
+        )
+        assert (live.get("content") or {}).get("type") == "text"
+
+        docs = wdoc.parse_doc(
+            path=f"ids:{bid}",
+            filetype="karakeep",
+            format="langchain",
+        )
+        assert len(docs) == 1
+        assert marker in docs[0].page_content  # the text content came through
+        assert title in docs[0].metadata.get("title", "")
+    finally:
+        client.delete_a_bookmark(bookmark_id=bid)
