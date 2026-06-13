@@ -265,9 +265,13 @@ setup(
             # load documents straight from a Zotero library (local API or web API)
             "pyzotero >= 1.6.0",
         ],
+        "karakeep": [
+            # load bookmarks straight from a Karakeep instance via its API
+            "karakeep-python-api >= 1.8.0",
+        ],
         "full": [
             # aggregates all loader extras (self-reference requires pip >= 21.2)
-            "wdoc[youtube,audio,anki,office,logseq,zotero]",
+            "wdoc[youtube,audio,anki,office,logseq,zotero,karakeep]",
         ],
         "dev": [
             "ruff >= 0.14.1",

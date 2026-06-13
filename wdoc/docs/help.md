@@ -191,6 +191,43 @@
                 per-item document with the bibliographic header (title, authors,
                 date, DOI, tags, ...) and abstract.
             * Requires the `zotero` extra: `pip install wdoc[zotero]`.
+        * `karakeep`
+            * Loads bookmarks from a [Karakeep](https://karakeep.app/) instance.
+                One selection fans out into many sub-documents: each bookmark
+                resolves to one document fed to wdoc's own loaders. A link
+                bookmark's stored crawled html goes to the `local_html` loader, a
+                text bookmark to `txt`, and a downloaded stored pdf/archive asset
+                to the `pdf` loader. The live bookmarked url is never re-fetched.
+                A compact metadata header (title, url, author, date, tags, note,
+                summary) is prepended to text and html documents.
+            * `--path` is the selector. Accepted forms:
+                * a list name, e.g. `"Reading"` (or `list:Reading`)
+                * `tag:Name` to load bookmarks with that tag
+                * `search:terms` to run a Karakeep search query
+                * `ids:ID1,ID2` to load explicit bookmark ids
+                * `library` (or `*`) to load every bookmark
+                * `favourites` or `archived` for those filters
+            * `--karakeep_api_endpoint`: str. Your instance URL including
+                `/api/v1/`. Falls back to the `KARAKEEP_PYTHON_API_ENDPOINT` env
+                var.
+            * `--karakeep_api_key`: str. Karakeep api key (bearer token). Falls
+                back to the `KARAKEEP_PYTHON_API_KEY` env var.
+            * `--karakeep_verify_ssl`: bool, default `True`. Verify the
+                instance's TLS certificate. Falls back to the
+                `KARAKEEP_PYTHON_API_VERIFY_SSL` env var.
+            * `--karakeep_content_source`: str, default `auto`. Which stored
+                artifact to use per bookmark: `auto` (stored crawled
+                html/extracted text if present, otherwise a stored pdf/archive
+                asset), `native` (stored html/extracted text only, skip a
+                bookmark that has none), or `wdoc` (prefer the stored
+                pdf/archive asset, parsed by wdoc's loaders, then fall back to
+                the stored html). None of these ever re-fetch the live url.
+            * Per-bookmark content resolution is cached (joblib, keyed on the
+                bookmark id and its modification time) so re-runs do not re-hit
+                the Karakeep server or re-download assets.
+            * Under `--private` mode only a local/loopback Karakeep endpoint is
+                allowed (a remote endpoint is blocked).
+            * Requires the `karakeep` extra: `pip install wdoc[karakeep]`.
         * `link_file`
             * `--path` must point to a file where each line is a link
                 that will be summarized.

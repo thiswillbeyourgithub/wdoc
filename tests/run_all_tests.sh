@@ -46,6 +46,17 @@ if [[ -z "${ZOTERO_COLLECTION_NAME:-}" ]]; then
     echo "ERROR: ZOTERO_COLLECTION_NAME env var is not set but is required to exercise the zotero loader api test. Set it to the name of a (preferably small) collection in your library." >&2
     exit 1
 fi
+# Karakeep loader: the api test creates its own temporary bookmark and deletes
+# it, so it only needs real credentials (endpoint + api key). Mirror the zotero
+# check so a missing setup crashes early instead of silently skipping the test.
+if [[ -z "${KARAKEEP_PYTHON_API_KEY:-}" ]]; then
+    echo "ERROR: KARAKEEP_PYTHON_API_KEY env var is not set but is required to test the karakeep loader. Set KARAKEEP_PYTHON_API_KEY (and KARAKEEP_PYTHON_API_ENDPOINT) before running tests." >&2
+    exit 1
+fi
+if [[ -z "${KARAKEEP_PYTHON_API_ENDPOINT:-}" ]]; then
+    echo "ERROR: KARAKEEP_PYTHON_API_ENDPOINT env var is not set but is required to test the karakeep loader. Set it to your instance URL including /api/v1/." >&2
+    exit 1
+fi
 
 # cleanup previous
 [[ "$(type deactivate)" == "deactivate is a shell function"* ]] && deactivate
@@ -88,6 +99,14 @@ echo "Done with zotero (basic)"
 echo "\nTesting zotero (api)"
 $PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_zotero.py
 echo "Done with zotero (api)"
+
+echo "\nTesting karakeep (basic)"
+$PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_karakeep.py
+echo "Done with karakeep (basic)"
+
+echo "\nTesting karakeep (api)"
+$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_karakeep.py
+echo "Done with karakeep (api)"
 
 echo "\nTesting vectorstores (api)"
 $PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py
