@@ -310,9 +310,18 @@ def test_karakeep_real_text_bookmark_roundtrip(karakeep_api_client):
 
     client = karakeep_api_client
     marker = f"wdoc karakeep roundtrip {uuid.uuid4()}"
+    # The text must be long enough to clear wdoc's "suspiciously low reading
+    # length" guard (> 0.1 min, i.e. a couple dozen words), so pad the unique
+    # marker with a deterministic sentence repeated a few times.
+    text = (
+        f"{marker}. "
+        + "This bookmark was created by the wdoc karakeep integration test to "
+        "verify that a text bookmark created through the Karakeep API can be "
+        "loaded back through wdoc's loader and then deleted again. "
+    ) * 3
     title = f"wdoc test bookmark {int(time.time())}"
     created = kmod._as_dict(
-        client.create_a_new_bookmark(type="text", text=marker, title=title)
+        client.create_a_new_bookmark(type="text", text=text, title=title)
     )
     bid = created["id"]
     try:
