@@ -67,6 +67,12 @@ WDOC_TEST_OLLAMA_EMBED_MODEL = os.getenv(
     "WDOC_TEST_OLLAMA_EMBED_MODEL", "embeddinggemma:latest"
 )
 
+# Full model id (provider included) so run_all_tests.sh can detect the
+# 'mistral/' prefix and validate MISTRAL_API_KEY before the suite runs.
+WDOC_TEST_MISTRAL_EMBED_MODEL = os.getenv(
+    "WDOC_TEST_MISTRAL_EMBED_MODEL", "mistral/mistral-embed"
+)
+
 # also make sure the default models work
 WDOC_TEST_DEFAULT_MODEL = os.getenv("WDOC_TEST_DEFAULT_MODEL", env.WDOC_DEFAULT_MODEL)
 WDOC_TEST_DEFAULT_EVAL_MODEL = os.getenv(
@@ -461,7 +467,7 @@ def test_openai_embeddings():
 )
 def test_mistral_embeddings():
     emb = load_embeddings_engine(
-        modelname=ModelName("mistral/mistral-embed"),
+        modelname=ModelName(WDOC_TEST_MISTRAL_EMBED_MODEL),
         cli_kwargs={},
         api_base=None,
         embed_kwargs={},

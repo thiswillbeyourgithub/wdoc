@@ -15,6 +15,7 @@ _ALL_TEST_MODELS=(
     "${WDOC_TEST_DEFAULT_MODEL:-openrouter/deepseek/deepseek-v4-pro}"
     "${WDOC_TEST_DEFAULT_EVAL_MODEL:-openrouter/deepseek/deepseek-v4-flash}"
     "${WDOC_TEST_DEFAULT_EMBED_MODEL:-openai/text-embedding-3-small}"
+    "${WDOC_TEST_MISTRAL_EMBED_MODEL:-mistral/mistral-embed}"
 )
 _check_provider_key() {
     local prefix="$1" keyvar="$2" m
