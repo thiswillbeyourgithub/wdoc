@@ -1,6 +1,6 @@
 # wdoc — Comprehensive Reference
 
-> **This document was written for wdoc v5.0.0. If you are using a different version, some arguments, defaults, or behaviors may have changed.**
+> **This document was written for wdoc v5.1.0. If you are using a different version, some arguments, defaults, or behaviors may have changed.**
 
 This document is a complete reference for `wdoc`, covering the CLI interface and the Python API.
 
@@ -44,20 +44,32 @@ This document is a complete reference for `wdoc`, covering the CLI interface and
 ## Installation
 
 ```bash
-# Full install (recommended)
+# Full install (recommended) — bundles every extra below
 pip install -U wdoc[full]
 
-# Minimal install
+# Minimal install — only PDF and URL/web loaders
 pip install -U wdoc
 
 # From git branches
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]
 
-# Optional extras
-pip install -U wdoc[pdftotext]
-pip install -U wdoc[fasttext]
+# Modular extras — install only what a given filetype needs
+pip install -U wdoc[youtube]    # youtube / youtube_playlist
+pip install -U wdoc[audio]      # local_audio, local_video, online_media
+pip install -U wdoc[anki]       # anki
+pip install -U wdoc[office]     # word, powerpoint, epub
+pip install -U wdoc[logseq]     # logseq_markdown
+pip install -U wdoc[zotero]     # zotero
+pip install -U wdoc[karakeep]   # karakeep
+pip install -U wdoc[pdftotext]  # extra PDF parser backend
+pip install -U wdoc[fasttext]   # language detection for doc validation
+
+# Extras can be combined
+pip install -U wdoc[youtube,audio]
 ```
+
+The plain `wdoc` package only includes PDF and URL/web loaders. Filetypes that touch youtube, audio, anki, office formats, logseq, zotero or karakeep need their extra (or just use `[full]`). Running via `uvx wdoc[full] ...` avoids having to think about extras.
 
 Set your API key(s): `export ANTHROPIC_API_KEY="your_key"` (or whichever provider you use).
 
