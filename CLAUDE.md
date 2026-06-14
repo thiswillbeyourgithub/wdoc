@@ -66,6 +66,7 @@ Each persona can be customized via `WDOC_{NAME}_INSTRUCTIONS` env vars.
 Any new setting (CLI argument or environment variable) **must** be documented in:
 - `wdoc/docs/help.md` — describe the setting, its type, default value, and accepted values.
 - `wdoc/docs/examples.md` — add usage examples where appropriate.
+- `SKILL.md` — the comprehensive user-facing reference; mirror the new setting in the relevant table (see [Keeping `SKILL.md` in Sync](#keeping-skillmd-in-sync)).
 
 New settings should be either:
 - A **CLI argument** (defined in `wdoc.py`'s main class), or
@@ -85,7 +86,7 @@ When adding new CLI arguments or loader-specific parameters, update these dicts 
 1. **Create a loader** in `wdoc/utils/loaders/` — add a file (e.g. `myformat.py`) containing a function `load_myformat(path, file_hash, ...) -> List[Document]`. Use the `@debug_return_empty` and `@optional_strip_unexp_args` decorators (see `txt.py` for a minimal example).
 2. **Register the filetype** — add `"myformat"` to the `LOADABLE_FILETYPE` list in `wdoc/utils/loaders/__init__.py`.
 3. **Add loader-specific args** (if any) to `filetype_arg_types` in `wdoc/utils/misc.py`.
-4. **Document it** — add the filetype and its arguments to `wdoc/docs/help.md`, and add examples to `wdoc/docs/examples.md`.
+4. **Document it** — add the filetype and its arguments to `wdoc/docs/help.md`, add examples to `wdoc/docs/examples.md`, and add the filetype + its loader args to the tables in `SKILL.md` (see [Keeping `SKILL.md` in Sync](#keeping-skillmd-in-sync)).
 5. **Auto-detection** (optional) — if the filetype corresponds to a file extension, add a mapping in the auto-detection logic so `--filetype=auto` can infer it.
 
 ## Bumping the Default Models
@@ -98,6 +99,17 @@ The two default LLM identifiers (`WDOC_DEFAULT_MODEL` and `WDOC_DEFAULT_QUERY_EV
 ```
 
 `env.py` is the source of truth for the current values. The script replaces both the full id (`provider/path/name`) and the basename, and re-syncs the `KEY=VALUE` lines in `docker/env.example` independently (so it recovers from prior drift). It never commits; review with `git diff` and commit yourself.
+
+## Keeping `SKILL.md` in Sync
+
+`SKILL.md` is the comprehensive user-facing reference for the CLI and the Python API (filetypes, arguments, env vars, examples). It is **not** auto-generated, so it drifts unless updated by hand. Whenever you change user-visible behavior, keep it in sync:
+- New CLI argument, env var, or loader-specific argument: add it to the relevant table (Global/Model/Embedding/Query/Summary Arguments, Environment Variables, or Loader-Specific Arguments).
+- New filetype: add a row to the Filetypes or Recursive Filetypes table, plus its loader args, and ideally a shell example.
+- Changed default, accepted values, or behavior of an existing setting: update the matching row.
+- New install extra: update the Installation section.
+- On a version bump, update the `> **This document was written for wdoc vX.Y.Z**` header line at the top.
+
+`wdoc/docs/help.md` and `wdoc/docs/examples.md` are the source the reference mirrors; if you edited those, mirror the change here too.
 
 ## Building Documentation
 
