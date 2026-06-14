@@ -196,6 +196,8 @@ These load multiple documents and can combine different sources:
 | `recursive_paths` | Glob files in a directory | `--pattern`, `--recursed_filetype`, `--include`, `--exclude` |
 | `link_file` | File with one URL per line | `--out_file` |
 | `youtube_playlist` | YouTube playlist | Same as `youtube` |
+| `zotero` | Zotero library; one selection fans out into each attachment (parsed by wdoc's own loaders) plus per-item metadata/abstract and optional notes. Needs `wdoc[zotero]` | `--zotero_connection`, `--zotero_library_id`, `--zotero_library_type`, `--zotero_api_key`, `--zotero_attachment_text`, `--zotero_include_notes`, `--zotero_include_metadata` |
+| `karakeep` | [Karakeep](https://karakeep.app/) bookmarks; one selection fans out into each bookmark's stored content (crawled html → `local_html`, text → `txt`, stored pdf/archive → `pdf`). The live url is never re-fetched. Needs `wdoc[karakeep]` | `--karakeep_api_endpoint`, `--karakeep_api_key`, `--karakeep_verify_ssl`, `--karakeep_content_source` |
 
 ### Loader-Specific Arguments (DocDict)
 
@@ -229,6 +231,21 @@ These load multiple documents and can combine different sources:
 | `--exclude` | `recursive_paths` | Regex list — paths must not match |
 | `--online_media_url_regex` | `online_media` | Regex matching media URLs |
 | `--online_media_resourcetype_regex` | `online_media` | Regex matching resource types |
+| `--zotero_connection` | `zotero` | `auto` (local API then Web API), `local`, or `web` (default `auto`). Local works offline / in `--private`; web is blocked in `--private` |
+| `--zotero_library_id` | `zotero` | Numeric library id for the Web API (falls back to `ZOTERO_LIBRARY_ID`) |
+| `--zotero_library_type` | `zotero` | `user` or `group` (default `user`; falls back to `ZOTERO_LIBRARY_TYPE`) |
+| `--zotero_api_key` | `zotero` | Web API key (falls back to `ZOTERO_API_KEY`) |
+| `--zotero_attachment_text` | `zotero` | `wdoc` (parse the file, best quality), `fulltext` (Zotero's pre-indexed text), or `hybrid` (default `wdoc`) |
+| `--zotero_include_notes` | `zotero` | Also emit one document per Zotero note (default `False`) |
+| `--zotero_include_metadata` | `zotero` | Emit a per-item bibliographic header + abstract document (default `True`) |
+| `--karakeep_api_endpoint` | `karakeep` | Instance URL including `/api/v1/` (falls back to `KARAKEEP_PYTHON_API_ENDPOINT`) |
+| `--karakeep_api_key` | `karakeep` | Bearer token (falls back to `KARAKEEP_PYTHON_API_KEY`) |
+| `--karakeep_verify_ssl` | `karakeep` | Verify the instance TLS cert (default `True`; falls back to `KARAKEEP_PYTHON_API_VERIFY_SSL`) |
+| `--karakeep_content_source` | `karakeep` | `auto` (stored html/text else stored pdf/archive), `native` (stored html/text only), or `wdoc` (prefer stored pdf/archive). Never re-fetches the live url (default `auto`) |
+
+**`zotero` `--path` selector syntax:** a collection name or nested path (e.g. `"Research/ML/Papers"`), `tag:foo,bar`, `items:KEY1,KEY2`, `search:SavedSearchName`, or `library` / `*` for the whole library.
+
+**`karakeep` `--path` selector syntax:** a list name (e.g. `"Reading"` or `list:Reading`), `tag:Name`, `search:terms`, `ids:ID1,ID2`, `library` / `*`, `favourites`, or `archived`.
 
 ### Filtering Arguments
 
@@ -389,6 +406,16 @@ wdoc --task=query --load_embeds_from=index.pkl \
 wdoc --task=query --path=docs/ --filetype=recursive_paths \
      --pattern="**/*.md" --recursed_filetype=txt \
      --filter_content="+.*machine learning.*"
+
+# Query a Zotero collection (local Zotero app running, no API key needed)
+wdoc --task=query --filetype=zotero \
+     --path="Research/ML/Papers" \
+     --query="What do these papers say about attention?"
+
+# Query a Karakeep list (creds from KARAKEEP_PYTHON_API_* env vars)
+wdoc --task=query --filetype=karakeep \
+     --path="list:Reading" \
+     --query="What do these articles say about RAG?"
 ```
 
 ---
