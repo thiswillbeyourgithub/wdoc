@@ -66,7 +66,7 @@ Each persona can be customized via `WDOC_{NAME}_INSTRUCTIONS` env vars.
 Any new setting (CLI argument or environment variable) **must** be documented in:
 - `wdoc/docs/help.md` — describe the setting, its type, default value, and accepted values.
 - `wdoc/docs/examples.md` — add usage examples where appropriate.
-- `SKILL.md` — the comprehensive user-facing reference; mirror the new setting in the relevant table (see [Keeping `SKILL.md` in Sync](#keeping-skillmd-in-sync)).
+- `SKILL.md`: the comprehensive user-facing reference; mirror the new setting in the relevant table (see [Keeping `SKILL.md` in Sync](#keeping-skillmd-in-sync)).
 
 New settings should be either:
 - A **CLI argument** (defined in `wdoc.py`'s main class), or

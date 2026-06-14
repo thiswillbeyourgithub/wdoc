@@ -44,17 +44,17 @@ This document is a complete reference for `wdoc`, covering the CLI interface and
 ## Installation
 
 ```bash
-# Full install (recommended) — bundles every extra below
+# Full install (recommended): bundles every extra below
 pip install -U wdoc[full]
 
-# Minimal install — only PDF and URL/web loaders
+# Minimal install: only PDF and URL/web loaders
 pip install -U wdoc
 
 # From git branches
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]
 
-# Modular extras — install only what a given filetype needs
+# Modular extras: install only what a given filetype needs
 pip install -U wdoc[youtube]    # youtube / youtube_playlist
 pip install -U wdoc[audio]      # local_audio, local_video, online_media
 pip install -U wdoc[anki]       # anki
