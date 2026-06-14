@@ -162,6 +162,7 @@ Flags may be written in kebab-case: any `--` argument has its dashes normalized 
 |----------|------|---------|-------------|
 | `--summary_n_recursion` | int | `0` | Number of recursive summary refinement passes (0 = disabled) |
 | `--summary_language` | str | `"the same language as the document"` | Output language for summaries |
+| `--citation_url_template` | str | `None` | URL template turning page citations into clickable links in summaries. Placeholders: `{page}`, `{source}`. E.g. `"https://site.com/docs/{source}#page={page}"` makes `[p.42]` link to that URL. Even without it, summaries of docs with page metadata (e.g. PDFs) get `[p.N]` citations automatically |
 
 ### Filetypes
 
@@ -457,6 +458,7 @@ wdoc(
     query_relevancy: float = -0.5,
     summary_n_recursion: int = 0,
     summary_language: str = "the same language as the document",
+    citation_url_template: str | None = None,
     llm_verbosity: bool = False,
     debug: bool = False,
     verbose: bool = False,
