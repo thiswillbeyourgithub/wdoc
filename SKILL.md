@@ -88,6 +88,8 @@ wdoc TASK PATH [QUERY]
 
 `wdoc` also accepts shell pipes: `cat file.pdf | wdoc parse --filetype=pdf`
 
+Flags may be written in kebab-case: any `--` argument has its dashes normalized to underscores, so `--query-eval-model` is equivalent to `--query_eval_model`.
+
 ### Shortcuts
 
 | Shortcut | Equivalent |
@@ -216,9 +218,11 @@ These load multiple documents and can combine different sources:
 | `--whisper_lang` | Audio types | Language hint for Whisper |
 | `--whisper_prompt` | Audio types | Prompt for Whisper |
 | `--deepgram_kwargs` | Audio types | Dict of Deepgram options |
-| `--youtube_language` | `youtube` | Preferred transcript languages (e.g. `["fr","en"]`) |
-| `--youtube_translation` | `youtube` | Translate transcript to this language |
+| `--youtube_language` | `youtube` | Preferred transcript languages (e.g. `["fr-orig","fr","en"]`). If unset, wdoc lists the video's tracks and picks the first ending in `-orig` (YouTube's original-language track), falling back to `["en","en-US","en-UK"]` |
+| `--youtube_translation` | `youtube` | Translate transcript to this language (translation provided by YouTube) |
 | `--youtube_audio_backend` | `youtube` | `youtube`, `whisper`, or `deepgram` |
+
+*Note: any `--yt_*` flag is automatically rewritten to `--youtube_*` (e.g. `--yt_language` → `--youtube_language`).*
 | `--json_dict_template` | `json_dict` | Template with `{key}` and `{value}` |
 | `--json_dict_exclude_keys` | `json_dict` | List of keys to skip |
 | `--metadata` | `text`, `json_dict` | Extra metadata as JSON dict |
