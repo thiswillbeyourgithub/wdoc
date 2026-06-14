@@ -202,6 +202,8 @@ These load multiple documents and can combine different sources:
 | `zotero` | Zotero library; one selection fans out into each attachment (parsed by wdoc's own loaders) plus per-item metadata/abstract and optional notes. Needs `wdoc[zotero]` | `--zotero_connection`, `--zotero_library_id`, `--zotero_library_type`, `--zotero_api_key`, `--zotero_attachment_text`, `--zotero_include_notes`, `--zotero_include_metadata` |
 | `karakeep` | [Karakeep](https://karakeep.app/) bookmarks; one selection fans out into each bookmark's stored content (crawled html → `local_html`, text → `txt`, stored pdf/archive → `pdf`). The live url is never re-fetched. Needs `wdoc[karakeep]` | `--karakeep_api_endpoint`, `--karakeep_api_key`, `--karakeep_verify_ssl`, `--karakeep_content_source` |
 
+> **Adding your own filetype is straightforward.** Each filetype is a self-contained loader in `wdoc/utils/loaders/`; nothing in the core pipeline needs to change. The recent `zotero` and `karakeep` types are recursive fan-out loaders that simply resolve a selector into many sub-documents and reuse the existing per-filetype loaders (e.g. `pdf`, `local_html`, `txt`) for the actual parsing. See `CLAUDE.md` ("Adding Support for a New Filetype") for the steps.
+
 ### Loader-Specific Arguments (DocDict)
 
 | Argument | Used By | Description |

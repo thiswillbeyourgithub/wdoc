@@ -83,6 +83,12 @@ When adding new CLI arguments or loader-specific parameters, update these dicts 
 
 ## Adding Support for a New Filetype
 
+Adding a filetype is intentionally self-contained: it touches a new loader module plus a couple of registration points, never the core RAG pipeline. The recent `zotero` and `karakeep` types are good references for the two routes available:
+- **Standalone loader** (most types): write a `load_*` function that returns `List[Document]` and register it (steps below).
+- **Recursive fan-out** (`zotero`, `karakeep`, `recursive_paths`, ...): resolve a selector/path into many sub-documents and delegate parsing to *existing* loaders via DocDicts, so you reuse the existing parsers instead of writing new parsing code. Register the function in `recursive_types_func_mapping` in `wdoc/utils/load_recursive.py`.
+
+Standalone loader steps:
+
 1. **Create a loader** in `wdoc/utils/loaders/` — add a file (e.g. `myformat.py`) containing a function `load_myformat(path, file_hash, ...) -> List[Document]`. Use the `@debug_return_empty` and `@optional_strip_unexp_args` decorators (see `txt.py` for a minimal example).
 2. **Register the filetype** — add `"myformat"` to the `LOADABLE_FILETYPE` list in `wdoc/utils/loaders/__init__.py`.
 3. **Add loader-specific args** (if any) to `filetype_arg_types` in `wdoc/utils/misc.py`.
