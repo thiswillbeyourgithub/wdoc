@@ -250,6 +250,45 @@ def test_summary_tim_urban_testing_model():
     assert "Lorem ipsum dolor sit amet" in out["summary"]
 
 
+@pytest.mark.basic
+def test_summarize_empty_completion_raises():
+    """An empty LLM completion during summarization must raise an explicit
+    error (after one no-cache retry) instead of silently returning an empty
+    summary. Regression test for reasoning models that occasionally emit only
+    reasoning tokens and no answer content, which previously surfaced as a
+    confusing `assert 'monkey' in ''` much later."""
+    from langchain_community.chat_models.fake import FakeListChatModel
+    from langchain_core.documents import Document
+
+    from wdoc.utils.llm import PriceCountingCallback
+    from wdoc.utils.tasks.summarize import _summarize
+
+    # The fake model always returns an empty string, so even the no-cache
+    # retry stays empty and the explicit error must be raised.
+    fake_llm = FakeListChatModel(
+        verbose=False,
+        responses=["", "", ""],
+        callbacks=[PriceCountingCallback(verbose=False)],
+        disable_streaming=True,
+        cache=False,
+    )
+
+    docs = [Document(page_content="A monkey talks about procrastination.")]
+    metadata = (
+        "<text_metadata><section_number>[PROGRESS]</section_number></text_metadata>"
+    )
+
+    with pytest.raises(ValueError, match="empty completion"):
+        _summarize(
+            docs=docs,
+            metadata=metadata,
+            language="english",
+            modelbackend="testing",
+            llm=fake_llm,
+            verbose=False,
+        )
+
+
 @pytest.mark.api
 @pytest.mark.skipif(
     " -m api" not in " ".join(sys.argv),

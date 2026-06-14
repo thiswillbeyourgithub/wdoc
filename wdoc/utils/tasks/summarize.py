@@ -638,46 +638,79 @@ def _summarize(
                 f"invalidates the cache: '{llm._get_llm_string()}'\n"
                 f"Related github issue: 'https://github.com/langchain-ai/langchain/issues/23257'"
             )
-        try:
-            output = llm._generate_with_cache(
-                messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
-            )
-        except Exception as e:
-            logger.warning(
-                f"Error when generating with cache, trying without cache: '{e}'"
-            )
-            output = llm._generate(
-                messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
-            )
-        if output.generations[0].generation_info is None:
-            assert "fake-list-chat-model" in llm._get_llm_string()
-            finish = "stop"
-        else:
-            finish = output.generations[0].generation_info["finish_reason"]
-            assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
-            assert len(output.generations) == 1
-        out = output.generations[0].text
-        if output.llm_output:  # only present if not caching
-            new_p = output.llm_output["token_usage"]["prompt_tokens"]
-            new_c = output.llm_output["token_usage"]["completion_tokens"]
-            new_r = output.llm_output["token_usage"]["total_tokens"] - (new_p + new_c)
-            logger.debug(
-                "LLM token usage output for that completion: "
-                + str(output.llm_output["token_usage"])
-            )
-        else:
-            new_p = 0
-            new_c = 0
-            new_r = 0
-        token_details["prompt"] += new_p
-        token_details["completion"] += new_c
-        token_details["internal_reasoning"] += new_r
+        # Generate the summary for this chunk. If the model returns an empty
+        # completion (e.g. a reasoning model that spent all its budget on
+        # reasoning tokens and emitted no answer content), retry once while
+        # bypassing the cache: the cache would otherwise just hand back the
+        # same empty result. Token usage from every attempt is accumulated so
+        # the cost accounting stays correct.
+        out = ""
+        max_attempts = 2
+        for attempt in range(1, max_attempts + 1):
+            if attempt == 1:
+                try:
+                    output = llm._generate_with_cache(
+                        messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Error when generating with cache, trying without cache: '{e}'"
+                    )
+                    output = llm._generate(
+                        messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
+                    )
+            else:
+                logger.warning(
+                    f"LLM returned an empty completion for chunk {fixed_index}, "
+                    f"retrying without cache (attempt {attempt}/{max_attempts})."
+                )
+                output = llm._generate(
+                    messages, request_timeout=env.WDOC_LLM_REQUEST_TIMEOUT
+                )
 
-        # the callback need to be updated manually when _generate is called
-        llm.callbacks[0].prompt_tokens += new_p
-        llm.callbacks[0].completion_tokens += new_c
-        llm.callbacks[0].internal_reasoning_tokens += new_r
-        llm.callbacks[0].total_tokens += new_p + new_c + new_r
+            if output.generations[0].generation_info is None:
+                assert "fake-list-chat-model" in llm._get_llm_string()
+                finish = "stop"
+            else:
+                finish = output.generations[0].generation_info["finish_reason"]
+                assert finish == "stop", f"Unexpected finish_reason: '{finish}'"
+                assert len(output.generations) == 1
+            out = output.generations[0].text
+            if output.llm_output:  # only present if not caching
+                new_p = output.llm_output["token_usage"]["prompt_tokens"]
+                new_c = output.llm_output["token_usage"]["completion_tokens"]
+                new_r = output.llm_output["token_usage"]["total_tokens"] - (
+                    new_p + new_c
+                )
+                logger.debug(
+                    "LLM token usage output for that completion: "
+                    + str(output.llm_output["token_usage"])
+                )
+            else:
+                new_p = 0
+                new_c = 0
+                new_r = 0
+            token_details["prompt"] += new_p
+            token_details["completion"] += new_c
+            token_details["internal_reasoning"] += new_r
+
+            # the callback need to be updated manually when _generate is called
+            llm.callbacks[0].prompt_tokens += new_p
+            llm.callbacks[0].completion_tokens += new_c
+            llm.callbacks[0].internal_reasoning_tokens += new_r
+            llm.callbacks[0].total_tokens += new_p + new_c + new_r
+
+            if out.strip():
+                break
+
+        if not out.strip():
+            raise ValueError(
+                f"The LLM (backend '{modelbackend}') returned an empty completion "
+                f"for chunk {fixed_index} even after retrying once without the "
+                "cache. This typically happens with reasoning models that emit "
+                "only reasoning tokens and no answer content. Try another model "
+                "or raise the max token limit."
+            )
 
         parsed = thinking_answer_parser(out)
         if verbose and parsed["thinking"]:
