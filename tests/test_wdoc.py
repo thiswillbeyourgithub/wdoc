@@ -252,19 +252,19 @@ def test_summary_tim_urban_testing_model():
 
 @pytest.mark.basic
 def test_summarize_empty_completion_raises():
-    """An empty LLM completion during summarization must raise an explicit
-    error (after one no-cache retry) instead of silently returning an empty
-    summary. Regression test for reasoning models that occasionally emit only
-    reasoning tokens and no answer content, which previously surfaced as a
-    confusing `assert 'monkey' in ''` much later."""
+    """An empty LLM message content during summarization must raise an explicit
+    error that dumps the full LLM output, instead of silently returning an empty
+    summary. Regression test for the case where the answer lands in another
+    field (e.g. additional_kwargs['reasoning_content']) while the message
+    content is empty, which previously surfaced as a confusing
+    `assert 'monkey' in ''` much later."""
     from langchain_community.chat_models.fake import FakeListChatModel
     from langchain_core.documents import Document
 
     from wdoc.utils.llm import PriceCountingCallback
     from wdoc.utils.tasks.summarize import _summarize
 
-    # The fake model always returns an empty string, so even the no-cache
-    # retry stays empty and the explicit error must be raised.
+    # The fake model always returns an empty string for the message content.
     fake_llm = FakeListChatModel(
         verbose=False,
         responses=["", "", ""],
@@ -278,7 +278,7 @@ def test_summarize_empty_completion_raises():
         "<text_metadata><section_number>[PROGRESS]</section_number></text_metadata>"
     )
 
-    with pytest.raises(ValueError, match="empty completion"):
+    with pytest.raises(ValueError, match="empty message content") as excinfo:
         _summarize(
             docs=docs,
             metadata=metadata,
@@ -287,6 +287,67 @@ def test_summarize_empty_completion_raises():
             llm=fake_llm,
             verbose=False,
         )
+    # the error must include the full generation dump to help troubleshooting
+    assert "generations[0]" in str(excinfo.value)
+
+
+@pytest.mark.basic
+def test_summary_recursion_continues_past_first_pass():
+    """Recursive summarization must keep going while each pass yields a new
+    summary. Regression test for a dict-membership bug where the dedup check
+    compared the summary text against integer recursion-level keys (always
+    True), which forced recursion to stop after the very first pass."""
+    from langchain_community.chat_models.fake import FakeListChatModel
+    from langchain_core.documents import Document
+
+    from wdoc.utils.llm import PriceCountingCallback
+    from wdoc.utils.tasks.summarize import summarize_documents
+
+    # Each canned response is distinct and comfortably above the 20-token floor
+    # enforced by check_docs_tkn_length, so no pass is skipped for being
+    # identical to the previous one or too short to recurse on.
+    responses = [
+        f"- Distinct summary number {i} about monkeys, procrastination, "
+        "deadlines, panic monsters and other carefully chosen words so the "
+        "token count stays well above the minimum threshold for recursion."
+        for i in range(1, 8)
+    ]
+    fake_llm = FakeListChatModel(
+        verbose=False,
+        responses=responses,
+        callbacks=[PriceCountingCallback(verbose=False)],
+        disable_streaming=True,
+        cache=False,
+    )
+
+    docs = [
+        Document(
+            page_content="A long original document about procrastination that "
+            "easily clears the minimum token length required for summarization.",
+            metadata={},
+        )
+    ]
+
+    n_recursion = 2
+    out = summarize_documents(
+        path="test_recursion_doc",
+        relevant_docs=docs,
+        summary_language="english",
+        model=ModelName("testing/testing"),
+        llm=fake_llm,
+        llm_verbosity=False,
+        summary_n_recursion=n_recursion,
+        llm_price={"prompt": 0, "completion": 0, "internal_reasoning": 0},
+        in_import_mode=True,
+        out_file=None,
+        wdoc_version="test",
+    )
+
+    # One base pass (level 0) plus one entry per recursion level. With the bug
+    # this stopped at 2 entries ({0, 1}); fixed it produces all of them.
+    assert len(out["recursive_summaries"]) == n_recursion + 1, out[
+        "recursive_summaries"
+    ]
 
 
 @pytest.mark.api
