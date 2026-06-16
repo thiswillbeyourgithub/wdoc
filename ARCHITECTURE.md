@@ -97,7 +97,7 @@ wdoc.__init__() ── Configuration & validation
 
 All models are loaded through **LiteLLM**, supporting 100+ providers (OpenAI, Anthropic, Google, Mistral, Ollama, OpenRouter, etc.).
 
-The defaults are duplicated across `wdoc/utils/env.py`, the docs, `README.md`, `SKILL.md`, this file, and `docker/env.example`. Use `./bump_default_models.sh` at the repo root to change them in one shot (dry-run by default, `--apply` to write).
+The defaults are duplicated across `wdoc/utils/env.py`, the docs, `README.md`, `wdoc-skill/REFERENCE.md`, this file, and `docker/env.example`. Use `./bump_default_models.sh` at the repo root to change them in one shot (dry-run by default, `--apply` to write).
 
 ---
 
