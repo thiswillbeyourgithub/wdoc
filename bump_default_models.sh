@@ -38,7 +38,7 @@ usage() {
 Usage: bump_default_models.sh <NEW_STRONG_MODEL> <NEW_EVAL_MODEL> [--apply]
 
 Reads current defaults from wdoc/utils/env.py and replaces them in:
-  wdoc/utils/env.py, wdoc/docs/help.md, SKILL.md, README.md, ARCHITECTURE.md
+  wdoc/utils/env.py, wdoc/docs/help.md, wdoc-skill/REFERENCE.md, README.md, ARCHITECTURE.md
 
 Both the full id ("provider/.../name") and the basename are replaced.
 A post-flight scan warns about any leftover mention of the old names or
@@ -124,7 +124,7 @@ echo
 FILES=(
   "wdoc/utils/env.py"
   "wdoc/docs/help.md"
-  "SKILL.md"
+  "wdoc-skill/REFERENCE.md"
   "README.md"
   "ARCHITECTURE.md"
 )

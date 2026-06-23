@@ -1,14 +1,11 @@
-# wdoc — Comprehensive Reference
+# wdoc Reference
 
-> **This document was written for wdoc v5.0.0. If you are using a different version, some arguments, defaults, or behaviors may have changed.**
+> Written for **wdoc v5.1.0**. On a different version, some arguments, defaults, or behaviors may differ.
 
-This document is a complete reference for `wdoc`, covering the CLI interface and the Python API.
-
----
+Complete reference for the `wdoc` CLI and Python API. For a quick orientation read [SKILL.md](SKILL.md); for copy-pasteable recipes read [EXAMPLES.md](EXAMPLES.md).
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Installation](#installation)
 - [CLI Reference](#cli-reference)
   - [Basic Syntax](#basic-syntax)
@@ -25,7 +22,6 @@ This document is a complete reference for `wdoc`, covering the CLI interface and
   - [Filtering Arguments](#filtering-arguments)
   - [Other Arguments](#other-arguments)
   - [Environment Variables](#environment-variables)
-  - [Shell Examples](#shell-examples)
 - [Python API Reference](#python-api-reference)
   - [Importing](#importing)
   - [wdoc Class](#wdoc-class)
@@ -33,35 +29,38 @@ This document is a complete reference for `wdoc`, covering the CLI interface and
   - [Public Methods](#public-methods)
   - [Public Properties](#public-properties)
   - [parse_doc Static Method](#parse_doc-static-method)
-  - [Python Examples](#python-examples)
-
----
-
-## Overview
-
-`wdoc` is a RAG (Retrieval-Augmented Generation) system for summarizing, searching, and querying documents across 15+ file types. It uses LangChain and LiteLLM as backends and supports 100+ LLM providers.
 
 ## Installation
 
 ```bash
-# Full install (recommended)
+# Full install (recommended): bundles every extra below
 pip install -U wdoc[full]
 
-# Minimal install
+# Minimal install: only PDF and URL/web loaders
 pip install -U wdoc
 
 # From git branches
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@main[full]
 pip install git+https://github.com/thiswillbeyourgithub/wdoc@dev[full]
 
-# Optional extras
-pip install -U wdoc[pdftotext]
-pip install -U wdoc[fasttext]
+# Modular extras: install only what a given filetype needs
+pip install -U wdoc[youtube]    # youtube / youtube_playlist
+pip install -U wdoc[audio]      # local_audio, local_video, online_media
+pip install -U wdoc[anki]       # anki
+pip install -U wdoc[office]     # word, powerpoint, epub
+pip install -U wdoc[logseq]     # logseq_markdown
+pip install -U wdoc[zotero]     # zotero
+pip install -U wdoc[karakeep]   # karakeep
+pip install -U wdoc[pdftotext]  # extra PDF parser backend
+pip install -U wdoc[fasttext]   # language detection for doc validation
+
+# Extras can be combined
+pip install -U wdoc[youtube,audio]
 ```
 
-Set your API key(s): `export ANTHROPIC_API_KEY="your_key"` (or whichever provider you use).
+The plain `wdoc` package only includes PDF and URL/web loaders. Filetypes that touch youtube, audio, anki, office formats, logseq, zotero or karakeep need their extra (or just use `[full]`). Running via `uvx wdoc[full] ...` avoids having to think about extras.
 
----
+Set your API key(s): `export ANTHROPIC_API_KEY="your_key"` (or whichever provider you use).
 
 ## CLI Reference
 
@@ -76,12 +75,14 @@ wdoc TASK PATH [QUERY]
 
 `wdoc` also accepts shell pipes: `cat file.pdf | wdoc parse --filetype=pdf`
 
+Flags may be written in kebab-case: any `--` argument has its dashes normalized to underscores, so `--query-eval-model` is equivalent to `--query_eval_model`.
+
 ### Shortcuts
 
 | Shortcut | Equivalent |
 |----------|-----------|
 | `wdoc web "query"` | `wdoc --task=query --filetype=ddg --path="query" --query="query"` |
-| `wdoc parse FILE` | Calls `wdoc.parse_doc(path=FILE)` — no LLM, just parsing |
+| `wdoc parse FILE` | Calls `wdoc.parse_doc(path=FILE)`, no LLM, just parsing |
 | `wdoc query FILE` | `wdoc --task=query --path=FILE` |
 | `wdoc summarize FILE` | `wdoc --task=summarize --path=FILE` |
 
@@ -148,12 +149,13 @@ wdoc TASK PATH [QUERY]
 |----------|------|---------|-------------|
 | `--summary_n_recursion` | int | `0` | Number of recursive summary refinement passes (0 = disabled) |
 | `--summary_language` | str | `"the same language as the document"` | Output language for summaries |
+| `--citation_url_template` | str | `None` | URL template turning page citations into clickable links in summaries. Placeholders: `{page}`, `{source}`. E.g. `"https://site.com/docs/{source}#page={page}"` makes `[p.42]` link to that URL. Even without it, summaries of docs with page metadata (e.g. PDFs) get `[p.N]` citations automatically |
 
 ### Filetypes
 
 | Filetype | Description | Key Arguments |
 |----------|-------------|---------------|
-| `auto` | Guess filetype from path (default) | — |
+| `auto` | Guess filetype from path (default) | (none) |
 | `anki` | Anki flashcard collection | `--anki_profile`, `--anki_deck`, `--anki_notetype`, `--anki_template`, `--anki_tag_filter` |
 | `epub` | EPUB e-books | `--path` |
 | `json_dict` | JSON dictionary file | `--json_dict_template`, `--json_dict_exclude_keys` |
@@ -165,7 +167,7 @@ wdoc TASK PATH [QUERY]
 | `online_pdf` | PDF via URL | Same as `pdf` |
 | `pdf` | PDF files (15 parsers, best auto-selected) | `--pdf_parsers`, `--doccheck_min_lang_prob`, `--doccheck_min_token`, `--doccheck_max_token` |
 | `powerpoint` | .ppt/.pptx/.odp | `--path` |
-| `string` | Interactive text paste | — |
+| `string` | Interactive text paste | (none) |
 | `text` | Text content passed directly as path | `--metadata` |
 | `txt` | Text files (.txt, .md, etc.) | `--path` |
 | `url` | Web pages | `--title` |
@@ -184,6 +186,10 @@ These load multiple documents and can combine different sources:
 | `recursive_paths` | Glob files in a directory | `--pattern`, `--recursed_filetype`, `--include`, `--exclude` |
 | `link_file` | File with one URL per line | `--out_file` |
 | `youtube_playlist` | YouTube playlist | Same as `youtube` |
+| `zotero` | Zotero library; one selection fans out into each attachment (parsed by wdoc's own loaders) plus per-item metadata/abstract and optional notes. Needs `wdoc[zotero]` | `--zotero_connection`, `--zotero_library_id`, `--zotero_library_type`, `--zotero_api_key`, `--zotero_attachment_text`, `--zotero_include_notes`, `--zotero_include_metadata` |
+| `karakeep` | [Karakeep](https://karakeep.app/) bookmarks; one selection fans out into each bookmark's stored content (crawled html to `local_html`, text to `txt`, stored pdf/archive to `pdf`). The live url is never re-fetched. Needs `wdoc[karakeep]` | `--karakeep_api_endpoint`, `--karakeep_api_key`, `--karakeep_verify_ssl`, `--karakeep_content_source` |
+
+> **Adding your own filetype is straightforward.** Each filetype is a self-contained loader in `wdoc/utils/loaders/`; nothing in the core pipeline needs to change. The recent `zotero` and `karakeep` types are recursive fan-out loaders that resolve a selector into many sub-documents and reuse the existing per-filetype loaders (e.g. `pdf`, `local_html`, `txt`) for the actual parsing. See `CLAUDE.md` ("Adding Support for a New Filetype") for the steps.
 
 ### Loader-Specific Arguments (DocDict)
 
@@ -202,8 +208,8 @@ These load multiple documents and can combine different sources:
 | `--whisper_lang` | Audio types | Language hint for Whisper |
 | `--whisper_prompt` | Audio types | Prompt for Whisper |
 | `--deepgram_kwargs` | Audio types | Dict of Deepgram options |
-| `--youtube_language` | `youtube` | Preferred transcript languages (e.g. `["fr","en"]`) |
-| `--youtube_translation` | `youtube` | Translate transcript to this language |
+| `--youtube_language` | `youtube` | Preferred transcript languages (e.g. `["fr-orig","fr","en"]`). If unset, wdoc lists the video's tracks and picks the first ending in `-orig` (YouTube's original-language track), falling back to `["en","en-US","en-UK"]` |
+| `--youtube_translation` | `youtube` | Translate transcript to this language (translation provided by YouTube) |
 | `--youtube_audio_backend` | `youtube` | `youtube`, `whisper`, or `deepgram` |
 | `--json_dict_template` | `json_dict` | Template with `{key}` and `{value}` |
 | `--json_dict_exclude_keys` | `json_dict` | List of keys to skip |
@@ -213,10 +219,27 @@ These load multiple documents and can combine different sources:
 | `--loading_failure` | All | `warn` or `crash` on load errors (default: `warn`) |
 | `--pattern` | `recursive_paths` | Glob pattern for file discovery |
 | `--recursed_filetype` | `recursive_paths` | Filetype for each matched file |
-| `--include` | `recursive_paths` | Regex list — paths must match |
-| `--exclude` | `recursive_paths` | Regex list — paths must not match |
+| `--include` | `recursive_paths` | Regex list; paths must match |
+| `--exclude` | `recursive_paths` | Regex list; paths must not match |
 | `--online_media_url_regex` | `online_media` | Regex matching media URLs |
 | `--online_media_resourcetype_regex` | `online_media` | Regex matching resource types |
+| `--zotero_connection` | `zotero` | `auto` (local API then Web API), `local`, or `web` (default `auto`). Local works offline / in `--private`; web is blocked in `--private` |
+| `--zotero_library_id` | `zotero` | Numeric library id for the Web API (falls back to `ZOTERO_LIBRARY_ID`) |
+| `--zotero_library_type` | `zotero` | `user` or `group` (default `user`; falls back to `ZOTERO_LIBRARY_TYPE`) |
+| `--zotero_api_key` | `zotero` | Web API key (falls back to `ZOTERO_API_KEY`) |
+| `--zotero_attachment_text` | `zotero` | `wdoc` (parse the file, best quality), `fulltext` (Zotero's pre-indexed text), or `hybrid` (default `wdoc`) |
+| `--zotero_include_notes` | `zotero` | Also emit one document per Zotero note (default `False`) |
+| `--zotero_include_metadata` | `zotero` | Emit a per-item bibliographic header + abstract document (default `True`) |
+| `--karakeep_api_endpoint` | `karakeep` | Instance URL including `/api/v1/` (falls back to `KARAKEEP_PYTHON_API_ENDPOINT`) |
+| `--karakeep_api_key` | `karakeep` | Bearer token (falls back to `KARAKEEP_PYTHON_API_KEY`) |
+| `--karakeep_verify_ssl` | `karakeep` | Verify the instance TLS cert (default `True`; falls back to `KARAKEEP_PYTHON_API_VERIFY_SSL`) |
+| `--karakeep_content_source` | `karakeep` | `auto` (stored html/text else stored pdf/archive), `native` (stored html/text only), or `wdoc` (prefer stored pdf/archive). Never re-fetches the live url (default `auto`) |
+
+*Note: any `--yt_*` flag is automatically rewritten to `--youtube_*` (e.g. `--yt_language` becomes `--youtube_language`).*
+
+**`zotero` `--path` selector syntax:** a collection name or nested path (e.g. `"Research/ML/Papers"`), `tag:foo,bar`, `items:KEY1,KEY2`, `search:SavedSearchName`, or `library` / `*` for the whole library.
+
+**`karakeep` `--path` selector syntax:** a list name (e.g. `"Reading"` or `list:Reading`), `tag:Name`, `search:terms`, `ids:ID1,ID2`, `library` / `*`, `favourites`, or `archived`.
 
 ### Filtering Arguments
 
@@ -226,14 +249,14 @@ These load multiple documents and can combine different sources:
 | `--filter_content` | list\|str | `None` | Filter docs by content. Format: `[+-]regex` |
 
 **`filter_metadata` syntax:**
-- `k+regex` — keep docs with a metadata **key** matching regex
-- `v+regex` — keep docs with a metadata **value** matching regex
-- `b+key_regex:value_regex` — keep docs where key AND value match
+- `k+regex` keeps docs with a metadata **key** matching regex
+- `v+regex` keeps docs with a metadata **value** matching regex
+- `b+key_regex:value_regex` keeps docs where key AND value match
 - Use `-` instead of `+` to exclude
 
 **`filter_content` syntax:**
-- `+regex` — keep docs whose content matches
-- `-regex` — exclude docs whose content matches
+- `+regex` keeps docs whose content matches
+- `-regex` excludes docs whose content matches
 
 ### Other Arguments
 
@@ -293,7 +316,7 @@ These load multiple documents and can combine different sources:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WDOC_MOD_FAISS_SCORE_FN` | `True` | Normalize FAISS scores to 0–1 range |
+| `WDOC_MOD_FAISS_SCORE_FN` | `True` | Normalize FAISS scores to 0-1 range |
 | `WDOC_FAISS_COMPRESSION` | `True` | zlib-compress FAISS indexes |
 | `WDOC_FAISS_BINARY` | `False` | Use binary embeddings (32x compression) |
 | `WDOC_EMBED_TESTING` | `True` | Test embedding model on startup |
@@ -316,7 +339,7 @@ These load multiple documents and can combine different sources:
 | `WDOC_LOADER_LAZY_LOADING` | `True` | Lazy-import loader functions |
 | `WDOC_APPLY_ASYNCIO_PATCH` | `False` | Apply nest_asyncio patch (needed for Ollama) |
 | `WDOC_IN_DOCKER` | `False` | Set automatically inside Docker |
-| `WDOC_PRIVATE_MODE` | — | Set automatically by `--private`, never set manually |
+| `WDOC_PRIVATE_MODE` | (internal) | Set automatically by `--private`, never set manually |
 
 #### Observability (Langfuse)
 
@@ -327,59 +350,6 @@ These load multiple documents and can combine different sources:
 | `WDOC_LANGFUSE_HOST` | `None` | Overrides `LANGFUSE_HOST` |
 | `WDOC_LITELLM_TAGS` | `None` | Comma-separated tags for litellm requests |
 | `WDOC_LITELLM_USER` | `wdoc_llm` | User identifier for litellm requests |
-
-### Shell Examples
-
-```bash
-# Query a PDF
-wdoc --task=query --path="paper.pdf" --query="What are the main findings?"
-
-# Query multiple PDFs in a directory
-wdoc --task=query --path="papers/" --pattern="**/*.pdf" \
-     --filetype=recursive_paths --recursed_filetype=pdf
-
-# Summarize a YouTube video
-wdoc --task=summarize --path="https://www.youtube.com/watch?v=VIDEO_ID" \
-     --youtube_language="en"
-
-# Web search
-wdoc web "latest news on quantum computing"
-
-# Parse a document to text (no LLM)
-wdoc parse document.pdf
-wdoc parse document.pdf --format=langchain_dict
-
-# Use local models (Ollama)
-wdoc --model="ollama/qwen3:8b" --query_eval_model="ollama/qwen3:8b" \
-     --embed_model="ollama/snowflake-arctic-embed2" \
-     --task=summarize --path=document.pdf
-
-# Save/load embeddings for repeated queries
-wdoc --task=query --path="big_corpus/" --filetype=recursive_paths \
-     --pattern="**/*.pdf" --recursed_filetype=pdf \
-     --save_embeds_as="my_index.pkl"
-wdoc --task=query --load_embeds_from="my_index.pkl" --query="My question"
-
-# Shell pipe
-cat document.pdf | wdoc parse --filetype=pdf
-echo "https://example.com" | wdoc parse
-
-# Private mode with custom endpoints
-wdoc --private --model="ollama/llama3" \
-     --llms_api_bases='{"model":"http://localhost:11434","query_eval_model":"http://localhost:11434","embeddings":"http://localhost:11434"}' \
-     --task=query --path=secret.pdf
-
-# Filter documents by metadata
-wdoc --task=query --load_embeds_from=index.pkl \
-     --filter_metadata="v+anki" --query="My question"
-
-# Filter documents by content
-wdoc --task=query --path=docs/ --filetype=recursive_paths \
-     --pattern="**/*.md" --recursed_filetype=txt \
-     --filter_content="+.*machine learning.*"
-```
-
----
 
 ## Python API Reference
 
@@ -414,6 +384,7 @@ wdoc(
     query_relevancy: float = -0.5,
     summary_n_recursion: int = 0,
     summary_language: str = "the same language as the document",
+    citation_url_template: str | None = None,
     llm_verbosity: bool = False,
     debug: bool = False,
     verbose: bool = False,
@@ -515,93 +486,3 @@ wdoc.parse_doc(
 | `xml` | str | XML-formatted output |
 | `langchain` | list[Document] | LangChain Document objects |
 | `langchain_dict` | list[dict] | Dicts with `page_content` and `metadata` |
-
-### Python Examples
-
-```python
-from wdoc import wdoc
-
-# 1. Query a document
-instance = wdoc(
-    task="query",
-    path="paper.pdf",
-    model="openai/gpt-4o",
-)
-result = instance.query_task("What are the main contributions?")
-print(result["final_answer"])
-print(f"Cost: ${result['total_cost']:.4f}")
-
-# Ask follow-up questions on the same documents
-result2 = instance.query_task("What methodology was used?")
-
-# 2. Summarize a document
-instance = wdoc(
-    task="summarize",
-    path="paper.pdf",
-    model="openai/gpt-4o",
-    summary_language="en",
-)
-results = instance.summary_results
-print(results["summary"])
-print(f"Cost: ${results['doc_total_cost']:.5f}")
-print(f"Time saved: {results['doc_reading_length']:.1f} min")
-
-# 3. Parse a document (no LLM needed)
-text = wdoc.parse_doc(path="document.pdf", format="text")
-docs = wdoc.parse_doc(path="document.pdf", format="langchain")
-dicts = wdoc.parse_doc(path="document.pdf", format="langchain_dict")
-
-# 4. Query with local models
-instance = wdoc(
-    task="query",
-    path="secret.pdf",
-    model="ollama/qwen3:8b",
-    query_eval_model="ollama/qwen3:8b",
-    embed_model="ollama/snowflake-arctic-embed2",
-    private=True,
-)
-
-# 5. Query multiple documents
-instance = wdoc(
-    task="query",
-    filetype="recursive_paths",
-    path="papers/",
-    pattern="**/*.pdf",
-    recursed_filetype="pdf",
-    source_tag="research_papers",
-    model="openai/gpt-4o",
-)
-
-# 6. Web search
-instance = wdoc(
-    task="query",
-    filetype="ddg",
-    path="latest quantum computing breakthroughs",
-    query="What are the most recent quantum computing breakthroughs?",
-)
-result = instance.query_task("What are the most recent quantum computing breakthroughs?")
-
-# 7. Save and reload embeddings
-instance = wdoc(
-    task="query",
-    path="corpus/",
-    filetype="recursive_paths",
-    pattern="**/*.pdf",
-    recursed_filetype="pdf",
-    save_embeds_as="my_index.pkl",
-)
-
-# Later, load without re-indexing:
-instance = wdoc(
-    task="query",
-    load_embeds_from="my_index.pkl",
-)
-result = instance.query_task("New question on the same corpus")
-
-# 8. Change interaction settings at runtime
-instance.interaction_settings = {
-    "top_k": 100,
-    "retriever": "basic_knn",
-    "relevancy": 0.0,
-}
-```

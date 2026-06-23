@@ -35,7 +35,7 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
     * **Web Search**: Preliminary web search support using [DuckDuckGo](https://en.wikipedia.org/wiki/DuckDuckGo) (via the [ddgs](https://pypi.org/project/ddgs/) library)
 
 ### Table of contents
-- [Comprehensive reference (SKILL.md)](#comprehensive-reference)
+- [Comprehensive reference (wdoc-skill/)](#comprehensive-reference)
 - [Explanatory diagrams](#explanatory-diagrams)
 - [Ultra short guide for people in a hurry](#ultra-short-guide-for-people-in-a-hurry)
 - [Features](#features)
@@ -51,7 +51,7 @@ Created by a psychiatry resident who needed a way to get a definitive answer fro
 
 ## Comprehensive reference
 
-A single-page comprehensive reference covering every CLI argument, environment variable, filetype, and the full Python API can be found in **[SKILL.md](./SKILL.md)**.
+A comprehensive reference covering every CLI argument, environment variable, filetype, and the full Python API lives in the **[`wdoc-skill/`](./wdoc-skill/)** directory, packaged as a Claude Code skill. It has three files: [`SKILL.md`](./wdoc-skill/SKILL.md) (a quick orientation), [`REFERENCE.md`](./wdoc-skill/REFERENCE.md) (the full argument, env var, filetype, and Python API tables), and [`EXAMPLES.md`](./wdoc-skill/EXAMPLES.md) (copy-pasteable shell and Python recipes).
 
 ## Explanatory diagrams
 
@@ -182,6 +182,8 @@ uvx wdoc[full] --path=$link --task=summarize --filetype="online_pdf"
 * **recursive_paths**: turns a path, a regex pattern and a filetype into all the files found recurisvely, and treated a the specified filetype (for example many PDFs or lots of HTML files etc).
 * **toml_entries**: read a .toml file. An example can be found in `docs/toml_entries_example.toml`.
 * **youtube playlists**: get the link for each video then process as **youtube**
+* **zotero**: load documents straight from a [Zotero](https://www.zotero.org/) library via [pyzotero](https://github.com/urschrei/pyzotero). The `--path` selects a collection, tag, item keys, saved search or the whole library, and each attachment is fed to the regular loaders. Requires the `zotero` extra. See [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) for the selector syntax and options.
+* **karakeep**: load bookmarks straight from a [Karakeep](https://karakeep.app/) instance via [karakeep-python-api](https://github.com/thiswillbeyourgithub/karakeep_python_api). The `--path` selects a list, tag, search, bookmark ids or the whole library, and each bookmark's stored content (crawled html, text, or a stored pdf asset) is fed to the regular loaders without re-fetching the live url. Requires the `karakeep` extra. See [help.md](https://github.com/thiswillbeyourgithub/wdoc/docs/help.md) for the selector syntax and options.
 
 ## Walkthrough and examples
 
@@ -208,9 +210,12 @@ Refer to [examples.md](https://github.com/thiswillbeyourgithub/wdoc/blob/main/wd
         * `wdoc[full]` is a shortcut that includes all the loader extras above (excluding `fasttext` and `pdftotext`, which need special handling). If unsure, use `wdoc[full]` and don't worry about filetypes.
         * If you have problems with pdftotext or fasttext, try `uvx wdoc[full,pdftotext,fasttext]`.
     * If you plan on contributing, you will also need `wdoc[dev]` for the commit hooks.
-    * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [SKILL.md](./SKILL.md) reference file:
+    * **Claude Code users**: to give Claude Code knowledge of `wdoc`'s CLI and Python API, install the [`wdoc-skill/`](./wdoc-skill/) skill (three files: `SKILL.md`, `REFERENCE.md`, `EXAMPLES.md`):
         ```bash
-        mkdir -p ~/.claude/skills/wdoc && wget -O ~/.claude/skills/wdoc/SKILL.md https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/SKILL.md
+        mkdir -p ~/.claude/skills/wdoc-skill
+        for f in SKILL.md REFERENCE.md EXAMPLES.md; do
+          wget -O ~/.claude/skills/wdoc-skill/$f https://raw.githubusercontent.com/thiswillbeyourgithub/wdoc/main/wdoc-skill/$f
+        done
         ```
 2. Add the API key for the backend you want as an environment variable: for example `export ANTHROPIC_API_KEY="***my_key***"`
 3. Launch is as easy as using `uvx wdoc --task=query --path=MYDOC [ARGS]`

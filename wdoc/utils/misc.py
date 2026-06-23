@@ -184,6 +184,17 @@ filetype_arg_types = {
     "ddg_max_results": int,
     "ddg_region": str,
     "ddg_safesearch": Literal["on", "off", "moderate"],
+    "zotero_library_id": str,
+    "zotero_library_type": Literal["user", "group"],
+    "zotero_api_key": str,
+    "zotero_connection": Literal["auto", "local", "web"],
+    "zotero_attachment_text": Literal["wdoc", "fulltext", "hybrid"],
+    "zotero_include_notes": bool,
+    "zotero_include_metadata": bool,
+    "karakeep_api_endpoint": str,
+    "karakeep_api_key": str,
+    "karakeep_verify_ssl": bool,
+    "karakeep_content_source": Literal["auto", "native", "wdoc"],
 }
 
 # extra arguments supported when instanciating wdoc
@@ -222,6 +233,7 @@ class DocDict(dict):
                 "source_tag",
                 "recur_parent_id",
                 "subitem_link",
+                "title",
             ]
             + list(filetype_arg_types.keys())
         )

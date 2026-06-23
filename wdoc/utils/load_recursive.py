@@ -1,5 +1,7 @@
 import json
+import os
 import re
+import tempfile
 from loguru import logger
 from pathlib import Path
 import uuid
@@ -405,6 +407,300 @@ def parse_ddg_search(
     return doclist
 
 
+def parse_zotero(
+    cli_kwargs: dict,
+    path: Union[str, Path],
+    zotero_connection: Literal["auto", "local", "web"] = "auto",
+    zotero_library_id: Optional[str] = None,
+    zotero_library_type: Literal["user", "group"] = "user",
+    zotero_api_key: Optional[str] = None,
+    zotero_attachment_text: Literal["wdoc", "fulltext", "hybrid"] = "wdoc",
+    zotero_include_notes: bool = False,
+    zotero_include_metadata: bool = True,
+    **extra_args,
+) -> List[DocDict]:
+    """
+    Turn a DocDict that has `filetype==zotero` into one DocDict per loadable
+    sub-document of the selected Zotero items.
+
+    The `path` carries the selector (see `parse_selector`): a collection name or
+    nested path by default, or one of `tag:...`, `items:...`, `search:...`,
+    `library`/`*`. Each selected item fans out into:
+      - one DocDict per attachment (a `pdf`/`auto`/`url` doc pointing at the
+        downloaded/linked file, so wdoc's own loaders handle the extraction; or a
+        `txt` doc holding Zotero's indexed fulltext when `zotero_attachment_text`
+        requests it);
+      - an always-on (`zotero_include_metadata`) `txt` doc with the item's
+        bibliographic header + abstract;
+      - optionally (`zotero_include_notes`) one `txt` doc per attached note.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The Zotero selector (see above)
+        zotero_connection: 'auto' (local then web), 'local', or 'web'
+        zotero_library_id: Zotero numeric library id (web API), else ZOTERO_LIBRARY_ID
+        zotero_library_type: 'user' or 'group'
+        zotero_api_key: Zotero api key (web API), else ZOTERO_API_KEY
+        zotero_attachment_text: how to get attachment text ('wdoc'=reuse wdoc
+            loaders on the file, 'fulltext'=Zotero indexed fulltext, 'hybrid'=
+            fulltext then fall back to the file)
+        zotero_include_notes: also emit a doc per Zotero note
+        zotero_include_metadata: also emit a per-item metadata/abstract doc
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each a loadable sub-document
+    """
+    from wdoc.utils.loaders.zotero import (
+        attachment_fulltext,
+        attachment_to_file,
+        format_bib_header,
+        get_zotero_client,
+        item_children,
+        item_web_url,
+        metadata_document_text,
+        parse_selector,
+        resolve_items,
+    )
+
+    logger.info(f"Loading zotero selector: '{path}'")
+    selector = parse_selector(path)
+    zot = get_zotero_client(
+        connection=zotero_connection,
+        library_id=zotero_library_id,
+        library_type=zotero_library_type,
+        api_key=zotero_api_key,
+    )
+    items = resolve_items(zot, selector)
+    assert items, f"No Zotero items found for selector '{path}'"
+
+    temp_dir = Path(tempfile.mkdtemp(prefix="wdoc_zotero_"))
+    recur_parent_id = str(uuid.uuid4())
+    doclist: List[DocDict] = []
+
+    def _emit(filetype: str, location: str, title: str, item: dict, subitem=None):
+        doc_kwargs = cli_kwargs.copy()
+        for k in list(doc_kwargs.keys()):
+            if k.startswith("zotero_"):
+                del doc_kwargs[k]
+        doc_kwargs.pop("filetype", None)
+        doc_kwargs["path"] = location
+        doc_kwargs["filetype"] = filetype
+        doc_kwargs["title"] = title
+        doc_kwargs["subitem_link"] = subitem or item_web_url(item) or ""
+        doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
+        # A fan-out over a whole library will inevitably hit individual items
+        # that fail to load (a sparse bibliographic entry too short for wdoc's
+        # minimum length check, a corrupt or DRM'd attachment, an unsupported
+        # attachment type, ...). Degrade gracefully: warn and skip that
+        # sub-document instead of crashing the entire selection. The batch
+        # still raises if every single sub-document fails.
+        doc_kwargs["loading_failure"] = "warn"
+        doclist.append(DocDict(doc_kwargs))
+
+    def _write_text(name: str, text: str) -> str:
+        out = temp_dir / name
+        out.write_text(text)
+        return str(out)
+
+    for item in items:
+        data = item.get("data", {})
+        title = data.get("title") or "Untitled"
+        key = item["key"]
+        children = item_children(zot, item)
+        attachments = [
+            c for c in children if c.get("data", {}).get("itemType") == "attachment"
+        ]
+
+        if zotero_include_metadata:
+            meta_text = metadata_document_text(item)
+            if meta_text.strip():
+                _emit(
+                    "txt",
+                    _write_text(f"{key}_metadata.txt", meta_text),
+                    f"{title} (metadata)",
+                    item,
+                )
+
+        for att in attachments:
+            att_title = att.get("data", {}).get("title") or title
+            att_key = att["key"]
+
+            if zotero_attachment_text in ("fulltext", "hybrid"):
+                fulltext = attachment_fulltext(zot, att_key)
+                if fulltext:
+                    header = format_bib_header(item)
+                    content = f"{header}\n\n{fulltext}" if header else fulltext
+                    _emit(
+                        "txt",
+                        _write_text(f"{att_key}_fulltext.txt", content),
+                        att_title,
+                        item,
+                    )
+                    continue
+                if zotero_attachment_text == "fulltext":
+                    logger.warning(
+                        f"No indexed fulltext for attachment {att_key} of "
+                        f"'{title}', skipping (zotero_attachment_text=fulltext)"
+                    )
+                    continue
+                # hybrid: fall through to materialising the file
+
+            materialised = attachment_to_file(zot, att, temp_dir)
+            if materialised is None:
+                continue
+            ftype, location = materialised
+            _emit(ftype, location, att_title, item, subitem=location)
+
+        if zotero_include_notes:
+            notes = [c for c in children if c.get("data", {}).get("itemType") == "note"]
+            for note in notes:
+                note_html = note.get("data", {}).get("note", "") or ""
+                if not note_html.strip():
+                    continue
+                header = format_bib_header(item)
+                content = f"{header}\n\nNote:\n{note_html}" if header else note_html
+                _emit(
+                    "txt",
+                    _write_text(f"{note['key']}_note.txt", content),
+                    f"{title} (note)",
+                    item,
+                )
+
+    assert doclist, (
+        f"Zotero selector '{path}' produced no loadable documents "
+        f"(items found: {len(items)})"
+    )
+    return doclist
+
+
+def parse_karakeep(
+    cli_kwargs: dict,
+    path: Union[str, Path],
+    karakeep_api_endpoint: Optional[str] = None,
+    karakeep_api_key: Optional[str] = None,
+    karakeep_verify_ssl: bool = True,
+    karakeep_content_source: Literal["auto", "native", "wdoc"] = "auto",
+    **extra_args,
+) -> List[DocDict]:
+    """
+    Turn a DocDict that has `filetype==karakeep` into one DocDict per loadable
+    bookmark of the selected Karakeep source.
+
+    The `path` carries the selector (see `parse_selector`): a list name by
+    default, or one of `tag:...`, `search:...`, `ids:...`, `library`/`*`,
+    `favourites`, `archived`. Each bookmark resolves to a single sub-document:
+      - a `local_html` doc for a link bookmark's stored crawled html;
+      - a `txt` doc for a text bookmark or an asset's pre-extracted text;
+      - a `pdf` doc for a downloaded stored pdf/archive asset.
+    A compact metadata header (title / url / author / tags / note / summary) is
+    prepended to text and html docs. The live bookmarked url is never re-fetched.
+
+    Args:
+        cli_kwargs: Base CLI arguments to inherit
+        path: The Karakeep selector (see above)
+        karakeep_api_endpoint: Karakeep API endpoint, else KARAKEEP_PYTHON_API_ENDPOINT
+        karakeep_api_key: Karakeep api key, else KARAKEEP_PYTHON_API_KEY
+        karakeep_verify_ssl: verify the instance's TLS certificate
+        karakeep_content_source: 'auto' (stored text/html, else stored pdf), 'native'
+            (stored extracted text/html only), or 'wdoc' (prefer the stored
+            pdf/archive asset, parsed by wdoc's loaders). None re-fetch the live url.
+        **extra_args: Additional arguments to pass to each document
+
+    Returns:
+        List of DocDict objects, each a loadable sub-document
+    """
+    from wdoc.utils.loaders.karakeep import (
+        bookmark_web_url,
+        cached_karakeep_content,
+        get_karakeep_client,
+        parse_selector,
+        resolve_bookmarks,
+    )
+
+    logger.info(f"Loading karakeep selector: '{path}'")
+    selector = parse_selector(path)
+    resolved_endpoint = karakeep_api_endpoint or os.environ.get(
+        "KARAKEEP_PYTHON_API_ENDPOINT"
+    )
+    client = get_karakeep_client(
+        api_endpoint=karakeep_api_endpoint,
+        api_key=karakeep_api_key,
+        verify_ssl=karakeep_verify_ssl,
+    )
+    bookmarks = resolve_bookmarks(client, selector)
+    assert bookmarks, f"No Karakeep bookmarks found for selector '{path}'"
+
+    temp_dir = Path(tempfile.mkdtemp(prefix="wdoc_karakeep_"))
+    recur_parent_id = str(uuid.uuid4())
+    doclist: List[DocDict] = []
+
+    def _emit(filetype: str, location: str, title: str, subitem: str):
+        doc_kwargs = cli_kwargs.copy()
+        for k in list(doc_kwargs.keys()):
+            if k.startswith("karakeep_"):
+                del doc_kwargs[k]
+        doc_kwargs.pop("filetype", None)
+        doc_kwargs["path"] = location
+        doc_kwargs["filetype"] = filetype
+        doc_kwargs["title"] = title
+        doc_kwargs["subitem_link"] = subitem or ""
+        doc_kwargs.update(extra_args)
+        doc_kwargs["recur_parent_id"] = recur_parent_id
+        # A fan-out over a whole library will inevitably hit individual
+        # bookmarks that fail to load (an empty crawl, a corrupt asset, ...).
+        # Degrade gracefully: warn and skip that sub-document instead of
+        # crashing the entire selection. The batch still raises if every single
+        # sub-document fails.
+        doc_kwargs["loading_failure"] = "warn"
+        doclist.append(DocDict(doc_kwargs))
+
+    for bookmark in bookmarks:
+        bid = bookmark.get("id")
+        title = (
+            bookmark.get("title")
+            or (bookmark.get("content") or {}).get("title")
+            or "Untitled"
+        )
+        try:
+            descriptor = cached_karakeep_content(
+                bid,
+                bookmark.get("modifiedAt"),
+                karakeep_content_source,
+                resolved_endpoint,
+                client=client,
+                bookmark=bookmark,
+            )
+        except Exception as err:
+            logger.warning(f"Could not resolve Karakeep bookmark {bid}: {err}")
+            continue
+        if not descriptor:
+            logger.warning(
+                f"Karakeep bookmark {bid} ('{title}') has no usable stored "
+                f"content for source '{karakeep_content_source}', skipping"
+            )
+            continue
+
+        out = temp_dir / f"{bid}{descriptor['suffix']}"
+        if descriptor["data"] is not None:
+            out.write_bytes(descriptor["data"])
+        else:
+            out.write_text(descriptor["text"])
+        _emit(
+            descriptor["filetype"],
+            str(out),
+            title,
+            bookmark_web_url(bookmark, resolved_endpoint),
+        )
+
+    assert doclist, (
+        f"Karakeep selector '{path}' produced no loadable documents "
+        f"(bookmarks found: {len(bookmarks)})"
+    )
+    return doclist
+
+
 @memoizer
 def parse_load_functions(load_functions: Tuple[str, ...]) -> bytes:
     load_functions = list(load_functions)
@@ -431,5 +727,7 @@ recursive_types_func_mapping = {
     "link_file": parse_link_file,
     "youtube_playlist": parse_youtube_playlist,
     "ddg": parse_ddg_search,
+    "zotero": parse_zotero,
+    "karakeep": parse_karakeep,
     "auto": None,
 }

@@ -15,6 +15,7 @@ _ALL_TEST_MODELS=(
     "${WDOC_TEST_DEFAULT_MODEL:-openrouter/deepseek/deepseek-v4-pro}"
     "${WDOC_TEST_DEFAULT_EVAL_MODEL:-openrouter/deepseek/deepseek-v4-flash}"
     "${WDOC_TEST_DEFAULT_EMBED_MODEL:-openai/text-embedding-3-small}"
+    "${WDOC_TEST_MISTRAL_EMBED_MODEL:-mistral/mistral-embed}"
 )
 _check_provider_key() {
     local prefix="$1" keyvar="$2" m
@@ -33,6 +34,28 @@ _check_provider_key "openai/" OPENAI_API_KEY
 _check_provider_key "mistral/" MISTRAL_API_KEY
 if [[ -z "${WDOC_WHISPER_API_KEY:-}" ]]; then
     echo "ERROR: WDOC_WHISPER_API_KEY env var is not set but is required to test whisper transcription. Set WDOC_WHISPER_API_KEY before running tests." >&2
+    exit 1
+fi
+# Zotero loader: the api test needs real credentials (or a reachable local
+# Zotero) plus a small selector to fan out. Mirror the whisper check so a
+# missing setup crashes early instead of silently skipping the test.
+if [[ -z "${ZOTERO_API_KEY:-}" ]]; then
+    echo "ERROR: ZOTERO_API_KEY env var is not set but is required to test the zotero loader. Set ZOTERO_API_KEY (and ZOTERO_LIBRARY_ID) before running tests." >&2
+    exit 1
+fi
+if [[ -z "${ZOTERO_COLLECTION_NAME:-}" ]]; then
+    echo "ERROR: ZOTERO_COLLECTION_NAME env var is not set but is required to exercise the zotero loader api test. Set it to the name of a (preferably small) collection in your library." >&2
+    exit 1
+fi
+# Karakeep loader: the api test creates its own temporary bookmark and deletes
+# it, so it only needs real credentials (endpoint + api key). Mirror the zotero
+# check so a missing setup crashes early instead of silently skipping the test.
+if [[ -z "${KARAKEEP_PYTHON_API_KEY:-}" ]]; then
+    echo "ERROR: KARAKEEP_PYTHON_API_KEY env var is not set but is required to test the karakeep loader. Set KARAKEEP_PYTHON_API_KEY (and KARAKEEP_PYTHON_API_ENDPOINT) before running tests." >&2
+    exit 1
+fi
+if [[ -z "${KARAKEEP_PYTHON_API_ENDPOINT:-}" ]]; then
+    echo "ERROR: KARAKEEP_PYTHON_API_ENDPOINT env var is not set but is required to test the karakeep loader. Set it to your instance URL including /api/v1/." >&2
     exit 1
 fi
 
@@ -69,6 +92,22 @@ echo "Done with parsing (basic)"
 echo "\nTesting wdoc (basic)"
 $PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_wdoc.py
 echo "Done with wdoc (basic)"
+
+echo "\nTesting zotero (basic)"
+$PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_zotero.py
+echo "Done with zotero (basic)"
+
+echo "\nTesting zotero (api)"
+$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_zotero.py
+echo "Done with zotero (api)"
+
+echo "\nTesting karakeep (basic)"
+$PYTHON_EXEC -m pytest -n auto --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m basic ../test_karakeep.py
+echo "Done with karakeep (basic)"
+
+echo "\nTesting karakeep (api)"
+$PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_karakeep.py
+echo "Done with karakeep (api)"
 
 echo "\nTesting vectorstores (api)"
 $PYTHON_EXEC -m pytest --disable-warnings --show-capture=no --code-highlight=yes --tb=short -m api ../test_vectorstores.py

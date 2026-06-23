@@ -154,6 +154,80 @@
             * `--recursed_filetype` is the filetype to use for each of the found path
         * `youtube_playlist`
             * `--path` must link to a youtube playlist
+        * `zotero`
+            * Loads documents from a Zotero library. One Zotero selection fans
+                out into many sub-documents: each attachment is handed to wdoc's
+                own pdf/auto loaders (no duplicated extraction), plus a per-item
+                metadata/abstract document and, optionally, notes.
+            * `--path` is the selector. Accepted forms:
+                * a collection name or nested path, e.g. `"Research/ML/Papers"`
+                    (the reference tool's `%%` separators are also accepted)
+                * `tag:foo,bar` to load items matching those tags
+                * `items:KEY1,KEY2` to load explicit Zotero item keys
+                * `search:Name` to run a Zotero saved search by name
+                    (best-effort: tag/itemType/quicksearch conditions are
+                    translated, other conditions are ignored with a warning)
+                * `library` (or `*`) to load the whole library
+            * `--zotero_connection`: str, default `auto`. One of `auto` (try the
+                local Zotero HTTP API at localhost:23119 then fall back to the
+                Web API), `local`, or `web`. The local API works offline and in
+                `--private` mode (it requires the Zotero desktop app running);
+                the Web API is blocked in `--private` mode.
+            * `--zotero_library_id`: str. Numeric library id for the Web API.
+                Falls back to the `ZOTERO_LIBRARY_ID` env var.
+            * `--zotero_library_type`: str, default `user`. `user` or `group`.
+                Falls back to the `ZOTERO_LIBRARY_TYPE` env var.
+            * `--zotero_api_key`: str. Zotero api key for the Web API. Falls back
+                to the `ZOTERO_API_KEY` env var.
+            * `--zotero_attachment_text`: str, default `wdoc`. How to obtain the
+                text of an attachment: `wdoc` (download/locate the file and let
+                wdoc's loaders parse it, best quality), `fulltext` (use Zotero's
+                pre-indexed fulltext, fast but lower quality and skips
+                un-indexed attachments), or `hybrid` (fulltext when available,
+                otherwise fall back to `wdoc`).
+            * `--zotero_include_notes`: bool, default `False`. Also emit one
+                document per Zotero note attached to an item.
+            * `--zotero_include_metadata`: bool, default `True`. Emit a small
+                per-item document with the bibliographic header (title, authors,
+                date, DOI, tags, ...) and abstract.
+            * Requires the `zotero` extra: `pip install wdoc[zotero]`.
+        * `karakeep`
+            * Loads bookmarks from a [Karakeep](https://karakeep.app/) instance.
+                One selection fans out into many sub-documents: each bookmark
+                resolves to one document fed to wdoc's own loaders. A link
+                bookmark's stored crawled html goes to the `local_html` loader, a
+                text bookmark to `txt`, and a downloaded stored pdf/archive asset
+                to the `pdf` loader. The live bookmarked url is never re-fetched.
+                A compact metadata header (title, url, author, date, tags, note,
+                summary) is prepended to text and html documents.
+            * `--path` is the selector. Accepted forms:
+                * a list name, e.g. `"Reading"` (or `list:Reading`)
+                * `tag:Name` to load bookmarks with that tag
+                * `search:terms` to run a Karakeep search query
+                * `ids:ID1,ID2` to load explicit bookmark ids
+                * `library` (or `*`) to load every bookmark
+                * `favourites` or `archived` for those filters
+            * `--karakeep_api_endpoint`: str. Your instance URL including
+                `/api/v1/`. Falls back to the `KARAKEEP_PYTHON_API_ENDPOINT` env
+                var.
+            * `--karakeep_api_key`: str. Karakeep api key (bearer token). Falls
+                back to the `KARAKEEP_PYTHON_API_KEY` env var.
+            * `--karakeep_verify_ssl`: bool, default `True`. Verify the
+                instance's TLS certificate. Falls back to the
+                `KARAKEEP_PYTHON_API_VERIFY_SSL` env var.
+            * `--karakeep_content_source`: str, default `auto`. Which stored
+                artifact to use per bookmark: `auto` (stored crawled
+                html/extracted text if present, otherwise a stored pdf/archive
+                asset), `native` (stored html/extracted text only, skip a
+                bookmark that has none), or `wdoc` (prefer the stored
+                pdf/archive asset, parsed by wdoc's loaders, then fall back to
+                the stored html). None of these ever re-fetch the live url.
+            * Per-bookmark content resolution is cached (joblib, keyed on the
+                bookmark id and its modification time) so re-runs do not re-hit
+                the Karakeep server or re-download assets.
+            * Under `--private` mode only a local/loopback Karakeep endpoint is
+                allowed (a remote endpoint is blocked).
+            * Requires the `karakeep` extra: `pip install wdoc[karakeep]`.
         * `link_file`
             * `--path` must point to a file where each line is a link
                 that will be summarized.

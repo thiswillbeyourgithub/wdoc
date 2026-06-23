@@ -226,7 +226,9 @@ def summarize_documents(
             f"<reading_length>\n{doc_reading_length:.1f} minutes\n</reading_length>"
         )
     else:
-        doc_reading_length = 0
+        # keep this a float: wdocSummary.doc_reading_length is typed float and
+        # beartype (WDOC_TYPECHECKING=crash) rejects a bare int 0 here.
+        doc_reading_length = 0.0
     if "author" in relevant_docs[0].metadata:
         author = relevant_docs[0].metadata["author"].strip()
         metadata.append(f"<author>\n{author}\n</author>")
@@ -366,7 +368,12 @@ def summarize_documents(
             prev_real_text = real_text
 
             assert n_recur not in recursive_summaries
-            if summary_text not in recursive_summaries:
+            # `recursive_summaries` is keyed by recursion level (ints), so we
+            # must compare against its *values* to detect a summary we have
+            # already produced. Checking membership in the dict directly looks
+            # at the keys and is therefore always True, which used to force
+            # recursion to stop after the very first pass.
+            if summary_text in recursive_summaries.values():
                 logger.warning(
                     f"Identical summary after {n_recur} "
                     "recursion, adding more recursion will not "
@@ -513,6 +520,29 @@ def _strip_llm_intro_artifacts(lines: List[str]) -> List[str]:
 
         cleaned.append(line)
     return cleaned
+
+
+def _describe_llm_output(output) -> str:
+    """Render every attribute of an LLM result's generations (plus llm_output)
+    as a readable string.
+
+    Used to build an actionable error message when a completion comes back
+    with empty message content: the actual text sometimes lands in a different
+    field (e.g. ``additional_kwargs['reasoning_content']`` for some reasoning
+    models, where litellm stores the answer when the provider leaves the
+    message ``content`` null) rather than in ``generations[0].text``.
+    """
+    lines = []
+    for i, gen in enumerate(output.generations):
+        lines.append(f"generations[{i}]:")
+        try:
+            dumped = gen.model_dump()
+        except Exception as err:  # pragma: no cover - purely defensive
+            dumped = {"<model_dump failed>": repr(err), "repr": repr(gen)}
+        for key, value in dumped.items():
+            lines.append(f"  {key}: {value!r}")
+    lines.append(f"llm_output: {getattr(output, 'llm_output', None)!r}")
+    return "\n".join(lines)
 
 
 @log_and_time_fn
@@ -678,6 +708,21 @@ def _summarize(
         llm.callbacks[0].completion_tokens += new_c
         llm.callbacks[0].internal_reasoning_tokens += new_r
         llm.callbacks[0].total_tokens += new_p + new_c + new_r
+
+        # An empty message content here would silently produce an empty summary.
+        # Rather than guess, surface the entire LLM output so the real answer can
+        # be located: for some reasoning models the text comes back in another
+        # field (e.g. additional_kwargs['reasoning_content']) while the message
+        # content is left empty, which means we are reading the wrong field.
+        if not out.strip():
+            raise ValueError(
+                f"The LLM (backend '{modelbackend}') returned an empty message "
+                f"content for chunk {fixed_index} (finish_reason='{finish}'), so "
+                "the summary would be empty. The answer may have been placed in "
+                "another field (e.g. 'reasoning_content') rather than the message "
+                "content. Full LLM output for troubleshooting:\n"
+                + _describe_llm_output(output)
+            )
 
         parsed = thinking_answer_parser(out)
         if verbose and parsed["thinking"]:

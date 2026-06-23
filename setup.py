@@ -129,7 +129,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="wdoc",
-    version="5.1.0",
+    version="5.1.1",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, or any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -205,7 +205,7 @@ setup(
         "blake3>=1.0.8",  # faster than sha256
         "pandas >= 2.3.3",
         "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-        "unstructured >= 0.18.15",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
+        "unstructured >= 0.18.15,<0.18.31",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
         # PDF loading (default, since pdf is the most common filetype)
         "openparse[ml] >= 0.5.7",  # pdf with table support
         "pdfminer.six >= 20231228",
@@ -261,9 +261,17 @@ setup(
             # sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
             "pdftotext >= 2.2.2",
         ],
+        "zotero": [
+            # load documents straight from a Zotero library (local API or web API)
+            "pyzotero >= 1.6.0",
+        ],
+        "karakeep": [
+            # load bookmarks straight from a Karakeep instance via its API
+            "karakeep-python-api >= 1.8.0",
+        ],
         "full": [
             # aggregates all loader extras (self-reference requires pip >= 21.2)
-            "wdoc[youtube,audio,anki,office,logseq]",
+            "wdoc[youtube,audio,anki,office,logseq,zotero,karakeep]",
         ],
         "dev": [
             "ruff >= 0.14.1",
