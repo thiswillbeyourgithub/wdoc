@@ -215,7 +215,7 @@ setup(
         "pdfplumber >= 0.11.1",
         "pdf2image >= 1.17.0",
         # URL / web loading (default, since urls are the most common filetype)
-        "playwright >= 1.45.0",  # for online_media and urls
+        "playwright >= 1.60.0",  # for online_media and urls
         "goose3 >= 3.1.20",
         "tldextract>=5.1.2",
         # online search via 'filetype=web'

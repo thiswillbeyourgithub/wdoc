@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 import ffmpeg
-import playwright
+import playwright.sync_api
 import pydub
 import uuid6
 import yt_dlp as youtube_dl
