@@ -327,7 +327,7 @@ These load multiple documents and can combine different sources:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `WDOC_WHISPER_ENDPOINT` | `""` | Custom Whisper API endpoint |
-| `WDOC_WHISPER_API_KEY` | `""` | Custom Whisper API key |
+| `WDOC_WHISPER_API_KEY` | `""` | Custom Whisper API key. When empty, falls back to `OPENAI_API_KEY`, then `WHISPER_API_KEY` |
 | `WDOC_WHISPER_MODEL` | `whisper-1` | Whisper model name |
 | `WDOC_WHISPER_PARALLEL_SPLITS` | `True` | Parallelize split audio transcription |
 
