@@ -232,12 +232,12 @@ setup(
             # audio/video transcription
             "deepgram-sdk >= 3.2.7",
             "httpx >= 0.27.0",  # to increase deepgram timeout
-            "pydub >= 0.25.1",  # extracting audio from local video
+            "pydub == 0.25.1",  # extracting audio from local video
             # audioop was removed in stdlib in Python 3.13 and pydub needs it
             # See https://github.com/jiaaro/pydub/issues/815
             "audioop-lts>=0.2.2; python_version>='3.13'",
-            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-            "torchaudio >= 2.8.0",  # silence removal from audio
+            "ffmpeg-python == 0.2.0",  # extracting audio from local video
+            "torchaudio == 2.8.0",  # silence removal from audio
         ],
         "anki": [
             "ankipandas>=0.3.15",
