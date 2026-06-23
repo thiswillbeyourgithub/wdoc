@@ -70,7 +70,7 @@ class wdoc:
     This docstring is dynamically updated with the content of wdoc/docs/help.md
     """
 
-    VERSION: str = "5.1.1"
+    VERSION: str = "5.1.3"
     allowed_extra_args = extra_args_types
     __import_mode__: bool = True
 

@@ -129,7 +129,7 @@ with open("README.md", "r") as readme:
 
 setup(
     name="wdoc",
-    version="5.1.1",
+    version="5.1.3",
     description="A perfect AI powered RAG for document query and summary. Supports ~all LLM and ~all filetypes (url, pdf, epub, youtube (incl playlist), audio, anki, md, docx, pptx, or any combination!)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -215,7 +215,7 @@ setup(
         "pdfplumber >= 0.11.1",
         "pdf2image >= 1.17.0",
         # URL / web loading (default, since urls are the most common filetype)
-        "playwright >= 1.45.0",  # for online_media and urls
+        "playwright >= 1.60.0",  # for online_media and urls
         "goose3 >= 3.1.20",
         "tldextract>=5.1.2",
         # online search via 'filetype=web'
@@ -232,12 +232,12 @@ setup(
             # audio/video transcription
             "deepgram-sdk >= 3.2.7",
             "httpx >= 0.27.0",  # to increase deepgram timeout
-            "pydub >= 0.25.1",  # extracting audio from local video
+            "pydub == 0.25.1",  # extracting audio from local video
             # audioop was removed in stdlib in Python 3.13 and pydub needs it
             # See https://github.com/jiaaro/pydub/issues/815
             "audioop-lts>=0.2.2; python_version>='3.13'",
-            "ffmpeg-python >= 0.2.0",  # extracting audio from local video
-            "torchaudio >= 2.8.0",  # silence removal from audio
+            "ffmpeg-python == 0.2.0",  # extracting audio from local video
+            "torchaudio == 2.8.0",  # silence removal from audio
         ],
         "anki": [
             "ankipandas>=0.3.15",

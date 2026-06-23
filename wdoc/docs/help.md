@@ -947,7 +947,8 @@
 * `WDOC_WHISPER_API_KEY`, default: `""`
     * If provided, sets a custom API key for Whisper transcription services. This is useful when using alternative 
     Whisper-compatible services that require their own authentication.
-    * When empty, uses the default OPENAI_API_KEY environment variable.
+    * When empty, falls back to the `OPENAI_API_KEY` environment variable, and if that is also unset, to the 
+    `WHISPER_API_KEY` environment variable. The resolution order is `WDOC_WHISPER_API_KEY` > `OPENAI_API_KEY` > `WHISPER_API_KEY`.
 
 * `WDOC_WHISPER_MODEL`, default: `"whisper-1"`
     * Specifies which Whisper model to use for audio transcription. This can be any model supported by your Whisper endpoint.

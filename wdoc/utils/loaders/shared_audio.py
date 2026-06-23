@@ -210,13 +210,30 @@ def transcribe_audio_whisper(
         )
     else:
         assert (
-            "OPENAI_API_KEY" in os.environ
-            and not os.environ["OPENAI_API_KEY"]
-            == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        ) or (
-            env.WDOC_WHISPER_API_KEY
-            and not env.WDOC_WHISPER_API_KEY == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
-        ), "No environment variable OPENAI_API_KEY nor WDOC_WHISPER_API_KEY found"
+            (
+                "OPENAI_API_KEY" in os.environ
+                and not os.environ["OPENAI_API_KEY"]
+                == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            )
+            or (
+                env.WDOC_WHISPER_API_KEY
+                and not env.WDOC_WHISPER_API_KEY
+                == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            )
+            or (
+                os.environ.get("WHISPER_API_KEY")
+                and not os.environ["WHISPER_API_KEY"]
+                == "REDACTED_BECAUSE_WDOC_IN_PRIVATE_MODE"
+            )
+        ), (
+            "No environment variable OPENAI_API_KEY, WDOC_WHISPER_API_KEY nor WHISPER_API_KEY found"
+        )
+
+    # Resolve the whisper API key. WDOC_WHISPER_API_KEY takes precedence; if it
+    # is unset and OPENAI_API_KEY is also unset, fall back to WHISPER_API_KEY.
+    whisper_api_key = env.WDOC_WHISPER_API_KEY
+    if not whisper_api_key and not os.environ.get("OPENAI_API_KEY"):
+        whisper_api_key = os.environ.get("WHISPER_API_KEY", "")
 
     try:
         t1 = time.time()
@@ -238,8 +255,8 @@ def transcribe_audio_whisper(
                     f"Using custom whisper endpoint: {env.WDOC_WHISPER_ENDPOINT}"
                 )
 
-            if env.WDOC_WHISPER_API_KEY:
-                transcription_kwargs["api_key"] = env.WDOC_WHISPER_API_KEY
+            if whisper_api_key:
+                transcription_kwargs["api_key"] = whisper_api_key
                 logger.debug("Using custom whisper API key")
 
             try:
@@ -270,8 +287,8 @@ def transcribe_audio_whisper(
                     data["language"] = language
 
                 headers = {}
-                if env.WDOC_WHISPER_API_KEY:
-                    headers["Authorization"] = f"Bearer {env.WDOC_WHISPER_API_KEY}"
+                if whisper_api_key:
+                    headers["Authorization"] = f"Bearer {whisper_api_key}"
 
                 # Make the request
                 endpoint_url = (
