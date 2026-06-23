@@ -205,7 +205,7 @@ setup(
         "blake3>=1.0.8",  # faster than sha256
         "pandas >= 2.3.3",
         "trio >= 0.31.0",  # for some reason older versions of trio, when present are used and cause issues on python 3.11: https://github.com/python-trio/trio/issues/2317
-        "unstructured >= 0.18.15",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
+        "unstructured >= 0.18.15,<0.18.31",  # base package only, used by pdf loader for clean_extra_whitespace. The heavy [all-docs] extra is in [office].
         # PDF loading (default, since pdf is the most common filetype)
         "openparse[ml] >= 0.5.7",  # pdf with table support
         "pdfminer.six >= 20231228",
