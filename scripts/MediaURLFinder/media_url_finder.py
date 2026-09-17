@@ -11,7 +11,7 @@ import fire
 from wdoc.utils.loaders.online_media import find_online_media
 import yt_dlp as youtube_dl
 
-ydl_opts = {"dump_single_json": True, "simulate": True}
+ydl_opts = {"quiet": True, "no_warnings": True, "skip_download": True}
 
 
 def main(url: str, **kwargs) -> str:
@@ -20,20 +20,21 @@ def main(url: str, **kwargs) -> str:
         print("No media links found")
         sys.exit(1)
 
-    d = {k: [] for k in out.keys()}
+    d = {}
 
     for k, v in out.items():
+        # skip the buckets that matched nothing instead of cluttering the output
+        if not v:
+            continue
         d[k] = {}
         for link in v:
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                j = ydl.download([url])
-                d[k][url] = j
-
-    # Remove unused
-    # keys = d.keys()
-    # for k in keys:
-    #     if not d[k]:
-    #         del d[k]
+                try:
+                    info = ydl.extract_info(link, download=False)
+                    d[k][link] = ydl.sanitize_info(info)
+                except Exception as err:
+                    # a media request is not necessarily something yt-dlp can handle
+                    d[k][link] = {"error": str(err)}
 
     return json.dumps(d)
 
