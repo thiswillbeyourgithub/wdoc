@@ -38,7 +38,11 @@ Replace `<URL_OF_THE_WEBPAGE>` with the actual URL you want to scan.
 
 **Optional arguments:**
 
-*   `--urls_only`: Print the discovered media URLs one per line (deduplicated) instead of the JSON metadata. Made to be piped into `yt-dlp` (see below).
+*   `--output_format`: one of `metadata` (the default), `urls` or `json`.
+    *   `metadata`: the full `yt-dlp` metadata for every link, grouped by the bucket it was discovered in. Buckets that matched nothing are omitted, and a link `yt-dlp` cannot handle is reported as `{"error": "..."}` instead of aborting the run.
+    *   `urls`: one media URL per line, deduplicated, discovery order preserved. Made to be piped into `yt-dlp -a -` (see below).
+    *   `json`: an ordered JSON list of `{"url": ..., "title": ...}`, one entry per deduplicated link, with an extra `"error"` key (and a `null` title) when `yt-dlp` could not read the link. This is the format to parse with `jq`.
+*   `--urls_only`: kept as an alias of `--output_format=urls`.
 
 You can also pass any argument accepted by `wdoc.utils.loaders.find_online_media`, such as:
 
@@ -52,12 +56,22 @@ You can also pass any argument accepted by `wdoc.utils.loaders.find_online_media
 uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video"
 ```
 
-This will output a JSON string containing the media URLs found and their metadata fetched by `yt-dlp`. Buckets that matched nothing are omitted, and a link that `yt-dlp` cannot handle is reported as `{"error": "..."}` instead of aborting the run. If no media links are found, it will print a message and exit.
+This will output a JSON string containing the media URLs found and their metadata fetched by `yt-dlp`. If no media links are found, it will print a message and exit with code 1.
 
 **Downloading directly with `yt-dlp`:**
 
 ```bash
-uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video" --urls_only | yt-dlp -a -
+uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video" --output_format=urls | yt-dlp -a -
 ```
+
+**Picking a link by title with `jq`:**
+
+```bash
+uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video" --output_format=json \
+    | jq -r '.[0].url' \
+    | xargs -r yt-dlp --referer "https://example.com/page_with_embedded_video"
+```
+
+Passing the page as `--referer` matters more often than not: scraped media URLs are usually served by a CDN that rejects a request coming from nowhere.
 
 *(This README was generated with the help of [aider.chat](https://github.com/Aider-AI/aider/issues), then updated with Claude Code)*
