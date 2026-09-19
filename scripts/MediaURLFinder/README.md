@@ -41,7 +41,9 @@ Replace `<URL_OF_THE_WEBPAGE>` with the actual URL you want to scan.
 *   `--output_format`: one of `metadata` (the default), `urls` or `json`.
     *   `metadata`: the full `yt-dlp` metadata for every link, grouped by the bucket it was discovered in. Buckets that matched nothing are omitted, and a link `yt-dlp` cannot handle is reported as `{"error": "..."}` instead of aborting the run.
     *   `urls`: one media URL per line, deduplicated, discovery order preserved. Made to be piped into `yt-dlp -a -` (see below).
-    *   `json`: an ordered JSON list of `{"url": ..., "title": ...}`, one entry per deduplicated link, with an extra `"error"` key (and a `null` title) when `yt-dlp` could not read the link. This is the format to parse with `jq`.
+    *   `json`: a JSON list of `{"url", "title", "filesize", "duration", "ext"}`, one entry per deduplicated link, in discovery order, with an extra `"error"` key (and null fields) when `yt-dlp` could not read the link. This is the format to parse with `jq`.
+        *   `filesize` is in bytes and is a **ranking aid, not an accurate figure**. `yt-dlp` only knows an exact size for a progressive file; for an HLS or DASH manifest the script falls back to `duration * bitrate`, and to the largest listed format when the top level advertises nothing. It is `null` when even that is impossible.
+        *   It exists because the first media URL a page loads is very often a pre-roll ad or a trailer, not the feature. Sorting on it is what picks the real video: `jq 'sort_by(.filesize // -1) | reverse'`.
 *   `--urls_only`: kept as an alias of `--output_format=urls`.
 
 You can also pass any argument accepted by `wdoc.utils.loaders.find_online_media`, such as:
@@ -64,12 +66,13 @@ This will output a JSON string containing the media URLs found and their metadat
 uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video" --output_format=urls | yt-dlp -a -
 ```
 
-**Picking a link by title with `jq`:**
+**Picking the biggest link with `jq`:**
 
 ```bash
-uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/page_with_embedded_video" --output_format=json \
-    | jq -r '.[0].url' \
-    | xargs -r yt-dlp --referer "https://example.com/page_with_embedded_video"
+page="https://example.com/page_with_embedded_video"
+uv run scripts/MediaURLFinder/media_url_finder.py --url="$page" --output_format=json \
+    | jq -r 'sort_by(.filesize // -1) | reverse | .[0].url' \
+    | xargs -r yt-dlp --referer "$page"
 ```
 
 Passing the page as `--referer` matters more often than not: scraped media URLs are usually served by a CDN that rejects a request coming from nowhere.

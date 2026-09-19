@@ -21,7 +21,10 @@ above, which always resolves the latest wdoc:
 Three output formats are available via --output_format:
   - metadata (default): the full yt-dlp metadata, grouped by discovery bucket
   - urls: one media URL per line, ready to pipe into `yt-dlp -a -`
-  - json: an ordered JSON list of {"url": ..., "title": ...}, one per link
+  - json: a JSON list of {"url", "title", "filesize", "duration", "ext"}, one
+    per link, in discovery order. `filesize` is what lets a caller tell the
+    real video apart from the trailer or the ad that a page often loads first,
+    for instance with `jq 'sort_by(.filesize // -1) | reverse'`.
 
     uv run scripts/MediaURLFinder/media_url_finder.py --url="..." --output_format=urls | yt-dlp -a -
 """
@@ -55,6 +58,40 @@ def probe(link: str) -> dict:
             return {"error": str(err)}
 
 
+def estimate_size(info: dict) -> int | None:
+    """Best guess at the byte size of what yt-dlp would download, or None.
+
+    yt-dlp only knows an exact `filesize` for a progressive file. An HLS or
+    DASH manifest advertises none, so fall back to duration * bitrate, and to
+    the largest listed format when the top level says nothing at all. This is
+    a ranking aid, not an accurate figure.
+    """
+
+    def one(fmt: dict) -> int | None:
+        for key in ("filesize", "filesize_approx"):
+            val = fmt.get(key)
+            if isinstance(val, (int, float)) and val > 0:
+                return int(val)
+        # tbr is in kbit/s, duration in seconds
+        duration = fmt.get("duration") or info.get("duration")
+        tbr = fmt.get("tbr")
+        if duration and tbr:
+            return int(duration * tbr * 1000 / 8)
+        return None
+
+    # what yt-dlp would actually pull when it has to mux video and audio
+    requested = info.get("requested_formats") or []
+    if requested:
+        parts = [one(fmt) for fmt in requested if isinstance(fmt, dict)]
+        if all(part is not None for part in parts) and parts:
+            return sum(parts)
+
+    sizes = [one(info)]
+    sizes += [one(fmt) for fmt in info.get("formats") or [] if isinstance(fmt, dict)]
+    sizes = [size for size in sizes if size is not None]
+    return max(sizes) if sizes else None
+
+
 def main(
     url: str,
     output_format: str = "metadata",
@@ -80,7 +117,13 @@ def main(
         entries = []
         for link in ordered_links(out):
             info = probe(link)
-            entry = {"url": link, "title": info.get("title")}
+            entry = {
+                "url": link,
+                "title": info.get("title"),
+                "filesize": estimate_size(info),
+                "duration": info.get("duration"),
+                "ext": info.get("ext"),
+            }
             if "error" in info:
                 entry["error"] = info["error"]
             entries.append(entry)
