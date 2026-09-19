@@ -18,6 +18,9 @@ above, which always resolves the latest wdoc:
 
     uv run --refresh scripts/MediaURLFinder/media_url_finder.py --url="..."
 
+Subtitle tracks (.srt, .vtt) are dropped from every format: the browser reports
+them alongside the media they belong to, and they are never what is wanted.
+
 Three output formats are available via --output_format:
   - metadata (default): the full yt-dlp metadata, grouped by discovery bucket
   - urls: one media URL per line, ready to pipe into `yt-dlp -a -`
@@ -31,6 +34,7 @@ Three output formats are available via --output_format:
 
 import json
 import sys
+from urllib.parse import urlparse
 import fire
 from wdoc.utils.loaders.online_media import find_online_media
 import yt_dlp as youtube_dl
@@ -39,10 +43,25 @@ ydl_opts = {"quiet": True, "no_warnings": True, "skip_download": True}
 
 OUTPUT_FORMATS = ("metadata", "urls", "json")
 
+# subtitle tracks ride the same network requests as the media they belong to,
+# so the browser reports them alongside the video. They are never what the
+# caller is after, and yt-dlp pulls the ones it wants by itself anyway.
+IGNORED_EXTENSIONS = (".srt", ".vtt")
+
+
+def is_ignored(link: str) -> bool:
+    """True for a link this script should pretend it never saw."""
+    # the extension lives in the path, a query string must not fool the check
+    return urlparse(link).path.lower().endswith(IGNORED_EXTENSIONS)
+
 
 def ordered_links(out: dict) -> list:
     """Flatten the discovery buckets into one list, deduplicated, order kept."""
-    return list(dict.fromkeys(link for v in out.values() for link in v))
+    return [
+        link
+        for link in dict.fromkeys(link for v in out.values() for link in v)
+        if not is_ignored(link)
+    ]
 
 
 def probe(link: str) -> dict:
@@ -106,16 +125,17 @@ def main(
     )
 
     out = find_online_media(url=url, **kwargs)
-    if not any(v for v in out.values()):
+    links = ordered_links(out)
+    if not links:
         print("No media links found")
         sys.exit(1)
 
     if output_format == "urls":
-        return "\n".join(ordered_links(out))
+        return "\n".join(links)
 
     if output_format == "json":
         entries = []
-        for link in ordered_links(out):
+        for link in links:
             info = probe(link)
             entry = {
                 "url": link,
@@ -132,10 +152,11 @@ def main(
     d = {}
 
     for k, v in out.items():
+        kept = [link for link in v if not is_ignored(link)]
         # skip the buckets that matched nothing instead of cluttering the output
-        if not v:
+        if not kept:
             continue
-        d[k] = {link: probe(link) for link in v}
+        d[k] = {link: probe(link) for link in kept}
 
     return json.dumps(d)
 
