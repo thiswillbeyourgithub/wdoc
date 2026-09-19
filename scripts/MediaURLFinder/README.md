@@ -8,6 +8,8 @@ Sometimes, tools like `yt-dlp` might not directly find the media URLs on a compl
 
 After finding potential URLs, the script uses `yt-dlp` to fetch metadata for each found link and returns the results as a JSON object.
 
+Subtitle tracks (`.srt`, `.vtt`) are dropped from every output format. A player fetches them over the same network requests as the video, so the browser reports them alongside it, but they are never what the caller is after and `yt-dlp` fetches the subtitles it was asked for by itself. The check looks at the URL path only, so a query string neither smuggles one through nor causes a false positive.
+
 ## Usage
 
 The script carries inline script metadata (PEP 723), so `uv` installs its dependencies on the fly and you never have to install wdoc yourself:
@@ -39,9 +41,10 @@ Replace `<URL_OF_THE_WEBPAGE>` with the actual URL you want to scan.
 **Optional arguments:**
 
 *   `--output_format`: one of `metadata` (the default), `urls` or `json`.
-    *   `metadata`: the full `yt-dlp` metadata for every link, grouped by the bucket it was discovered in. Buckets that matched nothing are omitted, and a link `yt-dlp` cannot handle is reported as `{"error": "..."}` instead of aborting the run.
+    *   `metadata`: the full `yt-dlp` metadata for every link, grouped by the bucket it was discovered in, plus the browser tab title under `page_title`. Buckets that matched nothing are omitted, and a link `yt-dlp` cannot handle is reported as `{"error": "..."}` instead of aborting the run.
     *   `urls`: one media URL per line, deduplicated, discovery order preserved. Made to be piped into `yt-dlp -a -` (see below).
-    *   `json`: a JSON list of `{"url", "title", "filesize", "duration", "ext"}`, one entry per deduplicated link, in discovery order, with an extra `"error"` key (and null fields) when `yt-dlp` could not read the link. This is the format to parse with `jq`.
+    *   `json`: a JSON list of `{"url", "title", "page_title", "filesize", "duration", "ext"}`, one entry per deduplicated link, in discovery order, with an extra `"error"` key (and null fields) when `yt-dlp` could not read the link. This is the format to parse with `jq`.
+        *   `page_title` is the browser tab title, repeated on every entry so a `jq` expression that selects one entry still carries it. A scraped media URL usually has an opaque CDN filename, so the tab title is generally the better name for the downloaded file.
         *   `filesize` is in bytes and is a **ranking aid, not an accurate figure**. `yt-dlp` only knows an exact size for a progressive file; for an HLS or DASH manifest the script falls back to `duration * bitrate`, and to the largest listed format when the top level advertises nothing. It is `null` when even that is impossible.
         *   It exists because the first media URL a page loads is very often a pre-roll ad or a trailer, not the feature. Sorting on it is what picks the real video: `jq 'sort_by(.filesize // -1) | reverse'`.
 *   `--urls_only`: kept as an alias of `--output_format=urls`.
@@ -70,10 +73,14 @@ uv run scripts/MediaURLFinder/media_url_finder.py --url="https://example.com/pag
 
 ```bash
 page="https://example.com/page_with_embedded_video"
-uv run scripts/MediaURLFinder/media_url_finder.py --url="$page" --output_format=json \
-    | jq -r 'sort_by(.filesize // -1) | reverse | .[0].url' \
-    | xargs -r yt-dlp --referer "$page"
+found="$(uv run scripts/MediaURLFinder/media_url_finder.py --url="$page" --output_format=json \
+    | jq -r 'sort_by(.filesize // -1) | reverse | .[0]')"
+yt-dlp --referer "$page" \
+    -o "$(jq -r '.page_title' <<<"$found" | sed -e 's/%/%%/g' -e 's#/#_#g').%(ext)s" \
+    "$(jq -r '.url' <<<"$found")"
 ```
+
+Note the `sed`: a title lands in a `yt-dlp` output template, where a `/` would spawn directories and a `%` is read as a field, so `%(title)s` inside a title really does get substituted. Leaving the extension as `%(ext)s` is what makes the file end up with whatever `yt-dlp` actually wrote, after any muxing.
 
 Passing the page as `--referer` matters more often than not: scraped media URLs are usually served by a CDN that rejects a request coming from nowhere.
 

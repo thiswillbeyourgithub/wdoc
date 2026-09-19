@@ -22,12 +22,15 @@ Subtitle tracks (.srt, .vtt) are dropped from every format: the browser reports
 them alongside the media they belong to, and they are never what is wanted.
 
 Three output formats are available via --output_format:
-  - metadata (default): the full yt-dlp metadata, grouped by discovery bucket
+  - metadata (default): the full yt-dlp metadata, grouped by discovery bucket,
+    plus the browser tab title under "page_title"
   - urls: one media URL per line, ready to pipe into `yt-dlp -a -`
-  - json: a JSON list of {"url", "title", "filesize", "duration", "ext"}, one
-    per link, in discovery order. `filesize` is what lets a caller tell the
-    real video apart from the trailer or the ad that a page often loads first,
-    for instance with `jq 'sort_by(.filesize // -1) | reverse'`.
+  - json: a JSON list of {"url", "title", "page_title", "filesize", "duration",
+    "ext"}, one per link, in discovery order. `filesize` is what lets a caller
+    tell the real video apart from the trailer or the ad that a page often
+    loads first, for instance with `jq 'sort_by(.filesize // -1) | reverse'`,
+    and `page_title` is the browser tab title, which is usually a far better
+    name for the downloaded file than the media's own title.
 
     uv run scripts/MediaURLFinder/media_url_finder.py --url="..." --output_format=urls | yt-dlp -a -
 """
@@ -125,6 +128,9 @@ def main(
     )
 
     out = find_online_media(url=url, **kwargs)
+    # not a bucket of links, and it would be iterated character by character
+    page_title = out.pop("page_title", "")
+
     links = ordered_links(out)
     if not links:
         print("No media links found")
@@ -140,6 +146,9 @@ def main(
             entry = {
                 "url": link,
                 "title": info.get("title"),
+                # repeated on every entry so a `jq` one-liner that selects a
+                # single entry still has it, without nesting the whole list
+                "page_title": page_title,
                 "filesize": estimate_size(info),
                 "duration": info.get("duration"),
                 "ext": info.get("ext"),
@@ -149,7 +158,7 @@ def main(
             entries.append(entry)
         return json.dumps(entries)
 
-    d = {}
+    d = {"page_title": page_title}
 
     for k, v in out.items():
         kept = [link for link in v if not is_ignored(link)]
