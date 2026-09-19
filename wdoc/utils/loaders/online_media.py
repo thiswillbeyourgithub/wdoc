@@ -173,11 +173,24 @@ def find_online_media(
             # Wait a bit more for any video to start loading if no media URLs found yet
             page.wait_for_timeout(10000)
 
+        try:
+            page_title = page.title()
+        except Exception as err:
+            logger.debug(f"Could not read the page title: {err}")
+            page_title = ""
+
         browser.close()
 
-    # deduplicate urls
+    # deduplicate urls, keeping the order they were requested in: the first
+    # media a page asks for is rarely the main one, so the order is a signal
     for k, v in video_urls.items():
-        video_urls[k] = list(set(v))
+        video_urls[k] = list(dict.fromkeys(v))
+
+    # the browser tab title, so a caller can name what it downloads after the
+    # page rather than after an opaque CDN filename. Set after the dedup loop
+    # on purpose: this value is a str, and list(dict.fromkeys(str)) would
+    # explode it into characters.
+    video_urls["page_title"] = page_title
 
     return video_urls
 
