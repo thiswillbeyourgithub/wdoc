@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # Build argument to control installation method
 # Values: "install" (from PyPI) or "compile" (from local source in editable mode)
