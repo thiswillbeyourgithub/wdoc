@@ -778,6 +778,18 @@
     or models that are fresh out of the oven, or bugs with backend parsing.
     As it can lead to issues it was decided to disable the matching by default, hence
     the default value is `True`.
+    * MiniMax selections are never fuzzy-remapped: explicit current, legacy, and
+      custom IDs are preserved. `minimax/` selects `minimax/MiniMax-M3.1-Flash`;
+      the other current recipe is `minimax/MiniMax-M3`. Set `MINIMAX_API_KEY`.
+      Flash uses adaptive thinking by default. Its `reasoning_effort` accepts
+      `low`, `medium`, `high`, `xhigh`, or `max` (the server default).
+      Pass it through `--model_kwargs='{"reasoning_effort":"high"}'`.
+      Flash does not accept disabled thinking, `none` effort, `service_tier`,
+      or `reasoning_split=false`. Default output limits for Flash and M3 are
+      524288 tokens; explicit `max_tokens` values remain unchanged.
+      `openrouter/minimax/` selects `openrouter/minimax/minimax-m3.1-flash:free`;
+      `openrouter/minimax/minimax-m3` is also available. OpenRouter retains its
+      own live pricing and output limits, and explicit gateway IDs are preserved.
 
 * `WDOC_ALLOW_NO_PRICE`
     * if "true", won't crash if no price was found for the given

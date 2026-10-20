@@ -28,7 +28,21 @@ def test_registers_minimax_models_with_current_metadata():
 
     extra_litellm_metadata.add_extra_models_metadata(fake_litellm)
 
+    assert fake_litellm.models_by_provider["minimax"] == [
+        "minimax/MiniMax-M3.1-Flash",
+        "minimax/MiniMax-M3",
+    ]
     expected = {
+        "minimax/MiniMax-M3.1-Flash": {
+            "max_tokens": 1_000_000,
+            "max_output_tokens": 524_288,
+            "input_cost_per_token": 0.15 / 1_000_000,
+            "output_cost_per_token": 0.60 / 1_000_000,
+            "cache_read_input_token_cost": 0.015 / 1_000_000,
+            "cache_creation_input_token_cost": None,
+            "input_modalities": ["text", "image", "video"],
+            "thinking": ["adaptive"],
+        },
         "minimax/MiniMax-M3": {
             "max_tokens": 1_000_000,
             "input_cost_per_token": 0.6 / 1_000_000,
@@ -50,7 +64,6 @@ def test_registers_minimax_models_with_current_metadata():
     }
 
     for model_id, metadata in expected.items():
-        assert model_id in fake_litellm.models_by_provider["minimax"]
         registered = registered_models[model_id]
         assert registered["litellm_provider"] == "minimax"
         assert registered["mode"] == "chat"
@@ -72,6 +85,49 @@ def test_does_not_replace_existing_litellm_metadata():
     assert fake_litellm.model_cost["minimax/MiniMax-M3"] is existing_metadata
     assert "minimax/MiniMax-M3" not in registered_models
     assert "minimax/MiniMax-M2.7" in registered_models
+
+
+def test_catalog_refresh_preserves_legacy_metadata_media_and_other_providers():
+    costs = {
+        **extra_litellm_metadata.MINIMAX_MODELS,
+        **extra_litellm_metadata.MINIMAX_LEGACY_MODELS,
+        "minimax/speech-example": {"mode": "audio_speech"},
+    }
+    original_costs = costs.copy()
+    other_models = ["other/custom"]
+    fake_litellm = SimpleNamespace(
+        model_cost=costs,
+        models_by_provider={"minimax": set(costs), "other": other_models},
+        register_model=lambda models: pytest.fail("No models should need registration"),
+    )
+
+    extra_litellm_metadata.add_extra_models_metadata(fake_litellm)
+
+    assert fake_litellm.model_cost == original_costs
+    assert fake_litellm.models_by_provider["other"] is other_models
+    assert fake_litellm.models_by_provider["minimax"] == [
+        "minimax/MiniMax-M3.1-Flash",
+        "minimax/MiniMax-M3",
+        "minimax/speech-example",
+    ]
+
+
+@pytest.mark.parametrize(
+    "model_id,metadata,expected",
+    [
+        ("minimax/MiniMax-M3.1-Flash", {}, True),
+        ("minimax/MiniMax-M2.7", {}, False),
+        ("minimax/speech-example", {"mode": "audio_speech"}, True),
+        ("openrouter/minimax/minimax-m3.1-flash:free", {}, True),
+        ("openrouter/minimax/minimax-m3", {}, True),
+        ("openrouter/minimax/minimax-m2.7", {}, False),
+        ("openrouter/other/custom", {}, True),
+    ],
+)
+def test_minimax_chat_suggestion_filter(model_id, metadata, expected):
+    assert (
+        extra_litellm_metadata.is_current_minimax_choice(model_id, metadata) is expected
+    )
 
 
 def test_registration_failure_only_logs_a_warning(monkeypatch):

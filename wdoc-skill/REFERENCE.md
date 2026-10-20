@@ -289,7 +289,7 @@ These load multiple documents and can combine different sources:
 | `WDOC_DEBUG` | `False` | Same as `--debug=True` |
 | `WDOC_VERBOSE` | `False` | Same as `--verbose=True` |
 | `WDOC_TYPECHECKING` | `warn` | `disabled`, `warn`, or `crash` (via beartype) |
-| `WDOC_NO_MODELNAME_MATCHING` | `True` | Disable fuzzy model name matching |
+| `WDOC_NO_MODELNAME_MATCHING` | `True` | Disable fuzzy model name matching. Explicit MiniMax IDs are always preserved; `minimax/` selects `minimax/MiniMax-M3.1-Flash`, followed by `minimax/MiniMax-M3` in current recipes. Flash effort: `low`, `medium`, `high`, `xhigh`, `max` (server default), via `model_kwargs`. Flash and M3 direct default output limit: 524288; explicit `max_tokens` is preserved. `openrouter/minimax/` selects `openrouter/minimax/minimax-m3.1-flash:free`; gateway pricing and limits stay independent. |
 | `WDOC_ALLOW_NO_PRICE` | `False` | Don't crash if model price is unknown |
 | `WDOC_STRICT_DOCDICT` | `False` | `True` = crash on unexpected DocDict args, `False` = warn, `strip` = ignore |
 | `WDOC_OPEN_ANKI` | `False` | Auto-open Anki browser for found cards |

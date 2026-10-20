@@ -144,11 +144,77 @@ def load_llm(
 
     assert private == env.WDOC_PRIVATE_MODE
 
+    current_minimax = modelname.original in (
+        "minimax/MiniMax-M3.1-Flash",
+        "minimax/MiniMax-M3",
+        "openrouter/minimax/minimax-m3.1-flash:free",
+        "openrouter/minimax/minimax-m3",
+    )
+    if current_minimax:
+        # ChatLiteLLM's minimum version ignores undeclared top-level fields.
+        model_kwargs = dict(extra_model_args.get("model_kwargs", {}))
+        for key in (
+            "reasoning_effort",
+            "thinking",
+            "reasoning_split",
+            "service_tier",
+            "extra_body",
+        ):
+            if key in extra_model_args:
+                model_kwargs[key] = extra_model_args.pop(key)
+        extra_model_args["model_kwargs"] = model_kwargs
+
+    if modelname.original == "minimax/MiniMax-M3.1-Flash":
+        flash_options = {**model_kwargs, **model_kwargs.get("extra_body", {})}
+        if flash_options.get("reasoning_effort") not in (
+            None,
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+        ):
+            raise ValueError(
+                "Flash reasoning_effort must be low, medium, high, xhigh, or max"
+            )
+        if flash_options.get("thinking") not in (None, {"type": "adaptive"}):
+            raise ValueError("Flash only supports adaptive thinking")
+        if flash_options.get("service_tier") is not None:
+            raise ValueError("Flash does not support service_tier")
+        if flash_options.get("reasoning_split") is False:
+            raise ValueError("Flash requires reasoning_split=true when specified")
+
+    if current_minimax and "reasoning_effort" in model_kwargs:
+        # LiteLLM 1.84 predates these model IDs and otherwise drops effort when
+        # drop_params=True. Pass the verified wire field through explicitly.
+        body = dict(model_kwargs.get("extra_body", {}))
+        effort = model_kwargs.pop("reasoning_effort")
+        if modelname.backend == "minimax":
+            body["reasoning_effort"] = effort
+        else:
+            body["reasoning"] = {**body.get("reasoning", {}), "effort": effort}
+        model_kwargs["extra_body"] = body
+
     max_tokens = get_model_max_tokens(modelname)
     logger.debug(f"Detected max token for model {modelname.original}: {max_tokens}")
     if "max_tokens" not in extra_model_args:
         # intentionaly limiting max tokens because it can cause bugs
-        if modelname.backend != "ollama":
+        if modelname.original in (
+            "minimax/MiniMax-M3.1-Flash",
+            "minimax/MiniMax-M3",
+        ):
+            # Context size is not the generation limit for these models.
+            extra_model_args["max_tokens"] = 524_288
+        elif modelname.original in (
+            "openrouter/minimax/minimax-m3.1-flash:free",
+            "openrouter/minimax/minimax-m3",
+        ):
+            from wdoc.utils.misc import get_openrouter_metadata
+
+            gateway = get_openrouter_metadata()[modelname.original]
+            limit = gateway["top_provider"].get("max_completion_tokens")
+            extra_model_args["max_tokens"] = limit or int(max_tokens * 0.9)
+        elif modelname.backend != "ollama":
             extra_model_args["max_tokens"] = int(max_tokens * 0.9)
         else:
             if max_tokens <= 10_000:
@@ -178,8 +244,14 @@ def load_llm(
             "Using openrouter so sorting models by throughput and prioritizing groq out of principle"
         )
 
+    if current_minimax:
+        from wdoc.utils.customs.minimax_chat import MiniMaxChatLiteLLM
+
+        chat_class = MiniMaxChatLiteLLM
+    else:
+        chat_class = ChatLiteLLM
     logger.debug(f"Using ChatLiteLLM backend for model {modelname.original}")
-    llm = ChatLiteLLM(
+    llm = chat_class(
         model_name=modelname.original,
         disable_streaming=True,  # Not needed and might break cache
         api_base=api_base,

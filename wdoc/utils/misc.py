@@ -492,7 +492,18 @@ def wrapped_model_name_matcher(model: str) -> str:
         raise Exception(
             f"Trying to use backend {backend} but no API KEY was found for it in the environnment."
         )
-    candidates = litellm.models_by_provider[backend]
+    from wdoc.utils.customs.add_extra_litellm_models_metadata import (
+        is_current_minimax_choice,
+    )
+
+    candidates = [
+        name
+        for name in litellm.models_by_provider[backend]
+        if is_current_minimax_choice(
+            name if name.startswith(f"{backend}/") else f"{backend}/{name}",
+            litellm.model_cost.get(name, {}),
+        )
+    ]
     if modelname in candidates:
         return model
     subcandidates = [m for m in candidates if m.startswith(modelname)]
@@ -524,6 +535,19 @@ def model_name_matcher(model: str) -> str:
         "Found 'testing' in model, this should not happen"
     )
     assert "/" in model, f"expected / in model '{model}'"
+    from wdoc.utils.customs.add_extra_litellm_models_metadata import (
+        MINIMAX_MODELS,
+        OPENROUTER_MINIMAX_MODELS,
+    )
+
+    if model.startswith(("minimax/", "openrouter/minimax/")):
+        # Provider-only selections use the first current recipe. Explicit IDs,
+        # including saved legacy and custom IDs, must never be fuzzy-remapped.
+        if model == "minimax/":
+            return next(iter(MINIMAX_MODELS))
+        if model == "openrouter/minimax/":
+            return OPENROUTER_MINIMAX_MODELS[0]
+        return model
     if env.WDOC_NO_MODELNAME_MATCHING:
         # logger.debug(f"Bypassing model name matching for model '{model}'")
         return model
@@ -553,7 +577,9 @@ def get_openrouter_metadata() -> dict:
         del info["id"]
         pricing = info["pricing"]  # fix pricing is a str originally
         for k, v in pricing.items():
-            pricing[k] = float(v)
+            # Gateway pricing can include structured tier/override metadata.
+            if isinstance(v, (str, int, float)):
+                pricing[k] = float(v)
         data[modelid] = info
 
         # for models that for example end with ":free", make them appear
